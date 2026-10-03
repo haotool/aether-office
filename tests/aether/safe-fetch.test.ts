@@ -73,6 +73,11 @@ beforeAll(async () => {
   server = http.createServer((req, res) => {
     if (req.url === '/redirect-meta')
       res.writeHead(302, { location: 'http://169.254.169.254/latest' }).end();
+    else if (req.url === '/echo') {
+      let body = '';
+      req.on('data', (d) => (body += d));
+      req.on('end', () => res.end(`${req.method}:${req.headers['authorization'] ?? ''}:${body}`));
+    } else if (req.url === '/redirect-same') res.writeHead(302, { location: '/' }).end();
     else if (req.url === '/loop') res.writeHead(302, { location: '/loop' }).end();
     else if (req.url === '/big') res.end(Buffer.alloc(5000));
     else if (req.url === '/slow') setTimeout(() => res.end('late'), 500);
@@ -105,4 +110,30 @@ it('fetches within bounds, revalidates redirects, and refuses private targets by
   await expect(safeFetch(`http://127.0.0.1:${port}/`, { ports: [port] })).rejects.toThrow(
     'URL_ADDRESS_FORBIDDEN',
   );
+});
+
+it('sends method, headers and body, and never forwards credentials through a redirect', async () => {
+  const policy = { ports: [port], isAllowed: (ip: string) => ip === '127.0.0.1' };
+  const echoed = await safeFetch(`http://127.0.0.1:${port}/echo`, policy, {
+    method: 'POST',
+    headers: { authorization: 'Bearer t' },
+    body: '{"q":1}',
+  });
+  expect(echoed.body.toString()).toBe('POST:Bearer t:{"q":1}');
+  // A POST is never redirected, and an authenticated GET only follows same-origin redirects.
+  await expect(
+    safeFetch(`http://127.0.0.1:${port}/redirect-same`, policy, { method: 'POST', body: '{}' }),
+  ).rejects.toThrow('URL_REDIRECT_FORBIDDEN');
+  await expect(
+    safeFetch(`http://127.0.0.1:${port}/redirect-meta`, policy, {
+      headers: { authorization: 'Bearer t' },
+    }),
+  ).rejects.toThrow(/URL_(REDIRECT|ADDRESS|PORT)_FORBIDDEN/);
+  expect(
+    (
+      await safeFetch(`http://127.0.0.1:${port}/redirect-same`, policy, {
+        headers: { authorization: 'x' },
+      })
+    ).body.toString(),
+  ).toBe('hello');
 });

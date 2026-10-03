@@ -44,6 +44,13 @@ export type Action =
   | 'knowledge.propose'
   | 'knowledge.approve'
   | 'work.comment'
+  | 'machine.invite'
+  | 'integration.connect'
+  | 'integration.toggle'
+  | 'skill.import'
+  | 'skill.toggle'
+  | 'schedule.create'
+  | 'schedule.toggle'
   | 'work.integrate'
   | 'reservation.acquire'
   | 'reservation.renew'
@@ -72,6 +79,13 @@ const grants: Record<Role, readonly Action[]> = {
     'work.submit',
     'work.review',
     'work.comment',
+    'schedule.create',
+    'schedule.toggle',
+    'skill.import',
+    'skill.toggle',
+    'integration.connect',
+    'integration.toggle',
+    'machine.invite',
     'work.verify',
     'work.accept',
     'work.integrate',
@@ -107,6 +121,8 @@ const grants: Record<Role, readonly Action[]> = {
     'work.submit',
     'work.cancel',
     'work.comment',
+    'schedule.create',
+    'schedule.toggle',
     'message.send',
     'message.ack',
     'approval.decide',
@@ -247,7 +263,7 @@ export function nextOccurrence(
   };
 }
 
-export { validateLayout, objectBounds, objectSize } from './layout.js';
+export { validateLayout, objectBounds, objectSize, type PlacedObject } from './layout.js';
 export {
   normalizePattern,
   patternsOverlap,
@@ -263,3 +279,21 @@ export {
   type CapabilityFlag,
   type Injection,
 } from './capabilities.js';
+export {
+  buildNavGrid,
+  findPath,
+  nearestWalkable,
+  pathLength,
+  type NavGrid,
+  type PathResult,
+  type Point,
+} from './navigation.js';
+export {
+  DEFAULT_TIMEZONE,
+  dueDecision,
+  isValidSpec,
+  isValidTimezone,
+  nextRun,
+  type ScheduleSpec,
+} from './schedule.js';
+export { parseSkill, SkillError, type ParsedSkill } from './skill.js';

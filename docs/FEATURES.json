@@ -1611,16 +1611,18 @@
     "verificationStatus": "partial",
     "codePaths": [
       "apps/control/src/services/safe-fetch.ts",
+      "apps/control/src/services/connectors.ts",
       "scripts/check-boundaries.mjs",
       "apps/web/src/features/Terminals.tsx"
     ],
     "testIds": [
       "tests/aether/safe-fetch.test.ts",
-      "tests/aether/web-safety.test.ts"
+      "tests/aether/web-safety.test.ts",
+      "tests/aether/integrations.test.ts"
     ],
     "evidencePaths": [],
     "blockers": [
-      "No Markdown renderer exists yet (all text is shown as text); safe-fetch is not yet used by a connector or A2A path"
+      "No Markdown renderer exists yet (all text is shown as text); A2A artifact fetching will reuse safe-fetch when built"
     ]
   },
   {
@@ -1671,21 +1673,41 @@
     "id": "REM-01",
     "requirement": "遠端 runner 以認證 outbound channel 連接 control。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/invitations.ts",
+      "apps/control/src/db/migrations/021-machine-invitations.sql",
+      "apps/runner/src/enroll.ts",
+      "apps/runner/src/transport.ts",
+      "apps/runner/src/runner.ts"
+    ],
+    "testIds": [
+      "tests/aether/remote-runners.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Control serves plain HTTP on loopback; TLS for remote use must be terminated by a reverse proxy, and no real TLS handshake was tested"
+    ]
   },
   {
     "id": "REM-02",
     "requirement": "enrollment token 短效單次使用，不是永久全域 shell token。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/control/src/services/invitations.ts",
+      "apps/control/src/db/migrations/021-machine-invitations.sql",
+      "apps/runner/src/enroll.ts",
+      "apps/runner/src/transport.ts",
+      "apps/web/src/features/MachineInvite.tsx"
+    ],
+    "testIds": [
+      "tests/aether/machine-grants.test.ts",
+      "tests/aether/remote-runners.test.ts",
+      "e2e/machine-invite.spec.ts"
+    ],
     "evidencePaths": [],
     "blockers": []
   },
@@ -1693,12 +1715,22 @@
     "id": "REM-03",
     "requirement": "machine grants 限制 project／root／provider／concurrency。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/control/src/services/runners.ts",
+      "apps/control/src/services/invitations.ts",
+      "apps/control/src/db/migrations/021-machine-invitations.sql",
+      "apps/runner/src/enroll.ts",
+      "apps/runner/src/transport.ts"
+    ],
+    "testIds": [
+      "tests/aether/machine-grants.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Locally enrolled machines (enroll()) keep an empty root list, meaning unrestricted"
+    ]
   },
   {
     "id": "REM-04",
@@ -1772,23 +1804,38 @@
     "id": "REM-07",
     "requirement": "不同 machine 使用獨立 clone，不共享 SQLite／.git。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/runner/src/storage.ts",
+      "apps/runner/src/main.ts"
+    ],
+    "testIds": [
+      "tests/aether/runner-storage.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Enforced as: runner state may not live inside an allowed repository; that each machine really uses its own clone is by construction (machine-bound workspaces) and not verified across two real hosts"
+    ]
   },
   {
     "id": "REM-08",
     "requirement": "兩個獨立 runner process 的故障／恢復整合測試通過。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/runner/src/main.ts",
+      "apps/control/src/services/invitations.ts"
+    ],
+    "testIds": [
+      "tests/aether/remote-runners.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Two real runner processes with the demo provider on one host: revocation, project scope, single-use enrollment and control outage covered",
+      "Not covered: SIGKILL of a runner mid-run, journal replay after a runner crash, native Git workspaces across two clones, and any real WAN, HA or Kubernetes setup"
+    ]
   },
   {
     "id": "STD-01",
@@ -2209,23 +2256,41 @@
     "id": "VIS-06",
     "requirement": "messageId 去重，動畫抵達不被當成真正 ACK。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/office-scene/src/carriers.ts",
+      "packages/office-scene/src/MessageCarriers.tsx"
+    ],
+    "testIds": [
+      "tests/aether/carriers.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Dedupe and planning are unit-tested; the moving envelope was not exercised in a browser with an agent-to-agent message",
+      "Arrival is decoration and never changes delivery state"
+    ]
   },
   {
     "id": "VIS-07",
     "requirement": "路徑不穿牆／桌，有 unreachable 狀態與測試。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "packages/kernel/src/navigation.ts",
+      "packages/office-scene/src/carriers.ts",
+      "apps/web/src/App.tsx"
+    ],
+    "testIds": [
+      "tests/aether/navigation.test.ts",
+      "tests/aether/carriers.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Unreachable surfaces as a notice; that notice was not browser-tested",
+      "Grid A* at 0.5 m resolution"
+    ]
   },
   {
     "id": "VIS-08",
@@ -2281,10 +2346,17 @@
     "id": "CAM-02",
     "requirement": "tour 可跳過／暫停／手動中斷，結束恢復選取。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/web/src/tour.ts",
+      "apps/web/src/App.tsx",
+      "packages/office-scene/src/OfficeScene.tsx"
+    ],
+    "testIds": [
+      "tests/aether/tour.test.ts",
+      "e2e/tour.spec.ts"
+    ],
     "evidencePaths": [],
     "blockers": []
   },
@@ -2417,12 +2489,21 @@
     "id": "CAM-08",
     "requirement": "效能報告來自實機量測，未達目標不寫成達標。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/office-scene/src/perf.ts",
+      "packages/office-scene/src/PerfProbe.tsx"
+    ],
+    "testIds": [
+      "tests/aether/perf.test.ts",
+      "e2e/perf.spec.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "One measurement: headless Chrome on Apple M4 (Metal), 904x548 viewport, vsync-capped near 60 fps, so headroom is unknown",
+      "No low-end GPU, mobile or other-browser measurement"
+    ]
   },
   {
     "id": "A11Y-01",
@@ -2566,12 +2647,21 @@
     "id": "A11Y-07",
     "requirement": "audio／browser notification 預設不擅自開啟。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/web/src/notifications.ts",
+      "apps/web/src/features/Approvals.tsx",
+      "apps/web/src/state.ts"
+    ],
+    "testIds": [
+      "tests/aether/notifications.test.ts",
+      "e2e/notifications.spec.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "The product has no audio at all; only opt-in browser notifications exist"
+    ]
   },
   {
     "id": "A11Y-08",
@@ -2600,34 +2690,65 @@
     "id": "INT-01",
     "requirement": "GitHub Issue→WorkItem→受批准的結果／PR 流程有實作。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/integrations.ts",
+      "apps/control/src/services/connectors.ts",
+      "apps/control/src/db/migrations/020-integrations-sync.sql",
+      "apps/web/src/features/Integrations.tsx"
+    ],
+    "testIds": [
+      "tests/aether/integrations.test.ts",
+      "e2e/integrations.spec.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Live GitHub verification blocked: no credentials; behavior is checked against a local fake that follows the documented REST shapes",
+      "Pull request creation is not implemented (it needs a pushed branch, and push is never automatic)",
+      "Result write-back is an owner-only API call with no UI button yet"
+    ]
   },
   {
     "id": "INT-02",
     "requirement": "Linear 匯入／狀態同步有實作、衝突規則與測試。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/integrations.ts",
+      "apps/control/src/services/connectors.ts",
+      "apps/control/src/db/migrations/020-integrations-sync.sql",
+      "apps/web/src/features/Integrations.tsx"
+    ],
+    "testIds": [
+      "tests/aether/integrations.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Live Linear verification blocked: no credentials; GraphQL shapes and the RATELIMITED error code come from public docs and are untested against the real service",
+      "Import and comment only: Linear issue state is not written back"
+    ]
   },
   {
     "id": "INT-03",
     "requirement": "webhook／polling retry 不形成同步迴圈或重複任務。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/control/src/services/integrations.ts",
+      "apps/control/src/services/connectors.ts",
+      "apps/control/src/db/migrations/020-integrations-sync.sql",
+      "apps/web/src/features/Integrations.tsx"
+    ],
+    "testIds": [
+      "tests/aether/integrations.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Webhooks need a reverse proxy that preserves the Host header; polling works without one"
+    ]
   },
   {
     "id": "INT-04",
@@ -2664,23 +2785,46 @@
     "id": "INT-05",
     "requirement": "skills 匯入／檢視／啟用／停用不自動執行未知命令。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "packages/kernel/src/skill.ts",
+      "apps/control/src/services/skills.ts",
+      "apps/runner/src/mcp.ts",
+      "apps/web/src/features/Skills.tsx"
+    ],
+    "testIds": [
+      "tests/aether/skill-kernel.test.ts",
+      "tests/aether/skills.test.ts",
+      "e2e/skills.spec.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Skills are reference text served via MCP skills_list; no mechanism executes skill content by design"
+    ]
   },
   {
     "id": "INT-06",
     "requirement": "schedule 依 timezone 觸發，重啟不重複派工。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "packages/kernel/src/schedule.ts",
+      "apps/control/src/services/schedules.ts",
+      "apps/control/src/db/migrations/018-schedules.sql",
+      "apps/web/src/features/Schedules.tsx"
+    ],
+    "testIds": [
+      "tests/aether/schedule-kernel.test.ts",
+      "tests/aether/schedules.test.ts",
+      "e2e/schedules.spec.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "UI creates daily/weekly schedules only (the API also accepts one-off)",
+      "A schedule only creates unassigned work; there is no scheduled auto-assignment by design"
+    ]
   },
   {
     "id": "INT-07",

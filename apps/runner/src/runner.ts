@@ -8,6 +8,7 @@ import {
 import { runFixture } from '@aether/providers';
 import { ObserverRunner } from './observers.js';
 import { integrate } from './merge.js';
+import { assertSecureControlUrl } from './transport.js';
 import { TerminalRunner } from './terminals.js';
 import { Journal } from './journal.js';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -37,14 +38,7 @@ export class Runner {
     this.terminals = native
       ? new TerminalRunner(journal, native, (path, body) => this.api(path, body))
       : undefined;
-    const parsed = new URL(url);
-    if (
-      parsed.protocol !== 'https:' &&
-      !(
-        parsed.protocol === 'http:' && ['127.0.0.1', 'localhost', '[::1]'].includes(parsed.hostname)
-      )
-    )
-      throw new Error('TLS_REQUIRED');
+    assertSecureControlUrl(url);
   }
   async api<T>(path: string, body: unknown, haltOnForbidden = true): Promise<T> {
     const response = await fetch(new URL(path, this.url), {

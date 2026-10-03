@@ -24,7 +24,8 @@
     "postinstall": "node scripts/prepare-pty.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "hooks": "tsx scripts/hooks.ts"
+    "hooks": "tsx scripts/hooks.ts",
+    "runner:enroll": "tsx apps/runner/src/enroll.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

@@ -47,6 +47,12 @@ export type Resolver = (host: string) => Promise<string[]>;
 const systemResolver: Resolver = async (host) =>
   (await dnsLookup(host, { all: true })).map((r) => r.address);
 
+export type FetchInit = {
+  method?: 'GET' | 'POST';
+  headers?: Record<string, string>;
+  body?: string;
+};
+
 export type FetchPolicy = {
   resolver?: Resolver;
   isAllowed?: (ip: string) => boolean;
@@ -84,16 +90,29 @@ function request(
   url: URL,
   address: string,
   policy: FetchPolicy,
-): Promise<{ status: number; location?: string; body: Buffer }> {
+  init: FetchInit,
+): Promise<{
+  status: number;
+  location?: string;
+  body: Buffer;
+  headers: http.IncomingHttpHeaders;
+}> {
   const maxBytes = policy.maxBytes ?? 1_048_576;
   const client = url.protocol === 'https:' ? https : http;
   return new Promise((resolve, reject) => {
     const req = client.request(
       url,
       {
-        method: 'GET',
+        method: init.method ?? 'GET',
         timeout: policy.timeoutMs ?? 5000,
-        headers: { 'user-agent': 'aether-office', accept: '*/*' },
+        headers: {
+          'user-agent': 'aether-office',
+          accept: '*/*',
+          ...init.headers,
+          ...(init.body === undefined
+            ? {}
+            : { 'content-length': String(Buffer.byteLength(init.body)) }),
+        },
         // Pin the socket to the validated address; the hostname is still used for SNI and Host.
         lookup: (_host, _options, callback) => callback(null, address, isIP(address)),
       },
@@ -115,6 +134,7 @@ function request(
             status: res.statusCode ?? 0,
             ...(location ? { location } : {}),
             body: Buffer.concat(chunks),
+            headers: res.headers,
           });
         });
       },
@@ -126,23 +146,40 @@ function request(
     req.on('error', (error) =>
       reject(error instanceof DomainError ? error : new DomainError('URL_FETCH_FAILED', 502)),
     );
-    req.end();
+    req.end(init.body);
   });
 }
 
 export async function safeFetch(
   raw: string,
   policy: FetchPolicy = {},
-): Promise<{ status: number; body: Buffer; finalUrl: string }> {
+  init: FetchInit = {},
+): Promise<{
+  status: number;
+  body: Buffer;
+  finalUrl: string;
+  headers: http.IncomingHttpHeaders;
+}> {
   let current = raw;
+  const origin = new URL(raw).origin;
   for (let hop = 0; hop <= (policy.maxRedirects ?? 3); hop++) {
     const { url, address } = await assertSafeUrl(current, policy);
-    const response = await request(url, address, policy);
+    const response = await request(url, address, policy, init);
     if (response.status >= 300 && response.status < 400 && response.location) {
+      // Credentials and request bodies never follow a redirect to somewhere else.
+      if (init.method === 'POST' || (init.headers && url.origin !== origin))
+        throw new DomainError('URL_REDIRECT_FORBIDDEN', 400);
       current = new URL(response.location, url).toString(); // revalidated at the top of the loop
+      if (init.headers && new URL(current).origin !== origin)
+        throw new DomainError('URL_REDIRECT_FORBIDDEN', 400);
       continue;
     }
-    return { status: response.status, body: response.body, finalUrl: url.toString() };
+    return {
+      status: response.status,
+      body: response.body,
+      finalUrl: url.toString(),
+      headers: response.headers,
+    };
   }
   throw new DomainError('URL_TOO_MANY_REDIRECTS', 400);
 }

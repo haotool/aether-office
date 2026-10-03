@@ -44,7 +44,15 @@ function machine(ctx: Context, actor: Actor) {
   authorize(actor, 'runner.report');
   const row = ctx.sqlite
     .prepare('SELECT * FROM machines WHERE id=? AND revokedAt IS NULL')
-    .get(actor.machineId) as { id: string; projectIds: string; concurrency: number } | undefined;
+    .get(actor.machineId) as
+    | {
+        id: string;
+        projectIds: string;
+        concurrency: number;
+        allowedProviders: string;
+        allowedRoots: string;
+      }
+    | undefined;
   if (!row) throw new DomainError('MACHINE_REVOKED', 401);
   return { actor, row };
 }
@@ -88,10 +96,15 @@ export function heartbeat(
     ).map((r) => r.id),
   };
 }
-export function claim(ctx: Context, actor: Actor, providers: readonly string[]): RunCommand | null {
+export function claim(ctx: Context, actor: Actor, requested: readonly string[]): RunCommand | null {
+  let providers = requested;
   const { row } = machine(ctx, actor);
   if (!providers.length || providers.some((p) => !['demo', 'claude', 'codex', 'acp'].includes(p)))
     throw new DomainError('INVALID_CAPABILITIES', 400);
+  // The machine grant, not the runner's own claim, decides which providers it may run.
+  const granted = JSON.parse(row.allowedProviders) as string[];
+  providers = providers.filter((p) => granted.includes(p));
+  if (!providers.length) throw new DomainError('PROVIDER_NOT_GRANTED', 403);
   return ctx.sqlite
     .transaction(() => {
       const count = ctx.sqlite
@@ -214,6 +227,13 @@ export function report(ctx: Context, actor: Actor, input: unknown) {
           throw new DomainError('WORKSPACE_SCOPE_MISMATCH');
         if (run.purpose === 'review' && w.baseSha !== run.reviewHead)
           throw new DomainError('REVIEW_HEAD_MISMATCH');
+        // A machine may only report workspaces under the roots it was granted (none = unrestricted local machine).
+        const roots = JSON.parse(row.allowedRoots) as string[];
+        if (
+          roots.length &&
+          !roots.some((r) => w.path === r || w.path.startsWith(r.replace(/\/+$/, '') + '/'))
+        )
+          throw new DomainError('WORKSPACE_ROOT_NOT_GRANTED', 403);
         ctx.sqlite
           .prepare(
             'INSERT INTO workspaces(id,projectId,workId,machineId,repository,path,branch,baseSha,headSha,state,createdAt) VALUES (?,?,?,?,?,?,?,?,?,?,?)',

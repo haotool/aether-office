@@ -21,6 +21,16 @@ import {
 } from './services/terminals.js';
 import { reportObservation, listObservations } from './services/observations.js';
 import { listReviewComments } from './services/review-comments.js';
+import {
+  handleGithubWebhook,
+  listConnections,
+  postResult,
+  syncConnection,
+  type SyncOptions,
+} from './services/integrations.js';
+import { redeemInvitation } from './services/invitations.js';
+import { listSkills } from './services/skills.js';
+import { listSchedules, tickSchedules } from './services/schedules.js';
 import { listReservations } from './services/reservations.js';
 import { scanLocalSessions } from './services/local-sessions.js';
 import { homedir } from 'node:os';
@@ -29,7 +39,13 @@ import type { Control } from './control.js';
 
 export function createServer(
   control: Control,
-  options: { origin: string; serveWeb?: boolean; logger?: boolean },
+  options: {
+    origin: string;
+    serveWeb?: boolean;
+    logger?: boolean;
+    /** Test seam: fetch policy and environment for connectors. Defaults are the secure ones. */
+    connectors?: SyncOptions;
+  },
 ) {
   const origin = new URL(options.origin);
   const app = Fastify({
@@ -52,11 +68,17 @@ export function createServer(
   let waitTimer: ReturnType<typeof setInterval> | undefined;
   app.addHook('onReady', async () => {
     refreshMessageWaits(control.ctx);
+    tickSchedules(control.ctx); // catches up after a restart: one occurrence at most, never a burst
     waitTimer = setInterval(() => {
       try {
         refreshMessageWaits(control.ctx);
       } catch {
         app.log.error('MESSAGE_WAIT_RECONCILIATION_FAILED');
+      }
+      try {
+        tickSchedules(control.ctx);
+      } catch {
+        app.log.error('SCHEDULE_TICK_FAILED');
       }
     }, 1000);
     waitTimer.unref();
@@ -376,6 +398,89 @@ export function createServer(
   app.get('/api/capabilities', async (request) => {
     authorize(actor(request), 'read');
     return { providers: CAPABILITIES };
+  });
+  app.get<{ Params: { projectId: string } }>(
+    '/api/projects/:projectId/schedules',
+    async (request) => {
+      authorize(actor(request), 'read', request.params.projectId);
+      return { schedules: listSchedules(control.ctx, request.params.projectId) };
+    },
+  );
+  app.get<{ Params: { projectId: string } }>('/api/projects/:projectId/skills', async (request) => {
+    const who = actor(request);
+    authorize(who, 'read', request.params.projectId);
+    return { skills: listSkills(control.ctx, who, request.params.projectId) };
+  });
+  app.get<{ Params: { projectId: string } }>(
+    '/api/projects/:projectId/integrations',
+    async (request) => {
+      authorize(actor(request), 'read', request.params.projectId);
+      return { integrations: listConnections(control.ctx, request.params.projectId) };
+    },
+  );
+  app.post<{ Params: { projectId: string; integrationId: string } }>(
+    '/api/projects/:projectId/integrations/:integrationId/sync',
+    async (request) => {
+      authorize(actor(request), 'integration.connect', request.params.projectId);
+      return syncConnection(
+        control.ctx,
+        request.params.projectId,
+        request.params.integrationId,
+        options.connectors,
+      );
+    },
+  );
+  app.post<{ Params: { projectId: string; workId: string } }>(
+    '/api/projects/:projectId/work/:workId/post-result',
+    async (request) => {
+      const who = actor(request);
+      authorize(who, 'integration.connect', request.params.projectId);
+      return postResult(
+        control.ctx,
+        who,
+        request.params.projectId,
+        request.params.workId,
+        options.connectors,
+      );
+    },
+  );
+  // GitHub signs the exact bytes it sends, so this scope keeps the body raw.
+  app.register(async (scope) => {
+    scope.addContentTypeParser('application/json', { parseAs: 'buffer' }, (_request, body, done) =>
+      done(null, body),
+    );
+    scope.post<{ Params: { integrationId: string } }>(
+      '/api/webhooks/github/:integrationId',
+      async (request) =>
+        handleGithubWebhook(
+          control.ctx,
+          request.params.integrationId,
+          request.headers,
+          request.body as Buffer,
+          options.connectors,
+        ),
+    );
+  });
+  // Unauthenticated by design: the single-use invitation token is the credential. Rate limited by IP.
+  app.post('/api/runner/enroll', async (request) => {
+    const key = `enroll:${request.ip}`;
+    const now = control.ctx.now();
+    const last = attempts.get(key);
+    if (last && last.until > now && last.count >= 10)
+      throw new DomainError('ENROLL_RATE_LIMIT', 429);
+    const { invitation } = z
+      .object({ invitation: z.string().min(10).max(200) })
+      .strict()
+      .parse(request.body);
+    try {
+      return redeemInvitation(control.ctx, invitation);
+    } catch (error) {
+      attempts.set(key, {
+        count: (last && last.until > now ? last.count : 0) + 1,
+        until: now + 60_000,
+      });
+      throw error;
+    }
   });
   app.post('/api/runner/observations', async (request) =>
     reportObservation(control.ctx, actor(request), request.body),

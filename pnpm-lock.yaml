@@ -309,6 +309,9 @@ importers:
       '@aether/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@aether/kernel':
+        specifier: workspace:*
+        version: link:../kernel
       '@react-three/drei':
         specifier: 10.7.9
         version: 10.7.9(@react-three/fiber@9.8.1(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(three@0.186.1))(@types/react@19.3.0)(@types/three@0.186.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(three@0.186.1)

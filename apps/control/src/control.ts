@@ -23,6 +23,10 @@ import { hash, secret, authenticate, createIdentity, identityActor } from './ser
 import { agent, emit, project, type Context } from './services/context.js';
 import { requestIntegration, requestJob } from './services/jobs.js';
 import { decideApproval } from './services/approvals.js';
+import { createInvitation } from './services/invitations.js';
+import { integrationCommand } from './services/integrations.js';
+import { skillCommand } from './services/skills.js';
+import { scheduleCommand } from './services/schedules.js';
 import { addReviewComment } from './services/review-comments.js';
 import { reservationCommand } from './services/reservations.js';
 import { terminalCommand } from './services/terminals.js';
@@ -98,6 +102,21 @@ export class Control {
           case 'terminal.resize':
           case 'terminal.stop':
             result = terminalCommand(this.ctx, actor, c);
+            break;
+          case 'machine.invite':
+            result = createInvitation(this.ctx, actor, c);
+            break;
+          case 'integration.connect':
+          case 'integration.toggle':
+            result = integrationCommand(this.ctx, actor, c);
+            break;
+          case 'skill.import':
+          case 'skill.toggle':
+            result = skillCommand(this.ctx, actor, c);
+            break;
+          case 'schedule.create':
+          case 'schedule.toggle':
+            result = scheduleCommand(this.ctx, actor, c);
             break;
           case 'work.integrate':
             result = requestIntegration(this.ctx, actor, c);

@@ -18,6 +18,10 @@ import { disposeOwned } from './geometry.js';
 import { defaultLayout, zones } from './layout.js';
 import { OrbitalBackdrop } from './OrbitalBackdrop.js';
 import { Animal } from './Animal.js';
+import { MessageCarriers } from './MessageCarriers.js';
+import { PerfProbe } from './PerfProbe.js';
+import type { PerfReport } from './perf.js';
+import type { SceneMessage } from './carriers.js';
 export type Quality = 'low' | 'balanced' | 'high';
 export type OfficeSceneProps = {
   agents: Agent[];
@@ -29,6 +33,12 @@ export type OfficeSceneProps = {
   locale: 'zh-TW' | 'en';
   focus: string;
   onFailure: () => void;
+  messages?: readonly SceneMessage[];
+  onMessageUnreachable?: (messageId: string, recipientId: string) => void;
+  /** Fired when the user drags, zooms or pans the camera, so automation like a tour can yield. */
+  onUserCamera?: () => void;
+  /** When set, the scene renders continuously for a fixed sample and reports measured frame times. */
+  onPerfReport?: (report: PerfReport) => void;
 };
 const Campus = memo(function Campus({ layout }: { layout: Layout }) {
   const scene = useMemo(() => buildCampus(layout), [layout]);
@@ -39,10 +49,12 @@ function SceneCamera({
   focus,
   layout,
   reducedMotion,
+  onUserCamera,
 }: {
   focus: string;
   layout: Layout;
   reducedMotion: boolean;
+  onUserCamera?: (() => void) | undefined;
 }) {
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
   const camera = useThree((s) => s.camera);
@@ -62,6 +74,13 @@ function SceneCamera({
     controls.current?.update();
     invalidate();
   }, [focus, layout, camera, invalidate]);
+  useEffect(() => {
+    const instance = controls.current;
+    if (!instance || !onUserCamera) return;
+    // 'start' fires only for user input, never for programmatic camera moves.
+    instance.addEventListener('start', onUserCamera);
+    return () => instance.removeEventListener('start', onUserCamera);
+  }, [onUserCamera]);
   return (
     <OrbitControls
       ref={controls}
@@ -238,13 +257,27 @@ export function OfficeScene(props: OfficeSceneProps) {
               </group>
             );
           })}
+          <MessageCarriers
+            layout={layout}
+            messages={props.messages ?? []}
+            reducedMotion={props.reducedMotion}
+            onUnreachable={props.onMessageUnreachable}
+          />
           <ProjectedLabels
             labels={labels}
             elements={elements.current}
             selected={props.selectedId}
           />
-          <SceneCamera focus={props.focus} layout={layout} reducedMotion={props.reducedMotion} />
+          <SceneCamera
+            focus={props.focus}
+            layout={layout}
+            reducedMotion={props.reducedMotion}
+            onUserCamera={props.onUserCamera}
+          />
           <Runtime onFailure={props.onFailure} />
+          {props.onPerfReport && (
+            <PerfProbe quality={props.quality} onReport={props.onPerfReport} />
+          )}
           <AnimationClock active={active} />
         </Canvas>
         <div className="world-labels">

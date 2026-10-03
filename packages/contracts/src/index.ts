@@ -157,6 +157,27 @@ export const terminalDimensions = {
   cols: z.number().int().min(10).max(400),
   rows: z.number().int().min(2).max(200),
 };
+export const scheduleSpecSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('once'), at: z.number().int().positive() }).strict(),
+  z
+    .object({ kind: z.literal('daily'), time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/) })
+    .strict(),
+  z
+    .object({
+      kind: z.literal('weekly'),
+      days: z.array(z.number().int().min(0).max(6)).min(1).max(7),
+      time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+    })
+    .strict(),
+]);
+export const scheduleTemplateSchema = z
+  .object({
+    title: shortText,
+    description: z.string().max(16000).default(''),
+    acceptance: z.string().trim().min(1).max(8000),
+    priority: z.number().int().min(0).max(3).default(1),
+  })
+  .strict();
 export const commandSchema = z.discriminatedUnion('type', [
   z
     .object({
@@ -418,6 +439,99 @@ export const commandSchema = z.discriminatedUnion('type', [
             .optional(),
         })
         .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...projectEnvelope,
+      type: z.literal('machine.invite'),
+      data: z
+        .object({
+          name: shortText,
+          ttlSec: z.number().int().min(60).max(900).default(600),
+          concurrency: z.number().int().min(1).max(4).default(1),
+          providers: z
+            .array(z.enum(['demo', 'claude', 'codex', 'acp']))
+            .min(1)
+            .max(4),
+          roots: z.array(z.string().min(1).max(1024)).min(1).max(16),
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...projectEnvelope,
+      type: z.literal('integration.connect'),
+      data: z.discriminatedUnion('provider', [
+        z
+          .object({
+            provider: z.literal('github'),
+            owner: z.string().regex(/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/),
+            repo: z.string().regex(/^[A-Za-z0-9._-]{1,100}$/),
+            tokenEnv: z.string().regex(/^[A-Z][A-Z0-9_]{1,63}$/),
+            webhookSecretEnv: z
+              .string()
+              .regex(/^[A-Z][A-Z0-9_]{1,63}$/)
+              .optional(),
+            baseUrl: z.url().optional(),
+          })
+          .strict(),
+        z
+          .object({
+            provider: z.literal('linear'),
+            teamKey: z.string().regex(/^[A-Za-z0-9]{1,16}$/),
+            tokenEnv: z.string().regex(/^[A-Z][A-Z0-9_]{1,63}$/),
+            baseUrl: z.url().optional(),
+          })
+          .strict(),
+      ]),
+    })
+    .strict(),
+  z
+    .object({
+      ...projectEnvelope,
+      type: z.literal('integration.toggle'),
+      expectedVersion: version,
+      data: z.object({ integrationId: id, enabled: z.boolean() }).strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...projectEnvelope,
+      type: z.literal('skill.import'),
+      data: z.object({ content: z.string().min(1).max(70000) }).strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...projectEnvelope,
+      type: z.literal('skill.toggle'),
+      expectedVersion: version,
+      data: z.object({ skillId: id, enabled: z.boolean() }).strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...projectEnvelope,
+      type: z.literal('schedule.create'),
+      data: z
+        .object({
+          name: shortText,
+          spec: scheduleSpecSchema,
+          timezone: z.string().min(1).max(64).default('Asia/Taipei'),
+          missed: z.enum(['skip', 'single']).default('skip'),
+          template: scheduleTemplateSchema,
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...projectEnvelope,
+      type: z.literal('schedule.toggle'),
+      expectedVersion: version,
+      data: z.object({ scheduleId: id, enabled: z.boolean() }).strict(),
     })
     .strict(),
   z
@@ -895,3 +1009,44 @@ export const reviewCommentsSchema = z.object({
   comments: z.array(reviewCommentSchema),
 });
 export type ReviewComments = z.infer<typeof reviewCommentsSchema>;
+
+export const scheduleSchema = z.object({
+  id,
+  name: z.string(),
+  spec: scheduleSpecSchema,
+  timezone: z.string(),
+  missed: z.enum(['skip', 'single']),
+  template: scheduleTemplateSchema,
+  enabled: z.boolean(),
+  nextRunAt: z.number().nullable(),
+  lastOccurrence: z.number().nullable(),
+  version: z.number().int(),
+});
+export type Schedule = z.infer<typeof scheduleSchema>;
+
+export const skillSchema = z.object({
+  id,
+  name: z.string(),
+  description: z.string(),
+  body: z.string(),
+  warnings: z.array(z.string()),
+  enabled: z.boolean(),
+  version: z.number().int(),
+  updatedAt: z.number(),
+});
+export type Skill = z.infer<typeof skillSchema>;
+
+export const integrationSchema = z.object({
+  id,
+  provider: z.enum(['github', 'linear']),
+  target: z.string(),
+  tokenEnv: z.string(),
+  enabled: z.boolean(),
+  lastSyncAt: z.number().nullable(),
+  lastError: z.string().nullable(),
+  backoffUntil: z.number().nullable(),
+  linked: z.number().int(),
+  conflicts: z.number().int(),
+  version: z.number().int(),
+});
+export type IntegrationConnection = z.infer<typeof integrationSchema>;

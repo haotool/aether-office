@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useReducer, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { NavLink, useLocation, useSearchParams } from 'react-router-dom';
 import {
@@ -21,6 +21,10 @@ import {
   Globe2,
   Radio,
   RotateCcw,
+  Play,
+  Pause,
+  SkipForward,
+  Square,
   Focus,
   PencilRuler,
   LogOut,
@@ -44,9 +48,23 @@ import { Knowledge } from './features/Knowledge.js';
 import { History } from './features/History.js';
 import { Workspace } from './features/Workspace.js';
 import { ExecutionSettings } from './features/ExecutionSettings.js';
+import { Schedules } from './features/Schedules.js';
+import { MachineInvite } from './features/MachineInvite.js';
+import { Integrations } from './features/Integrations.js';
+import { Skills } from './features/Skills.js';
 import { Observations } from './features/Observations.js';
 import { Approvals } from './features/Approvals.js';
+import type { PerfReport } from '@aether/office-scene';
 import { mergeLayout, sessionIdOf, sessionsToAgents } from './localSessions.js';
+import { useApprovalNotifications } from './notifications.js';
+import {
+  TOUR_INTERVAL_MS,
+  idle,
+  restoreFocus,
+  tourFocus,
+  tourReducer,
+  type TourAction,
+} from './tour.js';
 const Terminals = lazy(() =>
   import('./features/Terminals.js').then((m) => ({ default: m.Terminals })),
 );
@@ -176,6 +194,11 @@ function ProjectForm({ onClose, onSaved }: { onClose: () => void; onSaved: () =>
     </Modal>
   );
 }
+// Opt-in measurement: `?perf=1` renders a fixed sample of frames and exposes the measured result.
+const perfRequested = new URLSearchParams(window.location.search).has('perf');
+function publishPerf(report: PerfReport) {
+  (window as unknown as { __aetherPerf?: PerfReport }).__aetherPerf = report;
+}
 export function App() {
   const t = useT();
   const prefs = usePreferences();
@@ -190,6 +213,19 @@ export function App() {
   const [editor, setEditor] = useState(false);
   const [preview, setPreview] = useState<Layout | null>(null);
   const [focus, setFocus] = useState('overview');
+  const [tour, dispatchTour] = useReducer(tourReducer, idle);
+  const act = (action: TourAction) => {
+    const restore = restoreFocus(tour, action, tourReducer(tour, action));
+    dispatchTour(action);
+    if (restore) setFocus(restore);
+  };
+  useEffect(() => {
+    const target = tourFocus(tour);
+    if (target) setFocus(target);
+    if (tour.status !== 'playing') return;
+    const timer = setTimeout(() => act({ type: 'skip' }), TOUR_INTERVAL_MS);
+    return () => clearTimeout(timer);
+  }, [tour]); // `act` only closes over `tour`, which is this effect's dependency
   const [inspector, setInspector] = useState(true);
   const [menu, setMenu] = useState(false);
   const [offline, setOffline] = useState(false);
@@ -225,6 +261,7 @@ export function App() {
     refetchInterval: 10000,
     retry: false,
   });
+  useApprovalNotifications(projectId, !!session && prefs.notifyApprovals, t('approvalNeeded'));
   const seq = snapshot.data?.seq;
   useEffect(() => {
     if (!projectId || !session || !seq) return;
@@ -282,6 +319,12 @@ export function App() {
       : [];
   const sceneAgents = data ? [...data.agents, ...observed] : [];
   const selected = sceneAgents.find((a) => a.id === selectedId) ?? null;
+  // Recomputed per render on purpose: MessageCarriers dedupes by messageId, so identity does not matter.
+  const sceneMessages = (data?.messages ?? []).map((m) => ({
+    id: m.id,
+    senderId: m.senderId,
+    recipientIds: m.deliveries.map((d) => d.recipientId),
+  }));
   return (
     <div className="application">
       <header className="topbar">
@@ -508,6 +551,47 @@ export function App() {
                               </option>
                             ))}
                           </select>
+                          {tour.status === 'idle' ? (
+                            <button
+                              aria-label={t('tourStart')}
+                              title={t('tourStart')}
+                              onClick={() => act({ type: 'start', restore: focus })}
+                            >
+                              <Play size={16} />
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                aria-label={
+                                  tour.status === 'playing' ? t('tourPause') : t('tourResume')
+                                }
+                                title={tour.status === 'playing' ? t('tourPause') : t('tourResume')}
+                                onClick={() =>
+                                  act({ type: tour.status === 'playing' ? 'pause' : 'resume' })
+                                }
+                              >
+                                {tour.status === 'playing' ? (
+                                  <Pause size={16} />
+                                ) : (
+                                  <Play size={16} />
+                                )}
+                              </button>
+                              <button
+                                aria-label={t('tourSkip')}
+                                title={t('tourSkip')}
+                                onClick={() => act({ type: 'skip' })}
+                              >
+                                <SkipForward size={16} />
+                              </button>
+                              <button
+                                aria-label={t('tourStop')}
+                                title={t('tourStop')}
+                                onClick={() => act({ type: 'stop' })}
+                              >
+                                <Square size={16} />
+                              </button>
+                            </>
+                          )}
                           <button
                             aria-label={t('reset')}
                             title={t('reset')}
@@ -546,6 +630,10 @@ export function App() {
                             reducedMotion={prefs.reducedMotion}
                             locale={prefs.locale}
                             focus={focus}
+                            messages={sceneMessages}
+                            {...(perfRequested ? { onPerfReport: publishPerf } : {})}
+                            onUserCamera={() => act({ type: 'interrupt' })}
+                            onMessageUnreachable={() => setNotice(t('messageUnreachable'))}
                             onFailure={() => {
                               prefs.set({ view: '2d' });
                               setNotice(t('sceneFailed'));
@@ -649,12 +737,15 @@ export function App() {
                     ) : page === 'approvals' ? (
                       <Approvals projectId={projectId} />
                     ) : page === 'knowledge' ? (
-                      <Knowledge
-                        projectId={projectId}
-                        canWrite={canWrite}
-                        canApprove={session.actor.role === 'owner'}
-                        workItems={data.work}
-                      />
+                      <>
+                        <Knowledge
+                          projectId={projectId}
+                          canWrite={canWrite}
+                          canApprove={session.actor.role === 'owner'}
+                          workItems={data.work}
+                        />
+                        <Skills projectId={projectId} canManage={session.actor.role === 'owner'} />
+                      </>
                     ) : page === 'history' ? (
                       <History projectId={projectId} />
                     ) : page === 'machines' ? (
@@ -678,6 +769,10 @@ export function App() {
                         ) : (
                           <Empty title={t('noMachines')} hint={t('machineHint')} />
                         )}
+                        <MachineInvite
+                          projectId={projectId}
+                          canInvite={session.actor.role === 'owner'}
+                        />
                       </>
                     ) : page === 'settings' ? (
                       <>
@@ -717,6 +812,11 @@ export function App() {
                             {session.mode === 'demo' ? t('demoNote') : t('runnerGrantRequired')}
                           </p>
                         </div>
+                        <Schedules projectId={projectId} canManage={canWrite} />
+                        <Integrations
+                          projectId={projectId}
+                          canManage={session.actor.role === 'owner'}
+                        />
                         {session.mode === 'live' && (
                           <ExecutionSettings
                             projectId={projectId}

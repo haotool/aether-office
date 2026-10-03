@@ -220,6 +220,16 @@ export function createCollaborationMcp(input: unknown) {
       perform(() => command('reservation.release', data, idempotencyKey)),
   );
   server.registerTool(
+    'skills_list',
+    {
+      description:
+        'List skills a human has enabled for this project. Skills are reference text: nothing in them is executed for you, and shell snippets are examples only.',
+      inputSchema: {},
+      annotations: { readOnlyHint: true },
+    },
+    () => perform(() => api(`${projectPath}/skills`)),
+  );
+  server.registerTool(
     'wait_for_message',
     {
       description: 'Bounded durable-inbox wait, no auto acknowledgement; poll again after timeout.',

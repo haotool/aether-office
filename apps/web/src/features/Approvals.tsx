@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api, execute } from '../api.js';
 import { PageHeading, Empty, Badge, useT } from '../ui.js';
+import { usePreferences } from '../state.js';
+import { notificationsSupported, requestNotificationPermission } from '../notifications.js';
 type Approval = {
   id: string;
   runId: string;
@@ -18,6 +20,8 @@ type Approval = {
 };
 export function Approvals({ projectId }: { projectId: string }) {
   const t = useT();
+  const prefs = usePreferences();
+  const [denied, setDenied] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState('');
   const query = useQuery({
@@ -46,6 +50,23 @@ export function Approvals({ projectId }: { projectId: string }) {
   return (
     <>
       <PageHeading title={t('approvals')} subtitle={t('approvalNote')} />
+      <label title={notificationsSupported() ? undefined : t('notifyUnsupported')}>
+        <input
+          type="checkbox"
+          checked={prefs.notifyApprovals}
+          disabled={!notificationsSupported()}
+          onChange={async (e) => {
+            setDenied(false);
+            if (!e.target.checked) return prefs.set({ notifyApprovals: false });
+            // Permission is requested only here, from this explicit user action.
+            const granted = await requestNotificationPermission();
+            prefs.set({ notifyApprovals: granted });
+            setDenied(!granted);
+          }}
+        />{' '}
+        {t('notifyApprovals')}
+      </label>
+      {denied && <p role="status">{t('notifyDenied')}</p>}
       {error && (
         <p role="alert" className="error-text">
           {error}
