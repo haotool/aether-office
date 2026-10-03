@@ -1,0 +1,14 @@
+{
+  "name": "@aether/providers",
+  "version": "0.4.0-dev.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.31.0",
+    "@aether/contracts": "workspace:*",
+    "zod": "4.6.5",
+    "@anthropic-ai/claude-agent-sdk": "0.3.286",
+    "@anthropic-ai/sdk": "0.130.0"
+  }
+}

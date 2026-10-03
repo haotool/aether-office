@@ -1,0 +1,302 @@
+[
+  {
+    "repo": "stablyai/orca",
+    "sha": "0b812bd69856f9f2337dd54d7f3b9ceedff24cc9",
+    "path": "docs/site/content/docs/agents/claude-code.mdx",
+    "url": "https://github.com/stablyai/orca/blob/0b812bd69856f9f2337dd54d7f3b9ceedff24cc9/docs/site/content/docs/agents/claude-code.mdx"
+  },
+  {
+    "repo": "stablyai/orca",
+    "sha": "0b812bd69856f9f2337dd54d7f3b9ceedff24cc9",
+    "path": "docs/site/content/docs/agents/codex.mdx",
+    "url": "https://github.com/stablyai/orca/blob/0b812bd69856f9f2337dd54d7f3b9ceedff24cc9/docs/site/content/docs/agents/codex.mdx"
+  },
+  {
+    "repo": "stablyai/orca",
+    "sha": "0b812bd69856f9f2337dd54d7f3b9ceedff24cc9",
+    "path": "docs/site/content/docs/agents/session-history.mdx",
+    "url": "https://github.com/stablyai/orca/blob/0b812bd69856f9f2337dd54d7f3b9ceedff24cc9/docs/site/content/docs/agents/session-history.mdx"
+  },
+  {
+    "repo": "stablyai/orca",
+    "sha": "0b812bd69856f9f2337dd54d7f3b9ceedff24cc9",
+    "path": "docs/site/content/docs/cli/orchestration.mdx",
+    "url": "https://github.com/stablyai/orca/blob/0b812bd69856f9f2337dd54d7f3b9ceedff24cc9/docs/site/content/docs/cli/orchestration.mdx"
+  },
+  {
+    "repo": "stablyai/orca",
+    "sha": "0b812bd69856f9f2337dd54d7f3b9ceedff24cc9",
+    "path": "docs/site/content/docs/cli/overview.mdx",
+    "url": "https://github.com/stablyai/orca/blob/0b812bd69856f9f2337dd54d7f3b9ceedff24cc9/docs/site/content/docs/cli/overview.mdx"
+  },
+  {
+    "repo": "stablyai/orca",
+    "sha": "0b812bd69856f9f2337dd54d7f3b9ceedff24cc9",
+    "path": "docs/site/content/docs/model/agents-sessions.mdx",
+    "url": "https://github.com/stablyai/orca/blob/0b812bd69856f9f2337dd54d7f3b9ceedff24cc9/docs/site/content/docs/model/agents-sessions.mdx"
+  },
+  {
+    "repo": "stablyai/orca",
+    "sha": "0b812bd69856f9f2337dd54d7f3b9ceedff24cc9",
+    "path": "skill-guides/orchestration/references/coordinator-loop.md",
+    "url": "https://github.com/stablyai/orca/blob/0b812bd69856f9f2337dd54d7f3b9ceedff24cc9/skill-guides/orchestration/references/coordinator-loop.md"
+  },
+  {
+    "repo": "stablyai/orca",
+    "sha": "0b812bd69856f9f2337dd54d7f3b9ceedff24cc9",
+    "path": "skill-guides/orchestration/references/messaging-and-gates.md",
+    "url": "https://github.com/stablyai/orca/blob/0b812bd69856f9f2337dd54d7f3b9ceedff24cc9/skill-guides/orchestration/references/messaging-and-gates.md"
+  },
+  {
+    "repo": "stablyai/orca",
+    "sha": "0b812bd69856f9f2337dd54d7f3b9ceedff24cc9",
+    "path": "skill-guides/orchestration.md",
+    "url": "https://github.com/stablyai/orca/blob/0b812bd69856f9f2337dd54d7f3b9ceedff24cc9/skill-guides/orchestration.md"
+  },
+  {
+    "repo": "stablyai/orca",
+    "sha": "0b812bd69856f9f2337dd54d7f3b9ceedff24cc9",
+    "path": "src/main/agent-hooks/server/server-agent-presence.ts",
+    "url": "https://github.com/stablyai/orca/blob/0b812bd69856f9f2337dd54d7f3b9ceedff24cc9/src/main/agent-hooks/server/server-agent-presence.ts"
+  },
+  {
+    "repo": "stablyai/orca",
+    "sha": "0b812bd69856f9f2337dd54d7f3b9ceedff24cc9",
+    "path": "src/main/ai-vault/session-scanner-source-discovery.ts",
+    "url": "https://github.com/stablyai/orca/blob/0b812bd69856f9f2337dd54d7f3b9ceedff24cc9/src/main/ai-vault/session-scanner-source-discovery.ts"
+  },
+  {
+    "repo": "stablyai/orca",
+    "sha": "0b812bd69856f9f2337dd54d7f3b9ceedff24cc9",
+    "path": "src/main/runtime/rpc/methods/orchestration/gates/gate-run-authorization.test.ts",
+    "url": "https://github.com/stablyai/orca/blob/0b812bd69856f9f2337dd54d7f3b9ceedff24cc9/src/main/runtime/rpc/methods/orchestration/gates/gate-run-authorization.test.ts"
+  },
+  {
+    "repo": "stablyai/orca",
+    "sha": "0b812bd69856f9f2337dd54d7f3b9ceedff24cc9",
+    "path": "src/main/runtime/rpc/methods/orchestration/gates/gates.ts",
+    "url": "https://github.com/stablyai/orca/blob/0b812bd69856f9f2337dd54d7f3b9ceedff24cc9/src/main/runtime/rpc/methods/orchestration/gates/gates.ts"
+  },
+  {
+    "repo": "gastownhall/gastown",
+    "sha": "649b832b7672bc7a2dbef26f5983aba6198b819b",
+    "path": "internal/refinery/engineer.go",
+    "url": "https://github.com/gastownhall/gastown/blob/649b832b7672bc7a2dbef26f5983aba6198b819b/internal/refinery/engineer.go"
+  },
+  {
+    "repo": "aannoo/hcom",
+    "sha": "2c5f343b2f9ec4bf2acf49c0431860e7c2ae578b",
+    "path": "src/claude_actor.rs",
+    "url": "https://github.com/aannoo/hcom/blob/2c5f343b2f9ec4bf2acf49c0431860e7c2ae578b/src/claude_actor.rs"
+  },
+  {
+    "repo": "aannoo/hcom",
+    "sha": "2c5f343b2f9ec4bf2acf49c0431860e7c2ae578b",
+    "path": "src/commands/launch.rs",
+    "url": "https://github.com/aannoo/hcom/blob/2c5f343b2f9ec4bf2acf49c0431860e7c2ae578b/src/commands/launch.rs"
+  },
+  {
+    "repo": "aannoo/hcom",
+    "sha": "2c5f343b2f9ec4bf2acf49c0431860e7c2ae578b",
+    "path": "src/commands/start.rs",
+    "url": "https://github.com/aannoo/hcom/blob/2c5f343b2f9ec4bf2acf49c0431860e7c2ae578b/src/commands/start.rs"
+  },
+  {
+    "repo": "aannoo/hcom",
+    "sha": "2c5f343b2f9ec4bf2acf49c0431860e7c2ae578b",
+    "path": "src/hooks/claude.rs",
+    "url": "https://github.com/aannoo/hcom/blob/2c5f343b2f9ec4bf2acf49c0431860e7c2ae578b/src/hooks/claude.rs"
+  },
+  {
+    "repo": "aannoo/hcom",
+    "sha": "2c5f343b2f9ec4bf2acf49c0431860e7c2ae578b",
+    "path": "src/hooks/codex.rs",
+    "url": "https://github.com/aannoo/hcom/blob/2c5f343b2f9ec4bf2acf49c0431860e7c2ae578b/src/hooks/codex.rs"
+  },
+  {
+    "repo": "23blocks-OS/ai-maestro",
+    "sha": "bc4969cfd43fc81a9a5599932e0f88b19d1c9b22",
+    "path": "lib/agent-registry.ts",
+    "url": "https://github.com/23blocks-OS/ai-maestro/blob/bc4969cfd43fc81a9a5599932e0f88b19d1c9b22/lib/agent-registry.ts"
+  },
+  {
+    "repo": "23blocks-OS/ai-maestro",
+    "sha": "bc4969cfd43fc81a9a5599932e0f88b19d1c9b22",
+    "path": "lib/agent-runtime.ts",
+    "url": "https://github.com/23blocks-OS/ai-maestro/blob/bc4969cfd43fc81a9a5599932e0f88b19d1c9b22/lib/agent-runtime.ts"
+  },
+  {
+    "repo": "23blocks-OS/ai-maestro",
+    "sha": "bc4969cfd43fc81a9a5599932e0f88b19d1c9b22",
+    "path": "lib/message-delivery.ts",
+    "url": "https://github.com/23blocks-OS/ai-maestro/blob/bc4969cfd43fc81a9a5599932e0f88b19d1c9b22/lib/message-delivery.ts"
+  },
+  {
+    "repo": "777genius/agent-teams-ai",
+    "sha": "f936527bdf7ee7e147b6d3d06e51b9c01ccf491b",
+    "path": "package.json",
+    "url": "https://github.com/777genius/agent-teams-ai/blob/f936527bdf7ee7e147b6d3d06e51b9c01ccf491b/package.json"
+  },
+  {
+    "repo": "777genius/agent-teams-ai",
+    "sha": "f936527bdf7ee7e147b6d3d06e51b9c01ccf491b",
+    "path": "src/main/services/discovery/ProjectScanner.ts",
+    "url": "https://github.com/777genius/agent-teams-ai/blob/f936527bdf7ee7e147b6d3d06e51b9c01ccf491b/src/main/services/discovery/ProjectScanner.ts"
+  },
+  {
+    "repo": "777genius/agent-teams-ai",
+    "sha": "f936527bdf7ee7e147b6d3d06e51b9c01ccf491b",
+    "path": "src/main/services/team/TeamWorktreeGitService.ts",
+    "url": "https://github.com/777genius/agent-teams-ai/blob/f936527bdf7ee7e147b6d3d06e51b9c01ccf491b/src/main/services/team/TeamWorktreeGitService.ts"
+  },
+  {
+    "repo": "777genius/agent-teams-ai",
+    "sha": "f936527bdf7ee7e147b6d3d06e51b9c01ccf491b",
+    "path": "src/main/services/team/provisioning/TeamProvisioningSessionDiscovery.ts",
+    "url": "https://github.com/777genius/agent-teams-ai/blob/f936527bdf7ee7e147b6d3d06e51b9c01ccf491b/src/main/services/team/provisioning/TeamProvisioningSessionDiscovery.ts"
+  },
+  {
+    "repo": "777genius/agent-teams-ai",
+    "sha": "f936527bdf7ee7e147b6d3d06e51b9c01ccf491b",
+    "path": "src/main/services/team/provisioning/__tests__/TeamProvisioningSessionDiscovery.test.ts",
+    "url": "https://github.com/777genius/agent-teams-ai/blob/f936527bdf7ee7e147b6d3d06e51b9c01ccf491b/src/main/services/team/provisioning/__tests__/TeamProvisioningSessionDiscovery.test.ts"
+  },
+  {
+    "repo": "asheshgoplani/agent-deck",
+    "sha": "035fd602eda5e3ed7e95edb63b6418fbe285f74d",
+    "path": "cmd/agent-deck/conductor_cmd.go",
+    "url": "https://github.com/asheshgoplani/agent-deck/blob/035fd602eda5e3ed7e95edb63b6418fbe285f74d/cmd/agent-deck/conductor_cmd.go"
+  },
+  {
+    "repo": "asheshgoplani/agent-deck",
+    "sha": "035fd602eda5e3ed7e95edb63b6418fbe285f74d",
+    "path": "cmd/agent-deck/hook_children_context.go",
+    "url": "https://github.com/asheshgoplani/agent-deck/blob/035fd602eda5e3ed7e95edb63b6418fbe285f74d/cmd/agent-deck/hook_children_context.go"
+  },
+  {
+    "repo": "asheshgoplani/agent-deck",
+    "sha": "035fd602eda5e3ed7e95edb63b6418fbe285f74d",
+    "path": "cmd/agent-deck/worktree_cmd.go",
+    "url": "https://github.com/asheshgoplani/agent-deck/blob/035fd602eda5e3ed7e95edb63b6418fbe285f74d/cmd/agent-deck/worktree_cmd.go"
+  },
+  {
+    "repo": "asheshgoplani/agent-deck",
+    "sha": "035fd602eda5e3ed7e95edb63b6418fbe285f74d",
+    "path": "docs/conductor/README.md",
+    "url": "https://github.com/asheshgoplani/agent-deck/blob/035fd602eda5e3ed7e95edb63b6418fbe285f74d/docs/conductor/README.md"
+  },
+  {
+    "repo": "asheshgoplani/agent-deck",
+    "sha": "035fd602eda5e3ed7e95edb63b6418fbe285f74d",
+    "path": "internal/git/mergeback.go",
+    "url": "https://github.com/asheshgoplani/agent-deck/blob/035fd602eda5e3ed7e95edb63b6418fbe285f74d/internal/git/mergeback.go"
+  },
+  {
+    "repo": "asheshgoplani/agent-deck",
+    "sha": "035fd602eda5e3ed7e95edb63b6418fbe285f74d",
+    "path": "internal/session/conductor.go",
+    "url": "https://github.com/asheshgoplani/agent-deck/blob/035fd602eda5e3ed7e95edb63b6418fbe285f74d/internal/session/conductor.go"
+  },
+  {
+    "repo": "asheshgoplani/agent-deck",
+    "sha": "035fd602eda5e3ed7e95edb63b6418fbe285f74d",
+    "path": "internal/session/discovery.go",
+    "url": "https://github.com/asheshgoplani/agent-deck/blob/035fd602eda5e3ed7e95edb63b6418fbe285f74d/internal/session/discovery.go"
+  },
+  {
+    "repo": "simple10/agents-observe",
+    "sha": "b3a7238b3913976c10da052f75c73e29ad084c61",
+    "path": ".codex/config.toml",
+    "url": "https://github.com/simple10/agents-observe/blob/b3a7238b3913976c10da052f75c73e29ad084c61/.codex/config.toml"
+  },
+  {
+    "repo": "simple10/agents-observe",
+    "sha": "b3a7238b3913976c10da052f75c73e29ad084c61",
+    "path": ".codex/hooks.json",
+    "url": "https://github.com/simple10/agents-observe/blob/b3a7238b3913976c10da052f75c73e29ad084c61/.codex/hooks.json"
+  },
+  {
+    "repo": "simple10/agents-observe",
+    "sha": "b3a7238b3913976c10da052f75c73e29ad084c61",
+    "path": "hooks/hooks.json",
+    "url": "https://github.com/simple10/agents-observe/blob/b3a7238b3913976c10da052f75c73e29ad084c61/hooks/hooks.json"
+  },
+  {
+    "repo": "simple10/agents-observe",
+    "sha": "b3a7238b3913976c10da052f75c73e29ad084c61",
+    "path": "hooks/scripts/lib/agents/claude-code.mjs",
+    "url": "https://github.com/simple10/agents-observe/blob/b3a7238b3913976c10da052f75c73e29ad084c61/hooks/scripts/lib/agents/claude-code.mjs"
+  },
+  {
+    "repo": "simple10/agents-observe",
+    "sha": "b3a7238b3913976c10da052f75c73e29ad084c61",
+    "path": "hooks/scripts/lib/agents/codex.mjs",
+    "url": "https://github.com/simple10/agents-observe/blob/b3a7238b3913976c10da052f75c73e29ad084c61/hooks/scripts/lib/agents/codex.mjs"
+  },
+  {
+    "repo": "simple10/agents-observe",
+    "sha": "b3a7238b3913976c10da052f75c73e29ad084c61",
+    "path": "hooks/scripts/lib/agents/default.mjs",
+    "url": "https://github.com/simple10/agents-observe/blob/b3a7238b3913976c10da052f75c73e29ad084c61/hooks/scripts/lib/agents/default.mjs"
+  },
+  {
+    "repo": "simple10/agents-observe",
+    "sha": "b3a7238b3913976c10da052f75c73e29ad084c61",
+    "path": "hooks/scripts/lib/agents/index.mjs",
+    "url": "https://github.com/simple10/agents-observe/blob/b3a7238b3913976c10da052f75c73e29ad084c61/hooks/scripts/lib/agents/index.mjs"
+  },
+  {
+    "repo": "simple10/agents-observe",
+    "sha": "b3a7238b3913976c10da052f75c73e29ad084c61",
+    "path": "hooks/scripts/lib/config.mjs",
+    "url": "https://github.com/simple10/agents-observe/blob/b3a7238b3913976c10da052f75c73e29ad084c61/hooks/scripts/lib/config.mjs"
+  },
+  {
+    "repo": "simple10/agents-observe",
+    "sha": "b3a7238b3913976c10da052f75c73e29ad084c61",
+    "path": "hooks/scripts/lib/http.mjs",
+    "url": "https://github.com/simple10/agents-observe/blob/b3a7238b3913976c10da052f75c73e29ad084c61/hooks/scripts/lib/http.mjs"
+  },
+  {
+    "repo": "simple10/agents-observe",
+    "sha": "b3a7238b3913976c10da052f75c73e29ad084c61",
+    "path": "hooks/scripts/lib/logger.mjs",
+    "url": "https://github.com/simple10/agents-observe/blob/b3a7238b3913976c10da052f75c73e29ad084c61/hooks/scripts/lib/logger.mjs"
+  },
+  {
+    "repo": "simple10/agents-observe",
+    "sha": "b3a7238b3913976c10da052f75c73e29ad084c61",
+    "path": "test/hooks/scripts/lib/agents/codex.test.mjs",
+    "url": "https://github.com/simple10/agents-observe/blob/b3a7238b3913976c10da052f75c73e29ad084c61/test/hooks/scripts/lib/agents/codex.test.mjs"
+  },
+  {
+    "repo": "simple10/agents-observe",
+    "sha": "b3a7238b3913976c10da052f75c73e29ad084c61",
+    "path": "test/hooks/scripts/lib/callbacks-roundtrip.test.mjs",
+    "url": "https://github.com/simple10/agents-observe/blob/b3a7238b3913976c10da052f75c73e29ad084c61/test/hooks/scripts/lib/callbacks-roundtrip.test.mjs"
+  },
+  {
+    "repo": "zetbrush/multiagents",
+    "sha": "03fcf6e875804a21650ed4e45eb9b6624460f7fb",
+    "path": "README.md",
+    "url": "https://github.com/zetbrush/multiagents/blob/03fcf6e875804a21650ed4e45eb9b6624460f7fb/README.md"
+  },
+  {
+    "repo": "zetbrush/multiagents",
+    "sha": "03fcf6e875804a21650ed4e45eb9b6624460f7fb",
+    "path": "package.json",
+    "url": "https://github.com/zetbrush/multiagents/blob/03fcf6e875804a21650ed4e45eb9b6624460f7fb/package.json"
+  },
+  {
+    "repo": "agent-room-alkl/agent-room",
+    "sha": "080b13d2bf927a1ee3e66981dece0d2eee698d37",
+    "path": "README.md",
+    "url": "https://github.com/agent-room-alkl/agent-room/blob/080b13d2bf927a1ee3e66981dece0d2eee698d37/README.md"
+  },
+  {
+    "repo": "agent-room-alkl/agent-room",
+    "sha": "080b13d2bf927a1ee3e66981dece0d2eee698d37",
+    "path": "package.json",
+    "url": "https://github.com/agent-room-alkl/agent-room/blob/080b13d2bf927a1ee3e66981dece0d2eee698d37/package.json"
+  }
+]

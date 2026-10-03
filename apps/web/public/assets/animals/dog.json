@@ -1,0 +1,116 @@
+{
+  "assetId": "dog",
+  "version": 1,
+  "license": "MIT",
+  "provenance": "Original AETHER geometry/animation using AgentSystemLabs MIT aokit primitives",
+  "source": "assets-source/animals/dog.blend",
+  "sourceSha256": "460360273368a4fad35a729e67e121b7340185e011d1a9e9c4dd1dcf2ed70b06",
+  "blender": "5.2.2 LTS",
+  "metres": true,
+  "upAxis": "glTF Y",
+  "bounds": [
+    [-0.3578930199146271, -0.30440372228622437, 0.0028338776901364326],
+    [-0.3578930199146271, -0.30440372228622437, 1.4711337089538574],
+    [-0.3578930199146271, 0.468239963054657, 1.4711337089538574],
+    [-0.3578930199146271, 0.468239963054657, 0.0028338776901364326],
+    [0.3544182777404785, -0.30440372228622437, 0.0028338776901364326],
+    [0.3544182777404785, -0.30440372228622437, 1.4711337089538574],
+    [0.3544182777404785, 0.468239963054657, 1.4711337089538574],
+    [0.3544182777404785, 0.468239963054657, 0.0028338776901364326]
+  ],
+  "uvLayers": 1,
+  "materials": ["dog_PBR"],
+  "bones": [
+    "root",
+    "pelvis",
+    "chest",
+    "neck",
+    "head",
+    "ear_L",
+    "ear_R",
+    "upper_arm_L",
+    "forearm_L",
+    "hand_L",
+    "upper_arm_R",
+    "forearm_R",
+    "hand_R",
+    "tail",
+    "thigh_L",
+    "shin_L",
+    "foot_L",
+    "thigh_R",
+    "shin_R",
+    "foot_R"
+  ],
+  "clips": [
+    "idle",
+    "walk",
+    "turn",
+    "sit_down",
+    "seated_idle",
+    "typing",
+    "reading",
+    "testing",
+    "reviewing",
+    "waiting_permission",
+    "waiting_peer",
+    "celebrate",
+    "error",
+    "stand_up"
+  ],
+  "sockets": ["hand_socket_L", "hand_socket_R", "head_socket", "chest_socket"],
+  "textures": [
+    {
+      "file": "dog-base_color.png",
+      "sha256": "7a03bb414d398af8bfe1498acbc8e60d4abda88f43cc27fdf2e7ed9cd263995c",
+      "colorSpace": "sRGB",
+      "size": [1024, 1024]
+    },
+    {
+      "file": "dog-normal.png",
+      "sha256": "3a5db34b9e68366d003db96f1f43c36a403f66a29f7928520a2fa4b5b1d134d6",
+      "colorSpace": "Non-Color",
+      "size": [1024, 1024]
+    },
+    {
+      "file": "dog-roughness.png",
+      "sha256": "f4ffadb720904a31e4f7df4f458466ddcefc0fe95d8f862fbeb3fe747cd3c0d4",
+      "colorSpace": "Non-Color",
+      "size": [1024, 1024]
+    },
+    {
+      "file": "dog-ao.png",
+      "sha256": "ee1c09ec11ecffeea3a866927ebe73e2f7b0cd656cadf6bc047bd4b97bfceb10",
+      "colorSpace": "Non-Color",
+      "size": [1024, 1024]
+    }
+  ],
+  "lods": [
+    {
+      "level": 0,
+      "file": "dog-lod0.glb",
+      "sha256": "a966a23d477616a8cbad84356f4de47f950122532587b44466d4c8185e8f3465",
+      "triangles": 22696,
+      "duplicateTrianglesRemoved": 0,
+      "bytes": 2336788
+    },
+    {
+      "level": 1,
+      "file": "dog-lod1.glb",
+      "sha256": "68072f65fcc7b63053e65438fa302d6f15d10a8cffed585bd81d3bce42970b73",
+      "triangles": 7942,
+      "duplicateTrianglesRemoved": 0,
+      "bytes": 1791644
+    },
+    {
+      "level": 2,
+      "file": "dog-lod2.glb",
+      "sha256": "0329d8d27663e35252cc3819b3763cccc9601361adead6ed1c13ef92be187fc4",
+      "triangles": 1928,
+      "duplicateTrianglesRemoved": 0,
+      "bytes": 1545112
+    }
+  ],
+  "buildSeconds": 4.614,
+  "verificationStatus": "not_run"
+}

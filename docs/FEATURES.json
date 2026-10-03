@@ -1,0 +1,2795 @@
+[
+  {
+    "id": "ENV-01",
+    "requirement": "記錄 OS、architecture、Node／pnpm／git／provider binary 的實際版本。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "ENV-02",
+    "requirement": "依賴有 registry metadata、peer／engine 相容查證與例外紀錄。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "ENV-03",
+    "requirement": "乾淨目錄可以 frozen-lockfile 安裝，不依賴開發者 global packages。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "ENV-04",
+    "requirement": "setup／migration／seed 重跑不破壞既有資料或重複 demo。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "ENV-05",
+    "requirement": "build、typecheck、lint 在同一鎖定環境成功。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "ENV-06",
+    "requirement": "既有 git dirty changes 不被覆寫／reset／刪除。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "ENV-07",
+    "requirement": "doctor 能區分 missing CLI、auth required、native module failure、healthy。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "ENV-08",
+    "requirement": "README 命令在真正乾淨環境重現，無未宣告步驟。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "ARC-01",
+    "requirement": "web／scene 無 Node filesystem、PTY、provider SDK 私有依賴。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "scripts/check-boundaries.mjs"
+    ],
+    "testIds": [],
+    "evidencePaths": [
+      "evidence/boundaries-native.log"
+    ],
+    "blockers": []
+  },
+  {
+    "id": "ARC-02",
+    "requirement": "kernel 與 React／Three／Fastify／DB driver 的邊界由自動檢查保護。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "scripts/check-boundaries.mjs"
+    ],
+    "testIds": [],
+    "evidencePaths": [
+      "evidence/boundaries-native.log"
+    ],
+    "blockers": []
+  },
+  {
+    "id": "ARC-03",
+    "requirement": "所有公開 command／event 有 schema 與版本。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/contracts/src/index.ts",
+      "apps/control/src/services/runners.ts"
+    ],
+    "testIds": [
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "PTY/observe/ACP 等尚未完成的公開契約仍待實作。"
+    ]
+  },
+  {
+    "id": "ARC-04",
+    "requirement": "Agent identity、session、run、thread、turn、task ID 不混用。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/contracts/src/index.ts",
+      "apps/control/src/services/runners.ts"
+    ],
+    "testIds": [
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "PTY/observe/ACP 等尚未完成的公開契約仍待實作。"
+    ]
+  },
+  {
+    "id": "ARC-05",
+    "requirement": "不支援的 provider capability 回明確錯誤並禁用 UI 操作。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "ARC-06",
+    "requirement": "重要狀態只經 domain command 與政策 transition 修改。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "ARC-07",
+    "requirement": "DEMO／LIVE／OBSERVE／REPLAY 全程有可辨識來源。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "ARC-08",
+    "requirement": "進度與完成度不來自隨機資料或虛構百分比。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "CLA-01",
+    "requirement": "實作並驗證安裝版本適用的 CLI／SDK 啟動參數。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/providers/src/codex.ts",
+      "packages/providers/src/claude.ts",
+      "packages/providers/src/jsonrpc.ts"
+    ],
+    "testIds": [
+      "tests/aether/providers.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。"
+    ]
+  },
+  {
+    "id": "CLA-02",
+    "requirement": "structured stream 的 partial／complete／error 正常解析。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/providers/src/codex.ts",
+      "packages/providers/src/claude.ts",
+      "packages/providers/src/jsonrpc.ts"
+    ],
+    "testIds": [
+      "tests/aether/providers.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。"
+    ]
+  },
+  {
+    "id": "CLA-03",
+    "requirement": "session resume 綁定原 project 與對應 provider session。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/work.ts",
+      "apps/control/src/services/runners.ts",
+      "apps/runner/src/native.ts"
+    ],
+    "testIds": [],
+    "evidencePaths": [
+      "evidence/tests-resume-corrected.log",
+      "evidence/e2e-resume.log"
+    ],
+    "blockers": [
+      "合成Codex resume與UI已測；真Codex/Claude resume尚未實測。"
+    ]
+  },
+  {
+    "id": "CLA-04",
+    "requirement": "hook 安裝／更新／移除保留既有使用者設定。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/providers/src/claude-hooks.ts"
+    ],
+    "testIds": [
+      "tests/aether/claude-hooks.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/tests-claude-hooks.log"
+    ],
+    "blockers": [
+      "Installer library only: no CLI/UI opt-in command, no hook receiver script, not run against a real Claude Code install"
+    ]
+  },
+  {
+    "id": "CLA-05",
+    "requirement": "工具事件與 session／parent 的對應可驗證。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/providers/src/codex.ts",
+      "packages/providers/src/claude.ts",
+      "packages/providers/src/jsonrpc.ts"
+    ],
+    "testIds": [
+      "tests/aether/providers.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。"
+    ]
+  },
+  {
+    "id": "CLA-06",
+    "requirement": "忙碌時的訊息投遞遵守已驗證的 injection capability。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "CLA-07",
+    "requirement": "permission／auth／rate-limit 問題不偽裝成正常工作。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/providers/src/codex.ts",
+      "packages/providers/src/claude.ts",
+      "packages/providers/src/jsonrpc.ts"
+    ],
+    "testIds": [
+      "tests/aether/providers.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。"
+    ]
+  },
+  {
+    "id": "CLA-08",
+    "requirement": "真實 Claude smoke 有 evidence，或精確標記 live blocked。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "blocked",
+    "codePaths": [
+      "docs/PROVIDER_COMPATIBILITY.md"
+    ],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": [
+      "沒有真實付費模型呼叫授權；不執行 live smoke。"
+    ]
+  },
+  {
+    "id": "CDX-01",
+    "requirement": "schema 從對應 binary／官方版本生成並有版本紀錄。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "packages/providers/generated/codex-0.159.2-ts/InitializeParams.ts"
+    ],
+    "testIds": [],
+    "evidencePaths": [
+      "evidence/codex-schema-generation.log",
+      "evidence/codex-types-generation.log"
+    ],
+    "blockers": []
+  },
+  {
+    "id": "CDX-02",
+    "requirement": "initialize／initialized 與 request correlation 正確。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/providers/src/codex.ts",
+      "packages/providers/src/claude.ts",
+      "packages/providers/src/jsonrpc.ts"
+    ],
+    "testIds": [
+      "tests/aether/providers.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。"
+    ]
+  },
+  {
+    "id": "CDX-03",
+    "requirement": "thread／turn 的 start／resume 流程正確。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/providers/src/codex.ts",
+      "packages/providers/src/claude.ts",
+      "packages/providers/src/jsonrpc.ts",
+      "apps/control/src/services/work.ts",
+      "apps/control/src/services/runners.ts",
+      "apps/runner/src/native.ts"
+    ],
+    "testIds": [
+      "tests/aether/providers.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/tests-resume-corrected.log",
+      "evidence/e2e-resume.log"
+    ],
+    "blockers": [
+      "合成Codex resume與UI已測；真Codex/Claude resume尚未實測。"
+    ]
+  },
+  {
+    "id": "CDX-04",
+    "requirement": "item／tool／message streaming 去重且能容忍延遲。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/providers/src/codex.ts",
+      "packages/providers/src/claude.ts",
+      "packages/providers/src/jsonrpc.ts"
+    ],
+    "testIds": [
+      "tests/aether/providers.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。"
+    ]
+  },
+  {
+    "id": "CDX-05",
+    "requirement": "interrupt 對正確 active turn 執行，無誤殺另一工作。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/providers/src/codex.ts",
+      "packages/providers/src/claude.ts",
+      "packages/providers/src/jsonrpc.ts"
+    ],
+    "testIds": [
+      "tests/aether/providers.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。"
+    ]
+  },
+  {
+    "id": "CDX-06",
+    "requirement": "steer 僅在支援時開啟，接受不等於 semantic ack。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/providers/src/codex.ts",
+      "packages/providers/src/claude.ts",
+      "packages/providers/src/jsonrpc.ts"
+    ],
+    "testIds": [
+      "tests/aether/providers.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。"
+    ]
+  },
+  {
+    "id": "CDX-07",
+    "requirement": "approval 回覆對應正確 request、session 與參數。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/providers/src/codex.ts",
+      "packages/providers/src/claude.ts",
+      "packages/providers/src/jsonrpc.ts"
+    ],
+    "testIds": [
+      "tests/aether/providers.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。"
+    ]
+  },
+  {
+    "id": "CDX-08",
+    "requirement": "真實 Codex smoke 有 evidence，或精確標記 live blocked。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "blocked",
+    "codePaths": [
+      "docs/PROVIDER_COMPATIBILITY.md"
+    ],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": [
+      "沒有真實付費模型呼叫授權；不執行 live smoke。"
+    ]
+  },
+  {
+    "id": "RUN-01",
+    "requirement": "關掉 browser 不會自動殺死受管理的工作。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/runners.ts",
+      "apps/runner/src/runner.ts",
+      "apps/runner/src/journal.ts",
+      "apps/control/src/db/connection.ts",
+      "apps/runner/src/pty.ts",
+      "apps/runner/src/terminals.ts",
+      "apps/control/src/services/terminals.ts",
+      "apps/web/src/features/Terminals.tsx"
+    ],
+    "testIds": [
+      "tests/aether/control.test.ts",
+      "tests/aether/runner.test.ts",
+      "tests/aether/pty.test.ts",
+      "tests/aether/terminal-runner.test.ts",
+      "tests/aether/terminals.test.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/tests-terminal-release-candidate.log",
+      "evidence/e2e-terminal-diagnostics-final.log"
+    ],
+    "blockers": [
+      "macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。"
+    ]
+  },
+  {
+    "id": "RUN-02",
+    "requirement": "process journal／PID identity 可區分重啟與 PID reuse。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/runners.ts",
+      "apps/runner/src/runner.ts",
+      "apps/runner/src/journal.ts",
+      "apps/control/src/db/connection.ts",
+      "apps/runner/src/pty.ts",
+      "apps/runner/src/terminals.ts",
+      "apps/control/src/services/terminals.ts",
+      "apps/web/src/features/Terminals.tsx"
+    ],
+    "testIds": [
+      "tests/aether/control.test.ts",
+      "tests/aether/runner.test.ts",
+      "tests/aether/pty.test.ts",
+      "tests/aether/terminal-runner.test.ts",
+      "tests/aether/terminals.test.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/tests-terminal-release-candidate.log",
+      "evidence/e2e-terminal-diagnostics-final.log"
+    ],
+    "blockers": [
+      "macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。"
+    ]
+  },
+  {
+    "id": "RUN-03",
+    "requirement": "UTF-8、ANSI、resize、exit code 與 bounded scrollback 正常。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/runner/src/pty.ts",
+      "apps/runner/src/terminals.ts",
+      "apps/control/src/services/terminals.ts",
+      "apps/web/src/features/Terminals.tsx"
+    ],
+    "testIds": [
+      "tests/aether/pty.test.ts",
+      "tests/aether/terminal-runner.test.ts",
+      "tests/aether/terminals.test.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/tests-terminal-release-candidate.log",
+      "evidence/e2e-terminal-diagnostics-final.log"
+    ],
+    "blockers": [
+      "macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。"
+    ]
+  },
+  {
+    "id": "RUN-04",
+    "requirement": "terminal read／write 分權限，同時只能有合法 takeover owner。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/runner/src/pty.ts",
+      "apps/runner/src/terminals.ts",
+      "apps/control/src/services/terminals.ts",
+      "apps/web/src/features/Terminals.tsx"
+    ],
+    "testIds": [
+      "tests/aether/pty.test.ts",
+      "tests/aether/terminal-runner.test.ts",
+      "tests/aether/terminals.test.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/tests-terminal-release-candidate.log",
+      "evidence/e2e-terminal-diagnostics-final.log"
+    ],
+    "blockers": [
+      "macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。"
+    ]
+  },
+  {
+    "id": "RUN-05",
+    "requirement": "existing session discovery 需要核准路徑且預設唯讀。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/runner/src/observer.ts",
+      "apps/runner/src/observers.ts",
+      "apps/control/src/services/observations.ts",
+      "apps/web/src/features/Observations.tsx"
+    ],
+    "testIds": [
+      "tests/aether/observer.test.ts",
+      "tests/aether/observer-runner.test.ts",
+      "tests/aether/observation-control.test.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/tests-observe-nonblocking.log",
+      "evidence/e2e-observe-final.log"
+    ],
+    "blockers": [
+      "已核准fixture的讀取、持久上報、readonly UI及fault tests完成；實際provider檔案相容性未驗證，讀取上限與GUI授權仍有限制。"
+    ]
+  },
+  {
+    "id": "RUN-06",
+    "requirement": "partial line／rotation／未知 transcript schema 有安全處理。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/runner/src/observer.ts",
+      "apps/runner/src/observers.ts",
+      "apps/control/src/services/observations.ts",
+      "apps/web/src/features/Observations.tsx"
+    ],
+    "testIds": [
+      "tests/aether/observer.test.ts",
+      "tests/aether/observer-runner.test.ts",
+      "tests/aether/observation-control.test.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/tests-observe-nonblocking.log",
+      "evidence/e2e-observe-final.log"
+    ],
+    "blockers": [
+      "已核准fixture的讀取、持久上報、readonly UI及fault tests完成；實際provider檔案相容性未驗證，讀取上限與GUI授權仍有限制。"
+    ]
+  },
+  {
+    "id": "RUN-07",
+    "requirement": "stale／offline／unknown 不被顯示成 idle／success。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/runners.ts",
+      "apps/runner/src/runner.ts",
+      "apps/runner/src/journal.ts",
+      "apps/control/src/db/connection.ts",
+      "apps/runner/src/observer.ts",
+      "apps/runner/src/observers.ts",
+      "apps/control/src/services/observations.ts",
+      "apps/web/src/features/Observations.tsx"
+    ],
+    "testIds": [
+      "tests/aether/control.test.ts",
+      "tests/aether/runner.test.ts",
+      "tests/aether/observer.test.ts",
+      "tests/aether/observer-runner.test.ts",
+      "tests/aether/observation-control.test.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/tests-observe-nonblocking.log",
+      "evidence/e2e-observe-final.log"
+    ],
+    "blockers": [
+      "已核准fixture的讀取、持久上報、readonly UI及fault tests完成；實際provider檔案相容性未驗證，讀取上限與GUI授權仍有限制。"
+    ]
+  },
+  {
+    "id": "RUN-08",
+    "requirement": "structured log session 不顯示不存在的可互動 PTY。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/runner/src/pty.ts",
+      "apps/runner/src/terminals.ts",
+      "apps/control/src/services/terminals.ts",
+      "apps/web/src/features/Terminals.tsx"
+    ],
+    "testIds": [
+      "tests/aether/pty.test.ts",
+      "tests/aether/terminal-runner.test.ts",
+      "tests/aether/terminals.test.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/tests-terminal-release-candidate.log",
+      "evidence/e2e-terminal-diagnostics-final.log"
+    ],
+    "blockers": [
+      "macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。"
+    ]
+  },
+  {
+    "id": "EVT-01",
+    "requirement": "state＋event＋outbox 在同一 transaction 提交。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/control/src/control.ts",
+      "apps/control/src/services/context.ts"
+    ],
+    "testIds": [
+      "tests/aether/control.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": []
+  },
+  {
+    "id": "EVT-02",
+    "requirement": "同 command idempotency key 不產生重複結果。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/control/src/control.ts",
+      "apps/control/src/services/context.ts"
+    ],
+    "testIds": [
+      "tests/aether/control.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": []
+  },
+  {
+    "id": "EVT-03",
+    "requirement": "duplicate provider event 不重複改 projection／usage。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/control/src/services/provider-events.ts",
+      "packages/providers/src/codex.ts"
+    ],
+    "testIds": [
+      "tests/aether/providers.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "僅 synthetic/本機測試，非 live 模型。"
+    ]
+  },
+  {
+    "id": "EVT-04",
+    "requirement": "snapshot 與 stream cursor 之間不漏事件。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/runners.ts",
+      "apps/runner/src/runner.ts",
+      "apps/runner/src/journal.ts",
+      "apps/control/src/db/connection.ts"
+    ],
+    "testIds": [
+      "tests/aether/control.test.ts",
+      "tests/aether/runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "完整 crash window／跨程序斷線／備份 CLI 仍待覆蓋。"
+    ]
+  },
+  {
+    "id": "EVT-05",
+    "requirement": "過期 cursor 明確要求 resnapshot，不能靜默略過。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "EVT-06",
+    "requirement": "control restart 後與 runner reconciliation 不重複 spawn。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/runners.ts",
+      "apps/runner/src/runner.ts",
+      "apps/runner/src/journal.ts",
+      "apps/control/src/db/connection.ts"
+    ],
+    "testIds": [
+      "tests/aether/control.test.ts",
+      "tests/aether/runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "完整 crash window／跨程序斷線／備份 CLI 仍待覆蓋。"
+    ]
+  },
+  {
+    "id": "EVT-07",
+    "requirement": "副作用結果不明時進入 indeterminate，而非無條件重跑。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/runners.ts",
+      "apps/runner/src/runner.ts",
+      "apps/runner/src/journal.ts",
+      "apps/control/src/db/connection.ts"
+    ],
+    "testIds": [
+      "tests/aether/control.test.ts",
+      "tests/aether/runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "完整 crash window／跨程序斷線／備份 CLI 仍待覆蓋。"
+    ]
+  },
+  {
+    "id": "EVT-08",
+    "requirement": "backup／restore 以實際 DB 執行並驗證資料一致。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/runners.ts",
+      "apps/runner/src/runner.ts",
+      "apps/runner/src/journal.ts",
+      "apps/control/src/db/connection.ts"
+    ],
+    "testIds": [
+      "tests/aether/control.test.ts",
+      "tests/aether/runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "完整 crash window／跨程序斷線／備份 CLI 仍待覆蓋。"
+    ]
+  },
+  {
+    "id": "MSG-01",
+    "requirement": "DM／room／thread 有真實持久資料與 ACL。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/messages.ts",
+      "apps/runner/src/mcp.ts"
+    ],
+    "testIds": [
+      "tests/aether/control.test.ts",
+      "tests/aether/mcp.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/mcp-built-stdio-test.log"
+    ],
+    "blockers": [
+      "rooms、等待狀態投影、injection boundary 與全域對話額度尚未完成。"
+    ]
+  },
+  {
+    "id": "MSG-02",
+    "requirement": "broadcast 為每個 recipient 保留獨立 delivery 狀態。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/control/src/services/messages.ts"
+    ],
+    "testIds": [
+      "tests/aether/control.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": []
+  },
+  {
+    "id": "MSG-03",
+    "requirement": "persisted／injected／acknowledged／responded 不混淆。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/messages.ts",
+      "apps/runner/src/mcp.ts"
+    ],
+    "testIds": [
+      "tests/aether/control.test.ts",
+      "tests/aether/mcp.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/mcp-built-stdio-test.log"
+    ],
+    "blockers": [
+      "rooms、等待狀態投影、injection boundary 與全域對話額度尚未完成。"
+    ]
+  },
+  {
+    "id": "MSG-04",
+    "requirement": "斷線／重試不產生重複訊息副作用與動畫。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/messages.ts",
+      "apps/runner/src/mcp.ts"
+    ],
+    "testIds": [
+      "tests/aether/control.test.ts",
+      "tests/aether/mcp.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/mcp-built-stdio-test.log"
+    ],
+    "blockers": [
+      "rooms、等待狀態投影、injection boundary 與全域對話額度尚未完成。"
+    ]
+  },
+  {
+    "id": "MSG-05",
+    "requirement": "request／reply 有 correlation、timeout 與持久等待狀態。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/messages.ts",
+      "apps/runner/src/mcp.ts",
+      "apps/control/src/db/migrations/012-message-waits.sql"
+    ],
+    "testIds": [
+      "tests/aether/control.test.ts",
+      "tests/aether/mcp.test.ts",
+      "tests/aether/mcp-wait.test.ts",
+      "tests/aether/message-waits.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/mcp-built-stdio-test.log",
+      "evidence/mcp-wait-before.log",
+      "evidence/tests-mcp-wait-final.log",
+      "evidence/mcp-task-cancel.log",
+      "evidence/tests-message-waits-final.log",
+      "evidence/tests-wait-events.log",
+      "evidence/e2e-wait-events.log"
+    ],
+    "blockers": [
+      "已完成持久等待、UI、主動期限與原子事件；真provider端到端協作及歷史請求相容性未驗證。"
+    ]
+  },
+  {
+    "id": "MSG-06",
+    "requirement": "busy Agent 只在允許的 injection boundary 收到內容。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "MSG-07",
+    "requirement": "thread／spawn／context budget 能停止無限 Agent 對話。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/messages.ts",
+      "apps/runner/src/mcp.ts"
+    ],
+    "testIds": [
+      "tests/aether/control.test.ts",
+      "tests/aether/mcp.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/mcp-built-stdio-test.log"
+    ],
+    "blockers": [
+      "rooms、等待狀態投影、injection boundary 與全域對話額度尚未完成。"
+    ]
+  },
+  {
+    "id": "MSG-08",
+    "requirement": "nonce exchange 驗證跨 provider 真正取得並回覆訊息。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "TSK-01",
+    "requirement": "循環 DAG、跨 project 污染與遺失依賴被拒絕。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "packages/kernel/src/index.ts",
+      "apps/control/src/services/work.ts",
+      "apps/control/src/services/jobs.ts",
+      "apps/web/src/features/TaskDag.tsx",
+      "apps/web/src/features/taskGraph.ts",
+      "apps/web/src/features/Tasks.tsx"
+    ],
+    "testIds": [
+      "tests/aether/kernel.test.ts",
+      "tests/aether/control.test.ts",
+      "tests/aether/native-runner.test.ts",
+      "tests/aether/dag.test.ts",
+      "e2e/dag.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/e2e-full-workflow-first.log",
+      "evidence/tests-dag.log",
+      "evidence/e2e-dag-pointer-fix.log"
+    ],
+    "blockers": []
+  },
+  {
+    "id": "TSK-02",
+    "requirement": "task claim／assignment 有 version 與 concurrency 保護。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "packages/kernel/src/index.ts",
+      "apps/control/src/services/work.ts",
+      "apps/control/src/services/jobs.ts"
+    ],
+    "testIds": [
+      "tests/aether/kernel.test.ts",
+      "tests/aether/control.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": []
+  },
+  {
+    "id": "TSK-03",
+    "requirement": "scheduler 遵守能力、scope、公平性與並行數。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/runners.ts",
+      "apps/control/src/services/jobs.ts"
+    ],
+    "testIds": [
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/verification-workflow-test.log"
+    ],
+    "blockers": [
+      "跨 provider review/fix loop、公平排程、停滯診斷尚未完成；目前只有 synthetic 單 provider 全鏈。"
+    ]
+  },
+  {
+    "id": "TSK-04",
+    "requirement": "Claude→Codex review→fix→test 的 workflow 可完成。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/runners.ts",
+      "apps/control/src/services/jobs.ts",
+      "apps/control/src/services/review-runs.ts",
+      "apps/runner/src/native.ts",
+      "apps/web/src/features/Reviews.tsx"
+    ],
+    "testIds": [
+      "tests/aether/native-runner.test.ts",
+      "tests/aether/review-runs.test.ts",
+      "tests/aether/native-review.test.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/verification-workflow-test.log",
+      "evidence/tests-review-ui.log",
+      "evidence/e2e-native-review.log"
+    ],
+    "blockers": [
+      "已實作固定SHA獨立原生review及合成Codex整頁工作鏈；真Claude/Codex雙provider、完整workflow模板與平行integration仍未完成。"
+    ]
+  },
+  {
+    "id": "TSK-05",
+    "requirement": "provider 對調與 frontend／backend 平行 workflow 可完成。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/runners.ts",
+      "apps/control/src/services/jobs.ts",
+      "apps/control/src/services/review-runs.ts",
+      "apps/runner/src/native.ts",
+      "apps/web/src/features/Reviews.tsx"
+    ],
+    "testIds": [
+      "tests/aether/native-runner.test.ts",
+      "tests/aether/review-runs.test.ts",
+      "tests/aether/native-review.test.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/verification-workflow-test.log",
+      "evidence/tests-review-ui.log",
+      "evidence/e2e-native-review.log"
+    ],
+    "blockers": [
+      "已實作固定SHA獨立原生review及合成Codex整頁工作鏈；真Claude/Codex雙provider、完整workflow模板與平行integration仍未完成。"
+    ]
+  },
+  {
+    "id": "TSK-06",
+    "requirement": "LLM 提交 done 不會跳過 review／verification。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "packages/kernel/src/index.ts",
+      "apps/control/src/services/work.ts",
+      "apps/control/src/services/jobs.ts"
+    ],
+    "testIds": [
+      "tests/aether/kernel.test.ts",
+      "tests/aether/control.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": []
+  },
+  {
+    "id": "TSK-07",
+    "requirement": "重試上限／停滯診斷／人類 escalation 有實際效果。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/runners.ts",
+      "apps/control/src/services/jobs.ts",
+      "apps/control/src/services/work.ts",
+      "apps/runner/src/native.ts",
+      "apps/web/src/features/Tasks.tsx"
+    ],
+    "testIds": [
+      "tests/aether/native-runner.test.ts",
+      "tests/aether/control.test.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/verification-workflow-test.log",
+      "evidence/tests-retry.log",
+      "evidence/e2e-retry.log",
+      "evidence/tests-escalation.log",
+      "evidence/e2e-escalation.log"
+    ],
+    "blockers": [
+      "三次預設上限、owner逐次追加與審計已實作及E2E驗證；完整停滯診斷仍未完成。"
+    ]
+  },
+  {
+    "id": "TSK-08",
+    "requirement": "cancel propagation 不把取消中的結果錯標新成功工作。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/kernel/src/index.ts",
+      "apps/control/src/services/work.ts",
+      "apps/control/src/services/jobs.ts"
+    ],
+    "testIds": [
+      "tests/aether/kernel.test.ts",
+      "tests/aether/control.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/e2e-full-workflow-first.log",
+      "evidence/tests-cancel-shutdown-final.log",
+      "evidence/e2e-cancel-shutdown-final.log"
+    ],
+    "blockers": [
+      "已驗證未執行依賴鏈取消、菱形去重、版本與事件；訊息等待取消連動及完整人工復原流程仍待完成。"
+    ]
+  },
+  {
+    "id": "GIT-01",
+    "requirement": "writer 使用專屬 worktree，不直接改使用者 main 目錄。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/runner/src/workspaces.ts",
+      "apps/control/src/services/jobs.ts"
+    ],
+    "testIds": [
+      "tests/aether/workspaces.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/verification-workflow-test.log"
+    ],
+    "blockers": []
+  },
+  {
+    "id": "GIT-02",
+    "requirement": "路徑空白／Unicode／非法 ref／symlink 都有測試。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/runner/src/workspaces.ts",
+      "apps/web/src/features/Workspace.tsx"
+    ],
+    "testIds": [
+      "tests/aether/workspaces.test.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "Unicode/空白、dirty/已提交清理、base drift 有測試；完整 symlink/非法 ref/binary 大檔矩陣待補。"
+    ]
+  },
+  {
+    "id": "GIT-03",
+    "requirement": "file reservation 的 advisory 屬性與衝突清楚呈現。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "GIT-04",
+    "requirement": "dirty worktree cleanup 不刪使用者未提交內容。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/runner/src/workspaces.ts",
+      "apps/control/src/services/jobs.ts"
+    ],
+    "testIds": [
+      "tests/aether/workspaces.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/verification-workflow-test.log"
+    ],
+    "blockers": []
+  },
+  {
+    "id": "GIT-05",
+    "requirement": "diff 支援 untracked／binary／large file 安全降級。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/runner/src/workspaces.ts",
+      "apps/web/src/features/Workspace.tsx"
+    ],
+    "testIds": [
+      "tests/aether/workspaces.test.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "Unicode/空白、dirty/已提交清理、base drift 有測試；完整 symlink/非法 ref/binary 大檔矩陣待補。"
+    ]
+  },
+  {
+    "id": "GIT-06",
+    "requirement": "review comment 綁 commit／hunk，更新後能辨識過期。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "GIT-07",
+    "requirement": "test evidence 綁 head SHA，base 漂移會重新驗證。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/runner/src/workspaces.ts",
+      "apps/control/src/services/jobs.ts"
+    ],
+    "testIds": [
+      "tests/aether/workspaces.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/verification-workflow-test.log"
+    ],
+    "blockers": []
+  },
+  {
+    "id": "GIT-08",
+    "requirement": "merge conflict 停止交付，不自動覆蓋或無批准 push。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "SEC-01",
+    "requirement": "owner／operator／reviewer／viewer／agent 實際 server grants 生效。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/control/src/server.ts",
+      "packages/kernel/src/index.ts",
+      "apps/control/src/services/identity.ts"
+    ],
+    "testIds": [
+      "tests/aether/security.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": []
+  },
+  {
+    "id": "SEC-02",
+    "requirement": "每個 query、WS subscription、MCP tool 做 scope 檢查。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/approvals.ts",
+      "apps/runner/src/mcp.ts",
+      "apps/control/src/services/identity.ts"
+    ],
+    "testIds": [
+      "tests/aether/approvals.test.ts",
+      "tests/aether/mcp.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "批准/撤銷回歸已跑；完整 export/PTY/connector trust boundaries 與 live provider ack 待驗。"
+    ]
+  },
+  {
+    "id": "SEC-03",
+    "requirement": "viewer／agent 不能透過 payload 假冒身份提升權限。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/control/src/server.ts",
+      "packages/kernel/src/index.ts",
+      "apps/control/src/services/identity.ts"
+    ],
+    "testIds": [
+      "tests/aether/security.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": []
+  },
+  {
+    "id": "SEC-04",
+    "requirement": "approval 綁 action hash、session、expiry 與真實 provider ack。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/approvals.ts",
+      "apps/runner/src/mcp.ts",
+      "apps/control/src/services/identity.ts"
+    ],
+    "testIds": [
+      "tests/aether/approvals.test.ts",
+      "tests/aether/mcp.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "批准/撤銷回歸已跑；完整 export/PTY/connector trust boundaries 與 live provider ack 待驗。"
+    ]
+  },
+  {
+    "id": "SEC-05",
+    "requirement": "錯誤 Origin／Host、未認證 WS／API 被拒絕。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/control/src/server.ts",
+      "packages/kernel/src/index.ts",
+      "apps/control/src/services/identity.ts"
+    ],
+    "testIds": [
+      "tests/aether/security.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": []
+  },
+  {
+    "id": "SEC-06",
+    "requirement": "Markdown／URL／terminal clipboard／SSRF 有回歸測試。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "SEC-07",
+    "requirement": "logs／export／events／frontend bundle 不洩漏測試 secrets。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/approvals.ts",
+      "apps/runner/src/mcp.ts",
+      "apps/control/src/services/identity.ts"
+    ],
+    "testIds": [
+      "tests/aether/approvals.test.ts",
+      "tests/aether/mcp.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "批准/撤銷回歸已跑；完整 export/PTY/connector trust boundaries 與 live provider ack 待驗。"
+    ]
+  },
+  {
+    "id": "SEC-08",
+    "requirement": "外部指令／peer message 不能繞過權限與支出策略。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/approvals.ts",
+      "apps/runner/src/mcp.ts",
+      "apps/control/src/services/identity.ts"
+    ],
+    "testIds": [
+      "tests/aether/approvals.test.ts",
+      "tests/aether/mcp.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "批准/撤銷回歸已跑；完整 export/PTY/connector trust boundaries 與 live provider ack 待驗。"
+    ]
+  },
+  {
+    "id": "REM-01",
+    "requirement": "遠端 runner 以認證 outbound channel 連接 control。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "REM-02",
+    "requirement": "enrollment token 短效單次使用，不是永久全域 shell token。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "REM-03",
+    "requirement": "machine grants 限制 project／root／provider／concurrency。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "REM-04",
+    "requirement": "撤銷身份立即阻止新命令與敏感 stream。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/approvals.ts",
+      "apps/runner/src/mcp.ts",
+      "apps/control/src/services/identity.ts"
+    ],
+    "testIds": [
+      "tests/aether/approvals.test.ts",
+      "tests/aether/mcp.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "批准/撤銷回歸已跑；完整 export/PTY/connector trust boundaries 與 live provider ack 待驗。"
+    ]
+  },
+  {
+    "id": "REM-05",
+    "requirement": "local spool 重連後按序去重，不丟已承諾資料。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/runners.ts",
+      "apps/runner/src/runner.ts",
+      "apps/runner/src/journal.ts",
+      "apps/control/src/db/connection.ts"
+    ],
+    "testIds": [
+      "tests/aether/control.test.ts",
+      "tests/aether/runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "完整 crash window／跨程序斷線／備份 CLI 仍待覆蓋。"
+    ]
+  },
+  {
+    "id": "REM-06",
+    "requirement": "斷線時依 policy 停新派工，恢復不重複執行。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/runners.ts",
+      "apps/runner/src/runner.ts",
+      "apps/runner/src/journal.ts",
+      "apps/control/src/db/connection.ts"
+    ],
+    "testIds": [
+      "tests/aether/control.test.ts",
+      "tests/aether/runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "完整 crash window／跨程序斷線／備份 CLI 仍待覆蓋。"
+    ]
+  },
+  {
+    "id": "REM-07",
+    "requirement": "不同 machine 使用獨立 clone，不共享 SQLite／.git。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "REM-08",
+    "requirement": "兩個獨立 runner process 的故障／恢復整合測試通過。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "STD-01",
+    "requirement": "MCP 工具實際呼叫 kernel，不是回固定成功文字。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/runner/src/mcp.ts",
+      "apps/control/src/services/identity.ts"
+    ],
+    "testIds": [
+      "tests/aether/mcp.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/mcp-built-stdio-test.log"
+    ],
+    "blockers": [
+      "已實作 8 個真工具與 session resource；reservation/workflow 擴充工具待補。"
+    ]
+  },
+  {
+    "id": "STD-02",
+    "requirement": "MCP identity／resource／message scope 可測且隔離。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/runner/src/mcp.ts",
+      "apps/control/src/services/identity.ts"
+    ],
+    "testIds": [
+      "tests/aether/mcp.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/mcp-built-stdio-test.log"
+    ],
+    "blockers": [
+      "已實作 8 個真工具與 session resource；reservation/workflow 擴充工具待補。"
+    ]
+  },
+  {
+    "id": "STD-03",
+    "requirement": "通用 ACP adapter 真的協商能力、開始 session 並處理事件。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "STD-04",
+    "requirement": "ACP wire／SDK／schema 版本分開記錄。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "STD-05",
+    "requirement": "A2A gateway 的 AgentCard 宣告能力有對應實作。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "STD-06",
+    "requirement": "A2A task／message／cancel／artifact 路徑有 contract test。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "STD-07",
+    "requirement": "第三方 token／artifact fetch 不繞過 audience／SSRF 邊界。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "STD-08",
+    "requirement": "未完成的 bridge 不在 UI 被標記為可用整合。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "UIX-01",
+    "requirement": "onboarding 從 Demo／Live 選擇到第一工作完整可走。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/web/src/App.tsx",
+      "apps/web/src/ui.tsx",
+      "apps/web/src/features/Approvals.tsx",
+      "apps/web/src/features/Reviews.tsx"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+    ]
+  },
+  {
+    "id": "UIX-02",
+    "requirement": "Agent／Task／Message／Approval／Review 共用相同權威狀態。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/web/src/App.tsx",
+      "apps/web/src/ui.tsx",
+      "apps/web/src/features/Approvals.tsx",
+      "apps/web/src/features/Reviews.tsx"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+    ]
+  },
+  {
+    "id": "UIX-03",
+    "requirement": "所有主要操作按鈕可用或清楚說明不能使用的原因。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/web/src/App.tsx",
+      "apps/web/src/ui.tsx",
+      "apps/web/src/features/Approvals.tsx",
+      "apps/web/src/features/Reviews.tsx"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+    ]
+  },
+  {
+    "id": "UIX-04",
+    "requirement": "所有主要畫面具有 loading／empty／error／offline／no-permission。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/web/src/App.tsx",
+      "apps/web/src/ui.tsx",
+      "apps/web/src/features/Approvals.tsx",
+      "apps/web/src/features/Reviews.tsx"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+    ]
+  },
+  {
+    "id": "UIX-05",
+    "requirement": "language switch 覆蓋繁中／英文，無散落 placeholder 文案。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/web/src/App.tsx",
+      "apps/web/src/ui.tsx",
+      "apps/web/src/features/Approvals.tsx",
+      "apps/web/src/features/Reviews.tsx"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+    ]
+  },
+  {
+    "id": "UIX-06",
+    "requirement": "桌面與手機無主要內容溢出／遮擋／無法點擊。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/web/src/App.tsx",
+      "apps/web/src/ui.tsx",
+      "apps/web/src/features/Approvals.tsx",
+      "apps/web/src/features/Reviews.tsx"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+    ]
+  },
+  {
+    "id": "UIX-07",
+    "requirement": "deep link／reload 保留合理選取與可恢復工作上下文。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/web/src/App.tsx",
+      "apps/web/src/ui.tsx",
+      "apps/web/src/features/Approvals.tsx",
+      "apps/web/src/features/Reviews.tsx"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+    ]
+  },
+  {
+    "id": "UIX-08",
+    "requirement": "重要 approval／失敗／stale 不只靠顏色表達。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/web/src/App.tsx",
+      "apps/web/src/ui.tsx",
+      "apps/web/src/features/Approvals.tsx",
+      "apps/web/src/features/Reviews.tsx"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+    ]
+  },
+  {
+    "id": "VIS-01",
+    "requirement": "辦公室是可旋轉／近看的真實 3D，非一張背景圖。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/office-scene/src/OfficeScene.tsx",
+      "packages/office-scene/src/Animal.tsx",
+      "tools/blender/build_animals.py",
+      "scripts/validate-assets.mjs"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "tests/aether/kernel.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/assets-validation.json",
+      "evidence/e2e-full-workflow-first.log",
+      "evidence/renders/fox-3840x2160.json"
+    ],
+    "blockers": [
+      "24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+    ]
+  },
+  {
+    "id": "VIS-02",
+    "requirement": "九個空間有辨識度、正確尺度與連續動線。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/office-scene/src/OfficeScene.tsx",
+      "packages/office-scene/src/Animal.tsx",
+      "tools/blender/build_animals.py",
+      "scripts/validate-assets.mjs"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "tests/aether/kernel.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/assets-validation.json",
+      "evidence/e2e-full-workflow-first.log",
+      "evidence/renders/fox-3840x2160.json"
+    ],
+    "blockers": [
+      "24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+    ]
+  },
+  {
+    "id": "VIS-03",
+    "requirement": "桌椅／螢幕／建築具有合理厚度、結構與必要細節。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/office-scene/src/OfficeScene.tsx",
+      "packages/office-scene/src/Animal.tsx",
+      "tools/blender/build_animals.py",
+      "scripts/validate-assets.mjs"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "tests/aether/kernel.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/assets-validation.json",
+      "evidence/e2e-full-workflow-first.log",
+      "evidence/renders/fox-3840x2160.json"
+    ],
+    "blockers": [
+      "24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+    ]
+  },
+  {
+    "id": "VIS-04",
+    "requirement": "角色有可維護 pivot／骨架與至少指定的主要 animation states。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/office-scene/src/OfficeScene.tsx",
+      "packages/office-scene/src/Animal.tsx",
+      "tools/blender/build_animals.py",
+      "scripts/validate-assets.mjs"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "tests/aether/kernel.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/assets-validation.json",
+      "evidence/e2e-full-workflow-first.log",
+      "evidence/renders/fox-3840x2160.json"
+    ],
+    "blockers": [
+      "24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+    ]
+  },
+  {
+    "id": "VIS-05",
+    "requirement": "動畫只映射真實狀態，不製造假的工作或訊息。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/office-scene/src/OfficeScene.tsx",
+      "packages/office-scene/src/Animal.tsx",
+      "tools/blender/build_animals.py",
+      "scripts/validate-assets.mjs"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "tests/aether/kernel.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/assets-validation.json",
+      "evidence/e2e-full-workflow-first.log",
+      "evidence/renders/fox-3840x2160.json"
+    ],
+    "blockers": [
+      "24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+    ]
+  },
+  {
+    "id": "VIS-06",
+    "requirement": "messageId 去重，動畫抵達不被當成真正 ACK。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "VIS-07",
+    "requirement": "路徑不穿牆／桌，有 unreachable 狀態與測試。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "VIS-08",
+    "requirement": "原創資產／外部依賴都有清楚來源與授權。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/office-scene/src/OfficeScene.tsx",
+      "packages/office-scene/src/Animal.tsx",
+      "tools/blender/build_animals.py",
+      "scripts/validate-assets.mjs"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "tests/aether/kernel.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/assets-validation.json",
+      "evidence/e2e-full-workflow-first.log",
+      "evidence/renders/fox-3840x2160.json"
+    ],
+    "blockers": [
+      "24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+    ]
+  },
+  {
+    "id": "CAM-01",
+    "requirement": "overview／desk focus／follow／reset 正常且不鑽模。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/office-scene/src/OfficeScene.tsx",
+      "packages/office-scene/src/Animal.tsx",
+      "tools/blender/build_animals.py",
+      "scripts/validate-assets.mjs"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "tests/aether/kernel.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/assets-validation.json",
+      "evidence/e2e-full-workflow-first.log",
+      "evidence/renders/fox-3840x2160.json"
+    ],
+    "blockers": [
+      "24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+    ]
+  },
+  {
+    "id": "CAM-02",
+    "requirement": "tour 可跳過／暫停／手動中斷，結束恢復選取。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "CAM-03",
+    "requirement": "editor move／rotate／assign／undo／redo 真正保存與還原。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/office-scene/src/OfficeScene.tsx",
+      "packages/office-scene/src/Animal.tsx",
+      "tools/blender/build_animals.py",
+      "scripts/validate-assets.mjs"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "tests/aether/kernel.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/assets-validation.json",
+      "evidence/e2e-full-workflow-first.log",
+      "evidence/renders/fox-3840x2160.json"
+    ],
+    "blockers": [
+      "24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+    ]
+  },
+  {
+    "id": "CAM-04",
+    "requirement": "layout import schema／物件上限／動線驗證拒絕不合法資料。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/office-scene/src/OfficeScene.tsx",
+      "packages/office-scene/src/Animal.tsx",
+      "tools/blender/build_animals.py",
+      "scripts/validate-assets.mjs"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "tests/aether/kernel.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/assets-validation.json",
+      "evidence/e2e-full-workflow-first.log",
+      "evidence/renders/fox-3840x2160.json"
+    ],
+    "blockers": [
+      "24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+    ]
+  },
+  {
+    "id": "CAM-05",
+    "requirement": "high／balanced／low 有可觀察的實際資源差異。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/office-scene/src/OfficeScene.tsx",
+      "packages/office-scene/src/Animal.tsx",
+      "tools/blender/build_animals.py",
+      "scripts/validate-assets.mjs"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "tests/aether/kernel.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/assets-validation.json",
+      "evidence/e2e-full-workflow-first.log",
+      "evidence/renders/fox-3840x2160.json"
+    ],
+    "blockers": [
+      "24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+    ]
+  },
+  {
+    "id": "CAM-06",
+    "requirement": "WebGL unavailable／context lost 有可用 2D fallback。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/office-scene/src/OfficeScene.tsx",
+      "packages/office-scene/src/Animal.tsx",
+      "tools/blender/build_animals.py",
+      "scripts/validate-assets.mjs"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "tests/aether/kernel.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/assets-validation.json",
+      "evidence/e2e-full-workflow-first.log",
+      "evidence/renders/fox-3840x2160.json"
+    ],
+    "blockers": [
+      "24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+    ]
+  },
+  {
+    "id": "CAM-07",
+    "requirement": "scene 反覆進出不持續洩漏 geometry／texture／listener。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/office-scene/src/OfficeScene.tsx",
+      "packages/office-scene/src/Animal.tsx",
+      "tools/blender/build_animals.py",
+      "scripts/validate-assets.mjs"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "tests/aether/kernel.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/assets-validation.json",
+      "evidence/e2e-full-workflow-first.log",
+      "evidence/renders/fox-3840x2160.json"
+    ],
+    "blockers": [
+      "24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+    ]
+  },
+  {
+    "id": "CAM-08",
+    "requirement": "效能報告來自實機量測，未達目標不寫成達標。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "A11Y-01",
+    "requirement": "核心派工／訊息／approval／review 可只用鍵盤完成。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/web/src/App.tsx",
+      "apps/web/src/ui.tsx",
+      "apps/web/src/features/Approvals.tsx",
+      "apps/web/src/features/Reviews.tsx"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+    ]
+  },
+  {
+    "id": "A11Y-02",
+    "requirement": "Dialog focus trap／Escape／return focus 正常。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/web/src/App.tsx",
+      "apps/web/src/ui.tsx",
+      "apps/web/src/features/Approvals.tsx",
+      "apps/web/src/features/Reviews.tsx"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+    ]
+  },
+  {
+    "id": "A11Y-03",
+    "requirement": "canvas 外有等價的 DOM 狀態與操作入口。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/web/src/App.tsx",
+      "apps/web/src/ui.tsx",
+      "apps/web/src/features/Approvals.tsx",
+      "apps/web/src/features/Reviews.tsx"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+    ]
+  },
+  {
+    "id": "A11Y-04",
+    "requirement": "reduced motion 可關閉 camera 飛行／粒子／閃爍。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/web/src/App.tsx",
+      "apps/web/src/ui.tsx",
+      "apps/web/src/features/Approvals.tsx",
+      "apps/web/src/features/Reviews.tsx"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+    ]
+  },
+  {
+    "id": "A11Y-05",
+    "requirement": "dark／light 文本對比與狀態 icon 有測試。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/web/src/App.tsx",
+      "apps/web/src/ui.tsx",
+      "apps/web/src/features/Approvals.tsx",
+      "apps/web/src/features/Reviews.tsx"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+    ]
+  },
+  {
+    "id": "A11Y-06",
+    "requirement": "drag 操作有鍵盤或選單替代。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/web/src/App.tsx",
+      "apps/web/src/ui.tsx",
+      "apps/web/src/features/Approvals.tsx",
+      "apps/web/src/features/Reviews.tsx"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+    ]
+  },
+  {
+    "id": "A11Y-07",
+    "requirement": "audio／browser notification 預設不擅自開啟。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "A11Y-08",
+    "requirement": "axe／瀏覽器人工檢視的問題有 evidence 與修正。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/web/src/App.tsx",
+      "apps/web/src/ui.tsx",
+      "apps/web/src/features/Approvals.tsx",
+      "apps/web/src/features/Reviews.tsx"
+    ],
+    "testIds": [
+      "e2e/workbench.spec.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+    ]
+  },
+  {
+    "id": "INT-01",
+    "requirement": "GitHub Issue→WorkItem→受批准的結果／PR 流程有實作。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "INT-02",
+    "requirement": "Linear 匯入／狀態同步有實作、衝突規則與測試。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "INT-03",
+    "requirement": "webhook／polling retry 不形成同步迴圈或重複任務。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "INT-04",
+    "requirement": "knowledge 有 provenance、version、ACL 與繁中搜尋。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/provider-events.ts",
+      "apps/runner/src/runner.ts",
+      "apps/web/src/features/ExecutionSettings.tsx",
+      "apps/control/src/control.ts",
+      "apps/control/src/db/migrations/010-knowledge-review.sql",
+      "apps/web/src/features/Knowledge.tsx",
+      "apps/runner/src/mcp.ts"
+    ],
+    "testIds": [
+      "tests/aether/kernel.test.ts",
+      "tests/aether/native-runner.test.ts",
+      "tests/aether/knowledge.test.ts",
+      "e2e/knowledge.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/tests-knowledge-review.log",
+      "evidence/knowledge-search-final.log",
+      "evidence/e2e-knowledge-review.log"
+    ],
+    "blockers": [
+      "Provenance/version/ACL/繁中搜尋/人類批准與駁回已實作及測試；內容修訂、撤回、大庫索引與測試證實分類仍未完成。"
+    ]
+  },
+  {
+    "id": "INT-05",
+    "requirement": "skills 匯入／檢視／啟用／停用不自動執行未知命令。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "INT-06",
+    "requirement": "schedule 依 timezone 觸發，重啟不重複派工。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "INT-07",
+    "requirement": "budget 遵守並行／turn／時間限制，未知成本不顯示零。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/provider-events.ts",
+      "apps/runner/src/runner.ts",
+      "apps/web/src/features/ExecutionSettings.tsx"
+    ],
+    "testIds": [
+      "tests/aether/kernel.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "已有用量去重、回合/時間/並行限制與知識提案；pricing、全域預算與知識批准/version 操作待補。"
+    ]
+  },
+  {
+    "id": "INT-08",
+    "requirement": "usage 累積值／delta／resume 重播不重複統計。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/provider-events.ts",
+      "apps/runner/src/runner.ts",
+      "apps/web/src/features/ExecutionSettings.tsx"
+    ],
+    "testIds": [
+      "tests/aether/kernel.test.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log"
+    ],
+    "blockers": [
+      "已有用量去重、回合/時間/並行限制與知識提案；pricing、全域預算與知識批准/version 操作待補。"
+    ]
+  },
+  {
+    "id": "QA-01",
+    "requirement": "unit／contract／integration／E2E 都有真正執行紀錄。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "docs/PROGRESS.md",
+      "docs/FEATURES.json",
+      "docs/NATIVE_EXECUTION.md"
+    ],
+    "testIds": [
+      "e2e/native-workflow.spec.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "完整產品尚未完成；不能把局部測試當最終 gate。"
+    ]
+  },
+  {
+    "id": "QA-02",
+    "requirement": "fault injection 覆蓋 commit／delivery／ack 關鍵 crash window。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "QA-03",
+    "requirement": "LIVE／DEMO／synthetic／captured 的證據不混淆。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "docs/PROGRESS.md",
+      "docs/FEATURES.json",
+      "docs/NATIVE_EXECUTION.md"
+    ],
+    "testIds": [
+      "e2e/native-workflow.spec.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "完整產品尚未完成；不能把局部測試當最終 gate。"
+    ]
+  },
+  {
+    "id": "QA-04",
+    "requirement": "真實頁面截圖覆蓋 overview／desk／review／approval／mobile。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "docs/PROGRESS.md",
+      "docs/FEATURES.json",
+      "docs/NATIVE_EXECUTION.md"
+    ],
+    "testIds": [
+      "e2e/native-workflow.spec.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "完整產品尚未完成；不能把局部測試當最終 gate。"
+    ]
+  },
+  {
+    "id": "QA-05",
+    "requirement": "每個需求的 code path／test ID／evidence 可查驗。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "docs/PROGRESS.md",
+      "docs/FEATURES.json",
+      "docs/NATIVE_EXECUTION.md"
+    ],
+    "testIds": [
+      "e2e/native-workflow.spec.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "完整產品尚未完成；不能把局部測試當最終 gate。"
+    ]
+  },
+  {
+    "id": "QA-06",
+    "requirement": "所有文件與命令對照最新程式，沒有假 endpoint／假腳本。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "partial",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "docs/PROGRESS.md",
+      "docs/FEATURES.json",
+      "docs/NATIVE_EXECUTION.md"
+    ],
+    "testIds": [
+      "e2e/native-workflow.spec.ts",
+      "tests/aether/native-runner.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/workflow-all-tests.log",
+      "evidence/e2e-full-workflow-first.log"
+    ],
+    "blockers": [
+      "完整產品尚未完成；不能把局部測試當最終 gate。"
+    ]
+  },
+  {
+    "id": "QA-07",
+    "requirement": "最終重新 clean install／build／start／smoke 驗證成功或列具體失敗。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "QA-08",
+    "requirement": "FINAL_VERIFICATION 明確區分 passed／failed／blocked／not_run。",
+    "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
+    "implementationStatus": "not_started",
+    "verificationStatus": "not_run",
+    "codePaths": [],
+    "testIds": [],
+    "evidencePaths": [],
+    "blockers": []
+  },
+  {
+    "id": "OBS-LOCAL-01",
+    "requirement": "自動載入本機 Claude／Codex session（metadata＋git 上游／未提交狀態）並以 observe-only 角色顯示於 3D 辦公室。",
+    "scope": "AETHER target; user request 2026-10-03",
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/local-sessions.ts",
+      "apps/web/src/localSessions.ts",
+      "apps/web/src/features/Inspector.tsx"
+    ],
+    "testIds": [
+      "tests/aether/local-sessions.test.ts",
+      "e2e/local-sessions.spec.ts"
+    ],
+    "evidencePaths": [
+      "evidence/tests-local-sessions-full.log",
+      "evidence/e2e-local-sessions.log",
+      "evidence/screenshots/e2e-local-sessions.png"
+    ],
+    "blockers": [
+      "Activity is a file-mtime heuristic; not attached/managed; no hook bridge (child-agent parenting, worktree identity) yet; real-machine scan checked by count only, UI not run against real ~/.claude"
+    ]
+  }
+]

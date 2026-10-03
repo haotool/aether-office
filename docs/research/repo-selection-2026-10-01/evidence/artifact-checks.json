@@ -1,0 +1,16 @@
+{
+  "rows": 27,
+  "uniqueRepos": 27,
+  "pinnedSHA": 27,
+  "desktop": {
+    "width": 1280,
+    "horizontalOverflow": false
+  },
+  "mobile": {
+    "width": 390,
+    "horizontalOverflow": false
+  },
+  "nativeDetailsExpansion": true,
+  "paidProviderE2E": "not_run",
+  "wholeRepoAudits": "not_run"
+}

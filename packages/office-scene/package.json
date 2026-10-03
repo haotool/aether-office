@@ -1,0 +1,14 @@
+{
+  "name": "@aether/office-scene",
+  "version": "0.4.0-dev.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "three": "0.186.1",
+    "@react-three/fiber": "9.8.1",
+    "@react-three/drei": "10.7.9",
+    "react": "19.3.0",
+    "@aether/contracts": "workspace:*"
+  }
+}

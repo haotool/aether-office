@@ -1,0 +1,127 @@
+[
+  {
+    "url": "https://github.com/AgentSystemLabs/agent-office",
+    "canonicalUrl": "https://github.com/AgentSystemLabs/agent-office",
+    "checkedAt": "2026-09-30T19:53:18.698897+00:00",
+    "commit": "665aeec571bc03f76cbd16de8d628dd169a48874",
+    "license": "MIT License",
+    "licenseSha256": "c1988ce50d031cf99c20a6322a34062ed3062a28191d0f1b6b5e88f49acddcb9",
+    "filesRead": [
+      "src/server/queue.ts",
+      "src/server/auth.ts",
+      "src/server/config.ts",
+      "src/server/codex.ts",
+      "src/server/agents.ts",
+      "src/client/world/toon.ts",
+      "src/client/world/office.ts",
+      "src/shared/nav.ts",
+      "tests/nav.test.ts",
+      "tests/auth.test.ts",
+      "tests/prompts.test.ts"
+    ],
+    "sourceReviewScope": "selected complete modules and tests",
+    "testsExecuted": true,
+    "codeReuse": true,
+    "excluded": false,
+    "notes": ""
+  },
+  {
+    "url": "https://github.com/stablyai/orca",
+    "canonicalUrl": "https://github.com/stablyai/orca",
+    "checkedAt": "2026-09-30T19:53:18.709468+00:00",
+    "commit": "373d951bf072698871c9e738ec2e1665ffd56830",
+    "license": "MIT License",
+    "licenseSha256": "ff1b611f80580d49f4b97e93a97b24eb050b0671b26b8afe16341fab699112f3",
+    "filesRead": [
+      "src/main/worktree-removal-safety.ts",
+      "src/main/worktree-create-base.ts",
+      "src/main/worktree-metadata-ownership.test.ts"
+    ],
+    "sourceReviewScope": "selected excerpts only",
+    "testsExecuted": false,
+    "codeReuse": false,
+    "excluded": false,
+    "notes": ""
+  },
+  {
+    "url": "https://github.com/gastownhall/gascity",
+    "canonicalUrl": "https://github.com/gastownhall/gascity",
+    "checkedAt": "2026-09-30T19:53:18.721516+00:00",
+    "commit": "b5df315a82b38fd2379eb4255e311ab4fa7f588d",
+    "license": "MIT License",
+    "licenseSha256": "8bab40f7557b5ed6936f146436bb10d07f7688c1b1cb83e009ef0376565e31dc",
+    "filesRead": [
+      "engdocs/architecture/event-bus.md"
+    ],
+    "sourceReviewScope": "selected excerpts only",
+    "testsExecuted": false,
+    "codeReuse": false,
+    "excluded": false,
+    "notes": ""
+  },
+  {
+    "url": "https://github.com/gastownhall/gastown",
+    "canonicalUrl": "https://github.com/gastownhall/gastown",
+    "checkedAt": "2026-09-30T19:53:18.733147+00:00",
+    "commit": "649b832b7672bc7a2dbef26f5983aba6198b819b",
+    "license": "MIT License",
+    "licenseSha256": "6141d15e761ef772bdd45fdd4036dfc1f97488011429e6643e1445afa9d22f4d",
+    "filesRead": [
+      "internal/mail/store.go",
+      "internal/mail/delivery_test.go"
+    ],
+    "sourceReviewScope": "selected excerpts only",
+    "testsExecuted": false,
+    "codeReuse": false,
+    "excluded": false,
+    "notes": ""
+  },
+  {
+    "url": "https://github.com/aannoo/hcom",
+    "canonicalUrl": "https://github.com/aannoo/hcom",
+    "checkedAt": "2026-09-30T19:53:18.740884+00:00",
+    "commit": "c4e172709f912390814b37364e3049cfdbde10a8",
+    "license": "MIT License",
+    "licenseSha256": "c4377e640e98dac75418c670376569cf197c2f68513bfb9fdc05a80e36588100",
+    "filesRead": [
+      "src/delivery.rs",
+      "tests/send_delivery.rs"
+    ],
+    "sourceReviewScope": "selected excerpts only",
+    "testsExecuted": false,
+    "codeReuse": false,
+    "excluded": false,
+    "notes": ""
+  },
+  {
+    "url": "https://github.com/Dicklesworthstone/mcp_agent_mail",
+    "canonicalUrl": "https://github.com/Dicklesworthstone/mcp_agent_mail",
+    "checkedAt": "2026-09-30T19:53:18.752463+00:00",
+    "commit": "3fad5ec672869f81d2ca0a4c525dde004ac96f45",
+    "license": "MIT License (with OpenAI/Anthropic Rider)",
+    "licenseSha256": "32a82e0a5754e72e51fae44b65a936c831c07376f21c90f5fb9e76897fcc3509",
+    "filesRead": [],
+    "sourceReviewScope": "selected excerpts only",
+    "testsExecuted": false,
+    "codeReuse": false,
+    "excluded": true,
+    "notes": "Additional rider; excluded from runtime, reuse and further source audit."
+  },
+  {
+    "url": "https://github.com/23blocks-OS/ai-maestro",
+    "canonicalUrl": "https://github.com/23blocks-OS/ai-maestro",
+    "checkedAt": "2026-09-30T19:53:18.763903+00:00",
+    "commit": "109868385b9ee5c54e48de404a59d0bbdb9c547d",
+    "license": "MIT License",
+    "licenseSha256": "bac517c0e2e7286936e2b774e3bbf11b5bed539a709b6e0660c6141f124bc77d",
+    "filesRead": [
+      "lib/message-delivery.ts",
+      "lib/agent-runtime.ts"
+    ],
+    "sourceReviewScope": "selected excerpts only",
+    "testsExecuted": false,
+    "codeReuse": false,
+    "excluded": false,
+    "notes": ""
+  }
+]

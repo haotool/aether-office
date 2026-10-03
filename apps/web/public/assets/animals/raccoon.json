@@ -1,0 +1,116 @@
+{
+  "assetId": "raccoon",
+  "version": 1,
+  "license": "MIT",
+  "provenance": "Original AETHER geometry/animation using AgentSystemLabs MIT aokit primitives",
+  "source": "assets-source/animals/raccoon.blend",
+  "sourceSha256": "9df401b904fdeea1340717d94a171ccac57808c145585244f8a70fa1dee42caf",
+  "blender": "5.2.2 LTS",
+  "metres": true,
+  "upAxis": "glTF Y",
+  "bounds": [
+    [-0.3578930199146271, -0.2828136384487152, 0.0028338776901364326],
+    [-0.3578930199146271, -0.2828136384487152, 1.4333148002624512],
+    [-0.3578930199146271, 0.6160078644752502, 1.4333148002624512],
+    [-0.3578930199146271, 0.6160078644752502, 0.0028338776901364326],
+    [0.3544182777404785, -0.2828136384487152, 0.0028338776901364326],
+    [0.3544182777404785, -0.2828136384487152, 1.4333148002624512],
+    [0.3544182777404785, 0.6160078644752502, 1.4333148002624512],
+    [0.3544182777404785, 0.6160078644752502, 0.0028338776901364326]
+  ],
+  "uvLayers": 1,
+  "materials": ["raccoon_PBR"],
+  "bones": [
+    "root",
+    "pelvis",
+    "chest",
+    "neck",
+    "head",
+    "ear_L",
+    "ear_R",
+    "upper_arm_L",
+    "forearm_L",
+    "hand_L",
+    "upper_arm_R",
+    "forearm_R",
+    "hand_R",
+    "tail",
+    "thigh_L",
+    "shin_L",
+    "foot_L",
+    "thigh_R",
+    "shin_R",
+    "foot_R"
+  ],
+  "clips": [
+    "idle",
+    "walk",
+    "turn",
+    "sit_down",
+    "seated_idle",
+    "typing",
+    "reading",
+    "testing",
+    "reviewing",
+    "waiting_permission",
+    "waiting_peer",
+    "celebrate",
+    "error",
+    "stand_up"
+  ],
+  "sockets": ["hand_socket_L", "hand_socket_R", "head_socket", "chest_socket"],
+  "textures": [
+    {
+      "file": "raccoon-base_color.png",
+      "sha256": "d04b7ae39c05278df8eac2a15db02c0d1c25a124c0b5f37ce1a2a78f5c938b09",
+      "colorSpace": "sRGB",
+      "size": [1024, 1024]
+    },
+    {
+      "file": "raccoon-normal.png",
+      "sha256": "3254bcc414ed3dd7b300d7ab2b7058b09e7ce77b357915de020a0a0dc9114e30",
+      "colorSpace": "Non-Color",
+      "size": [1024, 1024]
+    },
+    {
+      "file": "raccoon-roughness.png",
+      "sha256": "64154d0da8f42e5649674c0d25b8f6b02b1be0094211c9367ee2e840c53b9dcc",
+      "colorSpace": "Non-Color",
+      "size": [1024, 1024]
+    },
+    {
+      "file": "raccoon-ao.png",
+      "sha256": "4bb9c33e97e89d91eec48c7e0233f62573dbcf89deca424c2931bcb75d1bb87e",
+      "colorSpace": "Non-Color",
+      "size": [1024, 1024]
+    }
+  ],
+  "lods": [
+    {
+      "level": 0,
+      "file": "raccoon-lod0.glb",
+      "sha256": "70f5692408b34880db92bf2eea55e83042f334c530682ca3738249ab95738037",
+      "triangles": 32372,
+      "duplicateTrianglesRemoved": 0,
+      "bytes": 2633504
+    },
+    {
+      "level": 1,
+      "file": "raccoon-lod1.glb",
+      "sha256": "aa8023236f7f3d28f60b2640f05a67b640a13c6b066940dd0bfb38586324cd1d",
+      "triangles": 11330,
+      "duplicateTrianglesRemoved": 0,
+      "bytes": 1855272
+    },
+    {
+      "level": 2,
+      "file": "raccoon-lod2.glb",
+      "sha256": "046784fc0f355aba4dd218268ad4b6b80c10a844711269ee0a769eedba7ce505",
+      "triangles": 2744,
+      "duplicateTrianglesRemoved": 6,
+      "bytes": 1509840
+    }
+  ],
+  "buildSeconds": 4.554,
+  "verificationStatus": "not_run"
+}

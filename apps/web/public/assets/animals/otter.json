@@ -1,0 +1,116 @@
+{
+  "assetId": "otter",
+  "version": 1,
+  "license": "MIT",
+  "provenance": "Original AETHER geometry/animation using AgentSystemLabs MIT aokit primitives",
+  "source": "assets-source/animals/otter.blend",
+  "sourceSha256": "b1e9222d45ffb8304eeba6d5ea00e0bd3ba0fdd11abca0e1bea156fe9bffc0e5",
+  "blender": "5.2.2 LTS",
+  "metres": true,
+  "upAxis": "glTF Y",
+  "bounds": [
+    [-0.3578930199146271, -0.2778136432170868, 0.0028338776901364326],
+    [-0.3578930199146271, -0.2778136432170868, 1.4063886404037476],
+    [-0.3578930199146271, 0.6114457249641418, 1.4063886404037476],
+    [-0.3578930199146271, 0.6114457249641418, 0.0028338776901364326],
+    [0.3544182777404785, -0.2778136432170868, 0.0028338776901364326],
+    [0.3544182777404785, -0.2778136432170868, 1.4063886404037476],
+    [0.3544182777404785, 0.6114457249641418, 1.4063886404037476],
+    [0.3544182777404785, 0.6114457249641418, 0.0028338776901364326]
+  ],
+  "uvLayers": 1,
+  "materials": ["otter_PBR"],
+  "bones": [
+    "root",
+    "pelvis",
+    "chest",
+    "neck",
+    "head",
+    "ear_L",
+    "ear_R",
+    "upper_arm_L",
+    "forearm_L",
+    "hand_L",
+    "upper_arm_R",
+    "forearm_R",
+    "hand_R",
+    "tail",
+    "thigh_L",
+    "shin_L",
+    "foot_L",
+    "thigh_R",
+    "shin_R",
+    "foot_R"
+  ],
+  "clips": [
+    "idle",
+    "walk",
+    "turn",
+    "sit_down",
+    "seated_idle",
+    "typing",
+    "reading",
+    "testing",
+    "reviewing",
+    "waiting_permission",
+    "waiting_peer",
+    "celebrate",
+    "error",
+    "stand_up"
+  ],
+  "sockets": ["hand_socket_L", "hand_socket_R", "head_socket", "chest_socket"],
+  "textures": [
+    {
+      "file": "otter-base_color.png",
+      "sha256": "c7fa4ee1ac58672855fefab618d08c204a8bdbc745bd6294f0fe9e99da0aa14e",
+      "colorSpace": "sRGB",
+      "size": [1024, 1024]
+    },
+    {
+      "file": "otter-normal.png",
+      "sha256": "0780c972b7f83dfc2d854a5ce6eb39e71e39d18f2a5174ddb744d5fa33504607",
+      "colorSpace": "Non-Color",
+      "size": [1024, 1024]
+    },
+    {
+      "file": "otter-roughness.png",
+      "sha256": "386b0698c1ff4444a080f901ac12d7cd74ad69b8d99b6697b907a0b37f752f3b",
+      "colorSpace": "Non-Color",
+      "size": [1024, 1024]
+    },
+    {
+      "file": "otter-ao.png",
+      "sha256": "6b13960367acaa56ef224f742c348196f3e5af8d17fe1b8e1dc24d50ec70eb82",
+      "colorSpace": "Non-Color",
+      "size": [1024, 1024]
+    }
+  ],
+  "lods": [
+    {
+      "level": 0,
+      "file": "otter-lod0.glb",
+      "sha256": "3b12004b847713cd02c0cf99370be0398804014c276b030d352d3d3bfc657204",
+      "triangles": 25640,
+      "duplicateTrianglesRemoved": 0,
+      "bytes": 2464840
+    },
+    {
+      "level": 1,
+      "file": "otter-lod1.glb",
+      "sha256": "c9dff9698a144c94fd161896f34ee028dc572f7c3fad4e662228e1f94c0a501f",
+      "triangles": 8974,
+      "duplicateTrianglesRemoved": 0,
+      "bytes": 1844940
+    },
+    {
+      "level": 2,
+      "file": "otter-lod2.glb",
+      "sha256": "f7f2a0d5556782dec0d588e3fcba97c9667d1c25f3d6b438e4598e49ef40795f",
+      "triangles": 2172,
+      "duplicateTrianglesRemoved": 6,
+      "bytes": 1566896
+    }
+  ],
+  "buildSeconds": 4.695,
+  "verificationStatus": "not_run"
+}

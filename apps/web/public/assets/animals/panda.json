@@ -1,0 +1,116 @@
+{
+  "assetId": "panda",
+  "version": 1,
+  "license": "MIT",
+  "provenance": "Original AETHER geometry/animation using AgentSystemLabs MIT aokit primitives",
+  "source": "assets-source/animals/panda.blend",
+  "sourceSha256": "d3c5cea5c9bc87c3d6bff21497a39141264b66accc851415e008a4815eb31783",
+  "blender": "5.2.2 LTS",
+  "metres": true,
+  "upAxis": "glTF Y",
+  "bounds": [
+    [-0.3578930199146271, -0.28081366419792175, 0.0028338776901364326],
+    [-0.3578930199146271, -0.28081366419792175, 1.4333148002624512],
+    [-0.3578930199146271, 0.2642292380332947, 1.4333148002624512],
+    [-0.3578930199146271, 0.2642292380332947, 0.0028338776901364326],
+    [0.3544182777404785, -0.28081366419792175, 0.0028338776901364326],
+    [0.3544182777404785, -0.28081366419792175, 1.4333148002624512],
+    [0.3544182777404785, 0.2642292380332947, 1.4333148002624512],
+    [0.3544182777404785, 0.2642292380332947, 0.0028338776901364326]
+  ],
+  "uvLayers": 1,
+  "materials": ["panda_PBR"],
+  "bones": [
+    "root",
+    "pelvis",
+    "chest",
+    "neck",
+    "head",
+    "ear_L",
+    "ear_R",
+    "upper_arm_L",
+    "forearm_L",
+    "hand_L",
+    "upper_arm_R",
+    "forearm_R",
+    "hand_R",
+    "tail",
+    "thigh_L",
+    "shin_L",
+    "foot_L",
+    "thigh_R",
+    "shin_R",
+    "foot_R"
+  ],
+  "clips": [
+    "idle",
+    "walk",
+    "turn",
+    "sit_down",
+    "seated_idle",
+    "typing",
+    "reading",
+    "testing",
+    "reviewing",
+    "waiting_permission",
+    "waiting_peer",
+    "celebrate",
+    "error",
+    "stand_up"
+  ],
+  "sockets": ["hand_socket_L", "hand_socket_R", "head_socket", "chest_socket"],
+  "textures": [
+    {
+      "file": "panda-base_color.png",
+      "sha256": "8c159e16f9a54481ad7d612153d7e22d021ab94b380aa1222e94b287d57b6f64",
+      "colorSpace": "sRGB",
+      "size": [1024, 1024]
+    },
+    {
+      "file": "panda-normal.png",
+      "sha256": "1920a83c43b7ac39d405741bac5422bbe90c77b074548ad29d0f775dfd32f917",
+      "colorSpace": "Non-Color",
+      "size": [1024, 1024]
+    },
+    {
+      "file": "panda-roughness.png",
+      "sha256": "16abd111ed066bc42a296be57331c9d6af8c2406b61dc88dcb9280f45c289dad",
+      "colorSpace": "Non-Color",
+      "size": [1024, 1024]
+    },
+    {
+      "file": "panda-ao.png",
+      "sha256": "79034bf9ed7c6fa80412b9f794c10f80b0ffdb83b76c2f62473e24322f43a1c0",
+      "colorSpace": "Non-Color",
+      "size": [1024, 1024]
+    }
+  ],
+  "lods": [
+    {
+      "level": 0,
+      "file": "panda-lod0.glb",
+      "sha256": "1764a19af44ba67e45982b5f80d319709d916b2cdda63bfac7079a070b1f674a",
+      "triangles": 24524,
+      "duplicateTrianglesRemoved": 0,
+      "bytes": 2369508
+    },
+    {
+      "level": 1,
+      "file": "panda-lod1.glb",
+      "sha256": "1dc91f25b362e48cb32481656aa233ddc353c59ff55bb8925f8fdc2a37b2e871",
+      "triangles": 8582,
+      "duplicateTrianglesRemoved": 0,
+      "bytes": 1781044
+    },
+    {
+      "level": 2,
+      "file": "panda-lod2.glb",
+      "sha256": "158ae72db3c2687ebb7d0cb5a2d523e68dab2a88fa73bfb30cccd7805c287d79",
+      "triangles": 2084,
+      "duplicateTrianglesRemoved": 0,
+      "bytes": 1519440
+    }
+  ],
+  "buildSeconds": 4.416,
+  "verificationStatus": "not_run"
+}

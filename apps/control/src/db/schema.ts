@@ -1,0 +1,91 @@
+import { sqliteTable, text, integer, primaryKey } from 'drizzle-orm/sqlite-core';
+import type { Activity, Mode, Provider } from '@aether/contracts';
+import type { Role, WorkState } from '@aether/kernel';
+export const projects = sqliteTable('projects', {
+  id: text().primaryKey(),
+  name: text().notNull(),
+  root: text(),
+  mode: text().$type<Mode>().notNull(),
+  version: integer().notNull(),
+  createdAt: integer().notNull(),
+});
+export const agents = sqliteTable('agents', {
+  id: text().primaryKey(),
+  projectId: text().notNull(),
+  name: text().notNull(),
+  role: text().notNull(),
+  provider: text().$type<Provider>().notNull(),
+  mode: text().$type<Mode>().notNull(),
+  species: text().notNull(),
+  color: text().notNull(),
+  activity: text().$type<Activity>().notNull(),
+  version: integer().notNull(),
+  createdAt: integer().notNull(),
+  lastSeen: integer(),
+});
+export const work = sqliteTable('work_items', {
+  id: text().primaryKey(),
+  projectId: text().notNull(),
+  title: text().notNull(),
+  description: text().notNull(),
+  acceptance: text().notNull(),
+  state: text().$type<WorkState>().notNull(),
+  assignee: text(),
+  version: integer().notNull(),
+  priority: integer().notNull(),
+  createdAt: integer().notNull(),
+  updatedAt: integer().notNull(),
+  attempt: integer().notNull(),
+  maxAttempts: integer().notNull(),
+  cancelCause: text(),
+  result: text(),
+  submittedBy: text(),
+  headSha: text(),
+  reviewBy: text(),
+  verifiedSha: text(),
+});
+export const dependencies = sqliteTable(
+  'task_dependencies',
+  { workId: text().notNull(), dependsOn: text().notNull(), projectId: text().notNull() },
+  (t) => [primaryKey({ columns: [t.workId, t.dependsOn] })],
+);
+export const messages = sqliteTable('messages', {
+  id: text().primaryKey(),
+  projectId: text().notNull(),
+  threadId: text().notNull(),
+  replyTo: text(),
+  senderId: text().notNull(),
+  body: text().notNull(),
+  kind: text().notNull(),
+  createdAt: integer().notNull(),
+  expiresAt: integer().notNull(),
+});
+export const identities = sqliteTable('identities', {
+  id: text().primaryKey(),
+  role: text().$type<Role>().notNull(),
+  name: text().notNull(),
+  tokenHash: text().notNull().unique(),
+  projectIds: text({ mode: 'json' }).$type<string[]>().notNull(),
+  agentId: text(),
+  machineId: text(),
+  revokedAt: integer(),
+  createdAt: integer().notNull(),
+  expiresAt: integer(),
+});
+export const knowledge = sqliteTable('knowledge', {
+  id: text().primaryKey(),
+  projectId: text().notNull(),
+  title: text().notNull(),
+  body: text().notNull(),
+  source: text().notNull(),
+  author: text().notNull(),
+  classification: text().notNull(),
+  version: integer().notNull(),
+  createdAt: integer().notNull(),
+  updatedAt: integer().notNull(),
+  reviewedBy: text(),
+  reviewReason: text(),
+  workId: text(),
+  artifactId: text(),
+  commitSha: text(),
+});

@@ -1,0 +1,5 @@
+CREATE TABLE observation_sources(id TEXT PRIMARY KEY,projectId TEXT NOT NULL REFERENCES projects(id),agentId TEXT NOT NULL REFERENCES agents(id),machineId TEXT NOT NULL REFERENCES machines(id),sourceKey TEXT NOT NULL,provider TEXT NOT NULL,label TEXT NOT NULL,state TEXT NOT NULL,revision INTEGER NOT NULL,lastSeen INTEGER NOT NULL,lastActivity INTEGER,UNIQUE(projectId,agentId,machineId,sourceKey));
+CREATE TABLE observation_records(seq INTEGER PRIMARY KEY AUTOINCREMENT,sourceId TEXT NOT NULL REFERENCES observation_sources(id),sourceEventId TEXT NOT NULL,sessionId TEXT NOT NULL,kind TEXT NOT NULL,role TEXT NOT NULL,text TEXT NOT NULL,createdAt INTEGER NOT NULL,UNIQUE(sourceId,sourceEventId));
+CREATE TABLE observation_reports(id TEXT PRIMARY KEY,sourceId TEXT NOT NULL REFERENCES observation_sources(id),requestHash TEXT NOT NULL,createdAt INTEGER NOT NULL);
+CREATE INDEX observation_source_project ON observation_sources(projectId,lastSeen);
+CREATE INDEX observation_record_source ON observation_records(sourceId,seq);

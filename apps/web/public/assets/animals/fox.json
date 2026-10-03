@@ -1,0 +1,116 @@
+{
+  "assetId": "fox",
+  "version": 1,
+  "license": "MIT",
+  "provenance": "Original AETHER geometry/animation using AgentSystemLabs MIT aokit primitives",
+  "source": "assets-source/animals/fox.blend",
+  "sourceSha256": "2d0fa3785f1b06c35b99a7ff43022938990ab8bba2a39a1286e88529896d5fdb",
+  "blender": "5.2.2 LTS",
+  "metres": true,
+  "upAxis": "glTF Y",
+  "bounds": [
+    [-0.3578930199146271, -0.3194037079811096, 0.0028338776901364326],
+    [-0.3578930199146271, -0.3194037079811096, 1.4711337089538574],
+    [-0.3578930199146271, 0.7472257614135742, 1.4711337089538574],
+    [-0.3578930199146271, 0.7472257614135742, 0.0028338776901364326],
+    [0.3544182777404785, -0.3194037079811096, 0.0028338776901364326],
+    [0.3544182777404785, -0.3194037079811096, 1.4711337089538574],
+    [0.3544182777404785, 0.7472257614135742, 1.4711337089538574],
+    [0.3544182777404785, 0.7472257614135742, 0.0028338776901364326]
+  ],
+  "uvLayers": 1,
+  "materials": ["fox_PBR"],
+  "bones": [
+    "root",
+    "pelvis",
+    "chest",
+    "neck",
+    "head",
+    "ear_L",
+    "ear_R",
+    "upper_arm_L",
+    "forearm_L",
+    "hand_L",
+    "upper_arm_R",
+    "forearm_R",
+    "hand_R",
+    "tail",
+    "thigh_L",
+    "shin_L",
+    "foot_L",
+    "thigh_R",
+    "shin_R",
+    "foot_R"
+  ],
+  "clips": [
+    "idle",
+    "walk",
+    "turn",
+    "sit_down",
+    "seated_idle",
+    "typing",
+    "reading",
+    "testing",
+    "reviewing",
+    "waiting_permission",
+    "waiting_peer",
+    "celebrate",
+    "error",
+    "stand_up"
+  ],
+  "sockets": ["hand_socket_L", "hand_socket_R", "head_socket", "chest_socket"],
+  "textures": [
+    {
+      "file": "fox-base_color.png",
+      "sha256": "7f4105bf55da794c5501b75817abcaccb20a0024638da977cb1963ffe2090e9f",
+      "colorSpace": "sRGB",
+      "size": [1024, 1024]
+    },
+    {
+      "file": "fox-normal.png",
+      "sha256": "eb95042753b2fce6a4829cb73faf4897388772977c5f34e879e32dbfbf663003",
+      "colorSpace": "Non-Color",
+      "size": [1024, 1024]
+    },
+    {
+      "file": "fox-roughness.png",
+      "sha256": "5b0abd2ef94c728a79de8cf8009ea0c8f0bb315c0a5c3030ab29c40304afe7e8",
+      "colorSpace": "Non-Color",
+      "size": [1024, 1024]
+    },
+    {
+      "file": "fox-ao.png",
+      "sha256": "d8317da17a1369fd354a2a631341482676518601a7c34732fb24ee0e4b5cdbc3",
+      "colorSpace": "Non-Color",
+      "size": [1024, 1024]
+    }
+  ],
+  "lods": [
+    {
+      "level": 0,
+      "file": "fox-lod0.glb",
+      "sha256": "f580c9265c683ccba3ee935395341d7a5472a5424f495799ac75be32615a8e18",
+      "triangles": 22768,
+      "duplicateTrianglesRemoved": 0,
+      "bytes": 2341708
+    },
+    {
+      "level": 1,
+      "file": "fox-lod1.glb",
+      "sha256": "606b3838da97a42b860d60fd52ee73892114fb00a2087c94f60f3159d692f50d",
+      "triangles": 7968,
+      "duplicateTrianglesRemoved": 0,
+      "bytes": 1795456
+    },
+    {
+      "level": 2,
+      "file": "fox-lod2.glb",
+      "sha256": "8f4a4c5b09e6ddb178457742adb67b169b2a11fee150750be59b3b561c16179b",
+      "triangles": 1934,
+      "duplicateTrianglesRemoved": 0,
+      "bytes": 1548384
+    }
+  ],
+  "buildSeconds": 4.946,
+  "verificationStatus": "not_run"
+}

@@ -5,3 +5,15 @@ dist
 .DS_Store
 pw.txt
 __pycache__/
+.research/
+.tools/
+.data/
+.env
+.env.*.local
+coverage/
+test-results/
+playwright-report/
+*.tsbuildinfo
+/evidence/
+*.blend1
+/docs/CHECKPOINT.md
