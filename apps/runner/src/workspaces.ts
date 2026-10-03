@@ -61,7 +61,7 @@ const inside = (root: string, target: string) => {
   const rel = relative(root, target);
   return rel !== '' && !rel.startsWith('..') && !isAbsolute(rel);
 };
-function environment(): NodeJS.ProcessEnv {
+export function environment(): NodeJS.ProcessEnv {
   // Verifiers execute workspace code: never inherit runner or provider credentials.
   return {
     ...Object.fromEntries(
@@ -86,6 +86,12 @@ export class Workspaces {
     mkdirSync(this.hooks, { recursive: true, mode: 0o700 });
     for (const dir of ['registry', 'checkouts', 'harnesses', 'artifacts'])
       mkdirSync(join(this.root, dir), { recursive: true, mode: 0o700 });
+  }
+  /** Managed scratch directory under the runner root, created on demand. */
+  scratch(name: string): string {
+    const directory = join(this.root, name);
+    mkdirSync(directory, { recursive: true, mode: 0o700 });
+    return directory;
   }
   private git(cwd: string, args: string[]): string {
     return execFileSync(

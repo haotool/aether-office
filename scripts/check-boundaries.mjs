@@ -24,6 +24,17 @@ async function visit(dir) {
         (file.startsWith('packages/providers/') && /control\//.test(item));
       if (banned) violations.push(`${file}: prohibited dependency ${item}`);
     }
+    // Untrusted text (messages, terminal output, provider content) must never reach the DOM as HTML,
+    // and terminal output must never gain clipboard or link-opening abilities.
+    if (
+      file.startsWith('apps/web/') &&
+      /dangerouslySetInnerHTML|\.innerHTML\s*=|insertAdjacentHTML|document\.write|\beval\(|new Function\(|@xterm\/addon-(clipboard|web-links)/.test(
+        source,
+      )
+    )
+      violations.push(`${file}: unsafe HTML, code evaluation or terminal addon`);
+    // Progress and completion must come from persisted state, never from randomness.
+    if (/Math\.random\(/.test(source)) violations.push(`${file}: Math.random in product code`);
     if (/@ts-ignore|@ts-nocheck/.test(source)) violations.push(`${file}: suppressed type safety`);
   }
 }

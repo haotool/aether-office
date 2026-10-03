@@ -272,6 +272,36 @@ it('runs a synthetic app-server through real HTTP, isolated Git, durable approva
     ).toEqual({ state: 'succeeded' });
     control.execute(owner.actor, command('work.accept', { workId }, projectId, verified.version));
     expect(control.snapshot(owner.actor, projectId).work[0]?.state).toBe('completed');
+    // Integrate the accepted commit through the real runner into a local candidate branch.
+    const git = (...args: string[]) =>
+      execFileSync('git', ['-C', repository, ...args], { encoding: 'utf8' }).trim();
+    const baseBranch = git('rev-parse', '--abbrev-ref', 'HEAD');
+    const baseBefore = git('rev-parse', baseBranch);
+    const accepted = control.snapshot(owner.actor, projectId).work[0]!;
+    const integration = control.execute(
+      owner.actor,
+      command(
+        'work.integrate',
+        { workId, baseBranch, expectedBase: baseBefore },
+        projectId,
+        accepted.version,
+      ),
+    );
+    for (let i = 0; i < 100; i++) {
+      await delay(50);
+      if (
+        control.ctx.sqlite
+          .prepare("SELECT 1 FROM integrations WHERE jobId=? AND status='merged'")
+          .get(integration.result['id'])
+      )
+        break;
+    }
+    const merged = control.ctx.sqlite
+      .prepare('SELECT candidate,mergeSha,headSha FROM integrations WHERE jobId=?')
+      .get(integration.result['id']) as { candidate: string; mergeSha: string; headSha: string };
+    expect(merged.headSha).toBe(accepted.headSha);
+    expect(git('rev-parse', merged.candidate)).toBe(merged.mergeSha);
+    expect(git('rev-parse', baseBranch)).toBe(baseBefore); // base branch never moved
     // Revoking project execution cancels queued work before any provider starts.
     const next = control.execute(
       owner.actor,

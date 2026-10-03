@@ -161,45 +161,79 @@
     "id": "ARC-05",
     "requirement": "不支援的 provider capability 回明確錯誤並禁用 UI 操作。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "packages/kernel/src/capabilities.ts",
+      "apps/control/src/services/work.ts",
+      "apps/control/src/server.ts",
+      "apps/web/src/features/CapabilityMatrix.tsx",
+      "apps/web/src/features/Tasks.tsx"
+    ],
+    "testIds": [
+      "tests/aether/capabilities.test.ts",
+      "tests/aether/control.test.ts",
+      "e2e/capabilities.spec.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Only the resume gate is enforced per command today; other flags are informational until their operations exist"
+    ]
   },
   {
     "id": "ARC-06",
     "requirement": "重要狀態只經 domain command 與政策 transition 修改。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/control/src/db/migrations/017-work-state-guard.sql",
+      "packages/kernel/src/index.ts",
+      "apps/control/src/services/work.ts"
+    ],
+    "testIds": [
+      "tests/aether/state-guard.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Guard covers work_items.state only; other aggregates rely on service-level checks"
+    ]
   },
   {
     "id": "ARC-07",
     "requirement": "DEMO／LIVE／OBSERVE／REPLAY 全程有可辨識來源。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/web/src/features/History.tsx",
+      "apps/web/src/App.tsx"
+    ],
+    "testIds": [
+      "e2e/replay.spec.ts",
+      "e2e/local-sessions.spec.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Replay is a read-only event list up to a chosen seq; it does not rebuild historical entity snapshots"
+    ]
   },
   {
     "id": "ARC-08",
     "requirement": "進度與完成度不來自隨機資料或虛構百分比。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "scripts/check-boundaries.mjs"
+    ],
+    "testIds": [
+      "tests/aether/web-safety.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Lint bans Math.random and shows no percentage; it cannot prove every future display is state-derived"
+    ]
   },
   {
     "id": "CLA-01",
@@ -313,12 +347,18 @@
     "id": "CLA-06",
     "requirement": "忙碌時的訊息投遞遵守已驗證的 injection capability。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "packages/kernel/src/capabilities.ts"
+    ],
+    "testIds": [
+      "tests/aether/capabilities.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "No adapter supports mid-turn or turn-boundary injection (capability none): messages stay in the durable inbox"
+    ]
   },
   {
     "id": "CLA-07",
@@ -838,10 +878,15 @@
     "id": "EVT-05",
     "requirement": "過期 cursor 明確要求 resnapshot，不能靜默略過。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/control/src/control.ts",
+      "apps/control/src/server.ts"
+    ],
+    "testIds": [
+      "tests/aether/cursor-retention.test.ts"
+    ],
     "evidencePaths": [],
     "blockers": []
   },
@@ -1032,12 +1077,19 @@
     "id": "MSG-06",
     "requirement": "busy Agent 只在允許的 injection boundary 收到內容。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "packages/kernel/src/capabilities.ts",
+      "apps/control/src/services/messages.ts"
+    ],
+    "testIds": [
+      "tests/aether/capabilities.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Same boundary as CLA-06: nothing is injected, so a busy agent only receives content when it reads its inbox"
+    ]
   },
   {
     "id": "MSG-07",
@@ -1065,12 +1117,18 @@
     "id": "MSG-08",
     "requirement": "nonce exchange 驗證跨 provider 真正取得並回覆訊息。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "partial",
+    "verificationStatus": "blocked",
+    "codePaths": [
+      "apps/runner/src/mcp.ts"
+    ],
+    "testIds": [
+      "tests/aether/mcp.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "A real Claude↔Codex nonce exchange needs two paid provider sessions, which are not authorized; only a synthetic nonce reply is covered"
+    ]
   },
   {
     "id": "TSK-01",
@@ -1320,12 +1378,24 @@
     "id": "GIT-03",
     "requirement": "file reservation 的 advisory 屬性與衝突清楚呈現。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "packages/kernel/src/reservations.ts",
+      "apps/control/src/services/reservations.ts",
+      "apps/runner/src/mcp.ts",
+      "apps/web/src/features/Reservations.tsx"
+    ],
+    "testIds": [
+      "tests/aether/reservations-kernel.test.ts",
+      "tests/aether/reservations.test.ts",
+      "tests/aether/mcp.test.ts",
+      "e2e/reservations.spec.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Advisory only: conflict check is conservative on directory scope; not yet enforced at scheduler or merge gates"
+    ]
   },
   {
     "id": "GIT-04",
@@ -1371,12 +1441,23 @@
     "id": "GIT-06",
     "requirement": "review comment 綁 commit／hunk，更新後能辨識過期。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/kernel/src/diff.ts",
+      "apps/control/src/services/review-comments.ts",
+      "apps/web/src/features/HunkComments.tsx"
+    ],
+    "testIds": [
+      "tests/aether/review-diff.test.ts",
+      "tests/aether/review-comments.test.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Comment create/list verified at control level with seeded diff jobs; browser only checks the empty-hunk state, not a full comment round trip",
+      "Line anchors are stored but not re-mapped across heads"
+    ]
   },
   {
     "id": "GIT-07",
@@ -1401,12 +1482,25 @@
     "id": "GIT-08",
     "requirement": "merge conflict 停止交付，不自動覆蓋或無批准 push。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/runner/src/merge.ts",
+      "apps/control/src/services/jobs.ts",
+      "apps/web/src/features/Integration.tsx"
+    ],
+    "testIds": [
+      "tests/aether/merge.test.ts",
+      "tests/aether/integration-control.test.ts",
+      "tests/aether/native-runner.test.ts",
+      "e2e/native-workflow.spec.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Candidate branch is not re-verified automatically before delivery",
+      "No PR handoff; push is intentionally never performed",
+      "Only owner may integrate; base moves are reported, not auto-rebased"
+    ]
   },
   {
     "id": "SEC-01",
@@ -1513,12 +1607,21 @@
     "id": "SEC-06",
     "requirement": "Markdown／URL／terminal clipboard／SSRF 有回歸測試。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/safe-fetch.ts",
+      "scripts/check-boundaries.mjs",
+      "apps/web/src/features/Terminals.tsx"
+    ],
+    "testIds": [
+      "tests/aether/safe-fetch.test.ts",
+      "tests/aether/web-safety.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "No Markdown renderer exists yet (all text is shown as text); safe-fetch is not yet used by a connector or A2A path"
+    ]
   },
   {
     "id": "SEC-07",

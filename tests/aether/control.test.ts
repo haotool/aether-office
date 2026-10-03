@@ -175,6 +175,14 @@ describe('runner leases and work', () => {
       const run = claim(f.control.ctx, runner.actor, ['demo'])!;
       sessions.add(run.sessionId);
       report(f.control.ctx, runner.actor, {
+        type: 'started',
+        sourceEventId: randomUUID(),
+        runId: run.runId,
+        epoch: run.epoch,
+        providerSessionId: `fixture-${attempt}`,
+        processIdentity: 'owned-child',
+      });
+      report(f.control.ctx, runner.actor, {
         type: 'result',
         sourceEventId: randomUUID(),
         runId: run.runId,
@@ -187,7 +195,7 @@ describe('runner leases and work', () => {
           f.owner.actor,
           command('work.retry', { workId, resume: true }, f.projectId, current().version),
         ),
-      ).toThrow('SESSION_RESUME_UNAVAILABLE');
+      ).toThrow('CAPABILITY_UNSUPPORTED'); // demo provider cannot resume
       expect(() =>
         f.control.execute(
           f.sender.actor,

@@ -35,6 +35,7 @@ import { usePreferences } from './state.js';
 import { useT, PageHeading, Modal, Field, Empty, Badge, AvatarIcon } from './ui.js';
 import type { Key } from './i18n.js';
 import { Agents } from './features/Agents.js';
+import { CapabilityMatrix } from './features/CapabilityMatrix.js';
 import { Tasks, TaskForm } from './features/Tasks.js';
 import { Messages } from './features/Messages.js';
 import { Inspector } from './features/Inspector.js';
@@ -605,12 +606,15 @@ export function App() {
                 ) : (
                   <div className="page-padding">
                     {page === 'agents' ? (
-                      <Agents
-                        snapshot={data}
-                        onSelect={select}
-                        onSaved={refresh}
-                        canWrite={canWrite}
-                      />
+                      <>
+                        <Agents
+                          snapshot={data}
+                          onSelect={select}
+                          onSaved={refresh}
+                          canWrite={canWrite}
+                        />
+                        <CapabilityMatrix />
+                      </>
                     ) : page === 'tasks' ? (
                       <Tasks
                         snapshot={data}

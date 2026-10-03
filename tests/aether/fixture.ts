@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { Control } from '../../apps/control/src/control.js';
 import type { Actor } from '../../packages/kernel/src/index.js';
 export function command(type: string, data: unknown, projectId?: string, expectedVersion?: number) {
@@ -59,4 +60,19 @@ export function fixture(file = ':memory:', clock?: () => number) {
       command('message.send', { recipients: [to], body: text, kind: 'inform' }, projectId),
     );
   return { control, owner, projectId, sender, recipient, senderId, recipientId, send, register };
+}
+
+const guard = readFileSync(
+  new URL('../../apps/control/src/db/migrations/017-work-state-guard.sql', import.meta.url),
+  'utf8',
+);
+/** Test-only: put a work item into an arbitrary state, bypassing the transition guard, then restore it. */
+export function seedWork(control: Control, workId: string, set: string, ...values: unknown[]) {
+  const sql = control.ctx.sqlite;
+  sql.prepare('DROP TRIGGER work_state_transition').run();
+  try {
+    sql.prepare(`UPDATE work_items SET ${set} WHERE id=?`).run(...values, workId);
+  } finally {
+    sql.exec(guard);
+  }
 }

@@ -21,8 +21,10 @@ import { connect } from './db/connection.js';
 import { projects, agents, work, dependencies, messages, knowledge } from './db/schema.js';
 import { hash, secret, authenticate, createIdentity, identityActor } from './services/identity.js';
 import { agent, emit, project, type Context } from './services/context.js';
-import { requestJob } from './services/jobs.js';
+import { requestIntegration, requestJob } from './services/jobs.js';
 import { decideApproval } from './services/approvals.js';
+import { addReviewComment } from './services/review-comments.js';
+import { reservationCommand } from './services/reservations.js';
 import { terminalCommand } from './services/terminals.js';
 import { changeWork, createWork } from './services/work.js';
 import { acknowledge, getMessage, inbox, sendMessage, messageWaits } from './services/messages.js';
@@ -96,6 +98,17 @@ export class Control {
           case 'terminal.resize':
           case 'terminal.stop':
             result = terminalCommand(this.ctx, actor, c);
+            break;
+          case 'work.integrate':
+            result = requestIntegration(this.ctx, actor, c);
+            break;
+          case 'work.comment':
+            result = addReviewComment(this.ctx, actor, c);
+            break;
+          case 'reservation.acquire':
+          case 'reservation.renew':
+          case 'reservation.release':
+            result = reservationCommand(this.ctx, actor, c);
             break;
           case 'project.create': {
             const row = {

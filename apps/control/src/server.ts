@@ -6,12 +6,12 @@ import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
 import { z } from 'zod';
-import { DomainError, authorize, type Actor } from '@aether/kernel';
+import { CAPABILITIES, DomainError, authorize, type Actor } from '@aether/kernel';
 import { login, sessionActor, hash, revoke } from './services/identity.js';
 import { claim, enroll, heartbeat, report, sessionCredential } from './services/runners.js';
 import { requestApproval, pollApproval, approvalSent } from './services/approvals.js';
 import { terminalProfileSchema, verifierSchema } from '@aether/contracts';
-import { claimJob, reportJob } from './services/jobs.js';
+import { claimJob, listIntegrations, reportJob } from './services/jobs.js';
 import {
   claimTerminalCommand,
   reportTerminalCommand,
@@ -20,6 +20,8 @@ import {
   readTerminal,
 } from './services/terminals.js';
 import { reportObservation, listObservations } from './services/observations.js';
+import { listReviewComments } from './services/review-comments.js';
+import { listReservations } from './services/reservations.js';
 import { scanLocalSessions } from './services/local-sessions.js';
 import { homedir } from 'node:os';
 import { diagnoseWork } from './services/diagnostics.js';
@@ -341,6 +343,39 @@ export function createServer(
       enabled: true,
       sessions: await scanLocalSessions(process.env['AETHER_LOCAL_SESSIONS_HOME'] ?? homedir()),
     };
+  });
+  app.get<{ Params: { projectId: string } }>(
+    '/api/projects/:projectId/reservations',
+    async (request) => {
+      const who = actor(request);
+      authorize(who, 'read', request.params.projectId);
+      return { reservations: listReservations(control.ctx, request.params.projectId) };
+    },
+  );
+  app.get<{ Params: { projectId: string; workId: string } }>(
+    '/api/projects/:projectId/work/:workId/comments',
+    async (request) =>
+      listReviewComments(
+        control.ctx,
+        actor(request),
+        request.params.projectId,
+        request.params.workId,
+      ),
+  );
+  app.get<{ Params: { projectId: string; workId: string } }>(
+    '/api/projects/:projectId/work/:workId/integrations',
+    async (request) =>
+      listIntegrations(
+        control.ctx,
+        actor(request),
+        request.params.projectId,
+        request.params.workId,
+      ),
+  );
+  // Static adapter matrix: lets the UI disable what a provider cannot do instead of guessing.
+  app.get('/api/capabilities', async (request) => {
+    authorize(actor(request), 'read');
+    return { providers: CAPABILITIES };
   });
   app.post('/api/runner/observations', async (request) =>
     reportObservation(control.ctx, actor(request), request.body),

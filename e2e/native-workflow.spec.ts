@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
 import { readFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
@@ -79,6 +80,8 @@ test('synthetic provider browser flow: permission, diff, review, commit-bound ve
   });
   await expect(page.getByText(/此證據對應的版本/)).toBeVisible();
   await page.getByRole('link', { name: '成果審查', exact: true }).click();
+  await expect(page.getByRole('region', { name: '程式碼區塊評論' })).toBeVisible();
+  await expect(page.getByText('沒有可留言的區塊', { exact: false })).toBeVisible();
   await page.getByLabel('審查意見', { exact: true }).fill('請在原工作區繼續修正。');
   await page.getByRole('button', { name: '要求修改', exact: true }).click();
   await page.getByRole('link', { name: /^任務/ }).click();
@@ -144,6 +147,22 @@ test('synthetic provider browser flow: permission, diff, review, commit-bound ve
   await page.getByRole('link', { name: /^任務/ }).click();
   await page.getByRole('button', { name: /合成程序完整工作鏈/ }).click();
   await expect(page.getByRole('dialog').getByText('已接受', { exact: true })).toBeVisible();
+  const repository = join(runtime.directory, 'fixture-repository');
+  const git = (...args: string[]) =>
+    execFileSync('git', ['-C', repository, ...args], { encoding: 'utf8' }).trim();
+  const baseBranch = git('rev-parse', '--abbrev-ref', 'HEAD');
+  const baseBefore = git('rev-parse', baseBranch);
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Base 分支', { exact: true }).fill(baseBranch);
+  await dialog.getByLabel('預期的 base commit（完整 40 碼）', { exact: true }).fill(baseBefore);
+  await dialog.getByRole('button', { name: '整合到候選分支', exact: true }).click();
+  // The synthetic fixture commits nothing, so the honest outcome is "already in base".
+  await expect(dialog.getByText('已包含於 base，無需整合', { exact: true })).toBeVisible({
+    timeout: 20000,
+  });
+  expect(git('rev-parse', baseBranch)).toBe(baseBefore); // base never moves
+  expect(git('branch', '--list', 'aether/integrate/*')).toBe('');
+  await page.screenshot({ path: 'evidence/screenshots/e2e-integration.png' });
   await page.getByRole('dialog').getByRole('button', { name: '關閉', exact: true }).click();
   await page.getByRole('link', { name: '終端機', exact: true }).click();
   await page.getByRole('button', { name: '啟動終端機', exact: true }).click();

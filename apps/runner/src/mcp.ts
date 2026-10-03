@@ -169,6 +169,57 @@ export function createCollaborationMcp(input: unknown) {
       ),
   );
   server.registerTool(
+    'reservations_list',
+    {
+      description:
+        'List active ADVISORY file reservations in this project. They coordinate cooperating agents only; they do not block writes.',
+      inputSchema: {},
+      annotations: { readOnlyHint: true },
+    },
+    () => perform(() => api(`${projectPath}/reservations`)),
+  );
+  server.registerTool(
+    'reservations_acquire',
+    {
+      description:
+        'Reserve repo-relative path patterns for a bounded time. A conflict returns granted=false with the holders; wait or coordinate instead of editing those paths.',
+      inputSchema: {
+        patterns: z.array(z.string().min(1).max(256)).min(1).max(32),
+        ttlSec: z.number().int().min(30).max(3600).default(600),
+        idempotencyKey: key,
+      },
+      annotations: { readOnlyHint: false, idempotentHint: true },
+    },
+    ({ idempotencyKey, ...data }) =>
+      perform(() =>
+        command('reservation.acquire', { ...data, workId: scope.workId }, idempotencyKey),
+      ),
+  );
+  server.registerTool(
+    'reservations_renew',
+    {
+      description: 'Extend your own unexpired reservation. An expired lease must be re-acquired.',
+      inputSchema: {
+        reservationId: z.string().uuid(),
+        ttlSec: z.number().int().min(30).max(3600).default(600),
+        idempotencyKey: key,
+      },
+      annotations: { readOnlyHint: false, idempotentHint: true },
+    },
+    ({ idempotencyKey, ...data }) =>
+      perform(() => command('reservation.renew', data, idempotencyKey)),
+  );
+  server.registerTool(
+    'reservations_release',
+    {
+      description: 'Release your own reservation as soon as you finish editing those paths.',
+      inputSchema: { reservationId: z.string().uuid(), idempotencyKey: key },
+      annotations: { readOnlyHint: false, idempotentHint: true },
+    },
+    ({ idempotencyKey, ...data }) =>
+      perform(() => command('reservation.release', data, idempotencyKey)),
+  );
+  server.registerTool(
     'wait_for_message',
     {
       description: 'Bounded durable-inbox wait, no auto acknowledgement; poll again after timeout.',

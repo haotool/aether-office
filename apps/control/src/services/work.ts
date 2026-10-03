@@ -8,6 +8,7 @@ import {
   assertTransition,
   assertVersion,
   DomainError,
+  supports,
   type Actor,
 } from '@aether/kernel';
 import { work, dependencies } from '../db/schema.js';
@@ -171,11 +172,12 @@ export function changeWork(
         .get(previous.workspaceId, row.id, c.projectId, previous.machineId)
     )
       throw new DomainError('RETRY_MACHINE_UNAVAILABLE');
+    if (c.type === 'work.retry' && c.data.resume && !supports(assigned.provider, 'resume'))
+      throw new DomainError('CAPABILITY_UNSUPPORTED');
     if (
       c.type === 'work.retry' &&
       c.data.resume &&
       (assigned.mode !== 'live' ||
-        !['codex', 'claude'].includes(assigned.provider) ||
         previous?.provider !== assigned.provider ||
         !previous?.providerSessionId)
     )
@@ -352,6 +354,10 @@ export function changeWork(
       );
     }
   }
+  // A retry is two policy steps (changes_requested|failed -> ready -> assigned); the DB guard
+  // rejects the shortcut.
+  if (c.type === 'work.retry')
+    ctx.sqlite.prepare("UPDATE work_items SET state='ready' WHERE id=?").run(row.id);
   ctx.db.update(work).set(patch).where(eq(work.id, row.id)).run();
   if (c.type === 'work.cancel') refreshMessageWaits(ctx, c.projectId);
   if (patch.state === 'completed') {

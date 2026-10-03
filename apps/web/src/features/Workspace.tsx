@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { Snapshot, Work } from '@aether/contracts';
 import { api, execute } from '../api.js';
 import { PageHeading, Empty, Badge, useT } from '../ui.js';
+import { Reservations } from './Reservations.js';
 export type WorkspaceData = {
   workspaces: {
     id: string;
@@ -153,6 +154,7 @@ export function Workspace({ snapshot }: { snapshot: Snapshot }) {
           );
         })
       )}
+      <Reservations projectId={snapshot.project.id} />
     </>
   );
 }

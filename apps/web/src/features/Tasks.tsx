@@ -3,6 +3,8 @@ import { Plus, ArrowRight, CheckCircle2, GitBranch } from 'lucide-react';
 import type { Snapshot, Work } from '@aether/contracts';
 import { TaskDiagnostics } from './TaskDiagnostics.js';
 import { execute } from '../api.js';
+import { Integration } from './Integration.js';
+import { useCapabilities } from './CapabilityMatrix.js';
 import { Modal, Field, Empty, Badge, PageHeading, useT } from '../ui.js';
 const TaskDag = lazy(() => import('./TaskDag.js').then((m) => ({ default: m.TaskDag })));
 export function TaskForm({
@@ -110,7 +112,11 @@ export function Tasks({
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [resume, setResume] = useState(false);
+  const capabilities = useCapabilities();
   const current = snapshot.work.find((w) => w.id === selected?.id) ?? selected;
+  const assignedProvider = snapshot.agents.find((a) => a.id === current?.assignee)?.provider;
+  const canResume =
+    !!assignedProvider && !!capabilities.data?.providers[assignedProvider]?.['resume'];
   const rows = (items: Work[]) =>
     items.map((work) => (
       <button className="task-row" key={work.id} onClick={() => setSelected(work)}>
@@ -302,10 +308,11 @@ export function Tasks({
           {['failed', 'changes_requested'].includes(current.state) && (
             <>
               {snapshot.project.mode === 'live' && (
-                <label>
+                <label title={canResume ? undefined : t('resumeUnsupported')}>
                   <input
                     type="checkbox"
-                    checked={resume}
+                    checked={resume && canResume}
+                    disabled={!canResume}
                     onChange={(e) => setResume(e.target.checked)}
                   />
                   {t('resumeSession')}
@@ -398,6 +405,14 @@ export function Tasks({
                 {t('cancel')}
               </button>
             </>
+          )}
+          {current.state === 'completed' && (
+            <Integration
+              projectId={snapshot.project.id}
+              work={current}
+              canIntegrate={canExtend}
+              onSaved={onSaved}
+            />
           )}
           {error && (
             <p role="alert" className="error-text">

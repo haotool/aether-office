@@ -96,7 +96,17 @@ it('MCP stdio uses durable scoped inbox/replies, stable retries and expiring run
     await app.listen({ host: '127.0.0.1', port: 4329 });
     await client.connect(transport);
     const list = await client.listTools();
-    expect(list.tools.map((t) => t.name)).toContain('get_inbox');
+    expect(list.tools.map((t) => t.name)).toEqual(
+      expect.arrayContaining(['get_inbox', 'reservations_acquire', 'reservations_list']),
+    );
+    const reserve = await client.callTool({
+      name: 'reservations_acquire',
+      arguments: { patterns: ['src/mcp/**'], idempotencyKey: 'reserve-mcp-key' },
+    });
+    expect(reserve.isError).not.toBe(true);
+    expect(JSON.parse((reserve.content as { text: string }[])[0]!.text).result.granted).toBe(true);
+    const reserved = await client.callTool({ name: 'reservations_list', arguments: {} });
+    expect(JSON.stringify(reserved)).toContain('src/mcp/**');
     const nonce = randomUUID();
     const sent = control.execute(
       owner.actor,

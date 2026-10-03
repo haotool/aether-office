@@ -3,6 +3,61 @@ import { jobReportSchema, type RunnerJob, type Command } from '@aether/contracts
 import { authorize, assertVersion, DomainError, type Actor } from '@aether/kernel';
 import { identityActor } from './identity.js';
 import { task, emit, type Context } from './context.js';
+export function requestIntegration(
+  ctx: Context,
+  actor: Actor,
+  c: Extract<Command, { type: 'work.integrate' }>,
+) {
+  const work = task(ctx, c.projectId, c.data.workId);
+  assertVersion(work.version, c.expectedVersion);
+  // Only human-accepted work whose verified commit is exactly the current head may be integrated.
+  if (work.state !== 'completed' || !work.headSha || work.verifiedSha !== work.headSha)
+    throw new DomainError('INTEGRATION_REQUIRES_ACCEPTED_WORK');
+  const workspace = ctx.sqlite
+    .prepare(
+      "SELECT w.id,w.machineId FROM workspaces w JOIN machines m ON m.id=w.machineId WHERE w.workId=? AND w.purpose='implementation' AND m.revokedAt IS NULL ORDER BY w.createdAt DESC LIMIT 1",
+    )
+    .get(work.id) as { id: string; machineId: string } | undefined;
+  if (!workspace) throw new DomainError('WORKSPACE_NOT_READY');
+  // Serial: one integration per project at a time, so each one sees the previous result.
+  if (
+    ctx.sqlite
+      .prepare(
+        "SELECT 1 FROM runner_jobs WHERE projectId=? AND kind='integrate' AND state IN ('queued','running')",
+      )
+      .get(c.projectId)
+  )
+    throw new DomainError('INTEGRATION_BUSY');
+  if (
+    ctx.sqlite
+      .prepare("SELECT 1 FROM integrations WHERE workId=? AND headSha=? AND status='merged'")
+      .get(work.id, work.headSha)
+  )
+    throw new DomainError('ALREADY_INTEGRATED');
+  const candidate = `aether/integrate/${work.id.slice(0, 8)}-${work.headSha.slice(0, 8)}`;
+  const id = randomUUID();
+  ctx.sqlite
+    .prepare(
+      'INSERT INTO runner_jobs(id,projectId,workId,workspaceId,machineId,kind,state,payload,requestedBy,expectedHead,expectedVersion,createdAt) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+    )
+    .run(
+      id,
+      c.projectId,
+      work.id,
+      workspace.id,
+      workspace.machineId,
+      'integrate',
+      'queued',
+      JSON.stringify({
+        integrate: { baseBranch: c.data.baseBranch, expectedBase: c.data.expectedBase, candidate },
+      }),
+      actor.id,
+      work.headSha,
+      work.version,
+      ctx.now(),
+    );
+  return { id, kind: 'integrate', state: 'queued', workId: work.id, candidate };
+}
 export function requestJob(
   ctx: Context,
   actor: Actor,
@@ -185,6 +240,28 @@ export function reportJob(ctx: Context, actor: Actor, input: unknown) {
       }
       if (result.status === 'succeeded' && job.kind === 'diff' && !result.diff)
         throw new DomainError('DIFF_REQUIRED');
+      if (result.status === 'succeeded' && job.kind === 'integrate') {
+        const i = result.integration;
+        if (!i) throw new DomainError('INTEGRATION_REQUIRED');
+        if (i.status !== 'base_moved' && i.headSha !== job.expectedHead)
+          throw new DomainError('INTEGRATION_BINDING_MISMATCH');
+        const spec = (JSON.parse(job.payload) as RunnerJob['payload']).integrate;
+        ctx.sqlite
+          .prepare('INSERT INTO integrations VALUES (?,?,?,?,?,?,?,?,?,?,?)')
+          .run(
+            job.id,
+            job.projectId,
+            job.workId,
+            i.status,
+            spec?.baseBranch ?? '',
+            i.status === 'base_moved' ? i.expected : i.baseSha,
+            job.expectedHead,
+            i.status === 'merged' ? i.mergeSha : null,
+            i.status === 'merged' ? i.candidate : null,
+            JSON.stringify(i),
+            ctx.now(),
+          );
+      }
       const state =
         job.state === 'indeterminate' || result.error === 'RUNNER_RESTARTED_RESULT_UNKNOWN'
           ? 'indeterminate'
@@ -215,4 +292,30 @@ export function reportJob(ctx: Context, actor: Actor, input: unknown) {
       return { duplicate: false };
     })
     .immediate();
+}
+export function listIntegrations(ctx: Context, actor: Actor, projectId: string, workId: string) {
+  authorize(actor, 'read', projectId);
+  // Every attempt is listed, including queued and failed ones, so a failure is never invisible.
+  const rows = ctx.sqlite
+    .prepare(
+      "SELECT j.id AS jobId,j.state,j.result AS jobResult,j.createdAt,i.status,i.baseBranch,i.headSha,i.candidate,i.detail FROM runner_jobs j LEFT JOIN integrations i ON i.jobId=j.id WHERE j.projectId=? AND j.workId=? AND j.kind='integrate' ORDER BY j.createdAt DESC",
+    )
+    .all(projectId, workId) as {
+    jobId: string;
+    state: string;
+    jobResult: string | null;
+    createdAt: number;
+    status: string | null;
+    baseBranch: string | null;
+    headSha: string | null;
+    candidate: string | null;
+    detail: string | null;
+  }[];
+  return {
+    integrations: rows.map(({ jobResult, detail, ...row }) => ({
+      ...row,
+      error: jobResult ? ((JSON.parse(jobResult) as { error?: string }).error ?? null) : null,
+      detail: detail ? (JSON.parse(detail) as unknown) : null,
+    })),
+  };
 }

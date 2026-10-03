@@ -420,6 +420,65 @@ export const commandSchema = z.discriminatedUnion('type', [
         .strict(),
     })
     .strict(),
+  z
+    .object({
+      ...projectEnvelope,
+      type: z.literal('work.integrate'),
+      expectedVersion: version,
+      data: z
+        .object({
+          workId: id,
+          baseBranch: z.string().regex(/^[\w./-]{1,100}$/),
+          expectedBase: z.string().regex(/^[0-9a-f]{40}$/),
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...projectEnvelope,
+      type: z.literal('work.comment'),
+      data: z
+        .object({
+          workId: id,
+          headSha: z.string().regex(/^[0-9a-f]{40}$/),
+          path: z.string().min(1).max(512),
+          hunkHash: z.string().regex(/^[0-9a-f]{64}$/),
+          line: z.number().int().positive().optional(),
+          body: z.string().min(1).max(4000),
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...projectEnvelope,
+      type: z.literal('reservation.acquire'),
+      data: z
+        .object({
+          patterns: z.array(z.string().min(1).max(256)).min(1).max(32),
+          ttlSec: z.number().int().min(30).max(3600).default(600),
+          workId: id.optional(),
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...projectEnvelope,
+      type: z.literal('reservation.renew'),
+      data: z
+        .object({ reservationId: id, ttlSec: z.number().int().min(30).max(3600).default(600) })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...projectEnvelope,
+      type: z.literal('reservation.release'),
+      data: z.object({ reservationId: id }).strict(),
+    })
+    .strict(),
 ]);
 export type Command = z.infer<typeof commandSchema>;
 export type Agent = z.infer<typeof agentSchema>;
@@ -612,9 +671,21 @@ export const runnerJobSchema = z
     projectId: id,
     workId: id,
     workspaceId: id,
-    kind: z.enum(['diff', 'verify']),
+    kind: z.enum(['diff', 'verify', 'integrate']),
     expectedHead: z.string().regex(/^[a-f0-9]{40,64}$/),
-    payload: z.object({ verifier: verifierSchema.optional() }).strict(),
+    payload: z
+      .object({
+        verifier: verifierSchema.optional(),
+        integrate: z
+          .object({
+            baseBranch: z.string(),
+            expectedBase: z.string().regex(/^[0-9a-f]{40}$/),
+            candidate: z.string(),
+          })
+          .strict()
+          .optional(),
+      })
+      .strict(),
   })
   .strict();
 export type RunnerJob = z.infer<typeof runnerJobSchema>;
@@ -645,12 +716,35 @@ export const verificationSchema = z
     reason: z.string().max(4000).nullable(),
   })
   .strict();
+export const integrationResultSchema = z.discriminatedUnion('status', [
+  z
+    .object({
+      status: z.literal('merged'),
+      baseSha: z.string(),
+      headSha: z.string(),
+      mergeSha: z.string(),
+      candidate: z.string(),
+    })
+    .strict(),
+  z.object({ status: z.literal('up_to_date'), baseSha: z.string(), headSha: z.string() }).strict(),
+  z
+    .object({
+      status: z.literal('conflict'),
+      baseSha: z.string(),
+      headSha: z.string(),
+      files: z.array(z.string().max(4096)).max(500),
+    })
+    .strict(),
+  z.object({ status: z.literal('base_moved'), expected: z.string(), actual: z.string() }).strict(),
+]);
+export type IntegrationResult = z.infer<typeof integrationResultSchema>;
 export const jobReportSchema = z
   .object({
     jobId: id,
     status: z.enum(['succeeded', 'failed']),
     error: z.string().max(200).optional(),
     verification: verificationSchema.optional(),
+    integration: integrationResultSchema.optional(),
     diff: z
       .object({
         baseSha: z.string().regex(/^[a-f0-9]{40,64}$/),
@@ -770,3 +864,34 @@ export const localSessionSchema = z.object({
 });
 export type LocalSession = z.infer<typeof localSessionSchema>;
 export type LocalSessionsResponse = { enabled: boolean; sessions: LocalSession[] };
+
+export const reservationSchema = z.object({
+  id,
+  ownerId: id,
+  workId: id.nullable(),
+  patterns: z.array(z.string()),
+  fence: z.number().int(),
+  state: z.enum(['active', 'expired', 'released']),
+  expiresAt: z.number(),
+  advisory: z.literal(true),
+});
+export type FileReservation = z.infer<typeof reservationSchema>;
+
+export const reviewCommentSchema = z.object({
+  id,
+  workId: id,
+  authorId: id,
+  headSha: z.string(),
+  path: z.string(),
+  hunkHash: z.string(),
+  line: z.number().nullable(),
+  body: z.string(),
+  createdAt: z.number(),
+  status: z.enum(['current', 'carried', 'stale', 'unknown']),
+});
+export const reviewCommentsSchema = z.object({
+  head: z.string().nullable(),
+  hunks: z.array(z.object({ path: z.string(), header: z.string(), hash: z.string() })),
+  comments: z.array(reviewCommentSchema),
+});
+export type ReviewComments = z.infer<typeof reviewCommentsSchema>;

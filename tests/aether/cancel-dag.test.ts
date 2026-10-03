@@ -1,6 +1,6 @@
 import { it, expect } from 'vitest';
 import { randomUUID } from 'node:crypto';
-import { fixture, command } from './fixture.js';
+import { fixture, command, seedWork } from './fixture.js';
 import { enroll, claim, report } from '../../apps/control/src/services/runners.js';
 it.each(['queued', 'running'] as const)(
   'cancels waiting diamond descendants once while preserving executed work (%s root)',
@@ -25,11 +25,11 @@ it.each(['queued', 'running'] as const)(
         unrelated = create('Unrelated'),
         historical = create('Historical attempt', [root]);
       // Reconciled/legacy execution evidence must survive even if its prerequisite graph is inconsistent.
-      f.control.ctx.sqlite
-        .prepare(
-          "UPDATE work_items SET state='failed',attempt=1,result='Preserve prior execution evidence' WHERE id=?",
-        )
-        .run(historical);
+      seedWork(
+        f.control,
+        historical,
+        "state='failed',attempt=1,result='Preserve prior execution evidence'",
+      );
       const machine = enroll(f.control.ctx, f.owner.actor, 'Cancellation fixture', [f.projectId]);
       f.control.execute(
         f.owner.actor,

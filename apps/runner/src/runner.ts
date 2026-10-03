@@ -7,6 +7,7 @@ import {
 } from '@aether/contracts';
 import { runFixture } from '@aether/providers';
 import { ObserverRunner } from './observers.js';
+import { integrate } from './merge.js';
 import { TerminalRunner } from './terminals.js';
 import { Journal } from './journal.js';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -101,6 +102,20 @@ export class Runner {
             truncated: diff.text.length > 60000 || diff.untracked.length > 1000,
           },
         };
+      } else if (job.kind === 'integrate') {
+        const spec = job.payload.integrate;
+        if (!spec) throw new Error('INTEGRATION_SPEC_REQUIRED');
+        const integration = await integrate({
+          repository: workspace.repository,
+          baseBranch: spec.baseBranch,
+          expectedBase: spec.expectedBase,
+          headSha: job.expectedHead,
+          candidate: spec.candidate,
+          scratchDir: manager.scratch('integrations'),
+          hooksDir: manager.hooks,
+          author: { name: 'AETHER integration', email: 'aether@localhost' },
+        });
+        result = { jobId: job.id, status: 'succeeded', integration };
       } else {
         const requested = job.payload.verifier,
           harness = requested ? this.native.verifiers.get(requested.name) : undefined;

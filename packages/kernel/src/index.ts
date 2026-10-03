@@ -43,7 +43,11 @@ export type Action =
   | 'identity.manage'
   | 'knowledge.propose'
   | 'knowledge.approve'
-  | 'reservation.manage';
+  | 'work.comment'
+  | 'work.integrate'
+  | 'reservation.acquire'
+  | 'reservation.renew'
+  | 'reservation.release';
 const grants: Record<Role, readonly Action[]> = {
   owner: [
     'terminal.start',
@@ -67,8 +71,10 @@ const grants: Record<Role, readonly Action[]> = {
     'work.progress',
     'work.submit',
     'work.review',
+    'work.comment',
     'work.verify',
     'work.accept',
+    'work.integrate',
     'work.cancel',
     'message.send',
     'message.ack',
@@ -77,7 +83,9 @@ const grants: Record<Role, readonly Action[]> = {
     'identity.manage',
     'knowledge.propose',
     'knowledge.approve',
-    'reservation.manage',
+    'reservation.acquire',
+    'reservation.renew',
+    'reservation.release',
   ],
   operator: [
     'terminal.start',
@@ -98,17 +106,21 @@ const grants: Record<Role, readonly Action[]> = {
     'work.progress',
     'work.submit',
     'work.cancel',
+    'work.comment',
     'message.send',
     'message.ack',
     'approval.decide',
     'layout.save',
     'knowledge.propose',
-    'reservation.manage',
+    'reservation.acquire',
+    'reservation.renew',
+    'reservation.release',
   ],
   reviewer: [
     'read',
     'workspace.diff',
     'work.review',
+    'work.comment',
     'message.send',
     'message.ack',
     'knowledge.propose',
@@ -123,7 +135,9 @@ const grants: Record<Role, readonly Action[]> = {
     'message.send',
     'message.ack',
     'knowledge.propose',
-    'reservation.manage',
+    'reservation.acquire',
+    'reservation.renew',
+    'reservation.release',
   ],
   runner: ['read', 'runner.report', 'work.verify'],
 };
@@ -155,10 +169,10 @@ export type WorkState =
   | 'cancelled'
   | 'failed'
   | 'indeterminate';
-const transitions: Record<WorkState, readonly WorkState[]> = {
+export const TRANSITIONS: Record<WorkState, readonly WorkState[]> = {
   backlog: ['ready', 'cancelled'],
   ready: ['backlog', 'assigned', 'blocked', 'cancelled'],
-  assigned: ['running', 'cancel_requested', 'blocked', 'indeterminate'],
+  assigned: ['running', 'cancel_requested', 'blocked', 'indeterminate', 'cancelled'],
   running: ['reviewing', 'failed', 'blocked', 'cancel_requested', 'indeterminate'],
   reviewing: ['changes_requested', 'verified', 'cancel_requested'],
   changes_requested: ['ready', 'cancelled'],
@@ -171,7 +185,7 @@ const transitions: Record<WorkState, readonly WorkState[]> = {
   indeterminate: ['blocked', 'cancelled'],
 };
 export function assertTransition(from: WorkState, to: WorkState): void {
-  if (!transitions[from].includes(to)) throw new DomainError('INVALID_TRANSITION');
+  if (!TRANSITIONS[from].includes(to)) throw new DomainError('INVALID_TRANSITION');
 }
 export function assertVersion(actual: number, expected: number): void {
   if (actual !== expected) throw new DomainError('VERSION_CONFLICT');
@@ -234,3 +248,18 @@ export function nextOccurrence(
 }
 
 export { validateLayout, objectBounds, objectSize } from './layout.js';
+export {
+  normalizePattern,
+  patternsOverlap,
+  findConflicts,
+  type Reservation,
+} from './reservations.js';
+export { parseDiff, commentStatus, type Hunk, type CommentStatus } from './diff.js';
+export {
+  CAPABILITIES,
+  capabilitiesOf,
+  supports,
+  type Capabilities,
+  type CapabilityFlag,
+  type Injection,
+} from './capabilities.js';

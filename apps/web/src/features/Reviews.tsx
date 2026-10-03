@@ -4,6 +4,7 @@ import type { Snapshot } from '@aether/contracts';
 import { api, execute } from '../api.js';
 import { PageHeading, Empty, Badge, Field, useT } from '../ui.js';
 import { useWorkspaces, JobEvidence } from './Workspace.js';
+import { HunkComments } from './HunkComments.js';
 export function Reviews({
   snapshot,
   onSaved,
@@ -66,6 +67,13 @@ export function Reviews({
                 <p>{work.acceptance}</p>
                 <p className="result-text">{work.result}</p>
                 <code>{work.headSha ?? t('verificationRequired')}</code>
+                {work.headSha && (
+                  <HunkComments
+                    projectId={snapshot.project.id}
+                    work={work}
+                    canComment={canReview}
+                  />
+                )}
                 {snapshot.project.mode === 'live' && (
                   <NativeReview
                     work={work}
