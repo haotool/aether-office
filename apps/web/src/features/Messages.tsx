@@ -4,6 +4,7 @@ import { Send, MessageSquare, ArrowUpRight } from 'lucide-react';
 import type { MessageWait, Snapshot } from '@aether/contracts';
 import { api, execute } from '../api.js';
 import { Empty, Field, Badge, PageHeading, AvatarIcon, useT } from '../ui.js';
+import { Rooms, useRooms } from './Rooms.js';
 export function Messages({
   snapshot,
   onSaved,
@@ -18,6 +19,8 @@ export function Messages({
   const [busy, setBusy] = useState(false);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
+  const [roomId, setRoomId] = useState('');
+  const rooms = useRooms(snapshot.project.id);
   return (
     <>
       <PageHeading title={t('messages')} subtitle={t('noMessagesHint')} />
@@ -111,7 +114,7 @@ export function Messages({
                 await execute(
                   'message.send',
                   {
-                    recipients: data.getAll('recipients'),
+                    ...(roomId ? { roomId } : { recipients: data.getAll('recipients') }),
                     body: data.get('body'),
                     kind: data.get('kind'),
                     ...(replyTo ? { replyTo } : {}),
@@ -128,11 +131,24 @@ export function Messages({
               }
             }}
           >
+            {!!rooms.data?.rooms.length && (
+              <Field label={t('room')}>
+                <select value={roomId} onChange={(e) => setRoomId(e.target.value)}>
+                  <option value="">{t('noRoom')}</option>
+                  {rooms.data.rooms.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
             <Field label={t('recipients')}>
               <select
                 name="recipients"
                 multiple
-                required
+                required={!roomId}
+                disabled={!!roomId}
                 size={Math.min(6, Math.max(2, snapshot.agents.length))}
               >
                 {snapshot.agents.map((a) => (

@@ -35,7 +35,10 @@ export async function enrollRunner(options: {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const flag = (name: string) => process.argv[process.argv.indexOf(name) + 1];
+  const flag = (name: string) => {
+    const at = process.argv.indexOf(name);
+    return at < 0 ? undefined : process.argv[at + 1];
+  };
   const url = flag('--url');
   const invitation = process.env['AETHER_INVITATION'] ?? flag('--invitation');
   if (!url || !invitation) {

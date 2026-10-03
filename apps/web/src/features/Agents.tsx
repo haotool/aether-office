@@ -104,6 +104,7 @@ export function Agents({
                 ).map((p) => (
                   <option key={p} value={p}>
                     {p.toUpperCase()}
+                    {p === 'acp' ? ` — ${t('acpNeedsConfig')}` : ''}
                   </option>
                 ))}
               </select>

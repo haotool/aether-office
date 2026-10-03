@@ -23,6 +23,8 @@ import { hash, secret, authenticate, createIdentity, identityActor } from './ser
 import { agent, emit, project, type Context } from './services/context.js';
 import { requestIntegration, requestJob } from './services/jobs.js';
 import { decideApproval } from './services/approvals.js';
+import { roomCommand } from './services/rooms.js';
+import { createA2AClient, revokeA2AClient } from './services/a2a-clients.js';
 import { createInvitation } from './services/invitations.js';
 import { integrationCommand } from './services/integrations.js';
 import { skillCommand } from './services/skills.js';
@@ -102,6 +104,16 @@ export class Control {
           case 'terminal.resize':
           case 'terminal.stop':
             result = terminalCommand(this.ctx, actor, c);
+            break;
+          case 'room.create':
+          case 'room.members':
+            result = roomCommand(this.ctx, actor, c);
+            break;
+          case 'a2a.client.create':
+            result = createA2AClient(this.ctx, actor, c);
+            break;
+          case 'a2a.client.revoke':
+            result = revokeA2AClient(this.ctx, c);
             break;
           case 'machine.invite':
             result = createInvitation(this.ctx, actor, c);

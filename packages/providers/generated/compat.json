@@ -1,0 +1,5 @@
+{
+  "schema": "codex-0.159.2",
+  "verifiedCliVersions": ["0.159.2", "0.160.0"],
+  "method": "`codex app-server generate-ts` output for 0.160.0 is byte-identical to 0.159.2; initialize handshake and rollout decoding were run against the installed 0.160.0 binary and real sessions"
+}

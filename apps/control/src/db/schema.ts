@@ -59,6 +59,7 @@ export const messages = sqliteTable('messages', {
   kind: text().notNull(),
   createdAt: integer().notNull(),
   expiresAt: integer().notNull(),
+  roomId: text(),
 });
 export const identities = sqliteTable('identities', {
   id: text().primaryKey(),

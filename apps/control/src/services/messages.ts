@@ -12,6 +12,7 @@ import { assertOwnedAgent, authorize, DomainError, type Actor } from '@aether/ke
 import { messages } from '../db/schema.js';
 import { identityActor } from './identity.js';
 import { agent, project, emit, type Context } from './context.js';
+import { roomRecipients } from './rooms.js';
 
 function participant(ctx: Context, projectId: string, id: string, persist = true): void {
   let kind: 'agent' | 'user' = 'agent';
@@ -30,8 +31,12 @@ function participant(ctx: Context, projectId: string, id: string, persist = true
 
 type Send = Extract<Command, { type: 'message.send' }>;
 export function sendMessage(ctx: Context, actor: Actor, command: Send) {
-  const { projectId, data } = command;
+  const { projectId, data: input } = command;
   const senderId = actor.agentId ?? actor.id;
+  // A room post is delivered to the room's other members, each with its own delivery record.
+  const data = input.roomId
+    ? { ...input, recipients: roomRecipients(ctx, projectId, input.roomId, actor) }
+    : input;
   if (new Set(data.recipients).size !== data.recipients.length)
     throw new DomainError('DUPLICATE_RECIPIENT', 400);
   for (const recipient of data.recipients) {
@@ -79,6 +84,7 @@ export function sendMessage(ctx: Context, actor: Actor, command: Send) {
     kind: data.kind,
     createdAt: ctx.now(),
     expiresAt: ctx.now() + data.ttlMs,
+    roomId: data.roomId ?? null,
   };
   ctx.db.insert(messages).values(message).run();
   for (const recipientId of data.recipients)

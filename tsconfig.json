@@ -20,7 +20,7 @@
     "packages/**/*.ts",
     "packages/**/*.tsx",
     "tests/aether/**/*.ts",
-    "scripts/dev.ts"
+    "scripts/**/*.ts"
   ],
   "exclude": ["node_modules", "dist", ".research"]
 }

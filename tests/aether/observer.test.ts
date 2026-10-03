@@ -185,3 +185,43 @@ it('uses the real Claude SDK read API on an approved file without spawning a mod
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+it('decodes verified 0.160.0 rollouts with their non-conversation records, and still refuses unverified versions and unknown records', () => {
+  const root = mkdtempSync(join(tmpdir(), 'aether-observer-160-'));
+  const project = realpathSync(root);
+  const write = (name: string, lines: unknown[]) => {
+    writeFileSync(join(root, name), lines.map((l) => JSON.stringify(l) + '\n').join(''));
+    return new CodexObserver(root, name, project).read(null);
+  };
+  const meta = (version: string) => ({
+    type: 'session_meta',
+    payload: { id: 's', cwd: project, cli_version: version },
+  });
+  const message = {
+    type: 'response_item',
+    payload: { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'hello' }] },
+  };
+  try {
+    const verified = write('ok.jsonl', [
+      meta('0.160.0'),
+      { type: 'world_state', payload: {} },
+      { type: 'token_usage_record', payload: {} },
+      { type: 'inter_agent_communication_metadata', payload: {} },
+      {
+        type: 'response_item',
+        payload: { type: 'agent_message', content: 'peer text is not a user message' },
+      },
+      message,
+    ]);
+    expect(verified.status).toBe('observed');
+    expect(verified.records.map((r) => r.text)).toEqual(['hello']);
+    expect(write('old.jsonl', [meta('0.130.0-alpha.5'), message]).status).toBe(
+      'unsupported_schema',
+    ); // never parsed on a guess
+    expect(
+      write('new.jsonl', [meta('0.160.0'), { type: 'brand_new_record', payload: {} }]).status,
+    ).toBe('unsupported_schema');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

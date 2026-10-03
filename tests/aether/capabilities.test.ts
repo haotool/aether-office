@@ -6,7 +6,9 @@ import { createServer } from '../../apps/control/src/server.js';
 it('only claims capabilities that are implemented; unknown providers support nothing', () => {
   expect(supports('codex', 'resume')).toBe(true);
   expect(supports('demo', 'resume')).toBe(false);
-  expect(supports('acp', 'start')).toBe(false);
+  expect(supports('acp', 'start')).toBe(true); // via the negotiated generic adapter
+  expect(supports('acp', 'resume')).toBe(false); // only per-agent negotiation could enable this
+  expect(supports('acp', 'subagents')).toBe(false);
   expect(supports('mystery', 'start')).toBe(false);
   for (const provider of ['codex', 'claude'] as const) {
     expect(capabilitiesOf(provider).subagents).toBe(false); // disabled in both adapters

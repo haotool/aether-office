@@ -33,3 +33,12 @@
 - Partial UTF-8/JSONL, reopen cursor, stable source IDs, inode rotation, truncation/prefix replacement, deletion, path traversal and symlink rejection have real-file tests. Arbitrary edits in the already-consumed middle of an unchanged file are not a complete audit/replay mechanism.
 
 Remaining: GUI-based local grant setup/selection (configuration is currently machine-local JSON), larger-file support, and actual provider-file compatibility checks. Canonical ingestion, atomic checkpoint/pending batches, nonblocking runner scheduling, observed provenance and stale/offline UI are implemented and tested with explicit fixtures. Reader output must never authorize commands or mark managed work completed.
+
+## ACP and A2A versions (recorded separately)
+
+| Layer | Wire protocol | Package (exact) | Notes |
+|---|---|---|---|
+| ACP client (`packages/providers/src/acp.ts`) | ACP v1 (`PROTOCOL_VERSION` 1, agent selects at `initialize`) | `@agentclientprotocol/sdk` 1.7.0 | Capabilities come from negotiation. Real `@agentclientprotocol/claude-agent-acp` 0.85.1 negotiated v1 with resume, image, embeddedContext and MCP advertised (initialize only, no model call). Not usable for read-only review. |
+| A2A gateway (`apps/control/src/services/a2a.ts`) | A2A spec 1.0.0, JSON-RPC binding | `@a2a-js/sdk` 1.3.0 | Off unless `AETHER_A2A=on`. Methods: SendMessage, GetTask, CancelTask, ListTasks. No streaming, push, or follow-up turns. |
+
+The ACP wire version, the SDK semver and the A2A spec version move independently; a test pins the ACP SDK semver to the installed package.

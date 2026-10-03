@@ -28,6 +28,8 @@ import {
   syncConnection,
   type SyncOptions,
 } from './services/integrations.js';
+import { authenticateA2AClient } from './services/a2a-clients.js';
+import { listRooms } from './services/rooms.js';
 import { redeemInvitation } from './services/invitations.js';
 import { listSkills } from './services/skills.js';
 import { listSchedules, tickSchedules } from './services/schedules.js';
@@ -45,6 +47,8 @@ export function createServer(
     logger?: boolean;
     /** Test seam: fetch policy and environment for connectors. Defaults are the secure ones. */
     connectors?: SyncOptions;
+    /** Enable the A2A gateway. Defaults to the AETHER_A2A=on environment switch; off otherwise. */
+    a2a?: boolean;
   },
 ) {
   const origin = new URL(options.origin);
@@ -444,6 +448,58 @@ export function createServer(
       );
     },
   );
+  app.get<{ Params: { projectId: string } }>('/api/projects/:projectId/rooms', async (request) => {
+    const who = actor(request);
+    authorize(who, 'read', request.params.projectId);
+    // Agents see only the rooms they belong to.
+    const rooms = listRooms(control.ctx, request.params.projectId);
+    return {
+      rooms: who.agentId ? rooms.filter((r) => r.members.includes(who.agentId!)) : rooms,
+    };
+  });
+  const a2aEnabled = options.a2a ?? process.env['AETHER_A2A'] === 'on';
+  app.get<{ Params: { projectId: string } }>('/api/projects/:projectId/a2a', async (request) => {
+    authorize(actor(request), 'read', request.params.projectId);
+    return {
+      enabled: a2aEnabled,
+      cardUrl: a2aEnabled ? `${options.origin}/.well-known/agent-card.json` : null,
+      clients: control.ctx.sqlite
+        .prepare(
+          `SELECT c.id,c.name,c.maxOpen,c.revokedAt,
+            (SELECT COUNT(*) FROM a2a_tasks t JOIN work_items w ON w.id=t.workId WHERE t.clientId=c.id AND w.state NOT IN ('completed','failed','cancelled')) AS open
+           FROM a2a_clients c WHERE c.projectId=? ORDER BY c.createdAt`,
+        )
+        .all(request.params.projectId),
+    };
+  });
+  // A2A gateway: absent (404) unless explicitly enabled. The SDK is only loaded when it is.
+  if (a2aEnabled)
+    app.register(async (scope) => {
+      const { A2AGateway } = await import('./services/a2a.js');
+      const { AgentCard } = await import('@a2a-js/sdk');
+      const gateway = new A2AGateway(control, options.origin);
+      scope.get('/.well-known/agent-card.json', async (_request, reply) =>
+        reply.header('cache-control', 'public, max-age=60').send(AgentCard.toJSON(gateway.card)),
+      );
+      scope.post('/a2a', async (request, reply) => {
+        const key = `a2a:${request.ip}`;
+        const now = control.ctx.now();
+        const last = attempts.get(key);
+        if (last && last.until > now && last.count >= 20)
+          throw new DomainError('A2A_RATE_LIMIT', 429);
+        let client;
+        try {
+          client = authenticateA2AClient(control.ctx, request.headers.authorization);
+        } catch (error) {
+          attempts.set(key, {
+            count: (last && last.until > now ? last.count : 0) + 1,
+            until: now + 60_000,
+          });
+          throw error;
+        }
+        return reply.send(await gateway.handle(client, request.body));
+      });
+    });
   // GitHub signs the exact bytes it sends, so this scope keeps the body raw.
   app.register(async (scope) => {
     scope.addContentTypeParser('application/json', { parseAs: 'buffer' }, (_request, body, done) =>

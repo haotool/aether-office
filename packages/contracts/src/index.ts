@@ -92,6 +92,7 @@ export const messageSchema = z.object({
   kind: z.enum(['inform', 'request', 'decision', 'handoff']),
   createdAt: z.number(),
   expiresAt: z.number(),
+  roomId: id.nullable().default(null),
 });
 export const messageWaitSchema = z.object({
   messageId: id,
@@ -369,14 +370,19 @@ export const commandSchema = z.discriminatedUnion('type', [
       type: z.literal('message.send'),
       data: z
         .object({
-          recipients: z.array(id).min(1).max(32),
+          // Either explicit recipients or a room, never both: a room's members are the recipients.
+          recipients: z.array(id).max(32).default([]),
+          roomId: id.optional(),
           body: z.string().trim().min(1).max(16000),
           kind: z.enum(['inform', 'request', 'decision', 'handoff']).default('inform'),
           threadId: id.optional(),
           replyTo: id.optional(),
           ttlMs: z.number().int().min(1000).max(604800000).default(86400000),
         })
-        .strict(),
+        .strict()
+        .refine((d) => (d.roomId ? d.recipients.length === 0 : d.recipients.length >= 1), {
+          message: 'Provide recipients or a roomId, not both and not neither',
+        }),
     })
     .strict(),
   z
@@ -439,6 +445,36 @@ export const commandSchema = z.discriminatedUnion('type', [
             .optional(),
         })
         .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...projectEnvelope,
+      type: z.literal('room.create'),
+      data: z.object({ name: shortText, members: z.array(id).min(1).max(32) }).strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...projectEnvelope,
+      type: z.literal('room.members'),
+      data: z.object({ roomId: id, members: z.array(id).min(1).max(32) }).strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...projectEnvelope,
+      type: z.literal('a2a.client.create'),
+      data: z
+        .object({ name: shortText, maxOpen: z.number().int().min(1).max(100).default(10) })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...projectEnvelope,
+      type: z.literal('a2a.client.revoke'),
+      data: z.object({ clientId: id }).strict(),
     })
     .strict(),
   z
@@ -1050,3 +1086,11 @@ export const integrationSchema = z.object({
   version: z.number().int(),
 });
 export type IntegrationConnection = z.infer<typeof integrationSchema>;
+
+export const roomSchema = z.object({
+  id,
+  name: z.string(),
+  members: z.array(z.string()),
+  createdAt: z.number(),
+});
+export type Room = z.infer<typeof roomSchema>;

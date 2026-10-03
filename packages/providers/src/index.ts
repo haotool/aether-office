@@ -117,3 +117,11 @@ export { CodexAdapter } from './codex.js';
 export { ClaudeAdapter } from './claude.js';
 export type { NativeSink, NativeOptions } from './protocol.js';
 export { installHooksFile, removeHooksFile, HOOK_EVENTS } from './claude-hooks.js';
+export {
+  AcpAdapter,
+  negotiationFrom,
+  normalizeAcpUpdate,
+  ACP_SDK_VERSION,
+  type AcpNegotiation,
+  type AcpVersions,
+} from './acp.js';

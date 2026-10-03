@@ -5,7 +5,10 @@ import { installHooksFile, removeHooksFile } from '../packages/providers/src/cla
 // Opt-in Claude Code hook installer. Default scope is one project's .claude/settings.local.json (gitignored).
 // `--scope user` edits ~/.claude/settings.json and therefore fires for every session on this machine.
 const [action, ...rest] = process.argv.slice(2);
-const flag = (name: string) => rest[rest.indexOf(name) + 1];
+const flag = (name: string) => {
+  const at = rest.indexOf(name);
+  return at < 0 ? undefined : rest[at + 1]; // absent flag is undefined, never the next token
+};
 const scope = flag('--scope') ?? 'project';
 const settings =
   scope === 'user'

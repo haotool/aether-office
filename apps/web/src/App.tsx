@@ -49,6 +49,8 @@ import { History } from './features/History.js';
 import { Workspace } from './features/Workspace.js';
 import { ExecutionSettings } from './features/ExecutionSettings.js';
 import { Schedules } from './features/Schedules.js';
+import { Rooms } from './features/Rooms.js';
+import { A2AClients } from './features/A2AClients.js';
 import { MachineInvite } from './features/MachineInvite.js';
 import { Integrations } from './features/Integrations.js';
 import { Skills } from './features/Skills.js';
@@ -712,7 +714,10 @@ export function App() {
                         canExtend={session.actor.role === 'owner'}
                       />
                     ) : page === 'messages' ? (
-                      <Messages snapshot={data} onSaved={refresh} canWrite={canWrite} />
+                      <>
+                        <Messages snapshot={data} onSaved={refresh} canWrite={canWrite} />
+                        <Rooms projectId={projectId} agents={data.agents} canManage={canWrite} />
+                      </>
                     ) : page === 'observations' ? (
                       <Observations key={projectId} projectId={projectId} />
                     ) : page === 'terminals' ? (
@@ -813,6 +818,10 @@ export function App() {
                           </p>
                         </div>
                         <Schedules projectId={projectId} canManage={canWrite} />
+                        <A2AClients
+                          projectId={projectId}
+                          canManage={session.actor.role === 'owner'}
+                        />
                         <Integrations
                           projectId={projectId}
                           canManage={session.actor.role === 'owner'}

@@ -5,10 +5,11 @@
   "type": "module",
   "exports": "./src/index.ts",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.31.0",
     "@aether/contracts": "workspace:*",
-    "zod": "4.6.5",
-    "@anthropic-ai/claude-agent-sdk": "0.3.286",
-    "@anthropic-ai/sdk": "0.130.0"
+    "@agentclientprotocol/sdk": "1.7.0",
+    "@anthropic-ai/claude-agent-sdk": "0.3.287",
+    "@anthropic-ai/sdk": "0.131.0",
+    "@modelcontextprotocol/sdk": "1.31.0",
+    "zod": "4.6.5"
   }
 }

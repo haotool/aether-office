@@ -61,7 +61,16 @@ export const CAPABILITIES = {
     usage: true,
     externalObservation: true,
   },
-  acp: none,
+  // Generic ACP agent: static floor only. resume, images and MCP depend on negotiation per agent.
+  acp: {
+    ...none,
+    start: true,
+    interrupt: true,
+    terminate: true,
+    structuredEvents: true,
+    toolEvents: true,
+    permissionRequests: true,
+  },
   observe: { ...none, externalObservation: true },
 } as const satisfies Record<string, Capabilities>;
 

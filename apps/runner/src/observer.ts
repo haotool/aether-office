@@ -50,10 +50,22 @@ function openSource(file: string) {
     throw error;
   }
 }
+// Rollout versions whose line format was checked against real sessions. Anything else is reported as
+// unsupported_schema instead of being parsed on a guess.
+export const SUPPORTED_ROLLOUT_VERSIONS = ['0.159.2', '0.160.0'] as const;
+// Record types seen in real 0.159.2 and 0.160.0 rollouts that carry no conversation content.
+const NON_CONVERSATION_RECORDS = [
+  'turn_context',
+  'event_msg',
+  'compacted',
+  'world_state',
+  'token_usage_record',
+  'inter_agent_communication_metadata',
+];
 const metaSchema = z.object({
   id: z.string().min(1).max(200),
   cwd: z.string().refine(isAbsolute),
-  cli_version: z.literal('0.159.2'),
+  cli_version: z.enum(SUPPORTED_ROLLOUT_VERSIONS),
 });
 const checkpointSchema = z
   .object({
@@ -212,7 +224,7 @@ export class CodexObserver {
           checkpoint.failure = 'unsupported_schema';
           return result('unsupported_schema');
         }
-        if (['turn_context', 'event_msg', 'compacted'].includes(String(parsed['type']))) continue;
+        if (NON_CONVERSATION_RECORDS.includes(String(parsed['type']))) continue;
         if (parsed['type'] !== 'response_item') {
           checkpoint.failure = 'unsupported_schema';
           return result('unsupported_schema');
@@ -264,6 +276,7 @@ export class CodexObserver {
             'custom_tool_call_output',
             'web_search_call',
             'image_generation_call',
+            'agent_message',
           ].includes(String(p['type']))
         ) {
           checkpoint.failure = 'unsupported_schema';

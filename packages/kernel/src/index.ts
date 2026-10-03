@@ -45,6 +45,10 @@ export type Action =
   | 'knowledge.approve'
   | 'work.comment'
   | 'machine.invite'
+  | 'room.create'
+  | 'room.members'
+  | 'a2a.client.create'
+  | 'a2a.client.revoke'
   | 'integration.connect'
   | 'integration.toggle'
   | 'skill.import'
@@ -81,11 +85,15 @@ const grants: Record<Role, readonly Action[]> = {
     'work.comment',
     'schedule.create',
     'schedule.toggle',
+    'room.create',
+    'room.members',
     'skill.import',
     'skill.toggle',
     'integration.connect',
     'integration.toggle',
     'machine.invite',
+    'a2a.client.create',
+    'a2a.client.revoke',
     'work.verify',
     'work.accept',
     'work.integrate',
@@ -123,6 +131,8 @@ const grants: Record<Role, readonly Action[]> = {
     'work.comment',
     'schedule.create',
     'schedule.toggle',
+    'room.create',
+    'room.members',
     'message.send',
     'message.ack',
     'approval.decide',

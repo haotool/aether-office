@@ -8,6 +8,8 @@ A local-first workspace for collaborative coding agents, with a 3D orbital offic
 
 Use Node **24.21.0** and the exact pnpm version in `package.json` (currently **12.8.1**).
 
+pnpm has built-in `setup` and `doctor` commands that shadow package scripts of the same name, so this project's two scripts are always run as `pnpm run setup` and `pnpm run doctor`.
+
 ```sh
 pnpm install --frozen-lockfile
 pnpm build
@@ -19,7 +21,7 @@ The demo UI is served at `http://127.0.0.1:4311`; control and the independent ru
 To run the built artifacts:
 
 ```sh
-pnpm setup --demo
+pnpm run setup --demo
 AETHER_MODE=demo pnpm start
 # In a separate terminal:
 AETHER_MODE=demo node apps/runner/dist/main.js
@@ -27,7 +29,7 @@ AETHER_MODE=demo node apps/runner/dist/main.js
 
 The built UI is served by control at `http://127.0.0.1:4310`.
 
-`pnpm setup` and `pnpm dev` select a separate live data directory. Native execution requires explicit project policy plus local runner configuration; see [native execution and MCP](docs/NATIVE_EXECUTION.md). No paid provider smoke has been run.
+`pnpm run setup` and `pnpm dev` select a separate live data directory. Native execution requires explicit project policy plus local runner configuration; see [native execution and MCP](docs/NATIVE_EXECUTION.md). No paid provider smoke has been run.
 
 ## Local sessions (observe-only)
 

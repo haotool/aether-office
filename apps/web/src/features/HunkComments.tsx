@@ -55,7 +55,8 @@ export function HunkComments({
           <form
             onSubmit={async (e) => {
               e.preventDefault();
-              const form = new FormData(e.currentTarget);
+              const element = e.currentTarget; // React clears currentTarget after the first await
+              const form = new FormData(element);
               const hunk = data.hunks[Number(form.get('hunk'))]!;
               setError('');
               try {
@@ -70,7 +71,7 @@ export function HunkComments({
                   },
                   projectId,
                 );
-                e.currentTarget.reset();
+                element.reset();
                 await client.invalidateQueries({ queryKey: key });
               } catch (err) {
                 setError(err instanceof Error ? err.message : 'REQUEST_FAILED');

@@ -2,9 +2,9 @@
 
 目前為 development。Codex 合成 app-server + HTTP + SQLite + Git 整合測試、Claude message normalizer 與 MCP stdio 測試已執行；未呼叫真實付費模型。這些測試不能證明 provider 登入、網路、額度或外部服務可用。
 
-使用專案指定 Node 24.21.0 與 pnpm 12.8.1，先 `pnpm install --frozen-lockfile`、`pnpm build`。`pnpm setup` 建立 live control 資料與 owner token；token 路徑由 setup 輸出，不要貼到聊天或 commit。
+使用專案指定 Node 24.21.0 與 pnpm 12.8.1，先 `pnpm install --frozen-lockfile`、`pnpm build`。`pnpm run setup` 建立 live control 資料與 owner token；token 路徑由 setup 輸出，不要貼到聊天或 commit。
 
-Live control：`AETHER_MODE=live pnpm start`。登入後先建立有 repository 絕對路徑的專案，再執行一次 `pnpm setup` 建立目前專案清單範圍內的 runner token。新增專案不會自動擴大舊 runner 權限，必須另行透過 `/api/machines` 註冊指定專案範圍。Native runner 預設關閉；另建立不加入版本控制、僅自己可讀的 JSON：
+Live control：`AETHER_MODE=live pnpm start`。登入後先建立有 repository 絕對路徑的專案，再執行一次 `pnpm run setup` 建立目前專案清單範圍內的 runner token。新增專案不會自動擴大舊 runner 權限，必須另行透過 `/api/machines` 註冊指定專案範圍。Native runner 預設關閉；另建立不加入版本控制、僅自己可讀的 JSON：
 
 ```json
 {

@@ -297,6 +297,7 @@ export function changeWork(
       'changes_requested',
       'failed',
       'verified',
+      'indeterminate', // a human closes a run whose outcome is unknown; the platform never guesses
     ].includes(row.state)
       ? 'cancelled'
       : 'cancel_requested';
@@ -308,6 +309,11 @@ export function changeWork(
         "SELECT id,state FROM runs WHERE workId=? AND state IN ('queued','claimed','running')",
       )
       .get(row.id) as { id: string; state: string } | undefined;
+    // Closing an unknown outcome also retires its run, so it can never be mistaken for live work.
+    if (row.state === 'indeterminate')
+      ctx.sqlite
+        .prepare("UPDATE runs SET state='cancelled' WHERE workId=? AND state='indeterminate'")
+        .run(row.id);
     if (run?.state === 'queued') {
       ctx.sqlite.prepare("UPDATE runs SET state='cancelled' WHERE id=?").run(run.id);
       ctx.sqlite.prepare("UPDATE runner_commands SET state='cancelled' WHERE runId=?").run(run.id);

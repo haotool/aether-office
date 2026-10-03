@@ -8,6 +8,7 @@ import type { McpScope } from './mcp.js';
 import {
   CodexAdapter,
   ClaudeAdapter,
+  AcpAdapter,
   type NativeSink,
   type ProviderResult,
 } from '@aether/providers';
@@ -59,6 +60,11 @@ export const nativeConfigSchema = z
       )
       .default({}),
     binaries: z.object({ codex: absolute.optional(), claude: absolute.optional() }).strict(),
+    // One generic ACP agent. Its capabilities come from negotiation; it cannot be used for read-only review.
+    acpAgent: z
+      .object({ command: absolute, args: z.array(z.string().max(4096)).max(32).default([]) })
+      .strict()
+      .optional(),
   })
   .strict();
 export type NativeConfig = z.infer<typeof nativeConfigSchema>;
@@ -75,6 +81,7 @@ export class NativeExecutor {
   constructor(directory: string, input: unknown) {
     this.config = nativeConfigSchema.parse(input);
     for (const binary of Object.values(this.config.binaries)) realpathSync(binary);
+    if (this.config.acpAgent) realpathSync(this.config.acpAgent.command);
     this.workspaces = new Workspaces(directory, this.config.repositories);
     for (const [name, config] of Object.entries(this.config.observations)) {
       const projectRoot = realpathSync(config.projectRoot),
@@ -105,8 +112,11 @@ export class NativeExecutor {
         ),
       );
   }
-  get providers(): ('codex' | 'claude')[] {
-    return (['codex', 'claude'] as const).filter((p) => !!this.config.binaries[p]);
+  get providers(): ('codex' | 'claude' | 'acp')[] {
+    return [
+      ...(['codex', 'claude'] as const).filter((p) => !!this.config.binaries[p]),
+      ...(this.config.acpAgent ? (['acp'] as const) : []),
+    ];
   }
   async run(
     command: RunCommand,
@@ -115,10 +125,18 @@ export class NativeExecutor {
     signal: AbortSignal,
     scope?: McpScope,
   ): Promise<ProviderResult> {
-    if (command.mode !== 'live' || !command.root || !['codex', 'claude'].includes(command.provider))
+    if (
+      command.mode !== 'live' ||
+      !command.root ||
+      !['codex', 'claude', 'acp'].includes(command.provider)
+    )
       throw new Error('NATIVE_EXECUTION_NOT_GRANTED');
-    const provider = command.provider as 'codex' | 'claude';
-    const binary = this.config.binaries[provider];
+    const provider = command.provider as 'codex' | 'claude' | 'acp';
+    // A generic ACP agent cannot be held to a read-only protocol, and resume depends on negotiation.
+    if (provider === 'acp' && (command.purpose === 'review' || command.resumeSessionId))
+      throw new Error('CAPABILITY_UNSUPPORTED');
+    const binary =
+      provider === 'acp' ? this.config.acpAgent?.command : this.config.binaries[provider];
     if (!binary) throw new Error('PROVIDER_NOT_GRANTED');
     if (signal.aborted)
       return { outcome: 'cancelled', summary: 'Cancelled before workspace creation.' };
@@ -197,7 +215,20 @@ export class NativeExecutor {
       env,
     };
     const adapter =
-      provider === 'codex' ? new CodexAdapter(options, sink) : new ClaudeAdapter(options, sink);
+      provider === 'codex'
+        ? new CodexAdapter(options, sink)
+        : provider === 'claude'
+          ? new ClaudeAdapter(options, sink)
+          : new AcpAdapter(
+              {
+                command: binary,
+                args: this.config.acpAgent!.args,
+                cwd: workspace.path,
+                env,
+                timeoutMs: command.timeoutMs,
+              },
+              sink,
+            );
     try {
       const prompt =
         command.purpose === 'review'

@@ -3,43 +3,72 @@
     "id": "ENV-01",
     "requirement": "記錄 OS、architecture、Node／pnpm／git／provider binary 的實際版本。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "scripts/doctor.ts"
+    ],
+    "testIds": [
+      "tests/aether/doctor.test.ts",
+      "tests/aether/codex-real.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Provider binary versions are read from the CLIs on PATH; Windows and Linux hosts were not run"
+    ]
   },
   {
     "id": "ENV-02",
     "requirement": "依賴有 registry metadata、peer／engine 相容查證與例外紀錄。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "scripts/audit-dependencies.mjs",
+      "docs/DEPENDENCY_AUDIT.md",
+      "pnpm-workspace.yaml"
+    ],
+    "testIds": [
+      "tests/aether/dependencies.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "The registry audit itself is run by hand and writes local evidence; the policy test enforces exact pins and no stale exceptions in CI"
+    ]
   },
   {
     "id": "ENV-03",
     "requirement": "乾淨目錄可以 frozen-lockfile 安裝，不依賴開發者 global packages。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "package.json",
+      "pnpm-lock.yaml",
+      "pnpm-workspace.yaml",
+      "scripts/clean-room.mjs"
+    ],
+    "testIds": [
+      "scripts/clean-room.mjs",
+      "tests/aether/dependencies.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Verified from a fresh clone on macOS arm64 with a warm pnpm store; a cold-cache or other-OS install was not run"
+    ]
   },
   {
     "id": "ENV-04",
     "requirement": "setup／migration／seed 重跑不破壞既有資料或重複 demo。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "scripts/setup.ts"
+    ],
+    "testIds": [
+      "tests/aether/setup.test.ts"
+    ],
     "evidencePaths": [],
     "blockers": []
   },
@@ -47,32 +76,52 @@
     "id": "ENV-05",
     "requirement": "build、typecheck、lint 在同一鎖定環境成功。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "package.json",
+      "scripts/check-boundaries.mjs"
+    ],
+    "testIds": [
+      "tests/aether/web-safety.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Run on macOS arm64 with Node 24.21.0 and pnpm 12.8.1 only"
+    ]
   },
   {
     "id": "ENV-06",
     "requirement": "既有 git dirty changes 不被覆寫／reset／刪除。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/runner/src/workspaces.ts",
+      "apps/runner/src/merge.ts"
+    ],
+    "testIds": [
+      "tests/aether/native-review.test.ts",
+      "tests/aether/native-runner.test.ts",
+      "tests/aether/merge.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Covered for managed workspaces and integration; the platform never operates on the user's main working tree"
+    ]
   },
   {
     "id": "ENV-07",
     "requirement": "doctor 能區分 missing CLI、auth required、native module failure、healthy。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "scripts/doctor.ts"
+    ],
+    "testIds": [
+      "tests/aether/doctor.test.ts"
+    ],
     "evidencePaths": [],
     "blockers": []
   },
@@ -80,12 +129,19 @@
     "id": "ENV-08",
     "requirement": "README 命令在真正乾淨環境重現，無未宣告步驟。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "README.md",
+      "scripts/clean-room.mjs"
+    ],
+    "testIds": [
+      "scripts/clean-room.mjs"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Install, build, run setup --demo and the built control were reproduced from a fresh clone; found and fixed that pnpm's built-in setup and doctor shadow the scripts. The pnpm demo watcher is not part of the script"
+    ]
   },
   {
     "id": "ARC-01",
@@ -96,7 +152,9 @@
     "codePaths": [
       "scripts/check-boundaries.mjs"
     ],
-    "testIds": [],
+    "testIds": [
+      "tests/aether/web-safety.test.ts"
+    ],
     "evidencePaths": [
       "evidence/boundaries-native.log"
     ],
@@ -111,7 +169,9 @@
     "codePaths": [
       "scripts/check-boundaries.mjs"
     ],
-    "testIds": [],
+    "testIds": [
+      "tests/aether/web-safety.test.ts"
+    ],
     "evidencePaths": [
       "evidence/boundaries-native.log"
     ],
@@ -404,9 +464,12 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "packages/providers/generated/codex-0.159.2-ts/InitializeParams.ts"
+      "packages/providers/generated/codex-0.159.2-ts/InitializeParams.ts",
+      "packages/providers/generated/compat.json"
     ],
-    "testIds": [],
+    "testIds": [
+      "tests/aether/codex-schema.test.ts"
+    ],
     "evidencePaths": [
       "evidence/codex-schema-generation.log",
       "evidence/codex-types-generation.log"
@@ -855,23 +918,21 @@
     "id": "EVT-04",
     "requirement": "snapshot 與 stream cursor 之間不漏事件。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/runners.ts",
-      "apps/runner/src/runner.ts",
-      "apps/runner/src/journal.ts",
-      "apps/control/src/db/connection.ts"
+      "apps/control/src/control.ts",
+      "apps/control/src/server.ts"
     ],
     "testIds": [
-      "tests/aether/control.test.ts",
-      "tests/aether/runner.test.ts"
+      "tests/aether/reconciliation.test.ts",
+      "tests/aether/cursor-retention.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "完整 crash window／跨程序斷線／備份 CLI 仍待覆蓋。"
+      "Single-process verification: better-sqlite3 is synchronous, so a snapshot and a concurrent writer cannot interleave inside one process"
     ]
   },
   {
@@ -894,91 +955,83 @@
     "id": "EVT-06",
     "requirement": "control restart 後與 runner reconciliation 不重複 spawn。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/runners.ts",
-      "apps/runner/src/runner.ts",
-      "apps/runner/src/journal.ts",
-      "apps/control/src/db/connection.ts"
+      "apps/control/src/services/runners.ts"
     ],
     "testIds": [
-      "tests/aether/control.test.ts",
-      "tests/aether/runner.test.ts"
+      "tests/aether/reconciliation.test.ts",
+      "tests/aether/remote-runners.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log"
     ],
-    "blockers": [
-      "完整 crash window／跨程序斷線／備份 CLI 仍待覆蓋。"
-    ]
+    "blockers": []
   },
   {
     "id": "EVT-07",
     "requirement": "副作用結果不明時進入 indeterminate，而非無條件重跑。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
       "apps/control/src/services/runners.ts",
-      "apps/runner/src/runner.ts",
-      "apps/runner/src/journal.ts",
-      "apps/control/src/db/connection.ts"
+      "apps/control/src/services/work.ts"
     ],
     "testIds": [
-      "tests/aether/control.test.ts",
-      "tests/aether/runner.test.ts"
+      "tests/aether/reconciliation.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "完整 crash window／跨程序斷線／備份 CLI 仍待覆蓋。"
+      "A runner that died mid-run and a runner that is only partitioned look identical to control; both stay indeterminate until a human cancels"
     ]
   },
   {
     "id": "EVT-08",
     "requirement": "backup／restore 以實際 DB 執行並驗證資料一致。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/runners.ts",
-      "apps/runner/src/runner.ts",
-      "apps/runner/src/journal.ts",
-      "apps/control/src/db/connection.ts"
+      "apps/control/src/backup.ts",
+      "scripts/backup.ts"
     ],
     "testIds": [
-      "tests/aether/control.test.ts",
-      "tests/aether/runner.test.ts"
+      "tests/aether/backup.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "完整 crash window／跨程序斷線／備份 CLI 仍待覆蓋。"
+      "cursor-secret and owner-token are outside the database and are not part of a backup"
     ]
   },
   {
     "id": "MSG-01",
     "requirement": "DM／room／thread 有真實持久資料與 ACL。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
+      "apps/control/src/services/rooms.ts",
       "apps/control/src/services/messages.ts",
-      "apps/runner/src/mcp.ts"
+      "apps/control/src/db/migrations/023-rooms.sql",
+      "apps/web/src/features/Rooms.tsx"
     ],
     "testIds": [
+      "tests/aether/rooms.test.ts",
       "tests/aether/control.test.ts",
-      "tests/aether/mcp.test.ts"
+      "e2e/rooms.spec.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log",
       "evidence/mcp-built-stdio-test.log"
     ],
     "blockers": [
-      "rooms、等待狀態投影、injection boundary 與全域對話額度尚未完成。"
+      "Rooms are not yet exposed as MCP tools; agents post to a room only through the platform API"
     ]
   },
   {
@@ -1002,62 +1055,58 @@
     "id": "MSG-03",
     "requirement": "persisted／injected／acknowledged／responded 不混淆。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
       "apps/control/src/services/messages.ts",
-      "apps/runner/src/mcp.ts"
+      "packages/kernel/src/capabilities.ts"
     ],
     "testIds": [
+      "tests/aether/rooms.test.ts",
       "tests/aether/control.test.ts",
-      "tests/aether/mcp.test.ts"
+      "tests/aether/capabilities.test.ts",
+      "tests/aether/message-waits.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log",
       "evidence/mcp-built-stdio-test.log"
     ],
     "blockers": [
-      "rooms、等待狀態投影、injection boundary 與全域對話額度尚未完成。"
+      "injected is never reached because no adapter injects into a running turn"
     ]
   },
   {
     "id": "MSG-04",
     "requirement": "斷線／重試不產生重複訊息副作用與動畫。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
       "apps/control/src/services/messages.ts",
-      "apps/runner/src/mcp.ts"
+      "packages/office-scene/src/carriers.ts"
     ],
     "testIds": [
-      "tests/aether/control.test.ts",
-      "tests/aether/mcp.test.ts"
+      "tests/aether/fault-injection.test.ts",
+      "tests/aether/carriers.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log",
       "evidence/mcp-built-stdio-test.log"
     ],
-    "blockers": [
-      "rooms、等待狀態投影、injection boundary 與全域對話額度尚未完成。"
-    ]
+    "blockers": []
   },
   {
     "id": "MSG-05",
     "requirement": "request／reply 有 correlation、timeout 與持久等待狀態。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
+    "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/messages.ts",
-      "apps/runner/src/mcp.ts",
-      "apps/control/src/db/migrations/012-message-waits.sql"
+      "apps/control/src/services/messages.ts"
     ],
     "testIds": [
-      "tests/aether/control.test.ts",
-      "tests/aether/mcp.test.ts",
-      "tests/aether/mcp-wait.test.ts",
-      "tests/aether/message-waits.test.ts"
+      "tests/aether/message-waits.test.ts",
+      "tests/aether/mcp-wait.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log",
@@ -1070,7 +1119,7 @@
       "evidence/e2e-wait-events.log"
     ],
     "blockers": [
-      "已完成持久等待、UI、主動期限與原子事件；真provider端到端協作及歷史請求相容性未驗證。"
+      "Verified with synthetic agents; a real provider answering a durable request is not run"
     ]
   },
   {
@@ -1095,22 +1144,20 @@
     "id": "MSG-07",
     "requirement": "thread／spawn／context budget 能停止無限 Agent 對話。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
+    "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/messages.ts",
-      "apps/runner/src/mcp.ts"
+      "apps/control/src/services/messages.ts"
     ],
     "testIds": [
-      "tests/aether/control.test.ts",
-      "tests/aether/mcp.test.ts"
+      "tests/aether/rooms.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log",
       "evidence/mcp-built-stdio-test.log"
     ],
     "blockers": [
-      "rooms、等待狀態投影、injection boundary 與全域對話額度尚未完成。"
+      "Thread round limit (32) and per-sender rate limit (60/min) stop ping-pong and a human can open a new thread; spawn depth does not apply because subagents are disabled, and there is no token-based conversation budget"
     ]
   },
   {
@@ -1881,21 +1928,36 @@
     "id": "STD-03",
     "requirement": "通用 ACP adapter 真的協商能力、開始 session 並處理事件。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/providers/src/acp.ts",
+      "packages/providers/src/acp-fixture.mjs",
+      "apps/runner/src/native.ts"
+    ],
+    "testIds": [
+      "tests/aether/acp.test.ts",
+      "tests/aether/acp-native.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "A real prompt turn was not run against claude-agent-acp or codex-acp (needs paid, authenticated sessions); the real adapter was only negotiated",
+      "ACP agents cannot be used for read-only review and cannot resume by default"
+    ]
   },
   {
     "id": "STD-04",
     "requirement": "ACP wire／SDK／schema 版本分開記錄。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "packages/providers/src/acp.ts",
+      "docs/PROVIDER_COMPATIBILITY.md"
+    ],
+    "testIds": [
+      "tests/aether/acp.test.ts"
+    ],
     "evidencePaths": [],
     "blockers": []
   },
@@ -1903,45 +1965,77 @@
     "id": "STD-05",
     "requirement": "A2A gateway 的 AgentCard 宣告能力有對應實作。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/control/src/services/a2a.ts",
+      "apps/control/src/server.ts"
+    ],
+    "testIds": [
+      "tests/aether/a2a.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "The card declares no streaming or push because neither is implemented"
+    ]
   },
   {
     "id": "STD-06",
     "requirement": "A2A task／message／cancel／artifact 路徑有 contract test。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/control/src/services/a2a.ts",
+      "apps/control/src/services/a2a-clients.ts"
+    ],
+    "testIds": [
+      "tests/aether/a2a.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Verified with the official @a2a-js/sdk client over real HTTP; no interop run against a third-party A2A server"
+    ]
   },
   {
     "id": "STD-07",
     "requirement": "第三方 token／artifact fetch 不繞過 audience／SSRF 邊界。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/a2a.ts",
+      "apps/control/src/services/safe-fetch.ts",
+      "apps/control/src/services/a2a-clients.ts"
+    ],
+    "testIds": [
+      "tests/aether/a2a.test.ts",
+      "tests/aether/safe-fetch.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "The gateway never fetches remote artifact URLs at all (URL parts are refused); an outbound artifact fetcher would reuse safe-fetch and does not exist yet"
+    ]
   },
   {
     "id": "STD-08",
     "requirement": "未完成的 bridge 不在 UI 被標記為可用整合。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/web/src/features/A2AClients.tsx",
+      "apps/web/src/features/Agents.tsx",
+      "apps/web/src/features/CapabilityMatrix.tsx"
+    ],
+    "testIds": [
+      "e2e/a2a.spec.ts",
+      "e2e/capabilities.spec.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "hcom and Agent Mail bridges are not built and appear nowhere in the UI"
+    ]
   },
   {
     "id": "UIX-01",
@@ -2897,12 +2991,18 @@
     "id": "QA-02",
     "requirement": "fault injection 覆蓋 commit／delivery／ack 關鍵 crash window。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/control.ts"
+    ],
+    "testIds": [
+      "tests/aether/fault-injection.test.ts"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "Control-side commit, outbox, delivery and ack windows are injected and proven atomic; runner journal crash windows and the outbox dispatcher lease are not injected"
+    ]
   },
   {
     "id": "QA-03",
@@ -3000,21 +3100,34 @@
     "id": "QA-07",
     "requirement": "最終重新 clean install／build／start／smoke 驗證成功或列具體失敗。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "scripts/clean-room.mjs",
+      "package.json",
+      "README.md"
+    ],
+    "testIds": [
+      "scripts/clean-room.mjs"
+    ],
     "evidencePaths": [],
-    "blockers": []
+    "blockers": [
+      "pnpm run verify:clean passed on 2405a4f (10 steps) and the 18 browser tests passed in a fresh clone of 215b838; run it again on the final HEAD with --e2e. Real provider smoke is not run"
+    ]
   },
   {
     "id": "QA-08",
     "requirement": "FINAL_VERIFICATION 明確區分 passed／failed／blocked／not_run。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "not_started",
-    "verificationStatus": "not_run",
-    "codePaths": [],
-    "testIds": [],
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "scripts/final-verification.ts",
+      "docs/FINAL_VERIFICATION.md"
+    ],
+    "testIds": [
+      "tests/aether/final-verification.test.ts"
+    ],
     "evidencePaths": [],
     "blockers": []
   },
