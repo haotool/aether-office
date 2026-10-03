@@ -1,6 +1,8 @@
 import { ArrowUpRight, X, Focus, Cpu, Clock, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Agent, LocalSession, Snapshot } from '@aether/contracts';
+import { ROLE_LABELS } from '@aether/kernel';
+import { classificationOf } from '../localSessions.js';
 import { AvatarIcon, Badge, useT } from '../ui.js';
 export function Inspector({
   agent,
@@ -16,6 +18,7 @@ export function Inspector({
   session?: LocalSession | null;
 }) {
   const t = useT();
+  const kind = session ? classificationOf(session) : null;
   const work = snapshot.work.find(
     (w) => w.assignee === agent?.id && !['cancelled', 'completed'].includes(w.state),
   );
@@ -77,13 +80,50 @@ export function Inspector({
               </div>
             </dl>
           </div>
-          {session && (
+          {session && kind && (
             <div className="inspector-section">
               <h3>OBSERVE · {session.provider}</h3>
               <dl>
                 <div>
                   <dt>cwd</dt>
                   <dd title={session.cwd}>{session.cwd}</dd>
+                </div>
+                {session.title && (
+                  <div>
+                    <dt>title</dt>
+                    <dd>{session.title}</dd>
+                  </div>
+                )}
+                <div>
+                  <dt>role</dt>
+                  <dd
+                    title={
+                      kind.basis === 'default' ? 'no keyword matched' : `matched "${kind.matched}"`
+                    }
+                  >
+                    {ROLE_LABELS[kind.role].en} · {kind.basis}
+                  </dd>
+                </div>
+                {session.usage.model && (
+                  <div>
+                    <dt>model</dt>
+                    <dd>{session.usage.model}</dd>
+                  </div>
+                )}
+                {session.usage.contextTokens !== null && (
+                  <div>
+                    <dt>context</dt>
+                    <dd>
+                      {session.usage.contextTokens.toLocaleString()}
+                      {session.usage.contextWindow
+                        ? ` / ${session.usage.contextWindow.toLocaleString()} (${Math.round((session.usage.contextTokens / session.usage.contextWindow) * 100)}%)`
+                        : ''}
+                    </dd>
+                  </div>
+                )}
+                <div>
+                  <dt>process</dt>
+                  <dd>{session.process}</dd>
                 </div>
                 {session.worktree && (
                   <div>
@@ -118,7 +158,9 @@ export function Inspector({
               </dl>
               <small>
                 {t('lastSeen')} ·{' '}
-                {session.hook ? `hook: ${session.hook.lastEvent}` : 'heuristic (file mtime)'}
+                {session.hook
+                  ? `hook: ${session.hook.lastEvent}${session.hook.tool ? ` · ${session.hook.tool}` : ''}`
+                  : 'heuristic (file mtime)'}
               </small>
             </div>
           )}

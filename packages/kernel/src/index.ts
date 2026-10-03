@@ -320,3 +320,12 @@ export {
 } from './schedule.js';
 export { parseSkill, SkillError, type ParsedSkill } from './skill.js';
 export { TEMPLATES, isTemplate, type StepPlan, type WorkflowTemplate } from './workflows.js';
+export {
+  DEPARTMENTS,
+  ROLE_LABELS,
+  classifySession,
+  type Classification,
+  type Department,
+  type DepartmentId,
+  type RoleId,
+} from './departments.js';

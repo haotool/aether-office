@@ -47,6 +47,7 @@ import { Reviews } from './features/Reviews.js';
 import { Knowledge } from './features/Knowledge.js';
 import { History } from './features/History.js';
 import { Workspace } from './features/Workspace.js';
+import { EmergencyStop } from './features/EmergencyStop.js';
 import { ExecutionSettings } from './features/ExecutionSettings.js';
 import { Schedules } from './features/Schedules.js';
 import { Rooms } from './features/Rooms.js';
@@ -58,6 +59,7 @@ import { Skills } from './features/Skills.js';
 import { Observations } from './features/Observations.js';
 import { Approvals } from './features/Approvals.js';
 import type { PerfReport } from '@aether/office-scene';
+import { useAdoptRepos } from './adoptProjects.js';
 import { mergeLayout, sessionIdOf, sessionsToAgents } from './localSessions.js';
 import { useApprovalNotifications } from './notifications.js';
 import {
@@ -266,6 +268,14 @@ export function App() {
     refetchInterval: 10000,
     retry: false,
   });
+  useAdoptRepos(
+    local.data?.sessions,
+    session?.actor.role === 'owner' && !!local.data?.enabled,
+    () => {
+      void client.invalidateQueries({ queryKey: ['projects'] });
+      void client.invalidateQueries({ queryKey: ['local-sessions'] });
+    },
+  );
   useApprovalNotifications(projectId, !!session && prefs.notifyApprovals, t('approvalNeeded'));
   const seq = snapshot.data?.seq;
   useEffect(() => {
@@ -320,7 +330,12 @@ export function App() {
   const data = snapshot.data;
   const observed =
     data && projectId && local.data?.enabled
-      ? sessionsToAgents(local.data.sessions, projectId)
+      ? sessionsToAgents(
+          local.data.sessions.filter((s) => s.projectId === projectId),
+          projectId,
+          Date.now(),
+          prefs.locale,
+        )
       : [];
   const sceneAgents = data ? [...data.agents, ...observed] : [];
   const selected = sceneAgents.find((a) => a.id === selectedId) ?? null;
@@ -373,6 +388,9 @@ export function App() {
           <Plus size={17} />
         </button>
         <div className="topbar-right">
+          {session.mode === 'live' && session.actor.role === 'owner' && projectId && (
+            <EmergencyStop projectId={projectId} />
+          )}
           <Badge state={session.mode} />
           <button
             className="icon-button"

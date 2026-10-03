@@ -17,3 +17,6 @@ playwright-report/
 /evidence/
 *.blend1
 /docs/CHECKPOINT.md
+
+# hook installer backups
+*.aether-backup

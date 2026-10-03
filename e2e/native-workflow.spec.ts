@@ -187,5 +187,13 @@ test('synthetic provider browser flow: permission, diff, review, commit-bound ve
   await page.getByRole('button', { name: '停止終端機', exact: true }).click();
   await expect(page.getByText(/^唯讀 · exited$/)).toBeVisible({ timeout: 15000 });
   await expect(page.getByText(/Exit code:/)).toBeVisible();
+  // Emergency stop: one confirmed step halts a running terminal and switches live execution off.
+  await page.getByRole('button', { name: '啟動終端機', exact: true }).click();
+  await expect(page.getByText(/^唯讀 · running$/)).toBeVisible({ timeout: 15000 });
+  await page.getByRole('button', { name: '緊急停止', exact: true }).click();
+  await page.getByRole('button', { name: '確定停止所有執行', exact: true }).click();
+  await expect(page.getByText(/^唯讀 · exited$/)).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole('button', { name: '緊急停止', exact: true })).toHaveCount(0);
+  await page.screenshot({ path: 'evidence/screenshots/e2e-emergency-stop.png' });
   expect(errors).toEqual([]);
 });

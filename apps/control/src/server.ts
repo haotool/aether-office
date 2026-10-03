@@ -36,7 +36,7 @@ import { redeemInvitation } from './services/invitations.js';
 import { listSkills } from './services/skills.js';
 import { listSchedules, tickSchedules } from './services/schedules.js';
 import { listReservations } from './services/reservations.js';
-import { scanLocalSessions } from './services/local-sessions.js';
+import { attributeSessions, scanLocalSessions } from './services/local-sessions.js';
 import { homedir } from 'node:os';
 import { diagnoseWork } from './services/diagnostics.js';
 import type { Control } from './control.js';
@@ -396,7 +396,10 @@ export function createServer(
     if (process.env['AETHER_LOCAL_SESSIONS'] === 'off') return { enabled: false, sessions: [] };
     return {
       enabled: true,
-      sessions: await scanLocalSessions(process.env['AETHER_LOCAL_SESSIONS_HOME'] ?? homedir()),
+      sessions: attributeSessions(
+        await scanLocalSessions(process.env['AETHER_LOCAL_SESSIONS_HOME'] ?? homedir()),
+        control.listProjects(who),
+      ),
     };
   });
   app.get<{ Params: { projectId: string } }>(

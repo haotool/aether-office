@@ -2,12 +2,12 @@
 
 Generated from `docs/FEATURES.json` (docs/FEATURES.json). Do not edit by hand: run `pnpm verification:report`.
 
-Features: **145**. Implementation: 108 implemented, 37 partial, 0 not started.
+Features: **145**. Implementation: 112 implemented, 33 partial, 0 not started.
 
 | Verification | Count | Meaning |
 |---|---|---|
-| passed | 80 | Verified by the listed tests at the scope stated in the ledger. |
-| partial | 62 | Some behaviour is verified; the blockers column names what is not. |
+| passed | 84 | Verified by the listed tests at the scope stated in the ledger. |
+| partial | 58 | Some behaviour is verified; the blockers column names what is not. |
 | blocked | 3 | Cannot be verified in this environment (for example, it needs paid or authenticated provider sessions). |
 | failed | 0 | A check ran and failed. |
 | not_run | 0 | No check has been run. |
@@ -15,7 +15,7 @@ Features: **145**. Implementation: 108 implemented, 37 partial, 0 not started.
 
 A passing build or test run is not a claim of production readiness. This file lists what the ledger can support, and what it cannot.
 
-## passed (80)
+## passed (84)
 
 | ID | Implementation | Requirement | Blockers |
 |---|---|---|---|
@@ -59,8 +59,10 @@ A passing build or test run is not a claim of production readiness. This file li
 | TSK-07 | implemented | 重試上限／停滯診斷／人類 escalation 有實際效果。 | Provider rate-limit evidence is reported as null: it is never inferred |
 | TSK-08 | implemented | cancel propagation 不把取消中的結果錯標新成功工作。 | — |
 | GIT-01 | implemented | writer 使用專屬 worktree，不直接改使用者 main 目錄。 | — |
+| GIT-02 | implemented | 路徑空白／Unicode／非法 ref／symlink 都有測試。 | 僅在 macOS 驗證；Windows 路徑語意（大小寫、保留名稱）未測 |
 | GIT-03 | implemented | file reservation 的 advisory 屬性與衝突清楚呈現。 | Advisory only: conflict check is conservative on directory scope; not yet enforced at scheduler or merge gates |
 | GIT-04 | implemented | dirty worktree cleanup 不刪使用者未提交內容。 | — |
+| GIT-05 | implemented | diff 支援 untracked／binary／large file 安全降級。 | 僅在 macOS 驗證；Windows 路徑語意（大小寫、保留名稱）未測 |
 | GIT-07 | implemented | test evidence 綁 head SHA，base 漂移會重新驗證。 | — |
 | SEC-01 | implemented | owner／operator／reviewer／viewer／agent 實際 server grants 生效。 | — |
 | SEC-02 | implemented | 每個 query、WS subscription、MCP tool 做 scope 檢查。 | Every HTTP route is swept for authentication and cross-project access; the stream is SSE (no WebSocket exists) and is covered by the revocation test |
@@ -73,6 +75,8 @@ A passing build or test run is not a claim of production readiness. This file li
 | REM-04 | implemented | 撤銷身份立即阻止新命令與敏感 stream。 | — |
 | REM-05 | implemented | local spool 重連後按序去重，不丟已承諾資料。 | The spool is a 8 MB JSON file; a longer outage fails closed with RUNNER_SPOOL_FULL rather than dropping events |
 | REM-06 | implemented | 斷線時依 policy 停新派工，恢復不重複執行。 | While control is unreachable a runner cannot claim, so no new dispatch starts; an in-flight run keeps going and is reported when the link returns |
+| STD-01 | implemented | MCP 工具實際呼叫 kernel，不是回固定成功文字。 | Workflow 啟動刻意不提供給 agent（僅人類可啟動）；未以真實 provider CLI 連接此 MCP server |
+| STD-02 | implemented | MCP identity／resource／message scope 可測且隔離。 | Workflow 啟動刻意不提供給 agent（僅人類可啟動）；未以真實 provider CLI 連接此 MCP server |
 | STD-04 | implemented | ACP wire／SDK／schema 版本分開記錄。 | — |
 | STD-05 | implemented | A2A gateway 的 AgentCard 宣告能力有對應實作。 | The card declares no streaming or push because neither is implemented |
 | STD-06 | implemented | A2A task／message／cancel／artifact 路徑有 contract test。 | Verified with the official @a2a-js/sdk client over real HTTP; no interop run against a third-party A2A server |
@@ -100,7 +104,7 @@ A passing build or test run is not a claim of production readiness. This file li
 | INT-06 | implemented | schedule 依 timezone 觸發，重啟不重複派工。 | UI creates daily/weekly schedules only (the API also accepts one-off); A schedule only creates unassigned work; there is no scheduled auto-assignment by design |
 | QA-08 | implemented | FINAL_VERIFICATION 明確區分 passed／failed／blocked／not_run。 | — |
 
-## partial (62)
+## partial (58)
 
 | ID | Implementation | Requirement | Blockers |
 |---|---|---|---|
@@ -109,7 +113,7 @@ A passing build or test run is not a claim of production readiness. This file li
 | CLA-01 | partial | 實作並驗證安裝版本適用的 CLI／SDK 啟動參數。 | synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。 |
 | CLA-02 | partial | structured stream 的 partial／complete／error 正常解析。 | synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。 |
 | CLA-03 | implemented | session resume 綁定原 project 與對應 provider session。 | 合成Codex resume與UI已測；真Codex/Claude resume尚未實測。 |
-| CLA-04 | implemented | hook 安裝／更新／移除保留既有使用者設定。 | Not run against a real Claude Code install; Codex hooks.json schema not documented in the fetched page, so no Codex installer (receiver already accepts codex) |
+| CLA-04 | implemented | hook 安裝／更新／移除保留既有使用者設定。 | Codex reported all 9 installed hooks as trusted and enabled through its own hooks/list, and the installed commands ran under a minimal environment, but no Codex session has fired them yet; Claude hooks are installed only for this repository (project scope); Codex payloads for spawned threads (session_id vs thread id) were not observed |
 | CLA-05 | partial | 工具事件與 session／parent 的對應可驗證。 | synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。 |
 | CLA-07 | partial | permission／auth／rate-limit 問題不偽裝成正常工作。 | synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。 |
 | CDX-03 | implemented | thread／turn 的 start／resume 流程正確。 | 合成Codex resume與UI已測；真Codex/Claude resume尚未實測。 |
@@ -126,8 +130,6 @@ A passing build or test run is not a claim of production readiness. This file li
 | MSG-07 | implemented | thread／spawn／context budget 能停止無限 Agent 對話。 | Thread round limit (32) and per-sender rate limit (60/min) stop ping-pong and a human can open a new thread; spawn depth does not apply because subagents are disabled, and there is no token-based conversation budget |
 | TSK-04 | implemented | Claude→Codex review→fix→test 的 workflow 可完成。 | The template pins Claude engineer and Codex reviewer and the loop is exercised with synthetic providers; a real Claude to Codex run needs paid, authenticated sessions that are not authorised |
 | TSK-05 | implemented | provider 對調與 frontend／backend 平行 workflow 可完成。 | Provider swap, the parallel frontend/backend DAG and the bounded meeting are enforced and tested at the control layer; parallel worktrees with a real integration review were not run with real providers |
-| GIT-02 | partial | 路徑空白／Unicode／非法 ref／symlink 都有測試。 | Unicode/空白、dirty/已提交清理、base drift 有測試；完整 symlink/非法 ref/binary 大檔矩陣待補。 |
-| GIT-05 | partial | diff 支援 untracked／binary／large file 安全降級。 | Unicode/空白、dirty/已提交清理、base drift 有測試；完整 symlink/非法 ref/binary 大檔矩陣待補。 |
 | GIT-06 | implemented | review comment 綁 commit／hunk，更新後能辨識過期。 | Comment create/list verified at control level with seeded diff jobs; browser only checks the empty-hunk state, not a full comment round trip; Line anchors are stored but not re-mapped across heads |
 | GIT-08 | implemented | merge conflict 停止交付，不自動覆蓋或無批准 push。 | Candidate branch is not re-verified automatically before delivery; No PR handoff; push is intentionally never performed; Only owner may integrate; base moves are reported, not auto-rebased |
 | SEC-04 | partial | approval 綁 action hash、session、expiry 與真實 provider ack。 | 批准/撤銷回歸已跑；完整 export/PTY/connector trust boundaries 與 live provider ack 待驗。 |
@@ -135,8 +137,6 @@ A passing build or test run is not a claim of production readiness. This file li
 | REM-01 | implemented | 遠端 runner 以認證 outbound channel 連接 control。 | Control serves plain HTTP on loopback; TLS for remote use must be terminated by a reverse proxy, and no real TLS handshake was tested |
 | REM-07 | implemented | 不同 machine 使用獨立 clone，不共享 SQLite／.git。 | Enforced as: runner state may not live inside an allowed repository; that each machine really uses its own clone is by construction (machine-bound workspaces) and not verified across two real hosts |
 | REM-08 | implemented | 兩個獨立 runner process 的故障／恢復整合測試通過。 | Two real runner processes with the demo provider on one host: revocation, project scope, single-use enrollment and control outage covered; Not covered: SIGKILL of a runner mid-run, journal replay after a runner crash, native Git workspaces across two clones, and any real WAN, HA or Kubernetes setup |
-| STD-01 | partial | MCP 工具實際呼叫 kernel，不是回固定成功文字。 | 已實作 8 個真工具與 session resource；reservation/workflow 擴充工具待補。 |
-| STD-02 | partial | MCP identity／resource／message scope 可測且隔離。 | 已實作 8 個真工具與 session resource；reservation/workflow 擴充工具待補。 |
 | STD-03 | implemented | 通用 ACP adapter 真的協商能力、開始 session 並處理事件。 | A real prompt turn was not run against claude-agent-acp or codex-acp (needs paid, authenticated sessions); the real adapter was only negotiated; ACP agents cannot be used for read-only review and cannot resume by default |
 | STD-07 | implemented | 第三方 token／artifact fetch 不繞過 audience／SSRF 邊界。 | The gateway never fetches remote artifact URLs at all (URL parts are refused); an outbound artifact fetcher would reuse safe-fetch and does not exist yet |
 | UIX-01 | implemented | onboarding 從 Demo／Live 選擇到第一工作完整可走。 | Demo sign-in through to a first task is covered; live onboarding (execution policy, runner, provider sign-in) has no guided flow |
@@ -164,8 +164,8 @@ A passing build or test run is not a claim of production readiness. This file li
 | QA-04 | partial | 真實頁面截圖覆蓋 overview／desk／review／approval／mobile。 | 完整產品尚未完成；不能把局部測試當最終 gate。 |
 | QA-05 | partial | 每個需求的 code path／test ID／evidence 可查驗。 | 完整產品尚未完成；不能把局部測試當最終 gate。 |
 | QA-06 | partial | 所有文件與命令對照最新程式，沒有假 endpoint／假腳本。 | 完整產品尚未完成；不能把局部測試當最終 gate。 |
-| QA-07 | implemented | 最終重新 clean install／build／start／smoke 驗證成功或列具體失敗。 | pnpm run verify:clean passed on 2405a4f (10 steps) and the 18 browser tests passed in a fresh clone of 215b838; run it again on the final HEAD with --e2e. Real provider smoke is not run |
-| OBS-LOCAL-01 | implemented | 自動載入本機 Claude／Codex session；以 Git common dir 歸屬 worktree，以 hook 事件歸屬子代理；observe-only 3D 顯示。 | Activity is a file-mtime heuristic until hooks are installed; Hooks never run against real CLIs in this repo’s tests; Claude sessions that change cwd mid-session use the first recorded cwd |
+| QA-07 | implemented | 最終重新 clean install／build／start／smoke 驗證成功或列具體失敗。 | verify:clean --e2e passed all 11 steps on 06a0a0e in a fresh clone (install, typecheck, lint, format, build, 236 tests, report, demo setup, built control smoke, browser tests); macOS only, no real provider smoke; re-run if HEAD changes |
+| OBS-LOCAL-01 | implemented | 自動載入本機 Claude／Codex session；以 Git common dir 歸屬 worktree，以 hook 事件歸屬子代理；observe-only 3D 顯示。 | Activity is a file-mtime heuristic until hooks are trusted and fire; without a running process it is shown idle; Process-to-session matching is by --resume id, else by provider and directory in recency order; a Claude session that changed directory shows no process; Sessions in no git repository and outside a project scratch directory (for example a Codex Desktop thread in a plugin workspace) cannot be attributed and are not shown; Spawned Codex subagents are shown only while their rollout changed in the last 2 minutes; Hooks are proven only for this repository session so far; Only the 60 most recent sessions are scanned |
 
 ## blocked (3)
 

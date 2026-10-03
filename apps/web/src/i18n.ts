@@ -411,6 +411,8 @@ export const zh = {
   succeeded: '作業已回報',
   queued: '等待執行',
   executionPolicy: '原生代理執行',
+  emergencyStop: '緊急停止',
+  emergencyConfirm: '確定停止所有執行',
   executionConsent:
     '啟用後，派工可能使用已登入提供者的付費額度。停用會取消排隊工作，並要求執行中的工作停止。工具權限仍逐次審核。',
   enableLive: '允許此專案執行真實代理',
@@ -858,6 +860,8 @@ export const en: Record<Key, string> = {
   succeeded: 'Job reported',
   queued: 'Queued',
   executionPolicy: 'Native agent execution',
+  emergencyStop: 'Emergency stop',
+  emergencyConfirm: 'Stop all execution',
   executionConsent:
     'Assigned work may consume the signed-in provider’s paid quota. Disabling cancels queued work and requests running work to stop. Tool permissions still require individual review.',
   enableLive: 'Allow live agents in this project',

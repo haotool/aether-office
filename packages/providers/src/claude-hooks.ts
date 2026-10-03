@@ -1,7 +1,7 @@
 import { mkdir, readFile, rename, writeFile, copyFile } from 'node:fs/promises';
 import { dirname, isAbsolute } from 'node:path';
 
-// Claude Code project-scope hook installer. Opt-in, namespaced, atomic, reversible.
+// Claude Code and Codex hook installer (both use the same hooks.json event/group/command shape). Opt-in, namespaced, atomic, reversible.
 // Our entries are identified only by MARKER inside `command`; everything else is left untouched.
 export const HOOK_MARKER = 'aether-office-hook';
 export const HOOK_EVENTS = [
@@ -13,7 +13,12 @@ export const HOOK_EVENTS = [
   'SubagentStart',
   'SubagentStop',
   'Stop',
+  'PermissionRequest',
 ] as const;
+// Claude Code also reports permission and idle prompts as Notification events (notification_type).
+export const CLAUDE_ONLY_EVENTS = ['Notification'] as const;
+export const eventsFor = (provider: 'claude' | 'codex') =>
+  provider === 'claude' ? [...HOOK_EVENTS, ...CLAUDE_ONLY_EVENTS] : [...HOOK_EVENTS];
 
 type HookCmd = { type?: string; command?: string; [k: string]: unknown };
 type Group = { matcher?: string; hooks?: HookCmd[]; [k: string]: unknown };
@@ -44,13 +49,17 @@ export function removeHooks(settings: Settings): Settings {
 export function installHooks(
   settings: Settings,
   script: string,
-  events: readonly string[] = HOOK_EVENTS,
+  events: readonly string[] | undefined = undefined,
+  provider: 'claude' | 'codex' = 'claude',
+  // Run through an explicit node: a hook starts without the user's shell, so neither PATH nor the file's exec bit is reliable.
+  runtime: string = process.execPath,
 ): Settings {
   assertScript(script);
+  assertScript(runtime);
   const base = removeHooks(settings);
   const hooks: Record<string, Group[]> = { ...(base.hooks ?? {}) };
-  for (const event of events) {
-    const command = `${JSON.stringify(script)} claude # ${HOOK_MARKER}:${event}`;
+  for (const event of events ?? eventsFor(provider)) {
+    const command = `${JSON.stringify(runtime)} ${JSON.stringify(script)} ${provider} # ${HOOK_MARKER}:${event}`;
     hooks[event] = [
       ...(hooks[event] ?? []),
       { hooks: [{ type: 'command', command, timeout: 5, async: true }] },
@@ -98,8 +107,13 @@ async function save(path: string, next: Settings) {
   await rename(tmp, path);
 }
 
-export async function installHooksFile(path: string, script: string, events?: readonly string[]) {
-  await save(path, installHooks(await load(path), script, events));
+export async function installHooksFile(
+  path: string,
+  script: string,
+  events?: readonly string[],
+  provider?: 'claude' | 'codex',
+) {
+  await save(path, installHooks(await load(path), script, events, provider));
 }
 export async function removeHooksFile(path: string) {
   await save(path, removeHooks(await load(path)));

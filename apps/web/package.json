@@ -6,6 +6,7 @@
   "exports": "./src/index.ts",
   "dependencies": {
     "@aether/contracts": "workspace:*",
+    "@aether/kernel": "workspace:*",
     "@aether/office-scene": "workspace:*",
     "@tanstack/react-query": "5.104.1",
     "@vitejs/plugin-react": "6.1.1",
