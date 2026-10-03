@@ -10,56 +10,62 @@ export type Actor = {
   runId?: string;
   runPurpose?: string;
 };
-export type Action =
-  | 'terminal.start'
-  | 'terminal.takeover'
-  | 'terminal.release'
-  | 'terminal.input'
-  | 'terminal.resize'
-  | 'terminal.stop'
-  | 'read'
-  | 'workspace.diff'
-  | 'project.execution.configure'
-  | 'project.create'
-  | 'agent.register'
-  | 'work.create'
-  | 'work.request_review'
-  | 'work.assign'
-  | 'work.dependencies'
-  | 'work.retry'
-  | 'work.extend'
-  | 'work.claim'
-  | 'work.progress'
-  | 'work.submit'
-  | 'work.review'
-  | 'work.verify'
-  | 'work.accept'
-  | 'work.cancel'
-  | 'message.send'
-  | 'message.ack'
-  | 'approval.decide'
-  | 'layout.save'
-  | 'runner.report'
-  | 'identity.manage'
-  | 'knowledge.propose'
-  | 'knowledge.approve'
-  | 'work.comment'
-  | 'machine.invite'
-  | 'room.create'
-  | 'room.members'
-  | 'a2a.client.create'
-  | 'a2a.client.revoke'
-  | 'integration.connect'
-  | 'integration.toggle'
-  | 'skill.import'
-  | 'skill.toggle'
-  | 'schedule.create'
-  | 'schedule.toggle'
-  | 'work.integrate'
-  | 'reservation.acquire'
-  | 'reservation.renew'
-  | 'reservation.release';
-const grants: Record<Role, readonly Action[]> = {
+export const ACTIONS = [
+  'terminal.start',
+  'terminal.takeover',
+  'terminal.release',
+  'terminal.input',
+  'terminal.resize',
+  'terminal.stop',
+  'read',
+  'workspace.diff',
+  'project.execution.configure',
+  'project.create',
+  'agent.register',
+  'work.create',
+  'work.request_review',
+  'work.assign',
+  'work.dependencies',
+  'work.retry',
+  'work.extend',
+  'work.claim',
+  'work.progress',
+  'work.submit',
+  'work.review',
+  'work.verify',
+  'work.accept',
+  'work.cancel',
+  'message.send',
+  'message.ack',
+  'approval.decide',
+  'layout.save',
+  'runner.report',
+  'identity.manage',
+  'knowledge.propose',
+  'knowledge.approve',
+  'work.comment',
+  'machine.invite',
+  'meeting.start',
+  'meeting.conclude',
+  'workflow.start',
+  'room.create',
+  'room.members',
+  'a2a.client.create',
+  'a2a.client.revoke',
+  'integration.connect',
+  'integration.toggle',
+  'skill.import',
+  'skill.toggle',
+  'schedule.create',
+  'schedule.toggle',
+  'work.integrate',
+  'reservation.acquire',
+  'reservation.renew',
+  'reservation.release',
+] as const;
+export type Action = (typeof ACTIONS)[number];
+/** What each role may do. Exported for the authorization-matrix test, which pins it so privilege cannot creep silently. */
+export const GRANTS: Record<Role, readonly Action[]> = {
   owner: [
     'terminal.start',
     'terminal.takeover',
@@ -87,6 +93,9 @@ const grants: Record<Role, readonly Action[]> = {
     'schedule.toggle',
     'room.create',
     'room.members',
+    'workflow.start',
+    'meeting.start',
+    'meeting.conclude',
     'skill.import',
     'skill.toggle',
     'integration.connect',
@@ -133,6 +142,9 @@ const grants: Record<Role, readonly Action[]> = {
     'schedule.toggle',
     'room.create',
     'room.members',
+    'workflow.start',
+    'meeting.start',
+    'meeting.conclude',
     'message.send',
     'message.ack',
     'approval.decide',
@@ -177,7 +189,7 @@ export class DomainError extends Error {
   }
 }
 export function authorize(actor: Actor, action: Action, projectId?: string): void {
-  if (!grants[actor.role].includes(action)) throw new DomainError('FORBIDDEN', 403);
+  if (!GRANTS[actor.role].includes(action)) throw new DomainError('FORBIDDEN', 403);
   if (projectId && !actor.projectIds.includes(projectId) && !actor.projectIds.includes('*'))
     throw new DomainError('PROJECT_FORBIDDEN', 403);
 }
@@ -307,3 +319,4 @@ export {
   type ScheduleSpec,
 } from './schedule.js';
 export { parseSkill, SkillError, type ParsedSkill } from './skill.js';
+export { TEMPLATES, isTemplate, type StepPlan, type WorkflowTemplate } from './workflows.js';

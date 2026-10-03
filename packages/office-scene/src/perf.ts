@@ -28,6 +28,9 @@ export type PerfReport = {
   stats: FrameStats;
   drawCalls: number;
   triangles: number;
+  /** GPU resources currently alive, for leak checks across mounts. */
+  geometries: number;
+  textures: number;
   renderer: string;
   quality: string;
   devicePixelRatio: number;

@@ -22,7 +22,7 @@ export function CapabilityMatrix() {
     <section aria-labelledby="capabilities-title">
       <h2 id="capabilities-title">{t('capabilities')}</h2>
       <p className="muted">{t('capabilitiesNote')}</p>
-      <div className="table-scroll">
+      <div className="table-scroll" tabIndex={0} role="region" aria-label={t('capabilities')}>
         <table>
           <thead>
             <tr>

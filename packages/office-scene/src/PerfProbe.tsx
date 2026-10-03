@@ -33,6 +33,8 @@ export function PerfProbe({
       stats,
       drawCalls: gl.info.render.calls,
       triangles: gl.info.render.triangles,
+      geometries: gl.info.memory.geometries,
+      textures: gl.info.memory.textures,
       renderer: String(
         debug
           ? context.getParameter(debug.UNMASKED_RENDERER_WEBGL)

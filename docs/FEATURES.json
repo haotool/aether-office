@@ -480,22 +480,21 @@
     "id": "CDX-02",
     "requirement": "initialize／initialized 與 request correlation 正確。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
       "packages/providers/src/codex.ts",
-      "packages/providers/src/claude.ts",
       "packages/providers/src/jsonrpc.ts"
     ],
     "testIds": [
-      "tests/aether/providers.test.ts",
-      "tests/aether/native-runner.test.ts"
+      "tests/aether/codex-protocol.test.ts",
+      "tests/aether/providers.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。"
+      "未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑"
     ]
   },
   {
@@ -529,88 +528,84 @@
     "id": "CDX-04",
     "requirement": "item／tool／message streaming 去重且能容忍延遲。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
       "packages/providers/src/codex.ts",
-      "packages/providers/src/claude.ts",
       "packages/providers/src/jsonrpc.ts"
     ],
     "testIds": [
-      "tests/aether/providers.test.ts",
-      "tests/aether/native-runner.test.ts"
+      "tests/aether/codex-protocol.test.ts",
+      "tests/aether/providers.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。"
+      "未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑"
     ]
   },
   {
     "id": "CDX-05",
     "requirement": "interrupt 對正確 active turn 執行，無誤殺另一工作。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
       "packages/providers/src/codex.ts",
-      "packages/providers/src/claude.ts",
       "packages/providers/src/jsonrpc.ts"
     ],
     "testIds": [
-      "tests/aether/providers.test.ts",
-      "tests/aether/native-runner.test.ts"
+      "tests/aether/codex-protocol.test.ts",
+      "tests/aether/providers.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。"
+      "未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑"
     ]
   },
   {
     "id": "CDX-06",
     "requirement": "steer 僅在支援時開啟，接受不等於 semantic ack。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
+    "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
       "packages/providers/src/codex.ts",
-      "packages/providers/src/claude.ts",
       "packages/providers/src/jsonrpc.ts"
     ],
     "testIds": [
-      "tests/aether/providers.test.ts",
-      "tests/aether/native-runner.test.ts"
+      "tests/aether/codex-protocol.test.ts",
+      "tests/aether/providers.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。"
+      "steer 對所有 provider 皆未開放（messageInjection=none），僅驗證未開放時被拒；支援時的 semantic ack 待 live 驗證"
     ]
   },
   {
     "id": "CDX-07",
     "requirement": "approval 回覆對應正確 request、session 與參數。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
       "packages/providers/src/codex.ts",
-      "packages/providers/src/claude.ts",
       "packages/providers/src/jsonrpc.ts"
     ],
     "testIds": [
-      "tests/aether/providers.test.ts",
-      "tests/aether/native-runner.test.ts"
+      "tests/aether/codex-protocol.test.ts",
+      "tests/aether/providers.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。"
+      "未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑"
     ]
   },
   {
@@ -1232,40 +1227,39 @@
     "id": "TSK-03",
     "requirement": "scheduler 遵守能力、scope、公平性與並行數。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/runners.ts",
-      "apps/control/src/services/jobs.ts"
+      "apps/control/src/services/runners.ts"
     ],
     "testIds": [
-      "tests/aether/native-runner.test.ts"
+      "tests/aether/scheduler.test.ts",
+      "tests/aether/scheduler-limits.test.ts",
+      "tests/aether/machine-grants.test.ts"
     ],
     "evidencePaths": [
       "evidence/verification-workflow-test.log"
     ],
-    "blockers": [
-      "跨 provider review/fix loop、公平排程、停滯診斷尚未完成；目前只有 synthetic 單 provider 全鏈。"
-    ]
+    "blockers": []
   },
   {
     "id": "TSK-04",
     "requirement": "Claude→Codex review→fix→test 的 workflow 可完成。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
+    "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/runners.ts",
-      "apps/control/src/services/jobs.ts",
+      "packages/kernel/src/workflows.ts",
+      "apps/control/src/services/workflows.ts",
       "apps/control/src/services/review-runs.ts",
-      "apps/runner/src/native.ts",
-      "apps/web/src/features/Reviews.tsx"
+      "apps/control/src/services/work.ts",
+      "apps/web/src/features/WorkflowStart.tsx"
     ],
     "testIds": [
-      "tests/aether/native-runner.test.ts",
+      "tests/aether/workflows.test.ts",
       "tests/aether/review-runs.test.ts",
       "tests/aether/native-review.test.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/workflows.spec.ts"
     ],
     "evidencePaths": [
       "evidence/verification-workflow-test.log",
@@ -1273,27 +1267,27 @@
       "evidence/e2e-native-review.log"
     ],
     "blockers": [
-      "已實作固定SHA獨立原生review及合成Codex整頁工作鏈；真Claude/Codex雙provider、完整workflow模板與平行integration仍未完成。"
+      "The template pins Claude engineer and Codex reviewer and the loop is exercised with synthetic providers; a real Claude to Codex run needs paid, authenticated sessions that are not authorised"
     ]
   },
   {
     "id": "TSK-05",
     "requirement": "provider 對調與 frontend／backend 平行 workflow 可完成。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
+    "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/runners.ts",
-      "apps/control/src/services/jobs.ts",
-      "apps/control/src/services/review-runs.ts",
-      "apps/runner/src/native.ts",
-      "apps/web/src/features/Reviews.tsx"
+      "packages/kernel/src/workflows.ts",
+      "apps/control/src/services/workflows.ts",
+      "apps/control/src/services/meetings.ts",
+      "apps/web/src/features/WorkflowStart.tsx",
+      "apps/web/src/features/Meetings.tsx"
     ],
     "testIds": [
-      "tests/aether/native-runner.test.ts",
-      "tests/aether/review-runs.test.ts",
-      "tests/aether/native-review.test.ts",
-      "e2e/native-workflow.spec.ts"
+      "tests/aether/workflows.test.ts",
+      "tests/aether/meetings.test.ts",
+      "e2e/workflows.spec.ts",
+      "e2e/meetings.spec.ts"
     ],
     "evidencePaths": [
       "evidence/verification-workflow-test.log",
@@ -1301,7 +1295,7 @@
       "evidence/e2e-native-review.log"
     ],
     "blockers": [
-      "已實作固定SHA獨立原生review及合成Codex整頁工作鏈；真Claude/Codex雙provider、完整workflow模板與平行integration仍未完成。"
+      "Provider swap, the parallel frontend/backend DAG and the bounded meeting are enforced and tested at the control layer; parallel worktrees with a real integration review were not run with real providers"
     ]
   },
   {
@@ -1330,19 +1324,16 @@
     "id": "TSK-07",
     "requirement": "重試上限／停滯診斷／人類 escalation 有實際效果。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/runners.ts",
-      "apps/control/src/services/jobs.ts",
-      "apps/control/src/services/work.ts",
-      "apps/runner/src/native.ts",
-      "apps/web/src/features/Tasks.tsx"
+      "apps/control/src/services/diagnostics.ts",
+      "apps/control/src/services/work.ts"
     ],
     "testIds": [
-      "tests/aether/native-runner.test.ts",
+      "tests/aether/diagnostics.test.ts",
       "tests/aether/control.test.ts",
-      "e2e/native-workflow.spec.ts"
+      "tests/aether/reconciliation.test.ts"
     ],
     "evidencePaths": [
       "evidence/verification-workflow-test.log",
@@ -1352,24 +1343,24 @@
       "evidence/e2e-escalation.log"
     ],
     "blockers": [
-      "三次預設上限、owner逐次追加與審計已實作及E2E驗證；完整停滯診斷仍未完成。"
+      "Provider rate-limit evidence is reported as null: it is never inferred"
     ]
   },
   {
     "id": "TSK-08",
     "requirement": "cancel propagation 不把取消中的結果錯標新成功工作。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "packages/kernel/src/index.ts",
       "apps/control/src/services/work.ts",
-      "apps/control/src/services/jobs.ts"
+      "apps/control/src/services/messages.ts"
     ],
     "testIds": [
-      "tests/aether/kernel.test.ts",
-      "tests/aether/control.test.ts",
-      "tests/aether/native-runner.test.ts"
+      "tests/aether/cancel-dag.test.ts",
+      "tests/aether/message-waits.test.ts",
+      "tests/aether/reconciliation.test.ts",
+      "tests/aether/review-runs.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log",
@@ -1377,9 +1368,7 @@
       "evidence/tests-cancel-shutdown-final.log",
       "evidence/e2e-cancel-shutdown-final.log"
     ],
-    "blockers": [
-      "已驗證未執行依賴鏈取消、菱形去重、版本與事件；訊息等待取消連動及完整人工復原流程仍待完成。"
-    ]
+    "blockers": []
   },
   {
     "id": "GIT-01",
@@ -1572,22 +1561,24 @@
     "id": "SEC-02",
     "requirement": "每個 query、WS subscription、MCP tool 做 scope 檢查。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/approvals.ts",
-      "apps/runner/src/mcp.ts",
-      "apps/control/src/services/identity.ts"
+      "apps/control/src/server.ts",
+      "packages/kernel/src/index.ts",
+      "apps/runner/src/mcp.ts"
     ],
     "testIds": [
-      "tests/aether/approvals.test.ts",
-      "tests/aether/mcp.test.ts"
+      "tests/aether/route-auth.test.ts",
+      "tests/aether/authz-matrix.test.ts",
+      "tests/aether/mcp.test.ts",
+      "tests/aether/security.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "批准/撤銷回歸已跑；完整 export/PTY/connector trust boundaries 與 live provider ack 待驗。"
+      "Every HTTP route is swept for authentication and cross-project access; the stream is SSE (no WebSocket exists) and is covered by the revocation test"
     ]
   },
   {
@@ -1676,44 +1667,44 @@
     "id": "SEC-07",
     "requirement": "logs／export／events／frontend bundle 不洩漏測試 secrets。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/approvals.ts",
-      "apps/runner/src/mcp.ts",
-      "apps/control/src/services/identity.ts"
+      "apps/control/src/control.ts",
+      "apps/control/src/server.ts"
     ],
     "testIds": [
-      "tests/aether/approvals.test.ts",
-      "tests/aether/mcp.test.ts"
+      "tests/aether/secret-hygiene.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "批准/撤銷回歸已跑；完整 export/PTY/connector trust boundaries 與 live provider ack 待驗。"
+      "Scans the database, events, logs and responses for known test secrets; the frontend bundle is not scanned because no secret is available at build time"
     ]
   },
   {
     "id": "SEC-08",
     "requirement": "外部指令／peer message 不能繞過權限與支出策略。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/approvals.ts",
-      "apps/runner/src/mcp.ts",
-      "apps/control/src/services/identity.ts"
+      "packages/kernel/src/index.ts",
+      "apps/control/src/services/a2a.ts",
+      "apps/control/src/services/schedules.ts"
     ],
     "testIds": [
-      "tests/aether/approvals.test.ts",
-      "tests/aether/mcp.test.ts"
+      "tests/aether/authz-matrix.test.ts",
+      "tests/aether/a2a.test.ts",
+      "tests/aether/schedules.test.ts",
+      "tests/aether/review-runs.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "批准/撤銷回歸已跑；完整 export/PTY/connector trust boundaries 與 live provider ack 待驗。"
+      "Remote and scheduled requests only create unassigned work, so they cannot spend; a global spend budget does not exist"
     ]
   },
   {
@@ -1783,68 +1774,64 @@
     "id": "REM-04",
     "requirement": "撤銷身份立即阻止新命令與敏感 stream。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/approvals.ts",
-      "apps/runner/src/mcp.ts",
-      "apps/control/src/services/identity.ts"
+      "apps/control/src/services/identity.ts",
+      "apps/control/src/server.ts"
     ],
     "testIds": [
-      "tests/aether/approvals.test.ts",
-      "tests/aether/mcp.test.ts"
+      "tests/aether/revocation.test.ts",
+      "tests/aether/remote-runners.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log"
     ],
-    "blockers": [
-      "批准/撤銷回歸已跑；完整 export/PTY/connector trust boundaries 與 live provider ack 待驗。"
-    ]
+    "blockers": []
   },
   {
     "id": "REM-05",
     "requirement": "local spool 重連後按序去重，不丟已承諾資料。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/runners.ts",
-      "apps/runner/src/runner.ts",
       "apps/runner/src/journal.ts",
-      "apps/control/src/db/connection.ts"
+      "apps/runner/src/runner.ts",
+      "apps/control/src/services/runners.ts"
     ],
     "testIds": [
-      "tests/aether/control.test.ts",
-      "tests/aether/runner.test.ts"
+      "tests/aether/runner-spool.test.ts",
+      "tests/aether/runner.test.ts",
+      "tests/aether/control.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "完整 crash window／跨程序斷線／備份 CLI 仍待覆蓋。"
+      "The spool is a 8 MB JSON file; a longer outage fails closed with RUNNER_SPOOL_FULL rather than dropping events"
     ]
   },
   {
     "id": "REM-06",
     "requirement": "斷線時依 policy 停新派工，恢復不重複執行。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/runners.ts",
       "apps/runner/src/runner.ts",
-      "apps/runner/src/journal.ts",
-      "apps/control/src/db/connection.ts"
+      "apps/control/src/services/runners.ts"
     ],
     "testIds": [
-      "tests/aether/control.test.ts",
-      "tests/aether/runner.test.ts"
+      "tests/aether/runner-spool.test.ts",
+      "tests/aether/reconciliation.test.ts",
+      "tests/aether/remote-runners.test.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "完整 crash window／跨程序斷線／備份 CLI 仍待覆蓋。"
+      "While control is unreachable a runner cannot claim, so no new dispatch starts; an in-flight run keeps going and is reported when the link returns"
     ]
   },
   {
@@ -2041,13 +2028,11 @@
     "id": "UIX-01",
     "requirement": "onboarding 從 Demo／Live 選擇到第一工作完整可走。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
+    "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
       "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx",
-      "apps/web/src/features/Approvals.tsx",
-      "apps/web/src/features/Reviews.tsx"
+      "apps/web/src/ui.tsx"
     ],
     "testIds": [
       "e2e/workbench.spec.ts",
@@ -2057,168 +2042,147 @@
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+      "Demo sign-in through to a first task is covered; live onboarding (execution policy, runner, provider sign-in) has no guided flow"
     ]
   },
   {
     "id": "UIX-02",
     "requirement": "Agent／Task／Message／Approval／Review 共用相同權威狀態。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
       "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx",
-      "apps/web/src/features/Approvals.tsx",
-      "apps/web/src/features/Reviews.tsx"
+      "apps/web/src/ui.tsx"
     ],
     "testIds": [
       "e2e/workbench.spec.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/native-workflow.spec.ts",
+      "e2e/navigation.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
-    "blockers": [
-      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
-    ]
+    "blockers": []
   },
   {
     "id": "UIX-03",
     "requirement": "所有主要操作按鈕可用或清楚說明不能使用的原因。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
+    "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
       "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx",
-      "apps/web/src/features/Approvals.tsx",
-      "apps/web/src/features/Reviews.tsx"
+      "apps/web/src/ui.tsx"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/ui-sweep.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+      "Many disabled controls do not state why they are disabled"
     ]
   },
   {
     "id": "UIX-04",
     "requirement": "所有主要畫面具有 loading／empty／error／offline／no-permission。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
+    "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
       "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx",
-      "apps/web/src/features/Approvals.tsx",
-      "apps/web/src/features/Reviews.tsx"
+      "apps/web/src/ui.tsx"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/ui-sweep.spec.ts",
+      "e2e/workbench.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+      "Loading, empty and offline states are covered; no-permission (viewer) states are not browser-tested"
     ]
   },
   {
     "id": "UIX-05",
     "requirement": "language switch 覆蓋繁中／英文，無散落 placeholder 文案。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx",
-      "apps/web/src/features/Approvals.tsx",
-      "apps/web/src/features/Reviews.tsx"
+      "apps/web/src/i18n.ts"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "e2e/native-workflow.spec.ts"
+      "tests/aether/i18n.test.ts",
+      "e2e/ui-sweep.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+      "Key parity, script purity and placeholder-free copy are unit-tested; the English UI is not browser-swept"
     ]
   },
   {
     "id": "UIX-06",
     "requirement": "桌面與手機無主要內容溢出／遮擋／無法點擊。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx",
-      "apps/web/src/features/Approvals.tsx",
-      "apps/web/src/features/Reviews.tsx"
+      "apps/web/src/style.css"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/ui-sweep.spec.ts",
+      "e2e/workbench.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+      "Horizontal overflow is measured on every page at 1440 and 390 px in both themes; there is no pixel-level clipping or tap-target audit"
     ]
   },
   {
     "id": "UIX-07",
     "requirement": "deep link／reload 保留合理選取與可恢復工作上下文。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
       "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx",
-      "apps/web/src/features/Approvals.tsx",
-      "apps/web/src/features/Reviews.tsx"
+      "apps/web/src/ui.tsx"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/navigation.spec.ts",
+      "e2e/ui-sweep.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
-    "blockers": [
-      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
-    ]
+    "blockers": []
   },
   {
     "id": "UIX-08",
     "requirement": "重要 approval／失敗／stale 不只靠顏色表達。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx",
-      "apps/web/src/features/Approvals.tsx",
-      "apps/web/src/features/Reviews.tsx"
+      "apps/web/src/ui.tsx"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/navigation.spec.ts",
+      "e2e/ui-sweep.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+      "Badges are checked for visible text; icon-only meaning elsewhere is covered only by axe"
     ]
   },
   {
@@ -2458,67 +2422,56 @@
     "id": "CAM-03",
     "requirement": "editor move／rotate／assign／undo／redo 真正保存與還原。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "packages/office-scene/src/OfficeScene.tsx",
-      "packages/office-scene/src/Animal.tsx",
-      "tools/blender/build_animals.py",
-      "scripts/validate-assets.mjs"
+      "apps/web/src/features/LayoutEditor.tsx",
+      "apps/control/src/control.ts"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "tests/aether/kernel.test.ts"
+      "e2e/layout-editor.spec.ts",
+      "tests/aether/layout.test.ts"
     ],
     "evidencePaths": [
       "evidence/assets-validation.json",
       "evidence/e2e-full-workflow-first.log",
       "evidence/renders/fox-3840x2160.json"
     ],
-    "blockers": [
-      "24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
-    ]
+    "blockers": []
   },
   {
     "id": "CAM-04",
     "requirement": "layout import schema／物件上限／動線驗證拒絕不合法資料。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "packages/office-scene/src/OfficeScene.tsx",
-      "packages/office-scene/src/Animal.tsx",
-      "tools/blender/build_animals.py",
-      "scripts/validate-assets.mjs"
+      "apps/web/src/features/LayoutEditor.tsx",
+      "packages/kernel/src/layout.ts",
+      "packages/contracts/src/index.ts"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "tests/aether/kernel.test.ts"
+      "tests/aether/layout.test.ts"
     ],
     "evidencePaths": [
       "evidence/assets-validation.json",
       "evidence/e2e-full-workflow-first.log",
       "evidence/renders/fox-3840x2160.json"
     ],
-    "blockers": [
-      "24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
-    ]
+    "blockers": []
   },
   {
     "id": "CAM-05",
     "requirement": "high／balanced／low 有可觀察的實際資源差異。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
       "packages/office-scene/src/OfficeScene.tsx",
-      "packages/office-scene/src/Animal.tsx",
-      "tools/blender/build_animals.py",
-      "scripts/validate-assets.mjs"
+      "packages/office-scene/src/PerfProbe.tsx"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "tests/aether/kernel.test.ts"
+      "e2e/scene.spec.ts"
     ],
     "evidencePaths": [
       "evidence/assets-validation.json",
@@ -2526,24 +2479,21 @@
       "evidence/renders/fox-3840x2160.json"
     ],
     "blockers": [
-      "24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+      "Measured as pixel ratio and draw calls on one machine (Apple M4, headless Chrome)"
     ]
   },
   {
     "id": "CAM-06",
     "requirement": "WebGL unavailable／context lost 有可用 2D fallback。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
       "packages/office-scene/src/OfficeScene.tsx",
-      "packages/office-scene/src/Animal.tsx",
-      "tools/blender/build_animals.py",
-      "scripts/validate-assets.mjs"
+      "apps/web/src/App.tsx"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "tests/aether/kernel.test.ts"
+      "e2e/scene.spec.ts"
     ],
     "evidencePaths": [
       "evidence/assets-validation.json",
@@ -2551,24 +2501,21 @@
       "evidence/renders/fox-3840x2160.json"
     ],
     "blockers": [
-      "24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+      "Covers WebGL being unavailable at start; the context-lost handler is wired but not exercised"
     ]
   },
   {
     "id": "CAM-07",
     "requirement": "scene 反覆進出不持續洩漏 geometry／texture／listener。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
       "packages/office-scene/src/OfficeScene.tsx",
-      "packages/office-scene/src/Animal.tsx",
-      "tools/blender/build_animals.py",
-      "scripts/validate-assets.mjs"
+      "packages/office-scene/src/PerfProbe.tsx"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "tests/aether/kernel.test.ts"
+      "e2e/scene.spec.ts"
     ],
     "evidencePaths": [
       "evidence/assets-validation.json",
@@ -2576,7 +2523,7 @@
       "evidence/renders/fox-3840x2160.json"
     ],
     "blockers": [
-      "24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+      "Leak check compares live GPU geometry and texture counts across five mounts at one quality level"
     ]
   },
   {
@@ -2603,138 +2550,117 @@
     "id": "A11Y-01",
     "requirement": "核心派工／訊息／approval／review 可只用鍵盤完成。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
+    "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
       "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx",
-      "apps/web/src/features/Approvals.tsx",
-      "apps/web/src/features/Reviews.tsx"
+      "apps/web/src/ui.tsx"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/accessibility.spec.ts",
+      "e2e/ui-sweep.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+      "Task creation is verified by keyboard alone; messaging, approval and review flows are not"
     ]
   },
   {
     "id": "A11Y-02",
     "requirement": "Dialog focus trap／Escape／return focus 正常。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx",
-      "apps/web/src/features/Approvals.tsx",
-      "apps/web/src/features/Reviews.tsx"
+      "apps/web/src/ui.tsx"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/accessibility.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+      "Native modal dialog: focus may pass to the browser's own UI, never to the page behind it"
     ]
   },
   {
     "id": "A11Y-03",
     "requirement": "canvas 外有等價的 DOM 狀態與操作入口。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
       "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx",
-      "apps/web/src/features/Approvals.tsx",
-      "apps/web/src/features/Reviews.tsx"
+      "apps/web/src/features/Agents.tsx"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/navigation.spec.ts",
+      "e2e/scene.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
-    "blockers": [
-      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
-    ]
+    "blockers": []
   },
   {
     "id": "A11Y-04",
     "requirement": "reduced motion 可關閉 camera 飛行／粒子／閃爍。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx",
-      "apps/web/src/features/Approvals.tsx",
-      "apps/web/src/features/Reviews.tsx"
+      "apps/web/src/state.ts",
+      "packages/office-scene/src/Avatar.tsx"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/accessibility.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+      "The product has no camera flights or particles; the preference is honoured by character animation and camera damping"
     ]
   },
   {
     "id": "A11Y-05",
     "requirement": "dark／light 文本對比與狀態 icon 有測試。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx",
-      "apps/web/src/features/Approvals.tsx",
-      "apps/web/src/features/Reviews.tsx"
+      "apps/web/src/tokens.css"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/ui-sweep.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+      "axe colour-contrast on every page in both themes; state icons are covered by axe only"
     ]
   },
   {
     "id": "A11Y-06",
     "requirement": "drag 操作有鍵盤或選單替代。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx",
-      "apps/web/src/features/Approvals.tsx",
-      "apps/web/src/features/Reviews.tsx"
+      "apps/web/src/features/LayoutEditor.tsx"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/layout-editor.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+      "The layout editor uses form controls, so no operation depends on dragging"
     ]
   },
   {
@@ -2761,23 +2687,20 @@
     "id": "A11Y-08",
     "requirement": "axe／瀏覽器人工檢視的問題有 evidence 與修正。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
+    "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx",
-      "apps/web/src/features/Approvals.tsx",
-      "apps/web/src/features/Reviews.tsx"
+      "e2e/ui-sweep.spec.ts"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/ui-sweep.spec.ts",
+      "e2e/accessibility.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。"
+      "axe sweeps run on every page (and found and fixed unfocusable scroll regions); there has been no screen-reader pass"
     ]
   },
   {

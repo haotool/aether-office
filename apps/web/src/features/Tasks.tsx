@@ -4,6 +4,7 @@ import type { Snapshot, Work } from '@aether/contracts';
 import { TaskDiagnostics } from './TaskDiagnostics.js';
 import { execute } from '../api.js';
 import { Integration } from './Integration.js';
+import { WorkflowStart } from './WorkflowStart.js';
 import { useCapabilities } from './CapabilityMatrix.js';
 import { Modal, Field, Empty, Badge, PageHeading, useT } from '../ui.js';
 const TaskDag = lazy(() => import('./TaskDag.js').then((m) => ({ default: m.TaskDag })));
@@ -138,10 +139,13 @@ export function Tasks({
         title={t('tasks')}
         subtitle={`${snapshot.work.length} ${t('tasks')}`}
         action={
-          <button className="primary" onClick={onNew} disabled={!canWrite}>
-            <Plus size={16} />
-            {t('newWork')}
-          </button>
+          <>
+            {canWrite && <WorkflowStart projectId={snapshot.project.id} onSaved={onSaved} />}
+            <button className="primary" onClick={onNew} disabled={!canWrite}>
+              <Plus size={16} />
+              {t('newWork')}
+            </button>
+          </>
         }
       />
       <div className="view-switch">

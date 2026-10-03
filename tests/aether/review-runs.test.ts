@@ -232,3 +232,31 @@ it.each(['approve', 'changes_requested', 'stale', 'cancel', 'offline'] as const)
     }
   },
 );
+
+it('a workflow step fixes the reviewer provider: the wrong provider is refused and the right one is accepted', () => {
+  const f = setup();
+  const { control, owner, projectId, reviewer, workId, work } = f;
+  try {
+    const sql = control.ctx.sqlite;
+    sql.pragma('foreign_keys = OFF');
+    sql
+      .prepare(
+        "INSERT INTO workflows VALUES ('wf','" + projectId + "','claude_codex_review','t',?,1)",
+      )
+      .run(owner.actor.id);
+    // The reviewer in this fixture is a codex agent; require a claude one first.
+    sql
+      .prepare("INSERT INTO workflow_steps VALUES (?,'wf','engineer+reviewer',0,'claude','claude')")
+      .run(workId);
+    const request = () =>
+      control.execute(
+        owner.actor,
+        command('work.request_review', { workId, agentId: reviewer }, projectId, work().version),
+      );
+    expect(request).toThrow('WORKFLOW_PROVIDER_MISMATCH');
+    sql.prepare("UPDATE workflow_steps SET reviewerProvider='codex' WHERE workId=?").run(workId);
+    expect(request().result).toMatchObject({ purpose: 'review', agentId: reviewer });
+  } finally {
+    control.close();
+  }
+});

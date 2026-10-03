@@ -107,6 +107,44 @@ it('MCP stdio uses durable scoped inbox/replies, stable retries and expiring run
     expect(JSON.parse((reserve.content as { text: string }[])[0]!.text).result.granted).toBe(true);
     const reserved = await client.callTool({ name: 'reservations_list', arguments: {} });
     expect(JSON.stringify(reserved)).toContain('src/mcp/**');
+    const text = (r: unknown) =>
+      JSON.parse((r as { content: { text: string }[] }).content[0]!.text);
+    const reservationId = text(reserve).result.reservation.id as string;
+    const renewed = await client.callTool({
+      name: 'reservations_renew',
+      arguments: { reservationId, ttlSec: 120, idempotencyKey: 'renew-mcp-key' },
+    });
+    expect(text(renewed).result.reservation.id).toBe(reservationId);
+    await client.callTool({
+      name: 'reservations_release',
+      arguments: { reservationId, idempotencyKey: 'release-mcp-key' },
+    });
+    expect(
+      JSON.stringify(await client.callTool({ name: 'reservations_list', arguments: {} })),
+    ).not.toContain('src/mcp/**');
+    // A malformed id never reaches the kernel as a success.
+    expect(
+      (
+        await client.callTool({
+          name: 'reservations_release',
+          arguments: { reservationId: 'nope', idempotencyKey: 'bad-id-key-1' },
+        })
+      ).isError,
+    ).toBe(true);
+    expect((await client.callTool({ name: 'skills_list', arguments: {} })).isError).not.toBe(true);
+    const proposal = await client.callTool({
+      name: 'propose_knowledge',
+      arguments: {
+        title: 'Learned',
+        body: 'It works',
+        source: 'mcp-test',
+        idempotencyKey: 'propose-mcp-key',
+      },
+    });
+    expect(proposal.isError).not.toBe(true);
+    expect(
+      control.ctx.sqlite.prepare("SELECT COUNT(*) AS n FROM knowledge WHERE title='Learned'").get(),
+    ).toEqual({ n: 1 }); // really persisted by the kernel, proposed and not approved
     const nonce = randomUUID();
     const sent = control.execute(
       owner.actor,

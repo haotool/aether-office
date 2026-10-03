@@ -450,6 +450,48 @@ export const commandSchema = z.discriminatedUnion('type', [
   z
     .object({
       ...projectEnvelope,
+      type: z.literal('meeting.start'),
+      data: z
+        .object({
+          topic: shortText,
+          question: z.string().trim().min(1).max(8000),
+          participants: z.array(id).min(2).max(12),
+          maxRounds: z.number().int().min(2).max(12).default(6),
+          deadlineMinutes: z.number().int().min(5).max(240).default(30),
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...projectEnvelope,
+      type: z.literal('meeting.conclude'),
+      data: z.object({ threadId: id, decision: z.string().trim().min(1).max(8000) }).strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...projectEnvelope,
+      type: z.literal('workflow.start'),
+      data: z
+        .object({
+          template: z.enum([
+            'claude_codex_review',
+            'codex_claude_review',
+            'frontend_backend',
+            'research_design_impl',
+          ]),
+          title: shortText,
+          description: z.string().max(16000).default(''),
+          acceptance: z.string().trim().min(1).max(8000),
+          priority: z.number().int().min(0).max(3).default(1),
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...projectEnvelope,
       type: z.literal('room.create'),
       data: z.object({ name: shortText, members: z.array(id).min(1).max(32) }).strict(),
     })
@@ -1094,3 +1136,20 @@ export const roomSchema = z.object({
   createdAt: z.number(),
 });
 export type Room = z.infer<typeof roomSchema>;
+
+export const workflowSchema = z.object({
+  id,
+  template: z.string(),
+  title: z.string(),
+  steps: z.array(
+    z.object({
+      workId: id,
+      role: z.string(),
+      position: z.number().int(),
+      engineerProvider: z.string().nullable(),
+      reviewerProvider: z.string().nullable(),
+      state: z.string(),
+    }),
+  ),
+});
+export type Workflow = z.infer<typeof workflowSchema>;

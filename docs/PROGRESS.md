@@ -244,3 +244,11 @@
 - 收斂：Prettier 3.9.9 固定版本（`pnpm format` / `format:check`）；vitest 並行上限 4；修正 PTY／verifier 逾時競態測試（逾時需長於子行程啟動）；`LocalSession` 型別移至 contracts 共用。
 - 驗證：tsc、boundaries、vitest 28 檔 70 passed、e2e 7 passed。機器負載高（load 30+）時 pty／mcp-wait 於全套並行偶發逾時，單獨執行皆通過；屬環境壓力，未在安靜環境重驗。
 - 未完成：FEATURES 約 44 項 not_started（遠端 runner、ACP／A2A、GitHub／Linear、排程、skills、file reservation／merge 等）。完整產品目標仍未完成。
+
+## 2026-10-04 — 產品收斂：安全、持久性、協定與 clean-room
+
+- 本輪依序 commit（皆未 push）：API 全路由先認證、一次性 bearer secret 不進事件／journal、角色×動作矩陣與撤銷關閉 SSE、runner spool 持久與重送測試、GPU 資源計數與 axe 全頁掃描、provider CLI 版本改由單一 manifest（`packages/providers/generated/compat.json`）、Codex 協定腳本化 peer 測試（request 對應、重複／延遲事件、interrupt 命中 active turn、approval 範圍）、workspace 大 diff 回 `DIFF_TOO_LARGE`＋symlink／非法 ref／untracked／binary 矩陣、MCP 工具實際走 kernel。
+- FEATURES：80 implemented/passed、28 implemented/partial、34 partial/partial、3 partial/blocked（共 145）。`docs/FINAL_VERIFICATION.md` 由 `pnpm verification:report` 自台帳產生，`verification:check` 通過。
+- 全套：tsc、boundaries、prettier、vitest 79 檔 236 passed。
+- 未通過的列都有具體 blocker：需付費或已登入的 provider session（CDX-08、CLA-08、MSG-08、live 整合）、Linux／Windows 主機（RUN-*、REM-*）、真實美術資產與跨 GPU 量測（VIS-*、CAM-*）。這些不以合成測試冒充通過。
+- 未執行：push、遠端寫入、`pnpm hooks --scope user`（會改全域設定）、付費模型呼叫。

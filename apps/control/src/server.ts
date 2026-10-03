@@ -29,6 +29,8 @@ import {
   type SyncOptions,
 } from './services/integrations.js';
 import { authenticateA2AClient } from './services/a2a-clients.js';
+import { listMeetings } from './services/meetings.js';
+import { listWorkflows } from './services/workflows.js';
 import { listRooms } from './services/rooms.js';
 import { redeemInvitation } from './services/invitations.js';
 import { listSkills } from './services/skills.js';
@@ -39,16 +41,31 @@ import { homedir } from 'node:os';
 import { diagnoseWork } from './services/diagnostics.js';
 import type { Control } from './control.js';
 
+/** Routes that answer without a session or bearer token, and why. Everything else under /api requires one. */
+export const PUBLIC_ROUTES: ReadonlySet<string> = new Set([
+  'GET /health',
+  'POST /api/login',
+  'GET /api/session', // answers 401 itself
+  'POST /api/runner/enroll', // the single-use invitation is the credential
+  'POST /api/webhooks/github/:integrationId', // authenticated by HMAC signature
+  'GET /.well-known/agent-card.json', // public by the A2A spec
+  'POST /a2a', // its own bearer scheme
+]);
+
 export function createServer(
   control: Control,
   options: {
     origin: string;
     serveWeb?: boolean;
     logger?: boolean;
+    /** Test seam: where structured logs go (defaults to stdout). */
+    logStream?: { write(line: string): void };
     /** Test seam: fetch policy and environment for connectors. Defaults are the secure ones. */
     connectors?: SyncOptions;
     /** Enable the A2A gateway. Defaults to the AETHER_A2A=on environment switch; off otherwise. */
     a2a?: boolean;
+    /** Test seam: collects every route as it is registered, so tests can sweep them all. */
+    routeLog?: { method: string; url: string }[];
   },
 ) {
   const origin = new URL(options.origin);
@@ -56,6 +73,7 @@ export function createServer(
     bodyLimit: 128 * 1024,
     logger: options.logger
       ? {
+          ...(options.logStream ? { stream: options.logStream } : {}),
           redact: [
             'req.headers.authorization',
             'req.headers.cookie',
@@ -69,6 +87,12 @@ export function createServer(
     requestIdHeader: false,
   });
   const streams = new Set<() => void>();
+  if (options.routeLog)
+    app.addHook('onRoute', (route) => {
+      for (const method of [route.method].flat())
+        if (method !== 'HEAD' && method !== 'OPTIONS')
+          options.routeLog!.push({ method, url: route.url });
+    });
   let waitTimer: ReturnType<typeof setInterval> | undefined;
   app.addHook('onReady', async () => {
     refreshMessageWaits(control.ctx);
@@ -126,6 +150,11 @@ export function createServer(
       mutation ? (typeof csrf === 'string' ? csrf : '') : undefined,
     );
   }
+  // Authenticate before any handler parses or validates input, so a route can never forget to.
+  app.addHook('preHandler', async (request) => {
+    const url = request.routeOptions.url ?? '';
+    if (url.startsWith('/api/') && !PUBLIC_ROUTES.has(`${request.method} ${url}`)) actor(request);
+  });
   app.setErrorHandler((error, request, reply) => {
     const e = error as Error & { statusCode?: number };
     const status =
@@ -457,6 +486,23 @@ export function createServer(
       rooms: who.agentId ? rooms.filter((r) => r.members.includes(who.agentId!)) : rooms,
     };
   });
+  app.get<{ Params: { projectId: string } }>(
+    '/api/projects/:projectId/workflows',
+    async (request) => {
+      authorize(actor(request), 'read', request.params.projectId);
+      return { workflows: listWorkflows(control.ctx, request.params.projectId) };
+    },
+  );
+  app.get<{ Params: { projectId: string } }>(
+    '/api/projects/:projectId/meetings',
+    async (request) => {
+      const who = actor(request);
+      authorize(who, 'read', request.params.projectId);
+      // Agents learn of a meeting through the request they were sent, not from this list.
+      if (who.agentId) return { meetings: [] };
+      return { meetings: listMeetings(control.ctx, request.params.projectId) };
+    },
+  );
   const a2aEnabled = options.a2a ?? process.env['AETHER_A2A'] === 'on';
   app.get<{ Params: { projectId: string } }>('/api/projects/:projectId/a2a', async (request) => {
     authorize(actor(request), 'read', request.params.projectId);

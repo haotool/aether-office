@@ -50,6 +50,7 @@ import { Workspace } from './features/Workspace.js';
 import { ExecutionSettings } from './features/ExecutionSettings.js';
 import { Schedules } from './features/Schedules.js';
 import { Rooms } from './features/Rooms.js';
+import { Meetings } from './features/Meetings.js';
 import { A2AClients } from './features/A2AClients.js';
 import { MachineInvite } from './features/MachineInvite.js';
 import { Integrations } from './features/Integrations.js';
@@ -199,7 +200,9 @@ function ProjectForm({ onClose, onSaved }: { onClose: () => void; onSaved: () =>
 // Opt-in measurement: `?perf=1` renders a fixed sample of frames and exposes the measured result.
 const perfRequested = new URLSearchParams(window.location.search).has('perf');
 function publishPerf(report: PerfReport) {
-  (window as unknown as { __aetherPerf?: PerfReport }).__aetherPerf = report;
+  const w = window as unknown as { __aetherPerf?: PerfReport; __aetherPerfHistory?: PerfReport[] };
+  w.__aetherPerf = report;
+  (w.__aetherPerfHistory ??= []).push(report); // one report per scene mount
 }
 export function App() {
   const t = useT();
@@ -717,6 +720,7 @@ export function App() {
                       <>
                         <Messages snapshot={data} onSaved={refresh} canWrite={canWrite} />
                         <Rooms projectId={projectId} agents={data.agents} canManage={canWrite} />
+                        <Meetings projectId={projectId} agents={data.agents} canManage={canWrite} />
                       </>
                     ) : page === 'observations' ? (
                       <Observations key={projectId} projectId={projectId} />

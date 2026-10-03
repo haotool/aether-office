@@ -42,3 +42,7 @@ Remaining: GUI-based local grant setup/selection (configuration is currently mac
 | A2A gateway (`apps/control/src/services/a2a.ts`) | A2A spec 1.0.0, JSON-RPC binding | `@a2a-js/sdk` 1.3.0 | Off unless `AETHER_A2A=on`. Methods: SendMessage, GetTask, CancelTask, ListTasks. No streaming, push, or follow-up turns. |
 
 The ACP wire version, the SDK semver and the A2A spec version move independently; a test pins the ACP SDK semver to the installed package.
+
+## Verified provider CLI releases
+
+`packages/providers/generated/compat.json` is the single list of provider releases the adapters, the transcript observers and `pnpm run doctor` accept. Codex is matched by exact release (its generated protocol types for 0.160.0 are byte-identical to 0.159.2, checked by `tests/aether/codex-schema.test.ts` against the installed binary). Claude Code is matched per minor series (2.1.x) because the contract is the exactly pinned `@anthropic-ai/claude-agent-sdk`. Before this list existed the adapters hard-coded one patch release each and would have refused the installed Codex 0.160.0 and Claude Code 2.1.288. To add a release: install it, run `pnpm run doctor` and the provider tests, then add it here.

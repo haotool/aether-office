@@ -42,7 +42,7 @@ export function History({ projectId }: { projectId: string }) {
           {query.error.message}
         </p>
       ) : query.data?.events.length ? (
-        <div className="history-table">
+        <div className="history-table" tabIndex={0} role="region" aria-label={t('history')}>
           <table>
             <thead>
               <tr>

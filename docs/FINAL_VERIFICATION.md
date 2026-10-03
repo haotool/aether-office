@@ -2,12 +2,12 @@
 
 Generated from `docs/FEATURES.json` (docs/FEATURES.json). Do not edit by hand: run `pnpm verification:report`.
 
-Features: **145**. Implementation: 72 implemented, 73 partial, 0 not started.
+Features: **145**. Implementation: 108 implemented, 37 partial, 0 not started.
 
 | Verification | Count | Meaning |
 |---|---|---|
-| passed | 52 | Verified by the listed tests at the scope stated in the ledger. |
-| partial | 90 | Some behaviour is verified; the blockers column names what is not. |
+| passed | 80 | Verified by the listed tests at the scope stated in the ledger. |
+| partial | 62 | Some behaviour is verified; the blockers column names what is not. |
 | blocked | 3 | Cannot be verified in this environment (for example, it needs paid or authenticated provider sessions). |
 | failed | 0 | A check ran and failed. |
 | not_run | 0 | No check has been run. |
@@ -15,7 +15,7 @@ Features: **145**. Implementation: 72 implemented, 73 partial, 0 not started.
 
 A passing build or test run is not a claim of production readiness. This file lists what the ledger can support, and what it cannot.
 
-## passed (52)
+## passed (80)
 
 | ID | Implementation | Requirement | Blockers |
 |---|---|---|---|
@@ -35,6 +35,10 @@ A passing build or test run is not a claim of production readiness. This file li
 | ARC-08 | implemented | 進度與完成度不來自隨機資料或虛構百分比。 | Lint bans Math.random and shows no percentage; it cannot prove every future display is state-derived |
 | CLA-06 | implemented | 忙碌時的訊息投遞遵守已驗證的 injection capability。 | No adapter supports mid-turn or turn-boundary injection (capability none): messages stay in the durable inbox |
 | CDX-01 | implemented | schema 從對應 binary／官方版本生成並有版本紀錄。 | — |
+| CDX-02 | implemented | initialize／initialized 與 request correlation 正確。 | 未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑 |
+| CDX-04 | implemented | item／tool／message streaming 去重且能容忍延遲。 | 未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑 |
+| CDX-05 | implemented | interrupt 對正確 active turn 執行，無誤殺另一工作。 | 未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑 |
+| CDX-07 | implemented | approval 回覆對應正確 request、session 與參數。 | 未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑 |
 | EVT-01 | implemented | state＋event＋outbox 在同一 transaction 提交。 | — |
 | EVT-02 | implemented | 同 command idempotency key 不產生重複結果。 | — |
 | EVT-03 | implemented | duplicate provider event 不重複改 projection／usage。 | 僅 synthetic/本機測試，非 live 模型。 |
@@ -50,29 +54,53 @@ A passing build or test run is not a claim of production readiness. This file li
 | MSG-06 | implemented | busy Agent 只在允許的 injection boundary 收到內容。 | Same boundary as CLA-06: nothing is injected, so a busy agent only receives content when it reads its inbox |
 | TSK-01 | implemented | 循環 DAG、跨 project 污染與遺失依賴被拒絕。 | — |
 | TSK-02 | implemented | task claim／assignment 有 version 與 concurrency 保護。 | — |
+| TSK-03 | implemented | scheduler 遵守能力、scope、公平性與並行數。 | — |
 | TSK-06 | implemented | LLM 提交 done 不會跳過 review／verification。 | — |
+| TSK-07 | implemented | 重試上限／停滯診斷／人類 escalation 有實際效果。 | Provider rate-limit evidence is reported as null: it is never inferred |
+| TSK-08 | implemented | cancel propagation 不把取消中的結果錯標新成功工作。 | — |
 | GIT-01 | implemented | writer 使用專屬 worktree，不直接改使用者 main 目錄。 | — |
 | GIT-03 | implemented | file reservation 的 advisory 屬性與衝突清楚呈現。 | Advisory only: conflict check is conservative on directory scope; not yet enforced at scheduler or merge gates |
 | GIT-04 | implemented | dirty worktree cleanup 不刪使用者未提交內容。 | — |
 | GIT-07 | implemented | test evidence 綁 head SHA，base 漂移會重新驗證。 | — |
 | SEC-01 | implemented | owner／operator／reviewer／viewer／agent 實際 server grants 生效。 | — |
+| SEC-02 | implemented | 每個 query、WS subscription、MCP tool 做 scope 檢查。 | Every HTTP route is swept for authentication and cross-project access; the stream is SSE (no WebSocket exists) and is covered by the revocation test |
 | SEC-03 | implemented | viewer／agent 不能透過 payload 假冒身份提升權限。 | — |
 | SEC-05 | implemented | 錯誤 Origin／Host、未認證 WS／API 被拒絕。 | — |
+| SEC-07 | implemented | logs／export／events／frontend bundle 不洩漏測試 secrets。 | Scans the database, events, logs and responses for known test secrets; the frontend bundle is not scanned because no secret is available at build time |
+| SEC-08 | implemented | 外部指令／peer message 不能繞過權限與支出策略。 | Remote and scheduled requests only create unassigned work, so they cannot spend; a global spend budget does not exist |
 | REM-02 | implemented | enrollment token 短效單次使用，不是永久全域 shell token。 | — |
 | REM-03 | implemented | machine grants 限制 project／root／provider／concurrency。 | Locally enrolled machines (enroll()) keep an empty root list, meaning unrestricted |
+| REM-04 | implemented | 撤銷身份立即阻止新命令與敏感 stream。 | — |
+| REM-05 | implemented | local spool 重連後按序去重，不丟已承諾資料。 | The spool is a 8 MB JSON file; a longer outage fails closed with RUNNER_SPOOL_FULL rather than dropping events |
+| REM-06 | implemented | 斷線時依 policy 停新派工，恢復不重複執行。 | While control is unreachable a runner cannot claim, so no new dispatch starts; an in-flight run keeps going and is reported when the link returns |
 | STD-04 | implemented | ACP wire／SDK／schema 版本分開記錄。 | — |
 | STD-05 | implemented | A2A gateway 的 AgentCard 宣告能力有對應實作。 | The card declares no streaming or push because neither is implemented |
 | STD-06 | implemented | A2A task／message／cancel／artifact 路徑有 contract test。 | Verified with the official @a2a-js/sdk client over real HTTP; no interop run against a third-party A2A server |
 | STD-08 | implemented | 未完成的 bridge 不在 UI 被標記為可用整合。 | hcom and Agent Mail bridges are not built and appear nowhere in the UI |
+| UIX-02 | implemented | Agent／Task／Message／Approval／Review 共用相同權威狀態。 | — |
+| UIX-05 | implemented | language switch 覆蓋繁中／英文，無散落 placeholder 文案。 | Key parity, script purity and placeholder-free copy are unit-tested; the English UI is not browser-swept |
+| UIX-06 | implemented | 桌面與手機無主要內容溢出／遮擋／無法點擊。 | Horizontal overflow is measured on every page at 1440 and 390 px in both themes; there is no pixel-level clipping or tap-target audit |
+| UIX-07 | implemented | deep link／reload 保留合理選取與可恢復工作上下文。 | — |
+| UIX-08 | implemented | 重要 approval／失敗／stale 不只靠顏色表達。 | Badges are checked for visible text; icon-only meaning elsewhere is covered only by axe |
 | VIS-07 | implemented | 路徑不穿牆／桌，有 unreachable 狀態與測試。 | Unreachable surfaces as a notice; that notice was not browser-tested; Grid A* at 0.5 m resolution |
 | CAM-02 | implemented | tour 可跳過／暫停／手動中斷，結束恢復選取。 | — |
+| CAM-03 | implemented | editor move／rotate／assign／undo／redo 真正保存與還原。 | — |
+| CAM-04 | implemented | layout import schema／物件上限／動線驗證拒絕不合法資料。 | — |
+| CAM-05 | implemented | high／balanced／low 有可觀察的實際資源差異。 | Measured as pixel ratio and draw calls on one machine (Apple M4, headless Chrome) |
+| CAM-06 | implemented | WebGL unavailable／context lost 有可用 2D fallback。 | Covers WebGL being unavailable at start; the context-lost handler is wired but not exercised |
+| CAM-07 | implemented | scene 反覆進出不持續洩漏 geometry／texture／listener。 | Leak check compares live GPU geometry and texture counts across five mounts at one quality level |
+| A11Y-02 | implemented | Dialog focus trap／Escape／return focus 正常。 | Native modal dialog: focus may pass to the browser's own UI, never to the page behind it |
+| A11Y-03 | implemented | canvas 外有等價的 DOM 狀態與操作入口。 | — |
+| A11Y-04 | implemented | reduced motion 可關閉 camera 飛行／粒子／閃爍。 | The product has no camera flights or particles; the preference is honoured by character animation and camera damping |
+| A11Y-05 | implemented | dark／light 文本對比與狀態 icon 有測試。 | axe colour-contrast on every page in both themes; state icons are covered by axe only |
+| A11Y-06 | implemented | drag 操作有鍵盤或選單替代。 | The layout editor uses form controls, so no operation depends on dragging |
 | A11Y-07 | implemented | audio／browser notification 預設不擅自開啟。 | The product has no audio at all; only opt-in browser notifications exist |
 | INT-03 | implemented | webhook／polling retry 不形成同步迴圈或重複任務。 | Webhooks need a reverse proxy that preserves the Host header; polling works without one |
 | INT-05 | implemented | skills 匯入／檢視／啟用／停用不自動執行未知命令。 | Skills are reference text served via MCP skills_list; no mechanism executes skill content by design |
 | INT-06 | implemented | schedule 依 timezone 觸發，重啟不重複派工。 | UI creates daily/weekly schedules only (the API also accepts one-off); A schedule only creates unassigned work; there is no scheduled auto-assignment by design |
 | QA-08 | implemented | FINAL_VERIFICATION 明確區分 passed／failed／blocked／not_run。 | — |
 
-## partial (90)
+## partial (62)
 
 | ID | Implementation | Requirement | Blockers |
 |---|---|---|---|
@@ -84,12 +112,8 @@ A passing build or test run is not a claim of production readiness. This file li
 | CLA-04 | implemented | hook 安裝／更新／移除保留既有使用者設定。 | Not run against a real Claude Code install; Codex hooks.json schema not documented in the fetched page, so no Codex installer (receiver already accepts codex) |
 | CLA-05 | partial | 工具事件與 session／parent 的對應可驗證。 | synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。 |
 | CLA-07 | partial | permission／auth／rate-limit 問題不偽裝成正常工作。 | synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。 |
-| CDX-02 | partial | initialize／initialized 與 request correlation 正確。 | synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。 |
 | CDX-03 | implemented | thread／turn 的 start／resume 流程正確。 | 合成Codex resume與UI已測；真Codex/Claude resume尚未實測。 |
-| CDX-04 | partial | item／tool／message streaming 去重且能容忍延遲。 | synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。 |
-| CDX-05 | partial | interrupt 對正確 active turn 執行，無誤殺另一工作。 | synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。 |
-| CDX-06 | partial | steer 僅在支援時開啟，接受不等於 semantic ack。 | synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。 |
-| CDX-07 | partial | approval 回覆對應正確 request、session 與參數。 | synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。 |
+| CDX-06 | implemented | steer 僅在支援時開啟，接受不等於 semantic ack。 | steer 對所有 provider 皆未開放（messageInjection=none），僅驗證未開放時被拒；支援時的 semantic ack 待 live 驗證 |
 | RUN-01 | partial | 關掉 browser 不會自動殺死受管理的工作。 | macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。 |
 | RUN-02 | partial | process journal／PID identity 可區分重啟與 PID reuse。 | macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。 |
 | RUN-03 | partial | UTF-8、ANSI、resize、exit code 與 bounded scrollback 正常。 | macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。 |
@@ -100,38 +124,24 @@ A passing build or test run is not a claim of production readiness. This file li
 | RUN-08 | partial | structured log session 不顯示不存在的可互動 PTY。 | macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。 |
 | MSG-05 | implemented | request／reply 有 correlation、timeout 與持久等待狀態。 | Verified with synthetic agents; a real provider answering a durable request is not run |
 | MSG-07 | implemented | thread／spawn／context budget 能停止無限 Agent 對話。 | Thread round limit (32) and per-sender rate limit (60/min) stop ping-pong and a human can open a new thread; spawn depth does not apply because subagents are disabled, and there is no token-based conversation budget |
-| TSK-03 | partial | scheduler 遵守能力、scope、公平性與並行數。 | 跨 provider review/fix loop、公平排程、停滯診斷尚未完成；目前只有 synthetic 單 provider 全鏈。 |
-| TSK-04 | partial | Claude→Codex review→fix→test 的 workflow 可完成。 | 已實作固定SHA獨立原生review及合成Codex整頁工作鏈；真Claude/Codex雙provider、完整workflow模板與平行integration仍未完成。 |
-| TSK-05 | partial | provider 對調與 frontend／backend 平行 workflow 可完成。 | 已實作固定SHA獨立原生review及合成Codex整頁工作鏈；真Claude/Codex雙provider、完整workflow模板與平行integration仍未完成。 |
-| TSK-07 | partial | 重試上限／停滯診斷／人類 escalation 有實際效果。 | 三次預設上限、owner逐次追加與審計已實作及E2E驗證；完整停滯診斷仍未完成。 |
-| TSK-08 | partial | cancel propagation 不把取消中的結果錯標新成功工作。 | 已驗證未執行依賴鏈取消、菱形去重、版本與事件；訊息等待取消連動及完整人工復原流程仍待完成。 |
+| TSK-04 | implemented | Claude→Codex review→fix→test 的 workflow 可完成。 | The template pins Claude engineer and Codex reviewer and the loop is exercised with synthetic providers; a real Claude to Codex run needs paid, authenticated sessions that are not authorised |
+| TSK-05 | implemented | provider 對調與 frontend／backend 平行 workflow 可完成。 | Provider swap, the parallel frontend/backend DAG and the bounded meeting are enforced and tested at the control layer; parallel worktrees with a real integration review were not run with real providers |
 | GIT-02 | partial | 路徑空白／Unicode／非法 ref／symlink 都有測試。 | Unicode/空白、dirty/已提交清理、base drift 有測試；完整 symlink/非法 ref/binary 大檔矩陣待補。 |
 | GIT-05 | partial | diff 支援 untracked／binary／large file 安全降級。 | Unicode/空白、dirty/已提交清理、base drift 有測試；完整 symlink/非法 ref/binary 大檔矩陣待補。 |
 | GIT-06 | implemented | review comment 綁 commit／hunk，更新後能辨識過期。 | Comment create/list verified at control level with seeded diff jobs; browser only checks the empty-hunk state, not a full comment round trip; Line anchors are stored but not re-mapped across heads |
 | GIT-08 | implemented | merge conflict 停止交付，不自動覆蓋或無批准 push。 | Candidate branch is not re-verified automatically before delivery; No PR handoff; push is intentionally never performed; Only owner may integrate; base moves are reported, not auto-rebased |
-| SEC-02 | partial | 每個 query、WS subscription、MCP tool 做 scope 檢查。 | 批准/撤銷回歸已跑；完整 export/PTY/connector trust boundaries 與 live provider ack 待驗。 |
 | SEC-04 | partial | approval 綁 action hash、session、expiry 與真實 provider ack。 | 批准/撤銷回歸已跑；完整 export/PTY/connector trust boundaries 與 live provider ack 待驗。 |
 | SEC-06 | implemented | Markdown／URL／terminal clipboard／SSRF 有回歸測試。 | No Markdown renderer exists yet (all text is shown as text); A2A artifact fetching will reuse safe-fetch when built |
-| SEC-07 | partial | logs／export／events／frontend bundle 不洩漏測試 secrets。 | 批准/撤銷回歸已跑；完整 export/PTY/connector trust boundaries 與 live provider ack 待驗。 |
-| SEC-08 | partial | 外部指令／peer message 不能繞過權限與支出策略。 | 批准/撤銷回歸已跑；完整 export/PTY/connector trust boundaries 與 live provider ack 待驗。 |
 | REM-01 | implemented | 遠端 runner 以認證 outbound channel 連接 control。 | Control serves plain HTTP on loopback; TLS for remote use must be terminated by a reverse proxy, and no real TLS handshake was tested |
-| REM-04 | partial | 撤銷身份立即阻止新命令與敏感 stream。 | 批准/撤銷回歸已跑；完整 export/PTY/connector trust boundaries 與 live provider ack 待驗。 |
-| REM-05 | partial | local spool 重連後按序去重，不丟已承諾資料。 | 完整 crash window／跨程序斷線／備份 CLI 仍待覆蓋。 |
-| REM-06 | partial | 斷線時依 policy 停新派工，恢復不重複執行。 | 完整 crash window／跨程序斷線／備份 CLI 仍待覆蓋。 |
 | REM-07 | implemented | 不同 machine 使用獨立 clone，不共享 SQLite／.git。 | Enforced as: runner state may not live inside an allowed repository; that each machine really uses its own clone is by construction (machine-bound workspaces) and not verified across two real hosts |
 | REM-08 | implemented | 兩個獨立 runner process 的故障／恢復整合測試通過。 | Two real runner processes with the demo provider on one host: revocation, project scope, single-use enrollment and control outage covered; Not covered: SIGKILL of a runner mid-run, journal replay after a runner crash, native Git workspaces across two clones, and any real WAN, HA or Kubernetes setup |
 | STD-01 | partial | MCP 工具實際呼叫 kernel，不是回固定成功文字。 | 已實作 8 個真工具與 session resource；reservation/workflow 擴充工具待補。 |
 | STD-02 | partial | MCP identity／resource／message scope 可測且隔離。 | 已實作 8 個真工具與 session resource；reservation/workflow 擴充工具待補。 |
 | STD-03 | implemented | 通用 ACP adapter 真的協商能力、開始 session 並處理事件。 | A real prompt turn was not run against claude-agent-acp or codex-acp (needs paid, authenticated sessions); the real adapter was only negotiated; ACP agents cannot be used for read-only review and cannot resume by default |
 | STD-07 | implemented | 第三方 token／artifact fetch 不繞過 audience／SSRF 邊界。 | The gateway never fetches remote artifact URLs at all (URL parts are refused); an outbound artifact fetcher would reuse safe-fetch and does not exist yet |
-| UIX-01 | partial | onboarding 從 Demo／Live 選擇到第一工作完整可走。 | 目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。 |
-| UIX-02 | partial | Agent／Task／Message／Approval／Review 共用相同權威狀態。 | 目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。 |
-| UIX-03 | partial | 所有主要操作按鈕可用或清楚說明不能使用的原因。 | 目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。 |
-| UIX-04 | partial | 所有主要畫面具有 loading／empty／error／offline／no-permission。 | 目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。 |
-| UIX-05 | partial | language switch 覆蓋繁中／英文，無散落 placeholder 文案。 | 目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。 |
-| UIX-06 | partial | 桌面與手機無主要內容溢出／遮擋／無法點擊。 | 目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。 |
-| UIX-07 | partial | deep link／reload 保留合理選取與可恢復工作上下文。 | 目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。 |
-| UIX-08 | partial | 重要 approval／失敗／stale 不只靠顏色表達。 | 目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。 |
+| UIX-01 | implemented | onboarding 從 Demo／Live 選擇到第一工作完整可走。 | Demo sign-in through to a first task is covered; live onboarding (execution policy, runner, provider sign-in) has no guided flow |
+| UIX-03 | implemented | 所有主要操作按鈕可用或清楚說明不能使用的原因。 | Many disabled controls do not state why they are disabled |
+| UIX-04 | implemented | 所有主要畫面具有 loading／empty／error／offline／no-permission。 | Loading, empty and offline states are covered; no-permission (viewer) states are not browser-tested |
 | VIS-01 | partial | 辦公室是可旋轉／近看的真實 3D，非一張背景圖。 | 24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
 | VIS-02 | partial | 九個空間有辨識度、正確尺度與連續動線。 | 24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
 | VIS-03 | partial | 桌椅／螢幕／建築具有合理厚度、結構與必要細節。 | 24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
@@ -140,19 +150,9 @@ A passing build or test run is not a claim of production readiness. This file li
 | VIS-06 | implemented | messageId 去重，動畫抵達不被當成真正 ACK。 | Dedupe and planning are unit-tested; the moving envelope was not exercised in a browser with an agent-to-agent message; Arrival is decoration and never changes delivery state |
 | VIS-08 | partial | 原創資產／外部依賴都有清楚來源與授權。 | 24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
 | CAM-01 | partial | overview／desk focus／follow／reset 正常且不鑽模。 | 24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
-| CAM-03 | partial | editor move／rotate／assign／undo／redo 真正保存與還原。 | 24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
-| CAM-04 | partial | layout import schema／物件上限／動線驗證拒絕不合法資料。 | 24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
-| CAM-05 | partial | high／balanced／low 有可觀察的實際資源差異。 | 24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
-| CAM-06 | partial | WebGL unavailable／context lost 有可用 2D fallback。 | 24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
-| CAM-07 | partial | scene 反覆進出不持續洩漏 geometry／texture／listener。 | 24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
 | CAM-08 | implemented | 效能報告來自實機量測，未達目標不寫成達標。 | One measurement: headless Chrome on Apple M4 (Metal), 904x548 viewport, vsync-capped near 60 fps, so headroom is unknown; No low-end GPU, mobile or other-browser measurement |
-| A11Y-01 | partial | 核心派工／訊息／approval／review 可只用鍵盤完成。 | 目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。 |
-| A11Y-02 | partial | Dialog focus trap／Escape／return focus 正常。 | 目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。 |
-| A11Y-03 | partial | canvas 外有等價的 DOM 狀態與操作入口。 | 目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。 |
-| A11Y-04 | partial | reduced motion 可關閉 camera 飛行／粒子／閃爍。 | 目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。 |
-| A11Y-05 | partial | dark／light 文本對比與狀態 icon 有測試。 | 目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。 |
-| A11Y-06 | partial | drag 操作有鍵盤或選單替代。 | 目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。 |
-| A11Y-08 | partial | axe／瀏覽器人工檢視的問題有 evidence 與修正。 | 目前 desktop/mobile 核心旅程/axe 已跑；其餘頁面、全鍵盤測試與所有錯誤/無權限狀態待補。 |
+| A11Y-01 | implemented | 核心派工／訊息／approval／review 可只用鍵盤完成。 | Task creation is verified by keyboard alone; messaging, approval and review flows are not |
+| A11Y-08 | implemented | axe／瀏覽器人工檢視的問題有 evidence 與修正。 | axe sweeps run on every page (and found and fixed unfocusable scroll regions); there has been no screen-reader pass |
 | INT-01 | implemented | GitHub Issue→WorkItem→受批准的結果／PR 流程有實作。 | Live GitHub verification blocked: no credentials; behavior is checked against a local fake that follows the documented REST shapes; Pull request creation is not implemented (it needs a pushed branch, and push is never automatic); Result write-back is an owner-only API call with no UI button yet |
 | INT-02 | implemented | Linear 匯入／狀態同步有實作、衝突規則與測試。 | Live Linear verification blocked: no credentials; GraphQL shapes and the RATELIMITED error code come from public docs and are untested against the real service; Import and comment only: Linear issue state is not written back |
 | INT-04 | partial | knowledge 有 provenance、version、ACL 與繁中搜尋。 | Provenance/version/ACL/繁中搜尋/人類批准與駁回已實作及測試；內容修訂、撤回、大庫索引與測試證實分類仍未完成。 |

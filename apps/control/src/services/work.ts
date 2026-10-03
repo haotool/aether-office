@@ -1,4 +1,5 @@
 import { refreshMessageWaits } from './messages.js';
+import { stepConstraint } from './workflows.js';
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import type { Command } from '@aether/contracts';
@@ -161,6 +162,9 @@ export function changeWork(
       c.projectId,
       c.type === 'work.assign' ? c.data.agentId : row.assignee!,
     );
+    const required = stepConstraint(ctx, row.id)?.engineerProvider;
+    if (required && assigned.provider !== required)
+      throw new DomainError('WORKFLOW_PROVIDER_MISMATCH', 409);
     if (retry && assigned.mode === 'live' && !previous?.workspaceId)
       throw new DomainError('RETRY_WORKSPACE_REQUIRED');
     if (

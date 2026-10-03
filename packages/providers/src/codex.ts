@@ -6,6 +6,7 @@ import type { ThreadResumeParams } from '../generated/codex-0.159.2-ts/v2/Thread
 import type { TurnStartParams } from '../generated/codex-0.159.2-ts/v2/TurnStartParams.js';
 import type { TurnInterruptParams } from '../generated/codex-0.159.2-ts/v2/TurnInterruptParams.js';
 import type { TurnSteerParams } from '../generated/codex-0.159.2-ts/v2/TurnSteerParams.js';
+import { assertCodexVersion } from './compat.js';
 import { JsonRpcProcess } from './jsonrpc.js';
 import {
   record,
@@ -40,7 +41,7 @@ export class CodexAdapter {
         encoding: 'utf8',
         timeout: 3000,
       }).trim();
-      if (version !== 'codex-cli 0.159.2') throw new Error('CODEX_VERSION_UNVERIFIED');
+      assertCodexVersion(version);
     }
     this.rpc =
       transport ??

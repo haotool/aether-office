@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { Command } from '@aether/contracts';
 import { assertVersion, DomainError, type Actor } from '@aether/kernel';
 import { task, agent, type Context } from './context.js';
+import { stepConstraint } from './workflows.js';
 export function requestReview(
   ctx: Context,
   actor: Actor,
@@ -13,6 +14,9 @@ export function requestReview(
     throw new DomainError('REVIEW_NOT_READY');
   const reviewer = agent(ctx, c.projectId, c.data.agentId);
   if (reviewer.id === work.assignee) throw new DomainError('SELF_REVIEW_FORBIDDEN', 403);
+  const required = stepConstraint(ctx, work.id)?.reviewerProvider;
+  if (required && reviewer.provider !== required)
+    throw new DomainError('WORKFLOW_PROVIDER_MISMATCH', 409);
   if (reviewer.mode !== 'live' || !['codex', 'claude'].includes(reviewer.provider))
     throw new DomainError('NATIVE_REVIEWER_REQUIRED');
   const policy = ctx.sqlite

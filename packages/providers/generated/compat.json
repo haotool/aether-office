@@ -1,5 +1,12 @@
 {
   "schema": "codex-0.159.2",
-  "verifiedCliVersions": ["0.159.2", "0.160.0"],
-  "method": "`codex app-server generate-ts` output for 0.160.0 is byte-identical to 0.159.2; initialize handshake and rollout decoding were run against the installed 0.160.0 binary and real sessions"
+  "verifiedCliVersions": [
+    "0.159.2",
+    "0.160.0"
+  ],
+  "method": "`codex app-server generate-ts` output for 0.160.0 is byte-identical to 0.159.2; initialize handshake and rollout decoding were run against the installed 0.160.0 binary and real sessions",
+  "claudeCodeSeries": [
+    "2.1"
+  ],
+  "claudeMethod": "Claude Code 2.1.x is accepted as one series: the contract is @anthropic-ai/claude-agent-sdk, which is pinned exactly; the series check only refuses a different minor release until it is verified"
 }

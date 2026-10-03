@@ -205,14 +205,21 @@ export class Workspaces {
   diff(id: string): { baseSha: string; headSha: string; text: string; untracked: string[] } {
     const workspace = this.load(id);
     const state = this.state(workspace.path);
-    const text = this.git(workspace.path, [
-      'diff',
-      '--no-ext-diff',
-      '--no-textconv',
-      '--binary',
-      workspace.baseSha,
-      '--',
-    ]);
+    let text: string;
+    try {
+      text = this.git(workspace.path, [
+        'diff',
+        '--no-ext-diff',
+        '--no-textconv',
+        '--binary',
+        workspace.baseSha,
+        '--',
+      ]);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOBUFS')
+        throw new Error('DIFF_TOO_LARGE', { cause: error });
+      throw error;
+    }
     const untracked = this.git(workspace.path, ['ls-files', '--others', '--exclude-standard', '-z'])
       .split('\0')
       .filter(Boolean);

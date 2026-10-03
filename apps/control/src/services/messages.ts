@@ -13,6 +13,7 @@ import { messages } from '../db/schema.js';
 import { identityActor } from './identity.js';
 import { agent, project, emit, type Context } from './context.js';
 import { roomRecipients } from './rooms.js';
+import { assertMeetingOpen } from './meetings.js';
 
 function participant(ctx: Context, projectId: string, id: string, persist = true): void {
   let kind: 'agent' | 'user' = 'agent';
@@ -69,6 +70,7 @@ export function sendMessage(ctx: Context, actor: Actor, command: Send) {
   const rounds = ctx.sqlite
     .prepare('SELECT COUNT(*) AS n FROM messages WHERE projectId=? AND threadId=?')
     .get(projectId, threadId) as { n: number };
+  assertMeetingOpen(ctx, projectId, threadId, rounds.n, actor);
   if (rounds.n >= 32) throw new DomainError('THREAD_ROUND_LIMIT');
   const rate = ctx.sqlite
     .prepare('SELECT COUNT(*) AS n FROM messages WHERE senderId=? AND createdAt>?')

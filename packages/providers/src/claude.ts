@@ -9,6 +9,7 @@ import {
   type NativeSink,
   type ProviderEvent,
 } from './protocol.js';
+import { assertClaudeVersion } from './compat.js';
 import { processIdentity, type ProviderResult } from './index.js';
 export function normalizeClaudeMessage(input: unknown, turnId: string): ProviderEvent[] {
   const m = record(input);
@@ -117,7 +118,7 @@ export class ClaudeAdapter {
       encoding: 'utf8',
       timeout: 3000,
     });
-    if (!version.startsWith('2.1.286 ')) throw new Error('CLAUDE_VERSION_UNVERIFIED');
+    assertClaudeVersion(version);
     const turnId = randomUUID();
     const seen = new Set<string>();
     let processReady: Promise<void> = Promise.resolve();

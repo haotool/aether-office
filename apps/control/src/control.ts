@@ -23,6 +23,8 @@ import { hash, secret, authenticate, createIdentity, identityActor } from './ser
 import { agent, emit, project, type Context } from './services/context.js';
 import { requestIntegration, requestJob } from './services/jobs.js';
 import { decideApproval } from './services/approvals.js';
+import { concludeMeeting, startMeeting } from './services/meetings.js';
+import { startWorkflow } from './services/workflows.js';
 import { roomCommand } from './services/rooms.js';
 import { createA2AClient, revokeA2AClient } from './services/a2a-clients.js';
 import { createInvitation } from './services/invitations.js';
@@ -34,6 +36,21 @@ import { reservationCommand } from './services/reservations.js';
 import { terminalCommand } from './services/terminals.js';
 import { changeWork, createWork } from './services/work.js';
 import { acknowledge, getMessage, inbox, sendMessage, messageWaits } from './services/messages.js';
+
+/** Result fields that are bearer secrets, by command. They are shown to the caller once and nowhere else. */
+const SECRET_RESULT_FIELDS: Partial<Record<string, readonly string[]>> = {
+  'machine.invite': ['token'],
+  'a2a.client.create': ['token'],
+};
+export function redactSecrets(
+  type: string,
+  result: Record<string, unknown>,
+): Record<string, unknown> {
+  const fields = SECRET_RESULT_FIELDS[type];
+  return fields
+    ? { ...result, ...Object.fromEntries(fields.map((f) => [f, '[shown once]'])) }
+    : result;
+}
 
 export class Control {
   readonly ctx: Context;
@@ -104,6 +121,15 @@ export class Control {
           case 'terminal.resize':
           case 'terminal.stop':
             result = terminalCommand(this.ctx, actor, c);
+            break;
+          case 'meeting.start':
+            result = startMeeting(this.ctx, actor, c);
+            break;
+          case 'meeting.conclude':
+            result = concludeMeeting(this.ctx, actor, c);
+            break;
+          case 'workflow.start':
+            result = startWorkflow(this.ctx, actor, c);
             break;
           case 'room.create':
           case 'room.members':
@@ -315,12 +341,14 @@ export class Control {
           }
         }
         if (!eventProject) throw new DomainError('EVENT_SCOPE_REQUIRED', 500);
+        // A bearer secret returned to the caller is never stored: not in the event log, not in the journal.
+        const persisted = redactSecrets(c.type, result);
         emit(
           this.ctx,
           actor,
           eventProject,
           eventType,
-          result,
+          persisted,
           commandId,
           c.correlationId,
           this.ctx.mode === 'demo' ? 'simulated' : 'command',
@@ -338,7 +366,7 @@ export class Control {
             actor.id,
             c.idempotencyKey,
             requestHash,
-            JSON.stringify(receipt),
+            JSON.stringify({ ...receipt, result: persisted }),
             this.ctx.now(),
           );
         return receipt;

@@ -125,3 +125,10 @@ export {
   type AcpNegotiation,
   type AcpVersions,
 } from './acp.js';
+export {
+  assertClaudeVersion,
+  assertCodexVersion,
+  claudeRolloutVersion,
+  codexRolloutVersion,
+  codexVersion,
+} from './compat.js';

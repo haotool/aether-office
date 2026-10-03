@@ -12,6 +12,7 @@ import { isAbsolute, relative, resolve, join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { getSessionMessages, type SessionStoreEntry } from '@anthropic-ai/claude-agent-sdk';
 import { z } from 'zod';
+import { claudeRolloutVersion, codexRolloutVersion } from '@aether/providers';
 const hash = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
 const inside = (root: string, path: string) => {
   const rel = relative(root, path);
@@ -50,9 +51,8 @@ function openSource(file: string) {
     throw error;
   }
 }
-// Rollout versions whose line format was checked against real sessions. Anything else is reported as
+// Rollout versions come from providers/generated/compat.json: anything else is reported as
 // unsupported_schema instead of being parsed on a guess.
-export const SUPPORTED_ROLLOUT_VERSIONS = ['0.159.2', '0.160.0'] as const;
 // Record types seen in real 0.159.2 and 0.160.0 rollouts that carry no conversation content.
 const NON_CONVERSATION_RECORDS = [
   'turn_context',
@@ -65,7 +65,7 @@ const NON_CONVERSATION_RECORDS = [
 const metaSchema = z.object({
   id: z.string().min(1).max(200),
   cwd: z.string().refine(isAbsolute),
-  cli_version: z.enum(SUPPORTED_ROLLOUT_VERSIONS),
+  cli_version: z.string().refine(codexRolloutVersion),
 });
 const checkpointSchema = z
   .object({
@@ -331,7 +331,7 @@ export async function observeClaudeFile(
           .object({
             sessionId: z.string().uuid(),
             cwd: z.string().refine(isAbsolute),
-            version: z.literal('2.1.286'),
+            version: z.string().refine(claudeRolloutVersion),
           })
           .parse(entry);
         if (resolve(meta.cwd) !== source.projectRoot || (sessionId && sessionId !== meta.sessionId))
