@@ -274,6 +274,9 @@ importers:
       '@aether/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@aether/kernel':
+        specifier: workspace:*
+        version: link:../../packages/kernel
       '@aether/office-scene':
         specifier: workspace:*
         version: link:../../packages/office-scene

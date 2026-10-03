@@ -1043,19 +1043,43 @@ export const localSessionSchema = z.object({
     })
     .nullable(),
   // Canonical identity: sessions share a project when they share the Git common directory.
-  worktree: z.object({ root: z.string(), project: z.string(), linked: z.boolean() }).nullable(),
+  worktree: z
+    .object({ root: z.string(), main: z.string(), project: z.string(), linked: z.boolean() })
+    .nullable(),
   // Present only when the user installed hooks; otherwise activity is a file-mtime heuristic.
   hook: z
     .object({
-      activity: z.enum(['working', 'idle', 'ended']),
+      activity: z.enum(['working', 'idle', 'waiting_permission', 'ended']),
       lastEvent: z.string(),
+      tool: z.string().nullable(),
       at: z.number(),
     })
     .nullable(),
   subagents: z.array(z.object({ id: z.string(), type: z.string(), lastSeen: z.number() })),
+  // The title the provider itself gave the session (Claude ai-title, Codex thread_name); null when it has none.
+  title: z.string().nullable(),
+  // Which engineering role the session's work belongs to, and what that rests on. Decided on the server; the
+  // text it was decided from is never sent.
+  classification: z.object({
+    role: z.string(),
+    department: z.string(),
+    basis: z.enum(['title', 'prompt', 'context', 'default']),
+    matched: z.string().nullable(),
+  }),
+  // Model and context size from the transcript tail; null when it cannot be read, never zero.
+  usage: z.object({
+    model: z.string().nullable(),
+    contextTokens: z.number().nullable(),
+    contextWindow: z.number().nullable(),
+    totalTokens: z.number().nullable(),
+  }),
+  // Is an agent CLI process running for it? 'unknown' for Codex Desktop threads, which share one app server.
+  process: z.enum(['running', 'none', 'unknown']),
 });
 export type LocalSession = z.infer<typeof localSessionSchema>;
-export type LocalSessionsResponse = { enabled: boolean; sessions: LocalSession[] };
+// A session joined to the AETHER project whose root is its main checkout; null until that project exists.
+export type AttributedSession = LocalSession & { projectId: string | null };
+export type LocalSessionsResponse = { enabled: boolean; sessions: AttributedSession[] };
 
 export const reservationSchema = z.object({
   id,

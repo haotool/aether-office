@@ -102,3 +102,50 @@ PM 可以協調並裁決，但「模型說通過」不構成 Git／測試真實�
 AETHER 現行 Codex adapter 明確關閉 multi_agent，Claude 禁用 Agent／Task；目前 demo 不能滿足全部原生子代理自動接入。這是產品能力缺口，與本次依使用者要求不委派調研是兩件事。此次沒有改產品執行碼、安裝 hooks、全域設定、付費模型、push 或 merge。
 
 可重現資料：matrix.json、source-index.json、evidence/adapter-assertions.log；原始暫存抓取在 /tmp/aether-repo-evaluation-20261001，可能被作業系統清除，所以所有引用都指向固定 GitHub commit。
+
+## 2026-10-04 補充：27 個 repo 已全部本機化，原始碼調研與可複製架構
+
+27 個 repo 皆 `--depth 1` 拉到 `.research/`（不進版控），固定 SHA 與逐檔核對的授權寫在 `matrix.json` 的 `localSha`、`licenseVerified`、`reuse`。**複製規則**：`code-with-notice` 可保留版權聲明後重用；`ideas-only`（AGPL-3.0 的 agent-teams-ai、claude-squad，以及沒有 LICENSE 檔的 multiagents）只能參考想法，不得複製程式碼；`excluded`（mcp_agent_mail 的 OpenAI／Anthropic rider、agents-office 的 PolyForm Noncommercial 與禁止嵌入條款）不碰。目前 AETHER 沒有複製任何第三方程式碼。
+
+**實際讀過原始碼的 9 個**（其餘 18 個仍是 README／授權層級，本輪沒有讀程式，不能算調研完成）：
+
+| repo | 讀了什麼 | 值得直接照做的架構 | AETHER 現況 |
+|---|---|---|---|
+| orca（MIT） | `src/main/agent-hooks`、`codex/` | hook 安裝「installed／partial／not_installed」狀態且容忍手改檔；用 Codex app-server 的唯讀 `hooks/list` 取得每個 hook 的 `trustStatus`；受管 hook 的安裝鎖與擁有者識別；本機 CLI 是否存在偵測 | 已採用前兩項（`pnpm hooks status`，真實回報 9 個 Codex hook 皆 trusted）；安裝鎖與 PATH 還原未做 |
+| pixel-agents（MIT） | `timerManager`、`hookEventHandler` | `PermissionRequest` 與 Notification(`permission_prompt`) 合併為「等待批准」，Stop 與 `idle_prompt` 為回合結束 | 已採用 |
+| agent-deck（MIT） | `hook_handler.go` | 事件→狀態表；`elicitation_dialog` 也算需人類；hook 狀態要有新鮮度 | 已採用 |
+| agents-observe（MIT） | `hooks/scripts/lib/agents` | Codex 與 Claude 的 hook 信封共用 `session_id／agent_id／cwd`；Codex `session_meta.git` 結構 | 已確認一致 |
+| agent-of-empires（MIT AND Apache-2.0） | `session/capture/codex.rs` | rollout 掃描上限（深度 4、8192 項、4096 候選）、首行 64KB 上限、檔名 UUID 必須等於 `session_id／id`、支援 `.jsonl.zst` | 掃描上限已採用；此機器沒有 `.zst`，尚未支援 |
+| hcom（MIT） | `src/hooks/codex.rs` | **透過 hook 回傳 `hookSpecificOutput.additionalContext` 把待讀訊息注入執行中的 session，且 delivery ack 只在輸出成功寫出後才提交** | 缺口：能力表 `messageInjection` 全為 none，觀察到的 session 也不是訊息收件人 |
+| gastown（MIT） | `docs/HOOKS.md`、`estop`、`refinery/batch.go` | Claude `--settings <path>` 以獨立層載入 hook，不改使用者檔案；ESTOP 哨兵檔凍結全部 agent 且 daemon 不重啟；batch-then-bisect 合併佇列 | 停止機制本來就有（關閉專案的 live 執行會取消排隊中的 run、要求執行中的 run 與終端機停止），缺的只是一步到位的入口，已補上 `EmergencyStop`；合併佇列是單一候選序列合併 |
+| symphony（Apache-2.0） | `SPEC.md` §7–§10 | 認領狀態機（Unclaimed／Claimed／Running／RetryQueued／Released）、每輪 stall 偵測、失敗指數退避 `min(10000·2^(n-1), max)`、啟動時清終態 workspace、工作目錄必須位於 workspace 根之內 | 缺口：沒有 stall 偵測與啟動清理；重試刻意由人類觸發（有嘗試上限） |
+| cli-agent-orchestrator（Apache-2.0） | `CODEBASE.md` | 終端 backend 與 provider adapter 分層；收件匣「即時＋事件驅動＋對帳」三條投遞路徑；`cao.plugins` 事件外掛契約 | 分層與對帳已有；事件外掛契約沒有 |
+
+**直接複製的優先序（依價值與風險）**
+1. **緊急停止**（gastown）：已完成。調研時我先判斷「沒有」是錯的：`project.execution.configure` 設 `liveEnabled=false` 已經會取消排隊中的 run、要求執行中的 run 取消並停止終端機；實際補的是頂端列的一步到位按鈕（兩段確認，只有 live 模式的 owner 看得到），沿用同一個指令與授權，沒有新增繞過路徑。仍然只針對單一專案，沒有「全部專案」版本。
+2. **hook 回傳注入訊息**（hcom）：把「已持久化」到「已投遞」做成真的，需先決定觀察到的 session 如何成為收件人（綁定 `session_id` 到註冊的 agent），風險較高。
+3. **stall 偵測與啟動清理**（symphony）：control 端對沒有事件超過門檻的 run 標記並通知，啟動時回收終態 workspace。
+4. **`--settings` 獨立層**（gastown）：僅適用於 AETHER 自己啟動的 Claude session；觀察外部 session 仍需 hook 安裝。
+
+**不採用**：tmux `send-keys` 注入（ai-maestro 等）依賴終端狀態，不可靠；claude-squad 的 autoyes 會繞過批准；AGPL 與 rider 類程式碼一律不複製。
+
+### 補讀其餘 18 個 repo（`matrix.json` 的 `sourceRead` 標出實際深度）
+
+深度分級：`source` 讀了相關原始碼；`docs` 只讀文件；`layout` 只看目錄結構；`docs-only-by-licence` AGPL 或無授權檔，刻意只讀文件；`not-read-by-policy` 授權排除，除 LICENSE 外沒有打開。**這一輪新增 6 個 `source`（gascity、vibe-kanban、nimbalyst、claude-agent-acp、agent-framework、agent-room），累計 15 個。**
+
+| repo | 讀了什麼 | 發現 | AETHER 現況／建議 |
+|---|---|---|---|
+| gascity（MIT） | `internal/sessionlog`、`transcriptmeta`、`reviewquorum`、`pricing` | 從 Codex rollout 尾端的 `token_count` 與 `turn_context` 取得模型與 context 佔用，只讀計數；`reviewquorum` 把審查拆成多條 lane，每條有 verdict（pass／pass_with_findings／fail／blocked）與失敗分類（transient／hard），湊不齊 lane 時是 `awaiting_reviewers` | 模型與 context 佔用**已採用**（Claude 與 Codex）。多 lane 審查是缺口：我們的審查是單一 lane |
+| nimbalyst（MIT） | `ClaudeCodeSessionScanner.ts` | Claude Code 2.1.x 的 transcript 有 `ai-title`（模型產生的會話標題）、`last-prompt`、`slug`；`subagents/` 子目錄是子代理；以 message id 去重 token | 子代理目錄與去重已採用。**會話標題最能回答「這個 session 在做什麼」，但它是內容衍生資料，需你同意才顯示** |
+| vibe-kanban（Apache-2.0，已宣告 sunset） | `executors/approvals.rs`、`worktree-manager` | 批准除了工具批准還有「問題批准」（agent 問人類問題並等回答）；worktree 建立有重試、重建、整批清理與疑似孤兒清理 | **缺口已確認**：Codex 的 `item/tool/requestUserInput` 與 `mcpServer/elicitation/request` 我們的 adapter 沒有處理（只處理兩種 requestApproval），遇到會被當成不支援的 server request。worktree 清理我們刻意保守 |
+| claude-agent-acp（Apache-2.0） | `src/elicitation.ts`、目錄 | 約 1.1 萬行的 Claude Agent SDK↔ACP 對應，已含原生子代理、elicitation、權限、fork／resume、受管政策 | 我們自己維護 Claude SDK 對應且「禁用 Agent／Task」。**建議把 Claude 路徑改走 ACP 加上這個 adapter**，一次補上子代理與使用者提問；代價是依賴它的版本節奏 |
+| agent-framework（MIT） | `orchestrations/` | 五種協作模式：sequential、concurrent、group chat（`max_rounds` 與 `termination_condition`，文件明說兩者都沒設會無限進行）、handoff、magentic | 我們的會議有 `maxRounds` 與期限、工作流是 DAG，已涵蓋；handoff 與 magentic 沒有 |
+| agent-room（MIT） | `README`、`api/mcp.*test.ts` | 與 hcom 獨立得到同一結論：Claude Code 不顯示 MCP 推播，所以用 Stop／UserPromptSubmit／SessionStart hook 在回合邊界取新訊息；還有 listen 迴圈與 webhook 喚醒三種在場模型；有「工具說明文字衛生」測試 | 支持 hcom 那條建議（hook 回合邊界注入）。我們的 MCP 已有 `wait_for_message`（listen 型） |
+| ai-maestro（MIT） | 通訊架構文件 | 檔案式持久訊息＋tmux 即時通知兩通道；文件自己列出 shell 注入風險 | 不採用 tmux 注入 |
+| codex-acp、agent-client-protocol、A2A | 目錄結構 | 協定與 adapter；我們已用 `@agentclientprotocol/sdk` 與 `@a2a-js/sdk` | 無需複製程式碼 |
+| OpenHands（MIT） | 目錄結構 | 這個 clone 已經只剩前端（沒有 agent runtime 目錄） | 無可借用的後端，維持不採用 |
+| ruflo（MIT） | README | 宣稱多；本輪沒有讀其實作 | 不採用，驗證成本高 |
+| ai-maestro 以外的 claude-squad、agent-teams-ai、multiagents | 只讀文件 | multiagents 有 `idle→working→done_pending_review→addressing_feedback→approved→released` 的 agent 任務狀態機，agent 在 release 前不能斷線 | 想法已被我們的 work 狀態機與審查流程涵蓋 |
+| mcp_agent_mail、agents-office | 除 LICENSE 外未打開 | 授權排除 | — |
+
+**結論**：兩個獨立 repo（hcom、agent-room）都用「hook 在回合邊界注入訊息」，且 hcom 只在輸出成功寫出後才提交已投遞，這是最成熟、也最值得照做的架構。其次是把 Claude 路徑改走 claude-agent-acp、處理 Codex 的使用者提問、以及多 lane 審查。

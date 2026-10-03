@@ -13,7 +13,14 @@ test('local sessions are auto-discovered and shown as observe-only 3D agents', a
     .getByLabel('存取權杖', { exact: true })
     .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
   await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  // The repository is adopted as its own project; its sessions appear there and not in other projects.
+  const picker = page.locator('.project-picker select');
+  await expect(picker.locator('option', { hasText: 'fixture-repo' })).toBeAttached({
+    timeout: 15000,
+  });
   const label = page.locator('.scene-label', { hasText: 'fixture-repo' });
+  await expect(label).toHaveCount(0);
+  await picker.selectOption({ label: 'fixture-repo' });
   await expect(label).toBeVisible({ timeout: 15000 });
   // Labels are projected from 3D and hidden when off-camera, so assert the subagent character exists.
   await expect(page.locator('.scene-label', { hasText: 'Explore' })).toBeAttached();

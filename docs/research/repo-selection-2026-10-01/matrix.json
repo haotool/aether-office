@@ -17,7 +17,11 @@
       "evidenceDepth": "選定原始碼",
       "verdict": "最接近一套完成；先移除預設 permission bypass。",
       "source": "https://github.com/stablyai/orca/blob/0b812bd69856f9f2337dd54d7f3b9ceedff24cc9/README.md",
-      "licenseSource": "https://github.com/stablyai/orca/blob/0b812bd69856f9f2337dd54d7f3b9ceedff24cc9/LICENSE"
+      "licenseSource": "https://github.com/stablyai/orca/blob/0b812bd69856f9f2337dd54d7f3b9ceedff24cc9/LICENSE",
+      "localSha": "373d951bf072698871c9e738ec2e1665ffd56830",
+      "licenseVerified": "MIT",
+      "reuse": "code-with-notice",
+      "sourceRead": "source"
     },
     {
       "repo": "gastownhall/gascity",
@@ -34,7 +38,11 @@
       "evidenceDepth": "文件",
       "verdict": "GasTown 下層建構材料；不是最快現成產品。",
       "source": "https://github.com/gastownhall/gascity/blob/4b26deb7c2b92138133a6b894048432fccda6c16/README.md",
-      "licenseSource": "https://github.com/gastownhall/gascity/blob/4b26deb7c2b92138133a6b894048432fccda6c16/LICENSE"
+      "licenseSource": "https://github.com/gastownhall/gascity/blob/4b26deb7c2b92138133a6b894048432fccda6c16/LICENSE",
+      "localSha": "b5df315a82b38fd2379eb4255e311ab4fa7f588d",
+      "licenseVerified": "MIT",
+      "reuse": "code-with-notice",
+      "sourceRead": "source"
     },
     {
       "repo": "gastownhall/gastown",
@@ -51,7 +59,11 @@
       "evidenceDepth": "選定原始碼",
       "verdict": "最完整 PM→合流架構；Beads／Dolt／tmux 維運較重，現成流程含 push，須改本機授權邊界。",
       "source": "https://github.com/gastownhall/gastown/blob/649b832b7672bc7a2dbef26f5983aba6198b819b/README.md",
-      "licenseSource": "https://github.com/gastownhall/gastown/blob/649b832b7672bc7a2dbef26f5983aba6198b819b/LICENSE"
+      "licenseSource": "https://github.com/gastownhall/gastown/blob/649b832b7672bc7a2dbef26f5983aba6198b819b/LICENSE",
+      "localSha": "649b832b7672bc7a2dbef26f5983aba6198b819b",
+      "licenseVerified": "MIT",
+      "reuse": "code-with-notice",
+      "sourceRead": "source"
     },
     {
       "repo": "aannoo/hcom",
@@ -68,7 +80,11 @@
       "evidenceDepth": "選定原始碼",
       "verdict": "跨 Claude／Codex 通訊強；不符合完全維持普通啟動方式。",
       "source": "https://github.com/aannoo/hcom/blob/2c5f343b2f9ec4bf2acf49c0431860e7c2ae578b/README.md",
-      "licenseSource": "https://github.com/aannoo/hcom/blob/2c5f343b2f9ec4bf2acf49c0431860e7c2ae578b/LICENSE"
+      "licenseSource": "https://github.com/aannoo/hcom/blob/2c5f343b2f9ec4bf2acf49c0431860e7c2ae578b/LICENSE",
+      "localSha": "c4e172709f912390814b37364e3049cfdbde10a8",
+      "licenseVerified": "MIT",
+      "reuse": "code-with-notice",
+      "sourceRead": "source"
     },
     {
       "repo": "Dicklesworthstone/mcp_agent_mail",
@@ -85,7 +101,12 @@
       "evidenceDepth": "README／授權",
       "verdict": "授權另附 OpenAI／Anthropic 限制；依既有專案決策排除重用。",
       "source": "https://github.com/Dicklesworthstone/mcp_agent_mail/blob/3fad5ec672869f81d2ca0a4c525dde004ac96f45/README.md",
-      "licenseSource": "https://github.com/Dicklesworthstone/mcp_agent_mail/blob/3fad5ec672869f81d2ca0a4c525dde004ac96f45/LICENSE"
+      "licenseSource": "https://github.com/Dicklesworthstone/mcp_agent_mail/blob/3fad5ec672869f81d2ca0a4c525dde004ac96f45/LICENSE",
+      "localSha": "3fad5ec672869f81d2ca0a4c525dde004ac96f45",
+      "licenseVerified": "MIT + OpenAI/Anthropic rider",
+      "reuse": "excluded",
+      "reuseNote": "The rider grants no rights to OpenAI, Anthropic or anyone acting for them; AETHER drives Claude and Codex.",
+      "sourceRead": "not-read-by-policy"
     },
     {
       "repo": "23blocks-OS/ai-maestro",
@@ -102,7 +123,11 @@
       "evidenceDepth": "選定原始碼",
       "verdict": "適合常駐多機 agent 管理；與共享 repo 多 worktree 的目標仍有接線。",
       "source": "https://github.com/23blocks-OS/ai-maestro/blob/bc4969cfd43fc81a9a5599932e0f88b19d1c9b22/README.md",
-      "licenseSource": "https://github.com/23blocks-OS/ai-maestro/blob/bc4969cfd43fc81a9a5599932e0f88b19d1c9b22/LICENSE"
+      "licenseSource": "https://github.com/23blocks-OS/ai-maestro/blob/bc4969cfd43fc81a9a5599932e0f88b19d1c9b22/LICENSE",
+      "localSha": "109868385b9ee5c54e48de404a59d0bbdb9c547d",
+      "licenseVerified": "MIT",
+      "reuse": "code-with-notice",
+      "sourceRead": "docs"
     },
     {
       "repo": "AgentSystemLabs/agent-office",
@@ -119,7 +144,11 @@
       "evidenceDepth": "README＋現行 AETHER 原始碼",
       "verdict": "保留美術與投影；沿用目前 AETHER 補完整控制面不是最短路。",
       "source": "https://github.com/AgentSystemLabs/agent-office/blob/1bc3028472d38b161e85117bf621bb6bc12700e5/README.md",
-      "licenseSource": "https://github.com/AgentSystemLabs/agent-office/blob/1bc3028472d38b161e85117bf621bb6bc12700e5/LICENSE"
+      "licenseSource": "https://github.com/AgentSystemLabs/agent-office/blob/1bc3028472d38b161e85117bf621bb6bc12700e5/LICENSE",
+      "localSha": "665aeec571bc03f76cbd16de8d628dd169a48874",
+      "licenseVerified": "MIT",
+      "reuse": "code-with-notice",
+      "sourceRead": "ours"
     },
     {
       "repo": "pixel-agents-hq/pixel-agents",
@@ -136,7 +165,11 @@
       "evidenceDepth": "README／選定文件",
       "verdict": "可借觀察與角色映射；不作 PM 核心。",
       "source": "https://github.com/pixel-agents-hq/pixel-agents/blob/3537e140c2094761beae748592aeb92ece8edfdd/README.md",
-      "licenseSource": "https://github.com/pixel-agents-hq/pixel-agents/blob/3537e140c2094761beae748592aeb92ece8edfdd/LICENSE"
+      "licenseSource": "https://github.com/pixel-agents-hq/pixel-agents/blob/3537e140c2094761beae748592aeb92ece8edfdd/LICENSE",
+      "localSha": "3537e140c2094761beae748592aeb92ece8edfdd",
+      "licenseVerified": "MIT",
+      "reuse": "code-with-notice",
+      "sourceRead": "source"
     },
     {
       "repo": "777genius/agent-teams-ai",
@@ -153,7 +186,12 @@
       "evidenceDepth": "選定原始碼",
       "verdict": "最接近現成團隊 UI 之一；接受 AGPL 義務與 backend 接線才考慮。",
       "source": "https://github.com/777genius/agent-teams-ai/blob/f936527bdf7ee7e147b6d3d06e51b9c01ccf491b/README.md",
-      "licenseSource": "https://github.com/777genius/agent-teams-ai/blob/f936527bdf7ee7e147b6d3d06e51b9c01ccf491b/LICENSE"
+      "licenseSource": "https://github.com/777genius/agent-teams-ai/blob/f936527bdf7ee7e147b6d3d06e51b9c01ccf491b/LICENSE",
+      "localSha": "0078315076cd4593527d1ea67ca63f72ceab5d77",
+      "licenseVerified": "AGPL-3.0",
+      "reuse": "ideas-only",
+      "reuseNote": "Copying code would put AETHER under AGPL network-service terms.",
+      "sourceRead": "docs-only-by-licence"
     },
     {
       "repo": "nimbalyst/nimbalyst",
@@ -170,7 +208,11 @@
       "evidenceDepth": "README",
       "verdict": "適合人工管理多 agent 開發，尚不足整套自動 PM。",
       "source": "https://github.com/nimbalyst/nimbalyst/blob/9f13b2794d6d37ab005af6302cfe2a8540cfcdb6/README.md",
-      "licenseSource": "https://github.com/nimbalyst/nimbalyst/blob/9f13b2794d6d37ab005af6302cfe2a8540cfcdb6/LICENSE"
+      "licenseSource": "https://github.com/nimbalyst/nimbalyst/blob/9f13b2794d6d37ab005af6302cfe2a8540cfcdb6/LICENSE",
+      "localSha": "3a227135094ca8a794aa62e6eadfea1f00b14fa0",
+      "licenseVerified": "MIT",
+      "reuse": "code-with-notice",
+      "sourceRead": "source"
     },
     {
       "repo": "agent-of-empires/agent-of-empires",
@@ -187,7 +229,12 @@
       "evidenceDepth": "README",
       "verdict": "平行 worktree 啟動好用；尚需 PM 與 merge policy。",
       "source": "https://github.com/agent-of-empires/agent-of-empires/blob/f7a23121886c2f273ee239c37ccc65b20647badc/README.md",
-      "licenseSource": "https://github.com/agent-of-empires/agent-of-empires/blob/f7a23121886c2f273ee239c37ccc65b20647badc/LICENSE"
+      "licenseSource": "https://github.com/agent-of-empires/agent-of-empires/blob/f7a23121886c2f273ee239c37ccc65b20647badc/LICENSE",
+      "localSha": "b7673189ed31e44fb7d23659cb2efb4b4da8c0f8",
+      "licenseVerified": "MIT AND Apache-2.0",
+      "reuse": "code-with-notice",
+      "reuseNote": "Keep both notices.",
+      "sourceRead": "source"
     },
     {
       "repo": "asheshgoplani/agent-deck",
@@ -204,7 +251,11 @@
       "evidenceDepth": "選定原始碼",
       "verdict": "若願意統一 tmux 習慣，輕量候選；project grouping 與 main CAS 須補。",
       "source": "https://github.com/asheshgoplani/agent-deck/blob/035fd602eda5e3ed7e95edb63b6418fbe285f74d/README.md",
-      "licenseSource": "https://github.com/asheshgoplani/agent-deck/blob/035fd602eda5e3ed7e95edb63b6418fbe285f74d/LICENSE"
+      "licenseSource": "https://github.com/asheshgoplani/agent-deck/blob/035fd602eda5e3ed7e95edb63b6418fbe285f74d/LICENSE",
+      "localSha": "e19e23dac840016f926f35398706bfc398d96c9d",
+      "licenseVerified": "MIT",
+      "reuse": "code-with-notice",
+      "sourceRead": "source"
     },
     {
       "repo": "smtg-ai/claude-squad",
@@ -221,7 +272,12 @@
       "evidenceDepth": "README",
       "verdict": "適合終端平行；experimental autoyes 不等於合併品質 gate。",
       "source": "https://github.com/smtg-ai/claude-squad/blob/ce1ffb4392b01f38e2c4599c7c84d2a93973b138/README.md",
-      "licenseSource": "https://github.com/smtg-ai/claude-squad/blob/ce1ffb4392b01f38e2c4599c7c84d2a93973b138/LICENSE.md"
+      "licenseSource": "https://github.com/smtg-ai/claude-squad/blob/ce1ffb4392b01f38e2c4599c7c84d2a93973b138/LICENSE.md",
+      "localSha": "ce1ffb4392b01f38e2c4599c7c84d2a93973b138",
+      "licenseVerified": "AGPL-3.0",
+      "reuse": "ideas-only",
+      "reuseNote": "Copying code would put AETHER under AGPL network-service terms.",
+      "sourceRead": "docs-only-by-licence"
     },
     {
       "repo": "awslabs/cli-agent-orchestrator",
@@ -238,7 +294,12 @@
       "evidenceDepth": "README",
       "verdict": "能做多 CLI 委派；補外部接入與 merge 層。",
       "source": "https://github.com/awslabs/cli-agent-orchestrator/blob/a1c3d138c38e58d1df04f9850b828e0b3df513e6/README.md",
-      "licenseSource": "https://github.com/awslabs/cli-agent-orchestrator/blob/a1c3d138c38e58d1df04f9850b828e0b3df513e6/LICENSE"
+      "licenseSource": "https://github.com/awslabs/cli-agent-orchestrator/blob/a1c3d138c38e58d1df04f9850b828e0b3df513e6/LICENSE",
+      "localSha": "0caec2c9fe13b44f43d1bb097e41a4264aca5d33",
+      "licenseVerified": "Apache-2.0",
+      "reuse": "code-with-notice",
+      "reuseNote": "Keep NOTICE.",
+      "sourceRead": "source"
     },
     {
       "repo": "OpenHands/OpenHands",
@@ -255,7 +316,11 @@
       "evidenceDepth": "README",
       "verdict": "新平台支援 Claude／Codex 不代表可接管既有 CLI；改造面較大。",
       "source": "https://github.com/OpenHands/OpenHands/blob/a8c05584ec6bb063a0857460b9cbff48e136919f/README.md",
-      "licenseSource": "https://github.com/OpenHands/OpenHands/blob/a8c05584ec6bb063a0857460b9cbff48e136919f/LICENSE"
+      "licenseSource": "https://github.com/OpenHands/OpenHands/blob/a8c05584ec6bb063a0857460b9cbff48e136919f/LICENSE",
+      "localSha": "a6bba78ffd5a8b31620770f52383b1a2c0477fcd",
+      "licenseVerified": "MIT",
+      "reuse": "code-with-notice",
+      "sourceRead": "layout"
     },
     {
       "repo": "openai/symphony",
@@ -272,7 +337,12 @@
       "evidenceDepth": "README",
       "verdict": "偏 Codex＋issue 自動開發；混合原生 Claude 協作須擴充。",
       "source": "https://github.com/openai/symphony/blob/be10a1b79df723d6d7612b5651c8522704dafb2e/README.md",
-      "licenseSource": "https://github.com/openai/symphony/blob/be10a1b79df723d6d7612b5651c8522704dafb2e/LICENSE"
+      "licenseSource": "https://github.com/openai/symphony/blob/be10a1b79df723d6d7612b5651c8522704dafb2e/LICENSE",
+      "localSha": "be10a1b79df723d6d7612b5651c8522704dafb2e",
+      "licenseVerified": "Apache-2.0",
+      "reuse": "code-with-notice",
+      "reuseNote": "Keep NOTICE.",
+      "sourceRead": "source"
     },
     {
       "repo": "microsoft/agent-framework",
@@ -289,7 +359,11 @@
       "evidenceDepth": "README",
       "verdict": "流程 SDK，沒有現成原生 CLI 接入與 Git 控制面。",
       "source": "https://github.com/microsoft/agent-framework/blob/f1fb145c4d80191aa86b3480d12112d828233763/README.md",
-      "licenseSource": "https://github.com/microsoft/agent-framework/blob/f1fb145c4d80191aa86b3480d12112d828233763/LICENSE"
+      "licenseSource": "https://github.com/microsoft/agent-framework/blob/f1fb145c4d80191aa86b3480d12112d828233763/LICENSE",
+      "localSha": "e9857bd75a21843803431a2e7dfa41ee9b017ac7",
+      "licenseVerified": "MIT",
+      "reuse": "code-with-notice",
+      "sourceRead": "source"
     },
     {
       "repo": "ruvnet/ruflo",
@@ -306,7 +380,11 @@
       "evidenceDepth": "README",
       "verdict": "覆蓋宣稱廣；不以宣傳數字視為交付，驗證與裁剪成本高。",
       "source": "https://github.com/ruvnet/ruflo/blob/6cfd88654f2c571940f32704d79a2a1892de4392/README.md",
-      "licenseSource": "https://github.com/ruvnet/ruflo/blob/6cfd88654f2c571940f32704d79a2a1892de4392/LICENSE"
+      "licenseSource": "https://github.com/ruvnet/ruflo/blob/6cfd88654f2c571940f32704d79a2a1892de4392/LICENSE",
+      "localSha": "e9eb2870be1ac88d7b119356be8752709f448de4",
+      "licenseVerified": "MIT",
+      "reuse": "code-with-notice",
+      "sourceRead": "docs"
     },
     {
       "repo": "simple10/agents-observe",
@@ -323,7 +401,11 @@
       "evidenceDepth": "選定原始碼＋8 個合成斷言",
       "verdict": "最快先做到看見；不是 PM。Codex 範例 hook 路徑綁目前 repo，不能直接通用安裝。",
       "source": "https://github.com/simple10/agents-observe/blob/b3a7238b3913976c10da052f75c73e29ad084c61/README.md",
-      "licenseSource": "https://github.com/simple10/agents-observe/blob/b3a7238b3913976c10da052f75c73e29ad084c61/LICENSE"
+      "licenseSource": "https://github.com/simple10/agents-observe/blob/b3a7238b3913976c10da052f75c73e29ad084c61/LICENSE",
+      "localSha": "b3a7238b3913976c10da052f75c73e29ad084c61",
+      "licenseVerified": "MIT",
+      "reuse": "code-with-notice",
+      "sourceRead": "source"
     },
     {
       "repo": "zetbrush/multiagents",
@@ -340,7 +422,12 @@
       "evidenceDepth": "README",
       "verdict": "可參考訊息機制；授權文件與整套驗收仍缺。",
       "source": "https://github.com/zetbrush/multiagents/blob/03fcf6e875804a21650ed4e45eb9b6624460f7fb/README.md",
-      "licenseSource": null
+      "licenseSource": null,
+      "localSha": "03fcf6e875804a21650ed4e45eb9b6624460f7fb",
+      "licenseVerified": "none (package.json says MIT, no LICENSE file)",
+      "reuse": "ideas-only",
+      "reuseNote": "No licence text was granted with the code.",
+      "sourceRead": "docs-only-by-licence"
     },
     {
       "repo": "agent-room-alkl/agent-room",
@@ -357,7 +444,11 @@
       "evidenceDepth": "README",
       "verdict": "有協作通道；還缺程序、Git、排程與授權 gate。",
       "source": "https://github.com/agent-room-alkl/agent-room/blob/080b13d2bf927a1ee3e66981dece0d2eee698d37/README.md",
-      "licenseSource": "https://github.com/agent-room-alkl/agent-room/blob/080b13d2bf927a1ee3e66981dece0d2eee698d37/LICENSE"
+      "licenseSource": "https://github.com/agent-room-alkl/agent-room/blob/080b13d2bf927a1ee3e66981dece0d2eee698d37/LICENSE",
+      "localSha": "080b13d2bf927a1ee3e66981dece0d2eee698d37",
+      "licenseVerified": "MIT",
+      "reuse": "code-with-notice",
+      "sourceRead": "source"
     },
     {
       "repo": "BloopAI/vibe-kanban",
@@ -374,7 +465,12 @@
       "evidenceDepth": "README",
       "verdict": "README 已公告 sunset；沒有維護接手計畫不選作新基底。",
       "source": "https://github.com/BloopAI/vibe-kanban/blob/d5cbb5380fa0b32e98ef9b8d987f63decce4be3a/README.md",
-      "licenseSource": "https://github.com/BloopAI/vibe-kanban/blob/d5cbb5380fa0b32e98ef9b8d987f63decce4be3a/LICENSE"
+      "licenseSource": "https://github.com/BloopAI/vibe-kanban/blob/d5cbb5380fa0b32e98ef9b8d987f63decce4be3a/LICENSE",
+      "localSha": "d5cbb5380fa0b32e98ef9b8d987f63decce4be3a",
+      "licenseVerified": "Apache-2.0",
+      "reuse": "code-with-notice",
+      "reuseNote": "Project announced sunset; not a base.",
+      "sourceRead": "source"
     },
     {
       "repo": "ajsahni/agents-office",
@@ -391,7 +487,12 @@
       "evidenceDepth": "README／授權",
       "verdict": "不符合本專案 MIT 開源基底方向；不重用其程式碼。",
       "source": "https://github.com/ajsahni/agents-office/blob/2d4700189ee0900060a97ff3ab79f9eb0386ca23/README.md",
-      "licenseSource": "https://github.com/ajsahni/agents-office/blob/2d4700189ee0900060a97ff3ab79f9eb0386ca23/LICENSE"
+      "licenseSource": "https://github.com/ajsahni/agents-office/blob/2d4700189ee0900060a97ff3ab79f9eb0386ca23/LICENSE",
+      "localSha": "2d4700189ee0900060a97ff3ab79f9eb0386ca23",
+      "licenseVerified": "PolyForm Noncommercial 1.0.0 + Sahni.ai terms",
+      "reuse": "excluded",
+      "reuseNote": "Noncommercial only, no rebranding, and may not front another agent system.",
+      "sourceRead": "not-read-by-policy"
     },
     {
       "repo": "agentclientprotocol/agent-client-protocol",
@@ -408,7 +509,11 @@
       "evidenceDepth": "README",
       "verdict": "可作 adapter 邊界；不能獨立完成需求。",
       "source": "https://github.com/agentclientprotocol/agent-client-protocol/blob/9e032156545412be9bba5e092f12d0080c499b6d/README.md",
-      "licenseSource": "https://github.com/agentclientprotocol/agent-client-protocol/blob/9e032156545412be9bba5e092f12d0080c499b6d/LICENSE"
+      "licenseSource": "https://github.com/agentclientprotocol/agent-client-protocol/blob/9e032156545412be9bba5e092f12d0080c499b6d/LICENSE",
+      "localSha": "2bc773bc77d245c72971fbb3263b51484faa9ee3",
+      "licenseVerified": "Apache-2.0",
+      "reuse": "code-with-notice",
+      "sourceRead": "layout"
     },
     {
       "repo": "agentclientprotocol/claude-agent-acp",
@@ -425,7 +530,11 @@
       "evidenceDepth": "選定文件／原始碼",
       "verdict": "可用於標準化 transport；不接管外部普通 session。",
       "source": "https://github.com/agentclientprotocol/claude-agent-acp/blob/0c862e29496bb018e7a4400697bd2315dfd5b845/README.md",
-      "licenseSource": "https://github.com/agentclientprotocol/claude-agent-acp/blob/0c862e29496bb018e7a4400697bd2315dfd5b845/LICENSE"
+      "licenseSource": "https://github.com/agentclientprotocol/claude-agent-acp/blob/0c862e29496bb018e7a4400697bd2315dfd5b845/LICENSE",
+      "localSha": "a44c486019e98ad478c549c4902e7092f1418d0b",
+      "licenseVerified": "Apache-2.0",
+      "reuse": "code-with-notice",
+      "sourceRead": "source"
     },
     {
       "repo": "zed-industries/codex-acp",
@@ -442,7 +551,11 @@
       "evidenceDepth": "README",
       "verdict": "若採 ACP 使用 canonical 新址；舊址不選作基底。",
       "source": "https://github.com/zed-industries/codex-acp/blob/296069e841634cd4bb9bc4515602d836e49231ec/README.md",
-      "licenseSource": "https://github.com/zed-industries/codex-acp/blob/296069e841634cd4bb9bc4515602d836e49231ec/LICENSE"
+      "licenseSource": "https://github.com/zed-industries/codex-acp/blob/296069e841634cd4bb9bc4515602d836e49231ec/LICENSE",
+      "localSha": "296069e841634cd4bb9bc4515602d836e49231ec",
+      "licenseVerified": "Apache-2.0",
+      "reuse": "code-with-notice",
+      "sourceRead": "layout"
     },
     {
       "repo": "a2aproject/A2A",
@@ -459,7 +572,12 @@
       "evidenceDepth": "README",
       "verdict": "不是 CLI session 發現、worktree scheduler 或 merge engine。",
       "source": "https://github.com/a2aproject/A2A/blob/c0e13ef67ec386ab304acbf60952f09cdc70bd66/README.md",
-      "licenseSource": "https://github.com/a2aproject/A2A/blob/c0e13ef67ec386ab304acbf60952f09cdc70bd66/LICENSE"
+      "licenseSource": "https://github.com/a2aproject/A2A/blob/c0e13ef67ec386ab304acbf60952f09cdc70bd66/LICENSE",
+      "localSha": "fe182ee3c053d2e6a3ad2576c959fa5f7d8b5d07",
+      "licenseVerified": "Apache-2.0",
+      "reuse": "code-with-notice",
+      "reuseNote": "Specification repository.",
+      "sourceRead": "layout"
     }
   ]
 }

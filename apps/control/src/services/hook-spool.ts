@@ -12,17 +12,26 @@ const recordSchema = z.object({
   cwd: z.string(),
   agentId: z.string().optional(),
   agentType: z.string().optional(),
+  tool: z.string().optional(),
+  notification: z.string().optional(),
 });
 export type HookRecord = z.infer<typeof recordSchema>;
 
 export type HookState = {
-  activity: 'working' | 'idle' | 'ended';
+  activity: 'working' | 'idle' | 'waiting_permission' | 'ended';
   lastEvent: string;
   at: number;
+  tool: string | null; // the tool being run, from PreToolUse until the next event
   subagents: { id: string; type: string; lastSeen: number }[];
 };
 
 const WORKING_EVENTS = new Set(['UserPromptSubmit', 'PreToolUse', 'PostToolUse']);
+// The agent is blocked on a human until its next event: a permission request, or Claude's notification that it
+// needs a permission or an answer (elicitation).
+const NEEDS_HUMAN = new Set(['permission_prompt', 'elicitation_dialog']);
+const asksPermission = (r: HookRecord) =>
+  r.event === 'PermissionRequest' ||
+  (r.event === 'Notification' && NEEDS_HUMAN.has(r.notification ?? ''));
 
 export function parseSpool(text: string): HookRecord[] {
   return text.split('\n').flatMap((line) => {
@@ -52,12 +61,29 @@ export function deriveHookState(
     if (r.agentId) {
       // Subagent traffic never changes the parent's activity; it only proves the parent is alive.
       if (!states.has(key))
-        states.set(key, { activity: 'working', lastEvent: r.event, at: r.at, subagents: [] });
+        states.set(key, {
+          activity: 'working',
+          lastEvent: r.event,
+          at: r.at,
+          tool: null,
+          subagents: [],
+        });
       continue;
     }
-    const activity =
-      r.event === 'SessionEnd' ? 'ended' : WORKING_EVENTS.has(r.event) ? 'working' : 'idle';
-    states.set(key, { activity, lastEvent: r.event, at: r.at, subagents: [] });
+    const activity = asksPermission(r)
+      ? 'waiting_permission'
+      : r.event === 'SessionEnd'
+        ? 'ended'
+        : WORKING_EVENTS.has(r.event)
+          ? 'working'
+          : 'idle';
+    states.set(key, {
+      activity,
+      lastEvent: r.event,
+      at: r.at,
+      tool: r.event === 'PreToolUse' ? (r.tool ?? null) : null,
+      subagents: [],
+    });
   }
   for (const [key, state] of states) {
     const children = [...(running.get(key) ?? [])].map(([id, v]) => ({ id, ...v }));

@@ -8,6 +8,8 @@ import { dirname, join } from 'node:path';
 
 const MAX_INPUT = 1024 * 1024;
 const MAX_SPOOL = 1024 * 1024;
+// Only the tool's name is kept, never its input or output.
+const toolName = (v) => (typeof v === 'string' && /^[\w.:-]{1,80}$/.test(v) ? v : undefined);
 const text = (v) => (typeof v === 'string' && v.length > 0 && v.length <= 512 ? v : undefined);
 
 export function spoolPath(env = process.env) {
@@ -27,6 +29,8 @@ export function toRecord(provider, payload, now = Date.now()) {
     cwd,
     agentId: text(payload.agent_id),
     agentType: text(payload.agent_type),
+    tool: toolName(payload.tool_name),
+    notification: toolName(payload.notification_type), // permission_prompt, idle_prompt: a type name, never the message
   };
 }
 

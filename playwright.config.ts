@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -9,6 +10,7 @@ process.env['AETHER_LOCAL_SESSIONS_HOME'] = fixtureHome;
 process.env['AETHER_HOOK_SPOOL'] = join(fixtureHome, 'hook-events.jsonl');
 mkdirSync(join(fixtureHome, '.claude/projects/p'), { recursive: true });
 mkdirSync(join(fixtureHome, 'fixture-repo'), { recursive: true });
+execFileSync('git', ['init', '-q', join(fixtureHome, 'fixture-repo')]); // sessions join projects by repository
 writeFileSync(
   join(fixtureHome, '.claude/projects/p/e2e-session.jsonl'),
   JSON.stringify({ type: 'user', cwd: join(fixtureHome, 'fixture-repo') }) + '\n',

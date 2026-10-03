@@ -368,17 +368,21 @@
     "codePaths": [
       "packages/providers/src/claude-hooks.ts",
       "packages/providers/src/hook-receiver.mjs",
+      "packages/providers/src/hook-status.ts",
       "scripts/hooks.ts"
     ],
     "testIds": [
       "tests/aether/claude-hooks.test.ts",
-      "tests/aether/hook-bridge.test.ts"
+      "tests/aether/hook-bridge.test.ts",
+      "tests/aether/hook-status.test.ts"
     ],
     "evidencePaths": [
       "evidence/tests-claude-hooks.log"
     ],
     "blockers": [
-      "Not run against a real Claude Code install; Codex hooks.json schema not documented in the fetched page, so no Codex installer (receiver already accepts codex)"
+      "Codex reported all 9 installed hooks as trusted and enabled through its own hooks/list, and the installed commands ran under a minimal environment, but no Codex session has fired them yet",
+      "Claude hooks are installed only for this repository (project scope)",
+      "Codex payloads for spawned threads (session_id vs thread id) were not observed"
     ]
   },
   {
@@ -1393,21 +1397,22 @@
     "id": "GIT-02",
     "requirement": "路徑空白／Unicode／非法 ref／symlink 都有測試。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
       "apps/runner/src/workspaces.ts",
       "apps/web/src/features/Workspace.tsx"
     ],
     "testIds": [
       "tests/aether/workspaces.test.ts",
+      "tests/aether/workspace-matrix.test.ts",
       "e2e/native-workflow.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "Unicode/空白、dirty/已提交清理、base drift 有測試；完整 symlink/非法 ref/binary 大檔矩陣待補。"
+      "僅在 macOS 驗證；Windows 路徑語意（大小寫、保留名稱）未測"
     ]
   },
   {
@@ -1456,21 +1461,22 @@
     "id": "GIT-05",
     "requirement": "diff 支援 untracked／binary／large file 安全降級。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
       "apps/runner/src/workspaces.ts",
       "apps/web/src/features/Workspace.tsx"
     ],
     "testIds": [
       "tests/aether/workspaces.test.ts",
+      "tests/aether/workspace-matrix.test.ts",
       "e2e/native-workflow.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "Unicode/空白、dirty/已提交清理、base drift 有測試；完整 symlink/非法 ref/binary 大檔矩陣待補。"
+      "僅在 macOS 驗證；Windows 路徑語意（大小寫、保留名稱）未測"
     ]
   },
   {
@@ -1875,40 +1881,42 @@
     "id": "STD-01",
     "requirement": "MCP 工具實際呼叫 kernel，不是回固定成功文字。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
       "apps/runner/src/mcp.ts",
       "apps/control/src/services/identity.ts"
     ],
     "testIds": [
-      "tests/aether/mcp.test.ts"
+      "tests/aether/mcp.test.ts",
+      "tests/aether/mcp-wait.test.ts"
     ],
     "evidencePaths": [
       "evidence/mcp-built-stdio-test.log"
     ],
     "blockers": [
-      "已實作 8 個真工具與 session resource；reservation/workflow 擴充工具待補。"
+      "Workflow 啟動刻意不提供給 agent（僅人類可啟動）；未以真實 provider CLI 連接此 MCP server"
     ]
   },
   {
     "id": "STD-02",
     "requirement": "MCP identity／resource／message scope 可測且隔離。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "partial",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
       "apps/runner/src/mcp.ts",
       "apps/control/src/services/identity.ts"
     ],
     "testIds": [
-      "tests/aether/mcp.test.ts"
+      "tests/aether/mcp.test.ts",
+      "tests/aether/mcp-wait.test.ts"
     ],
     "evidencePaths": [
       "evidence/mcp-built-stdio-test.log"
     ],
     "blockers": [
-      "已實作 8 個真工具與 session resource；reservation/workflow 擴充工具待補。"
+      "Workflow 啟動刻意不提供給 agent（僅人類可啟動）；未以真實 provider CLI 連接此 MCP server"
     ]
   },
   {
@@ -3035,7 +3043,7 @@
     ],
     "evidencePaths": [],
     "blockers": [
-      "pnpm run verify:clean passed on 2405a4f (10 steps) and the 18 browser tests passed in a fresh clone of 215b838; run it again on the final HEAD with --e2e. Real provider smoke is not run"
+      "verify:clean --e2e passed all 11 steps on 06a0a0e in a fresh clone (install, typecheck, lint, format, build, 236 tests, report, demo setup, built control smoke, browser tests); macOS only, no real provider smoke; re-run if HEAD changes"
     ]
   },
   {
@@ -3062,14 +3070,18 @@
     "verificationStatus": "partial",
     "codePaths": [
       "apps/control/src/services/local-sessions.ts",
+      "apps/control/src/services/agent-processes.ts",
       "apps/control/src/services/hook-spool.ts",
       "apps/web/src/localSessions.ts",
+      "apps/web/src/adoptProjects.ts",
       "apps/web/src/features/Inspector.tsx",
       "packages/contracts/src/index.ts"
     ],
     "testIds": [
       "tests/aether/local-sessions.test.ts",
+      "tests/aether/agent-processes.test.ts",
       "tests/aether/hook-bridge.test.ts",
+      "tests/aether/adopt-projects.test.ts",
       "e2e/local-sessions.spec.ts"
     ],
     "evidencePaths": [
@@ -3078,9 +3090,12 @@
       "evidence/screenshots/e2e-local-sessions.png"
     ],
     "blockers": [
-      "Activity is a file-mtime heuristic until hooks are installed",
-      "Hooks never run against real CLIs in this repo’s tests",
-      "Claude sessions that change cwd mid-session use the first recorded cwd"
+      "Activity is a file-mtime heuristic until hooks are trusted and fire; without a running process it is shown idle",
+      "Process-to-session matching is by --resume id, else by provider and directory in recency order; a Claude session that changed directory shows no process",
+      "Sessions in no git repository and outside a project scratch directory (for example a Codex Desktop thread in a plugin workspace) cannot be attributed and are not shown",
+      "Spawned Codex subagents are shown only while their rollout changed in the last 2 minutes",
+      "Hooks are proven only for this repository session so far",
+      "Only the 60 most recent sessions are scanned"
     ]
   }
 ]
