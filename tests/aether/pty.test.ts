@@ -7,7 +7,7 @@ import { PtySession } from '../../apps/runner/src/pty.js';
 const owner = { id: 'owner', role: 'owner' as const },
   other = { id: 'other', role: 'operator' as const };
 async function until(predicate: () => boolean) {
-  for (let i = 0; i < 200; i++) {
+  for (let i = 0; i < 500; i++) {
     if (predicate()) return;
     await delay(10);
   }
@@ -86,13 +86,13 @@ it.skipIf(process.platform === 'win32')('bounds a PTY process which ignores TERM
         binary: process.execPath,
         args: ['-e', "process.on('SIGTERM',()=>{});console.log('READY');setInterval(()=>{},100);"],
         cwd: dir,
-        timeoutMs: 300,
+        timeoutMs: 1500, // must outlast child start-up under load so the TERM handler is installed
       },
       { cols: 80, rows: 24 },
     );
     await until(() => terminal!.read().chunks.some((c) => c.data.includes('READY')));
     await terminal.exited;
-    expect(Date.now() - started).toBeLessThan(2500);
+    expect(Date.now() - started).toBeLessThan(4000);
   } finally {
     terminal?.stop();
     if (terminal) await terminal.exited;

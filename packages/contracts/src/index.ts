@@ -739,3 +739,34 @@ export const observationReportSchema = z
   })
   .strict();
 export type ObservationReport = z.infer<typeof observationReportSchema>;
+
+export const localSessionSchema = z.object({
+  key: z.string(),
+  provider: z.enum(['claude', 'codex']),
+  sessionId: z.string(),
+  cwd: z.string(),
+  repo: z.string(),
+  mtime: z.number(),
+  git: z
+    .object({
+      branch: z.string().nullable(),
+      upstream: z.string().nullable(),
+      ahead: z.number(),
+      behind: z.number(),
+      uncommitted: z.number(),
+    })
+    .nullable(),
+  // Canonical identity: sessions share a project when they share the Git common directory.
+  worktree: z.object({ root: z.string(), project: z.string(), linked: z.boolean() }).nullable(),
+  // Present only when the user installed hooks; otherwise activity is a file-mtime heuristic.
+  hook: z
+    .object({
+      activity: z.enum(['working', 'idle', 'ended']),
+      lastEvent: z.string(),
+      at: z.number(),
+    })
+    .nullable(),
+  subagents: z.array(z.object({ id: z.string(), type: z.string(), lastSeen: z.number() })),
+});
+export type LocalSession = z.infer<typeof localSessionSchema>;
+export type LocalSessionsResponse = { enabled: boolean; sessions: LocalSession[] };

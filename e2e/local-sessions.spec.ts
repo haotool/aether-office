@@ -15,6 +15,8 @@ test('local sessions are auto-discovered and shown as observe-only 3D agents', a
   await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
   const label = page.locator('.scene-label', { hasText: 'fixture-repo' });
   await expect(label).toBeVisible({ timeout: 15000 });
+  // Labels are projected from 3D and hidden when off-camera, so assert the subagent character exists.
+  await expect(page.locator('.scene-label', { hasText: 'Explore' })).toBeAttached();
   await expect(page.locator('canvas')).toBeVisible();
   await label.click();
   await expect(page.getByText('OBSERVE · claude')).toBeVisible();

@@ -28,7 +28,7 @@ import {
   PanelRightClose,
   CheckCheck,
 } from 'lucide-react';
-import type { Layout, Project, Snapshot } from '@aether/contracts';
+import type { Layout, LocalSessionsResponse, Project, Snapshot } from '@aether/contracts';
 import { eventSchema } from '@aether/contracts';
 import { api, execute, login, type Session } from './api.js';
 import { usePreferences } from './state.js';
@@ -45,7 +45,7 @@ import { Workspace } from './features/Workspace.js';
 import { ExecutionSettings } from './features/ExecutionSettings.js';
 import { Observations } from './features/Observations.js';
 import { Approvals } from './features/Approvals.js';
-import { mergeLayout, sessionsToAgents, type LocalSessionsResponse } from './localSessions.js';
+import { mergeLayout, sessionIdOf, sessionsToAgents } from './localSessions.js';
 const Terminals = lazy(() =>
   import('./features/Terminals.js').then((m) => ({ default: m.Terminals })),
 );
@@ -745,7 +745,9 @@ export function App() {
         {inspector && data && (
           <Inspector
             agent={selected}
-            session={local.data?.sessions.find((x) => `local:${x.key}` === selected?.id) ?? null}
+            session={
+              local.data?.sessions.find((x) => x.key === sessionIdOf(selected?.id ?? '')) ?? null
+            }
             snapshot={data}
             onClose={() => setInspector(false)}
             onFocus={() => {

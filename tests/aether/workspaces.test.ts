@@ -116,7 +116,7 @@ it('bounds a verifier that ignores SIGTERM and preserves split UTF-8 log bytes',
       "process.on('SIGTERM',()=>{});const b=Buffer.from('狐狸');process.stdout.write(b.subarray(0,1));setTimeout(()=>process.stdout.write(b.subarray(1)),20);setInterval(()=>{},100);",
       process.execPath,
       [],
-      150,
+      1500, // must outlast child start-up under parallel test load, or the split write never happens
     );
     const started = Date.now();
     const result = await f.manager.verify(f.workspace.id, harness.id);

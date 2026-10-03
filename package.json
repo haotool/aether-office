@@ -23,7 +23,8 @@
     "setup": "tsx scripts/setup.ts",
     "postinstall": "node scripts/prepare-pty.mjs",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "hooks": "tsx scripts/hooks.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

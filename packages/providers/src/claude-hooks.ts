@@ -50,8 +50,11 @@ export function installHooks(
   const base = removeHooks(settings);
   const hooks: Record<string, Group[]> = { ...(base.hooks ?? {}) };
   for (const event of events) {
-    const command = `${JSON.stringify(script)} ${event} # ${HOOK_MARKER}`;
-    hooks[event] = [...(hooks[event] ?? []), { hooks: [{ type: 'command', command, timeout: 5 }] }];
+    const command = `${JSON.stringify(script)} claude # ${HOOK_MARKER}:${event}`;
+    hooks[event] = [
+      ...(hooks[event] ?? []),
+      { hooks: [{ type: 'command', command, timeout: 5, async: true }] },
+    ];
   }
   return { ...base, hooks };
 }

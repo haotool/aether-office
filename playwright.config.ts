@@ -6,11 +6,24 @@ import { join } from 'node:path';
 const fixtureHome =
   process.env['AETHER_LOCAL_SESSIONS_HOME'] ?? mkdtempSync(join(tmpdir(), 'aether-e2e-home-'));
 process.env['AETHER_LOCAL_SESSIONS_HOME'] = fixtureHome;
+process.env['AETHER_HOOK_SPOOL'] = join(fixtureHome, 'hook-events.jsonl');
 mkdirSync(join(fixtureHome, '.claude/projects/p'), { recursive: true });
 mkdirSync(join(fixtureHome, 'fixture-repo'), { recursive: true });
 writeFileSync(
   join(fixtureHome, '.claude/projects/p/e2e-session.jsonl'),
   JSON.stringify({ type: 'user', cwd: join(fixtureHome, 'fixture-repo') }) + '\n',
+);
+writeFileSync(
+  process.env['AETHER_HOOK_SPOOL'],
+  JSON.stringify({
+    at: Date.now() + 3_600_000, // far future so the fixture subagent stays live for the whole run
+    provider: 'claude',
+    event: 'SubagentStart',
+    sessionId: 'e2e-session',
+    cwd: join(fixtureHome, 'fixture-repo'),
+    agentId: 'sub-1',
+    agentType: 'Explore',
+  }) + '\n',
 );
 export default defineConfig({
   testDir: './e2e',

@@ -76,7 +76,10 @@ test('real HTTP journey: authenticate, inspect office, create and assign work, p
   });
   await expect(page.getByRole('dialog').getByText(/No paid model ran/)).toBeVisible();
   await page.getByRole('dialog').getByRole('button', { name: '關閉', exact: true }).click();
-  await page.getByRole('link', { name: /^訊息\s*\d*$/ }).first().click();
+  await page
+    .getByRole('link', { name: /^訊息\s*\d*$/ })
+    .first()
+    .click();
   await page.getByLabel('收件成員', { exact: true }).selectOption({ label: 'Mika' });
   await page.getByLabel('訊息內容', { exact: true }).fill('UTF-8 🦊 持久訊息 — reload 後仍存在');
   await page.getByRole('button', { name: '傳送', exact: true }).click();

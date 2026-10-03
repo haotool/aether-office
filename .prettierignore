@@ -11,3 +11,4 @@ evidence
 docs
 /bin
 /tests/glb.ts
+/vite.config.ts

@@ -269,19 +269,22 @@
     "id": "CLA-04",
     "requirement": "hook 安裝／更新／移除保留既有使用者設定。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
+    "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "packages/providers/src/claude-hooks.ts"
+      "packages/providers/src/claude-hooks.ts",
+      "packages/providers/src/hook-receiver.mjs",
+      "scripts/hooks.ts"
     ],
     "testIds": [
-      "tests/aether/claude-hooks.test.ts"
+      "tests/aether/claude-hooks.test.ts",
+      "tests/aether/hook-bridge.test.ts"
     ],
     "evidencePaths": [
       "evidence/tests-claude-hooks.log"
     ],
     "blockers": [
-      "Installer library only: no CLI/UI opt-in command, no hook receiver script, not run against a real Claude Code install"
+      "Not run against a real Claude Code install; Codex hooks.json schema not documented in the fetched page, so no Codex installer (receiver already accepts codex)"
     ]
   },
   {
@@ -2770,17 +2773,20 @@
   },
   {
     "id": "OBS-LOCAL-01",
-    "requirement": "自動載入本機 Claude／Codex session（metadata＋git 上游／未提交狀態）並以 observe-only 角色顯示於 3D 辦公室。",
+    "requirement": "自動載入本機 Claude／Codex session；以 Git common dir 歸屬 worktree，以 hook 事件歸屬子代理；observe-only 3D 顯示。",
     "scope": "AETHER target; user request 2026-10-03",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
       "apps/control/src/services/local-sessions.ts",
+      "apps/control/src/services/hook-spool.ts",
       "apps/web/src/localSessions.ts",
-      "apps/web/src/features/Inspector.tsx"
+      "apps/web/src/features/Inspector.tsx",
+      "packages/contracts/src/index.ts"
     ],
     "testIds": [
       "tests/aether/local-sessions.test.ts",
+      "tests/aether/hook-bridge.test.ts",
       "e2e/local-sessions.spec.ts"
     ],
     "evidencePaths": [
@@ -2789,7 +2795,9 @@
       "evidence/screenshots/e2e-local-sessions.png"
     ],
     "blockers": [
-      "Activity is a file-mtime heuristic; not attached/managed; no hook bridge (child-agent parenting, worktree identity) yet; real-machine scan checked by count only, UI not run against real ~/.claude"
+      "Activity is a file-mtime heuristic until hooks are installed",
+      "Hooks never run against real CLIs in this repo’s tests",
+      "Claude sessions that change cwd mid-session use the first recorded cwd"
     ]
   }
 ]

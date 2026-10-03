@@ -1,8 +1,7 @@
 import { ArrowUpRight, X, Focus, Cpu, Clock, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import type { Agent, Snapshot } from '@aether/contracts';
+import type { Agent, LocalSession, Snapshot } from '@aether/contracts';
 import { AvatarIcon, Badge, useT } from '../ui.js';
-import type { LocalSession } from '../localSessions.js';
 export function Inspector({
   agent,
   snapshot,
@@ -86,6 +85,20 @@ export function Inspector({
                   <dt>cwd</dt>
                   <dd title={session.cwd}>{session.cwd}</dd>
                 </div>
+                {session.worktree && (
+                  <div>
+                    <dt>worktree</dt>
+                    <dd title={session.worktree.root}>
+                      {session.worktree.project} · {session.worktree.linked ? 'linked' : 'main'}
+                    </dd>
+                  </div>
+                )}
+                {session.subagents.length > 0 && (
+                  <div>
+                    <dt>subagents</dt>
+                    <dd>{session.subagents.map((c) => c.type).join(', ')}</dd>
+                  </div>
+                )}
                 <div>
                   <dt>branch</dt>
                   <dd>{session.git?.branch ?? t('unavailable')}</dd>
@@ -103,7 +116,10 @@ export function Inspector({
                   <dd>{session.git?.uncommitted ?? t('unavailable')}</dd>
                 </div>
               </dl>
-              <small>{t('lastSeen')} · heuristic (file mtime)</small>
+              <small>
+                {t('lastSeen')} ·{' '}
+                {session.hook ? `hook: ${session.hook.lastEvent}` : 'heuristic (file mtime)'}
+              </small>
             </div>
           )}
           <div className="inspector-section">

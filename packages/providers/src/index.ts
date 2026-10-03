@@ -116,3 +116,4 @@ export async function runFixture(
 export { CodexAdapter } from './codex.js';
 export { ClaudeAdapter } from './claude.js';
 export type { NativeSink, NativeOptions } from './protocol.js';
+export { installHooksFile, removeHooksFile, HOOK_EVENTS } from './claude-hooks.js';

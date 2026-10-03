@@ -236,16 +236,11 @@
 - evidence/adapter-assertions.log：8 個 source adapter/config 合成斷言通過；artifact-checks.json：27 unique rows／40-char SHA，桌面1280與手機390無水平溢出、原生 details 可展開；兩張 screenshot 已查看。未跑27個產品的runtime、未付費模型、未安裝hook／全域設定、未改產品執行碼、未合併／push。獨立 agent-browser research session，不干擾既有使用者demo。
 - 下一步：選型若採 Orca，先 pinned checkout 與安全 launch argv fixture；再普通 CLI／跨 worktree／child parent grouping bridge 離線驗收，之後固定 SHA review 與合成 Git integration 負例。真 provider smoke 與遠端／合併仍須既有明確授權。原始完整產品目標仍未完成；此次完成的是使用者新要求的27 repo評估。
 
-## 2026-10-03 — CLA-04 hook 安裝器（函式庫層）
+## 2026-10-03 — 本機 session 自動歸屬、upstream 同步與 clean-code 收斂
 
-- 新增 packages/providers/src/claude-hooks.ts：專案範圍 settings.json 的 hook install／update／remove。以 command 內 `aether-office-hook` 標記辨識自己的條目；使用者既有 hooks 與其他欄位原樣保留，install 冪等、remove 還原原內容；腳本路徑須為絕對且無 shell 特殊字元；JSON 無法解析即拒絕且不覆寫；首次寫入保留 `.aether-backup`，以 tmp＋rename 原子寫入。
-- tests/aether/claude-hooks.test.ts 4 passed（evidence/tests-claude-hooks.log）；tsc 與 check-boundaries 通過。僅合成檔案，未對真 Claude Code 驗證 hook 欄位／事件名稱，未動任何全域設定。
-- 尚缺：hook receiver 腳本（有界 timeout＋本地 spool→canonical ingestion）、opt-in CLI／UI 入口、真實版本相容驗收；因此 CLA-04 記為 partial，不宣稱 session 自動接入完成。
-- 完整產品目標仍未完成：FEATURES 仍有 44 項 not_started（REM、STD/A2A、INT、GIT-03/06/08、QA 等）。
-
-## 2026-10-03 — 本機 session 自動載入（observe-only）
-
-- control `GET /api/local-sessions`（僅人類 owner/operator；`AETHER_LOCAL_SESSIONS=off` 關閉；`AETHER_LOCAL_SESSIONS_HOME` 覆寫 home）：掃描 ~/.claude/projects 與 ~/.codex/sessions 近 7 天最新 60 個 jsonl，只取 id／cwd／mtime（讀檔頭 64KB，不保留對話內容），並對最多 30 個 cwd 執行唯讀 `git status`（core.fsmonitor=false、GIT_OPTIONAL_LOCKS=0、4 秒逾時）取得 branch／upstream／ahead／behind／未提交數。5 秒快取。
-- Web 把 session 轉成 provider=observe 角色加入 3D 場景與右側面板（不改存檔 layout，另補桌位）；活動狀態僅為 mtime 推測（2 分鐘內=working），面板明示 heuristic。
-- 驗證：全套 vitest 27 檔 67 passed；build 通過；tsc／boundaries 通過；e2e（fixture home，不讀真實目錄）passed＋axe 無違規＋截圖已看。真實機器掃描只核對數量：60 sessions（claude 34／codex 26）、36 repos、437ms；未用真 UI 檢視。
-- 未做：hook bridge（子代理 parent、worktree 身分、停止偵測）、受管派工；Claude 專案 id 與 cwd 為檔頭第一個 cwd，未處理 session 中途換目錄。完整產品目標仍未完成。
+- 本機 session 掃描（metadata＋git 狀態）、worktree 以 Git common dir 歸屬同一專案、hook 事件歸屬子代理與活動狀態；observe-only 3D 呈現。詳見 FEATURES `OBS-LOCAL-01`、`CLA-04`。
+- Hook：`pnpm hooks install|remove [--scope project|user] [--project <dir>]` 寫入 `.claude/settings.local.json`（預設）或使用者設定；接收器只記 id／事件名／cwd，不存 prompt。Claude 與 Codex 的 hook payload 都含 session_id／cwd／agent_id／agent_type（官方文件已查）。Codex 設定檔格式文件未載明，未做 Codex 安裝器。**`--scope user` 會改全域設定，未執行。**
+- 與 upstream 合併 29 個 commit（merge 82525e6）：上游只改 legacy `src/`、`tests/`、`deploy/`、`blender/`；根目錄 package.json／README／CLAUDE.md／AGENTS.md 保留 AETHER 版。legacy 應用不在 workspace 建置內。
+- 收斂：Prettier 3.9.9 固定版本（`pnpm format` / `format:check`）；vitest 並行上限 4；修正 PTY／verifier 逾時競態測試（逾時需長於子行程啟動）；`LocalSession` 型別移至 contracts 共用。
+- 驗證：tsc、boundaries、vitest 28 檔 70 passed、e2e 7 passed。機器負載高（load 30+）時 pty／mcp-wait 於全套並行偶發逾時，單獨執行皆通過；屬環境壓力，未在安靜環境重驗。
+- 未完成：FEATURES 約 44 項 not_started（遠端 runner、ACP／A2A、GitHub／Linear、排程、skills、file reservation／merge 等）。完整產品目標仍未完成。

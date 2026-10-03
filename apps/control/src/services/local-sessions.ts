@@ -1,8 +1,10 @@
 import { execFile } from 'node:child_process';
+import { homedir } from 'node:os';
 import { promisify } from 'node:util';
 import { open, readdir, stat } from 'node:fs/promises';
-import { isAbsolute, join } from 'node:path';
-import { z } from 'zod';
+import { basename, dirname, isAbsolute, join } from 'node:path';
+import { readHookState } from './hook-spool.js';
+import type { LocalSession } from '@aether/contracts';
 
 // Read-only discovery of local Claude Code / Codex sessions. Metadata only: id, cwd, mtime.
 // Transcript content is never retained or returned. Bounded by MAX_SESSIONS/MAX_REPOS.
@@ -12,24 +14,6 @@ const MAX_REPOS = 30;
 const HEAD_BYTES = 64 * 1024;
 const RECENT_MS = 7 * 24 * 3600 * 1000;
 
-export const localSessionSchema = z.object({
-  key: z.string(),
-  provider: z.enum(['claude', 'codex']),
-  sessionId: z.string(),
-  cwd: z.string(),
-  repo: z.string(),
-  mtime: z.number(),
-  git: z
-    .object({
-      branch: z.string().nullable(),
-      upstream: z.string().nullable(),
-      ahead: z.number(),
-      behind: z.number(),
-      uncommitted: z.number(),
-    })
-    .nullable(),
-});
-export type LocalSession = z.infer<typeof localSessionSchema>;
 type Raw = { provider: 'claude' | 'codex'; sessionId: string; cwd: string; mtime: number };
 
 async function head(file: string): Promise<string> {
@@ -137,58 +121,76 @@ export function parseGitStatus(text: string): NonNullable<LocalSession['git']> {
   };
 }
 
-async function gitState(cwd: string): Promise<LocalSession['git']> {
+async function git(cwd: string, args: string[]): Promise<string> {
+  const { stdout } = await run('git', ['-C', cwd, '-c', 'core.fsmonitor=false', ...args], {
+    timeout: 4000,
+    maxBuffer: 1024 * 1024,
+    env: {
+      PATH: process.env['PATH'] ?? '',
+      GIT_OPTIONAL_LOCKS: '0',
+      HOME: process.env['HOME'] ?? '',
+    },
+  });
+  return stdout;
+}
+
+type RepoInfo = { git: LocalSession['git']; worktree: LocalSession['worktree'] };
+
+async function repoInfo(cwd: string): Promise<RepoInfo> {
+  const empty: RepoInfo = { git: null, worktree: null };
   try {
-    if (!(await stat(cwd)).isDirectory()) return null;
-    const { stdout } = await run(
-      'git',
-      [
-        '-C',
-        cwd,
-        '-c',
-        'core.fsmonitor=false',
-        'status',
-        '--porcelain=v1',
-        '-b',
-        '--untracked-files=normal',
-      ],
-      {
-        timeout: 4000,
-        maxBuffer: 1024 * 1024,
-        env: {
-          PATH: process.env['PATH'] ?? '',
-          GIT_OPTIONAL_LOCKS: '0',
-          HOME: process.env['HOME'] ?? '',
-        },
-      },
-    );
-    return parseGitStatus(stdout);
+    if (!(await stat(cwd)).isDirectory()) return empty;
+    const [status, ids] = await Promise.all([
+      git(cwd, ['status', '--porcelain=v1', '-b', '--untracked-files=normal']),
+      git(cwd, ['rev-parse', '--path-format=absolute', '--git-common-dir', '--show-toplevel']),
+    ]);
+    const [common, root] = ids.trim().split('\n');
+    if (!common || !root) return { ...empty, git: parseGitStatus(status) };
+    const main = basename(common) === '.git' ? dirname(common) : common;
+    return {
+      git: parseGitStatus(status),
+      worktree: { root, project: basename(main), linked: root !== main },
+    };
   } catch {
-    return null;
+    return empty;
   }
 }
+
+export const hookSpoolFile = () =>
+  process.env['AETHER_HOOK_SPOOL'] ?? join(homedir(), '.aether', 'hook-events.jsonl');
 
 let cache: { at: number; value: LocalSession[] } | null = null;
 export async function scanLocalSessions(
   home: string,
   now = Date.now(),
   ttlMs = 5000,
+  spoolFile = hookSpoolFile(),
 ): Promise<LocalSession[]> {
   if (cache && now - cache.at < ttlMs) return cache.value;
   const raw = await discoverRaw(home, now);
   const repos = [...new Set(raw.map((r) => r.cwd))].slice(0, MAX_REPOS);
-  const states = new Map(
-    await Promise.all(repos.map(async (c) => [c, await gitState(c)] as const)),
-  );
-  const value = raw.map((r) => ({
-    key: `${r.provider}:${r.sessionId}`,
-    provider: r.provider,
-    sessionId: r.sessionId,
-    cwd: r.cwd,
-    repo: r.cwd.split('/').filter(Boolean).pop() ?? r.cwd,
-    mtime: Math.round(r.mtime),
-    git: states.get(r.cwd) ?? null,
-  }));
+  const [infos, hooks] = await Promise.all([
+    Promise.all(repos.map(async (c) => [c, await repoInfo(c)] as const)),
+    readHookState(spoolFile, now),
+  ]);
+  const states = new Map(infos);
+  const value = raw.map((r): LocalSession => {
+    const key = `${r.provider}:${r.sessionId}`;
+    const info = states.get(r.cwd);
+    const hook = hooks.get(key);
+    return {
+      key,
+      provider: r.provider,
+      sessionId: r.sessionId,
+      cwd: r.cwd,
+      repo: info?.worktree?.project ?? basename(r.cwd),
+      mtime: Math.round(r.mtime),
+      git: info?.git ?? null,
+      worktree: info?.worktree ?? null,
+      hook: hook ? { activity: hook.activity, lastEvent: hook.lastEvent, at: hook.at } : null,
+      subagents: hook?.subagents ?? [],
+    };
+  });
   cache = { at: now, value };
   return value;
 }

@@ -29,11 +29,25 @@ The built UI is served by control at `http://127.0.0.1:4310`.
 
 `pnpm setup` and `pnpm dev` select a separate live data directory. Native execution requires explicit project policy plus local runner configuration; see [native execution and MCP](docs/NATIVE_EXECUTION.md). No paid provider smoke has been run.
 
+## Local sessions (observe-only)
+
+Signed-in owners and operators see recent Claude Code and Codex sessions from this machine as observed characters in the office. Discovery reads only session ids, working directories and file times, plus read-only `git status`; transcripts are not read or stored. Sessions in linked worktrees group under the repository's Git common directory. Set `AETHER_LOCAL_SESSIONS=off` to disable.
+
+For authoritative activity and subagent attribution, opt in to hooks per project:
+
+```sh
+pnpm hooks install --project /path/to/repo   # writes .claude/settings.local.json
+pnpm hooks remove --project /path/to/repo
+```
+
+`--scope user` edits `~/.claude/settings.json` and affects every session on the machine. The receiver records only ids, event names and the working directory in `~/.aether/hook-events.jsonl`.
+
 ## Current checks
 
 ```sh
 pnpm typecheck
 pnpm lint
+pnpm format:check
 pnpm test
 pnpm build
 pnpm exec playwright test

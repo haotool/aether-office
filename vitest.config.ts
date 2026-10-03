@@ -1,4 +1,10 @@
 import { defineConfig } from 'vitest/config';
 export default defineConfig({
-  test: { include: ['tests/aether/**/*.test.ts'], testTimeout: 10000, hookTimeout: 20000 },
+  // Process-spawning suites (PTY, Git, MCP) are timing-sensitive; bound parallelism so they stay deterministic.
+  test: {
+    include: ['tests/aether/**/*.test.ts'],
+    testTimeout: 10000,
+    hookTimeout: 20000,
+    maxWorkers: 4,
+  },
 });
