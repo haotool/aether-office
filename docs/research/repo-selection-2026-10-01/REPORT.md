@@ -149,3 +149,46 @@ AETHER 現行 Codex adapter 明確關閉 multi_agent，Claude 禁用 Agent／Tas
 | mcp_agent_mail、agents-office | 除 LICENSE 外未打開 | 授權排除 | — |
 
 **結論**：兩個獨立 repo（hcom、agent-room）都用「hook 在回合邊界注入訊息」，且 hcom 只在輸出成功寫出後才提交已投遞，這是最成熟、也最值得照做的架構。其次是把 Claude 路徑改走 claude-agent-acp、處理 Codex 的使用者提問、以及多 lane 審查。
+
+## 2026-10-04 補充：尚未納入的功能盤點，以及是否改用 Orca 當底層
+
+### 尚未納入、值得做的功能（依價值排序）
+
+| 優先 | 功能 | 來源 | 為何值得 | 和 AETHER 的接法 |
+|---|---|---|---|---|
+| 1 | 訂閱額度與用量追蹤（Claude／Codex 剩餘額度、重置時間） | Orca、agent-teams-ai（想法） | 多代理並行最先撞到的是額度 | Codex rollout 的 `token_count` 已帶 `rate_limits`；Claude 從 transcript 用量累計；顯示在遙測列與每層 HUD |
+| 2 | 完成／需要你時的通知與未讀狀態 | Orca、agent-deck、pixel-agents | hook 已能判斷「等待批准」與 Stop | 瀏覽器通知＋未讀角標，接現有 hook 狀態 |
+| 3 | 即時紀錄與深度 session 分析（工具呼叫、指令、子代理、context 佔用） | agent-teams-ai（想法）、nimbalyst | 回答「每個 session 在做什麼」最直接 | 逐 session 選擇開啟的 transcript 尾端檢視；需要你同意讀內容 |
+| 4 | Claude agent team 收件匣與任務視覺化 | Claude Code 官方 | 真實的代理間訊息可畫成 3D 飛行路徑 | 讀 `~/.claude/teams/*/inboxes/*.json` 與 `~/.claude/tasks/*` |
+| 5 | 對執行中的 Claude session 傳訊息 | Claude Code 跨 session 訊息、hcom、agent-room | 從 app 指揮外部 session | 本機收件 socket `/tmp/cc-socks/<pid>.sock`；訊息本體格式未公開，需先在拋棄式 session 驗證 |
+| 6 | Session fork／從介面續接 | agent-deck | 分支探索不同方案 | `claude --fork-session`、`codex fork` |
+| 7 | 開發伺服器預覽與背景程序列表 | vibe-kanban、agent-teams-ai（想法） | 看到代理做出來的東西 | runner 回報 workspace 內 listen 的 port，介面內嵌預覽 |
+| 8 | PR 建立（AI 摘要）與合併 | vibe-kanban、Orca | 目前停在「整合候選」 | 接現有 GitHub 整合與 integration job；合併仍須明確授權 |
+| 9 | 看板視圖 | vibe-kanban、nimbalyst | 任務多時比 DAG 好讀 | 同一份 work 狀態的另一種檢視 |
+| 10 | Token 分析與預算（依成員、任務、部門） | agent-teams-ai（想法）、gascity | INT-07／08 仍 partial | 已有用量去重；補聚合與預算上限 |
+| 11 | 多 lane 審查（quorum）與 batch-then-bisect 合併佇列 | gascity、gastown | 審查與合流的成熟做法 | 擴充 review run 與 integration |
+| 12 | 容器沙箱（Docker／Podman／Apple Containers） | agent-of-empires | 讓代理在隔離環境內放手做 | runner 新增 container 執行器；是否在容器內關閉批准由你決定 |
+| 13 | 更多 provider（Gemini CLI、OpenCode、Copilot、Cursor） | vibe-kanban、agent-deck | 混合團隊 | 走現有 ACP adapter |
+| 14 | 行動裝置伴侶（PWA）、搜尋／快速開啟、檔案拖曳附件 | Orca、nimbalyst、agent-teams-ai（想法） | 日常操作效率 | 介面層工作 |
+| 15 | Escalation、Witness 式卡住偵測後自動處理 | gastown | 已有停滯偵測，缺升級流程 | 停滯事件 → 通知 → 指派 |
+
+不建議：tmux send-keys 注入（ai-maestro、gastown 的部分做法，脆弱）；AGPL 與 rider 授權的程式碼（只取想法）。
+
+### 是否改用 Orca 當底層
+
+| | Orca | AETHER |
+|---|---|---|
+| 形態 | Electron 桌面 app，單一使用者，以終端機（TUI）代理為中心 | Web＋control server（SQLite、指令日誌）＋可遠端的 runner |
+| 規模 | 約 2.8 萬個 TS 檔、470 萬行、1.15 萬個測試檔，幾乎每天發版 | 約 1,600 個 TS 檔、14 萬行（含上游舊程式），192 個測試檔 |
+| 強項 | worktree、終端機分割、行動伴侶、SSH、GitHub／Linear、額度追蹤、通知、Design Mode、Computer Use | 持久訊息與投遞狀態、單次批准、commit 綁定驗證、審查與整合關卡、RBAC、MCP 協作、A2A、遠端 runner、本機 session 觀察與部門分類、3D 辦公室 |
+| 代理權限 | 預設以跳過權限的方式啟動 TUI 代理 | 單次批准；跳過權限的模式在本專案被安全分類器拒絕實作 |
+
+**結論：不建議整套替換，建議「保留 AETHER 核心，逐項移植 Orca 的成熟模組」。**
+
+1. 形態不同：換成 Orca 等於放棄 server／遠端 runner／多人權限與 web 3D 介面，或把這些重寫進一個 470 萬行、每天變動的 fork。fork 的合併成本會持續累積。
+2. AETHER 的差異化（持久訊息、驗證與審查關卡、部門分類、3D）在 Orca 裡都不存在，搬過去不會比現在少工。
+3. Orca 的預設權限做法與本專案的安全邊界衝突，這部分不能直接沿用。
+4. 已證實可行的路線：前幾輪已移植 Orca 的 hook 安裝狀態與 Codex `hooks/list` 信任查詢，效果好、風險低。
+5. 兩者也能並存：Orca 啟動的代理本身就是一般的 Claude／Codex session，AETHER 已能自動發現、歸屬與分類它們。
+
+建議的移植順序：額度追蹤 → 通知與未讀 → 即時紀錄（需你同意）→ agent team 視覺化 → session fork → 預覽與 PR。

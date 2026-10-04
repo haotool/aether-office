@@ -260,3 +260,12 @@
 - 產品面：session 依主 checkout 歸屬專案並自動建立專案、Codex 衍生 rollout 折為子代理、`ps`／`lsof` 偵測真實 CLI 程序、hook 顯示工具名稱與等待批准、無程序且久無動靜顯示離線；Codex 與 Claude hook 安裝器（Codex 全域範圍需使用者在 `/hooks` 信任一次，尚未信任）。
 - 更正：GIT-02/05、STD-01/02 先前回報為 passed，但台帳寫入因 shell 的 `node` 函式損壞而靜默失敗；現已實際寫入並 `verification:check` 通過。
 - 台帳現況：84 implemented/passed、28 implemented/partial、30 partial/partial、3 partial/blocked。
+
+## 2026-10-04（續二）— 多層樓 3D、介面語言與真實 Claude ↔ Codex 互傳
+
+- 3D：五層樓（每層一個部門：產品工程、平台與可靠性、品質與資安、資料與 AI、領導與開發者體驗）、透視鏡頭與 fly-to、WASD／Q E／+ − 鍵盤飛行、1–5 與 [ ] 換層、X 分層展開、hover 與雙擊飛到座位、電梯核心與資料流、無人機與掃描光幕。每層的房間依部門命名。
+- session 依標題、任務與分支分類成職位（前端、後端、SRE、QA、資安、資料、ML、架構…），分類在 server 端完成，用來判斷的文字不會送到 client；有標題（Claude `ai-title`、Codex `thread_name`）時顯示標題。
+- 介面：移除色條與漸層，改為儀器面板語言（角標框、斜切的樓層板與活動 pip、樓層讀數、遙測列、平切按鈕、藍圖格線）。
+- 協定缺口：Codex 的使用者提問與 MCP elicitation 明確回答「無回答」並記錄問了什麼；MCP 工具批准（`codex_approval_kind = mcp_tool_call`）走人工批准，只批准單次，不接受「記住整個 session」；停滯偵測（機器仍有心跳、run 超過兩倍時限且至少 10 分鐘無回報）。
+- 真實 smoke（經明確授權，用訂閱登入，無 API key，`pnpm run smoke:live -- --confirm-subscription-quota`）：Codex 0.160.0 與 Claude Code 2.1.288 各一次 `whoami`；Claude 傳 nonce A，Codex 回 nonce B 與 A，Claude 讀到回覆。證據在本機 `evidence/live-smoke-*.json`（該目錄被 gitignore）。MSG-08、CDX-08、CLA-08 轉為 passed。
+- 仍未做：hook 在回合邊界注入訊息、Claude 路徑改走 ACP adapter、多 lane 審查、在介面內一鍵啟動兩個 agent 互傳（目前以腳本與既有的註冊／派工介面完成）、Linux／Windows、長時間 live 穩定性。

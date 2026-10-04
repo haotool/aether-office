@@ -30,7 +30,7 @@ describe('layout validation (the same rules guard the editor, an import and the 
     expect(() => validateLayout(objects)).toThrow(code);
   });
 
-  it('the import schema refuses unknown fields, wrong versions, bad furniture and more than 180 objects', () => {
+  it('the import schema refuses unknown fields, wrong versions, bad furniture and more than 600 objects', () => {
     const good = layout([desk('a', -10, -6)]);
     expect(layoutSchema.safeParse(good).success).toBe(true);
     expect(layoutSchema.safeParse({ ...good, extra: 1 }).success).toBe(false);
@@ -38,7 +38,7 @@ describe('layout validation (the same rules guard the editor, an import and the 
     expect(
       layoutSchema.safeParse(layout([{ ...desk('a', 1, 1), type: 'spaceship' as never }])).success,
     ).toBe(false);
-    const many = Array.from({ length: 181 }, (_, i) =>
+    const many = Array.from({ length: 601 }, (_, i) =>
       desk(`d${i}`, -20 + (i % 10) * 4, -14 + Math.floor(i / 10) * 1.5),
     );
     expect(layoutSchema.safeParse(layout(many)).success).toBe(false);

@@ -30,7 +30,8 @@
     "verification:report": "tsx scripts/final-verification.ts",
     "verification:check": "tsx scripts/final-verification.ts --check",
     "verify:clean": "node scripts/clean-room.mjs",
-    "backup": "tsx scripts/backup.ts"
+    "backup": "tsx scripts/backup.ts",
+    "smoke:live": "tsx scripts/live-smoke.ts"
   },
   "devDependencies": {
     "@a2a-js/sdk": "1.3.0",

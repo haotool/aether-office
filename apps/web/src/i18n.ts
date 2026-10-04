@@ -412,6 +412,11 @@ export const zh = {
   queued: '等待執行',
   executionPolicy: '原生代理執行',
   emergencyStop: '緊急停止',
+  telemetry: '本機 session 概況',
+  sessions: '會話',
+  liveProcesses: '執行中',
+  floor: '樓層',
+  floorName: 'zh',
   emergencyConfirm: '確定停止所有執行',
   executionConsent:
     '啟用後，派工可能使用已登入提供者的付費額度。停用會取消排隊工作，並要求執行中的工作停止。工具權限仍逐次審核。',
@@ -861,6 +866,11 @@ export const en: Record<Key, string> = {
   queued: 'Queued',
   executionPolicy: 'Native agent execution',
   emergencyStop: 'Emergency stop',
+  telemetry: 'Local session overview',
+  sessions: 'SESSIONS',
+  liveProcesses: 'LIVE',
+  floor: 'Floor',
+  floorName: 'en',
   emergencyConfirm: 'Stop all execution',
   executionConsent:
     'Assigned work may consume the signed-in provider’s paid quota. Disabling cancels queued work and requests running work to stop. Tool permissions still require individual review.',

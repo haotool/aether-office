@@ -2,20 +2,20 @@
 
 Generated from `docs/FEATURES.json` (docs/FEATURES.json). Do not edit by hand: run `pnpm verification:report`.
 
-Features: **145**. Implementation: 112 implemented, 33 partial, 0 not started.
+Features: **145**. Implementation: 115 implemented, 30 partial, 0 not started.
 
 | Verification | Count | Meaning |
 |---|---|---|
-| passed | 84 | Verified by the listed tests at the scope stated in the ledger. |
+| passed | 87 | Verified by the listed tests at the scope stated in the ledger. |
 | partial | 58 | Some behaviour is verified; the blockers column names what is not. |
-| blocked | 3 | Cannot be verified in this environment (for example, it needs paid or authenticated provider sessions). |
+| blocked | 0 | Cannot be verified in this environment (for example, it needs paid or authenticated provider sessions). |
 | failed | 0 | A check ran and failed. |
 | not_run | 0 | No check has been run. |
 | not_applicable | 0 | Does not apply to this product. |
 
 A passing build or test run is not a claim of production readiness. This file lists what the ledger can support, and what it cannot.
 
-## passed (84)
+## passed (87)
 
 | ID | Implementation | Requirement | Blockers |
 |---|---|---|---|
@@ -34,11 +34,13 @@ A passing build or test run is not a claim of production readiness. This file li
 | ARC-07 | implemented | DEMO／LIVE／OBSERVE／REPLAY 全程有可辨識來源。 | Replay is a read-only event list up to a chosen seq; it does not rebuild historical entity snapshots |
 | ARC-08 | implemented | 進度與完成度不來自隨機資料或虛構百分比。 | Lint bans Math.random and shows no percentage; it cannot prove every future display is state-derived |
 | CLA-06 | implemented | 忙碌時的訊息投遞遵守已驗證的 injection capability。 | No adapter supports mid-turn or turn-boundary injection (capability none): messages stay in the durable inbox |
+| CLA-08 | implemented | 真實 Claude smoke 有 evidence，或精確標記 live blocked。 | 一次 whoami 與一次訊息互傳；未測真實程式修改與批准指令 |
 | CDX-01 | implemented | schema 從對應 binary／官方版本生成並有版本紀錄。 | — |
 | CDX-02 | implemented | initialize／initialized 與 request correlation 正確。 | 未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑 |
 | CDX-04 | implemented | item／tool／message streaming 去重且能容忍延遲。 | 未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑 |
 | CDX-05 | implemented | interrupt 對正確 active turn 執行，無誤殺另一工作。 | 未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑 |
 | CDX-07 | implemented | approval 回覆對應正確 request、session 與參數。 | 未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑 |
+| CDX-08 | implemented | 真實 Codex smoke 有 evidence，或精確標記 live blocked。 | 一次 whoami 與一次訊息互傳；未測真實程式修改與批准指令 |
 | EVT-01 | implemented | state＋event＋outbox 在同一 transaction 提交。 | — |
 | EVT-02 | implemented | 同 command idempotency key 不產生重複結果。 | — |
 | EVT-03 | implemented | duplicate provider event 不重複改 projection／usage。 | 僅 synthetic/本機測試，非 live 模型。 |
@@ -52,6 +54,7 @@ A passing build or test run is not a claim of production readiness. This file li
 | MSG-03 | implemented | persisted／injected／acknowledged／responded 不混淆。 | injected is never reached because no adapter injects into a running turn |
 | MSG-04 | implemented | 斷線／重試不產生重複訊息副作用與動畫。 | — |
 | MSG-06 | implemented | busy Agent 只在允許的 injection boundary 收到內容。 | Same boundary as CLA-06: nothing is injected, so a busy agent only receives content when it reads its inbox |
+| MSG-08 | implemented | nonce exchange 驗證跨 provider 真正取得並回覆訊息。 | macOS 單次短 smoke（Codex 0.160.0／Claude Code 2.1.288，訂閱登入）；未測長時間穩定與其他作業系統 |
 | TSK-01 | implemented | 循環 DAG、跨 project 污染與遺失依賴被拒絕。 | — |
 | TSK-02 | implemented | task claim／assignment 有 version 與 concurrency 保護。 | — |
 | TSK-03 | implemented | scheduler 遵守能力、scope、公平性與並行數。 | — |
@@ -164,13 +167,5 @@ A passing build or test run is not a claim of production readiness. This file li
 | QA-04 | partial | 真實頁面截圖覆蓋 overview／desk／review／approval／mobile。 | 完整產品尚未完成；不能把局部測試當最終 gate。 |
 | QA-05 | partial | 每個需求的 code path／test ID／evidence 可查驗。 | 完整產品尚未完成；不能把局部測試當最終 gate。 |
 | QA-06 | partial | 所有文件與命令對照最新程式，沒有假 endpoint／假腳本。 | 完整產品尚未完成；不能把局部測試當最終 gate。 |
-| QA-07 | implemented | 最終重新 clean install／build／start／smoke 驗證成功或列具體失敗。 | verify:clean --e2e passed all 11 steps on 06a0a0e in a fresh clone (install, typecheck, lint, format, build, 236 tests, report, demo setup, built control smoke, browser tests); macOS only, no real provider smoke; re-run if HEAD changes |
+| QA-07 | implemented | 最終重新 clean install／build／start／smoke 驗證成功或列具體失敗。 | clean-room 在 06a0a0e 全過；之後的 3D／UI 大改動尚未重跑 verify:clean --e2e；macOS only |
 | OBS-LOCAL-01 | implemented | 自動載入本機 Claude／Codex session；以 Git common dir 歸屬 worktree，以 hook 事件歸屬子代理；observe-only 3D 顯示。 | Activity is a file-mtime heuristic until hooks are trusted and fire; without a running process it is shown idle; Process-to-session matching is by --resume id, else by provider and directory in recency order; a Claude session that changed directory shows no process; Sessions in no git repository and outside a project scratch directory (for example a Codex Desktop thread in a plugin workspace) cannot be attributed and are not shown; Spawned Codex subagents are shown only while their rollout changed in the last 2 minutes; Hooks are proven only for this repository session so far; Only the 60 most recent sessions are scanned |
-
-## blocked (3)
-
-| ID | Implementation | Requirement | Blockers |
-|---|---|---|---|
-| CLA-08 | partial | 真實 Claude smoke 有 evidence，或精確標記 live blocked。 | 沒有真實付費模型呼叫授權；不執行 live smoke。 |
-| CDX-08 | partial | 真實 Codex smoke 有 evidence，或精確標記 live blocked。 | 沒有真實付費模型呼叫授權；不執行 live smoke。 |
-| MSG-08 | partial | nonce exchange 驗證跨 provider 真正取得並回覆訊息。 | A real Claude↔Codex nonce exchange needs two paid provider sessions, which are not authorized; only a synthetic nonce reply is covered |

@@ -6,6 +6,8 @@ export type PlacedObject = {
   z: number;
   rotation: number;
   agentId: string | null;
+  /** Which floor of the building; absent means the ground floor. */
+  floor?: number;
 };
 export const objectSize = {
   desk: [2.2, 1.8],
@@ -39,6 +41,7 @@ export function validateLayout(objects: readonly PlacedObject[]): void {
     if ((a.minX < 1 && a.maxX > -1) || (a.minZ < 1 && a.maxZ > -1))
       throw new DomainError('LAYOUT_BLOCKS_AISLE', 400);
     for (let j = 0; j < i; j++) {
+      if ((objects[i]!.floor ?? 0) !== (objects[j]!.floor ?? 0)) continue; // floors do not collide
       const b = bounds[j]!;
       if (a.minX < b.maxX && a.maxX > b.minX && a.minZ < b.maxZ && a.maxZ > b.minZ)
         throw new DomainError('LAYOUT_OVERLAP', 400);

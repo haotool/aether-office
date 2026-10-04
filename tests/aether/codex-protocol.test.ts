@@ -177,6 +177,86 @@ describe('CodexAdapter against scripted app-server peers', () => {
     }
   }, 20000);
 
+  it('answers an agent question and an MCP elicitation explicitly, records what was asked, and never echoes a secret question', async () => {
+    const { recorded, done } = setup();
+    try {
+      const rpc = peer(`${PRELUDE}
+        let pendingTurn;
+        rl.on('line', (line) => {
+          const m = JSON.parse(line);
+          if (m.method === 'initialize') send({ id: m.id, result: { userAgent: 'x', codexHome: '/', platformFamily: 'unix', platformOs: 'x' } });
+          else if (m.method === 'thread/start') send({ id: m.id, result: { thread: { id: T } } });
+          else if (m.method === 'turn/start') {
+            pendingTurn = m.id;
+            send({ method: 'turn/started', params: { threadId: T, turn: { id: 'turn-1' } } });
+            send({ id: pendingTurn, result: { turn: { id: 'turn-1' } } });
+            send({ id: 'q-1', method: 'item/tool/requestUserInput', params: { threadId: T, turnId: 'turn-1', itemId: 'i1', isBlocking: true, questions: [
+              { id: 'a', header: 'Which database?', question: 'Pick one', options: null },
+              { id: 'b', header: 'API key', question: 'Paste your key', isSecret: true, options: null } ] } });
+          } else if (m.id === 'q-1') {
+            record('question-answer', m);
+            send({ id: 'e-1', method: 'mcpServer/elicitation/request', params: { threadId: T, turnId: 'turn-1', serverName: 's', message: 'Need input' } });
+          } else if (m.id === 'e-1') {
+            record('elicitation-answer', m);
+            send({ id: 'q-foreign', method: 'item/tool/requestUserInput', params: { threadId: 'other-thread', turnId: 'x', itemId: 'i2', isBlocking: true, questions: [] } });
+          } else if (m.id === 'q-foreign') {
+            record('foreign-answer', m);
+            send(turn('turn-1', 'completed'));
+          }
+        });`);
+      const s = sink();
+      await new CodexAdapter(options, s.sink, rpc).run('go', new AbortController().signal);
+      const answers = Object.fromEntries(
+        recorded().map((r) => [r.name, r.value as { result?: unknown; error?: unknown }]),
+      );
+      expect(answers['question-answer']!.result).toEqual({ answers: {} });
+      expect(answers['elicitation-answer']!.result).toEqual({ action: 'decline' });
+      expect(answers['foreign-answer']!.error).toBeDefined(); // another thread's question is refused, not answered
+      const asked = s.events.filter((e) => e.kind === 'tool.failed');
+      expect(asked.map((e) => ('name' in e ? e.name : ''))).toEqual([
+        'request_user_input',
+        'mcp_elicitation',
+      ]);
+      expect(JSON.stringify(asked)).toContain('Which database?');
+      expect(JSON.stringify(asked)).not.toContain('API key');
+      expect(JSON.stringify(asked)).not.toContain('Paste your key');
+    } finally {
+      done();
+    }
+  }, 20000);
+
+  it('treats an MCP tool-call elicitation as a one-call tool approval, scoped to its thread, and refuses to remember it', async () => {
+    const { recorded, done } = setup();
+    try {
+      const rpc = peer(`${PRELUDE}
+        let pendingTurn;
+        const call = (id, thread) => ({ id, method: 'mcpServer/elicitation/request', params: { threadId: thread, turnId: 'turn-1', serverName: 'aether', mode: 'form', message: 'Allow the aether tool?', requestedSchema: { type: 'object', properties: {} }, _meta: { codex_approval_kind: 'mcp_tool_call', persist: ['session'], tool_params: { body: 'hello' } } } });
+        rl.on('line', (line) => {
+          const m = JSON.parse(line);
+          if (m.method === 'initialize') send({ id: m.id, result: { userAgent: 'x', codexHome: '/', platformFamily: 'unix', platformOs: 'x' } });
+          else if (m.method === 'thread/start') send({ id: m.id, result: { thread: { id: T } } });
+          else if (m.method === 'turn/start') {
+            pendingTurn = m.id;
+            send({ method: 'turn/started', params: { threadId: T, turn: { id: 'turn-1' } } });
+            send({ id: pendingTurn, result: { turn: { id: 'turn-1' } } });
+            send(call('mcp-foreign', 'other-thread'));
+          } else if (m.id === 'mcp-foreign') { record('foreign', m); send(call('mcp-real', T)); }
+          else if (m.id === 'mcp-real') { record('real', m); send(turn('turn-1', 'completed')); }
+        });`);
+      const s = sink();
+      await new CodexAdapter(options, s.sink, rpc).run('go', new AbortController().signal);
+      const answers = Object.fromEntries(
+        recorded().map((r) => [r.name, r.value as { result?: unknown; error?: unknown }]),
+      );
+      expect(s.permissions).toHaveLength(1); // asked once, about the right thread
+      expect(s.permissions[0]).toMatchObject({ requestId: 'mcp-real', kind: 'mcpToolCall' });
+      expect(answers['real']!.result).toEqual({ action: 'accept' }); // no `_meta`: nothing is persisted for the session
+      expect(answers['foreign']!.error).toBeDefined();
+    } finally {
+      done();
+    }
+  }, 20000);
+
   it('never offers steer: the adapter exposes the method but needs an active turn, and nothing calls it', async () => {
     const adapter = new CodexAdapter(
       options,

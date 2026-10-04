@@ -4,7 +4,7 @@ import { Control } from './control.js';
 import { createServer } from './server.js';
 import { secret } from './services/identity.js';
 import { reconcileTerminals } from './services/terminals.js';
-import { reconcileOffline } from './services/runners.js';
+import { reconcileOffline, reconcileStalled } from './services/runners.js';
 const mode = process.env['AETHER_MODE'] === 'demo' ? 'demo' : 'live';
 const directory = resolve(process.env['AETHER_DATA_DIR'] ?? `.data/${mode}`);
 mkdirSync(directory, { recursive: true, mode: 0o700 });
@@ -33,6 +33,7 @@ const app = createServer(control, {
 });
 const timer = setInterval(() => {
   reconcileOffline(control.ctx);
+  reconcileStalled(control.ctx);
   reconcileTerminals(control.ctx);
 }, 10000);
 timer.unref();

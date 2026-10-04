@@ -48,6 +48,7 @@ import { Knowledge } from './features/Knowledge.js';
 import { History } from './features/History.js';
 import { Workspace } from './features/Workspace.js';
 import { EmergencyStop } from './features/EmergencyStop.js';
+import { Telemetry } from './features/Telemetry.js';
 import { ExecutionSettings } from './features/ExecutionSettings.js';
 import { Schedules } from './features/Schedules.js';
 import { Rooms } from './features/Rooms.js';
@@ -60,7 +61,13 @@ import { Observations } from './features/Observations.js';
 import { Approvals } from './features/Approvals.js';
 import type { PerfReport } from '@aether/office-scene';
 import { useAdoptRepos } from './adoptProjects.js';
-import { mergeLayout, sessionIdOf, sessionsToAgents } from './localSessions.js';
+import {
+  floorResolver,
+  mergeLayout,
+  roleResolver,
+  sessionIdOf,
+  sessionsToAgents,
+} from './localSessions.js';
 import { useApprovalNotifications } from './notifications.js';
 import {
   TOUR_INTERVAL_MS,
@@ -337,6 +344,8 @@ export function App() {
           prefs.locale,
         )
       : [];
+  const floorOf = floorResolver(local.data?.sessions ?? []);
+  const roleOf = roleResolver(local.data?.sessions ?? []);
   const sceneAgents = data ? [...data.agents, ...observed] : [];
   const selected = sceneAgents.find((a) => a.id === selectedId) ?? null;
   // Recomputed per render on purpose: MessageCarriers dedupes by messageId, so identity does not matter.
@@ -388,6 +397,7 @@ export function App() {
           <Plus size={17} />
         </button>
         <div className="topbar-right">
+          {local.data?.enabled && <Telemetry sessions={local.data.sessions} />}
           {session.mode === 'live' && session.actor.role === 'owner' && projectId && (
             <EmergencyStop projectId={projectId} />
           )}
@@ -643,9 +653,10 @@ export function App() {
                         >
                           <OfficeScene
                             agents={sceneAgents}
+                            roleOf={roleOf}
                             layout={
                               preview ??
-                              mergeLayout(data.layout?.data ?? null, data.agents, observed)
+                              mergeLayout(data.layout?.data ?? null, data.agents, observed, floorOf)
                             }
                             selectedId={selectedId}
                             onSelect={select}
