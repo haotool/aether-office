@@ -450,15 +450,22 @@
     "id": "CLA-08",
     "requirement": "真實 Claude smoke 有 evidence，或精確標記 live blocked。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "blocked",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
+      "packages/providers/src/claude.ts",
+      "scripts/live-smoke.ts",
       "docs/PROVIDER_COMPATIBILITY.md"
     ],
-    "testIds": [],
-    "evidencePaths": [],
+    "testIds": [
+      "tests/aether/providers.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/live-smoke-claude.json",
+      "evidence/live-smoke-exchange.json"
+    ],
     "blockers": [
-      "沒有真實付費模型呼叫授權；不執行 live smoke。"
+      "一次 whoami 與一次訊息互傳；未測真實程式修改與批准指令"
     ]
   },
   {
@@ -616,15 +623,22 @@
     "id": "CDX-08",
     "requirement": "真實 Codex smoke 有 evidence，或精確標記 live blocked。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "blocked",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
+      "packages/providers/src/codex.ts",
+      "scripts/live-smoke.ts",
       "docs/PROVIDER_COMPATIBILITY.md"
     ],
-    "testIds": [],
-    "evidencePaths": [],
+    "testIds": [
+      "tests/aether/codex-protocol.test.ts"
+    ],
+    "evidencePaths": [
+      "evidence/live-smoke-codex.json",
+      "evidence/live-smoke-exchange.json"
+    ],
     "blockers": [
-      "沒有真實付費模型呼叫授權；不執行 live smoke。"
+      "一次 whoami 與一次訊息互傳；未測真實程式修改與批准指令"
     ]
   },
   {
@@ -1163,17 +1177,22 @@
     "id": "MSG-08",
     "requirement": "nonce exchange 驗證跨 provider 真正取得並回覆訊息。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
-    "implementationStatus": "partial",
-    "verificationStatus": "blocked",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
     "codePaths": [
-      "apps/runner/src/mcp.ts"
+      "apps/runner/src/mcp.ts",
+      "packages/providers/src/codex.ts",
+      "scripts/live-smoke.ts"
     ],
     "testIds": [
-      "tests/aether/mcp.test.ts"
+      "tests/aether/mcp.test.ts",
+      "tests/aether/codex-protocol.test.ts"
     ],
-    "evidencePaths": [],
+    "evidencePaths": [
+      "evidence/live-smoke-exchange.json"
+    ],
     "blockers": [
-      "A real Claude↔Codex nonce exchange needs two paid provider sessions, which are not authorized; only a synthetic nonce reply is covered"
+      "macOS 單次短 smoke（Codex 0.160.0／Claude Code 2.1.288，訂閱登入）；未測長時間穩定與其他作業系統"
     ]
   },
   {
@@ -3043,7 +3062,7 @@
     ],
     "evidencePaths": [],
     "blockers": [
-      "verify:clean --e2e passed all 11 steps on 06a0a0e in a fresh clone (install, typecheck, lint, format, build, 236 tests, report, demo setup, built control smoke, browser tests); macOS only, no real provider smoke; re-run if HEAD changes"
+      "clean-room 在 06a0a0e 全過；之後的 3D／UI 大改動尚未重跑 verify:clean --e2e；macOS only"
     ]
   },
   {

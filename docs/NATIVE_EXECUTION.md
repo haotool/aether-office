@@ -1,6 +1,6 @@
 # 原生代理與 MCP
 
-目前為 development。Codex 合成 app-server + HTTP + SQLite + Git 整合測試、Claude message normalizer 與 MCP stdio 測試已執行；未呼叫真實付費模型。這些測試不能證明 provider 登入、網路、額度或外部服務可用。
+目前為 development。Codex 合成 app-server + HTTP + SQLite + Git 整合測試、Claude message normalizer 與 MCP stdio 測試已執行；另有一次真實 live smoke（見下方「Live smoke」）。合成測試不能證明 provider 登入、網路、額度或外部服務可用。
 
 使用專案指定 Node 24.21.0 與 pnpm 12.8.1，先 `pnpm install --frozen-lockfile`、`pnpm build`。`pnpm run setup` 建立 live control 資料與 owner token；token 路徑由 setup 輸出，不要貼到聊天或 commit。
 
@@ -33,7 +33,7 @@ MCP stdio 子程序由 runner 配置；身份 token 限定當次 run、agent 與
 
 工具批准分為 pending、decided、decision_sent、provider_acknowledged。最後一個狀態需要提供者的實際工具事件，不能以「按下允許」冒充。批准只綁定單次 request/session/parameters hash；不支援 session-wide auto approval。
 
-尚未完成：實際外部 session 格式驗證、PTY 跨平台驗證與結果不明的人工結案、通用 ACP、完整跨 provider review/fix/verification workflow，以及 live smoke。不要把這些功能當成已可用。
+尚未完成：實際外部 session 格式驗證、PTY 跨平台驗證與結果不明的人工結案、通用 ACP、完整跨 provider review/fix/verification workflow，以及更長時間、真實程式修改的 live 驗證。不要把這些功能當成已可用。
 
 ## 固定版本驗證
 
@@ -78,7 +78,9 @@ Native JSON 可加入固定的本機啟動設定；root 必須已在 repositorie
 }
 ```
 
-這是 native JSON 的一個欄位；只有終端機時 binaries 可用空物件。Runner 公布 profile 名稱與設定 hash，UI 不接受任意 executable／argv／cwd。專案 live policy 也須啟用。點「終端機 → 啟動終端機」會真的執行此本機程式；不自動替它生成 task 成果或工具批准證據。
+這是 native JSON 的一個欄位；只有終端機時 binaries 可用空物件。
+
+在 native JSON 加入 `"cliTerminals": true`，runner 會為每個已授權 repository 自動提供 `claude-<資料夾名>` 與 `codex-<資料夾名>` 兩個終端機設定，直接執行 `binaries` 裡的 CLI，可在瀏覽器使用它們自己的指令（slash commands、`/resume` 等）。不加任何參數，CLI 維持自己預設的權限詢問。這些互動 session 也會被本機 session 掃描讀到並分類到部門。Runner 公布 profile 名稱與設定 hash，UI 不接受任意 executable／argv／cwd。專案 live policy 也須啟用。點「終端機 → 啟動終端機」會真的執行此本機程式；不自動替它生成 task 成果或工具批准證據。
 
 畫面預設唯讀；owner/operator 可明確接管，lease 30 秒，由输入續期。讀取與寫入分權限，epoch 防止舊接管者繼續輸入。重新載入頁面仍預設唯讀，程序持續執行；關閉頁面不停止程序。Resize、退出碼、停止及最新命令狀態可見。輸入先排隊，applied 只代表 runner 已寫入 PTY，不代表模型理解。不要在權限提示上盲目輸入。
 
@@ -114,3 +116,14 @@ files 是 approvedRoot 內的相對路徑；不接受越界或 symlink 來源。
 最近讀取回報是本平台收到資料的時間，不等於外部程序心跳；最近新增觀察也不是 provider 的原始執行時間。沒有新可見記錄時顯示 stale／活性未知，機器失聯則顯示 offline。缺檔、未知格式、越界與資源上限都保留明確狀態，不顯示 idle／success。歷史可按序號向前分頁。
 
 Codex／Claude 真 HTTP 的合成檔案與重啟、ACK遺失、磁碟寫入失敗測試，以及 Codex shape 的瀏覽器顯示／刪檔狀態已通過。未讀取使用者私有 transcript，尚無實際 provider 檔案的相容性證據。讀取上限與版本限制見 PROVIDER_COMPATIBILITY.md。
+
+## Live smoke
+
+`pnpm run smoke:live -- --confirm-subscription-quota [--only claude|codex|exchange]` 在拋棄式目錄與拋棄式 Git repo 內，用本機已安裝的 Claude Code 與 Codex CLI 啟動真實 session。它沿用 CLI 自己的登入（Claude.ai 訂閱與 ChatGPT 登入）：不讀、不寫、不需要任何 API key，且會消耗少量訂閱額度，所以沒有旗標就不執行。批准由腳本內明確的白名單決定：只允許 AETHER 協作工具（Claude 的 `mcp__aether__*`、Codex 的 `mcpToolCall` 且 server 為 aether），指令與檔案修改一律拒絕。
+
+2026-10-04 在 macOS（Codex CLI 0.160.0、Claude Code 2.1.288）的結果，證據在 `evidence/live-smoke-*.json`：
+
+- `--only codex`、`--only claude`：各一次真實 run，呼叫 `whoami`，回報的 agentId 與資料庫一致。
+- `--only exchange`：Claude 以 `send_message` 傳出含 nonce A 的 request，Codex 以 `wait_for_message` 收到後回覆含 nonce B 與 nonce A 的訊息，Claude 讀到回覆；request 的投遞狀態為 `responded`。
+
+這證明兩個 provider 能經 AETHER 的持久訊息互相通訊，不證明長時間穩定、Windows／Linux、或真實的程式修改工作流。Codex 以 elicitation 表達 MCP 工具批准（`_meta.codex_approval_kind = mcp_tool_call`），平台以單次呼叫的工具批准處理，從不接受它提供的「記住整個 session」。

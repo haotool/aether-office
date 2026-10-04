@@ -9,6 +9,8 @@ import {
   enroll,
   heartbeat,
   reconcileOffline,
+  reconcileStalled,
+  STALL_FLOOR_MS,
   report,
 } from '../../apps/control/src/services/runners.js';
 import { command, fixture } from './fixture.js';
@@ -165,6 +167,41 @@ it('a snapshot and the event stream never lose or repeat an event around the sna
     expect(new Set(seqs).size).toBe(seqs.length);
     expect(seqs.every((s, i) => i === 0 || s > seqs[i - 1]!)).toBe(true);
     expect(seqs[0]! > BigInt(snapshot.seq)).toBe(true);
+  } finally {
+    f.control.close();
+  }
+});
+
+it('asks a stuck run on a healthy machine to stop, once, and leaves a quiet but recent or offline one alone', () => {
+  const clock = { now: 5_000_000 };
+  const f = fixture(undefined, () => clock.now);
+  try {
+    const machine = enroll(f.control.ctx, f.owner.actor, 'M', [f.projectId]);
+    const { run } = started(f, machine);
+    const runState = () =>
+      (
+        f.control.ctx.sqlite.prepare('SELECT state FROM runs WHERE id=?').get(run.runId) as {
+          state: string;
+        }
+      ).state;
+
+    clock.now += STALL_FLOOR_MS - 1000; // quiet, but within the limit
+    heartbeat(f.control.ctx, machine.actor);
+    expect(reconcileStalled(f.control.ctx)).toBe(0);
+    expect(runState()).toBe('running');
+
+    clock.now += 2000; // past the limit while the machine keeps heartbeating
+    heartbeat(f.control.ctx, machine.actor);
+    expect(reconcileStalled(f.control.ctx)).toBe(1);
+    expect(runState()).toBe('cancel_requested');
+    expect(reconcileStalled(f.control.ctx)).toBe(0); // idempotent: it is no longer `running`
+    const stalled = f.control
+      .events(f.owner.actor, f.projectId, '0', 500)
+      .filter((e) => e.type === 'run.stalled');
+    expect(stalled).toHaveLength(1);
+    expect(stalled[0]!.payload).toMatchObject({ runId: run.runId });
+    // The runner is told to abort it on the next heartbeat.
+    expect(heartbeat(f.control.ctx, machine.actor).cancelRunIds).toContain(run.runId);
   } finally {
     f.control.close();
   }

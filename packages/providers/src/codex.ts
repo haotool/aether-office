@@ -61,7 +61,11 @@ export class CodexAdapter {
       if (!this.options.readOnlyReview) await this.sink.permissionSent?.(String(id));
     };
     this.rpc.onRequest = async (method, params, id) => {
+      const isQuestion = method === 'item/tool/requestUserInput';
+      const isElicitation = method === 'mcpServer/elicitation/request';
       if (
+        !isQuestion &&
+        !isElicitation &&
         !['item/commandExecution/requestApproval', 'item/fileChange/requestApproval'].includes(
           method,
         )
@@ -72,11 +76,31 @@ export class CodexAdapter {
       if (
         !sessionId ||
         p['threadId'] !== sessionId ||
-        typeof p['turnId'] !== 'string' ||
-        (this.turnId !== null && p['turnId'] !== this.turnId) ||
+        (this.turnId !== null && p['turnId'] !== undefined && p['turnId'] !== this.turnId) ||
         (!this.pendingTurn && this.turnId === null)
       )
         throw new Error('APPROVAL_SCOPE_MISMATCH');
+      // Codex asks the human before an MCP tool call by way of an elicitation tagged mcp_tool_call. That is a tool
+      // approval, decided like any other: one call only. Codex also offers to remember the choice for the session; that
+      // option is never taken.
+      if (isElicitation && record(p['_meta'] ?? {})['codex_approval_kind'] === 'mcp_tool_call') {
+        const meta = record(p['_meta']);
+        const decision = this.options.readOnlyReview
+          ? 'deny'
+          : await this.sink.permission({
+              requestId: String(id),
+              kind: 'mcpToolCall',
+              toolId:
+                text(meta['tool_title'] ?? meta['tool_name'] ?? p['serverName'], 200) ||
+                `mcp:${String(id)}`,
+              turnId: text(p['turnId'], 200) || this.turnId || '',
+              providerSessionId: sessionId,
+              parameters: p,
+            });
+        return { action: decision === 'approve' ? 'accept' : 'decline' };
+      }
+      if (isQuestion || isElicitation) return this.unanswered(method, p, id);
+      if (typeof p['turnId'] !== 'string') throw new Error('APPROVAL_SCOPE_MISMATCH');
       if (this.pendingTurn && !this.turnId) this.turnId = p['turnId'];
       const decision = this.options.readOnlyReview
         ? 'deny'
@@ -92,6 +116,37 @@ export class CodexAdapter {
       const response = { decision: decision === 'approve' ? 'accept' : 'decline' };
       return response;
     };
+  }
+  /**
+   * The agent asked the human a question (or an MCP server asked for input). No interactive channel is connected to a
+   * managed run, so it is answered explicitly as "no answer" instead of failing the request, and recorded where the
+   * human can see what was asked. Secret questions are never echoed.
+   */
+  private unanswered(method: string, p: Record<string, unknown>, id: string | number) {
+    const questions = Array.isArray(p['questions']) ? p['questions'] : [];
+    const asked = questions
+      .map((q) => record(q))
+      .filter((q) => q['isSecret'] !== true)
+      .map((q) => text(q['header'], 80) || text(q['question'], 80))
+      .filter(Boolean);
+    const turnId = text(p['turnId'], 200) || this.turnId || '';
+    const name = method === 'item/tool/requestUserInput' ? 'request_user_input' : 'mcp_elicitation';
+    this.emit(
+      {
+        kind: 'tool.failed',
+        toolId: text(p['itemId'], 200) || `request:${String(id)}`,
+        turnId,
+        name,
+        summary:
+          `The agent asked for input${asked.length ? `: ${asked.join('; ')}` : ''}. No interactive channel is connected to this run, so it was answered as "no answer".`.slice(
+            0,
+            4000,
+          ),
+        parentToolId: null,
+      },
+      `question:${String(id)}`,
+    );
+    return method === 'item/tool/requestUserInput' ? { answers: {} } : { action: 'decline' };
   }
   private emit(event: ProviderEvent, key: string): void {
     if (this.seen.has(key)) return;

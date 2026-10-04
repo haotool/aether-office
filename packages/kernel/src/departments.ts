@@ -111,7 +111,7 @@ const RULES: readonly (readonly [RoleId, RegExp])[] = [
   ],
   [
     'platform',
-    /\b(ci|cd|ci\/cd|pipeline|docker\w*|k8s|kubernetes|helm|terraform|infra\w*|devops|deploy\w*|github actions|workflow|build|bazel|vite config|tooling|monorepo|pnpm)\b|部署|建置|基礎設施|流水線/i,
+    /\b(ci|cd|ci\/cd|ci-cd|cicd|pipeline|docker\w*|k8s|kubernetes|helm|terraform|infra\w*|devops|deploy\w*|github actions|build (?:system|pipeline|cache)|bazel|vite config|tooling|monorepo|pnpm)\b|部署|建置|基礎設施|流水線/i,
   ],
   [
     'qa',
@@ -127,7 +127,7 @@ const RULES: readonly (readonly [RoleId, RegExp])[] = [
   ],
   [
     'ml',
-    /\b(ml|ai|llm|model|prompt|embedding|rag|agent|training|finetun\w*|inference|openai|anthropic|claude|codex|gpt)\b|模型|機器學習|提示/i,
+    /\b(ml|machine learning|llm|embedding\w*|rag|training|finetun\w*|fine-tun\w*|inference|vector (?:db|database|store)|prompt engineering)\b|模型訓練|機器學習|向量/i,
   ],
   [
     'data',
@@ -135,7 +135,7 @@ const RULES: readonly (readonly [RoleId, RegExp])[] = [
   ],
   [
     'analytics',
-    /\b(analytics|dashboard|metric\w*|report\w*|chart|kpi|telemetry|usage)\b|報表|分析|指標|儀表/i,
+    /\b(analytics|dashboard|metric\w*|chart|kpi|telemetry|funnel|cohort)\b|報表|數據分析|指標|儀表/i,
   ],
   [
     'frontend',
@@ -155,11 +155,11 @@ const RULES: readonly (readonly [RoleId, RegExp])[] = [
   ],
   [
     'product-manager',
-    /\b(plan|roadmap|prd|backlog|prioriti\w*|requirements?|milestone|sprint|triage|issue|ticket|estimate)\b|規劃|需求|排程|優先|里程碑/i,
+    /\b(plan|roadmap|prd|backlog|prioriti\w*|requirements?|milestone|sprint|triage|issue|ticket|estimate|status update|progress)\b|規劃|需求|排程|優先|里程碑|進度|專案管理/i,
   ],
   [
     'research',
-    /\b(research|investigate|explore|survey|compare|evaluate|benchmark|analy[sz]e|study)\b|調研|研究|評估|比較|調查/i,
+    /\b(research|investigate|explore|survey|compare|evaluate|benchmark|analy[sz]e|study)\b|調研|研究|評估|比較|調查|分析|原因/i,
   ],
   ['fullstack', /\b(full-?stack|end-to-end feature)\b|全端/i],
 ];

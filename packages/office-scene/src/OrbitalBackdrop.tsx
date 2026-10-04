@@ -1,5 +1,7 @@
 import { useMemo, useEffect } from 'react';
 import {
+  AdditiveBlending,
+  BackSide,
   CanvasTexture,
   SRGBColorSpace,
   BufferGeometry,
@@ -132,52 +134,136 @@ function earthTexture() {
   texture.colorSpace = SRGBColorSpace;
   return texture;
 }
+/** A soft radial glow painted once: the nebula clouds and the planet's halo are additive sprites of it. */
+function glowTexture(inner: string, outer: string) {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 256;
+  const ctx = canvas.getContext('2d')!;
+  const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+  gradient.addColorStop(0, inner);
+  gradient.addColorStop(1, outer);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 256, 256);
+  const texture = new CanvasTexture(canvas);
+  texture.colorSpace = SRGBColorSpace;
+  return texture;
+}
+
+const NEBULAE = [
+  { position: [-320, 120, -520], scale: 420, color: 'rgba(120,90,255,.55)' },
+  { position: [380, 40, -480], scale: 360, color: 'rgba(40,220,230,.4)' },
+  { position: [60, 260, -640], scale: 520, color: 'rgba(255,90,170,.28)' },
+] as const;
+
 export function OrbitalBackdrop({ low }: { low: boolean }) {
   const texture = useMemo(earthTexture, []);
+  const glows = useMemo(() => NEBULAE.map((n) => glowTexture(n.color, 'rgba(0,0,0,0)')), []);
   const stars = useMemo(() => {
     const geometry = new BufferGeometry();
     const points: number[] = [];
-    for (let i = 0; i < (low ? 180 : 550); i++) {
+    const colors: number[] = [];
+    const count = low ? 400 : 1600;
+    const tint = new Color();
+    for (let i = 0; i < count; i++) {
       const angle = i * 2.399963,
-        y = 1 - (2 * (i + 0.5)) / (low ? 180 : 550),
-        r = Math.sqrt(1 - y * y);
-      points.push(Math.cos(angle) * r * 155, y * 155, Math.sin(angle) * r * 155);
+        y = 1 - (2 * (i + 0.5)) / count,
+        r = Math.sqrt(1 - y * y),
+        radius = 900 + (i % 5) * 60;
+      points.push(Math.cos(angle) * r * radius, y * radius, Math.sin(angle) * r * radius);
+      tint.setHSL(0.5 + ((i * 7) % 20) / 100, 0.6, 0.78 + ((i * 13) % 10) / 60);
+      colors.push(tint.r, tint.g, tint.b);
     }
     geometry.setAttribute('position', new Float32BufferAttribute(points, 3));
+    geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
     return geometry;
   }, [low]);
   useEffect(
     () => () => {
       texture.dispose();
+      for (const glow of glows) glow.dispose();
     },
-    [texture],
+    [texture, glows],
   );
   useEffect(() => () => stars.dispose(), [stars]);
   return (
     <group>
       <points geometry={stars}>
         <pointsMaterial
-          color="#a6c8ce"
-          size={0.18}
-          sizeAttenuation
+          vertexColors
+          size={1.7}
+          sizeAttenuation={false}
           transparent
-          opacity={0.7}
+          opacity={0.9}
           fog={false}
         />
       </points>
-      <group position={[-9, 10, -52]} rotation={[0.06, 1.6, -0.2]}>
+      {!low &&
+        NEBULAE.map((n, i) => (
+          <sprite key={i} position={[...n.position]} scale={[n.scale, n.scale, 1]}>
+            <spriteMaterial
+              map={glows[i]!}
+              transparent
+              depthWrite={false}
+              blending={AdditiveBlending}
+              fog={false}
+            />
+          </sprite>
+        ))}
+      <group position={[-70, 30, -190]} rotation={[0.06, 1.6, -0.2]}>
         <mesh>
-          <sphereGeometry args={[23, low ? 40 : 72, low ? 24 : 48]} />
+          <sphereGeometry args={[62, low ? 40 : 96, low ? 24 : 64]} />
           <meshStandardMaterial
             map={texture}
             roughness={1}
             emissive={new Color('#245368')}
-            emissiveIntensity={0.12}
+            emissiveIntensity={0.18}
           />
         </mesh>
-        <mesh scale={1.018}>
-          <sphereGeometry args={[23, 40, 28]} />
-          <meshBasicMaterial color="#6fc9e1" transparent opacity={0.07} depthWrite={false} />
+        <mesh scale={1.025}>
+          <sphereGeometry args={[62, 48, 32]} />
+          <meshBasicMaterial color="#6fd9ff" transparent opacity={0.1} depthWrite={false} />
+        </mesh>
+        <mesh scale={1.07}>
+          <sphereGeometry args={[62, 48, 32]} />
+          <meshBasicMaterial
+            color="#4bd8ff"
+            transparent
+            opacity={0.05}
+            depthWrite={false}
+            side={BackSide}
+            blending={AdditiveBlending}
+          />
+        </mesh>
+      </group>
+      {/* An orbital ring and a distant station give the sky scale and depth. */}
+      <mesh position={[-70, 30, -190]} rotation={[1.2, 0.2, 0.15]}>
+        <torusGeometry args={[88, 0.35, 8, 160]} />
+        <meshBasicMaterial color="#5ee7e7" transparent opacity={0.55} fog={false} />
+      </mesh>
+      <mesh position={[-70, 30, -190]} rotation={[1.05, 0.5, -0.1]}>
+        <torusGeometry args={[102, 0.18, 8, 160]} />
+        <meshBasicMaterial color="#9d8cff" transparent opacity={0.4} fog={false} />
+      </mesh>
+      <group position={[210, 90, -260]} rotation={[0.3, -0.6, 0.2]}>
+        <mesh>
+          <torusGeometry args={[26, 1.6, 10, 64]} />
+          <meshStandardMaterial
+            color="#1a2c3a"
+            metalness={0.8}
+            roughness={0.35}
+            emissive="#1f6f7a"
+            emissiveIntensity={0.5}
+          />
+        </mesh>
+        <mesh>
+          <cylinderGeometry args={[3, 3, 70, 16]} />
+          <meshStandardMaterial
+            color="#14222d"
+            metalness={0.8}
+            roughness={0.4}
+            emissive="#4be3dc"
+            emissiveIntensity={0.25}
+          />
         </mesh>
       </group>
     </group>

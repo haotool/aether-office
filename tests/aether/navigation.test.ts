@@ -4,13 +4,15 @@ import {
   findPath,
   pathLength,
   objectBounds,
+  validateLayout,
   type PlacedObject,
 } from '../../packages/kernel/src/index.js';
 import { defaultLayout } from '../../packages/office-scene/src/layout.js';
 import type { Agent } from '../../packages/contracts/src/index.js';
 
 const agents = Array.from({ length: 12 }, (_, i) => ({ id: `a${i}` }) as Agent);
-const desks = defaultLayout(agents).objects;
+const building = defaultLayout(agents, (a) => Number(a.id.slice(1)) % 5).objects;
+const desks = building.filter((o) => !o.floor);
 
 function assertWalkable(objects: readonly PlacedObject[], points: { x: number; z: number }[]) {
   for (let i = 1; i < points.length; i++) {
@@ -66,4 +68,18 @@ it('reports unreachable when a destination is walled in or off the floor', () =>
   const grid = buildNavGrid(ring, { clearance: 0.6 });
   expect(findPath(grid, { x: 10, z: 10 }, { x: 0, z: 0 }).status).toBe('unreachable');
   expect(findPath(grid, { x: 10, z: 10 }, { x: 80, z: 80 }).status).toBe('unreachable');
+});
+
+it('keeps every floor of the building valid and walkable on its own', () => {
+  for (let floor = 0; floor < 5; floor++) {
+    const onFloor = building.filter((o) => (o.floor ?? 0) === floor);
+    expect(() => validateLayout(onFloor)).not.toThrow();
+    const seats = onFloor.filter((o) => o.agentId);
+    expect(seats.length).toBeGreaterThan(0);
+    const grid = buildNavGrid(onFloor);
+    for (const to of seats.slice(1))
+      expect(findPath(grid, seats[0]!, to).status, `floor ${floor} ${to.id}`).toBe('ok');
+  }
+  // Floors do not collide with each other: the same desk positions repeat on every floor.
+  expect(() => validateLayout(building)).not.toThrow();
 });

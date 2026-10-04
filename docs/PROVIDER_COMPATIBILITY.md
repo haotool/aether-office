@@ -20,7 +20,7 @@
 
 原生 start/resume 必須綁定該專案、worktree、AgentSession 和 provider thread；不將 sessionId/runId/threadId 當同一個 ID。Approval 保留 requestId，單次決策，拒絕 session-wide auto approval。工具結果錯誤與正常完成分開。輸入／輸出 token 的 usage 是可用資訊，模型內部 reasoning 不收集。
 
-沒有使用 --yolo、--dangerously-skip-permissions 或自動切換付費 API。Live 功能待本機 implementation/contract 完成後，仍須明確額度授權才執行真模型驗證。
+沒有使用 --yolo、--dangerously-skip-permissions 或自動切換付費 API。真模型驗證須明確額度授權；2026-10-04 已在授權下以 `pnpm run smoke:live` 跑過 Codex 0.160.0 與 Claude Code 2.1.288 的訂閱登入 smoke（見 NATIVE_EXECUTION.md）。
 
 
 ## External observation readers — 2026-10-01

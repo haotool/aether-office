@@ -1,4 +1,4 @@
-import { isAbsolute } from 'node:path';
+import { basename, isAbsolute } from 'node:path';
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { z } from 'zod';
 import { fileURLToPath } from 'node:url';
@@ -60,6 +60,9 @@ export const nativeConfigSchema = z
       )
       .default({}),
     binaries: z.object({ codex: absolute.optional(), claude: absolute.optional() }).strict(),
+    // Offer each configured provider CLI as an interactive terminal in every granted repository, so its own commands
+    // (slash commands, /resume, its normal permission prompts) can be used from the browser. Off unless set.
+    cliTerminals: z.boolean().default(false),
     // One generic ACP agent. Its capabilities come from negotiation; it cannot be used for read-only review.
     acpAgent: z
       .object({ command: absolute, args: z.array(z.string().max(4096)).max(32).default([]) })
@@ -101,6 +104,17 @@ export class NativeExecutor {
       };
       this.terminalProfiles.set(name, { profile, root, hash: digest(JSON.stringify(profile)) });
     }
+    if (this.config.cliTerminals)
+      for (const root of this.workspaces.allowed)
+        for (const provider of ['claude', 'codex'] as const) {
+          const binary = this.config.binaries[provider];
+          if (!binary) continue;
+          const name = `${provider}-${basename(root).replace(/[^a-zA-Z0-9_-]/g, '-')}`.slice(0, 80);
+          if (this.terminalProfiles.has(name)) continue; // an explicit profile of the same name wins
+          // The CLI's own default permission mode: no flag is added, so it asks as it normally would.
+          const profile = { binary: realpathSync(binary), args: [], cwd: root, timeoutMs: 3600000 };
+          this.terminalProfiles.set(name, { profile, root, hash: digest(JSON.stringify(profile)) });
+        }
     for (const [name, config] of Object.entries(this.config.verifiers))
       this.verifiers.set(
         name,

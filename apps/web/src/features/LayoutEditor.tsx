@@ -2,6 +2,8 @@ import { useState } from 'react';
 import type { Snapshot, Layout } from '@aether/contracts';
 import { layoutSchema } from '@aether/contracts';
 import { defaultLayout } from '@aether/office-scene';
+import { DEPARTMENTS } from '@aether/kernel';
+import { floorResolver } from '../localSessions.js';
 import { execute } from '../api.js';
 import { Modal, Field, useT } from '../ui.js';
 export function LayoutEditor({
@@ -16,11 +18,12 @@ export function LayoutEditor({
   onPreview: (layout: Layout | null) => void;
 }) {
   const t = useT();
+  const [floor, setFloor] = useState(0);
   const [history, setHistory] = useState<Layout[]>([
-    snapshot.layout?.data ?? defaultLayout(snapshot.agents),
+    snapshot.layout?.data ?? defaultLayout(snapshot.agents, floorResolver([])),
   ]);
   const [index, setIndex] = useState(0);
-  const [selected, setSelected] = useState(history[0]!.objects[0]?.id ?? '');
+  const [selected, setSelected] = useState(history[0]!.objects.find((o) => !o.floor)?.id ?? '');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const draft = history[index]!;
@@ -93,13 +96,31 @@ export function LayoutEditor({
             />
           </label>
         </div>
-        <Field label={t('object')}>
-          <select value={selected} onChange={(e) => setSelected(e.target.value)}>
-            {draft.objects.map((o) => (
-              <option key={o.id} value={o.id}>
-                {t(o.type)} · {o.id}
+        <Field label={t('floor')}>
+          <select
+            value={floor}
+            onChange={(e) => {
+              const next = Number(e.target.value);
+              setFloor(next);
+              setSelected(draft.objects.find((o) => (o.floor ?? 0) === next)?.id ?? '');
+            }}
+          >
+            {DEPARTMENTS.map((d) => (
+              <option key={d.id} value={d.floor}>
+                {d.floor + 1}F · {t('floorName') === 'en' ? d.en : d.zh}
               </option>
             ))}
+          </select>
+        </Field>
+        <Field label={t('object')}>
+          <select value={selected} onChange={(e) => setSelected(e.target.value)}>
+            {draft.objects
+              .filter((o) => (o.floor ?? 0) === floor)
+              .map((o) => (
+                <option key={o.id} value={o.id}>
+                  {t(o.type)} · {o.id}
+                </option>
+              ))}
           </select>
         </Field>
         {object && (
@@ -172,7 +193,10 @@ export function LayoutEditor({
                 const id = `${type}-${crypto.randomUUID().slice(0, 6)}`;
                 change({
                   ...draft,
-                  objects: [...draft.objects, { id, type, x: 5, z: 5, rotation: 0, agentId: null }],
+                  objects: [
+                    ...draft.objects,
+                    { id, type, x: 5, z: 5, rotation: 0, agentId: null, floor },
+                  ],
                 });
                 setSelected(id);
               }}

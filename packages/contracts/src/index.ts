@@ -130,12 +130,14 @@ export const furnitureSchema = z
     z: z.number().finite().min(-16).max(16),
     rotation: z.number().int().min(0).max(3),
     agentId: id.nullable().default(null),
+    // The building has one floor per department (0 = Product Engineering). Layouts saved before floors existed are floor 0.
+    floor: z.number().int().min(0).max(4).default(0),
   })
   .strict();
 export const layoutSchema = z
   .object({
     schemaVersion: z.literal(1),
-    objects: z.array(furnitureSchema).max(180),
+    objects: z.array(furnitureSchema).max(600),
     zones: z.array(z.object({ id: shortText, name: shortText })).max(9),
   })
   .strict();

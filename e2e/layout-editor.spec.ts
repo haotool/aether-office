@@ -28,7 +28,7 @@ test('the layout editor adds, moves, undoes, redoes and saves, and the saved lay
 
   await page.getByRole('button', { name: '編輯配置', exact: true }).click();
   const dialog = page.getByRole('dialog');
-  const options = dialog.locator('select').first().locator('option');
+  const options = dialog.getByLabel('物件', { exact: true }).locator('option');
   await options.first().waitFor({ state: 'attached' }); // the object list renders after the dialog opens
   const initial = await options.count();
   await dialog
@@ -50,7 +50,8 @@ test('the layout editor adds, moves, undoes, redoes and saves, and the saved lay
   await expect(dialog).toHaveCount(0);
   await expect
     .poll(async () => (await saved())?.data.objects.length)
-    .toBe(before === 0 ? initial + 1 : before + 1);
+    // The editor saves the whole building (every floor); the list shows one floor, so only growth is comparable.
+    .toBeGreaterThan(before === 0 ? initial : before);
   await page.reload();
   expect((await saved())?.data.objects.some((o) => o.x === 6.5)).toBe(true); // persisted on the server, not just in the page
 });

@@ -29,7 +29,7 @@ AETHER_MODE=demo node apps/runner/dist/main.js
 
 The built UI is served by control at `http://127.0.0.1:4310`.
 
-`pnpm run setup` and `pnpm dev` select a separate live data directory. Native execution requires explicit project policy plus local runner configuration; see [native execution and MCP](docs/NATIVE_EXECUTION.md). No paid provider smoke has been run.
+`pnpm run setup` and `pnpm dev` select a separate live data directory. Native execution requires explicit project policy plus local runner configuration; see [native execution and MCP](docs/NATIVE_EXECUTION.md). A live smoke has been run on macOS with Codex CLI 0.160.0 and Claude Code 2.1.288 under their subscription logins (a real Claude ↔ Codex message exchange); see [native execution](docs/NATIVE_EXECUTION.md#live-smoke) and `pnpm run smoke:live`.
 
 ## Local sessions (observe-only)
 

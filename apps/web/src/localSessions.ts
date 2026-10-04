@@ -1,6 +1,6 @@
 import type { Agent, Layout, LocalSession } from '@aether/contracts';
-import { defaultLayout } from '@aether/office-scene';
-import { ROLE_LABELS, type Classification } from '@aether/kernel';
+import { FLOORS, FLOOR_CAPACITY, defaultLayout, seatAt } from '@aether/office-scene';
+import { DEPARTMENTS, ROLE_LABELS, classifySession, type Classification } from '@aether/kernel';
 
 const SPECIES = ['fox', 'cat', 'rabbit', 'bear', 'otter', 'raccoon', 'panda', 'dog'] as const;
 const WORKING_MS = 2 * 60 * 1000;
@@ -96,25 +96,68 @@ export function sessionsToAgents(
   });
 }
 
-// Give extra agents desks without disturbing a saved layout; unseated agents get new desks beyond existing ones.
+const floorOfDepartment = (id: string) => DEPARTMENTS.find((d) => d.id === id)?.floor ?? 0;
+
+/**
+ * Which floor an agent works on: an observed session by the department it was classified into (its subagents with
+ * it), a managed agent by what its role says.
+ */
+export function floorResolver(sessions: readonly LocalSession[]): (agent: Agent) => number {
+  const byKey = new Map(
+    sessions.map((s) => [s.key, floorOfDepartment(s.classification.department)]),
+  );
+  return (agent) => {
+    const key = sessionIdOf(agent.id);
+    if (key !== null) return byKey.get(key) ?? 0;
+    return floorOfDepartment(classifySession({ title: agent.role }).department);
+  };
+}
+
+/**
+ * Seats every agent the saved layout has no desk for, on the agent's own floor, in the first free slot. A saved
+ * layout is never rearranged. With no saved layout the whole building is generated.
+ */
 export function mergeLayout(
   layout: Layout | null,
   managed: readonly Agent[],
   extra: readonly Agent[],
+  floorOf: (agent: Agent) => number = () => 0,
 ): Layout | null {
-  if (!extra.length) return layout;
   const all = [...managed, ...extra];
-  if (!layout) return defaultLayout(all);
+  if (!layout) return extra.length ? defaultLayout(all, floorOf) : null;
   const seated = new Set(layout.objects.flatMap((o) => (o.agentId ? [o.agentId] : [])));
-  const used = new Set(layout.objects.map((o) => o.id));
-  const desks = defaultLayout(all).objects.filter(
-    (o) => o.type === 'desk' && o.agentId && !seated.has(o.agentId),
-  );
-  return {
-    ...layout,
-    objects: [
-      ...layout.objects,
-      ...desks.map((o) => ({ ...o, id: used.has(o.id) ? `${o.id}-obs` : o.id })),
-    ],
+  const added: Layout['objects'] = [];
+  const next = new Map<number, number>();
+  const taken = (floor: number, x: number, z: number) =>
+    [...layout.objects, ...added].some(
+      (o) => (o.floor ?? 0) === floor && Math.abs(o.x - x) < 2.4 && Math.abs(o.z - z) < 2.2,
+    );
+  for (const agent of all) {
+    if (seated.has(agent.id)) continue;
+    const floor = Math.min(FLOORS - 1, Math.max(0, floorOf(agent)));
+    let slot = next.get(floor) ?? 0;
+    while (slot < FLOOR_CAPACITY && taken(floor, ...seatAt(slot))) slot++;
+    if (slot >= FLOOR_CAPACITY) continue; // a full floor: the agent has no desk, as before
+    next.set(floor, slot + 1);
+    const [x, z] = seatAt(slot);
+    added.push({
+      id: `desk-obs-${floor}-${slot}`,
+      type: 'desk',
+      x,
+      z,
+      rotation: 0,
+      agentId: agent.id,
+      floor,
+    });
+  }
+  return added.length ? { ...layout, objects: [...layout.objects, ...added] } : layout;
+}
+
+/** The role id an agent's screen and floor are chosen by: an observed session's classification, else its role text. */
+export function roleResolver(sessions: readonly LocalSession[]): (agent: Agent) => string {
+  const byKey = new Map(sessions.map((s) => [s.key, s.classification.role]));
+  return (agent) => {
+    const key = sessionIdOf(agent.id);
+    return (key !== null && byKey.get(key)) || classifySession({ title: agent.role }).role;
   };
 }
