@@ -1,5 +1,7 @@
 import { execFile } from 'node:child_process';
+import { availableParallelism } from 'node:os';
 import { promisify } from 'node:util';
+import { mapPool } from './pool.js';
 
 /**
  * Read-only health of a repository's worktrees and branches: which are already merged into the default branch but
@@ -7,6 +9,8 @@ import { promisify } from 'node:util';
  * the report says what would be safe to remove and the commands that would do it.
  */
 const run = promisify(execFile);
+// Worktrees inspected at once: each is a few short git processes, mostly waiting on the disk.
+const WIDTH = Math.min(12, availableParallelism());
 const git = async (cwd: string, args: string[], timeout = 8000) =>
   (
     await run('git', ['-C', cwd, '-c', 'core.fsmonitor=false', ...args], {
@@ -112,33 +116,45 @@ export async function gitHealth(root: string) {
   } catch {
     /* no remote */
   }
-  const rows = [];
-  for (let i = 0; i < worktrees.length; i += 4) {
-    const batch = await Promise.all(
-      worktrees.slice(i, i + 4).map(async (w) => {
-        if (w.prunable)
-          return { ...w, merged: false, dirty: null, lastCommitAt: null, sizeBytes: null };
-        const [status, last, size] = await Promise.all([
-          git(w.path, ['status', '--porcelain=v1', '--untracked-files=normal']).catch(() => null),
-          git(w.path, ['log', '-1', '--format=%ct']).catch(() => ''),
-          sizeOf(w.path),
-        ]);
-        return {
-          ...w,
-          merged:
-            !w.main &&
-            !!w.branch &&
-            w.branch !== base &&
-            merged.has(w.branch) &&
-            (w.head !== baseHead || (await movedSinceCreated(w.branch))),
-          dirty: status === null ? null : list(status).length,
-          lastCommitAt: Number(last.trim()) * 1000 || null,
-          sizeBytes: size,
-        };
-      }),
-    );
-    rows.push(...batch);
-  }
+  // Each branch's last commit, for every worktree on a branch in one call instead of one `git log` each.
+  const tips = new Map(
+    list(
+      await git(root, [
+        'for-each-ref',
+        '--format=%(refname:short)%09%(committerdate:unix)',
+        'refs/heads',
+      ]),
+    ).flatMap((line) => {
+      const [name, at] = line.split('\t');
+      return name && Number(at) ? [[name, Number(at) * 1000] as const] : [];
+    }),
+  );
+  const inspect = async (w: Worktree) => {
+    if (w.prunable) return { ...w, merged: false, dirty: null, lastCommitAt: null };
+    const isMerged =
+      !w.main &&
+      !!w.branch &&
+      w.branch !== base &&
+      merged.has(w.branch) &&
+      (w.head !== baseHead || (await movedSinceCreated(w.branch)));
+    // Whether a worktree has uncommitted changes is only asked of the ones that could be removed: it is what decides
+    // that, and `git status` over hundreds of worktrees is most of the cost of the report.
+    const [status, last] = await Promise.all([
+      isMerged
+        ? git(w.path, ['status', '--porcelain=v1', '--untracked-files=normal']).catch(() => null)
+        : Promise.resolve(null),
+      w.branch && tips.has(w.branch)
+        ? Promise.resolve('')
+        : git(w.path, ['log', '-1', '--format=%ct']).catch(() => ''), // a detached checkout has no branch tip
+    ]);
+    return {
+      ...w,
+      merged: isMerged,
+      dirty: status === null ? null : list(status).length,
+      lastCommitAt: (w.branch && tips.get(w.branch)) || Number(last.trim()) * 1000 || null,
+    };
+  };
+  const rows = await mapPool(worktrees, WIDTH, inspect);
   const removable = rows.filter((w) => w.merged && w.dirty === 0 && !w.locked);
   const inWorktree = new Set(rows.flatMap((w) => (w.branch ? [w.branch] : [])));
   const staleBranches = [...merged].filter((b) => b !== base && !inWorktree.has(b));
@@ -147,10 +163,7 @@ export async function gitHealth(root: string) {
     worktrees: rows,
     staleBranches,
     remoteMerged,
-    totals: {
-      sizeBytes: rows.reduce((n, w) => n + (w.sizeBytes ?? 0), 0),
-      reclaimableBytes: removable.reduce((n, w) => n + (w.sizeBytes ?? 0), 0),
-    },
+    removable: removable.map((w) => w.path),
     // What a person could run after reading the list: nothing here is executed.
     suggestions: [
       ...(rows.some((w) => w.prunable) ? ['git worktree prune'] : []),
@@ -159,6 +172,24 @@ export async function gitHealth(root: string) {
       ...remoteMerged.map((b) => `git push origin --delete ${b.replace(/^origin\//, '')}`),
     ],
   };
+}
+
+/**
+ * How much disk each worktree takes (`du`), apart from the report because it is by far the slow part: the report is
+ * useful at once, the sizes follow. A size that could not be read is null, never zero.
+ */
+export async function worktreeSizes(
+  root: string,
+): Promise<{ sizes: Record<string, number | null> }> {
+  const worktrees = parseWorktrees(await git(root, ['worktree', 'list', '--porcelain'])).filter(
+    (w) => !w.prunable,
+  );
+  const sized = await mapPool(
+    worktrees,
+    WIDTH,
+    async (w) => [w.path, await sizeOf(w.path)] as const,
+  );
+  return { sizes: Object.fromEntries(sized) };
 }
 
 export type CleanResult = { path: string; outcome: 'removed' | 'skipped'; reason?: string };

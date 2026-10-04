@@ -15,7 +15,7 @@ import {
   type NativeSink,
   type ProviderEvent,
 } from './protocol.js';
-import { processIdentity, type ProviderResult } from './index.js';
+import { processIdentity, VERSION_PROBE_MS, type ProviderResult } from './index.js';
 const threadResponse = z.object({ thread: z.object({ id: z.string().min(1).max(200) }) });
 const turnResponse = z.object({ turn: z.object({ id: z.string().min(1).max(200) }) });
 export class CodexAdapter {
@@ -39,7 +39,7 @@ export class CodexAdapter {
     if (!transport) {
       const version = execFileSync(options.binary, ['--version'], {
         encoding: 'utf8',
-        timeout: 3000,
+        timeout: VERSION_PROBE_MS,
       }).trim();
       assertCodexVersion(version);
     }

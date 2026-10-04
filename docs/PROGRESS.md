@@ -283,3 +283,77 @@
 - 已加入：可列出所有本機 session 並搜尋，可複製 resume／fork 指令，也可開啟開發預覽連結（從 agent 程序樹的監聽 port 取得）；一鍵清理已合併、沒有未提交修改的 worktree，只用 `git worktree remove`，不加 `--force`；看板改為五欄並涵蓋所有工作狀態；各部門 token 用量；⌘K／Ctrl+K 快速開啟頁面、專案與 session。
 - Gemini CLI 0.46.0 不用新增程式碼，透過既有的通用 ACP adapter（`acpAgent: { command: gemini, args: ["--acp"] }`）實測完成 initialize 協商。
 - 依第一性原理判斷暫不做：agent team 收件匣（本機沒有 `~/.claude/teams`，沒有資料可顯示）；建立 PR（屬於遠端寫入，需要另外授權）；多 lane 審查與 merge queue（單人在本機使用時沒有排隊的需求）；容器沙箱（目前已用 worktree 與 repo 授權隔離）；PWA（只在 localhost 使用，安裝的價值很低）。
+
+## 2026-10-04（續五）— 以真實資料 QA
+
+- 在 HEAD 0736cfb 執行 clean-room（`verify:clean --e2e`），11 個步驟全數通過，QA-07 改為 passed。
+- 另起一個隔離的 live control，讀取本機真實的 60 個 session 與 497 個 worktree，逐頁檢查並截圖，修正了以下問題：
+  - 32 個 `codex exec` 執行沒有標題，改用任務的開頭文字（已遮蔽憑證，最多 80 字）。Claude 的 prompt 仍然不會送到前端。
+  - Claude session 原本沒有 token 總量，現在逐則訊息累加，以 message id 去重並增量讀取。首次掃描 6.7 秒，之後約 1.9 秒。
+  - 2D 辦公室、成員列與成員數原本只計入受管理成員，57 個本機 session 只在 3D 中出現；已修正。
+  - Session 列表欄位被擠出畫面：全域 `nowrap` 導致表格寬 1671px、容器只有 852px，已修正。無標題的 session 改以 worktree 目錄名稱區分。
+  - 3D 成員名稱截斷在 24 字，worktree 的差異被切掉（`accounting-bunny-w1119` → `accounting-bunny`），已修正。
+  - Git 健康改用依機器核心數調整大小的 worker pool：冷啟動從 30 秒降到 14 秒，暖啟動從 14 秒降到 6.6 秒，報告內容不變。
+- 確認正常：3D 依部門分層（3F 品質 39、2F 平台 14…）、即時紀錄、提交圖（150 個 commit、20 條 lane，確實有這麼多並行分支）、系統負載與 Codex 額度。
+
+## 2026-10-04（續六）— 資源消耗量化與 3D 幀率
+
+實測環境：Apple M4（10 核、32 GB）、本機真實資料（60 個 session、57 位成員、497 個 worktree）、Chromium 走 Metal GPU、視窗 1440×900。
+
+| 項目 | 數值 |
+|---|---|
+| control 常駐記憶體 | 180–265 MB |
+| control CPU | 無人連線時約 0.01 CPU 秒／10 秒（幾乎為零）；開著一個瀏覽器時平均約 2% |
+| 掃描 session 的子行程（`ps`、`lsof`） | 每次約 0.2 CPU 秒，每 10 秒一次（約 2%，只在有人開著頁面時才跑） |
+| API 流量 | `/api/local-sessions` 每次約 59 KB、每分鐘 4–6 次，約 235 KB；snapshot 與 system 各只有 1–1.5 KB |
+| 瀏覽器分頁（3D） | renderer 380–530 MB、GPU 行程 170–180 MB、其他約 100 MB，合計約 0.7–0.9 GB；JS heap 25 MB；DOM 約 1,200 個節點；三個畫質檔都是 60 fps |
+| 建置產物 | 主 JS 1.59 MB（gzip 445 KB）；`dist` 57 MB，其中 55 MB 是動物模型與貼圖（依物種、LOD 延遲載入） |
+| Git 健康（497 個 worktree） | 冷啟動 14 秒、暖啟動 6.6 秒。拆解（並行 10）：`du` 10.3 秒、`git status` 5.4 秒（其中掃 untracked 只佔 0.6 秒）、`git log -1` 1.7 秒 |
+| 開發工具 | vitest 約 15 秒、Playwright 2.7–3.8 分鐘、build 約 3 秒、node_modules 1.0 GB |
+
+- 已改善：環境動畫（無人機、掃描光幕、全息閃爍）原本每一幀都重畫，等於 `frameloop="demand"` 沒有生效。原因是 `Floor` 的動畫迴圈每幀自己呼叫 `invalidate()`。現在由 `AnimationClock` 統一控制，環境動畫約 30 fps；操作鏡頭、飛行與近景追蹤仍維持完整幀率。每 20 秒的 CPU 時間：renderer 從 4.8–5.9 秒降到 2.8 秒，GPU 行程從 3.1–3.6 秒降到 1.8 秒，約降四成多（每個狀態只量了一到兩次，機器同時有其他負載，數字僅供參考）。
+- 評估後不做：
+  - 開啟 git `core.fsmonitor`：497 個 worktree 會各自啟動一個常駐 daemon，代價比省下的時間大。`core.untrackedCache` 最多省 0.6 秒。
+  - session 列表改用 ETag 或 SSE：流量只在 localhost，每分鐘 235 KB 沒有實際影響；沒有人開頁面時伺服器本來就不掃描。
+- 還可以做（尚未實作）：Git 健康先回傳不含大小的報告，大小稍後補上（`du` 佔冷啟動約六成）；若願意多一個外部程式，diskus 在冷快取下約比 `du` 快 10 倍；動物模型改用 KTX2 與 meshopt 壓縮（尚未量測可省多少）。
+
+## 2026-10-04（續七）— 外部程式評估、依賴供應鏈與新動物
+
+- 外部程式評估：diskus（平行版 `du`）在這台 macOS（APFS）上沒有好處。以 Homebrew 驗證過 SHA-256 的 bottle 解壓到暫存區實測 497 個 worktree：`du` 並行 10 個 8.7 秒，diskus 串行 15.8 秒、並行 13.8 秒，反而更慢（它的優勢出現在冷快取的 Linux 檔案系統；這裡的瓶頸是 metadata I/O，`du` 又已依 worktree 並行）。**結論：不安裝。**
+- 依賴供應鏈：`pnpm-workspace.yaml` 明確設定 `minimumReleaseAge: 1440`（不裝一天內的新版本）、`trustPolicy: no-downgrade`（發布證據比舊版弱就拒絕）、`blockExoticSubdeps: true`（不接受 git／tarball 來源）。先在暫存區用這些政策重新解析整棵樹（不碰鎖定檔），確認不會被拒絕，只是次要版本較新。離線測試 `tests/aether/dependencies.test.ts` 守住：版本全部鎖死、411 個套件都有 sha512 完整性雜湊、只有 better-sqlite3／esbuild／node-pty 能在安裝時執行腳本（實際掃描已安裝套件）。`pnpm run audit:deps` 查已知漏洞（目前沒有）。
+- 動物模型重做（`tools/blender/`，Blender 5.2，全部由程式生成）：身體由重疊的形狀熔成單一平滑蒙皮並用自動權重（取代一堆分離的球），制服與腰帶直接畫在皮上；臉部零件（睜眼、笑眼、閉眼、微笑、張嘴、「哦」、平嘴、眉毛）以移進頭內／移出頭外的方式切換表情；8 種各自的耳朵、尾巴與花紋（狐狸的長吻與尾尖、兔子的長耳與門牙、熊貓與浣熊的眼圈、貓的條紋、狗的垂耳…）；手臂加長約 20%，手搆得到嘴與耳；道具（馬克杯、手機、板夾）平時藏在胸腔內，由動畫送到手上。
+- 動畫 14 → 24 個：新增 thinking、scratch_head、cheer、sleeping、stretch、sip、wave、shrug、look_around、nod。手臂姿勢用一次性求解器依頭部實際位置算出（手與嘴／耳／下巴誤差在 1 公分內）。
+- 場景狀態（`animal-states.ts`）：idle→坐著呼吸眨眼、starting→伸懶腰、working→打字、reviewing→拿板夾、waiting_permission→舉手、waiting_peer→講電話、error→抱頭、offline→睡覺、unknown→聳肩；閒置、工作、審查時偶爾做小動作（只有「花點時間」的動作，不暗示決定、結果或訊息，符合 VIS-05）；工作完成（working／reviewing→idle）歡呼，使用者批准權限（waiting_permission→working）點頭，選取成員時揮手。每位成員起始相位不同，不會整排同步。測試守住狀態對應，以及 Blender 原始碼、驗證腳本與場景的片段清單一致。
+- 資產大小：每個 LOD 的 GLB 各嵌一份貼圖，LOD1／LOD2 改用 512 貼圖（LOD0 維持 1024）；非選取成員的載入量與舊版相當（fox LOD1 1.7 MB），整個資料夾 60 MB（舊版 55 MB）。
+- 發現並修正：道具骨頭原本掛在 root，坐下後身體往前移，道具留在原位，板夾從背後穿出來；改掛在胸部。
+
+## 2026-10-04（續八）— 後端效能剖析與是否用 Rust 重寫
+
+量測環境同前（Apple M4、真實資料：60 個 session、497 個 worktree），control 伺服器開著一個瀏覽器、依其輪詢頻率連續 60 秒，並以 `--cpu-prof` 與事件迴圈延遲取樣。
+
+**CPU 不是瓶頸。** 行程 95% 在閒置，忙碌只佔 4.9%（67 秒中 3.3 秒），而且花在原生 I/O：行程建立（`ps`、`lsof`、`git`）、讀檔與 `(program)`。Fastify、zod、SQLite、ORM 加起來不到 0.1 秒。事件迴圈延遲 p99 約 13 ms（計時器解析度本身就是 10 ms）。API 中位數：snapshot 12 ms、approvals 8 ms、system 10 ms、transcript 8 ms；只有本機 session 掃描（431 ms）與 Git 提交圖（285 ms）較長，兩者都在等子行程與磁碟。
+
+**記憶體才是問題，而且主因不是 Node。** 空的 Node 行程 42 MB，伺服器閒置卻是 265 MB。逐一匯入量測：`drizzle-orm` 單獨就多佔 130–190 MB（它被當成外部套件在執行時載入數百個檔案），fastify＋zod 合計約 30 MB。專案只用它做 21 處簡單查詢（其餘 321 處已是原生 SQL）。
+
+做了什麼（commit 見下方清單）：
+- 以約 60 行、有型別的 `db/query.ts` 取代 `drizzle-orm`，移除該依賴（鎖定檔 411 → 395 個項目，也少了一個供應鏈風險面）。新測試守住：查詢行為、JSON 欄位、不接受不存在的欄位名稱（防止名稱夾帶 SQL）、`schema.ts` 列的每個欄位確實存在於遷移後的資料庫。
+- 本機 session 掃描：每個目錄的 Git 身分（`rev-parse`，5 分鐘）與狀態（30 秒）改為快取，子行程每次掃描 110 → 6 個；暖掃描 354 → 約 190 ms；探索檔案、讀檔頭、查程序（`lsof` 兩個）改為並行並設上限（`mapPool`）；五個各自 `Buffer.alloc` 的讀檔函式合併為共用的小型緩衝池。
+- Claude token 累計與用量解析改為直接在位元組上找 `"usage"` 與訊息 id，只解碼命中的那幾百位元組，不再 `JSON.parse` 整行（一行常有數十 KB）；在全部 25 個真實 Claude transcript 上與舊算法逐一比對，總和完全相同，且快 3.4 倍。用量窗口改為 128 KB → 512 KB → 2 MB 逐步加寬。同一份真實資料上，新舊整份掃描結果逐欄位完全相同。
+
+結果：閒置 RSS 265 → 99 MB；輪詢 9 次掃描後 333–398 → 188 MB；第一次掃描 1.9 → 1.16 秒；暖路徑回應約 1 ms（5 秒內重複請求命中快取）。
+
+**不建議用 Rust 重寫後端。** 理由：
+1. 沒有 CPU 瓶頸可解：JS 的框架與資料庫成本合計 < 0.1 秒／分鐘，慢的是子行程與磁碟，Rust 同樣得啟動 `git`／`ps`／`lsof`。
+2. 記憶體問題已用換掉一個 ORM 解決大半（−166 MB）。Rust 再省的上限約 60–70 MB，對一台 32 GB 的開發機沒有實際意義。
+3. 成本高：後端約 1.5 萬行 TypeScript、1.1 萬行測試要全部重寫並維持行為一致；契約（zod）目前與瀏覽器共用單一來源；Claude Agent SDK 只有 TypeScript／Python 版，A2A、ACP、MCP 都以官方 TypeScript SDK 為準（Rust 版多為社群實作）；`node-pty`、`better-sqlite3` 要換成不同的函式庫。
+4. 重新評估的條件：同時要管理數百個 session、要發行單一二進位檔，或之後的 profile 顯示 JS 熱路徑。其中「單一二進位檔」可先試 Node 的 single executable applications，成本遠低於重寫。
+
+## 2026-10-04（續九）— 存活判斷、殭屍／孤兒處理與三種新 3D 造型
+
+- 以真實資料量測：10 個活著的 agent 進程有 2 個沒有出現在 session 清單（休眠 18 小時與 27 小時的，transcript 不在最新 60 個之內）。改為先查進程、以進程為準補齊（見 `docs/NATIVE_EXECUTION.md` 〈進程生命週期〉），現在 11/11 都對得上。
+- 存活分類：active／idle／dormant（≥6 小時靜止）／orphaned／ended／unknown；殭屍在 macOS 只剩 `<defunct>`，沒有名稱與工作目錄，所以計入沒有收屍的父進程底下。
+- 3D：睡覺的兔子（休眠）、孤魂（孤兒）、殭屍（僵屍：官帽、符咒、尖牙、長袍、雙臂前伸、原地跳，站在有殭屍子進程的座位後面）。用真的孤兒進程與真的殭屍進程端到端驗證。
+- 受保護的停止動作（僅擁有者，只對休眠／孤兒，只送 SIGTERM 給那個進程本人）。
+- AETHER 自己啟動的進程：四處重複的停止邏輯合為 `groupStopper`；ACP adapter 補上獨立群組與 SIGKILL 升級；runner 重啟時以 `pid:啟動時間` 回收先前留下的孤兒（以前是明確不處理）。
+- 修正：CLI `--version` 探測 3 秒在高負載（load average 18）下會誤判，改為 10 秒。
+- 「停止程序」已在真實瀏覽器驗證：對一個真的孤兒 `claude` 進程，Sessions 頁顯示「孤兒 · 靜止 1 分鐘 · 已執行 1 分鐘」與按鈕，確認後回「已停止。」，進程確實消失，稽核事件已記錄。

@@ -5,6 +5,11 @@ allowBuilds:
   better-sqlite3: true
   node-pty: true
   esbuild: true
+# A release younger than a day is not installed (most hijacked packages are pulled within hours), a package whose
+# publish evidence is weaker than an earlier version's is refused, and dependencies may not come from git or tarball URLs.
+minimumReleaseAge: 1440
+trustPolicy: no-downgrade
+blockExoticSubdeps: true
 minimumReleaseAgeExclude:
   - '@vitest/mocker@5.0.3'
   - '@vitest/spy@5.0.3'

@@ -1,5 +1,6 @@
-import { open, stat } from 'node:fs/promises';
+import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
+import { readEdge } from './file-edge.js';
 
 // The title each provider already stores for its own session picker: Claude Code's `ai-title` entry in the
 // transcript and Codex's `thread_name` in session_index.jsonl. Nothing else of the conversation is read.
@@ -43,18 +44,7 @@ export function parseCodexIndex(text: string): Map<string, string> {
   return names;
 }
 
-async function tail(file: string, bytes: number): Promise<string> {
-  const { size } = await stat(file);
-  const length = Math.min(size, bytes);
-  const handle = await open(file, 'r');
-  try {
-    const buffer = Buffer.alloc(length);
-    await handle.read(buffer, 0, length, size - length);
-    return buffer.toString('utf8');
-  } finally {
-    await handle.close();
-  }
-}
+const tail = (file: string, bytes: number) => readEdge(file, 'tail', bytes);
 
 const claudeCache = new Map<string, { mtime: number; size: number; title: string | null }>();
 export async function readClaudeTitle(file: string): Promise<string | null> {

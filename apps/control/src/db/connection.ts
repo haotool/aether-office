@@ -1,9 +1,7 @@
 import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { readFileSync, mkdirSync, chmodSync, readdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
-import * as schema from './schema.js';
 export function connect(filename: string, now: () => number = Date.now) {
   if (filename !== ':memory:') mkdirSync(dirname(filename), { recursive: true, mode: 0o700 });
   const sqlite = new Database(filename);
@@ -52,7 +50,7 @@ export function connect(filename: string, now: () => number = Date.now) {
         })
         .immediate();
     if (filename !== ':memory:') chmodSync(filename, 0o600);
-    return { sqlite, db: drizzle(sqlite, { schema }) };
+    return { sqlite };
   } catch (error) {
     sqlite.close();
     throw error;

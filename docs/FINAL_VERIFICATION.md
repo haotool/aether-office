@@ -146,14 +146,14 @@ A passing build or test run is not a claim of production readiness. This file li
 | UIX-01 | implemented | onboarding 從 Demo／Live 選擇到第一工作完整可走。 | Demo sign-in through to a first task is covered; live onboarding (execution policy, runner, provider sign-in) has no guided flow |
 | UIX-03 | implemented | 所有主要操作按鈕可用或清楚說明不能使用的原因。 | Many disabled controls do not state why they are disabled |
 | UIX-04 | implemented | 所有主要畫面具有 loading／empty／error／offline／no-permission。 | Loading, empty and offline states are covered; no-permission (viewer) states are not browser-tested |
-| VIS-01 | partial | 辦公室是可旋轉／近看的真實 3D，非一張背景圖。 | 24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
-| VIS-02 | partial | 九個空間有辨識度、正確尺度與連續動線。 | 24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
-| VIS-03 | partial | 桌椅／螢幕／建築具有合理厚度、結構與必要細節。 | 24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
-| VIS-04 | partial | 角色有可維護 pivot／骨架與至少指定的主要 animation states。 | 24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
-| VIS-05 | partial | 動畫只映射真實狀態，不製造假的工作或訊息。 | 24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
+| VIS-01 | partial | 辦公室是可旋轉／近看的真實 3D，非一張背景圖。 | 24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
+| VIS-02 | partial | 九個空間有辨識度、正確尺度與連續動線。 | 24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
+| VIS-03 | partial | 桌椅／螢幕／建築具有合理厚度、結構與必要細節。 | 24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
+| VIS-04 | partial | 角色有可維護 pivot／骨架與至少指定的主要 animation states。 | 24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
+| VIS-05 | partial | 動畫只映射真實狀態，不製造假的工作或訊息。 | 24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
 | VIS-06 | implemented | messageId 去重，動畫抵達不被當成真正 ACK。 | Dedupe and planning are unit-tested; the moving envelope was not exercised in a browser with an agent-to-agent message; Arrival is decoration and never changes delivery state |
-| VIS-08 | partial | 原創資產／外部依賴都有清楚來源與授權。 | 24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
-| CAM-01 | partial | overview／desk focus／follow／reset 正常且不鑽模。 | 24 GLB rig/UV/PBR/14clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
+| VIS-08 | partial | 原創資產／外部依賴都有清楚來源與授權。 | 24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
+| CAM-01 | partial | overview／desk focus／follow／reset 正常且不鑽模。 | 24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
 | CAM-08 | implemented | 效能報告來自實機量測，未達目標不寫成達標。 | One measurement: headless Chrome on Apple M4 (Metal), 904x548 viewport, vsync-capped near 60 fps, so headroom is unknown; No low-end GPU, mobile or other-browser measurement |
 | A11Y-01 | implemented | 核心派工／訊息／approval／review 可只用鍵盤完成。 | Task creation is verified by keyboard alone; messaging, approval and review flows are not |
 | A11Y-08 | implemented | axe／瀏覽器人工檢視的問題有 evidence 與修正。 | axe sweeps run on every page (and found and fixed unfocusable scroll regions); there has been no screen-reader pass |

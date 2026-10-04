@@ -1,12 +1,12 @@
 import { randomBytes, randomUUID, createHash, timingSafeEqual } from 'node:crypto';
-import { eq } from 'drizzle-orm';
 import { DomainError, authorize, type Actor, type Role } from '@aether/kernel';
+import { insertRow, selectOne, updateRows } from '../db/query.js';
 import { identities } from '../db/schema.js';
 import type { Context } from './context.js';
 export const hash = (value: string): string => createHash('sha256').update(value).digest('hex');
 export const secret = (): string => randomBytes(32).toString('base64url');
 export function identityActor(ctx: Context, id: string): Actor {
-  const row = ctx.db.select().from(identities).where(eq(identities.id, id)).get();
+  const row = selectOne(ctx.sqlite, identities, { id });
   if (!row || row.revokedAt !== null || (row.expiresAt !== null && row.expiresAt <= ctx.now()))
     throw new DomainError('AUTH_REQUIRED', 401);
   const execution = ctx.sqlite
@@ -34,11 +34,7 @@ export function identityActor(ctx: Context, id: string): Actor {
 }
 export function authenticate(ctx: Context, token: string): Actor {
   if (token.length < 32 || token.length > 256) throw new DomainError('AUTH_REQUIRED', 401);
-  const row = ctx.db
-    .select({ id: identities.id })
-    .from(identities)
-    .where(eq(identities.tokenHash, hash(token)))
-    .get();
+  const row = selectOne(ctx.sqlite, identities, { tokenHash: hash(token) });
   if (!row) throw new DomainError('AUTH_REQUIRED', 401);
   return identityActor(ctx, row.id);
 }
@@ -72,21 +68,18 @@ export function createIdentity(
     throw new DomainError('MACHINE_SCOPE_REQUIRED', 400);
   const token = secret();
   const id = randomUUID();
-  ctx.db
-    .insert(identities)
-    .values({
-      id,
-      name: options.name,
-      role: options.role,
-      tokenHash: hash(token),
-      projectIds: options.projectIds,
-      agentId: options.agentId ?? null,
-      machineId: options.machineId ?? null,
-      revokedAt: null,
-      createdAt: ctx.now(),
-      expiresAt: options.ttlMs ? ctx.now() + options.ttlMs : null,
-    })
-    .run();
+  insertRow(ctx.sqlite, identities, {
+    id,
+    name: options.name,
+    role: options.role,
+    tokenHash: hash(token),
+    projectIds: options.projectIds,
+    agentId: options.agentId ?? null,
+    machineId: options.machineId ?? null,
+    revokedAt: null,
+    createdAt: ctx.now(),
+    expiresAt: options.ttlMs ? ctx.now() + options.ttlMs : null,
+  });
   return { token, actor: identityActor(ctx, id) };
 }
 export function login(ctx: Context, token: string) {
@@ -121,7 +114,7 @@ export function revoke(ctx: Context, by: Actor, id: string): void {
     throw new DomainError('PROJECT_FORBIDDEN', 403);
   ctx.sqlite
     .transaction(() => {
-      ctx.db.update(identities).set({ revokedAt: ctx.now() }).where(eq(identities.id, id)).run();
+      updateRows(ctx.sqlite, identities, { id }, { revokedAt: ctx.now() });
       ctx.sqlite.prepare('DELETE FROM browser_sessions WHERE identityId=?').run(id);
       if (target.machineId) {
         ctx.sqlite

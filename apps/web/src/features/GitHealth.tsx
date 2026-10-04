@@ -12,14 +12,13 @@ type Worktree = {
   merged: boolean;
   dirty: number | null;
   lastCommitAt: number | null;
-  sizeBytes: number | null;
 };
 type Report = {
   defaultBranch: string;
   worktrees: Worktree[];
   staleBranches: string[];
   remoteMerged: string[];
-  totals: { sizeBytes: number; reclaimableBytes: number };
+  removable: string[];
   suggestions: string[];
 };
 
@@ -48,6 +47,16 @@ export function GitHealth({ projectId }: { projectId: string }) {
     staleTime: 5 * 60 * 1000,
     retry: false,
   });
+  // The slow part, asked for once the report is on screen: sizes arrive after it, not before.
+  const sizes = useQuery({
+    queryKey: ['git-health-sizes', projectId],
+    queryFn: () =>
+      api<{ sizes: Record<string, number | null> }>(`/api/projects/${projectId}/git-health/sizes`),
+    enabled: query.isSuccess,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  }).data?.sizes;
+  const sizeOf = (path: string) => (sizes ? bytes(sizes[path] ?? null) : '…');
   if (query.isPending) return <p className="panel">{t('gitHealthScanning')}</p>;
   if (query.error) return <p className="panel">{query.error.message}</p>;
   const r = query.data;
@@ -61,8 +70,16 @@ export function GitHealth({ projectId }: { projectId: string }) {
             ? t('gitMergedDirty')
             : t('gitMerged')
           : t('gitActive');
-  const sorted = [...r.worktrees].sort((a, b) => (b.sizeBytes ?? 0) - (a.sizeBytes ?? 0));
-  const removable = r.worktrees.filter((w) => w.merged && w.dirty === 0 && !w.locked && !w.main);
+  // Largest first once the sizes are known; until then, most recently committed first.
+  const sorted = [...r.worktrees].sort((a, b) =>
+    sizes
+      ? (sizes[b.path] ?? 0) - (sizes[a.path] ?? 0)
+      : (b.lastCommitAt ?? 0) - (a.lastCommitAt ?? 0),
+  );
+  const removable = r.worktrees.filter((w) => r.removable.includes(w.path));
+  const total = sizes ? Object.values(sizes).reduce<number>((n, s) => n + (s ?? 0), 0) : null;
+  const reclaimable = sizes ? removable.reduce((n, w) => n + (sizes[w.path] ?? 0), 0) : null;
+  const amount = (n: number | null) => (n === null ? '…' : bytes(n));
   const clean = async () => {
     setBusy(true);
     setError('');
@@ -74,6 +91,7 @@ export function GitHealth({ projectId }: { projectId: string }) {
       setOutcome(result.results);
       setConfirming(false);
       await client.invalidateQueries({ queryKey: ['git-health', projectId] });
+      await client.invalidateQueries({ queryKey: ['git-health-sizes', projectId] });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'REQUEST_FAILED');
     } finally {
@@ -102,11 +120,11 @@ export function GitHealth({ projectId }: { projectId: string }) {
         </div>
         <div>
           <dt>{t('gitTotalSize')}</dt>
-          <dd>{bytes(r.totals.sizeBytes)}</dd>
+          <dd>{amount(total)}</dd>
         </div>
         <div>
           <dt>{t('gitReclaimable')}</dt>
-          <dd className="good">{bytes(r.totals.reclaimableBytes)}</dd>
+          <dd className="good">{amount(reclaimable)}</dd>
         </div>
       </dl>
       {removable.length > 0 &&
@@ -116,7 +134,7 @@ export function GitHealth({ projectId }: { projectId: string }) {
             <ul className="mono-list">
               {removable.slice(0, 12).map((w) => (
                 <li key={w.path}>
-                  {w.branch} · {bytes(w.sizeBytes)}
+                  {w.branch} · {sizeOf(w.path)}
                 </li>
               ))}
               {removable.length > 12 && <li>… +{removable.length - 12}</li>}
@@ -132,7 +150,7 @@ export function GitHealth({ projectId }: { projectId: string }) {
           </div>
         ) : (
           <button className="secondary" onClick={() => setConfirming(true)}>
-            {t('gitClean')} · {removable.length} · {bytes(r.totals.reclaimableBytes)}
+            {t('gitClean')} · {removable.length} · {amount(reclaimable)}
           </button>
         ))}
       {error && <p role="alert">{error}</p>}
@@ -169,7 +187,7 @@ export function GitHealth({ projectId }: { projectId: string }) {
                 <td title={w.path}>{w.branch ?? '(detached)'}</td>
                 <td>{state(w)}</td>
                 <td>{w.dirty ?? '—'}</td>
-                <td>{bytes(w.sizeBytes)}</td>
+                <td>{sizeOf(w.path)}</td>
                 <td>{w.lastCommitAt ? new Date(w.lastCommitAt).toLocaleDateString() : '—'}</td>
               </tr>
             ))}

@@ -1,92 +1,185 @@
-import { sqliteTable, text, integer, primaryKey } from 'drizzle-orm/sqlite-core';
 import type { Activity, Mode, Provider } from '@aether/contracts';
 import type { Role, WorkState } from '@aether/kernel';
-export const projects = sqliteTable('projects', {
-  id: text().primaryKey(),
-  name: text().notNull(),
-  root: text(),
-  mode: text().$type<Mode>().notNull(),
-  version: integer().notNull(),
-  createdAt: integer().notNull(),
-});
-export const agents = sqliteTable('agents', {
-  id: text().primaryKey(),
-  projectId: text().notNull(),
-  name: text().notNull(),
-  role: text().notNull(),
-  provider: text().$type<Provider>().notNull(),
-  mode: text().$type<Mode>().notNull(),
-  species: text().notNull(),
-  color: text().notNull(),
-  activity: text().$type<Activity>().notNull(),
-  version: integer().notNull(),
-  createdAt: integer().notNull(),
-  lastSeen: integer(),
-});
-export const work = sqliteTable('work_items', {
-  id: text().primaryKey(),
-  projectId: text().notNull(),
-  title: text().notNull(),
-  description: text().notNull(),
-  acceptance: text().notNull(),
-  state: text().$type<WorkState>().notNull(),
-  assignee: text(),
-  version: integer().notNull(),
-  priority: integer().notNull(),
-  createdAt: integer().notNull(),
-  updatedAt: integer().notNull(),
-  attempt: integer().notNull(),
-  maxAttempts: integer().notNull(),
-  cancelCause: text(),
-  result: text(),
-  submittedBy: text(),
-  headSha: text(),
-  reviewBy: text(),
-  verifiedSha: text(),
-});
-export const dependencies = sqliteTable(
-  'task_dependencies',
-  { workId: text().notNull(), dependsOn: text().notNull(), projectId: text().notNull() },
-  (t) => [primaryKey({ columns: [t.workId, t.dependsOn] })],
+import { table } from './query.js';
+
+// The shape of the rows the control plane reads and writes through db/query.ts. The tables themselves are created by
+// migration.sql and migrations/; a test keeps the two in step.
+export type ProjectRow = {
+  id: string;
+  name: string;
+  root: string | null;
+  mode: Mode;
+  version: number;
+  createdAt: number;
+};
+export type AgentRow = {
+  id: string;
+  projectId: string;
+  name: string;
+  role: string;
+  provider: Provider;
+  mode: Mode;
+  species: string;
+  color: string;
+  activity: Activity;
+  version: number;
+  createdAt: number;
+  lastSeen: number | null;
+};
+export type WorkRow = {
+  id: string;
+  projectId: string;
+  title: string;
+  description: string;
+  acceptance: string;
+  state: WorkState;
+  assignee: string | null;
+  version: number;
+  priority: number;
+  createdAt: number;
+  updatedAt: number;
+  attempt: number;
+  maxAttempts: number;
+  cancelCause: string | null;
+  result: string | null;
+  submittedBy: string | null;
+  headSha: string | null;
+  reviewBy: string | null;
+  verifiedSha: string | null;
+};
+export type DependencyRow = { workId: string; dependsOn: string; projectId: string };
+export type MessageRow = {
+  id: string;
+  projectId: string;
+  threadId: string;
+  replyTo: string | null;
+  senderId: string;
+  body: string;
+  kind: string;
+  createdAt: number;
+  expiresAt: number;
+  roomId: string | null;
+};
+export type IdentityRow = {
+  id: string;
+  role: Role;
+  name: string;
+  tokenHash: string;
+  projectIds: string[];
+  agentId: string | null;
+  machineId: string | null;
+  revokedAt: number | null;
+  createdAt: number;
+  expiresAt: number | null;
+};
+export type KnowledgeRow = {
+  id: string;
+  projectId: string;
+  title: string;
+  body: string;
+  source: string;
+  author: string;
+  classification: string;
+  version: number;
+  createdAt: number;
+  updatedAt: number;
+  reviewedBy: string | null;
+  reviewReason: string | null;
+  workId: string | null;
+  artifactId: string | null;
+  commitSha: string | null;
+};
+
+export const projects = table<ProjectRow>('projects', [
+  'id',
+  'name',
+  'root',
+  'mode',
+  'version',
+  'createdAt',
+]);
+export const agents = table<AgentRow>('agents', [
+  'id',
+  'projectId',
+  'name',
+  'role',
+  'provider',
+  'mode',
+  'species',
+  'color',
+  'activity',
+  'version',
+  'createdAt',
+  'lastSeen',
+]);
+export const work = table<WorkRow>('work_items', [
+  'id',
+  'projectId',
+  'title',
+  'description',
+  'acceptance',
+  'state',
+  'assignee',
+  'version',
+  'priority',
+  'createdAt',
+  'updatedAt',
+  'attempt',
+  'maxAttempts',
+  'cancelCause',
+  'result',
+  'submittedBy',
+  'headSha',
+  'reviewBy',
+  'verifiedSha',
+]);
+export const dependencies = table<DependencyRow>('task_dependencies', [
+  'workId',
+  'dependsOn',
+  'projectId',
+]);
+export const messages = table<MessageRow>('messages', [
+  'id',
+  'projectId',
+  'threadId',
+  'replyTo',
+  'senderId',
+  'body',
+  'kind',
+  'createdAt',
+  'expiresAt',
+  'roomId',
+]);
+export const identities = table<IdentityRow>(
+  'identities',
+  [
+    'id',
+    'role',
+    'name',
+    'tokenHash',
+    'projectIds',
+    'agentId',
+    'machineId',
+    'revokedAt',
+    'createdAt',
+    'expiresAt',
+  ],
+  ['projectIds'],
 );
-export const messages = sqliteTable('messages', {
-  id: text().primaryKey(),
-  projectId: text().notNull(),
-  threadId: text().notNull(),
-  replyTo: text(),
-  senderId: text().notNull(),
-  body: text().notNull(),
-  kind: text().notNull(),
-  createdAt: integer().notNull(),
-  expiresAt: integer().notNull(),
-  roomId: text(),
-});
-export const identities = sqliteTable('identities', {
-  id: text().primaryKey(),
-  role: text().$type<Role>().notNull(),
-  name: text().notNull(),
-  tokenHash: text().notNull().unique(),
-  projectIds: text({ mode: 'json' }).$type<string[]>().notNull(),
-  agentId: text(),
-  machineId: text(),
-  revokedAt: integer(),
-  createdAt: integer().notNull(),
-  expiresAt: integer(),
-});
-export const knowledge = sqliteTable('knowledge', {
-  id: text().primaryKey(),
-  projectId: text().notNull(),
-  title: text().notNull(),
-  body: text().notNull(),
-  source: text().notNull(),
-  author: text().notNull(),
-  classification: text().notNull(),
-  version: integer().notNull(),
-  createdAt: integer().notNull(),
-  updatedAt: integer().notNull(),
-  reviewedBy: text(),
-  reviewReason: text(),
-  workId: text(),
-  artifactId: text(),
-  commitSha: text(),
-});
+export const knowledge = table<KnowledgeRow>('knowledge', [
+  'id',
+  'projectId',
+  'title',
+  'body',
+  'source',
+  'author',
+  'classification',
+  'version',
+  'createdAt',
+  'updatedAt',
+  'reviewedBy',
+  'reviewReason',
+  'workId',
+  'artifactId',
+  'commitSha',
+]);

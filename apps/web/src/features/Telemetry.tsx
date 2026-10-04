@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { bytes } from './GitHealth.js';
 import type { LocalSession } from '@aether/contracts';
 import { useT } from '../ui.js';
+import { needsAttention } from '../localSessions.js';
 
 const TIME_ZONE = 'Asia/Taipei';
 const format = (now: Date) =>
@@ -30,6 +31,7 @@ export function Telemetry({
     return () => clearInterval(timer);
   }, []);
   const live = sessions.filter((s) => s.process === 'running').length;
+  const stale = sessions.filter(needsAttention);
   const system = useQuery({
     queryKey: ['system'],
     queryFn: () =>
@@ -70,6 +72,10 @@ export function Telemetry({
       <div>
         <dt>{t('liveProcesses')}</dt>
         <dd>{pad(live)}</dd>
+      </div>
+      <div title={t('staleHint')}>
+        <dt>{t('staleCount')}</dt>
+        <dd className={stale.length ? 'warn' : ''}>{pad(stale.length)}</dd>
       </div>
       <div
         title={

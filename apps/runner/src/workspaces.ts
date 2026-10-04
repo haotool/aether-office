@@ -1,5 +1,6 @@
 import { StringDecoder } from 'node:string_decoder';
 import { execFileSync, spawn } from 'node:child_process';
+import { groupStopper } from '@aether/providers';
 import { createHash, randomUUID } from 'node:crypto';
 import {
   mkdirSync,
@@ -282,27 +283,14 @@ export class Workspaces {
     const decoder = new StringDecoder('utf8');
     let capped = false;
     let timedOut = false;
-    let killTimer: ReturnType<typeof setTimeout> | undefined;
     const child = spawn(harness.executable, harness.args, {
       cwd: workspace.path,
       env: environment(),
       stdio: ['ignore', 'pipe', 'pipe'],
       detached: process.platform !== 'win32',
     });
-    // The owned POSIX group can outlive its leader while descendants retain pipes.
-    const signalChild = (signal: NodeJS.Signals) => {
-      if (process.platform !== 'win32' && child.pid)
-        try {
-          process.kill(-child.pid, signal);
-        } catch (error) {
-          if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error;
-        }
-      else if (child.exitCode === null && child.signalCode === null) child.kill(signal);
-    };
-    const stop = () => {
-      signalChild('SIGTERM');
-      killTimer ??= setTimeout(() => signalChild('SIGKILL'), 1000);
-    };
+    const stopper = groupStopper(child); // the group can outlive its leader while descendants retain pipes
+    const stop = stopper.stop;
     const collect = (chunk: Buffer) => {
       outputBytes += chunk.length;
       if (outputBytes > 1024 * 1024) {
@@ -329,7 +317,7 @@ export class Workspaces {
       });
     } finally {
       clearTimeout(timer);
-      if (killTimer) clearTimeout(killTimer);
+      stopper.cancel();
       signal?.removeEventListener('abort', stop);
       output += decoder.end();
     }

@@ -1,4 +1,5 @@
-import { open, stat } from 'node:fs/promises';
+import { stat } from 'node:fs/promises';
+import { readEdge } from './file-edge.js';
 import { redactSecrets } from './redaction.js';
 
 /**
@@ -157,17 +158,9 @@ export function parseTranscript(provider: 'claude' | 'codex', tail: string) {
 
 export async function readTranscript(provider: 'claude' | 'codex', file: string) {
   const { size, mtimeMs } = await stat(file);
-  const length = Math.min(size, TAIL_BYTES);
-  const handle = await open(file, 'r');
-  try {
-    const buffer = Buffer.alloc(length);
-    await handle.read(buffer, 0, length, size - length);
-    return {
-      ...parseTranscript(provider, buffer.toString('utf8')),
-      updatedAt: Math.round(mtimeMs),
-      truncated: size > TAIL_BYTES,
-    };
-  } finally {
-    await handle.close();
-  }
+  return {
+    ...parseTranscript(provider, await readEdge(file, 'tail', TAIL_BYTES)),
+    updatedAt: Math.round(mtimeMs),
+    truncated: size > TAIL_BYTES,
+  };
 }

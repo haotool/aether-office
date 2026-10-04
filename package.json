@@ -29,6 +29,7 @@
     "doctor": "tsx scripts/doctor.ts",
     "verification:report": "tsx scripts/final-verification.ts",
     "verification:check": "tsx scripts/final-verification.ts --check",
+    "audit:deps": "pnpm audit --audit-level=high",
     "verify:clean": "node scripts/clean-room.mjs",
     "backup": "tsx scripts/backup.ts",
     "smoke:live": "tsx scripts/live-smoke.ts"

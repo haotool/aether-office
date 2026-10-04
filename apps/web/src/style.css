@@ -2275,6 +2275,14 @@ th {
   padding: 6px 8px;
   border-bottom: 1px solid var(--line);
 }
+.sessions-page td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.sessions-page td:first-child {
+  min-width: 200px;
+  max-width: 300px;
+}
 .sessions-page td small {
   display: block;
   color: var(--dim);
@@ -2291,13 +2299,14 @@ th {
   color: var(--mint);
   font-family: var(--mono);
 }
-.sessions-page .actions {
-  white-space: nowrap;
-}
-.sessions-page .actions button + button {
-  margin-left: 4px;
+.sessions-page td:nth-child(5) {
+  max-width: 160px;
 }
 .sessions-page .actions button {
+  display: block;
+  width: 100%;
+  margin-bottom: 4px;
+  white-space: nowrap;
   min-height: 26px;
   padding: 3px 8px;
   font-size: 10px;
@@ -2349,4 +2358,18 @@ th {
 .quick-list small {
   opacity: 0.6;
   font-family: var(--mono);
+}
+
+.sessions-page small.liveness {
+  font-weight: 600;
+}
+.sessions-page small.liveness.active {
+  color: var(--mint);
+}
+.sessions-page small.liveness.dormant,
+.sessions-page small.liveness.orphaned {
+  color: var(--gold);
+}
+.sessions-page small.liveness.zombie {
+  color: var(--red);
 }

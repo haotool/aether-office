@@ -1,7 +1,6 @@
 import { requestReview } from './services/review-runs.js';
 import { randomUUID } from 'node:crypto';
 import { realpathSync } from 'node:fs';
-import { eq, inArray } from 'drizzle-orm';
 import {
   commandSchema,
   agentSchema,
@@ -18,6 +17,7 @@ import {
 import { authorize, assertVersion, DomainError, type Actor } from '@aether/kernel';
 import { validateLayout } from '@aether/kernel';
 import { connect } from './db/connection.js';
+import { insertRow, selectAll, selectIn, selectOne, updateRows } from './db/query.js';
 import { projects, agents, work, dependencies, messages, knowledge } from './db/schema.js';
 import { hash, secret, authenticate, createIdentity, identityActor } from './services/identity.js';
 import { agent, emit, project, type Context } from './services/context.js';
@@ -176,7 +176,7 @@ export class Control {
               version: 1,
               createdAt: this.ctx.now(),
             };
-            this.ctx.db.insert(projects).values(row).run();
+            insertRow(this.ctx.sqlite, projects, row);
             result = row;
             eventProject = row.id;
             break;
@@ -234,7 +234,7 @@ export class Control {
               createdAt: this.ctx.now(),
               lastSeen: null,
             };
-            this.ctx.db.insert(agents).values(row).run();
+            insertRow(this.ctx.sqlite, agents, row);
             result = row;
             break;
           }
@@ -284,11 +284,7 @@ export class Control {
             result = decideApproval(this.ctx, actor, c.projectId, c.expectedVersion, c.data);
             break;
           case 'knowledge.approve': {
-            const row = this.ctx.db
-              .select()
-              .from(knowledge)
-              .where(eq(knowledge.id, c.data.knowledgeId))
-              .get();
+            const row = selectOne(this.ctx.sqlite, knowledge, { id: c.data.knowledgeId });
             if (!row || row.projectId !== c.projectId)
               throw new DomainError('KNOWLEDGE_NOT_FOUND', 404);
             assertVersion(row.version, c.expectedVersion);
@@ -301,7 +297,7 @@ export class Control {
               updatedAt: this.ctx.now(),
               version: row.version + 1,
             };
-            this.ctx.db.update(knowledge).set(patch).where(eq(knowledge.id, row.id)).run();
+            updateRows(this.ctx.sqlite, knowledge, { id: row.id }, patch);
             result = { ...row, ...patch };
             break;
           }
@@ -335,7 +331,7 @@ export class Control {
               reviewedBy: null,
               reviewReason: null,
             };
-            this.ctx.db.insert(knowledge).values(row).run();
+            insertRow(this.ctx.sqlite, knowledge, row);
             result = row;
             break;
           }
@@ -378,12 +374,8 @@ export class Control {
     authorize(actor, 'read');
     return (
       actor.projectIds.includes('*')
-        ? this.ctx.db.select().from(projects).all()
-        : this.ctx.db
-            .select()
-            .from(projects)
-            .where(inArray(projects.id, [...actor.projectIds]))
-            .all()
+        ? selectAll(this.ctx.sqlite, projects)
+        : selectIn(this.ctx.sqlite, projects, 'id', actor.projectIds)
     ).map((p) => projectSchema.parse(p));
   }
   snapshot(actor: Actor, projectId: string): Snapshot {
@@ -392,19 +384,14 @@ export class Control {
       .transaction(() => {
         const p = project(this.ctx, actor, projectId);
         const seq = this.highWatermark(projectId);
-        const visible = this.ctx.db
-          .select()
-          .from(messages)
-          .where(eq(messages.projectId, projectId))
-          .all()
-          .filter(
-            (m) =>
-              actor.role !== 'agent' ||
-              m.senderId === actor.agentId ||
-              !!this.ctx.sqlite
-                .prepare('SELECT 1 FROM recipient_deliveries WHERE messageId=? AND recipientId=?')
-                .get(m.id, actor.agentId),
-          );
+        const visible = selectAll(this.ctx.sqlite, messages, { projectId }).filter(
+          (m) =>
+            actor.role !== 'agent' ||
+            m.senderId === actor.agentId ||
+            !!this.ctx.sqlite
+              .prepare('SELECT 1 FROM recipient_deliveries WHERE messageId=? AND recipientId=?')
+              .get(m.id, actor.agentId),
+        );
         const rows = visible.slice(-100).map((m) => ({
           ...messageSchema.parse(m),
           deliveries: (
@@ -422,23 +409,11 @@ export class Control {
           schemaVersion: 1 as const,
           seq,
           project: p,
-          agents: this.ctx.db
-            .select()
-            .from(agents)
-            .where(eq(agents.projectId, projectId))
-            .all()
-            .map((a) => agentSchema.parse(a)),
-          work: this.ctx.db
-            .select()
-            .from(work)
-            .where(eq(work.projectId, projectId))
-            .all()
-            .map((w) => workSchema.parse(w)),
-          dependencies: this.ctx.db
-            .select()
-            .from(dependencies)
-            .where(eq(dependencies.projectId, projectId))
-            .all(),
+          agents: selectAll(this.ctx.sqlite, agents, { projectId }).map((a) =>
+            agentSchema.parse(a),
+          ),
+          work: selectAll(this.ctx.sqlite, work, { projectId }).map((w) => workSchema.parse(w)),
+          dependencies: selectAll(this.ctx.sqlite, dependencies, { projectId }),
           messages: rows,
           layout: layout
             ? { version: layout.version, data: layoutSchema.parse(JSON.parse(layout.data)) }

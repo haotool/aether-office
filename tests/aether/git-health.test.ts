@@ -7,6 +7,7 @@ import { createServer } from '../../apps/control/src/server.js';
 import {
   cleanMergedWorktrees,
   gitHealth,
+  worktreeSizes,
   parseWorktrees,
 } from '../../apps/control/src/services/git-health.js';
 import { command, fixture } from './fixture.js';
@@ -48,16 +49,21 @@ it('reports merged worktrees and branches, missing worktrees and sizes, and sugg
     const by = Object.fromEntries(report.worktrees.map((w) => [w.branch ?? w.path, w]));
     expect(report.defaultBranch).toBe('main');
     expect(by['done']).toMatchObject({ merged: true, dirty: 0 });
-    expect(by['wip']).toMatchObject({ merged: false, dirty: 1 });
+    expect(by['wip']).toMatchObject({ merged: false, dirty: null }); // changes are only counted where removal is possible
+    expect(by['wip']!.lastCommitAt).toBeGreaterThan(0);
     expect(by['lost']).toMatchObject({ prunable: true });
-    expect(by['main']!.sizeBytes).toBeGreaterThan(0);
     expect(report.staleBranches).toEqual(['old-merged']);
     expect(report.suggestions).toEqual([
       'git worktree prune',
       `git worktree remove ${JSON.stringify(join(dir, 'wt-done'))}`,
       'git branch -d old-merged',
     ]);
-    expect(report.totals.reclaimableBytes).toBe(by['done']!.sizeBytes);
+    expect(report.removable).toEqual([join(dir, 'wt-done')]);
+    // The sizes come apart from the report: every worktree still on disk, none for the one that is gone.
+    const { sizes } = await worktreeSizes(repo);
+    expect(sizes[repo]).toBeGreaterThan(0);
+    expect(sizes[join(dir, 'wt-done')]).toBeGreaterThan(0);
+    expect(Object.keys(sizes)).not.toContain(join(dir, 'wt-lost'));
     // Nothing was removed.
     expect(g(repo, 'worktree', 'list')).toContain('wt-done');
   } finally {

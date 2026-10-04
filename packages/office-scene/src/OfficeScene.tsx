@@ -32,6 +32,7 @@ import {
 import { FLOORS, defaultLayout, floorZones, zones } from './layout.js';
 import { OrbitalBackdrop } from './OrbitalBackdrop.js';
 import { Animal } from './Animal.js';
+import type { Apparition } from './animal-states.js';
 import { MessageCarriers } from './MessageCarriers.js';
 import { PerfProbe } from './PerfProbe.js';
 import { SCREEN_H, SCREEN_W, screenTexture } from './screens.js';
@@ -64,6 +65,10 @@ export type OfficeSceneProps = {
   roleOf?: (agent: Agent) => string;
   /** The Git branch an agent works on, drawn as a beam from its desk into the core (the default branch). */
   branchOf?: (agent: Agent) => BranchInfo | null;
+  /** Members drawn as something else at their own seat: a sleeping rabbit, a ghost, a jiangshi (see animal-states). */
+  apparitions?: Readonly<Record<string, Apparition>>;
+  /** Members with zombie processes under them (id → how many): a jiangshi stands behind each one's chair as well. */
+  zombies?: Readonly<Record<string, number>>;
   /** Agents with something new for the user (waiting for them, or finished): their labels are marked. */
   unreadIds?: ReadonlySet<string>;
   /** When set, the scene renders continuously for a fixed sample and reports measured frame times. */
@@ -103,7 +108,6 @@ const Floor = memo(function Floor({
   useEffect(() => () => disposeFloor(model), [model]);
   // Moving parts (hologram rings, breathing trim) advance only while the scene animates, at a steady rate.
   const clock = useRef(0);
-  const invalidate = useThree((s) => s.invalidate);
   useFrame((_state, delta) => {
     if (!animate || document.hidden) return;
     clock.current += delta;
@@ -130,7 +134,7 @@ const Floor = memo(function Floor({
     for (const p of model.pulsers)
       (p.material as unknown as { emissiveIntensity: number }).emissiveIntensity =
         p.base + p.amplitude * Math.sin(clock.current * p.speed);
-    invalidate();
+    // The next frame is requested by AnimationClock, which sets the pace.
   });
   void detail;
   return <primitive object={model.group} position={[0, y, 0]} dispose={null} />;
@@ -274,13 +278,25 @@ function Runtime({ onFailure }: { onFailure: () => void }) {
   return null;
 }
 
-function AnimationClock({ active }: { active: boolean }) {
+// Ambient motion (drones, scan sweeps, hologram shimmer) needs no more than ~30 frames a second; the camera
+// (fly-to, follow, orbit) invalidates on its own and keeps the full rate. Measured on an M4: halves GPU and renderer work.
+const AMBIENT_FRAME_MS = 24;
+
+function AnimationClock({ active, smooth }: { active: boolean; smooth: boolean }) {
   const invalidate = useThree((s) => s.invalidate);
+  const timer = useRef<number | undefined>(undefined);
   useFrame(() => {
-    if (active && !document.hidden) invalidate();
+    if (!active || document.hidden) return;
+    if (smooth) invalidate();
+    else if (timer.current === undefined)
+      timer.current = window.setTimeout(() => {
+        timer.current = undefined;
+        invalidate();
+      }, AMBIENT_FRAME_MS);
   });
   useEffect(() => {
     if (active) invalidate();
+    return () => window.clearTimeout(timer.current);
   }, [active, invalidate]);
   return null;
 }
@@ -836,11 +852,22 @@ export function OfficeScene(props: OfficeSceneProps) {
                 >
                   <Animal
                     agent={agent}
+                    apparition={props.apparitions?.[agent.id]}
                     selected={agent.id === props.selectedId || agent.id === hovered}
                     reducedMotion={props.reducedMotion}
                     quality={props.quality}
                     onError={props.onFailure}
                   />
+                  {(props.zombies?.[agent.id] ?? 0) > 0 && (
+                    <Animal
+                      agent={agent}
+                      apparition="zombie"
+                      selected={false}
+                      reducedMotion={props.reducedMotion}
+                      quality={props.quality}
+                      onError={props.onFailure}
+                    />
+                  )}
                 </group>
               </group>
             );
@@ -912,7 +939,7 @@ export function OfficeScene(props: OfficeSceneProps) {
               ];
             })}
           />
-          <AnimationClock active={active || follow} />
+          <AnimationClock active={active || follow} smooth={follow} />
         </Canvas>
         <div className="world-labels">
           {sceneAgents.map((agent) => (

@@ -1,12 +1,12 @@
 import { open, stat } from 'node:fs/promises';
+import { withEdge } from './file-edge.js';
 import type { LocalSession } from '@aether/contracts';
 
 // Model, context size and spend from a provider transcript. Only counters and the model name are read:
 // no message text is parsed out, kept or returned.
 export type SessionUsage = LocalSession['usage'];
-const TAIL_BYTES = 128 * 1024;
-// A long Codex turn can push the last turn_context (which names the model) out of the first window.
-const WIDE_TAIL_BYTES = 2 * 1024 * 1024;
+// Read windows, narrowest first. A long Codex turn can push its last turn_context (which names the model) out of the first.
+const TAILS = [128 * 1024, 512 * 1024, 2 * 1024 * 1024];
 const NONE: SessionUsage = {
   model: null,
   contextTokens: null,
@@ -20,17 +20,33 @@ const obj = (v: unknown): Record<string, unknown> =>
   typeof v === 'object' && v !== null ? (v as Record<string, unknown>) : {};
 
 /**
+ * The lines of `data` that hold one of `needles`, last first, decoded one at a time. Everything else (megabytes of tool
+ * output) is skipped as bytes, never turned into text; stopping early costs nothing.
+ */
+function* linesWithFromEnd(data: Buffer, needles: readonly string[]): Generator<string> {
+  let limit = data.length;
+  while (limit > 0) {
+    const hit = Math.max(...needles.map((needle) => data.lastIndexOf(needle, limit - 1)));
+    if (hit < 0) return;
+    const start = data.lastIndexOf(10, hit) + 1; // -1 + 1: the first line
+    const stop = data.indexOf(10, hit);
+    yield data.toString('utf8', start, stop < 0 ? data.length : stop);
+    limit = start;
+  }
+}
+
+/**
  * Pure. Codex: the latest token_count that carries info (the latest request's input is the context in use, the
  * cumulative total is the session's spend) and the model of the turn_context before it. Claude: the latest assistant
  * message's usage (new + cached input is the context in use). Absent or malformed → null, never zero.
  */
-export function parseUsage(provider: 'claude' | 'codex', tail: string): SessionUsage {
+export function parseUsage(provider: 'claude' | 'codex', tail: Buffer): SessionUsage {
   const usage = { ...NONE };
-  const lines = tail.split('\n');
-  for (let i = lines.length - 1; i >= 0; i--) {
+  const needles = provider === 'claude' ? ['"usage"'] : ['"token_count"', '"turn_context"'];
+  for (const line of linesWithFromEnd(tail, needles)) {
     let entry: Record<string, unknown>;
     try {
-      entry = obj(JSON.parse(lines[i]!));
+      entry = obj(JSON.parse(line));
     } catch {
       continue; // the first line of a tail read is usually cut in half
     }
@@ -90,19 +106,14 @@ export async function readUsage(provider: 'claude' | 'codex', file: string): Pro
     const { mtimeMs, size } = await stat(file);
     const hit = cache.get(file);
     if (hit && hit.mtime === mtimeMs && hit.size === size) return hit.usage;
-    const read = async (bytes: number) => {
-      const length = Math.min(size, bytes);
-      const handle = await open(file, 'r');
-      try {
-        const buffer = Buffer.alloc(length);
-        await handle.read(buffer, 0, length, size - length);
-        return parseUsage(provider, buffer.toString('utf8'));
-      } finally {
-        await handle.close();
-      }
-    };
-    let usage = await read(TAIL_BYTES);
-    if (usage.model === null && size > TAIL_BYTES) usage = await read(WIDE_TAIL_BYTES);
+    const read = (bytes: number) =>
+      withEdge(file, 'tail', bytes, (data) => parseUsage(provider, data));
+    // Most transcripts name the model in their last few records: widen the window only while it is still missing.
+    let usage = NONE;
+    for (let i = 0; i < TAILS.length; i++) {
+      if (i > 0 && (usage.model !== null || size <= TAILS[i - 1]!)) break;
+      usage = await read(TAILS[i]!);
+    }
     if (provider === 'claude') usage = { ...usage, totalTokens: await claudeTotal(file, size) };
     if (cache.size > 512) cache.clear(); // bounded by design
     cache.set(file, { mtime: mtimeMs, size, usage });
@@ -112,46 +123,63 @@ export async function readUsage(provider: 'claude' | 'codex', file: string): Pro
   }
 }
 
+const USAGE_KEYS = [
+  'input_tokens',
+  'cache_creation_input_tokens',
+  'cache_read_input_tokens',
+  'output_tokens',
+] as const;
+const USAGE_COUNTERS = USAGE_KEYS.map((key) => new RegExp(`"${key}":(\\d+)`));
+
 /**
- * Pure. Claude Code keeps no running total, so a session's spend is the sum of every assistant message's input
- * (new and cached) and output, the same measure as Codex's total_token_usage. One message is written as several lines
- * repeating its usage, so a message counts once, by id; `lastId` carries that across chunks.
+ * Pure. Claude Code keeps no running total, so a session's spend is the sum of every assistant message's input (new and
+ * cached) and output, the same measure as Codex's total_token_usage. `data` is whole lines. One message is written as
+ * several lines repeating its usage, so a message counts once, by id; `lastId` carries that across chunks.
+ *
+ * Most of a transcript is tool output and thinking, and a line can be tens of KB, so nothing is decoded but the few
+ * hundred bytes holding a message's id and counters (JSON.parse of every line is what filled memory). Lines whose
+ * usage is not a message's own (a sub-agent's result, say) carry no message id and are skipped.
  */
-export function sumClaudeTokens(lines: string, lastId: string | null) {
+export function sumClaudeTokens(data: Buffer, lastId: string | null) {
   let tokens = 0;
-  for (const line of lines.split('\n')) {
-    if (!line.includes('"usage"')) continue;
-    let message: Record<string, unknown>;
-    try {
-      message = obj(obj(JSON.parse(line))['message']);
-    } catch {
-      continue;
-    }
-    const id = typeof message['id'] === 'string' ? message['id'] : null;
-    if (id !== null && id === lastId) continue;
+  let from = 0;
+  while (from < data.length) {
+    const hit = data.indexOf('"usage":{', from);
+    if (hit < 0) break;
+    const start = data.lastIndexOf(10, hit) + 1; // -1 + 1: the first line
+    const stop = data.indexOf(10, hit);
+    const lineEnd = stop < 0 ? data.length : stop;
+    from = lineEnd + 1;
+    const head = data.toString('utf8', start, Math.min(start + 900, lineEnd));
+    const id = /"message":\{[^{}]{0,300}?"id":"([^"]+)"/.exec(head)?.[1];
+    if (id === undefined || id === lastId) continue;
     lastId = id;
-    const u = obj(message['usage']);
-    for (const k of [
-      'input_tokens',
-      'cache_creation_input_tokens',
-      'cache_read_input_tokens',
-      'output_tokens',
-    ])
-      tokens += num(u[k]) ?? 0;
+    // The message's own counters come first; the per-iteration copies that follow are not added again.
+    const counters = data.toString('utf8', hit + 9, Math.min(hit + 9 + 400, lineEnd));
+    for (const counter of USAGE_COUNTERS) tokens += Number(counter.exec(counters)?.[1] ?? 0);
   }
   return { tokens, lastId };
 }
 
 const CHUNK = 4 * 1024 * 1024;
+// One buffer for every file, so files are summed one at a time: a buffer per file kept hundreds of MB resident.
+const chunk = Buffer.allocUnsafe(CHUNK);
+let sums: Promise<unknown> = Promise.resolve();
 type Total = { offset: number; tokens: number; lastId: string | null };
 const totals = new Map<string, Total>();
 /** A Claude transcript's running total, reading only what was appended since the last call. */
-async function claudeTotal(file: string, size: number): Promise<number> {
+function claudeTotal(file: string, size: number): Promise<number> {
+  const next = sums.then(() => sumFile(file, size));
+  sums = next.catch(() => 0);
+  return next;
+}
+
+async function sumFile(file: string, size: number): Promise<number> {
   let state: Total | undefined = totals.get(file);
   if (!state || size < state.offset) state = { offset: 0, tokens: 0, lastId: null };
   const handle = await open(file, 'r');
   try {
-    const buffer = Buffer.alloc(CHUNK);
+    const buffer = chunk;
     while (state.offset < size) {
       const { bytesRead }: { bytesRead: number } = await handle.read(
         buffer,
@@ -161,8 +189,12 @@ async function claudeTotal(file: string, size: number): Promise<number> {
       );
       if (!bytesRead) break;
       const end: number = buffer.lastIndexOf(10, bytesRead - 1); // only whole lines; the rest is read next time
-      if (end < 0) break;
-      const sum = sumClaudeTokens(buffer.toString('utf8', 0, end), state.lastId);
+      if (end < 0) {
+        if (bytesRead < CHUNK) break; // an unfinished last line: wait for the rest
+        state = { ...state, offset: state.offset + bytesRead }; // one line longer than a chunk: step over it
+        continue;
+      }
+      const sum = sumClaudeTokens(buffer.subarray(0, end), state.lastId);
       state = {
         offset: state.offset + end + 1,
         tokens: state.tokens + sum.tokens,

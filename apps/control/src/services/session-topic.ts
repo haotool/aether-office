@@ -1,4 +1,5 @@
-import { open, stat } from 'node:fs/promises';
+import { stat } from 'node:fs/promises';
+import { readEdge } from './file-edge.js';
 import { redactSecrets } from './redaction.js';
 
 // What a session was asked to do. It classifies the session on the server and is then dropped, except that a Codex
@@ -60,18 +61,7 @@ export function codexTopic(head: string): string | null {
   return null;
 }
 
-async function read(file: string, where: 'head' | 'tail', bytes: number): Promise<string> {
-  const { size } = await stat(file);
-  const length = Math.min(size, bytes);
-  const handle = await open(file, 'r');
-  try {
-    const buffer = Buffer.alloc(length);
-    await handle.read(buffer, 0, length, where === 'head' ? 0 : size - length);
-    return buffer.toString('utf8');
-  } finally {
-    await handle.close();
-  }
-}
+const read = (file: string, where: 'head' | 'tail', bytes: number) => readEdge(file, where, bytes);
 
 const cache = new Map<string, { mtime: number; size: number; topic: string | null }>();
 export async function readTopic(

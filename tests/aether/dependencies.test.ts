@@ -50,4 +50,44 @@ describe('dependency policy', () => {
     const allowed = [...workspace.matchAll(/^\s{2}([\w@/.-]+): true$/gm)].map((m) => m[1]).sort();
     expect(allowed).toEqual(['better-sqlite3', 'esbuild', 'node-pty']);
   });
+
+  it('locks every package to a registry tarball with an integrity hash', () => {
+    const lock = readFileSync('pnpm-lock.yaml', 'utf8');
+    const resolutions = [...lock.matchAll(/^ {4}resolution: (.+)$/gm)].map((m) => m[1]!);
+    expect(resolutions.length).toBeGreaterThan(100);
+    expect(resolutions.filter((r) => !/^\{integrity: sha512-[\w+/=]+\}$/.test(r))).toEqual([]);
+  });
+
+  it('keeps the install-time protections on', () => {
+    const workspace = readFileSync('pnpm-workspace.yaml', 'utf8');
+    expect(workspace).toMatch(/^trustPolicy: no-downgrade$/m);
+    expect(workspace).toMatch(/^blockExoticSubdeps: true$/m);
+    expect(Number(/^minimumReleaseAge: (\d+)$/m.exec(workspace)?.[1])).toBeGreaterThanOrEqual(1440);
+    expect(workspace).not.toMatch(/dangerouslyAllowAllBuilds/);
+  });
+
+  it('has no installed package with an install script outside the allow-list', () => {
+    const root = 'node_modules/.pnpm';
+    if (!existsSync(root)) return;
+    const allowed = ['better-sqlite3', 'esbuild', 'node-pty'];
+    const scripted = new Set<string>();
+    for (const entry of readdirSync(root)) {
+      const modules = `${root}/${entry}/node_modules`;
+      if (!existsSync(modules)) continue;
+      for (const name of readdirSync(modules)) {
+        const dirs = name.startsWith('@')
+          ? readdirSync(`${modules}/${name}`).map((sub) => `${name}/${sub}`)
+          : [name];
+        for (const dir of dirs) {
+          const file = `${modules}/${dir}/package.json`;
+          if (!existsSync(file)) continue;
+          const pkg = read(file) as { name?: string; scripts?: Record<string, string> };
+          const hooks = pkg.scripts ?? {};
+          if (pkg.name && (hooks['preinstall'] || hooks['install'] || hooks['postinstall']))
+            scripted.add(pkg.name);
+        }
+      }
+    }
+    expect([...scripted].filter((name) => !allowed.includes(name))).toEqual([]);
+  });
 });

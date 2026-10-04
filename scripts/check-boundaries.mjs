@@ -17,7 +17,7 @@ async function visit(dir) {
     for (const item of imports) {
       const banned =
         (file.startsWith('packages/kernel/') &&
-          /^(node:|react|three|fastify|better-sqlite3|drizzle|@aether\/providers)/.test(item)) ||
+          /^(node:|react|three|fastify|better-sqlite3|@aether\/providers)/.test(item)) ||
         ((file.startsWith('apps/web/') || file.startsWith('packages/office-scene/')) &&
           /^(node:|fastify|better-sqlite3|@aether\/providers)/.test(item)) ||
         (file.startsWith('apps/runner/') && /control\/(src|dist)\/db/.test(item)) ||
