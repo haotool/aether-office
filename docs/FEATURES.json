@@ -3051,7 +3051,7 @@
     "requirement": "最終重新 clean install／build／start／smoke 驗證成功或列具體失敗。",
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
-    "verificationStatus": "partial",
+    "verificationStatus": "passed",
     "codePaths": [
       "scripts/clean-room.mjs",
       "package.json",
@@ -3061,9 +3061,7 @@
       "scripts/clean-room.mjs"
     ],
     "evidencePaths": [],
-    "blockers": [
-      "clean-room 在 06a0a0e 全過；之後的 3D／UI 大改動尚未重跑 verify:clean --e2e；macOS only"
-    ]
+    "blockers": []
   },
   {
     "id": "QA-08",

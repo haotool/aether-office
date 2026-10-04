@@ -38,7 +38,7 @@ Remaining: GUI-based local grant setup/selection (configuration is currently mac
 
 | Layer | Wire protocol | Package (exact) | Notes |
 |---|---|---|---|
-| ACP client (`packages/providers/src/acp.ts`) | ACP v1 (`PROTOCOL_VERSION` 1, agent selects at `initialize`) | `@agentclientprotocol/sdk` 1.7.0 | Capabilities come from negotiation. Real `@agentclientprotocol/claude-agent-acp` 0.85.1 negotiated v1 with resume, image, embeddedContext and MCP advertised (initialize only, no model call). Not usable for read-only review. |
+| ACP client (`packages/providers/src/acp.ts`) | ACP v1 (`PROTOCOL_VERSION` 1, agent selects at `initialize`) | `@agentclientprotocol/sdk` 1.7.0 | Capabilities come from negotiation. Real `@agentclientprotocol/claude-agent-acp` 0.85.1 negotiated v1 with resume, image, embeddedContext and MCP advertised (initialize only, no model call). Real Gemini CLI 0.46.0 (`acpAgent: { command: "/opt/homebrew/bin/gemini", args: ["--acp"] }`) negotiated v1 with resume, image, audio, embeddedContext and MCP, auth methods oauth-personal / gemini-api-key / vertex-ai / gateway (2026-10-04, initialize only). Not usable for read-only review. |
 | A2A gateway (`apps/control/src/services/a2a.ts`) | A2A spec 1.0.0, JSON-RPC binding | `@a2a-js/sdk` 1.3.0 | Off unless `AETHER_A2A=on`. Methods: SendMessage, GetTask, CancelTask, ListTasks. No streaming, push, or follow-up turns. |
 
 The ACP wire version, the SDK semver and the A2A spec version move independently; a test pins the ACP SDK semver to the installed package.

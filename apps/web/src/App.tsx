@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useReducer, useState } from 'react';
+import { lazy, Suspense, useEffect, useReducer, useState, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { NavLink, useLocation, useSearchParams } from 'react-router-dom';
 import {
@@ -20,6 +20,7 @@ import {
   Moon,
   Globe2,
   Radio,
+  Layers,
   RotateCcw,
   Play,
   Pause,
@@ -58,17 +59,20 @@ import { MachineInvite } from './features/MachineInvite.js';
 import { Integrations } from './features/Integrations.js';
 import { Skills } from './features/Skills.js';
 import { Observations } from './features/Observations.js';
+import { Sessions } from './features/Sessions.js';
 import { Approvals } from './features/Approvals.js';
 import type { PerfReport } from '@aether/office-scene';
 import { useAdoptRepos } from './adoptProjects.js';
 import {
+  branchResolver,
   floorResolver,
   mergeLayout,
   roleResolver,
+  activityOf,
   sessionIdOf,
   sessionsToAgents,
 } from './localSessions.js';
-import { useApprovalNotifications } from './notifications.js';
+import { useApprovalNotifications, useSessionAlerts, type SessionEvent } from './notifications.js';
 import {
   TOUR_INTERVAL_MS,
   idle,
@@ -83,6 +87,9 @@ const Terminals = lazy(() =>
 const OfficeScene = lazy(() =>
   import('@aether/office-scene').then((m) => ({ default: m.OfficeScene })),
 );
+const QuickOpen = lazy(() =>
+  import('./features/QuickOpen.js').then((m) => ({ default: m.QuickOpen })),
+);
 const LayoutEditor = lazy(() =>
   import('./features/LayoutEditor.js').then((m) => ({ default: m.LayoutEditor })),
 );
@@ -93,6 +100,7 @@ const nav = [
   ['messages', MessagesSquare],
   ['workspace', Monitor],
   ['terminals', Monitor],
+  ['sessions', Layers],
   ['observations', Radio],
   ['reviews', ShieldCheck],
   ['approvals', CheckCheck],
@@ -242,6 +250,17 @@ export function App() {
   }, [tour]); // `act` only closes over `tour`, which is this effect's dependency
   const [inspector, setInspector] = useState(true);
   const [menu, setMenu] = useState(false);
+  const [quick, setQuick] = useState(false);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setQuick((open) => !open);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
   const [offline, setOffline] = useState(false);
   const [notice, setNotice] = useState('');
   useEffect(() => {
@@ -284,6 +303,30 @@ export function App() {
     },
   );
   useApprovalNotifications(projectId, !!session && prefs.notifyApprovals, t('approvalNeeded'));
+  // Sessions that started waiting for a human or finished since they were last looked at.
+  const [unread, setUnread] = useState<ReadonlySet<string>>(new Set());
+  const briefs = useMemo(
+    () =>
+      local.data?.sessions.map((s) => ({
+        key: s.key,
+        activity: activityOf(s, Date.now()),
+        title: s.title ?? s.repo,
+      })),
+    [local.data],
+  );
+  const alertLabels = useMemo(
+    () => ({ needsYou: t('sessionNeedsYou'), finished: t('sessionFinished') }),
+    [t],
+  );
+  const markUnread = useCallback(
+    (events: SessionEvent[]) => setUnread((u) => new Set([...u, ...events.map((e) => e.key)])),
+    [],
+  );
+  useSessionAlerts(briefs, prefs.notifyApprovals, alertLabels, markUnread);
+  useEffect(() => {
+    const key = selectedId ? sessionIdOf(selectedId) : null;
+    if (key && unread.has(key)) setUnread((u) => new Set([...u].filter((k) => k !== key)));
+  }, [selectedId, unread]);
   const seq = snapshot.data?.seq;
   useEffect(() => {
     if (!projectId || !session || !seq) return;
@@ -346,6 +389,7 @@ export function App() {
       : [];
   const floorOf = floorResolver(local.data?.sessions ?? []);
   const roleOf = roleResolver(local.data?.sessions ?? []);
+  const branchOf = branchResolver(local.data?.sessions ?? []);
   const sceneAgents = data ? [...data.agents, ...observed] : [];
   const selected = sceneAgents.find((a) => a.id === selectedId) ?? null;
   // Recomputed per render on purpose: MessageCarriers dedupes by messageId, so identity does not matter.
@@ -397,7 +441,7 @@ export function App() {
           <Plus size={17} />
         </button>
         <div className="topbar-right">
-          {local.data?.enabled && <Telemetry sessions={local.data.sessions} />}
+          {local.data?.enabled && <Telemetry sessions={local.data.sessions} unread={unread.size} />}
           {session.mode === 'live' && session.actor.role === 'owner' && projectId && (
             <EmergencyStop projectId={projectId} />
           )}
@@ -461,6 +505,33 @@ export function App() {
             </button>
           </div>
         </nav>
+        {quick && (
+          <Suspense fallback={null}>
+            <QuickOpen
+              onClose={() => setQuick(false)}
+              items={[
+                ...nav.map(([key]) => ({
+                  id: `page:${key}`,
+                  label: t(key),
+                  hint: key,
+                  to: `/${key}${projectId ? `?project=${projectId}` : ''}`,
+                })),
+                ...(projects.data ?? []).map((p) => ({
+                  id: `project:${p.id}`,
+                  label: p.name,
+                  hint: t('project'),
+                  to: `/${page}?project=${p.id}`,
+                })),
+                ...(local.data?.sessions ?? []).map((s) => ({
+                  id: `session:${s.key}`,
+                  label: s.title ?? s.repo,
+                  hint: `${s.provider} · ${s.repo} · ${s.git?.branch ?? ''}`,
+                  to: `/office?${s.projectId ? `project=${s.projectId}&` : ''}agent=${encodeURIComponent(`local:${s.key}`)}`,
+                })),
+              ]}
+            />
+          </Suspense>
+        )}
         <main className={`main-content ${page === 'office' ? 'office-page' : ''}`}>
           {offline && (
             <div className="offline-banner" role="status">
@@ -540,7 +611,7 @@ export function App() {
                     <div className="office-stats">
                       <span>
                         <i className="dot mint" />
-                        {data.agents.length} {t('agents')}
+                        {sceneAgents.length} {t('agents')}
                       </span>
                       <span>
                         <i className="dot gold" />
@@ -654,6 +725,8 @@ export function App() {
                           <OfficeScene
                             agents={sceneAgents}
                             roleOf={roleOf}
+                            branchOf={branchOf}
+                            unreadIds={new Set([...unread].map((key) => `local:${key}`))}
                             layout={
                               preview ??
                               mergeLayout(data.layout?.data ?? null, data.agents, observed, floorOf)
@@ -677,7 +750,7 @@ export function App() {
                       ) : (
                         <div className="office-2d">
                           <Agents
-                            snapshot={data}
+                            snapshot={{ ...data, agents: sceneAgents }}
                             onSelect={select}
                             onSaved={refresh}
                             canWrite={canWrite}
@@ -702,7 +775,7 @@ export function App() {
                         </NavLink>
                       </div>
                       <div className="team-strip-list">
-                        {data.agents.map((agent) => (
+                        {sceneAgents.map((agent) => (
                           <button
                             className={`team-chip ${agent.id === selectedId ? 'selected' : ''}`}
                             key={agent.id}
@@ -751,6 +824,8 @@ export function App() {
                         <Rooms projectId={projectId} agents={data.agents} canManage={canWrite} />
                         <Meetings projectId={projectId} agents={data.agents} canManage={canWrite} />
                       </>
+                    ) : page === 'sessions' ? (
+                      <Sessions sessions={local.data?.sessions ?? []} locale={prefs.locale} />
                     ) : page === 'observations' ? (
                       <Observations key={projectId} projectId={projectId} />
                     ) : page === 'terminals' ? (

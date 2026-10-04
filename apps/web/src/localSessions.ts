@@ -161,3 +161,50 @@ export function roleResolver(sessions: readonly LocalSession[]): (agent: Agent) 
     return (key !== null && byKey.get(key)) || classifySession({ title: agent.role }).role;
   };
 }
+
+/** The Git branch behind an observed agent, for the beams in the office; managed agents have none here. */
+export function branchResolver(sessions: readonly LocalSession[]) {
+  const byKey = new Map(sessions.map((s) => [s.key, s]));
+  return (agent: Agent) => {
+    const key = sessionIdOf(agent.id);
+    const s = key === null ? undefined : byKey.get(key);
+    if (!s?.git) return null;
+    return {
+      branch: s.git.branch,
+      linked: !!s.worktree?.linked,
+      dirty: s.git.uncommitted,
+      ahead: s.git.ahead,
+      behind: s.git.behind,
+    };
+  };
+}
+
+const quote = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;
+/** The provider's own commands to continue or branch off a session, run from the session's directory. */
+export function sessionCommands(s: Pick<LocalSession, 'provider' | 'sessionId' | 'cwd'>) {
+  const cd = `cd ${quote(s.cwd)} && `;
+  return s.provider === 'claude'
+    ? {
+        resume: `${cd}claude --resume ${s.sessionId}`,
+        fork: `${cd}claude --resume ${s.sessionId} --fork-session`,
+      }
+    : { resume: `${cd}codex resume ${s.sessionId}`, fork: `${cd}codex fork ${s.sessionId}` };
+}
+
+/** Pure. Tokens each department's sessions have used, largest first; sessions that report no usage are left out. */
+export function tokensByDepartment(
+  sessions: readonly (Pick<LocalSession, 'usage'> & { classification: { department: string } })[],
+) {
+  const totals = new Map<string, { tokens: number; sessions: number }>();
+  for (const s of sessions) {
+    if (s.usage.totalTokens === null) continue;
+    const t = totals.get(s.classification.department) ?? { tokens: 0, sessions: 0 };
+    totals.set(s.classification.department, {
+      tokens: t.tokens + s.usage.totalTokens,
+      sessions: t.sessions + 1,
+    });
+  }
+  return [...totals]
+    .map(([department, t]) => ({ department, ...t }))
+    .sort((a, b) => b.tokens - a.tokens);
+}

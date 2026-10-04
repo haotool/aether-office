@@ -2018,3 +2018,335 @@ th {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.telemetry dd.warn {
+  color: var(--gold);
+}
+
+.transcript-toggle {
+  margin-top: 12px;
+}
+.transcript-toggle summary {
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  color: var(--mint);
+}
+.live-transcript .analysis {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0;
+  font-size: 11px;
+}
+.live-transcript .analysis b {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 1.4px;
+  color: var(--dim);
+  margin-bottom: 3px;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.chips li {
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  font-family: var(--mono);
+  font-size: 10px;
+}
+.chips i {
+  font-style: normal;
+  color: var(--mint);
+}
+.mono-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+}
+.mono-list li {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.transcript {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 340px;
+  overflow: auto;
+  border-top: 1px solid var(--line);
+}
+.transcript .entry {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+}
+.transcript .who {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.transcript .assistant .who {
+  color: var(--mint);
+}
+.transcript .tool .who {
+  color: var(--violet);
+}
+.transcript .error .text {
+  color: var(--red);
+}
+.transcript .text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.transcript .tool .text,
+.transcript .result .text {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.git-health h2 {
+  margin-bottom: 12px;
+}
+.readouts-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  margin: 0 0 14px;
+  font-family: var(--mono);
+}
+.readouts-row dt {
+  font-size: 9px;
+  letter-spacing: 1.4px;
+  color: var(--dim);
+}
+.readouts-row dd {
+  margin: 0;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.readouts-row dd.good {
+  color: var(--mint);
+}
+.git-health table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.git-health th,
+.git-health td {
+  text-align: left;
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.git-health tr.reclaimable td:nth-child(2) {
+  color: var(--mint);
+}
+.git-health .table-scroll {
+  max-height: 360px;
+  overflow: auto;
+}
+.git-health .suggestions {
+  max-height: 220px;
+  overflow: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  background: var(--bg);
+  padding: 10px;
+}
+
+.scene-label.unread::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 8px var(--gold);
+  margin-left: 2px;
+}
+
+.git-graph {
+  margin-bottom: 16px;
+}
+.graph-scroll {
+  max-height: 420px;
+  overflow: auto;
+}
+.graph {
+  display: flex;
+  gap: 6px;
+}
+.graph svg {
+  flex-shrink: 0;
+}
+.graph ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  flex: 1;
+}
+.graph li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.graph .ref {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 0 5px;
+  border: 1px solid color-mix(in srgb, var(--mint) 50%, transparent);
+  color: var(--mint);
+  border-radius: 2px;
+}
+.graph .subject {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.graph .sha {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--dim);
+}
+
+.clean-confirm {
+  margin: 0 0 14px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line));
+}
+.clean-confirm ul {
+  margin: 6px 0 10px;
+}
+.git-health > .secondary {
+  margin-bottom: 14px;
+}
+
+.sessions-page .filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.sessions-page .filters input[type='search'] {
+  flex: 1;
+  min-width: 220px;
+}
+.sessions-page .count {
+  margin-left: auto;
+  font-family: var(--mono);
+  color: var(--dim);
+}
+.sessions-page .table-scroll {
+  max-height: calc(100dvh - 300px);
+  overflow: auto;
+}
+.sessions-page table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.sessions-page th,
+.sessions-page td {
+  text-align: left;
+  vertical-align: top;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.sessions-page td small {
+  display: block;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+.sessions-page td b {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--mint);
+}
+.sessions-page td a {
+  margin-right: 6px;
+  color: var(--mint);
+  font-family: var(--mono);
+}
+.sessions-page .actions {
+  white-space: nowrap;
+}
+.sessions-page .actions button + button {
+  margin-left: 4px;
+}
+.sessions-page .actions button {
+  min-height: 26px;
+  padding: 3px 8px;
+  font-size: 10px;
+}
+
+.token-split {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+.token-split li {
+  display: grid;
+  gap: 2px;
+  padding: 6px 10px;
+  border: 1px solid var(--grid);
+  font-family: var(--mono);
+}
+.token-split b {
+  font-size: 1.1em;
+}
+
+.quick-input {
+  width: 100%;
+}
+.quick-list {
+  max-height: 50vh;
+  overflow: auto;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.quick-list button {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+}
+.quick-list [aria-selected='true'] button {
+  background: var(--grid);
+}
+.quick-list small {
+  opacity: 0.6;
+  font-family: var(--mono);
+}

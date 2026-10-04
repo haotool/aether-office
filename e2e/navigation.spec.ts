@@ -67,3 +67,14 @@ test('state is never carried by colour alone: every badge has visible text', asy
     expect(empty, path).toBe(0);
   }
 });
+
+test('Ctrl+K opens quick open, and typing then Enter jumps to the match', async ({ page }) => {
+  await login(page);
+  await page.keyboard.press('Control+k');
+  const input = page.getByRole('searchbox', { name: '快速開啟' });
+  await expect(input).toBeFocused();
+  await input.fill('approvals');
+  await input.press('Enter');
+  await expect(page).toHaveURL(/\/approvals/);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});

@@ -15,9 +15,17 @@ const session = (main: string | null, projectId: string | null): AttributedSessi
     hook: null,
     subagents: [],
     process: 'unknown',
+    resources: null,
+    ports: [],
     title: null,
     classification: { role: 'generalist', department: 'product', basis: 'default', matched: null },
-    usage: { model: null, contextTokens: null, contextWindow: null, totalTokens: null },
+    usage: {
+      model: null,
+      contextTokens: null,
+      contextWindow: null,
+      totalTokens: null,
+      limit: null,
+    },
     projectId,
   }) as AttributedSession;
 

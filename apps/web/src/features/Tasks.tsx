@@ -6,6 +6,7 @@ import { execute } from '../api.js';
 import { Integration } from './Integration.js';
 import { WorkflowStart } from './WorkflowStart.js';
 import { useCapabilities } from './CapabilityMatrix.js';
+import { BOARD } from './board.js';
 import { Modal, Field, Empty, Badge, PageHeading, useT } from '../ui.js';
 const TaskDag = lazy(() => import('./TaskDag.js').then((m) => ({ default: m.TaskDag })));
 export function TaskForm({
@@ -168,14 +169,19 @@ export function Tasks({
           <div className="task-list">{rows(snapshot.work)}</div>
         ) : (
           <div className="kanban">
-            {(['ready', 'assigned', 'running', 'reviewing', 'completed'] as const).map((state) => (
-              <section key={state}>
-                <h3>
-                  {t(state)} <span>{snapshot.work.filter((w) => w.state === state).length}</span>
-                </h3>
-                {rows(snapshot.work.filter((w) => w.state === state))}
-              </section>
-            ))}
+            {BOARD.map(([column, states]) => {
+              const items = snapshot.work.filter((w) =>
+                (states as readonly string[]).includes(w.state),
+              );
+              return (
+                <section key={column}>
+                  <h3>
+                    {t(column)} <span>{items.length}</span>
+                  </h3>
+                  {rows(items)}
+                </section>
+              );
+            })}
           </div>
         )
       ) : (

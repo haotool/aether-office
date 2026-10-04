@@ -269,3 +269,17 @@
 - 協定缺口：Codex 的使用者提問與 MCP elicitation 明確回答「無回答」並記錄問了什麼；MCP 工具批准（`codex_approval_kind = mcp_tool_call`）走人工批准，只批准單次，不接受「記住整個 session」；停滯偵測（機器仍有心跳、run 超過兩倍時限且至少 10 分鐘無回報）。
 - 真實 smoke（經明確授權，用訂閱登入，無 API key，`pnpm run smoke:live -- --confirm-subscription-quota`）：Codex 0.160.0 與 Claude Code 2.1.288 各一次 `whoami`；Claude 傳 nonce A，Codex 回 nonce B 與 A，Claude 讀到回覆。證據在本機 `evidence/live-smoke-*.json`（該目錄被 gitignore）。MSG-08、CDX-08、CLA-08 轉為 passed。
 - 仍未做：hook 在回合邊界注入訊息、Claude 路徑改走 ACP adapter、多 lane 審查、在介面內一鍵啟動兩個 agent 互傳（目前以腳本與既有的註冊／派工介面完成）、Linux／Windows、長時間 live 穩定性。
+
+## 2026-10-04（續三）— 觀察、監控與 Git 視覺化
+
+- 3D：全息工作站（無實體螢幕）、依職位的多樣化畫面（18 種職位、每人固定一種）、懸浮座艙、資料柱、狀態信標、近景追蹤活躍成員、每位成員 worktree 到核心（主分支）的 Git 光束與工作中的資料封包。
+- 監控：Codex 訂閱額度（取自 rollout；Claude Code 本機不記錄，顯示未知）、機器 CPU／記憶體（macOS 以 vm_stat 計可用）／磁碟可用、每個 session 的 CPU 與記憶體、需要你或已完成的未讀標記與通知。
+- 即時紀錄（經使用者同意讀內容）：只以掃描器登記的 key 開檔、讀取上限、不讀隱藏推理、以移植自 Orca（MIT，已列於 THIRD_PARTY_NOTICES）的規則遮蔽憑證。
+- Git：唯讀健康報告（已合併未清除的 worktree 與分支、已不存在的 worktree、各 worktree 大小與可回收量，只列建議指令不執行）與提交圖。實測 accounting-bunny：486 個 worktree、120 個已合併未清除、可回收約 18 GB。
+- 未做：YOLO／AUTO 權限模式（Claude Code 的安全分類器拒絕，需使用者自行於權限設定放行或在 CLI 設定中開啟）、agent team 收件匣視覺化、session fork、開發預覽、PR 建立、看板、token 預算、多 lane 審查、容器沙箱。
+
+## 2026-10-04（續四）— 補齊同類產品常見功能
+
+- 已加入：可列出所有本機 session 並搜尋，可複製 resume／fork 指令，也可開啟開發預覽連結（從 agent 程序樹的監聽 port 取得）；一鍵清理已合併、沒有未提交修改的 worktree，只用 `git worktree remove`，不加 `--force`；看板改為五欄並涵蓋所有工作狀態；各部門 token 用量；⌘K／Ctrl+K 快速開啟頁面、專案與 session。
+- Gemini CLI 0.46.0 不用新增程式碼，透過既有的通用 ACP adapter（`acpAgent: { command: gemini, args: ["--acp"] }`）實測完成 initialize 協商。
+- 依第一性原理判斷暫不做：agent team 收件匣（本機沒有 `~/.claude/teams`，沒有資料可顯示）；建立 PR（屬於遠端寫入，需要另外授權）；多 lane 審查與 merge queue（單人在本機使用時沒有排隊的需求）；容器沙箱（目前已用 worktree 與 repo 授權隔離）；PWA（只在 localhost 使用，安裝的價值很低）。

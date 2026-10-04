@@ -1074,9 +1074,22 @@ export const localSessionSchema = z.object({
     contextTokens: z.number().nullable(),
     contextWindow: z.number().nullable(),
     totalTokens: z.number().nullable(),
+    // The provider's own subscription window, when it records one (Codex does; Claude Code does not, locally).
+    limit: z
+      .object({
+        usedPercent: z.number(),
+        windowMinutes: z.number().nullable(),
+        resetsAt: z.number().nullable(),
+        plan: z.string().nullable(),
+      })
+      .nullable(),
   }),
   // Is an agent CLI process running for it? 'unknown' for Codex Desktop threads, which share one app server.
   process: z.enum(['running', 'none', 'unknown']),
+  // CPU (share of one core) and resident memory of the process behind it, when one was found.
+  resources: z.object({ cpuPercent: z.number(), rssBytes: z.number() }).nullable(),
+  // Ports its process tree listens on: a dev server it started, for a preview link.
+  ports: z.array(z.number().int()),
 });
 export type LocalSession = z.infer<typeof localSessionSchema>;
 // A session joined to the AETHER project whose root is its main checkout; null until that project exists.
