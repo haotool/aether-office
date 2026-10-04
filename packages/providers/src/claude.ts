@@ -10,7 +10,7 @@ import {
   type ProviderEvent,
 } from './protocol.js';
 import { assertClaudeVersion } from './compat.js';
-import { processIdentity, type ProviderResult } from './index.js';
+import { processIdentity, VERSION_PROBE_MS, type ProviderResult } from './index.js';
 export function normalizeClaudeMessage(input: unknown, turnId: string): ProviderEvent[] {
   const m = record(input);
   const out: ProviderEvent[] = [];
@@ -116,7 +116,7 @@ export class ClaudeAdapter {
   async run(prompt: string, signal: AbortSignal): Promise<ProviderResult> {
     const version = execFileSync(this.options.binary, ['--version'], {
       encoding: 'utf8',
-      timeout: 3000,
+      timeout: VERSION_PROBE_MS,
     });
     assertClaudeVersion(version);
     const turnId = randomUUID();

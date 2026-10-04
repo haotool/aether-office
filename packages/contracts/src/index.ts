@@ -1088,6 +1088,17 @@ export const localSessionSchema = z.object({
   process: z.enum(['running', 'none', 'unknown']),
   // CPU (share of one core) and resident memory of the process behind it, when one was found.
   resources: z.object({ cpuPercent: z.number(), rssBytes: z.number() }).nullable(),
+  // How alive it is: working, waiting, long forgotten, or left without an owner; and when its process began
+  // (with the session, the identity a stop request must name) and how long nothing has happened in it.
+  liveness: z.object({
+    state: z.enum(['active', 'idle', 'dormant', 'orphaned', 'ended', 'unknown']),
+    startedAt: z.number().nullable(),
+    quietMs: z.number().nullable(),
+    // Finished processes under its process that nobody has collected: zombies, shown standing behind its seat.
+    zombies: z.array(
+      z.object({ pid: z.number().int(), startedAt: z.number(), program: z.string().nullable() }),
+    ),
+  }),
   // Ports its process tree listens on: a dev server it started, for a preview link.
   ports: z.array(z.number().int()),
 });

@@ -1,3 +1,4 @@
+import { groupStopper } from './process-control.js';
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { StringDecoder } from 'node:string_decoder';
 import { createHash } from 'node:crypto';
@@ -155,26 +156,8 @@ export class JsonRpcProcess {
     if (this.stopped) return;
     this.stopped = true;
     this.fail(new Error('PROVIDER_CLOSED'));
-    const pid = this.child.pid;
-    if (pid) {
-      try {
-        if (process.platform === 'win32') this.child.kill('SIGTERM');
-        else process.kill(-pid, 'SIGTERM');
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error;
-      }
-      const timer = setTimeout(() => {
-        if (this.child.exitCode === null && this.child.signalCode === null) {
-          try {
-            if (process.platform === 'win32') this.child.kill('SIGKILL');
-            else process.kill(-pid, 'SIGKILL');
-          } catch (error) {
-            if ((error as NodeJS.ErrnoException).code !== 'ESRCH')
-              this.onClose(new Error('PROCESS_TERMINATION_FAILED'));
-          }
-        }
-      }, 1500);
-      timer.unref();
-    }
+    const stopper = groupStopper(this.child, 1500);
+    stopper.stop();
+    this.child.once('close', stopper.cancel);
   }
 }

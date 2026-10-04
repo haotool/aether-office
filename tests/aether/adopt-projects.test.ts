@@ -16,6 +16,7 @@ const session = (main: string | null, projectId: string | null): AttributedSessi
     subagents: [],
     process: 'unknown',
     resources: null,
+    liveness: { state: 'unknown', startedAt: null, quietMs: null, zombies: [] },
     ports: [],
     title: null,
     classification: { role: 'generalist', department: 'product', basis: 'default', matched: null },

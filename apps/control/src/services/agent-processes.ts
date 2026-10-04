@@ -7,51 +7,209 @@ import type { LocalSession } from '@aether/contracts';
 const run = promisify(execFile);
 export type AgentProcess = {
   pid: number;
+  ppid: number;
   provider: 'claude' | 'codex';
   cwd: string;
   resume: string | null;
   /** From `ps`: share of one core, and resident memory. What pidusage reads on macOS too, without the dependency. */
   cpuPercent: number;
   rssBytes: number;
+  /** When the process started (ps `lstart`, to the second): with the pid, the identity of this process and no other. */
+  startedAt: number;
+  /** CPU time the process has used in all; its growth between two looks says whether it is doing anything. */
+  cpuSeconds: number;
+  /** `ps` state of the process itself, e.g. `S+`, `Ss`. */
+  stat: string;
+  /**
+   * Zombies under it: finished processes nobody has collected (`<defunct>`, state Z). A zombie keeps no name, no
+   * arguments and no directory, so it cannot be traced to a session by itself; it belongs to whoever should have
+   * collected it, which is the process it descends from.
+   */
+  zombies: Zombie[];
+  /** Has the process lost the one that started it? (see isOrphaned) */
+  orphaned: boolean;
   /** TCP ports the agent or anything it started (a dev server) is listening on. */
   ports: number[];
 };
 export type ProcessState = LocalSession['process'];
+/** A finished process nobody collected, and the program it was when it was last seen alive (null if it never was). */
+export type Zombie = { pid: number; startedAt: number; program: string | null };
+
+/** One line of `ps`, for any process: the table the parent and tree questions are answered from. */
+export type ProcessRow = {
+  pid: number;
+  ppid: number;
+  stat: string;
+  startedAt: number;
+  cpuSeconds: number;
+  cpuPercent: number;
+  rssBytes: number;
+  tty: string;
+  command: string;
+};
 
 // Helpers and servers that merely carry the provider's name never hold a session of their own.
 const NOT_A_SESSION = /\b(app-server|exec-server|code-mode-host|mcp-server|--version)\b/;
+// The manager that adopts a user's orphans on Linux, in place of init.
+const ORPHAN_ADOPTER = /(?:^|\/)systemd\s.*--user\b/;
 const RESUME = /(?:--resume|-r)[ =]([0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})/i;
+// `ps -o lstart` is always 24 characters ("Sat Oct  3 10:23:45 2026") and, run with LC_ALL=C, always in English.
+const LSTART = /^(?:\w{3}) (\w{3}) +(\d{1,2}) (\d\d):(\d\d):(\d\d) (\d{4})/;
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+export const PS_FORMAT = 'lstart=,pid=,ppid=,stat=,time=,%cpu=,rss=,tty=,command=';
 
-/** Pure: which providers' CLI processes does this `ps -o pid=,%cpu=,rss=,command=` listing contain? */
-export function parseProcessList(text: string): Omit<AgentProcess, 'cwd' | 'ports'>[] {
+/** Pure. `ps` start time (local time, to the second) → epoch milliseconds, or null when it does not parse. */
+export function parseStartTime(text: string): number | null {
+  const m = LSTART.exec(text.trim());
+  if (!m) return null;
+  const month = MONTHS.indexOf(m[1]!);
+  if (month < 0) return null;
+  return new Date(
+    Number(m[6]),
+    month,
+    Number(m[2]),
+    Number(m[3]),
+    Number(m[4]),
+    Number(m[5]),
+  ).getTime();
+}
+
+/** Pure. CPU time as `ps` prints it (`[dd-][hh:]mm:ss[.cc]`) → seconds. */
+export function parseCpuTime(text: string): number {
+  const [days, clock] = text.includes('-') ? text.split('-') : ['0', text];
+  const parts = clock!.split(':').map(Number);
+  if (parts.some((n) => !Number.isFinite(n))) return 0;
+  return parts.reduce((total, n) => total * 60 + n, 0) + Number(days) * 86400;
+}
+
+/** Pure. Every line of `ps -axo ${PS_FORMAT}`. */
+export function parseProcessTable(text: string): ProcessRow[] {
   return text.split('\n').flatMap((line) => {
-    const m = /^\s*(\d+)\s+([\d.]+)\s+(\d+)\s+(.+)$/.exec(line);
-    if (!m) return [];
-    const [, pid, cpu, rss, command] = m as unknown as [string, string, string, string, string];
-    const program = basename(command.split(/\s+-/)[0]!.trim().split(' ')[0] ?? '');
-    const provider = program === 'claude' ? 'claude' : program === 'codex' ? 'codex' : null;
-    if (!provider || NOT_A_SESSION.test(command)) return [];
+    const startedAt = parseStartTime(line.slice(0, 24));
+    const m = /^\s*(\d+)\s+(\d+)\s+(\S+)\s+(\S+)\s+([\d.]+)\s+(\d+)\s+(\S+)\s+(.+)$/.exec(
+      line.slice(24),
+    );
+    if (startedAt === null || !m) return [];
+    const [, pid, ppid, stat, time, cpu, rss, tty, command] = m as unknown as string[] as [
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+    ];
     return [
       {
         pid: Number(pid),
-        provider,
-        resume: RESUME.exec(command)?.[1] ?? null,
+        ppid: Number(ppid),
+        stat,
+        startedAt,
+        cpuSeconds: parseCpuTime(time),
         cpuPercent: Number(cpu),
         rssBytes: Number(rss) * 1024,
+        tty,
+        command,
       },
     ];
   });
 }
 
-/** Pure: every descendant of each root, from `ps -o pid=,ppid=` lines. */
-export function descendants(text: string, roots: readonly number[]): Map<number, number> {
-  const children = new Map<number, number[]>();
-  for (const line of text.split('\n')) {
-    const m = /^\s*(\d+)\s+(\d+)/.exec(line);
-    if (!m) continue;
-    const [pid, ppid] = [Number(m[1]), Number(m[2])];
-    children.set(ppid, [...(children.get(ppid) ?? []), pid]);
+/** Pure. The provider CLI processes among `rows`: the sessions' own, not helpers that share the name. */
+export function parseProcessList(
+  rows: readonly ProcessRow[],
+): Omit<AgentProcess, 'cwd' | 'ports' | 'orphaned' | 'zombies'>[] {
+  return rows.flatMap((row) => {
+    const program = basename(row.command.split(/\s+-/)[0]!.trim().split(' ')[0] ?? '');
+    const provider = program === 'claude' ? 'claude' : program === 'codex' ? 'codex' : null;
+    if (!provider || NOT_A_SESSION.test(row.command)) return [];
+    return [
+      {
+        pid: row.pid,
+        ppid: row.ppid,
+        provider,
+        resume: RESUME.exec(row.command)?.[1] ?? null,
+        cpuPercent: row.cpuPercent,
+        rssBytes: row.rssBytes,
+        startedAt: row.startedAt,
+        cpuSeconds: row.cpuSeconds,
+        stat: row.stat,
+      },
+    ];
+  });
+}
+
+/**
+ * Pure. Has this process lost the one that started it? Not simply `ppid <= 1`: under a `systemd --user` manager (and in
+ * a container with a subreaper) an orphan is adopted by that manager, whose pid is large and alive, so the test is
+ * "the parent is gone, init, or a manager that adopts orphans" (gascity learned this the hard way). A zombie is never
+ * called an orphan: nothing is running to be lost.
+ */
+export function isOrphaned(
+  row: Pick<ProcessRow, 'ppid' | 'stat'>,
+  byPid: ReadonlyMap<number, ProcessRow>,
+): boolean {
+  if (row.stat.startsWith('Z')) return false;
+  if (row.ppid <= 1) return true;
+  const parent = byPid.get(row.ppid);
+  return !parent || ORPHAN_ADOPTER.test(parent.command);
+}
+
+/**
+ * Remembers what the processes under the agents were called while they were alive. A zombie loses its name, so the only
+ * way to say what it was is to have looked before it died. Only the program (no arguments: those can hold secrets), only
+ * for processes under an agent, and only as long as they exist.
+ */
+export class ProcessNames {
+  private seen = new Map<string, string>();
+  private key = (row: Pick<ProcessRow, 'pid' | 'startedAt'>) => `${row.pid}:${row.startedAt}`;
+
+  /** Looks at the table once: names the living `watched` rows, keeps the names of the zombies among them. */
+  remember(rows: readonly ProcessRow[], watched: ReadonlySet<number>): void {
+    const next = new Map<string, string>();
+    for (const row of rows) {
+      if (!watched.has(row.pid)) continue;
+      const name = row.stat.startsWith('Z')
+        ? this.seen.get(this.key(row))
+        : basename(row.command.trim().split(/\s+/)[0] ?? '').slice(0, 40);
+      if (name) next.set(this.key(row), name);
+    }
+    this.seen = next;
   }
+
+  programOf(row: Pick<ProcessRow, 'pid' | 'startedAt'>): string | null {
+    return this.seen.get(this.key(row)) ?? null;
+  }
+}
+
+/** Pure: the zombies (state Z) that descend from each root, counted under the process that fathered them. */
+export function zombiesUnder(
+  rows: readonly ProcessRow[],
+  roots: readonly number[],
+  names: Pick<ProcessNames, 'programOf'> = { programOf: () => null },
+): Map<number, Zombie[]> {
+  const owner = descendants(rows, roots);
+  const found = new Map<number, Zombie[]>();
+  for (const row of rows) {
+    const root = row.stat.startsWith('Z') ? owner.get(row.pid) : undefined;
+    if (root === undefined || root === row.pid) continue;
+    found.set(root, [
+      ...(found.get(root) ?? []),
+      { pid: row.pid, startedAt: row.startedAt, program: names.programOf(row) },
+    ]);
+  }
+  return found;
+}
+
+/** Pure: every descendant of each root, from the process table. */
+export function descendants(
+  rows: readonly ProcessRow[],
+  roots: readonly number[],
+): Map<number, number> {
+  const children = new Map<number, number[]>();
+  for (const row of rows) children.set(row.ppid, [...(children.get(row.ppid) ?? []), row.pid]);
   const owner = new Map<number, number>(); // pid → the root it descends from
   for (const root of roots) {
     const queue = [root];
@@ -106,15 +264,14 @@ async function cwdsOf(pids: number[]): Promise<Map<number, string>> {
   return parseCwds(out.stdout);
 }
 
-/** Ports each agent's process tree listens on (best effort: none when ps or lsof is unavailable). */
-async function listeningPorts(roots: number[]): Promise<Map<number, number[]>> {
+/** Ports each agent's process tree listens on (best effort: none when lsof is unavailable). */
+async function listeningPorts(
+  roots: number[],
+  rows: readonly ProcessRow[],
+): Promise<Map<number, number[]>> {
   if (!roots.length || process.platform === 'win32') return new Map();
   try {
-    const tree = descendants(
-      (await run('ps', ['-axo', 'pid=,ppid='], { timeout: 4000, maxBuffer: 4 * 1024 * 1024 }))
-        .stdout,
-      roots,
-    );
+    const tree = descendants(rows, roots);
     const out = await run(
       'lsof',
       ['-nP', '-iTCP', '-sTCP:LISTEN', '-Fpn', '-a', '-p', [...tree.keys()].join(',')],
@@ -137,22 +294,49 @@ async function listeningPorts(roots: number[]): Promise<Map<number, number[]>> {
   }
 }
 
+/** The whole process table, one `ps`. LC_ALL=C keeps the start times in English whatever the user's language. */
+export async function readProcessTable(): Promise<ProcessRow[]> {
+  const { stdout } = await run('ps', ['-axo', PS_FORMAT], {
+    timeout: 4000,
+    maxBuffer: 8 * 1024 * 1024,
+    env: { ...process.env, LC_ALL: 'C' },
+  });
+  return parseProcessTable(stdout);
+}
+
+const names = new ProcessNames();
+
 export async function listAgentProcesses(): Promise<{
   processes: AgentProcess[];
   desktopCodex: boolean;
+  table: ProcessRow[];
 }> {
-  const { stdout } = await run('ps', ['-axo', 'pid=,%cpu=,rss=,command='], {
-    timeout: 4000,
-    maxBuffer: 4 * 1024 * 1024,
-  });
-  const candidates = parseProcessList(stdout);
-  const cwds = await cwdsOf(candidates.map((c) => c.pid));
-  const ports = await listeningPorts(candidates.map((c) => c.pid));
+  const table = await readProcessTable();
+  const byPid = new Map(table.map((row) => [row.pid, row]));
+  const candidates = parseProcessList(table);
+  const pids = candidates.map((c) => c.pid);
+  const [cwds, ports] = await Promise.all([cwdsOf(pids), listeningPorts(pids, table)]); // independent: two lsof at once
+  names.remember(table, new Set(descendants(table, pids).keys()));
+  const zombies = zombiesUnder(table, pids, names);
   const processes = candidates.flatMap((c) => {
     const cwd = cwds.get(c.pid);
-    return cwd ? [{ ...c, cwd, ports: ports.get(c.pid) ?? [] }] : [];
+    return cwd
+      ? [
+          {
+            ...c,
+            cwd,
+            ports: ports.get(c.pid) ?? [],
+            orphaned: isOrphaned(c, byPid),
+            zombies: zombies.get(c.pid) ?? [],
+          },
+        ]
+      : [];
   });
-  return { processes, desktopCodex: /\bcodex\b[^\n]* app-server\b/.test(stdout) };
+  return {
+    processes,
+    table,
+    desktopCodex: table.some((row) => /\bcodex\b[^\n]* app-server\b/.test(row.command)),
+  };
 }
 
 type Located = Pick<LocalSession, 'provider' | 'sessionId' | 'cwd' | 'mtime'> & {

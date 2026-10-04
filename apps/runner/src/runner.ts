@@ -5,7 +5,7 @@ import {
   type RunnerEvent,
   type RunnerJob,
 } from '@aether/contracts';
-import { runFixture } from '@aether/providers';
+import { reapSurvivor, runFixture, type Reaped } from '@aether/providers';
 import { ObserverRunner } from './observers.js';
 import { integrate } from './merge.js';
 import { assertSecureControlUrl } from './transport.js';
@@ -15,6 +15,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import type { NativeSink } from '@aether/providers';
 import type { NativeExecutor } from './native.js';
 export class Runner {
+  private readonly survivors = new Map<string, Reaped>();
   readonly terminals: TerminalRunner | undefined;
   readonly observers: ObserverRunner | undefined;
   private observerError: string | null = null;
@@ -325,6 +326,32 @@ export class Runner {
       this.ticking = false;
     }
   }
+  /**
+   * Before anything starts: stops what a runner that died left running. The journal holds each run's and terminal's
+   * `pid:start`; a process is stopped only if it is still that process and its owner is gone (see reapSurvivor), so a
+   * crash no longer leaves an agent burning quota with nobody to report to.
+   */
+  async reapSurvivors(): Promise<Reaped[]> {
+    const targets = [
+      ...Object.values(this.journal.state.runs)
+        .filter((run) => run.state !== 'finished' && run.processIdentity)
+        .map((run) => ({ key: run.command.runId, identity: run.processIdentity! })),
+      ...Object.values(this.journal.state.terminals)
+        .filter((t) => t.snapshot.state !== 'exited' && t.snapshot.processIdentity)
+        .map((t) => ({ key: t.snapshot.terminalId, identity: t.snapshot.processIdentity })),
+    ];
+    return Promise.all(
+      targets.map(async ({ key, identity }) => {
+        const reaped = await reapSurvivor(identity);
+        this.survivors.set(key, reaped);
+        if (reaped.action !== 'none')
+          console.error(
+            `Left running by the previous runner: ${identity} was ${reaped.verdict}; ${reaped.action}.`,
+          );
+        return reaped;
+      }),
+    );
+  }
   start(): void {
     this.terminals?.recover();
     for (const entry of Object.values(this.journal.state.jobs))
@@ -339,15 +366,19 @@ export class Runner {
       }
     for (const run of Object.values(this.journal.state.runs)) {
       if (run.state === 'finished') continue;
-      // Never signal a persisted PID: the previous process may be gone or its PID reused.
+      // A persisted PID is never signalled here: reapSurvivors has already judged it by pid and start time.
+      const survivor = this.survivors.get(run.command.runId);
       this.enqueue({
         type: 'result',
         sourceEventId: randomUUID(),
         runId: run.command.runId,
         epoch: run.command.epoch,
         outcome: 'indeterminate',
-        summary:
-          'Runner restarted during execution. Process ownership must be reconciled; no automatic retry.',
+        summary: `Runner restarted during execution. ${
+          survivor && survivor.action !== 'none'
+            ? `Its process was left running and has been stopped (${survivor.action});`
+            : 'Process ownership must be reconciled;'
+        } no automatic retry.`,
       });
       run.state = 'finished';
       this.journal.save();

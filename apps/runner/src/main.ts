@@ -29,4 +29,5 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const)
       process.exitCode = 1;
     });
   });
+await runner.reapSurvivors();
 runner.start();

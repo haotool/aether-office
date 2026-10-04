@@ -12,6 +12,7 @@ import {
 } from '@agentclientprotocol/sdk';
 import type { ProviderEvent } from './protocol.js';
 import { text, type NativeSink } from './protocol.js';
+import { groupStopper } from './process-control.js';
 import { processIdentity, type ProviderResult } from './index.js';
 
 // Generic ACP client adapter. What it can do is decided by the agent's negotiated capabilities, not by
@@ -134,8 +135,11 @@ export class AcpAdapter {
       cwd: this.options.cwd,
       env: this.options.env ?? { PATH: process.env['PATH'] ?? '', HOME: process.env['HOME'] ?? '' },
       stdio: ['pipe', 'pipe', 'ignore'],
+      detached: process.platform !== 'win32', // its own group, so a stop reaches what the adapter started too
     });
-    const stop = () => child.kill('SIGTERM');
+    const stopper = groupStopper(child);
+    const stop = stopper.stop;
+    child.once('close', stopper.cancel);
     signal.addEventListener('abort', stop, { once: true });
     const timer = setTimeout(stop, this.options.timeoutMs);
     timer.unref();
@@ -151,7 +155,7 @@ export class AcpAdapter {
     const close = () => {
       clearTimeout(timer);
       signal.removeEventListener('abort', stop);
-      if (child.exitCode === null) child.kill('SIGTERM');
+      if (child.exitCode === null) stop();
     };
     return { child, connection, close };
   }

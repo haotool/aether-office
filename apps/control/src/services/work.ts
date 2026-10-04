@@ -1,7 +1,6 @@
 import { refreshMessageWaits } from './messages.js';
 import { stepConstraint } from './workflows.js';
 import { randomUUID } from 'node:crypto';
-import { eq } from 'drizzle-orm';
 import type { Command } from '@aether/contracts';
 import {
   assertAcyclic,
@@ -12,6 +11,7 @@ import {
   supports,
   type Actor,
 } from '@aether/kernel';
+import { insertRow, selectAll, updateRows } from '../db/query.js';
 import { work, dependencies } from '../db/schema.js';
 import { agent, task, emit, type Context } from './context.js';
 export function createWork(
@@ -20,12 +20,8 @@ export function createWork(
   c: Extract<Command, { type: 'work.create' }>,
 ) {
   const id = randomUUID();
-  const tasks = ctx.db.select().from(work).where(eq(work.projectId, c.projectId)).all();
-  const edges = ctx.db
-    .select()
-    .from(dependencies)
-    .where(eq(dependencies.projectId, c.projectId))
-    .all();
+  const tasks = selectAll(ctx.sqlite, work, { projectId: c.projectId });
+  const edges = selectAll(ctx.sqlite, dependencies, { projectId: c.projectId });
   const graph = new Map(
     tasks.map((t) => [t.id, edges.filter((e) => e.workId === t.id).map((e) => e.dependsOn)]),
   );
@@ -54,9 +50,9 @@ export function createWork(
     reviewBy: null,
     verifiedSha: null,
   };
-  ctx.db.insert(work).values(row).run();
+  insertRow(ctx.sqlite, work, row);
   for (const dependsOn of c.data.dependencies)
-    ctx.db.insert(dependencies).values({ workId: id, dependsOn, projectId: c.projectId }).run();
+    insertRow(ctx.sqlite, dependencies, { workId: id, dependsOn, projectId: c.projectId });
   return { ...row, dependencies: c.data.dependencies };
 }
 export function changeWork(
@@ -86,12 +82,8 @@ export function changeWork(
   if (c.type === 'work.dependencies') {
     if (row.attempt !== 0 || !['ready', 'backlog'].includes(row.state))
       throw new DomainError('WORK_DEPENDENCIES_LOCKED');
-    const tasks = ctx.db.select().from(work).where(eq(work.projectId, c.projectId)).all();
-    const edges = ctx.db
-      .select()
-      .from(dependencies)
-      .where(eq(dependencies.projectId, c.projectId))
-      .all();
+    const tasks = selectAll(ctx.sqlite, work, { projectId: c.projectId });
+    const edges = selectAll(ctx.sqlite, dependencies, { projectId: c.projectId });
     assertAcyclic(
       row.id,
       c.data.dependencies,
@@ -107,10 +99,7 @@ export function changeWork(
     if (state !== row.state) assertTransition(row.state, state);
     ctx.sqlite.prepare('DELETE FROM task_dependencies WHERE workId=?').run(row.id);
     for (const dependsOn of c.data.dependencies)
-      ctx.db
-        .insert(dependencies)
-        .values({ workId: row.id, dependsOn, projectId: c.projectId })
-        .run();
+      insertRow(ctx.sqlite, dependencies, { workId: row.id, dependsOn, projectId: c.projectId });
     patch = { ...patch, state };
   } else if (c.type === 'work.extend') {
     if (!['failed', 'changes_requested'].includes(row.state) || row.attempt < row.maxAttempts)
@@ -368,7 +357,7 @@ export function changeWork(
   // rejects the shortcut.
   if (c.type === 'work.retry')
     ctx.sqlite.prepare("UPDATE work_items SET state='ready' WHERE id=?").run(row.id);
-  ctx.db.update(work).set(patch).where(eq(work.id, row.id)).run();
+  updateRows(ctx.sqlite, work, { id: row.id }, patch);
   if (c.type === 'work.cancel') refreshMessageWaits(ctx, c.projectId);
   if (patch.state === 'completed') {
     ctx.sqlite

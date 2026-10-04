@@ -2,7 +2,7 @@ import { spawn, type IPty } from 'node-pty';
 import { randomUUID } from 'node:crypto';
 import { realpathSync } from 'node:fs';
 import { isAbsolute } from 'node:path';
-import { processIdentity } from '@aether/providers';
+import { groupStopper, processIdentity } from '@aether/providers';
 import { z } from 'zod';
 const size = z
   .object({ cols: z.number().int().min(10).max(400), rows: z.number().int().min(2).max(200) })
@@ -34,7 +34,7 @@ export class PtySession {
   private lease: { owner: string; token: string; expiresAt: number } | null = null;
   private exit: { exitCode: number; signal: number | null } | null = null;
   private deadline: ReturnType<typeof setTimeout>;
-  private killTimer: ReturnType<typeof setTimeout> | undefined;
+  private readonly stopper: ReturnType<typeof groupStopper>;
   private dimensions: { cols: number; rows: number };
   constructor(
     profile: PtyProfile,
@@ -59,6 +59,7 @@ export class PtySession {
       encoding: 'utf8',
       env,
     });
+    this.stopper = groupStopper(this.child);
     try {
       this.processIdentity = processIdentity(this.child);
     } catch (error) {
@@ -86,6 +87,7 @@ export class PtySession {
       this.child.onExit((event) => {
         this.exit = { exitCode: event.exitCode, signal: event.signal ?? null };
         this.lease = null;
+        this.stopper.cancel();
         clearTimeout(this.deadline);
         resolve(this.exit);
       }),
@@ -146,17 +148,8 @@ export class PtySession {
     this.controller(user, token);
     this.lease = null;
   }
-  /** Only the in-memory owned process is signalled; persisted PIDs are never adopted. */
-  private signalGroup(signal: NodeJS.Signals) {
-    try {
-      process.kill(-this.child.pid, signal);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error;
-    }
-  }
   stop() {
     if (this.exit) return;
-    this.signalGroup('SIGTERM');
-    this.killTimer ??= setTimeout(() => this.signalGroup('SIGKILL'), 1000);
+    this.stopper.stop(); // only the owned in-memory process; a recorded pid is judged by reapSurvivor, never signalled here
   }
 }

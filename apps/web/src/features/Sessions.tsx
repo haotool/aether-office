@@ -1,17 +1,33 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { AttributedSession } from '@aether/contracts';
+import type { AttributedSession, LocalSession } from '@aether/contracts';
 import { DEPARTMENTS, ROLE_LABELS, type RoleId } from '@aether/kernel';
-import { activityOf, sessionCommands, tokensByDepartment } from '../localSessions.js';
+import { activityOf, formatSpan, sessionCommands, tokensByDepartment } from '../localSessions.js';
 import { PageHeading, useT } from '../ui.js';
+import { StopSession } from './StopSession.js';
+
+const LIVENESS_LABEL = {
+  active: 'livenessActive',
+  idle: 'livenessIdle',
+  dormant: 'livenessDormant',
+  orphaned: 'livenessOrphaned',
+  ended: 'livenessEnded',
+  unknown: 'livenessUnknown',
+} as const;
+
+/** What a zombie was, for a tooltip: "node (pid 123), ?" — the program it was last seen as, or ? when it never was. */
+const zombieTitle = (zombies: LocalSession['liveness']['zombies'], hint: string) =>
+  `${zombies.map((z) => `${z.program ?? '?'} (pid ${z.pid})`).join(', ')}\n${hint}`;
 
 /** Every local session in one searchable list: what it is, where it runs, what it is doing, and how to pick it up. */
 export function Sessions({
   sessions,
   locale,
+  canStop = false,
 }: {
   sessions: readonly AttributedSession[];
   locale: 'zh-TW' | 'en';
+  canStop?: boolean;
 }) {
   const t = useT();
   const navigate = useNavigate();
@@ -19,6 +35,8 @@ export function Sessions({
   const [provider, setProvider] = useState('');
   const [department, setDepartment] = useState('');
   const [runningOnly, setRunningOnly] = useState(false);
+  const [liveness, setLiveness] = useState('');
+  const [stopping, setStopping] = useState<AttributedSession | null>(null);
   const [copied, setCopied] = useState('');
   const now = Date.now();
   const compact = new Intl.NumberFormat(locale, { notation: 'compact' });
@@ -28,6 +46,7 @@ export function Sessions({
       .filter((s) => !provider || s.provider === provider)
       .filter((s) => !department || s.classification.department === department)
       .filter((s) => !runningOnly || s.process === 'running')
+      .filter((s) => !liveness || s.liveness.state === liveness)
       .filter(
         (s) =>
           !q ||
@@ -36,7 +55,7 @@ export function Sessions({
             .some((v) => String(v).toLowerCase().includes(q)),
       )
       .sort((a, b) => b.mtime - a.mtime);
-  }, [sessions, query, provider, department, runningOnly]);
+  }, [sessions, query, provider, department, runningOnly, liveness]);
   const copy = async (text: string, id: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -75,6 +94,18 @@ export function Sessions({
             {DEPARTMENTS.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.floor + 1}F · {locale === 'zh-TW' ? d.zh : d.en}
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label={t('status')}
+            value={liveness}
+            onChange={(e) => setLiveness(e.target.value)}
+          >
+            <option value="">{t('allLiveness')}</option>
+            {(['active', 'idle', 'dormant', 'orphaned', 'ended'] as const).map((state) => (
+              <option key={state} value={state}>
+                {t(LIVENESS_LABEL[state])}
               </option>
             ))}
           </select>
@@ -128,7 +159,8 @@ export function Sessions({
                 return (
                   <tr key={s.key}>
                     <td title={s.cwd}>
-                      <b>{s.provider === 'codex' ? 'CX' : 'CL'}</b> {s.title ?? s.repo}
+                      <b>{s.provider === 'codex' ? 'CX' : 'CL'}</b>{' '}
+                      {s.title ?? (s.cwd.split('/').pop() || s.repo)}
                       <small>{s.repo}</small>
                     </td>
                     <td>
@@ -136,6 +168,31 @@ export function Sessions({
                     </td>
                     <td>
                       {activityOf(s, now)} · {s.process}
+                      {s.liveness.state !== 'unknown' && (
+                        <small className={`liveness ${s.liveness.state}`}>
+                          {t(LIVENESS_LABEL[s.liveness.state])}
+                          {s.liveness.quietMs !== null && (
+                            <>
+                              {' · '}
+                              {t('quietFor')} {formatSpan(s.liveness.quietMs, locale)}
+                            </>
+                          )}
+                          {s.liveness.zombies.length > 0 && (
+                            <>
+                              {' · '}
+                              <span title={zombieTitle(s.liveness.zombies, t('zombieHint'))}>
+                                {t('livenessZombie')} ×{s.liveness.zombies.length}
+                              </span>
+                            </>
+                          )}
+                          {s.liveness.startedAt !== null && (
+                            <>
+                              {' · '}
+                              {t('runningFor')} {formatSpan(now - s.liveness.startedAt, locale)}
+                            </>
+                          )}
+                        </small>
+                      )}
                       {s.resources && (
                         <small>
                           {s.resources.cpuPercent.toFixed(0)}% ·{' '}
@@ -183,6 +240,11 @@ export function Sessions({
                       >
                         {copied === `${s.key}:f` ? t('copied') : t('copyFork')}
                       </button>
+                      {canStop && ['dormant', 'orphaned'].includes(s.liveness.state) && (
+                        <button className="secondary danger" onClick={() => setStopping(s)}>
+                          {t('stopAction')}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -191,6 +253,9 @@ export function Sessions({
           </table>
         </div>
       </div>
+      {stopping && (
+        <StopSession session={stopping} locale={locale} onClose={() => setStopping(null)} />
+      )}
     </>
   );
 }

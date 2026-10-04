@@ -38,11 +38,17 @@ import { listSchedules, tickSchedules } from './services/schedules.js';
 import { listReservations } from './services/reservations.js';
 import { readTranscript } from './services/session-transcript.js';
 import { systemMetrics } from './services/system-metrics.js';
-import { cleanMergedWorktrees, gitHealth } from './services/git-health.js';
+import { cleanMergedWorktrees, gitHealth, worktreeSizes } from './services/git-health.js';
 import { listAgentProcesses } from './services/agent-processes.js';
 import { emit } from './services/context.js';
 import { gitGraph } from './services/git-graph.js';
-import { attributeSessions, scanLocalSessions, sessionFile } from './services/local-sessions.js';
+import {
+  attributeSessions,
+  processOf,
+  scanLocalSessions,
+  sessionFile,
+} from './services/local-sessions.js';
+import { stopLocalSession } from './services/stop-session.js';
 import { homedir } from 'node:os';
 import { diagnoseWork } from './services/diagnostics.js';
 import type { Control } from './control.js';
@@ -408,6 +414,45 @@ export function createServer(
       ),
     };
   });
+  // Stops the process behind a session that is dormant or orphaned. Owner only, audited, SIGTERM to that process alone.
+  app.post<{ Params: { key: string } }>('/api/local-sessions/:key/stop', async (request) => {
+    const who = actor(request);
+    if (who.role !== 'owner' || who.agentId || who.machineId)
+      throw new DomainError('FORBIDDEN', 403);
+    if (!/^(claude|codex):[A-Za-z0-9._-]{1,200}$/.test(request.params.key))
+      throw new DomainError('INVALID_SESSION_KEY', 400);
+    const body = z.object({ startedAt: z.number().int() }).strict().parse(request.body);
+    if (process.env['AETHER_LOCAL_SESSIONS'] === 'off')
+      throw new DomainError('LOCAL_SESSIONS_OFF', 404);
+    const sessions = attributeSessions(
+      await scanLocalSessions(
+        process.env['AETHER_LOCAL_SESSIONS_HOME'] ?? homedir(),
+        Date.now(),
+        0,
+      ),
+      control.listProjects(who),
+    );
+    const session = sessions.find((s) => s.key === request.params.key);
+    if (!session?.projectId)
+      throw new DomainError(session ? 'SESSION_HAS_NO_PROJECT' : 'SESSION_NOT_FOUND', 404);
+    authorize(who, 'project.execution.configure', session.projectId); // owner-only action
+    const result = await stopLocalSession({
+      session,
+      pid: processOf(session.key),
+      startedAt: body.startedAt,
+    });
+    const audit = randomUUID();
+    emit(
+      control.ctx,
+      who,
+      session.projectId,
+      'local-session.stop.requested',
+      { key: session.key, state: session.liveness.state, outcome: result.outcome },
+      audit,
+      audit,
+    );
+    return result;
+  });
   // Worktree and branch health of a project's repository: merged but still present, gone from disk, how large.
   app.get<{ Params: { projectId: string } }>(
     '/api/projects/:projectId/git-health',
@@ -419,6 +464,19 @@ export function createServer(
         .get(request.params.projectId) as { root: string | null } | undefined;
       if (!row?.root) throw new DomainError('PROJECT_HAS_NO_REPOSITORY', 404);
       return gitHealth(row.root);
+    },
+  );
+  // What each of those worktrees takes on disk: separate and slower, so the report does not wait for it.
+  app.get<{ Params: { projectId: string } }>(
+    '/api/projects/:projectId/git-health/sizes',
+    async (request) => {
+      const who = actor(request);
+      authorize(who, 'read', request.params.projectId);
+      const row = control.ctx.sqlite
+        .prepare('SELECT root FROM projects WHERE id=?')
+        .get(request.params.projectId) as { root: string | null } | undefined;
+      if (!row?.root) throw new DomainError('PROJECT_HAS_NO_REPOSITORY', 404);
+      return worktreeSizes(row.root);
     },
   );
   // Owner-only: remove the worktrees the health report lists as merged and clean, re-checked here, never forced.

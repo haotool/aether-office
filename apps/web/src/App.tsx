@@ -64,8 +64,10 @@ import { Approvals } from './features/Approvals.js';
 import type { PerfReport } from '@aether/office-scene';
 import { useAdoptRepos } from './adoptProjects.js';
 import {
+  apparitionsOf,
   branchResolver,
   floorResolver,
+  zombiesOf,
   mergeLayout,
   roleResolver,
   activityOf,
@@ -387,6 +389,8 @@ export function App() {
           prefs.locale,
         )
       : [];
+  const apparitions = apparitionsOf(local.data?.sessions ?? []);
+  const zombies = zombiesOf(local.data?.sessions ?? []);
   const floorOf = floorResolver(local.data?.sessions ?? []);
   const roleOf = roleResolver(local.data?.sessions ?? []);
   const branchOf = branchResolver(local.data?.sessions ?? []);
@@ -725,6 +729,8 @@ export function App() {
                           <OfficeScene
                             agents={sceneAgents}
                             roleOf={roleOf}
+                            apparitions={apparitions}
+                            zombies={zombies}
                             branchOf={branchOf}
                             unreadIds={new Set([...unread].map((key) => `local:${key}`))}
                             layout={
@@ -825,7 +831,11 @@ export function App() {
                         <Meetings projectId={projectId} agents={data.agents} canManage={canWrite} />
                       </>
                     ) : page === 'sessions' ? (
-                      <Sessions sessions={local.data?.sessions ?? []} locale={prefs.locale} />
+                      <Sessions
+                        sessions={local.data?.sessions ?? []}
+                        locale={prefs.locale}
+                        canStop={session.actor.role === 'owner'}
+                      />
                     ) : page === 'observations' ? (
                       <Observations key={projectId} projectId={projectId} />
                     ) : page === 'terminals' ? (

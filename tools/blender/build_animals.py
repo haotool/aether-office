@@ -11,11 +11,40 @@ import argparse
 from pathlib import Path
 from mathutils import Vector
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from animal_geometry import create, PROFILES
-from animal_rig import skeleton, make_clips, ao
+from animal_geometry import create, tail_path
+from animal_forms import GHOST_TAIL, ghost_create
+from animal_clips import clips_for, key_clips
+from animal_profiles import PROFILES
+from animal_rig import skeleton, ao
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'apps/web/public/assets/animals'
 SOURCE=ROOT/'assets-source/animals'
+# The baked maps are source material: the shipped GLBs carry their own (WebP) copies, so these stay out of the web root.
+TEXTURES=SOURCE/'textures'
+# The bones that bend the fused skin; the rest (face, ears, tail, props) carry loose parts of their own.
+BODY_BONES={'pelvis','chest','neck','head',*(f'{b}_{s}' for b in ('upper_arm','forearm','hand','thigh','shin','foot') for s in 'LR')}
+
+
+def assemble(species):
+    """The finished animal in the scene: fused skin with automatic weights, loose parts joined on, skinned to the rig."""
+    ao.clear()
+    bpy.context.scene.unit_settings.system='METRIC';bpy.context.scene.unit_settings.scale_length=1
+    skin,parts,lay=ghost_create() if species=='ghost' else create(species)
+    rig=skeleton(lay,GHOST_TAIL if species=='ghost' else tail_path(PROFILES[species]))
+    for bone in rig.data.bones:bone.use_deform=bone.name in BODY_BONES
+    bpy.ops.object.select_all(action='DESELECT');skin.select_set(True);rig.select_set(True);bpy.context.view_layer.objects.active=rig
+    bpy.ops.object.parent_set(type='ARMATURE_AUTO')
+    bpy.ops.object.select_all(action='DESELECT');skin.select_set(True);bpy.context.view_layer.objects.active=skin
+    bpy.ops.object.mode_set(mode='WEIGHT_PAINT')
+    bpy.ops.object.vertex_group_smooth(group_select_mode='ALL',factor=.5,repeat=3)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    # glTF skins take four bones a vertex; trim here so Blender deforms it the same way.
+    with bpy.context.temp_override(object=skin,active_object=skin,selected_objects=[skin]):
+        bpy.ops.object.vertex_group_limit_total(group_select_mode='ALL',limit=4)
+        bpy.ops.object.vertex_group_normalize_all(group_select_mode='ALL',lock_active=False)
+    for bone in rig.data.bones:bone.use_deform=True
+    mesh=ao.join(skin,parts);mesh.name=f'Aether_{species}'
+    return mesh,rig,lay
 
 
 def digest(path):
@@ -48,7 +77,7 @@ def bake(mesh, species, size):
         elif kind=='roughness':bpy.ops.object.bake(type='EMIT')
         elif kind=='normal':bpy.ops.object.bake(type='NORMAL',normal_space='TANGENT')
         else:bpy.ops.object.bake(type='AO')
-        image.filepath_raw=str(OUT/f'{species}-{kind}.png');image.file_format='PNG';image.save();image.pack();images[kind]=image
+        image.filepath_raw=str(TEXTURES/f'{species}-{kind}.png');image.file_format='PNG';image.save();image.pack();images[kind]=image
         for tree,previous,output,emit in old_links:tree.links.new(previous,output.inputs['Surface']);tree.nodes.remove(emit)
         for tree,node in nodes:tree.nodes.remove(node)
     group=bpy.data.node_groups.get('glTF Material Output') or bpy.data.node_groups.new('glTF Material Output','ShaderNodeTree')
@@ -68,7 +97,7 @@ def bake(mesh, species, size):
 
 def export(path, rig):
     rig.animation_data.action=None;ao.pose(rig,ao.Pose())
-    bpy.ops.export_scene.gltf(filepath=str(path),export_format='GLB',export_yup=True,export_apply=True,export_texcoords=True,export_cameras=False,export_lights=False,export_animations=True,export_animation_mode='ACTIONS',export_force_sampling=True,export_anim_slide_to_zero=True,export_optimize_animation_size=True,export_optimize_animation_keep_anim_armature=True,export_reset_pose_bones=True,export_def_bones=True)
+    bpy.ops.export_scene.gltf(filepath=str(path),export_format='GLB',export_image_format='WEBP',export_image_webp_fallback=False,export_yup=True,export_apply=True,export_texcoords=True,export_cameras=False,export_lights=False,export_animations=True,export_animation_mode='ACTIONS',export_force_sampling=True,export_anim_slide_to_zero=True,export_optimize_animation_size=True,export_optimize_animation_keep_anim_armature=True,export_reset_pose_bones=True,export_def_bones=True)
 
 
 def validate_lod(mesh):
@@ -87,13 +116,11 @@ def validate_lod(mesh):
 
 
 def build(species, size):
-    started=time.time();ao.clear();bpy.context.preferences.filepaths.save_version=0;OUT.mkdir(parents=True,exist_ok=True);SOURCE.mkdir(parents=True,exist_ok=True)
-    bpy.context.scene.unit_settings.system='METRIC';bpy.context.scene.unit_settings.scale_length=1
-    mesh=create(species);images=bake(mesh,species,size);rig=skeleton()
-    modifier=mesh.modifiers.new('Skin','ARMATURE');modifier.object=rig;mesh.parent=rig
-    clips=make_clips();ao.key_clips(rig,clips)
+    started=time.time();bpy.context.preferences.filepaths.save_version=0;OUT.mkdir(parents=True,exist_ok=True);TEXTURES.mkdir(parents=True,exist_ok=True)
+    mesh,rig,lay=assemble(species);images=bake(mesh,species,size)
+    clips=clips_for(species);key_clips(rig,clips)
     for name in ['sit_down','stand_up','turn']:
-        bpy.data.actions[name].use_cyclic=False
+        if name in bpy.data.actions:bpy.data.actions[name].use_cyclic=False
     source=SOURCE/f'{species}.blend';bpy.ops.wm.save_as_mainfile(filepath=str(source))
     # All nine surfaces were baked into the same UV atlas. A single runtime
     # material preserves their distinct colours/roughness with one draw call.
@@ -109,16 +136,19 @@ def build(species, size):
             while list(mesh.modifiers).index(decimate)>0:
                 with bpy.context.temp_override(object=mesh, active_object=mesh):bpy.ops.object.modifier_move_up(modifier=decimate.name)
             bpy.context.view_layer.objects.active=mesh;ao.apply_modifier(mesh,decimate.name)
+        if lod==1:
+            # Far away animals do not need the close-up texture; every LOD GLB embeds its own copy.
+            for image in images.values():image.scale(512,512)
         duplicate_tris=validate_lod(mesh)
         path=OUT/f'{species}-lod{lod}.glb';export(path,rig)
         lods.append({'level':lod,'file':path.name,'sha256':digest(path),'triangles':ao.tris(mesh),'duplicateTrianglesRemoved':duplicate_tris,'bytes':path.stat().st_size})
     bounds=[list(mesh.matrix_world@Vector(c)) for c in mesh.bound_box]
-    manifest={'assetId':species,'version':1,'license':'MIT','provenance':'Original AETHER geometry/animation using AgentSystemLabs MIT aokit primitives','source':str(source.relative_to(ROOT)),'sourceSha256':digest(source),'blender':bpy.app.version_string,'metres':True,'upAxis':'glTF Y','bounds':bounds,'uvLayers':len(mesh.data.uv_layers),'materials':[m.name for m in mesh.data.materials],'bones':[b.name for b in rig.data.bones],'clips':list(clips),'sockets':['hand_socket_L','hand_socket_R','head_socket','chest_socket'],'textures':[{'file':Path(bpy.path.abspath(image.filepath_raw)).name,'sha256':digest(bpy.path.abspath(image.filepath_raw)),'colorSpace':image.colorspace_settings.name,'size':[size,size]} for image in images.values()],'lods':lods,'buildSeconds':round(time.time()-started,3),'verificationStatus':'not_run'}
+    manifest={'assetId':species,'version':2,'license':'MIT','provenance':'Original AETHER geometry/animation generated by tools/blender using AgentSystemLabs MIT aokit primitives','source':str(source.relative_to(ROOT)),'sourceSha256':digest(source),'blender':bpy.app.version_string,'metres':True,'upAxis':'glTF Y','bounds':bounds,'uvLayers':len(mesh.data.uv_layers),'materials':[m.name for m in mesh.data.materials],'bones':[b.name for b in rig.data.bones],'clips':list(clips),'sockets':['hand_socket_L','hand_socket_R','head_socket','chest_socket'],'textures':[{'file':f'textures/{Path(bpy.path.abspath(image.filepath_raw)).name}','sha256':digest(bpy.path.abspath(image.filepath_raw)),'colorSpace':image.colorspace_settings.name,'size':[size,size]} for image in images.values()],'lods':lods,'buildSeconds':round(time.time()-started,3),'verificationStatus':'not_run'}
     (OUT/f'{species}.json').write_text(json.dumps(manifest,indent=2)+'\n')
     print('AETHER_ASSET_BUILT '+json.dumps({'species':species,'seconds':manifest['buildSeconds'],'lods':lods}),flush=True)
 
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser();parser.add_argument('--species',choices=list(PROFILES)+['all'],default='all');parser.add_argument('--texture-size',type=int,default=1024)
+    parser=argparse.ArgumentParser();parser.add_argument('--species',choices=[*PROFILES,'ghost','all'],default='all');parser.add_argument('--texture-size',type=int,default=1024)
     options=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
-    for species in PROFILES if options.species=='all' else [options.species]:build(species,options.texture_size)
+    for species in [*PROFILES,'ghost'] if options.species=='all' else [options.species]:build(species,options.texture_size)

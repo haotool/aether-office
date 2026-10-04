@@ -2,183 +2,34 @@ import { execFile } from 'node:child_process';
 import { realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { promisify } from 'node:util';
-import { open, readdir, stat } from 'node:fs/promises';
-import { basename, dirname, isAbsolute, join } from 'node:path';
+import { stat } from 'node:fs/promises';
+import { basename, dirname, join } from 'node:path';
 import { assignProcesses, listAgentProcesses } from './agent-processes.js';
+import { classifyLiveness, CpuWatch } from './session-liveness.js';
 import { readHookState } from './hook-spool.js';
 import { classifySession } from '@aether/kernel';
 import { readClaudeTitle, readCodexTitles } from './session-title.js';
+import { mapPool } from './pool.js';
+import {
+  discoverRaw,
+  encodeRoot,
+  resetDiscoveryCache,
+  sessionsOfProcesses,
+  type Raw,
+} from './session-discovery.js';
 import { readTopic, topicTitle } from './session-topic.js';
 import { readUsage } from './session-usage.js';
 import type { AttributedSession, LocalSession } from '@aether/contracts';
 
 // Read-only discovery of local Claude Code / Codex sessions. Metadata only: id, cwd, mtime.
-// Transcript content is never retained or returned. Bounded by MAX_SESSIONS/MAX_REPOS.
+// Transcript content is never retained or returned. Every session with a live process is shown; of the rest, the newest
+// MAX_SESSIONS.
 const run = promisify(execFile);
 export const MAX_SESSIONS = 60;
-const MAX_REPOS = MAX_SESSIONS; // every session's directory is classified, none is left unowned by a cap
+const MAX_REPOS = 400; // every shown session's directory is classified, none is left unowned by a cap
 const GIT_BATCH = 10; // bounds concurrent git processes
-const HEAD_BYTES = 64 * 1024;
-// Bounds one scan of a provider's session tree, however large the history grows.
-const MAX_SCAN_ENTRIES = 8 * 1024;
-const RECENT_MS = 7 * 24 * 3600 * 1000;
-
-type Child = { id: string; type: string; lastSeen: number };
-type Raw = {
-  provider: 'claude' | 'codex';
-  sessionId: string;
-  cwd: string;
-  mtime: number;
-  children?: Child[];
-  file: string;
-  shared?: boolean; // hosted by a long-running app server (Codex Desktop), not by its own process
-};
-const ACTIVE_CHILD_MS = 2 * 60 * 1000;
-
-// A Codex rollout names its origin; a spawned one also carries its parent's thread id and its own role.
-function codexMeta(text: string): {
-  spawn: { parent: string; type: string } | null;
-  shared: boolean;
-} {
-  try {
-    const source = (JSON.parse(text.slice(0, text.indexOf('\n'))) as CodexMeta).payload?.source;
-    const spawn = typeof source === 'object' ? source?.subagent?.thread_spawn : undefined;
-    return {
-      spawn: spawn?.parent_thread_id
-        ? {
-            parent: spawn.parent_thread_id,
-            type: spawn.agent_role ?? spawn.agent_nickname ?? 'subagent',
-          }
-        : null,
-      shared: typeof source === 'string' && source !== 'exec' && source !== 'cli',
-    };
-  } catch {
-    return { spawn: null, shared: false }; // an oversized or cut first line is just an ordinary session
-  }
-}
-type CodexMeta = {
-  payload?: {
-    source?:
-      | string
-      | {
-          subagent?: {
-            thread_spawn?: {
-              parent_thread_id?: string;
-              agent_role?: string;
-              agent_nickname?: string;
-            };
-          };
-        };
-  };
-};
-
-async function head(file: string): Promise<string> {
-  const fh = await open(file, 'r');
-  try {
-    const buf = Buffer.alloc(HEAD_BYTES);
-    const { bytesRead } = await fh.read(buf, 0, HEAD_BYTES, 0);
-    return buf.toString('utf8', 0, bytesRead);
-  } finally {
-    await fh.close();
-  }
-}
-const cwdOf = (text: string) => {
-  const m = /"cwd":"((?:[^"\\]|\\.)*)"/.exec(text);
-  if (!m) return null;
-  try {
-    const v = JSON.parse(`"${m[1]}"`) as string;
-    return isAbsolute(v) ? v : null;
-  } catch {
-    return null;
-  }
-};
-
-async function candidates(
-  dir: string,
-  depth: number,
-  now: number,
-  out: { file: string; mtime: number }[],
-  budget = { entries: MAX_SCAN_ENTRIES },
-) {
-  let entries;
-  try {
-    entries = await readdir(dir, { withFileTypes: true });
-  } catch {
-    return;
-  }
-  // Newest first (Codex shards by YYYY/MM/DD), so a spent budget drops the oldest sessions, not the latest.
-  entries.sort((a, b) => (a.name < b.name ? 1 : -1));
-  for (const e of entries) {
-    if (budget.entries-- <= 0) return;
-    if (e.isSymbolicLink()) continue;
-    const p = join(dir, e.name);
-    if (e.isDirectory() && depth < 4) await candidates(p, depth + 1, now, out, budget);
-    // <session>/subagents/agent-*.jsonl are children of a session already listed, not sessions of their own.
-    else if (e.isFile() && e.name.endsWith('.jsonl') && basename(dir) !== 'subagents') {
-      try {
-        const s = await stat(p);
-        if (now - s.mtimeMs < RECENT_MS) out.push({ file: p, mtime: s.mtimeMs });
-      } catch {
-        /* vanished */
-      }
-    }
-  }
-}
-
-export async function discoverRaw(home: string, now = Date.now()): Promise<Raw[]> {
-  const found: (Raw & {
-    spawn?: { parent: string; type: string } | null;
-  })[] = [];
-  for (const provider of ['claude', 'codex'] as const) {
-    const list: { file: string; mtime: number }[] = [];
-    await candidates(
-      join(home, provider === 'claude' ? '.claude/projects' : '.codex/sessions'),
-      0,
-      now,
-      list,
-    );
-    list.sort((a, b) => b.mtime - a.mtime);
-    for (const { file, mtime } of list.slice(0, MAX_SESSIONS)) {
-      try {
-        const text = await head(file);
-        const cwd = cwdOf(text);
-        const base = file
-          .split('/')
-          .pop()!
-          .replace(/\.jsonl$/, '');
-        if (cwd)
-          found.push({
-            provider,
-            sessionId:
-              provider === 'codex'
-                ? (/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.exec(base)?.[0] ?? base)
-                : base,
-            cwd,
-            mtime,
-            file,
-            ...(provider === 'codex' ? codexMeta(text) : {}),
-          });
-      } catch {
-        /* unreadable: skip, never fail the scan */
-      }
-    }
-  }
-  // A spawned Codex rollout is a subagent of its parent, shown as a character of the parent's project while it is active.
-  const ids = new Set(found.map((r) => r.sessionId));
-  const parents = new Map(found.map((r) => [r.sessionId, r]));
-  const roots = found.filter((r) => !(r.spawn && ids.has(r.spawn.parent)));
-  for (const r of found)
-    if (r.spawn && ids.has(r.spawn.parent) && now - r.mtime < ACTIVE_CHILD_MS)
-      (parents.get(r.spawn.parent)!.children ??= []).push({
-        id: r.sessionId,
-        type: r.spawn.type,
-        lastSeen: Math.round(r.mtime),
-      });
-  return roots
-    .sort((a, b) => b.mtime - a.mtime)
-    .slice(0, MAX_SESSIONS)
-    .map(({ spawn: _s, ...r }) => r);
-}
+const READ_WIDTH = 6; // transcripts read at once
+const cpuWatch = new CpuWatch();
 
 export function parseGitStatus(text: string): NonNullable<LocalSession['git']> {
   const lines = text.split('\n').filter(Boolean);
@@ -212,23 +63,55 @@ async function git(cwd: string, args: string[]): Promise<string> {
 
 type RepoInfo = { git: LocalSession['git']; worktree: LocalSession['worktree'] };
 
-async function repoInfo(cwd: string): Promise<RepoInfo> {
-  const empty: RepoInfo = { git: null, worktree: null };
+// Which repository a directory belongs to hardly ever changes; its branch and changes do, but a scan every few
+// seconds need not ask Git again each time (that was two processes per directory per scan).
+const IDENTITY_TTL_MS = 5 * 60 * 1000;
+const STATUS_TTL_MS = 30 * 1000;
+const MAX_CACHED_DIRECTORIES = 512;
+const identities = new Map<string, { at: number; value: RepoInfo['worktree'] }>();
+const statuses = new Map<string, { at: number; value: RepoInfo['git'] }>();
+
+async function remembered<T>(
+  cache: Map<string, { at: number; value: T }>,
+  key: string,
+  ttl: number,
+  now: number,
+  read: () => Promise<T>,
+): Promise<T> {
+  const hit = cache.get(key);
+  if (hit && now - hit.at < ttl) return hit.value;
+  const value = await read();
+  if (cache.size >= MAX_CACHED_DIRECTORIES) cache.clear();
+  cache.set(key, { at: now, value });
+  return value;
+}
+
+async function repoInfo(cwd: string, now: number): Promise<RepoInfo> {
   try {
-    if (!(await stat(cwd)).isDirectory()) return empty;
-    const [status, ids] = await Promise.all([
-      git(cwd, ['status', '--porcelain=v1', '-b', '--untracked-files=normal']),
-      git(cwd, ['rev-parse', '--path-format=absolute', '--git-common-dir', '--show-toplevel']),
+    if (!(await stat(cwd)).isDirectory()) return { git: null, worktree: null };
+    // A directory that is not a repository is remembered as such too, rather than asked about on every scan.
+    const [status, worktree] = await Promise.all([
+      remembered(statuses, cwd, STATUS_TTL_MS, now, async () =>
+        parseGitStatus(
+          await git(cwd, ['status', '--porcelain=v1', '-b', '--untracked-files=normal']),
+        ),
+      ).catch(() => null),
+      remembered(identities, cwd, IDENTITY_TTL_MS, now, async () => {
+        const ids = await git(cwd, [
+          'rev-parse',
+          '--path-format=absolute',
+          '--git-common-dir',
+          '--show-toplevel',
+        ]);
+        const [common, root] = ids.trim().split('\n');
+        if (!common || !root) return null;
+        const main = basename(common) === '.git' ? dirname(common) : common;
+        return { root, main, project: basename(main), linked: root !== main };
+      }).catch(() => null),
     ]);
-    const [common, root] = ids.trim().split('\n');
-    if (!common || !root) return { ...empty, git: parseGitStatus(status) };
-    const main = basename(common) === '.git' ? dirname(common) : common;
-    return {
-      git: parseGitStatus(status),
-      worktree: { root, main, project: basename(main), linked: root !== main },
-    };
+    return { git: status, worktree };
   } catch {
-    return empty;
+    return { git: null, worktree: null };
   }
 }
 
@@ -239,6 +122,9 @@ let cache: { at: number; value: LocalSession[] } | null = null;
 // Which transcript each session key was found in by the latest scan. The only way a transcript is opened.
 let files = new Map<string, { provider: 'claude' | 'codex'; file: string }>();
 export const sessionFile = (key: string) => files.get(key) ?? null;
+// Which process the latest scan found behind each session. Kept server-side: a stop names a session, never a pid.
+let owners = new Map<string, number>();
+export const processOf = (key: string) => owners.get(key) ?? null;
 export async function scanLocalSessions(
   home: string,
   now = Date.now(),
@@ -246,38 +132,66 @@ export async function scanLocalSessions(
   spoolFile = hookSpoolFile(),
 ): Promise<LocalSession[]> {
   if (cache && now - cache.at < ttlMs) return cache.value;
-  const raw = await discoverRaw(home, now);
+  // Processes first: they decide which sessions are shown. A no-ps host says 'unknown', never 'none'.
+  const [found, live] = await Promise.all([
+    discoverRaw(home, now),
+    listAgentProcesses().catch(() => null),
+  ]);
+  if (live) cpuWatch.observe(live.processes, now);
+  let sessions = found;
+  let running = live ? assignProcesses(sessions, live.processes, live.desktopCodex) : null;
+  if (live && running) {
+    // A process alive for days in a quiet transcript has no recent file: look its session up from the process.
+    const owned = new Set([...running.values()].flatMap((v) => (v.process ? [v.process.pid] : [])));
+    const lost = live.processes.filter((p) => !owned.has(p.pid));
+    const older = lost.length
+      ? await sessionsOfProcesses(home, lost, new Set(sessions.map((r) => r.file))).catch(
+          () => [] as Raw[],
+        )
+      : [];
+    if (older.length) {
+      sessions = [...sessions, ...older];
+      running = assignProcesses(sessions, live.processes, live.desktopCodex);
+    }
+  }
+  // Every session with a process is shown, however old; of the rest, the newest few.
+  const alive = (r: Raw) => running?.get(`${r.provider}:${r.sessionId}`)?.state === 'running';
+  const raw = [
+    ...sessions.filter(alive),
+    ...sessions.filter((r) => !alive(r)).slice(0, MAX_SESSIONS),
+  ].sort((a, b) => b.mtime - a.mtime);
   const repos = [...new Set(raw.map((r) => r.cwd))].slice(0, MAX_REPOS);
-  const infos: (readonly [string, RepoInfo])[] = [];
-  for (let i = 0; i < repos.length; i += GIT_BATCH)
-    infos.push(
-      ...(await Promise.all(
-        repos.slice(i, i + GIT_BATCH).map(async (c) => [c, await repoInfo(c)] as const),
-      )),
-    );
+  const infos = await mapPool(repos, GIT_BATCH, async (c) => [c, await repoInfo(c, now)] as const);
   const hooks = await readHookState(spoolFile, now);
-  const live = await listAgentProcesses().catch(() => null); // no ps/lsof: say 'unknown', never 'none'
+  // Each transcript is read through a buffer of a few hundred KB to a few MB: a few at a time, not all sixty.
   const usages = new Map(
-    await Promise.all(raw.map(async (r) => [r.file, await readUsage(r.provider, r.file)] as const)),
+    await mapPool(
+      raw,
+      READ_WIDTH,
+      async (r) => [r.file, await readUsage(r.provider, r.file)] as const,
+    ),
   );
   const codexTitles = await readCodexTitles(home);
   const titles = new Map(
-    await Promise.all(
-      raw.map(
-        async (r) =>
-          [
-            r.file,
-            r.provider === 'claude'
-              ? await readClaudeTitle(r.file)
-              : (codexTitles.get(r.sessionId) ?? null),
-          ] as const,
-      ),
+    await mapPool(
+      raw,
+      READ_WIDTH,
+      async (r) =>
+        [
+          r.file,
+          r.provider === 'claude'
+            ? await readClaudeTitle(r.file)
+            : (codexTitles.get(r.sessionId) ?? null),
+        ] as const,
     ),
   );
   const topics = new Map(
-    await Promise.all(raw.map(async (r) => [r.file, await readTopic(r.provider, r.file)] as const)),
+    await mapPool(
+      raw,
+      READ_WIDTH,
+      async (r) => [r.file, await readTopic(r.provider, r.file)] as const,
+    ),
   );
-  const running = live ? assignProcesses(raw, live.processes, live.desktopCodex) : null;
   const states = new Map(infos);
   const value = raw.map((r): LocalSession => {
     const key = `${r.provider}:${r.sessionId}`;
@@ -308,6 +222,14 @@ export async function scanLocalSessions(
       }),
       usage: usages.get(r.file)!,
       process: running?.get(key)?.state ?? 'unknown',
+      liveness: classifyLiveness({
+        process: running?.get(key)?.process ?? null,
+        state: running?.get(key)?.state ?? 'unknown',
+        mtime: r.mtime,
+        hookAt: hook?.at ?? null,
+        busyAt: running?.get(key)?.process ? cpuWatch.busyAt(running.get(key)!.process!) : null,
+        now,
+      }),
       ports: running?.get(key)?.process?.ports ?? [],
       resources: running?.get(key)?.process
         ? {
@@ -320,11 +242,20 @@ export async function scanLocalSessions(
   files = new Map(
     raw.map((r) => [`${r.provider}:${r.sessionId}`, { provider: r.provider, file: r.file }]),
   );
+  owners = new Map(
+    raw.flatMap((r) => {
+      const pid = running?.get(`${r.provider}:${r.sessionId}`)?.process?.pid;
+      return pid ? [[`${r.provider}:${r.sessionId}`, pid] as const] : [];
+    }),
+  );
   cache = { at: now, value };
   return value;
 }
 export const resetLocalSessionCache = () => {
   cache = null;
+  identities.clear();
+  statuses.clear();
+  resetDiscoveryCache();
 };
 
 const canonical = (path: string) => {
@@ -337,7 +268,6 @@ const canonical = (path: string) => {
 
 // Claude Code names a project's scratch directory /tmp/claude-<uid>/<root with every non-alphanumeric as '-'>/…;
 // agents launched there (for example headless Codex reviews) belong to that project even outside any repository.
-const encodeRoot = (root: string) => root.replace(/[^A-Za-z0-9]/g, '-');
 const scratchOwner = /^(?:\/private)?\/tmp\/claude-\d+\/([^/]+)\//;
 
 /** Joins each session to the project whose root is its main checkout, so worktrees share one project. */

@@ -127,3 +127,35 @@ Codex／Claude 真 HTTP 的合成檔案與重啟、ACK遺失、磁碟寫入失�
 - `--only exchange`：Claude 以 `send_message` 傳出含 nonce A 的 request，Codex 以 `wait_for_message` 收到後回覆含 nonce B 與 nonce A 的訊息，Claude 讀到回覆；request 的投遞狀態為 `responded`。
 
 這證明兩個 provider 能經 AETHER 的持久訊息互相通訊，不證明長時間穩定、Windows／Linux、或真實的程式修改工作流。Codex 以 elicitation 表達 MCP 工具批准（`_meta.codex_approval_kind = mcp_tool_call`），平台以單次呼叫的工具批准處理，從不接受它提供的「記住整個 session」。
+
+## 進程生命週期：停止、倖存者、孤兒與殭屍
+
+AETHER 同時處理兩種進程，規則不同。
+
+**一、AETHER 自己啟動的進程**（`packages/providers/src/process-control.ts`）
+
+- 每個子進程都以 `detached` 啟動，成為自己進程群組的組長；停止時對整個群組送 SIGTERM，等待有上限（預設 1 秒），再送 SIGKILL。忽略 SIGTERM 的進程不會永遠活著。ACP adapter 原本沒有獨立群組、也不升級到 SIGKILL，現在與其他三處（PTY、工作區執行、JSON-RPC）共用同一個 `groupStopper`。
+- 計時器在子進程 `close`（所有管線關閉）時取消，而不是 `exit`：群組可能比組長活得久（子孫握著管線），而一旦全部結束，群組 id 就是已被回收的 pid，不能再送訊號。
+- **PID 重用**：日誌記的是 `pid:啟動時間`（`ps -o lstart=`），不是 pid。runner 崩潰重啟時，`Runner.reapSurvivors()` 對日誌中尚未結束的 run 與終端機逐一判斷（`judgeSurvivor`）：不存在 → `gone`；啟動時間不同 → `reused`，絕不碰；殭屍 → `zombie`；仍有活著的父進程 → `owned`，留給它的父進程；只有「同一個進程、仍在執行、擁有它的已經不在」才是 `orphaned`，才送 SIGTERM（群組）→ 有上限的等待 → SIGKILL。每次送訊號前重新比對身分。以前的做法是「絕不碰持久化的 PID」，結果 runner 一崩潰，先前啟動的代理就變成孤兒繼續執行（持續消耗額度）。
+- **孤兒不是 `ppid <= 1`**：在 `systemd --user` 下，孤兒由使用者管理員收養（它的 pid 很大且活著）。判斷是「父進程不存在、是 init，或是會收養孤兒的管理員」。這個坑來自 gascity。
+- 絕不以名稱或命令列辨識要殺的進程（agent-deck 曾因此在一次掃描中殺掉全部約 65 個活著的 session）；身分是 pid＋啟動時間。
+
+**二、使用者自己啟動的本機 Claude／Codex session**（唯讀觀察，`apps/control/src/services/`）
+
+- 存活分兩個問題，各自回答：有沒有進程、裡面有沒有動靜。`session-liveness.ts` 把每個 session 分成 `active`（兩分鐘內有動靜）、`idle`、`dormant`（進程活著但靜止超過 6 小時）、`orphaned`（啟動它的已不在）、`ended`、`unknown`（Codex Desktop 的對話共用一個 app server）。動靜取最新的一個：transcript 寫入、hook 事件、CPU 時間增加（以 pid＋啟動時間為鍵記住上一次的 CPU 秒數，所以長時間編譯而 transcript 安靜的 session 不會被誤判為休眠），且不會比進程存活時間更久。
+- **掃描全部存活的 session**：先查進程，再以進程為準找出對應的 session，不論多舊、多後面。過去只取最新 60 個，一個活了一天、transcript 安靜的 session 就消失了（真實資料中 10 個進程有 2 個被漏掉）。現在「每個有進程的 session 都顯示，其餘取最新 60 個」；找不到最近檔案的，用進程自己的資訊反查（Claude：`--resume` id，或其目錄對應的專案資料夾裡最新的檔案；Codex：rollout 檔名裡的 id）。檔頭解析結果（cwd 與 id 不會變）永久快取。
+- **殭屍**（狀態 Z）在 macOS 只剩 `<defunct>`：沒有名稱、參數、也沒有工作目錄，所以無法直接對應到 session。它屬於**沒有收屍的父進程**，因此計入該 session 進程之下的 `zombies`（沿進程樹往下數）。殭屍不能被殺，要處理的是它的父進程（結束、或讓它 wait）。
+- **停止**（只對 `dormant`／`orphaned`，僅擁有者）：`POST /api/local-sessions/:key/stop`。伺服器自己重新判斷狀態（不採信用戶端）、要求用戶端回傳它看到的啟動時間（防止停到另一個進程）、拒絕伺服器自己與其祖先、送出前再讀一次進程表，只送一次 SIGTERM 給那個進程本人（不送群組：它可能是某人的終端機工作）；忽略了就回報，不強制終止。記錄稽核事件 `local-session.stop.requested`。
+- 3D 呈現：休眠 → 睡覺的兔子（座位上，飄著 Z）、孤兒 → 孤魂（半透明，飄在座位上方）、有殭屍 → 殭屍（僵屍，站在椅子後面，原地跳；成員本人仍在座位上）。
+
+## 調研：27 個 repo 的做法與取捨
+
+| 問題 | 做法（出處） | AETHER 的決定 |
+|---|---|---|
+| 孤兒判斷 | `ppid<=1` 在 systemd --user 下是錯的（gascity `pidutil/subreaper.go`） | 採用：父進程不存在、init 或收養孤兒的管理員 |
+| 殺進程的身分 | 活著、非殭屍、已被收養、命令列與環境標記都吻合；絕不用名稱（gascity `orphan_reap.go`、agent-deck `reap-stale-tmux.sh`） | 採用 pid＋啟動時間；命令列不是身分 |
+| 升級流程 | SIGTERM → 有上限的等待 → SIGKILL（gascity、orca） | 採用；等待的計時器在群組結束後取消，避免打到被回收的 pid |
+| 進程樹終止 | 子進程 `detached`，對 `-pid` 送訊號（orca `process-tree-termination.ts`） | 已是如此；ACP adapter 補齊 |
+| 父進程死亡的子進程 | 子進程輪詢 ppid，變成 1 就自殺（ruflo parent-death watchdog） | 不適用：被啟動的是第三方 CLI，無法在裡面加看門狗；改用重啟時的倖存者回收 |
+| 存活的兩個維度 | 容器還在 vs 代理程序還在（gascity `runtime/liveness.go`、gastown 的 zombie：tmux 在、Claude 不在） | 採用：有無進程、有無動靜分開判斷 |
+| 依賴 | orca、agent-deck、gascity 都自己寫進程樹與存活判斷；沒有人用 `ps-list`／`pidtree`／`tree-kill`／`pidusage` | **不加依賴**：現有的 `ps` 解析（零依賴）涵蓋同樣的欄位，並有真實進程的測試；少一個供應鏈風險面 |

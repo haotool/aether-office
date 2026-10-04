@@ -16,6 +16,7 @@ const session = (over: Partial<LocalSession>): LocalSession => ({
   subagents: [],
   process: 'unknown',
   resources: null,
+  liveness: { state: 'unknown', startedAt: null, quietMs: null, zombies: [] },
   ports: [],
   title: null,
   classification: { role: 'generalist', department: 'product', basis: 'default', matched: null },

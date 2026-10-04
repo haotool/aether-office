@@ -2,22 +2,45 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
 const root = 'apps/web/public/assets/animals';
-const species = ['fox', 'rabbit', 'panda', 'cat', 'dog', 'raccoon', 'otter', 'bear'];
+const species = [
+  'fox',
+  'rabbit',
+  'panda',
+  'cat',
+  'dog',
+  'raccoon',
+  'otter',
+  'bear',
+  'ghost',
+  'zombie',
+];
+// The ghost and the jiangshi are not animals: they carry their own one clip and none of the animals'.
+const formClips = { ghost: ['haunt'], zombie: ['hop'] };
 const clips = [
   'idle',
   'walk',
   'turn',
   'sit_down',
+  'stand_up',
   'seated_idle',
   'typing',
   'reading',
-  'testing',
+  'thinking',
+  'scratch_head',
   'reviewing',
+  'testing',
   'waiting_permission',
   'waiting_peer',
-  'celebrate',
   'error',
-  'stand_up',
+  'cheer',
+  'celebrate',
+  'sleeping',
+  'stretch',
+  'sip',
+  'wave',
+  'shrug',
+  'look_around',
+  'nod',
 ];
 const digest = (data) => createHash('sha256').update(data).digest('hex');
 const results = [];
@@ -43,7 +66,10 @@ for (const name of species) {
     assert.equal(gltf.asset.version, '2.0');
     assert.ok(gltf.skins?.length);
     assert.equal(gltf.materials.length, 1, 'one atlas material per animal');
-    assert.deepEqual(gltf.animations.map((a) => a.name).sort(), [...clips].sort());
+    assert.deepEqual(
+      gltf.animations.map((a) => a.name).sort(),
+      [...(formClips[name] ?? clips)].sort(),
+    );
     for (const socket of manifest.sockets)
       assert.ok(
         gltf.nodes.some((n) => n.name === socket),
@@ -52,6 +78,7 @@ for (const name of species) {
     for (const image of gltf.images ?? []) {
       assert.ok(Number.isInteger(image.bufferView), 'embedded texture');
       assert.ok(!image.uri, 'no uncontrolled external asset URL');
+      assert.equal(image.mimeType, 'image/webp', 'shipped textures are WebP');
     }
     let triangles = 0;
     for (const mesh of gltf.meshes)
@@ -110,7 +137,7 @@ for (const name of species) {
     });
   }
   for (const texture of manifest.textures)
-    assert.equal(digest(await readFile(`${root}/${texture.file}`)), texture.sha256);
+    assert.equal(digest(await readFile(`assets-source/animals/${texture.file}`)), texture.sha256);
 }
 await writeFile(
   'evidence/assets-validation.json',

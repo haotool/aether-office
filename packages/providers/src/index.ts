@@ -24,6 +24,9 @@ const fixtureLine = z.discriminatedUnion('type', [
     summary: z.string().max(32000),
   }),
 ]);
+/** How long a provider CLI gets to answer `--version`. A slow start on a busy machine (over three seconds at a load
+ * average of 18) is not a missing binary. */
+export const VERSION_PROBE_MS = 10_000;
 export function processIdentity(child: Pick<ChildProcessWithoutNullStreams, 'pid'>): string {
   if (!child.pid) throw new Error('PROCESS_NOT_SPAWNED');
   const birth = execFileSync('ps', ['-p', String(child.pid), '-o', 'lstart='], {
@@ -132,3 +135,16 @@ export {
   codexRolloutVersion,
   codexVersion,
 } from './compat.js';
+export {
+  STOP_GRACE_MS,
+  groupAlive,
+  groupStopper,
+  inspectProcess,
+  isOrphan,
+  judgeSurvivor,
+  parseIdentity,
+  reapSurvivor,
+  signalGroup,
+  type Reaped,
+  type Survivor,
+} from './process-control.js';

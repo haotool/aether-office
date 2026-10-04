@@ -1,5 +1,12 @@
 import type { Agent, Layout, LocalSession } from '@aether/contracts';
-import { FLOORS, FLOOR_CAPACITY, defaultLayout, seatAt } from '@aether/office-scene';
+import {
+  FLOORS,
+  FLOOR_CAPACITY,
+  apparitionOf,
+  defaultLayout,
+  seatAt,
+  type Apparition,
+} from '@aether/office-scene';
 import { DEPARTMENTS, ROLE_LABELS, classifySession, type Classification } from '@aether/kernel';
 
 const SPECIES = ['fox', 'cat', 'rabbit', 'bear', 'otter', 'raccoon', 'panda', 'dog'] as const;
@@ -9,6 +16,12 @@ const LOCAL_PREFIX = 'local:';
 const SUBAGENT_INFIX = ':sub:';
 
 const basename = (path: string) => path.split('/').filter(Boolean).pop() ?? '';
+// Names are cut to 24 characters, so an untitled session in a worktree named after its repository is named by what
+// sets the worktree apart (`ledger-api-w1119` → `w1119`); the repository is the project it is shown in.
+const place = (s: Pick<LocalSession, 'cwd' | 'repo'>) => {
+  const dir = basename(s.cwd) || s.repo;
+  return dir.startsWith(`${s.repo}-`) ? dir.slice(s.repo.length + 1) : dir;
+};
 const hue = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 360;
 
 export const sessionIdOf = (agentId: string): string | null =>
@@ -59,6 +72,20 @@ function observed(
 export const classificationOf = (s: LocalSession): Classification =>
   s.classification as Classification;
 
+const NOTE = {
+  dormant: { 'zh-TW': '休眠', en: 'dormant' },
+  orphaned: { 'zh-TW': '孤兒', en: 'orphaned' },
+} as const;
+/** How the member is alive, when that is worth saying: appended to its role line. */
+const noteOf = (s: Pick<LocalSession, 'liveness'>, locale: 'zh-TW' | 'en') => {
+  const state =
+    s.liveness.state in NOTE ? ` · ${NOTE[s.liveness.state as keyof typeof NOTE][locale]}` : '';
+  const zombies = s.liveness.zombies.length
+    ? ` · ${locale === 'zh-TW' ? '殭屍' : 'zombies'} ×${s.liveness.zombies.length}`
+    : '';
+  return state + zombies;
+};
+
 export function sessionsToAgents(
   sessions: readonly LocalSession[],
   projectId: string,
@@ -74,8 +101,8 @@ export function sessionsToAgents(
     const tag = `${s.provider === 'codex' ? 'cx' : 'cl'}·${s.sessionId.slice(0, 4)}`;
     const parent = observed(
       `${LOCAL_PREFIX}${s.key}`,
-      `${tag} ${s.title ?? (basename(s.cwd) || s.repo)}`,
-      `${roleName} · ${s.provider}${branch}${worktree}`,
+      `${tag} ${s.title ?? place(s)}`,
+      `${roleName} · ${s.provider}${branch}${worktree}${noteOf(s, locale)}`,
       s.key,
       activityOf(s, now),
       s.mtime,
@@ -207,4 +234,43 @@ export function tokensByDepartment(
   return [...totals]
     .map(([department, t]) => ({ department, ...t }))
     .sort((a, b) => b.tokens - a.tokens);
+}
+
+/** A span of time as a person reads it: "3 分鐘", "14 小時", "2 天". Rounded down, never zero. */
+export function formatSpan(ms: number, locale: 'zh-TW' | 'en' = 'zh-TW'): string {
+  const minutes = Math.max(1, Math.floor(ms / 60_000));
+  const [n, zh, en] =
+    minutes < 60
+      ? [minutes, '分鐘', 'min']
+      : minutes < 48 * 60
+        ? [Math.floor(minutes / 60), '小時', 'h']
+        : [Math.floor(minutes / 1440), '天', 'd'];
+  return locale === 'zh-TW' ? `${n} ${zh}` : `${n} ${en}`;
+}
+
+/** Sessions worth a person's attention for how they are alive: forgotten, ownerless, or with zombies under them. */
+export const needsAttention = (s: Pick<LocalSession, 'liveness'>) =>
+  ['dormant', 'orphaned'].includes(s.liveness.state) || s.liveness.zombies.length > 0;
+
+/** Which sessions are drawn as a sleeping rabbit or a ghost in place of the member, by the id of that member. */
+export function apparitionsOf(
+  sessions: readonly LocalSession[],
+): Record<string, Exclude<Apparition, 'zombie'>> {
+  return Object.fromEntries(
+    sessions.flatMap((s) => {
+      const form = apparitionOf(s.liveness.state);
+      return form ? [[`${LOCAL_PREFIX}${s.key}`, form] as const] : [];
+    }),
+  );
+}
+
+/** Which members have zombie processes under them, and how many. */
+export function zombiesOf(sessions: readonly LocalSession[]): Record<string, number> {
+  return Object.fromEntries(
+    sessions.flatMap((s) =>
+      s.liveness.zombies.length
+        ? [[`${LOCAL_PREFIX}${s.key}`, s.liveness.zombies.length] as const]
+        : [],
+    ),
+  );
 }

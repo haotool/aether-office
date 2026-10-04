@@ -1,5 +1,4 @@
 import { createHmac, timingSafeEqual, randomUUID } from 'node:crypto';
-import { eq, and } from 'drizzle-orm';
 import {
   inboxQuerySchema,
   messageWaitSchema,
@@ -9,6 +8,7 @@ import {
   type InboxPage,
 } from '@aether/contracts';
 import { assertOwnedAgent, authorize, DomainError, type Actor } from '@aether/kernel';
+import { insertRow, selectOne } from '../db/query.js';
 import { messages } from '../db/schema.js';
 import { identityActor } from './identity.js';
 import { agent, project, emit, type Context } from './context.js';
@@ -59,11 +59,7 @@ export function sendMessage(ctx: Context, actor: Actor, command: Send) {
       throw new DomainError('THREAD_MISMATCH', 400);
     threadId = original.threadId;
   } else if (data.threadId) {
-    const first = ctx.db
-      .select()
-      .from(messages)
-      .where(and(eq(messages.projectId, projectId), eq(messages.threadId, threadId)))
-      .get();
+    const first = selectOne(ctx.sqlite, messages, { projectId, threadId });
     if (!first) throw new DomainError('THREAD_NOT_FOUND', 404);
     getMessage(ctx, actor, projectId, first.id);
   }
@@ -88,7 +84,7 @@ export function sendMessage(ctx: Context, actor: Actor, command: Send) {
     expiresAt: ctx.now() + data.ttlMs,
     roomId: data.roomId ?? null,
   };
-  ctx.db.insert(messages).values(message).run();
+  insertRow(ctx.sqlite, messages, message);
   for (const recipientId of data.recipients)
     ctx.sqlite
       .prepare(
@@ -138,11 +134,7 @@ export function sendMessage(ctx: Context, actor: Actor, command: Send) {
 }
 export function getMessage(ctx: Context, actor: Actor, projectId: string, messageId: string) {
   project(ctx, actor, projectId);
-  const message = ctx.db
-    .select()
-    .from(messages)
-    .where(and(eq(messages.id, messageId), eq(messages.projectId, projectId)))
-    .get();
+  const message = selectOne(ctx.sqlite, messages, { id: messageId, projectId });
   if (!message) throw new DomainError('MESSAGE_NOT_FOUND', 404);
   if (actor.role === 'agent' && message.senderId !== actor.agentId) {
     const delivery = ctx.sqlite
