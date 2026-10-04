@@ -33,5 +33,10 @@ test('local sessions are auto-discovered and shown as observe-only 3D agents', a
       .violations,
   ).toEqual([]);
   await page.screenshot({ path: 'evidence/screenshots/e2e-local-sessions.png' });
+  // Without WebGL, or by choice, the 2D list and the team strip show the same sessions.
+  await page.getByRole('button', { name: '2D 列表' }).click();
+  await expect(page.locator('.agent-card', { hasText: 'fixture-repo' }).first()).toBeVisible();
+  await expect(page.locator('.team-chip', { hasText: 'fixture-repo' }).first()).toBeVisible();
+  await page.getByRole('button', { name: '3D 空間' }).click();
   expect(errors).toEqual([]);
 });

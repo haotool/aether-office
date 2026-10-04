@@ -5,6 +5,8 @@ AETHER OFFICE is a fork of [AgentSystemLabs/agent-office](https://github.com/Age
 Copyright (c) 2026 AgentSystemLabs. MIT License, retained in `LICENSE`.
 The original source under `src/`, original tests and `blender/` retain this attribution. The AETHER PBR geometry helpers in `packages/office-scene/src/geometry.ts` adapt the upstream `src/client/world/toon.ts` rounded geometry and mesh merging implementation. New code does not change the upstream authorship of these portions.
 
+`apps/control/src/services/redaction.ts` adapts the secret patterns of [stablyai/orca](https://github.com/stablyai/orca) `src/shared/crash-report-redaction.ts` (commit `373d951b`), Copyright (c) 2026 Lovecast Inc., MIT License.
+
 Other cloned repositories are read-only research inputs in ignored `.research/`; they are not bundled or runtime dependencies. See `docs/research/SOURCES.json`. In particular, MCP Agent Mail has an additional license rider and is excluded from reuse.
 
 Node.js, React, Three.js, R3F, Drei, Fastify, SQLite/better-sqlite3, Drizzle, Zod and the other installed packages retain their own licenses. Selected versions and registry license metadata are recorded in `evidence/dependency-registry.json`; the lockfile records resolved transitive versions. A distributable SBOM is still pending and must be produced before release.

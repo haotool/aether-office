@@ -1,3 +1,5 @@
+import { GitGraph } from './GitGraph.js';
+import { GitHealth } from './GitHealth.js';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { Snapshot, Work } from '@aether/contracts';
@@ -71,6 +73,8 @@ export function Workspace({ snapshot }: { snapshot: Snapshot }) {
   return (
     <>
       <PageHeading title={t('workspace')} subtitle={t('workspaceHint')} />
+      {snapshot.project.root && <GitGraph projectId={snapshot.project.id} />}
+      {snapshot.project.root && <GitHealth projectId={snapshot.project.id} />}
       {error && <p role="alert">{error}</p>}
       {query.isPending ? (
         <p>{t('loading')}</p>

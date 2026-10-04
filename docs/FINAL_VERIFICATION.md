@@ -6,8 +6,8 @@ Features: **145**. Implementation: 115 implemented, 30 partial, 0 not started.
 
 | Verification | Count | Meaning |
 |---|---|---|
-| passed | 87 | Verified by the listed tests at the scope stated in the ledger. |
-| partial | 58 | Some behaviour is verified; the blockers column names what is not. |
+| passed | 88 | Verified by the listed tests at the scope stated in the ledger. |
+| partial | 57 | Some behaviour is verified; the blockers column names what is not. |
 | blocked | 0 | Cannot be verified in this environment (for example, it needs paid or authenticated provider sessions). |
 | failed | 0 | A check ran and failed. |
 | not_run | 0 | No check has been run. |
@@ -15,7 +15,7 @@ Features: **145**. Implementation: 115 implemented, 30 partial, 0 not started.
 
 A passing build or test run is not a claim of production readiness. This file lists what the ledger can support, and what it cannot.
 
-## passed (87)
+## passed (88)
 
 | ID | Implementation | Requirement | Blockers |
 |---|---|---|---|
@@ -105,9 +105,10 @@ A passing build or test run is not a claim of production readiness. This file li
 | INT-03 | implemented | webhook／polling retry 不形成同步迴圈或重複任務。 | Webhooks need a reverse proxy that preserves the Host header; polling works without one |
 | INT-05 | implemented | skills 匯入／檢視／啟用／停用不自動執行未知命令。 | Skills are reference text served via MCP skills_list; no mechanism executes skill content by design |
 | INT-06 | implemented | schedule 依 timezone 觸發，重啟不重複派工。 | UI creates daily/weekly schedules only (the API also accepts one-off); A schedule only creates unassigned work; there is no scheduled auto-assignment by design |
+| QA-07 | implemented | 最終重新 clean install／build／start／smoke 驗證成功或列具體失敗。 | — |
 | QA-08 | implemented | FINAL_VERIFICATION 明確區分 passed／failed／blocked／not_run。 | — |
 
-## partial (58)
+## partial (57)
 
 | ID | Implementation | Requirement | Blockers |
 |---|---|---|---|
@@ -167,5 +168,4 @@ A passing build or test run is not a claim of production readiness. This file li
 | QA-04 | partial | 真實頁面截圖覆蓋 overview／desk／review／approval／mobile。 | 完整產品尚未完成；不能把局部測試當最終 gate。 |
 | QA-05 | partial | 每個需求的 code path／test ID／evidence 可查驗。 | 完整產品尚未完成；不能把局部測試當最終 gate。 |
 | QA-06 | partial | 所有文件與命令對照最新程式，沒有假 endpoint／假腳本。 | 完整產品尚未完成；不能把局部測試當最終 gate。 |
-| QA-07 | implemented | 最終重新 clean install／build／start／smoke 驗證成功或列具體失敗。 | clean-room 在 06a0a0e 全過；之後的 3D／UI 大改動尚未重跑 verify:clean --e2e；macOS only |
 | OBS-LOCAL-01 | implemented | 自動載入本機 Claude／Codex session；以 Git common dir 歸屬 worktree，以 hook 事件歸屬子代理；observe-only 3D 顯示。 | Activity is a file-mtime heuristic until hooks are trusted and fire; without a running process it is shown idle; Process-to-session matching is by --resume id, else by provider and directory in recency order; a Claude session that changed directory shows no process; Sessions in no git repository and outside a project scratch directory (for example a Codex Desktop thread in a plugin workspace) cannot be attributed and are not shown; Spawned Codex subagents are shown only while their rollout changed in the last 2 minutes; Hooks are proven only for this repository session so far; Only the 60 most recent sessions are scanned |

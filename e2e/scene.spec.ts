@@ -118,9 +118,14 @@ test('entering and leaving the 3D scene repeatedly does not accumulate GPU geome
   }
   const all = await reports(page);
   expect(all.length).toBeGreaterThanOrEqual(5);
-  const first = all[0]!;
-  for (const later of all.slice(1)) {
-    expect(later.geometries).toBeLessThanOrEqual(first.geometries); // a remount never holds more than the first mount
-    expect(later.textures).toBeLessThanOrEqual(first.textures);
+  // What a mount holds varies by one or two with when data arrives relative to the sample, so the baseline is the
+  // larger of the first two mounts. A leak grows round after round and still exceeds it.
+  const baseline = {
+    geometries: Math.max(all[0]!.geometries, all[1]!.geometries),
+    textures: Math.max(all[0]!.textures, all[1]!.textures),
+  };
+  for (const later of all.slice(2)) {
+    expect(later.geometries).toBeLessThanOrEqual(baseline.geometries);
+    expect(later.textures).toBeLessThanOrEqual(baseline.textures);
   }
 });

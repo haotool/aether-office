@@ -1,10 +1,21 @@
 import { open, stat } from 'node:fs/promises';
+import { redactSecrets } from './redaction.js';
 
-// What a session was asked to do, used ONLY to classify it. The text is cut short, handed to the classifier on the server
-// and dropped: it is never stored, logged or returned to a client.
+// What a session was asked to do. It classifies the session on the server and is then dropped, except that a Codex
+// session without a thread name (every `codex exec` run) is titled by its task's opening words, stripped of
+// credentials, for the owner and operators, the same audience that may read the live transcript. Never stored or logged.
 const TAIL_BYTES = 256 * 1024;
 const HEAD_BYTES = 512 * 1024;
 const MAX_TOPIC = 400;
+
+const TITLE_LENGTH = 80;
+
+/** Pure. A title made from a task's opening words, for a session whose provider gave it none. */
+export function topicTitle(topic: string | null): string | null {
+  if (!topic) return null;
+  const text = redactSecrets(topic).trim();
+  return text.length > TITLE_LENGTH ? `${text.slice(0, TITLE_LENGTH)}…` : text || null;
+}
 
 const clip = (v: unknown) =>
   typeof v === 'string' && v.trim() ? v.replace(/\s+/g, ' ').trim().slice(0, MAX_TOPIC) : null;

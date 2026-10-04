@@ -15,9 +15,11 @@ const session = (over: Partial<LocalSession>): LocalSession => ({
   hook: null,
   subagents: [],
   process: 'unknown',
+  resources: null,
+  ports: [],
   title: null,
   classification: { role: 'generalist', department: 'product', basis: 'default', matched: null },
-  usage: { model: null, contextTokens: null, contextWindow: null, totalTokens: null },
+  usage: { model: null, contextTokens: null, contextWindow: null, totalTokens: null, limit: null },
   ...over,
 });
 const hook = (activity: 'working' | 'idle' | 'waiting_permission' | 'ended', at = NOW) => ({

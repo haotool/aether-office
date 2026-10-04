@@ -36,7 +36,13 @@ import { redeemInvitation } from './services/invitations.js';
 import { listSkills } from './services/skills.js';
 import { listSchedules, tickSchedules } from './services/schedules.js';
 import { listReservations } from './services/reservations.js';
-import { attributeSessions, scanLocalSessions } from './services/local-sessions.js';
+import { readTranscript } from './services/session-transcript.js';
+import { systemMetrics } from './services/system-metrics.js';
+import { cleanMergedWorktrees, gitHealth } from './services/git-health.js';
+import { listAgentProcesses } from './services/agent-processes.js';
+import { emit } from './services/context.js';
+import { gitGraph } from './services/git-graph.js';
+import { attributeSessions, scanLocalSessions, sessionFile } from './services/local-sessions.js';
 import { homedir } from 'node:os';
 import { diagnoseWork } from './services/diagnostics.js';
 import type { Control } from './control.js';
@@ -401,6 +407,89 @@ export function createServer(
         control.listProjects(who),
       ),
     };
+  });
+  // Worktree and branch health of a project's repository: merged but still present, gone from disk, how large.
+  app.get<{ Params: { projectId: string } }>(
+    '/api/projects/:projectId/git-health',
+    async (request) => {
+      const who = actor(request);
+      authorize(who, 'read', request.params.projectId);
+      const row = control.ctx.sqlite
+        .prepare('SELECT root FROM projects WHERE id=?')
+        .get(request.params.projectId) as { root: string | null } | undefined;
+      if (!row?.root) throw new DomainError('PROJECT_HAS_NO_REPOSITORY', 404);
+      return gitHealth(row.root);
+    },
+  );
+  // Owner-only: remove the worktrees the health report lists as merged and clean, re-checked here, never forced.
+  app.post<{ Params: { projectId: string }; Body: unknown }>(
+    '/api/projects/:projectId/git-health/clean',
+    async (request) => {
+      const who = actor(request);
+      authorize(who, 'project.execution.configure', request.params.projectId); // owner-only action
+      const body = z
+        .object({ paths: z.array(z.string().min(1).max(4096)).min(1).max(500) })
+        .strict()
+        .parse(request.body);
+      const row = control.ctx.sqlite
+        .prepare('SELECT root FROM projects WHERE id=?')
+        .get(request.params.projectId) as { root: string | null } | undefined;
+      if (!row?.root) throw new DomainError('PROJECT_HAS_NO_REPOSITORY', 404);
+      const live = await listAgentProcesses().catch(() => null);
+      if (!live) throw new DomainError('PROCESS_LIST_UNAVAILABLE', 503); // cannot prove no agent is inside: do nothing
+      const audit = randomUUID();
+      const results = await cleanMergedWorktrees(
+        row.root,
+        body.paths,
+        live.processes.map((p) => p.cwd),
+      );
+      emit(
+        control.ctx,
+        who,
+        request.params.projectId,
+        'git.worktrees.cleaned',
+        {
+          removed: results.filter((r) => r.outcome === 'removed').map((r) => r.path),
+          skipped: results.filter((r) => r.outcome === 'skipped').length,
+        },
+        audit,
+        audit,
+      );
+      return { results };
+    },
+  );
+  // Recent commit graph of a project's repository, laid out in lanes.
+  app.get<{ Params: { projectId: string } }>(
+    '/api/projects/:projectId/git-graph',
+    async (request) => {
+      const who = actor(request);
+      authorize(who, 'read', request.params.projectId);
+      const row = control.ctx.sqlite
+        .prepare('SELECT root FROM projects WHERE id=?')
+        .get(request.params.projectId) as { root: string | null } | undefined;
+      if (!row?.root) throw new DomainError('PROJECT_HAS_NO_REPOSITORY', 404);
+      return gitGraph(row.root);
+    },
+  );
+  // Machine load and free disk, for the people running agents on it.
+  app.get('/api/system', async (request) => {
+    const who = actor(request);
+    if (!['owner', 'operator'].includes(who.role) || who.agentId || who.machineId)
+      throw new DomainError('FORBIDDEN', 403);
+    return systemMetrics([homedir(), process.env['AETHER_DATA_DIR'] ?? process.cwd()]);
+  });
+  // Live transcript of one local session, by the key the scanner found it under. Same audience as the list above.
+  app.get<{ Params: { key: string } }>('/api/local-sessions/:key/transcript', async (request) => {
+    const who = actor(request);
+    if (!['owner', 'operator'].includes(who.role) || who.agentId || who.machineId)
+      throw new DomainError('FORBIDDEN', 403);
+    if (process.env['AETHER_LOCAL_SESSIONS'] === 'off') throw new DomainError('NOT_FOUND', 404);
+    const key = request.params.key;
+    if (!/^(claude|codex):[A-Za-z0-9._-]{1,200}$/.test(key))
+      throw new DomainError('INVALID_SESSION_KEY', 400);
+    const found = sessionFile(key);
+    if (!found) throw new DomainError('SESSION_NOT_FOUND', 404);
+    return readTranscript(found.provider, found.file);
   });
   app.get<{ Params: { projectId: string } }>(
     '/api/projects/:projectId/reservations',

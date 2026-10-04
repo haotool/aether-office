@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { Agent, LocalSession, Snapshot } from '@aether/contracts';
 import { ROLE_LABELS } from '@aether/kernel';
 import { classificationOf } from '../localSessions.js';
+import { LiveTranscript } from './LiveTranscript.js';
 import { AvatarIcon, Badge, useT } from '../ui.js';
 export function Inspector({
   agent,
@@ -125,6 +126,15 @@ export function Inspector({
                   <dt>process</dt>
                   <dd>{session.process}</dd>
                 </div>
+                {session.resources && (
+                  <div>
+                    <dt>cpu · mem</dt>
+                    <dd>
+                      {session.resources.cpuPercent.toFixed(1)}% ·{' '}
+                      {(session.resources.rssBytes / 1e6).toFixed(0)} MB
+                    </dd>
+                  </div>
+                )}
                 {session.worktree && (
                   <div>
                     <dt>worktree</dt>
@@ -162,6 +172,10 @@ export function Inspector({
                   ? `hook: ${session.hook.lastEvent}${session.hook.tool ? ` · ${session.hook.tool}` : ''}`
                   : 'heuristic (file mtime)'}
               </small>
+              <details className="transcript-toggle">
+                <summary>{t('liveTranscript')}</summary>
+                <LiveTranscript sessionKey={session.key} />
+              </details>
             </div>
           )}
           <div className="inspector-section">

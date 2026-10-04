@@ -12,7 +12,14 @@ import {
 } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { MathUtils, Vector3, type Mesh } from 'three';
+import {
+  AdditiveBlending,
+  MathUtils,
+  QuadraticBezierCurve3,
+  TubeGeometry,
+  Vector3,
+  type Mesh,
+} from 'three';
 import type { Agent, Layout } from '@aether/contracts';
 import { DEPARTMENTS } from '@aether/kernel';
 import {
@@ -32,6 +39,13 @@ import type { PerfReport } from './perf.js';
 import type { SceneMessage } from './carriers.js';
 
 export type Quality = 'low' | 'balanced' | 'high';
+export type BranchInfo = {
+  branch: string | null;
+  linked: boolean;
+  dirty: number;
+  ahead: number;
+  behind: number;
+};
 export type OfficeSceneProps = {
   agents: Agent[];
   layout: Layout | null;
@@ -48,6 +62,10 @@ export type OfficeSceneProps = {
   onUserCamera?: () => void;
   /** Which engineering role an agent works in; picks the art on its screen. */
   roleOf?: (agent: Agent) => string;
+  /** The Git branch an agent works on, drawn as a beam from its desk into the core (the default branch). */
+  branchOf?: (agent: Agent) => BranchInfo | null;
+  /** Agents with something new for the user (waiting for them, or finished): their labels are marked. */
+  unreadIds?: ReadonlySet<string>;
   /** When set, the scene renders continuously for a fixed sample and reports measured frame times. */
   onPerfReport?: (report: PerfReport) => void;
 };
@@ -404,6 +422,105 @@ function MemberScreen({
   );
 }
 
+/**
+ * Each member's branch as a beam of light from the desk into the elevator core, which stands for the default branch.
+ * A linked worktree is cyan, the main checkout white, uncommitted work amber; while the member works the beam flows
+ * toward the core. Only real Git state is drawn: no beam without a branch.
+ */
+function BranchBeam({
+  from,
+  to,
+  color,
+  flowing,
+  animate,
+}: {
+  from: [number, number, number];
+  to: [number, number, number];
+  color: string;
+  flowing: boolean;
+  animate: boolean;
+}) {
+  const curve = useMemo(
+    () =>
+      new QuadraticBezierCurve3(
+        new Vector3(...from),
+        new Vector3((from[0] + to[0]) / 2, Math.max(from[1], to[1]) + 2.2, (from[2] + to[2]) / 2),
+        new Vector3(...to),
+      ),
+    [from[0], from[1], from[2], to[0], to[1], to[2]], // eslint-disable-line react-hooks/exhaustive-deps -- by value
+  );
+  const geometry = useMemo(
+    () => new TubeGeometry(curve, 28, flowing ? 0.075 : 0.055, 6, false),
+    [curve, flowing],
+  );
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  const packets = useRef<(Mesh | null)[]>([]);
+  const clock = useRef(0);
+  useFrame((_state, delta) => {
+    if (!flowing || !animate) return;
+    clock.current += delta;
+    packets.current.forEach((mesh, i) => {
+      if (!mesh) return;
+      mesh.position.copy(curve.getPoint((clock.current * 0.35 + i / 3) % 1));
+    });
+  });
+  return (
+    <group>
+      <mesh geometry={geometry}>
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={flowing ? 0.9 : 0.4}
+          blending={AdditiveBlending}
+          depthWrite={false}
+          toneMapped={false}
+        />
+      </mesh>
+      {flowing &&
+        [0, 1, 2].map((i) => (
+          <mesh
+            key={i}
+            ref={(node) => {
+              packets.current[i] = node;
+            }}
+            position={curve.getPoint(i / 3)}
+          >
+            <sphereGeometry args={[0.11, 10, 8]} />
+            <meshBasicMaterial color={color} toneMapped={false} />
+          </mesh>
+        ))}
+    </group>
+  );
+}
+
+/**
+ * Each member's branch as a tube of light from the desk into the elevator core, which stands for the default branch.
+ * A linked worktree is cyan, the main checkout white, a detached checkout violet, uncommitted work amber; while the
+ * member works, packets travel
+ * along it into the core. Only real Git state is drawn: no beam outside a repository.
+ */
+function BranchBeams({
+  beams,
+  animate,
+}: {
+  beams: {
+    id: string;
+    from: [number, number, number];
+    to: [number, number, number];
+    color: string;
+    flowing: boolean;
+  }[];
+  animate: boolean;
+}) {
+  return (
+    <>
+      {beams.map((beam) => (
+        <BranchBeam key={beam.id} {...beam} animate={animate} />
+      ))}
+    </>
+  );
+}
+
 const ACTIVE: readonly Agent['activity'][] = [
   'working',
   'reviewing',
@@ -751,6 +868,33 @@ export function OfficeScene(props: OfficeSceneProps) {
           {props.onPerfReport && (
             <PerfProbe quality={props.quality} onReport={props.onPerfReport} />
           )}
+          {props.branchOf && (
+            <BranchBeams
+              animate={!props.reducedMotion}
+              beams={sceneAgents.flatMap((agent) => {
+                const info = props.branchOf!(agent);
+                const desk = layout.objects.find((o) => o.agentId === agent.id);
+                if (!info || !desk) return [];
+                const y = floorY(desk.floor ?? 0, exploded);
+                return [
+                  {
+                    id: agent.id,
+                    from: [desk.x, y + 1.45, desk.z - 0.3] as [number, number, number],
+                    to: [0, y + 5.4, 0] as [number, number, number],
+                    color:
+                      info.dirty > 0
+                        ? '#ffc65c'
+                        : !info.branch
+                          ? '#a592ff'
+                          : info.linked
+                            ? '#43e6df'
+                            : '#e8f2f8',
+                    flowing: ACTIVE.includes(agent.activity),
+                  },
+                ];
+              })}
+            />
+          )}
           <Beacons
             animate={!props.reducedMotion}
             items={sceneAgents.flatMap((agent) => {
@@ -778,7 +922,7 @@ export function OfficeScene(props: OfficeSceneProps) {
                 if (node) elements.current.set(agent.id, node);
                 else elements.current.delete(agent.id);
               }}
-              className={`scene-label ${agent.id === props.selectedId ? 'selected' : ''} ${agent.id === hovered ? 'hovered' : ''}`}
+              className={`scene-label ${agent.id === props.selectedId ? 'selected' : ''} ${agent.id === hovered ? 'hovered' : ''} ${props.unreadIds?.has(agent.id) ? 'unread' : ''}`}
               onClick={() => props.onSelect(agent.id)}
               onPointerEnter={() => setHovered(agent.id)}
               onPointerLeave={() => setHovered((h) => (h === agent.id ? null : h))}

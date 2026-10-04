@@ -8,7 +8,7 @@ import { assignProcesses, listAgentProcesses } from './agent-processes.js';
 import { readHookState } from './hook-spool.js';
 import { classifySession } from '@aether/kernel';
 import { readClaudeTitle, readCodexTitles } from './session-title.js';
-import { readTopic } from './session-topic.js';
+import { readTopic, topicTitle } from './session-topic.js';
 import { readUsage } from './session-usage.js';
 import type { AttributedSession, LocalSession } from '@aether/contracts';
 
@@ -236,6 +236,9 @@ export const hookSpoolFile = () =>
   process.env['AETHER_HOOK_SPOOL'] ?? join(homedir(), '.aether', 'hook-events.jsonl');
 
 let cache: { at: number; value: LocalSession[] } | null = null;
+// Which transcript each session key was found in by the latest scan. The only way a transcript is opened.
+let files = new Map<string, { provider: 'claude' | 'codex'; file: string }>();
+export const sessionFile = (key: string) => files.get(key) ?? null;
 export async function scanLocalSessions(
   home: string,
   now = Date.now(),
@@ -293,7 +296,10 @@ export async function scanLocalSessions(
         ? { activity: hook.activity, lastEvent: hook.lastEvent, tool: hook.tool, at: hook.at }
         : null,
       subagents: [...(hook?.subagents ?? []), ...(r.children ?? [])],
-      title: titles.get(r.file) ?? null,
+      // A `codex exec` run has no thread name; its task's opening words name it. A Claude prompt is never sent.
+      title:
+        titles.get(r.file) ??
+        (r.provider === 'codex' ? topicTitle(topics.get(r.file) ?? null) : null),
       classification: classifySession({
         title: titles.get(r.file) ?? null,
         prompt: topics.get(r.file) ?? null,
@@ -301,9 +307,19 @@ export async function scanLocalSessions(
         repo: info?.worktree?.project ?? basename(r.cwd),
       }),
       usage: usages.get(r.file)!,
-      process: running?.get(key) ?? 'unknown',
+      process: running?.get(key)?.state ?? 'unknown',
+      ports: running?.get(key)?.process?.ports ?? [],
+      resources: running?.get(key)?.process
+        ? {
+            cpuPercent: running.get(key)!.process!.cpuPercent,
+            rssBytes: running.get(key)!.process!.rssBytes,
+          }
+        : null,
     };
   });
+  files = new Map(
+    raw.map((r) => [`${r.provider}:${r.sessionId}`, { provider: r.provider, file: r.file }]),
+  );
   cache = { at: now, value };
   return value;
 }
