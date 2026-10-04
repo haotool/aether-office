@@ -134,7 +134,7 @@ export class TerminalRunner {
         entry.pending = false;
         this.journal.save();
       }
-    for (const [id, pty] of this.sessions)
+    for (const id of this.sessions.keys())
       if (
         this.journal.state.terminals[id]?.snapshot.state === 'exited' &&
         !this.journal.state.terminals[id]?.pending

@@ -149,6 +149,109 @@ export function claimJob(ctx: Context, actor: Actor): RunnerJob | null {
     })
     .immediate();
 }
+type JobRow = {
+  id: string;
+  projectId: string;
+  workId: string;
+  workspaceId: string;
+  kind: string;
+  state: string;
+  result: string | null;
+  payload: string;
+  expectedHead: string;
+  expectedVersion: number;
+};
+type Work = ReturnType<typeof task>;
+type JobReport = ReturnType<typeof jobReportSchema.parse>;
+
+/**
+ * A successful verify job: its evidence must be for this job's workspace and harness, and the work becomes verified only
+ * when the run was clean, passed, and still matches the head and version the job was started for.
+ */
+function recordVerification(ctx: Context, job: JobRow, work: Work, result: JobReport) {
+  const v = result.verification;
+  const requested = JSON.parse(job.payload) as RunnerJob['payload'];
+  if (
+    !v ||
+    v.workspaceId !== job.workspaceId ||
+    v.harnessSourceHash !== requested.verifier?.sourceHash
+  )
+    throw new DomainError('VERIFICATION_BINDING_MISMATCH');
+  ctx.sqlite
+    .prepare('INSERT INTO verification_evidence VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+    .run(
+      v.id,
+      job.projectId,
+      work.id,
+      v.workspaceId,
+      v.harnessHash,
+      v.before.head,
+      v.after.head,
+      v.baseBefore,
+      v.baseAfter,
+      v.status,
+      v.logHash,
+      v.exitCode,
+      JSON.stringify(v),
+      ctx.now(),
+    );
+  const base = ctx.sqlite
+    .prepare('SELECT baseSha FROM workspaces WHERE id=?')
+    .get(job.workspaceId) as { baseSha: string };
+  const clean =
+    v.baseBefore === base.baseSha &&
+    v.before.indexTree === v.before.tree &&
+    v.after.indexTree === v.after.tree &&
+    v.finishedAt >= v.startedAt &&
+    v.before.status === '' &&
+    v.after.status === '' &&
+    v.before.head === v.after.head &&
+    v.before.tree === v.after.tree &&
+    v.before.indexTree === v.after.indexTree &&
+    v.baseBefore === v.baseAfter;
+  if (
+    job.state === 'running' &&
+    v.status === 'passed' &&
+    v.reason === null &&
+    v.exitCode === 0 &&
+    clean &&
+    v.before.head === job.expectedHead &&
+    work.headSha === job.expectedHead &&
+    work.version === job.expectedVersion &&
+    work.state === 'reviewing' &&
+    work.reviewBy
+  )
+    ctx.sqlite
+      .prepare(
+        "UPDATE work_items SET state='verified',verifiedSha=?,version=version+1,updatedAt=? WHERE id=?",
+      )
+      .run(v.after.head, ctx.now(), work.id);
+}
+
+/** A successful integrate job: what was merged (or why the base moved), bound to the head it was started for. */
+function recordIntegration(ctx: Context, job: JobRow, result: JobReport) {
+  const i = result.integration;
+  if (!i) throw new DomainError('INTEGRATION_REQUIRED');
+  if (i.status !== 'base_moved' && i.headSha !== job.expectedHead)
+    throw new DomainError('INTEGRATION_BINDING_MISMATCH');
+  const spec = (JSON.parse(job.payload) as RunnerJob['payload']).integrate;
+  ctx.sqlite
+    .prepare('INSERT INTO integrations VALUES (?,?,?,?,?,?,?,?,?,?,?)')
+    .run(
+      job.id,
+      job.projectId,
+      job.workId,
+      i.status,
+      spec?.baseBranch ?? '',
+      i.status === 'base_moved' ? i.expected : i.baseSha,
+      job.expectedHead,
+      i.status === 'merged' ? i.mergeSha : null,
+      i.status === 'merged' ? i.candidate : null,
+      JSON.stringify(i),
+      ctx.now(),
+    );
+}
+
 export function reportJob(ctx: Context, actor: Actor, input: unknown) {
   actor = machine(ctx, actor);
   const result = jobReportSchema.parse(input);
@@ -156,20 +259,7 @@ export function reportJob(ctx: Context, actor: Actor, input: unknown) {
     .transaction(() => {
       const job = ctx.sqlite
         .prepare('SELECT * FROM runner_jobs WHERE id=? AND machineId=?')
-        .get(result.jobId, actor.machineId) as
-        | {
-            id: string;
-            projectId: string;
-            workId: string;
-            workspaceId: string;
-            kind: string;
-            state: string;
-            result: string | null;
-            payload: string;
-            expectedHead: string;
-            expectedVersion: number;
-          }
-        | undefined;
+        .get(result.jobId, actor.machineId) as JobRow | undefined;
       if (!job) throw new DomainError('JOB_NOT_FOUND', 404);
       authorize(actor, 'runner.report', job.projectId);
       if (job.result) {
@@ -179,89 +269,12 @@ export function reportJob(ctx: Context, actor: Actor, input: unknown) {
       if (!['running', 'indeterminate'].includes(job.state))
         throw new DomainError('JOB_NOT_RUNNING');
       const work = task(ctx, job.projectId, job.workId);
-      const v = result.verification;
-      if (result.status === 'succeeded' && job.kind === 'verify') {
-        const requested = JSON.parse(job.payload) as RunnerJob['payload'];
-        if (
-          !v ||
-          v.workspaceId !== job.workspaceId ||
-          v.harnessSourceHash !== requested.verifier?.sourceHash
-        )
-          throw new DomainError('VERIFICATION_BINDING_MISMATCH');
-        ctx.sqlite
-          .prepare('INSERT INTO verification_evidence VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
-          .run(
-            v.id,
-            job.projectId,
-            work.id,
-            v.workspaceId,
-            v.harnessHash,
-            v.before.head,
-            v.after.head,
-            v.baseBefore,
-            v.baseAfter,
-            v.status,
-            v.logHash,
-            v.exitCode,
-            JSON.stringify(v),
-            ctx.now(),
-          );
-        const base = ctx.sqlite
-          .prepare('SELECT baseSha FROM workspaces WHERE id=?')
-          .get(job.workspaceId) as { baseSha: string };
-        const clean =
-          v.baseBefore === base.baseSha &&
-          v.before.indexTree === v.before.tree &&
-          v.after.indexTree === v.after.tree &&
-          v.finishedAt >= v.startedAt &&
-          v.before.status === '' &&
-          v.after.status === '' &&
-          v.before.head === v.after.head &&
-          v.before.tree === v.after.tree &&
-          v.before.indexTree === v.after.indexTree &&
-          v.baseBefore === v.baseAfter;
-        if (
-          job.state === 'running' &&
-          v.status === 'passed' &&
-          v.reason === null &&
-          v.exitCode === 0 &&
-          clean &&
-          v.before.head === job.expectedHead &&
-          work.headSha === job.expectedHead &&
-          work.version === job.expectedVersion &&
-          work.state === 'reviewing' &&
-          work.reviewBy
-        )
-          ctx.sqlite
-            .prepare(
-              "UPDATE work_items SET state='verified',verifiedSha=?,version=version+1,updatedAt=? WHERE id=?",
-            )
-            .run(v.after.head, ctx.now(), work.id);
-      }
+      if (result.status === 'succeeded' && job.kind === 'verify')
+        recordVerification(ctx, job, work, result);
       if (result.status === 'succeeded' && job.kind === 'diff' && !result.diff)
         throw new DomainError('DIFF_REQUIRED');
-      if (result.status === 'succeeded' && job.kind === 'integrate') {
-        const i = result.integration;
-        if (!i) throw new DomainError('INTEGRATION_REQUIRED');
-        if (i.status !== 'base_moved' && i.headSha !== job.expectedHead)
-          throw new DomainError('INTEGRATION_BINDING_MISMATCH');
-        const spec = (JSON.parse(job.payload) as RunnerJob['payload']).integrate;
-        ctx.sqlite
-          .prepare('INSERT INTO integrations VALUES (?,?,?,?,?,?,?,?,?,?,?)')
-          .run(
-            job.id,
-            job.projectId,
-            job.workId,
-            i.status,
-            spec?.baseBranch ?? '',
-            i.status === 'base_moved' ? i.expected : i.baseSha,
-            job.expectedHead,
-            i.status === 'merged' ? i.mergeSha : null,
-            i.status === 'merged' ? i.candidate : null,
-            JSON.stringify(i),
-            ctx.now(),
-          );
-      }
+      if (result.status === 'succeeded' && job.kind === 'integrate')
+        recordIntegration(ctx, job, result);
       const state =
         job.state === 'indeterminate' || result.error === 'RUNNER_RESTARTED_RESULT_UNKNOWN'
           ? 'indeterminate'
@@ -283,7 +296,7 @@ export function reportJob(ctx: Context, actor: Actor, input: unknown) {
           kind: job.kind,
           status: result.status,
           workId: job.workId,
-          verification: v ?? null,
+          verification: result.verification ?? null,
         },
         job.id,
         job.id,

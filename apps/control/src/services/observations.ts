@@ -1,9 +1,63 @@
 import { randomUUID, createHash } from 'node:crypto';
-import { observationReportSchema } from '@aether/contracts';
+import { observationReportSchema, type ObservationReport } from '@aether/contracts';
 import { authorize, DomainError, type Actor } from '@aether/kernel';
 import { identityActor } from './identity.js';
 import { project, agent, emit, type Context } from './context.js';
 import { redact } from './approvals.js';
+/** Stores the new records of a report once each (a repeat of the same record is ignored, a changed one is a conflict) and emits an event per new one. */
+function storeRecords(
+  ctx: Context,
+  actor: Actor,
+  data: ObservationReport,
+  sourceId: string,
+  now: number,
+): number {
+  let added = 0;
+  for (const record of data.records) {
+    const text = String(redact(record.text));
+    const existing = ctx.sqlite
+      .prepare(
+        'SELECT sessionId,kind,role,text FROM observation_records WHERE sourceId=? AND sourceEventId=?',
+      )
+      .get(sourceId, record.sourceId) as
+      { sessionId: string; kind: string; role: string; text: string } | undefined;
+    if (
+      existing &&
+      (existing.sessionId !== record.sessionId ||
+        existing.kind !== record.kind ||
+        existing.role !== record.role ||
+        existing.text !== text)
+    )
+      throw new DomainError('OBSERVATION_EVENT_CONFLICT');
+    const result = ctx.sqlite
+      .prepare(
+        'INSERT OR IGNORE INTO observation_records(sourceId,sourceEventId,sessionId,kind,role,text,createdAt) VALUES (?,?,?,?,?,?,?)',
+      )
+      .run(sourceId, record.sourceId, record.sessionId, record.kind, record.role, text, now);
+    if (result.changes) {
+      added++;
+      emit(
+        ctx,
+        actor,
+        data.projectId,
+        `observation.${record.kind}`,
+        {
+          sourceId,
+          agentId: data.agentId,
+          provider: data.provider,
+          sessionId: record.sessionId,
+          role: record.role,
+          text,
+        },
+        record.sourceId,
+        data.reportId,
+        'observed',
+      );
+    }
+  }
+  return added;
+}
+
 export function reportObservation(ctx: Context, actor: Actor, input: unknown) {
   actor = identityActor(ctx, actor.id);
   const data = observationReportSchema.parse(input);
@@ -59,49 +113,7 @@ export function reportObservation(ctx: Context, actor: Actor, input: unknown) {
           data.revision,
           now,
         );
-      let added = 0;
-      for (const record of data.records) {
-        const text = String(redact(record.text));
-        const existing = ctx.sqlite
-          .prepare(
-            'SELECT sessionId,kind,role,text FROM observation_records WHERE sourceId=? AND sourceEventId=?',
-          )
-          .get(sourceId, record.sourceId) as
-          { sessionId: string; kind: string; role: string; text: string } | undefined;
-        if (
-          existing &&
-          (existing.sessionId !== record.sessionId ||
-            existing.kind !== record.kind ||
-            existing.role !== record.role ||
-            existing.text !== text)
-        )
-          throw new DomainError('OBSERVATION_EVENT_CONFLICT');
-        const result = ctx.sqlite
-          .prepare(
-            'INSERT OR IGNORE INTO observation_records(sourceId,sourceEventId,sessionId,kind,role,text,createdAt) VALUES (?,?,?,?,?,?,?)',
-          )
-          .run(sourceId, record.sourceId, record.sessionId, record.kind, record.role, text, now);
-        if (result.changes) {
-          added++;
-          emit(
-            ctx,
-            actor,
-            data.projectId,
-            `observation.${record.kind}`,
-            {
-              sourceId,
-              agentId: data.agentId,
-              provider: data.provider,
-              sessionId: record.sessionId,
-              role: record.role,
-              text,
-            },
-            record.sourceId,
-            data.reportId,
-            'observed',
-          );
-        }
-      }
+      const added = storeRecords(ctx, actor, data, sourceId, now);
       if (added) {
         ctx.sqlite
           .prepare('UPDATE observation_sources SET lastActivity=? WHERE id=?')

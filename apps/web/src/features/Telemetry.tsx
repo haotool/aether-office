@@ -5,6 +5,7 @@ import { bytes } from './GitHealth.js';
 import type { LocalSession } from '@aether/contracts';
 import { useT } from '../ui.js';
 import { needsAttention } from '../localSessions.js';
+import { ClaudeQuota } from './ClaudeQuota.js';
 
 const TIME_ZONE = 'Asia/Taipei';
 const format = (now: Date) =>
@@ -40,12 +41,12 @@ export function Telemetry({
         memory: { totalBytes: number; freeBytes: number };
         disks: { path: string; totalBytes: number; freeBytes: number }[];
       }>('/api/system'),
-    refetchInterval: 10000,
+    refetchInterval: 20000,
     retry: false,
   }).data;
   const memUsed = system ? 100 - (system.memory.freeBytes / system.memory.totalBytes) * 100 : null;
   const disk = system?.disks[0];
-  // The newest Codex window anyone reported; Claude Code keeps no limit on disk, so it is shown as unknown.
+  // The newest Codex window anyone reported (Claude's windows come from <ClaudeQuota />).
   const codex = [...sessions]
     .filter((s) => s.provider === 'codex' && s.usage.limit)
     .sort((a, b) => b.mtime - a.mtime)[0]?.usage.limit;
@@ -89,10 +90,7 @@ export function Telemetry({
           {codex ? `${Math.round(codex.usedPercent)}%` : '—'}
         </dd>
       </div>
-      <div title={t('claudeQuotaUnknown')}>
-        <dt>CLAUDE</dt>
-        <dd>—</dd>
-      </div>
+      <ClaudeQuota />
       <div
         title={
           system

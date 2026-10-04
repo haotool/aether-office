@@ -115,7 +115,7 @@ async function repoInfo(cwd: string, now: number): Promise<RepoInfo> {
   }
 }
 
-export const hookSpoolFile = () =>
+const hookSpoolFile = () =>
   process.env['AETHER_HOOK_SPOOL'] ?? join(homedir(), '.aether', 'hook-events.jsonl');
 
 let cache: { at: number; value: LocalSession[] } | null = null;

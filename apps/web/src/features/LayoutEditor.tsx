@@ -1,7 +1,8 @@
+import { uuid } from '../browser-compat.js';
 import { useState } from 'react';
 import type { Snapshot, Layout } from '@aether/contracts';
 import { layoutSchema } from '@aether/contracts';
-import { defaultLayout } from '@aether/office-scene';
+import { defaultLayout } from '@aether/office-scene/model';
 import { DEPARTMENTS } from '@aether/kernel';
 import { floorResolver } from '../localSessions.js';
 import { execute } from '../api.js';
@@ -190,7 +191,7 @@ export function LayoutEditor({
               className="secondary"
               key={type}
               onClick={() => {
-                const id = `${type}-${crypto.randomUUID().slice(0, 6)}`;
+                const id = `${type}-${uuid().slice(0, 6)}`;
                 change({
                   ...draft,
                   objects: [

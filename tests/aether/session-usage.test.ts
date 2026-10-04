@@ -25,7 +25,7 @@ it('reads Codex context in use, session total, window and the model of the lates
         type: 'token_count',
         info: {
           last_token_usage: { input_tokens: 500 },
-          total_token_usage: { total_tokens: 900 },
+          total_token_usage: { total_tokens: 900, cached_input_tokens: 600 },
           model_context_window: 1000,
         },
       },
@@ -48,7 +48,7 @@ it('reads Codex context in use, session total, window and the model of the lates
     model: 'gpt-new',
     contextTokens: 500,
     contextWindow: 1000,
-    totalTokens: 900,
+    freshTokens: 300, // 900 in all, of which 600 came from the cache
     limit: { usedPercent: 84, windowMinutes: 10080, resetsAt: 1791583205000, plan: 'prolite' },
   });
   expect(JSON.stringify(usage)).not.toContain('PRIVATE');
@@ -74,7 +74,7 @@ it('reads Claude context as new plus cached input of the latest assistant messag
     model: 'claude-sonnet-5-5',
     contextTokens: 250495,
     contextWindow: null,
-    totalTokens: null,
+    freshTokens: null,
     limit: null,
   });
 });
@@ -84,7 +84,7 @@ it('reports unknown as null, never zero, for empty, malformed or counter-less ta
     model: null,
     contextTokens: null,
     contextWindow: null,
-    totalTokens: null,
+    freshTokens: null,
     limit: null,
   };
   expect(parseUsage('codex', Buffer.from(''))).toEqual(none);
@@ -115,18 +115,18 @@ it('sums every Claude assistant message once, though one message spans several l
   };
   const data = (...lines: string[]) => Buffer.from(lines.join('\n'));
   const text = data(line('a', u), line('a', u), '{"type":"user"}', line('b', u), 'cut {"usage"');
-  expect(sumClaudeTokens(text, null)).toEqual({ tokens: 234, lastId: 'b' });
+  expect(sumClaudeTokens(text, null)).toEqual({ tokens: 34, lastId: 'b' }); // cache reads (100) are not counted
   expect(sumClaudeTokens(data(line('b', u)), 'b').tokens).toBe(0); // continues a message from the previous chunk
   // The counters after the message's own (one copy per iteration) are not added again.
   const iterated = line('c', { ...u, iterations: [{ ...u }, { ...u }] });
-  expect(sumClaudeTokens(data(iterated), null).tokens).toBe(117);
+  expect(sumClaudeTokens(data(iterated), null).tokens).toBe(17);
   // A sub-agent's result carries usage but is no message of this session: it has no message id.
   const subagent = JSON.stringify({
     type: 'user',
     toolUseResult: { usage: u },
     message: { role: 'user' },
   });
-  expect(sumClaudeTokens(data(subagent, line('d', u)), null).tokens).toBe(117);
+  expect(sumClaudeTokens(data(subagent, line('d', u)), null).tokens).toBe(17);
 });
 
 it('totals a real file the same as summing its text, across chunk boundaries', async () => {
@@ -148,6 +148,6 @@ it('totals a real file the same as summing its text, across chunk boundaries', a
   await writeFile(file, text); // about 8 MB: more than one chunk
   const { readUsage } = await import('../../apps/control/src/services/session-usage.js');
   const read = await readUsage('claude', file);
-  expect(read.totalTokens).toBe(sumClaudeTokens(Buffer.from(text), null).tokens);
-  expect(read.totalTokens).toBe(4000 * 105);
+  expect(read.freshTokens).toBe(sumClaudeTokens(Buffer.from(text), null).tokens);
+  expect(read.freshTokens).toBe(4000 * 15); // input 3 + cache written 7 + output 5, never the 90 read from the cache
 });

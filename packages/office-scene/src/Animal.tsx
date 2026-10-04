@@ -33,16 +33,19 @@ export function Animal({
   reducedMotion,
   quality,
   apparition,
+  light = false,
   onError,
 }: {
   agent: Agent;
   apparition?: Apparition | undefined;
+  /** A phone: smaller models and textures (the selected one a step down, the rest the smallest). */
+  light?: boolean;
   selected: boolean;
   reducedMotion: boolean;
   quality: 'low' | 'balanced' | 'high';
   onError: () => void;
 }) {
-  const lod = quality === 'low' ? 2 : selected ? 0 : 1;
+  const lod = quality === 'low' ? 2 : selected ? (light ? 1 : 0) : light ? 2 : 1;
   const species = apparition ? APPARITION_MODEL[apparition] : agent.species;
   const url = `/assets/animals/${species}-lod${lod}.glb`;
   const [model, setModel] = useState<Model | null>(null);

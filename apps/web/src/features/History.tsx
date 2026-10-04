@@ -43,7 +43,7 @@ export function History({ projectId }: { projectId: string }) {
         </p>
       ) : query.data?.events.length ? (
         <div className="history-table" tabIndex={0} role="region" aria-label={t('history')}>
-          <table>
+          <table className="stack">
             <thead>
               <tr>
                 <th>SEQ</th>
@@ -58,12 +58,12 @@ export function History({ projectId }: { projectId: string }) {
                 .reverse()
                 .map((event) => (
                   <tr key={event.eventId}>
-                    <td>
+                    <td data-label="SEQ">
                       <code>{event.seq}</code>
                     </td>
-                    <td>{new Date(event.occurredAt).toLocaleString()}</td>
-                    <td>{event.type}</td>
-                    <td>
+                    <td data-label={t('time')}>{new Date(event.occurredAt).toLocaleString()}</td>
+                    <td data-label={t('event')}>{event.type}</td>
+                    <td data-label={t('source')}>
                       <Badge state={event.source === 'simulated' ? 'demo' : 'live'} />{' '}
                       {event.source}
                     </td>

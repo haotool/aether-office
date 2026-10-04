@@ -29,10 +29,7 @@ export type WorkspaceData = {
     expectedVersion: number;
   }[];
 };
-export function jobMatchesWork(
-  job: WorkspaceData['jobs'][number],
-  work: Work | undefined,
-): boolean {
+function jobMatchesWork(job: WorkspaceData['jobs'][number], work: Work | undefined): boolean {
   return (
     !!work &&
     job.expectedHead === work.headSha &&

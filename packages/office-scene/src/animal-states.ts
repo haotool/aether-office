@@ -1,5 +1,5 @@
 import type { Agent } from '@aether/contracts';
-import { seeded } from './screens.js';
+import { seeded } from './random.js';
 
 /** Every clip an animal model carries (tools/blender/animal_clips.py, checked by scripts/validate-assets.mjs). */
 export const CLIPS = [

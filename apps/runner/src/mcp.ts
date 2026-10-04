@@ -2,7 +2,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import type { InboxPage, Snapshot } from '@aether/contracts';
-export const mcpScopeSchema = z
+const mcpScopeSchema = z
   .object({
     url: z.url(),
     token: z.string().min(32),

@@ -11,7 +11,7 @@ const NONE: SessionUsage = {
   model: null,
   contextTokens: null,
   contextWindow: null,
-  totalTokens: null,
+  freshTokens: null,
   limit: null,
 };
 
@@ -55,7 +55,11 @@ export function parseUsage(provider: 'claude' | 'codex', tail: Buffer): SessionU
       if (usage.contextTokens === null && payload['type'] === 'token_count' && payload['info']) {
         const info = obj(payload['info']);
         usage.contextTokens = num(obj(info['last_token_usage'])['input_tokens']);
-        usage.totalTokens = num(obj(info['total_token_usage'])['total_tokens']);
+        const total = obj(info['total_token_usage']);
+        const spent = num(total['total_tokens']);
+        // Codex's input count includes what the cache served, so those tokens come off the total.
+        usage.freshTokens =
+          spent === null ? null : Math.max(0, spent - (num(total['cached_input_tokens']) ?? 0));
         usage.contextWindow = num(info['model_context_window']);
       }
       if (usage.limit === null && payload['type'] === 'token_count' && payload['rate_limits']) {
@@ -114,7 +118,7 @@ export async function readUsage(provider: 'claude' | 'codex', file: string): Pro
       if (i > 0 && (usage.model !== null || size <= TAILS[i - 1]!)) break;
       usage = await read(TAILS[i]!);
     }
-    if (provider === 'claude') usage = { ...usage, totalTokens: await claudeTotal(file, size) };
+    if (provider === 'claude') usage = { ...usage, freshTokens: await claudeTotal(file, size) };
     if (cache.size > 512) cache.clear(); // bounded by design
     cache.set(file, { mtime: mtimeMs, size, usage });
     return usage;
@@ -123,17 +127,13 @@ export async function readUsage(provider: 'claude' | 'codex', file: string): Pro
   }
 }
 
-const USAGE_KEYS = [
-  'input_tokens',
-  'cache_creation_input_tokens',
-  'cache_read_input_tokens',
-  'output_tokens',
-] as const;
+// Cache reads are not counted (see LocalSession.usage.freshTokens): new input, input written to the cache, and output.
+const USAGE_KEYS = ['input_tokens', 'cache_creation_input_tokens', 'output_tokens'] as const;
 const USAGE_COUNTERS = USAGE_KEYS.map((key) => new RegExp(`"${key}":(\\d+)`));
 
 /**
- * Pure. Claude Code keeps no running total, so a session's spend is the sum of every assistant message's input (new and
- * cached) and output, the same measure as Codex's total_token_usage. `data` is whole lines. One message is written as
+ * Pure. Claude Code keeps no running total, so a session's spend is the sum of every assistant message's new input,
+ * cache-written input and output; the same measure as Codex's total_token_usage minus its cached input. `data` is whole lines. One message is written as
  * several lines repeating its usage, so a message counts once, by id; `lastId` carries that across chunks.
  *
  * Most of a transcript is tool output and thinking, and a line can be tens of KB, so nothing is decoded but the few

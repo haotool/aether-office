@@ -24,7 +24,7 @@ const session = (main: string | null, projectId: string | null): AttributedSessi
       model: null,
       contextTokens: null,
       contextWindow: null,
-      totalTokens: null,
+      freshTokens: null,
       limit: null,
     },
     projectId,

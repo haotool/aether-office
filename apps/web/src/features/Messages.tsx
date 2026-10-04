@@ -4,7 +4,7 @@ import { Send, MessageSquare, ArrowUpRight } from 'lucide-react';
 import type { MessageWait, Snapshot } from '@aether/contracts';
 import { api, execute } from '../api.js';
 import { Empty, Field, Badge, PageHeading, AvatarIcon, useT } from '../ui.js';
-import { Rooms, useRooms } from './Rooms.js';
+import { useRooms } from './Rooms.js';
 export function Messages({
   snapshot,
   onSaved,

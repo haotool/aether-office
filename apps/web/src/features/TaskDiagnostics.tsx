@@ -60,7 +60,6 @@ export function TaskDiagnostics({
   const d = query.data;
   return (
     <section aria-label={t('workDiagnosis')}>
-      <h3>{t('workDiagnosis')}</h3>
       {query.error ? (
         <p role="alert">{query.error.message}</p>
       ) : d ? (

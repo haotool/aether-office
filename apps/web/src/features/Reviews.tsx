@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import type { Snapshot } from '@aether/contracts';
 import { api, execute } from '../api.js';
-import { PageHeading, Empty, Badge, Field, useT } from '../ui.js';
+import { PageHeading, Empty, Badge, Field, useT, Clamp } from '../ui.js';
 import { useWorkspaces, JobEvidence } from './Workspace.js';
 import { HunkComments } from './HunkComments.js';
 export function Reviews({
@@ -65,7 +65,7 @@ export function Reviews({
                 <h2>{work.title}</h2>
                 <h4>{t('acceptance')}</h4>
                 <p>{work.acceptance}</p>
-                <p className="result-text">{work.result}</p>
+                <Clamp className="result-text">{work.result}</Clamp>
                 <code>{work.headSha ?? t('verificationRequired')}</code>
                 {work.headSha && (
                   <HunkComments

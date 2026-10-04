@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 import { ROLE_LABELS } from '../../packages/kernel/src/index.js';
-import { screenRoles, seeded } from '../../packages/office-scene/src/screens.js';
+import { screenRoles } from '../../packages/office-scene/src/screens.js';
+import { seeded } from '../../packages/office-scene/src/random.js';
 
 it('has screen art for every engineering role, and picks it deterministically per member', () => {
   expect([...screenRoles].sort()).toEqual(Object.keys(ROLE_LABELS).sort());

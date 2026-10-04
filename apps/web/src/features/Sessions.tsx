@@ -1,9 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import type { AttributedSession, LocalSession } from '@aether/contracts';
 import { DEPARTMENTS, ROLE_LABELS, type RoleId } from '@aether/kernel';
 import { activityOf, formatSpan, sessionCommands, tokensByDepartment } from '../localSessions.js';
+import { copyText } from '../browser-compat.js';
+import { usePhoneAny } from '../phone.js';
 import { PageHeading, useT } from '../ui.js';
+import { reapZombies } from './reap.js';
 import { StopSession } from './StopSession.js';
 
 const LIVENESS_LABEL = {
@@ -20,6 +24,9 @@ const zombieTitle = (zombies: LocalSession['liveness']['zombies'], hint: string)
   `${zombies.map((z) => `${z.program ?? '?'} (pid ${z.pid})`).join(', ')}\n${hint}`;
 
 /** Every local session in one searchable list: what it is, where it runs, what it is doing, and how to pick it up. */
+/** Rows drawn at first; the rest on request, so a long list does not make a phone render hundreds of cards. */
+const PAGE = 30;
+
 export function Sessions({
   sessions,
   locale,
@@ -34,35 +41,54 @@ export function Sessions({
   const [query, setQuery] = useState('');
   const [provider, setProvider] = useState('');
   const [department, setDepartment] = useState('');
-  const [runningOnly, setRunningOnly] = useState(false);
+  const phone = usePhoneAny();
+  // On a phone it opens on what is running; the rest is one tap away.
+  const [runningOnly, setRunningOnly] = useState(phone);
+  const [shown, setShown] = useState(PAGE);
   const [liveness, setLiveness] = useState('');
   const [stopping, setStopping] = useState<AttributedSession | null>(null);
   const [copied, setCopied] = useState('');
+  const client = useQueryClient();
+  const [reaped, setReaped] = useState<Record<string, string>>({});
+  const reap = async (s: AttributedSession) => {
+    try {
+      const r = await reapZombies(s);
+      setReaped((all) => ({
+        ...all,
+        [s.key]: r.after === 0 ? t('reapCleared') : t('reapRemaining'),
+      }));
+      await client.invalidateQueries({ queryKey: ['local-sessions'] });
+    } catch (e) {
+      setReaped((all) => ({ ...all, [s.key]: e instanceof Error ? e.message : 'REQUEST_FAILED' }));
+    }
+  };
   const now = Date.now();
   const compact = new Intl.NumberFormat(locale, { notation: 'compact' });
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return [...sessions]
-      .filter((s) => !provider || s.provider === provider)
-      .filter((s) => !department || s.classification.department === department)
-      .filter((s) => !runningOnly || s.process === 'running')
-      .filter((s) => !liveness || s.liveness.state === liveness)
-      .filter(
-        (s) =>
-          !q ||
-          [s.title, s.repo, s.cwd, s.git?.branch, s.classification.role, s.usage.model]
-            .filter(Boolean)
-            .some((v) => String(v).toLowerCase().includes(q)),
-      )
-      .sort((a, b) => b.mtime - a.mtime);
+    return (
+      [...sessions]
+        .filter((s) => !provider || s.provider === provider)
+        .filter((s) => !department || s.classification.department === department)
+        .filter((s) => !runningOnly || s.process === 'running')
+        .filter((s) => !liveness || s.liveness.state === liveness)
+        .filter(
+          (s) =>
+            !q ||
+            [s.title, s.repo, s.cwd, s.git?.branch, s.classification.role, s.usage.model]
+              .filter(Boolean)
+              .some((v) => String(v).toLowerCase().includes(q)),
+        )
+        // Running sessions first (they are what you opened this page for), then by recency.
+        .sort(
+          (a, b) =>
+            Number(b.process === 'running') - Number(a.process === 'running') || b.mtime - a.mtime,
+        )
+    );
   }, [sessions, query, provider, department, runningOnly, liveness]);
+  useEffect(() => setShown(PAGE), [query, provider, department, runningOnly, liveness]);
   const copy = async (text: string, id: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(id);
-    } catch {
-      setCopied('');
-    }
+    setCopied((await copyText(text)) ? id : '');
   };
   return (
     <>
@@ -136,7 +162,7 @@ export function Sessions({
           })}
         </ul>
         <div className="table-scroll" tabIndex={0} aria-label={t('sessionsPage')}>
-          <table>
+          <table className="stack">
             <thead>
               <tr>
                 <th>{t('sessionTitle')}</th>
@@ -149,7 +175,7 @@ export function Sessions({
               </tr>
             </thead>
             <tbody>
-              {rows.map((s) => {
+              {rows.slice(0, shown).map((s) => {
                 const commands = sessionCommands(s);
                 const role = ROLE_LABELS[s.classification.role as RoleId];
                 const window =
@@ -163,10 +189,10 @@ export function Sessions({
                       {s.title ?? (s.cwd.split('/').pop() || s.repo)}
                       <small>{s.repo}</small>
                     </td>
-                    <td>
+                    <td data-label={t('jobRole')}>
                       {role ? (locale === 'zh-TW' ? role.zh : role.en) : s.classification.role}
                     </td>
-                    <td>
+                    <td data-label={t('status')}>
                       {activityOf(s, now)} · {s.process}
                       {s.liveness.state !== 'unknown' && (
                         <small className={`liveness ${s.liveness.state}`}>
@@ -200,12 +226,14 @@ export function Sessions({
                         </small>
                       )}
                     </td>
-                    <td>
+                    <td data-label={t('model')}>
                       {s.usage.model ?? '—'}
                       {window !== null && <small>ctx {window}%</small>}
                     </td>
-                    <td>{s.git?.branch ?? (s.git ? 'detached' : '—')}</td>
-                    <td>
+                    <td data-label={t('gitBranch')}>
+                      {s.git?.branch ?? (s.git ? 'detached' : '—')}
+                    </td>
+                    <td data-label={t('preview')}>
                       {s.ports.length
                         ? s.ports.map((port) => (
                             <a
@@ -223,7 +251,9 @@ export function Sessions({
                       <button
                         className="secondary"
                         onClick={() =>
-                          navigate(`/office?agent=${encodeURIComponent(`local:${s.key}`)}`)
+                          navigate(
+                            `/office?${s.projectId ? `project=${s.projectId}&` : ''}agent=${encodeURIComponent(`local:${s.key}`)}&focus=1`,
+                          )
                         }
                       >
                         {t('showInOffice')}
@@ -240,6 +270,15 @@ export function Sessions({
                       >
                         {copied === `${s.key}:f` ? t('copied') : t('copyFork')}
                       </button>
+                      {canStop && s.process === 'running' && s.liveness.zombies.length > 0 && (
+                        <button
+                          className="secondary"
+                          title={t('zombieHint')}
+                          onClick={() => void reap(s)}
+                        >
+                          {reaped[s.key] ?? t('reapZombies')}
+                        </button>
+                      )}
                       {canStop && ['dormant', 'orphaned'].includes(s.liveness.state) && (
                         <button className="secondary danger" onClick={() => setStopping(s)}>
                           {t('stopAction')}
@@ -252,6 +291,11 @@ export function Sessions({
             </tbody>
           </table>
         </div>
+        {rows.length > shown && (
+          <button className="secondary full-width show-more" onClick={() => setShown(shown + PAGE)}>
+            {t('showMore')} ({rows.length - shown})
+          </button>
+        )}
       </div>
       {stopping && (
         <StopSession session={stopping} locale={locale} onClose={() => setStopping(null)} />

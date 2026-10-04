@@ -4,7 +4,7 @@
  */
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-export function roundedBox(w: number, h: number, d: number, r = 0.06): THREE.BufferGeometry {
+function roundedBox(w: number, h: number, d: number, r = 0.06): THREE.BufferGeometry {
   const shape = new THREE.Shape();
   const x = -w / 2,
     y = -d / 2;
@@ -63,17 +63,4 @@ export function mergeStatic(root: THREE.Group): THREE.Group {
   }
   for (const geometry of originals) geometry.dispose();
   return merged;
-}
-export function disposeOwned(root: THREE.Object3D): void {
-  const geometries = new Set<THREE.BufferGeometry>();
-  const materials = new Set<THREE.Material>();
-  root.traverse((object) => {
-    if (object instanceof THREE.Mesh) {
-      geometries.add(object.geometry);
-      for (const material of Array.isArray(object.material) ? object.material : [object.material])
-        materials.add(material);
-    }
-  });
-  for (const geometry of geometries) geometry.dispose();
-  for (const material of materials) material.dispose();
 }

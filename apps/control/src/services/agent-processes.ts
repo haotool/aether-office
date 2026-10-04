@@ -56,7 +56,7 @@ const RESUME = /(?:--resume|-r)[ =]([0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})
 // `ps -o lstart` is always 24 characters ("Sat Oct  3 10:23:45 2026") and, run with LC_ALL=C, always in English.
 const LSTART = /^(?:\w{3}) (\w{3}) +(\d{1,2}) (\d\d):(\d\d):(\d\d) (\d{4})/;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-export const PS_FORMAT = 'lstart=,pid=,ppid=,stat=,time=,%cpu=,rss=,tty=,command=';
+const PS_FORMAT = 'lstart=,pid=,ppid=,stat=,time=,%cpu=,rss=,tty=,command=';
 
 /** Pure. `ps` start time (local time, to the second) → epoch milliseconds, or null when it does not parse. */
 export function parseStartTime(text: string): number | null {
