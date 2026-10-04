@@ -74,8 +74,6 @@ export const CAPABILITIES = {
   observe: { ...none, externalObservation: true },
 } as const satisfies Record<string, Capabilities>;
 
-export type ProviderName = keyof typeof CAPABILITIES;
-
 export function capabilitiesOf(provider: string): Capabilities {
   return (CAPABILITIES as Record<string, Capabilities>)[provider] ?? none;
 }

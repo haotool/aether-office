@@ -51,7 +51,7 @@ export function startWorkflow(ctx: Context, actor: Actor, c: Start): Workflow {
   return readWorkflow(ctx, workflowId);
 }
 
-export function readWorkflow(ctx: Context, workflowId: string): Workflow {
+function readWorkflow(ctx: Context, workflowId: string): Workflow {
   const head = ctx.sqlite
     .prepare('SELECT id,template,title FROM workflows WHERE id=?')
     .get(workflowId) as { id: string; template: string; title: string } | undefined;

@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -42,6 +42,19 @@ export default defineConfig({
     trace: 'off',
     screenshot: 'only-on-failure',
   },
+  projects: [
+    { name: 'chrome', testIgnore: /ios-only/ },
+    // WebKit is the engine of every browser on iOS. Opt in once `playwright install webkit` has been run.
+    ...(process.env['AETHER_WEBKIT']
+      ? [
+          {
+            name: 'webkit-iphone',
+            testMatch: /(touch-flow|responsive)\.spec\.ts/,
+            use: { ...devices['iPhone 15'], browserName: 'webkit' as const, channel: undefined },
+          },
+        ]
+      : []),
+  ],
   webServer: [
     {
       command: 'node --import tsx scripts/e2e-server.ts',

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from 'react';
-import { Plus, ArrowRight, CheckCircle2, GitBranch } from 'lucide-react';
+import { Plus, ArrowRight, CheckCircle2 } from 'lucide-react';
 import type { Snapshot, Work } from '@aether/contracts';
 import { TaskDiagnostics } from './TaskDiagnostics.js';
 import { execute } from '../api.js';
@@ -7,7 +7,7 @@ import { Integration } from './Integration.js';
 import { WorkflowStart } from './WorkflowStart.js';
 import { useCapabilities } from './CapabilityMatrix.js';
 import { BOARD } from './board.js';
-import { Modal, Field, Empty, Badge, PageHeading, useT } from '../ui.js';
+import { Modal, Field, Empty, Badge, PageHeading, Fold, Clamp, useT } from '../ui.js';
 const TaskDag = lazy(() => import('./TaskDag.js').then((m) => ({ default: m.TaskDag })));
 export function TaskForm({
   snapshot,
@@ -203,15 +203,18 @@ export function Tasks({
                 current.cancelCause}
             </p>
           )}
-          <TaskDiagnostics
-            projectId={snapshot.project.id}
-            workId={current.id}
-            version={current.version}
-          />
-          <p className="preserve-space">{current.description}</p>
-          <h3>{t('acceptance')}</h3>
-          <p className="preserve-space">{current.acceptance}</p>
-          <p>
+          <Clamp className="preserve-space">{current.description}</Clamp>
+          <Fold title={t('workDiagnosis')}>
+            <TaskDiagnostics
+              projectId={snapshot.project.id}
+              workId={current.id}
+              version={current.version}
+            />
+          </Fold>
+          <Fold title={t('acceptance')}>
+            <p className="preserve-space">{current.acceptance}</p>
+          </Fold>
+          <p className="fold-line">
             {t('dependencies')}:{' '}
             {snapshot.dependencies
               .filter((d) => d.workId === current.id)
@@ -224,12 +227,11 @@ export function Tasks({
               .join('、') || '—'}
           </p>
           {current.result && (
-            <>
-              <h3>{t('result')}</h3>
-              <p className="result-text">{current.result}</p>
-            </>
+            <Fold title={t('result')} open>
+              <Clamp className="result-text">{current.result}</Clamp>
+            </Fold>
           )}
-          <small>
+          <small className="fold-line">
             {t('version')} {current.version} · {current.id.slice(0, 8)}
           </small>
           {['ready', 'backlog'].includes(current.state) && current.attempt === 0 && (

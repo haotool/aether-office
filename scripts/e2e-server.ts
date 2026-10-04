@@ -1,6 +1,6 @@
 import { mkdtempSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 import { setup } from './setup.js';
 const directory = mkdtempSync(join(tmpdir(), 'aether-e2e-'));

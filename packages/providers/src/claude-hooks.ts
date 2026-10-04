@@ -16,7 +16,7 @@ export const HOOK_EVENTS = [
   'PermissionRequest',
 ] as const;
 // Claude Code also reports permission and idle prompts as Notification events (notification_type).
-export const CLAUDE_ONLY_EVENTS = ['Notification'] as const;
+const CLAUDE_ONLY_EVENTS = ['Notification'] as const;
 export const eventsFor = (provider: 'claude' | 'codex') =>
   provider === 'claude' ? [...HOOK_EVENTS, ...CLAUDE_ONLY_EVENTS] : [...HOOK_EVENTS];
 

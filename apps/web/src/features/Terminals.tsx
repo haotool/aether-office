@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Terminal } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
+import { TerminalKeys } from './TerminalKeys.js';
 import { terminalSnapshotSchema } from '@aether/contracts';
 import { api, execute } from '../api.js';
 import { Field, PageHeading, useT } from '../ui.js';
@@ -206,6 +207,7 @@ function TerminalView({
           Exit code: {exit.exitCode} · Signal: {exit.signal ?? '—'}
         </p>
       )}
+      {writable && <TerminalKeys onKey={(sequence) => terminal.current?.input(sequence)} />}
       <div ref={host} className="terminal-screen" aria-label={t('terminals')} />
       {(error || query.error) && <p role="alert">{error || query.error?.message}</p>}
     </article>

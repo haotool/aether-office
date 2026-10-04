@@ -40,3 +40,27 @@ test('local sessions are auto-discovered and shown as observe-only 3D agents', a
   await page.getByRole('button', { name: '3D 空間' }).click();
   expect(errors).toEqual([]);
 });
+
+test('"show in office" opens the member\'s project and brings its desk into view', async ({
+  page,
+}) => {
+  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
+    directory: string;
+  };
+  await page.goto('/');
+  await page
+    .getByLabel('存取權杖', { exact: true })
+    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
+  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await expect(
+    page.locator('.project-picker select option', { hasText: 'fixture-repo' }),
+  ).toBeAttached({
+    timeout: 15000,
+  });
+  await page.goto('/sessions');
+  await page.getByRole('button', { name: '在辦公室查看' }).first().click();
+  await expect(page).toHaveURL(/\/office\?project=[^&]+&agent=local%3Aclaude%3Ae2e-session$/, {
+    timeout: 15000,
+  }); // the focus request was taken up and removed from the address
+  await expect(page.locator('.scene-label.selected')).toBeVisible();
+});

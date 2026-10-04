@@ -28,7 +28,7 @@ const observationProfileSchema = z
   .strict()
   .refine((p) => p.discover || p.files.length > 0, 'Explicit files or discovery required');
 export type ObservationProfile = z.infer<typeof observationProfileSchema>;
-export const nativeConfigSchema = z
+const nativeConfigSchema = z
   .object({
     enabled: z.literal(true),
     repositories: z.array(absolute).min(1).max(32),

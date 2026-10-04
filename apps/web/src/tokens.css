@@ -20,6 +20,17 @@
   --aura-b: #2a1b6a40;
   --shadow: 0 10px 34px #00000066;
   --grid: #2f4a6112;
+  /* Type floor: no visible text under --fs-label (uppercase mono tags) or --fs-small (everything readable). */
+  --fs-label: 11px;
+  --fs-small: 12px;
+  --fs-body: 14px;
+  /* Pointer targets: 44px for a finger (WCAG 2.5.5, Apple HIG), 32px for a mouse. */
+  --target-touch: 44px;
+  --target-fine: 32px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
   --mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Noto Sans Mono', monospace;
 }
 :root[data-theme='light'] {

@@ -1,22 +1,27 @@
-import { ArrowUpRight, X, Focus, Cpu, Clock, MessageSquare } from 'lucide-react';
+import { ArrowUpRight, ChevronDown, ChevronUp, X, Focus, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Agent, LocalSession, Snapshot } from '@aether/contracts';
 import { ROLE_LABELS } from '@aether/kernel';
 import { classificationOf } from '../localSessions.js';
 import { LiveTranscript } from './LiveTranscript.js';
-import { AvatarIcon, Badge, useT } from '../ui.js';
+import { AvatarIcon, Badge, Fold, useT } from '../ui.js';
 export function Inspector({
   agent,
   snapshot,
   onClose,
   onFocus,
   session,
+  tall,
+  onToggleTall,
 }: {
   agent: Agent | null;
   snapshot: Snapshot;
   onClose: () => void;
   onFocus: () => void;
   session?: LocalSession | null;
+  /** On a phone the inspector is a sheet: half height, or tall on request. */
+  tall?: boolean;
+  onToggleTall?: () => void;
 }) {
   const t = useT();
   const kind = session ? classificationOf(session) : null;
@@ -24,12 +29,24 @@ export function Inspector({
     (w) => w.assignee === agent?.id && !['cancelled', 'completed'].includes(w.state),
   );
   return (
-    <aside className="inspector">
+    <aside className={`inspector ${tall ? 'tall' : ''}`}>
       <div className="inspector-heading">
         <span>{t('details')}</span>
-        <button className="icon-button" aria-label={t('close')} onClick={onClose}>
-          <X size={17} />
-        </button>
+        <span className="inspector-heading-actions">
+          {onToggleTall && (
+            <button
+              className="icon-button"
+              aria-label={tall ? t('collapse') : t('expand')}
+              aria-pressed={!!tall}
+              onClick={onToggleTall}
+            >
+              {tall ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+            </button>
+          )}
+          <button className="icon-button" aria-label={t('close')} onClick={onClose}>
+            <X size={17} />
+          </button>
+        </span>
       </div>
       {agent ? (
         <>
@@ -51,8 +68,7 @@ export function Inspector({
               </Link>
             )}
           </div>
-          <div className="inspector-section">
-            <h3>{t('profile')}</h3>
+          <Fold title={t('profile')}>
             <dl>
               <div>
                 <dt>{t('provider')}</dt>
@@ -80,10 +96,9 @@ export function Inspector({
                 <dd title={t('costNote')}>{t('unavailable')}</dd>
               </div>
             </dl>
-          </div>
+          </Fold>
           {session && kind && (
-            <div className="inspector-section">
-              <h3>OBSERVE · {session.provider}</h3>
+            <Fold title={`OBSERVE · ${session.provider}`} open>
               <dl>
                 <div>
                   <dt>cwd</dt>
@@ -176,10 +191,9 @@ export function Inspector({
                 <summary>{t('liveTranscript')}</summary>
                 <LiveTranscript sessionKey={session.key} />
               </details>
-            </div>
+            </Fold>
           )}
-          <div className="inspector-section">
-            <h3>{t('currentWork')}</h3>
+          <Fold title={t('currentWork')}>
             {work ? (
               <div className="inspector-work">
                 <Badge state={work.state} />
@@ -193,7 +207,7 @@ export function Inspector({
             ) : (
               <p className="muted">{t('noWork')}</p>
             )}
-          </div>
+          </Fold>
           <div className="inspector-footer">
             <span className="tiny-label">IDENTITY</span>
             <code>{agent.id.slice(0, 8)}</code>

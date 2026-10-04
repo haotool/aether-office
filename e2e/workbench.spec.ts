@@ -116,7 +116,9 @@ test('real HTTP journey: authenticate, inspect office, create and assign work, p
   await context.tracing.stop({ path: 'evidence/e2e-workbench-trace.zip' });
 });
 
-test('mobile uses a working 2D view and keyboard-operable modal', async ({ page }) => {
+test('a phone gets the 3D office by default, with the 2D list one tap away, and a keyboard-operable modal', async ({
+  page,
+}) => {
   const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
     directory: string;
   };
@@ -126,7 +128,9 @@ test('mobile uses a working 2D view and keyboard-operable modal', async ({ page 
     .getByLabel('存取權杖', { exact: true })
     .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
   await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
-  await expect(page.getByRole('heading', { name: '軌道辦公室', exact: true })).toBeVisible();
+  await expect(page.locator('.phone-office')).toBeVisible(); // the phone office has no heading: the scene is the page
+  await expect(page.locator('canvas')).toBeVisible();
+  await page.getByRole('button', { name: '2D', exact: true }).click();
   await expect(page.locator('.office-2d')).toBeVisible();
   expect(await page.locator('canvas').count()).toBe(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(

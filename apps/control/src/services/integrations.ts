@@ -351,11 +351,7 @@ export async function postResult(
   return { posted: true };
 }
 
-export function verifyGithubSignature(
-  secret: string,
-  raw: Buffer,
-  header: string | undefined,
-): boolean {
+function verifyGithubSignature(secret: string, raw: Buffer, header: string | undefined): boolean {
   if (!header?.startsWith('sha256=')) return false;
   const expected = createHmac('sha256', secret).update(raw).digest();
   const given = Buffer.from(header.slice(7), 'hex');

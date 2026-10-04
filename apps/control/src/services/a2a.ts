@@ -21,7 +21,7 @@ import { createWork } from './work.js';
 // remains the authority: no remote caller can start a process, read knowledge, or reach another
 // project, and nothing is fetched from URLs a remote agent supplies.
 
-export const A2A_METHODS = ['SendMessage', 'GetTask', 'CancelTask', 'ListTasks'] as const;
+const A2A_METHODS = ['SendMessage', 'GetTask', 'CancelTask', 'ListTasks'] as const;
 const MAX_TEXT = 16000;
 
 type Client = A2AClient;
@@ -29,7 +29,7 @@ type WorkRow = { id: string; state: string; result: string | null; updatedAt: nu
 
 const TERMINAL = ['completed', 'failed', 'cancelled'];
 
-export function taskStateOf(work: string): TaskState {
+function taskStateOf(work: string): TaskState {
   switch (work) {
     case 'backlog':
     case 'ready':

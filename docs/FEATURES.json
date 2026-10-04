@@ -184,7 +184,7 @@
     "implementationStatus": "partial",
     "verificationStatus": "partial",
     "codePaths": [
-      "packages/contracts/src/index.ts",
+      "packages/contracts/src",
       "apps/control/src/services/runners.ts"
     ],
     "testIds": [
@@ -204,7 +204,7 @@
     "implementationStatus": "partial",
     "verificationStatus": "partial",
     "codePaths": [
-      "packages/contracts/src/index.ts",
+      "packages/contracts/src",
       "apps/control/src/services/runners.ts"
     ],
     "testIds": [
@@ -227,6 +227,7 @@
       "packages/kernel/src/capabilities.ts",
       "apps/control/src/services/work.ts",
       "apps/control/src/server.ts",
+      "apps/control/src/routes",
       "apps/web/src/features/CapabilityMatrix.tsx",
       "apps/web/src/features/Tasks.tsx"
     ],
@@ -935,7 +936,8 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/control/src/control.ts",
-      "apps/control/src/server.ts"
+      "apps/control/src/server.ts",
+      "apps/control/src/routes"
     ],
     "testIds": [
       "tests/aether/reconciliation.test.ts",
@@ -956,7 +958,8 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/control/src/control.ts",
-      "apps/control/src/server.ts"
+      "apps/control/src/server.ts",
+      "apps/control/src/routes"
     ],
     "testIds": [
       "tests/aether/cursor-retention.test.ts"
@@ -1571,6 +1574,7 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/control/src/server.ts",
+      "apps/control/src/routes",
       "packages/kernel/src/index.ts",
       "apps/control/src/services/identity.ts"
     ],
@@ -1590,6 +1594,7 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/control/src/server.ts",
+      "apps/control/src/routes",
       "packages/kernel/src/index.ts",
       "apps/runner/src/mcp.ts"
     ],
@@ -1614,6 +1619,7 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/control/src/server.ts",
+      "apps/control/src/routes",
       "packages/kernel/src/index.ts",
       "apps/control/src/services/identity.ts"
     ],
@@ -1655,6 +1661,7 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/control/src/server.ts",
+      "apps/control/src/routes",
       "packages/kernel/src/index.ts",
       "apps/control/src/services/identity.ts"
     ],
@@ -1696,7 +1703,8 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/control/src/control.ts",
-      "apps/control/src/server.ts"
+      "apps/control/src/server.ts",
+      "apps/control/src/routes"
     ],
     "testIds": [
       "tests/aether/secret-hygiene.test.ts"
@@ -1803,7 +1811,8 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/control/src/services/identity.ts",
-      "apps/control/src/server.ts"
+      "apps/control/src/server.ts",
+      "apps/control/src/routes"
     ],
     "testIds": [
       "tests/aether/revocation.test.ts",
@@ -1983,7 +1992,8 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/control/src/services/a2a.ts",
-      "apps/control/src/server.ts"
+      "apps/control/src/server.ts",
+      "apps/control/src/routes"
     ],
     "testIds": [
       "tests/aether/a2a.test.ts"
@@ -2475,7 +2485,7 @@
     "codePaths": [
       "apps/web/src/features/LayoutEditor.tsx",
       "packages/kernel/src/layout.ts",
-      "packages/contracts/src/index.ts"
+      "packages/contracts/src"
     ],
     "testIds": [
       "tests/aether/layout.test.ts"
@@ -2640,7 +2650,7 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/web/src/state.ts",
-      "packages/office-scene/src/Avatar.tsx"
+      "packages/office-scene/src/Animal.tsx"
     ],
     "testIds": [
       "e2e/accessibility.spec.ts"
@@ -3092,7 +3102,7 @@
       "apps/web/src/localSessions.ts",
       "apps/web/src/adoptProjects.ts",
       "apps/web/src/features/Inspector.tsx",
-      "packages/contracts/src/index.ts"
+      "packages/contracts/src"
     ],
     "testIds": [
       "tests/aether/local-sessions.test.ts",

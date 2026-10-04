@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { execute } from '../api.js';
-import { Field, Modal, useT } from '../ui.js';
+import { Field, Modal, useT, Hint } from '../ui.js';
 import type { Key } from '../i18n.js';
 
 const TEMPLATES = [
@@ -53,7 +53,7 @@ export function WorkflowStart({ projectId, onSaved }: { projectId: string; onSav
                 ))}
               </select>
             </Field>
-            <p className="muted">{t('workflowNote')}</p>
+            <Hint>{t('workflowNote')}</Hint>
             <Field label={t('workTitle')}>
               <input name="title" required maxLength={160} />
             </Field>

@@ -29,6 +29,16 @@ AETHER_MODE=demo node apps/runner/dist/main.js
 
 The built UI is served by control at `http://127.0.0.1:4310`.
 
+### Open it from a phone or tablet (local network)
+
+By default control listens on this machine only. To use it from another device on the same network, start it with `AETHER_HOST=0.0.0.0` (or one interface address):
+
+```sh
+AETHER_HOST=0.0.0.0 pnpm start
+```
+
+It prints the addresses to open (for example `http://192.168.1.20:4310`). Sign in with the same owner token; the 3D office works on a phone. Requests are accepted only when addressed to a private-network address on the same port (a name on the public internet is refused, which is what stops DNS rebinding). The connection is plain HTTP, so the token crosses the network unencrypted: use it on a network you trust, or put a TLS tunnel (for example Tailscale) in front.
+
 `pnpm run setup` and `pnpm dev` select a separate live data directory. Native execution requires explicit project policy plus local runner configuration; see [native execution and MCP](docs/NATIVE_EXECUTION.md). A live smoke has been run on macOS with Codex CLI 0.160.0 and Claude Code 2.1.288 under their subscription logins (a real Claude ↔ Codex message exchange); see [native execution](docs/NATIVE_EXECUTION.md#live-smoke) and `pnpm run smoke:live`.
 
 ## Local sessions (observe-only)

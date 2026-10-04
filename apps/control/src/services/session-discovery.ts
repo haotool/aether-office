@@ -13,7 +13,7 @@ const MAX_SCAN_ENTRIES = 8 * 1024;
 // How many recent files are identified at all. Every one is, because a live process may own any of them: what is shown
 // is chosen later (local-sessions.ts), after it is known which sessions have a process.
 const MAX_CANDIDATES = 2000;
-export const RECENT_MS = 7 * 24 * 3600 * 1000;
+const RECENT_MS = 7 * 24 * 3600 * 1000;
 const ACTIVE_CHILD_MS = 2 * 60 * 1000;
 const UUID_SUFFIX = /[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 

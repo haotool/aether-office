@@ -6,14 +6,14 @@ import {
   defaultLayout,
   seatAt,
   type Apparition,
-} from '@aether/office-scene';
+} from '@aether/office-scene/model';
 import { DEPARTMENTS, ROLE_LABELS, classifySession, type Classification } from '@aether/kernel';
 
 const SPECIES = ['fox', 'cat', 'rabbit', 'bear', 'otter', 'raccoon', 'panda', 'dog'] as const;
 const WORKING_MS = 2 * 60 * 1000;
 const GONE_MS = 10 * 60 * 1000;
-const LOCAL_PREFIX = 'local:';
-const SUBAGENT_INFIX = ':sub:';
+export const LOCAL_PREFIX = 'local:';
+export const SUBAGENT_INFIX = ':sub:';
 
 const basename = (path: string) => path.split('/').filter(Boolean).pop() ?? '';
 // Names are cut to 24 characters, so an untitled session in a worktree named after its repository is named by what
@@ -224,10 +224,10 @@ export function tokensByDepartment(
 ) {
   const totals = new Map<string, { tokens: number; sessions: number }>();
   for (const s of sessions) {
-    if (s.usage.totalTokens === null) continue;
+    if (s.usage.freshTokens === null) continue;
     const t = totals.get(s.classification.department) ?? { tokens: 0, sessions: 0 };
     totals.set(s.classification.department, {
-      tokens: t.tokens + s.usage.totalTokens,
+      tokens: t.tokens + s.usage.freshTokens,
       sessions: t.sessions + 1,
     });
   }
@@ -272,5 +272,42 @@ export function zombiesOf(sessions: readonly LocalSession[]): Record<string, num
         ? [[`${LOCAL_PREFIX}${s.key}`, s.liveness.zombies.length] as const]
         : [],
     ),
+  );
+}
+
+/**
+ * Why a session wants a person, in a few words: "休眠 27 小時", "孤兒", "殭屍 ×2 (node, sh)". Null when it does not.
+ * Pure; the same words label the director's shot of it and the row in the attention list.
+ */
+export function attentionReason(
+  s: Pick<LocalSession, 'liveness'>,
+  locale: 'zh-TW' | 'en' = 'zh-TW',
+): string | null {
+  const zh = locale === 'zh-TW';
+  const parts: string[] = [];
+  const { state, quietMs, zombies } = s.liveness;
+  if (state === 'dormant' || state === 'orphaned') {
+    const name = NOTE[state][locale];
+    parts.push(quietMs !== null ? `${name} ${formatSpan(quietMs, locale)}` : name);
+  }
+  if (zombies.length) {
+    const programs = [...new Set(zombies.map((z) => z.program).filter(Boolean))].slice(0, 3);
+    parts.push(
+      `${zh ? '殭屍' : 'zombies'} ×${zombies.length}${programs.length ? ` (${programs.join(', ')})` : ''}`,
+    );
+  }
+  return parts.length ? parts.join(' · ') : null;
+}
+
+/** The members that want a person, by id, with the reason: what the director's attention shots are made of. */
+export function attentionOf(
+  sessions: readonly LocalSession[],
+  locale: 'zh-TW' | 'en',
+): Record<string, string> {
+  return Object.fromEntries(
+    sessions.flatMap((s) => {
+      const reason = attentionReason(s, locale);
+      return reason ? [[`${LOCAL_PREFIX}${s.key}`, reason] as const] : [];
+    }),
   );
 }

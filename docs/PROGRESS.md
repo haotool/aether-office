@@ -273,7 +273,7 @@
 ## 2026-10-04（續三）— 觀察、監控與 Git 視覺化
 
 - 3D：全息工作站（無實體螢幕）、依職位的多樣化畫面（18 種職位、每人固定一種）、懸浮座艙、資料柱、狀態信標、近景追蹤活躍成員、每位成員 worktree 到核心（主分支）的 Git 光束與工作中的資料封包。
-- 監控：Codex 訂閱額度（取自 rollout；Claude Code 本機不記錄，顯示未知）、機器 CPU／記憶體（macOS 以 vm_stat 計可用）／磁碟可用、每個 session 的 CPU 與記憶體、需要你或已完成的未讀標記與通知。
+- 監控：Codex 訂閱額度（取自 rollout）、Claude 訂閱額度（取自 claude-hud 外掛的用量快取，見 NATIVE_EXECUTION.md）、機器 CPU／記憶體（macOS 以 vm_stat 計可用）／磁碟可用、每個 session 的 CPU 與記憶體、需要你或已完成的未讀標記與通知。
 - 即時紀錄（經使用者同意讀內容）：只以掃描器登記的 key 開檔、讀取上限、不讀隱藏推理、以移植自 Orca（MIT，已列於 THIRD_PARTY_NOTICES）的規則遮蔽憑證。
 - Git：唯讀健康報告（已合併未清除的 worktree 與分支、已不存在的 worktree、各 worktree 大小與可回收量，只列建議指令不執行）與提交圖。實測 ledger-api：486 個 worktree、120 個已合併未清除、可回收約 18 GB。
 - 未做：YOLO／AUTO 權限模式（Claude Code 的安全分類器拒絕，需使用者自行於權限設定放行或在 CLI 設定中開啟）、agent team 收件匣視覺化、session fork、開發預覽、PR 建立、看板、token 預算、多 lane 審查、容器沙箱。
@@ -357,3 +357,72 @@
 - AETHER 自己啟動的進程：四處重複的停止邏輯合為 `groupStopper`；ACP adapter 補上獨立群組與 SIGKILL 升級；runner 重啟時以 `pid:啟動時間` 回收先前留下的孤兒（以前是明確不處理）。
 - 修正：CLI `--version` 探測 3 秒在高負載（load average 18）下會誤判，改為 10 秒。
 - 「停止程序」已在真實瀏覽器驗證：對一個真的孤兒 `claude` 進程，Sessions 頁顯示「孤兒 · 靜止 1 分鐘 · 已執行 1 分鐘」與按鈕，確認後回「已停止。」，進程確實消失，稽核事件已記錄。
+- 之後三個小切片（commit fa6373f、0854de1、c25eadd）：Git 健康頁先出報告、容量隨後補上（532 個 worktree：9.6 → 1.9 秒，容量約 10 秒後到）；模型貼圖改輸出 WebP，原始 PNG 貼圖搬到 `assets-source/animals/textures`（資產 60 → 37 MB，狐狸 LOD0 3.2 → 2.1 MB）；殭屍會顯示它最後還活著時是什麼程式（只有程式名稱，不含參數），Sessions 頁也列出它們。
+
+## 2026-10-04（續十）— clean-code 收斂
+
+目標：每個檔案都在 800 行以內、沒有死碼與未使用的匯入、沒有一個函式兼做好幾件事。原則是只搬移與拆分，行為不變；每個切片都過 tsc、prettier、邊界檢查、建置、vitest 與 Playwright 後才提交。
+
+- **拆檔**：`OfficeScene.tsx` 1111 → 240 行（Floor、SceneCamera、SceneRuntime、Labels、MemberScreen、BranchBeams、Member、SceneHud 五個 HUD、`useSceneKeys`、`useSceneNavigation`、`scene-markers`、`scene-geometry`）；`contracts/index.ts` 1205 行依領域拆成 core、commands、events、runner、sessions、records（對外匯出的名稱逐一比對，完全相同）；`server.ts` 882 → 167 行，八組路由放進 `routes/`，「僅限人類操作者」與「取得專案儲存庫根目錄」兩個重複四、五次的檢查收成 `requireOperator`／`repositoryRoot`；`App.tsx` 995 → 286 行（Login、Topbar、Sidebar、OfficePage、ProjectPage、MachinesPage、SettingsPage、AppQuickOpen、四個 hooks）；`i18n.ts` 依語系拆成 `locales/zh.ts`、`locales/en.ts`。
+- **長函式**：`runners.report`（227 行）、`jobs.reportJob`（144）、`observations.reportObservation`（113）各拆成每種事件一個函式，主函式只剩驗證、去重與送出事件。
+- **死碼**：移除被 GLB 動物取代的舊 `Avatar.tsx`（FEATURES.json 的 A11Y-04 改指向 `Animal.tsx`）、`disposeOwned`、`ProviderName`，並取消 12 個只在自己檔案裡用到的匯出。`tsconfig` 開啟 `noUnusedLocals`，並清掉它找出的 9 個未使用的匯入。
+- **量測到的一個實際問題**：先前 `@aether/office-scene` 被 `localSessions.ts` 與 `LayoutEditor.tsx` 以一般匯入使用，Three.js 因此被打進主要 bundle，「延遲載入 3D 場景」其實沒有生效（建置還提示 INEFFECTIVE_DYNAMIC_IMPORT，並把警告門檻調到 1600 KB 蓋掉）。新增不含 3D 引擎的 `@aether/office-scene/model` 入口（版面、樓層、幽靈／殭屍判斷；`seeded` 移到純函式的 `random.ts`），網頁其餘部分只從它匯入。主 bundle 1600 → 579 KB（gzip 455 → 178 KB），Three.js 約 1 MB 只在開 3D 視圖時載入；警告門檻改回實際值 1100 KB。
+- 沒有動的：`createCollaborationMcp`（288 行）是一份工具註冊清單，共用同一組 `api`／`command`／`perform`，拆開只會增加傳參；UI 的長元件（Integrations、Schedules、Approvals）是版面標記，不是邏輯。
+- 備註：本機負載（另一個專案的 Blender 與 node 在跑，load average 約 24）會讓 vitest 偶爾有一個計時相關的測試逾時（每次不同的測試，單獨跑皆通過）；以 `--maxWorkers=4` 全部通過。
+
+## 2026-10-04（續十一）— 以真實資料檢視後的兩項修正
+
+在這台機器的真實資料上（70 個 session、4 個 repo）檢視：10 個存活 session 與 `ps` 的 agent 進程對得上，4 個 repo 都自動成為專案，分類與即時紀錄都讀得到。找出並修正兩處：
+
+- **token 數字過大**：各部門用量出現「70 億」，因為累計把 cache 讀取算進去（同一段 context 每一輪都會再讀一次，長 session 因此看起來大上百倍）。欄位 `usage.totalTokens` 改名為 `freshTokens`，意義是「沒有由 prompt cache 提供的 token」：Claude 為新輸入＋寫入 cache 的輸入＋輸出；Codex 為 `total_tokens` 減 `cached_input_tokens`。同一份資料現在是 3860 萬（原 70 億）。「使用中的 context」（`contextTokens`）不變，那一項本來就該包含 cache 讀取。
+- **「在辦公室查看」不會移動鏡頭**：現在連結帶 `focus=1`，場景載入且該成員有座位後，鏡頭飛到他的桌子，並把 `focus` 從網址移除；Session 頁的連結補上 `project`（以前會落在別的專案而找不到成員），快速開啟（Ctrl/Cmd+K）同樣會聚焦。新增 e2e 守住。
+
+- Claude 用量：調研 27 個 repo（agent-deck 讀 statusLine 的 `rate_limits` 並拒絕讀憑證庫；nimbalyst 從 Keychain 取 OAuth token 呼叫未公開端點）。採用 agent-deck 的原則，資料來源用這台機器已有的 claude-hud 用量快取；頂端列的 CLAUDE 現在顯示「5 小時·7 天」用量（這台實測 3·90%，7 天已接近上限）。
+
+## 2026-10-04（續十二）— 整體 UI/UX 與行動裝置
+
+方法：先用真實資料（70 個 session）在手機 390、平板 820、筆電 1280 逐頁量測（水平溢出、小於 32px 的點擊目標、小於 11px 的字、寬度超出畫面的元素）與截圖，再依規則修，最後把規則寫成可執行的檢查。
+
+- **區網可用**：`AETHER_HOST=0.0.0.0`（預設仍只開本機）。Host／Origin 只接受同一個連接埠上的私有網段位址（192.168／10／172.16–31／100.64（Tailscale）／fc00／fe80）與 `.local`，公開網域名一律拒絕（擋 DNS rebinding）；啟動時列出可開的網址並警告 HTTP 明文。手機在區網用 HTTP 不是安全環境，沒有 `crypto.randomUUID` 與 `navigator.clipboard`，已補後備（`browser-compat.ts`）。用 Chromium 開 `http://192.168.x.x:4310` 實測：`isSecureContext=false`，3D 正常。
+- **規則與檢查**：寫進 AGENTS.md 的「UI rules」，由 `e2e/responsive.spec.ts` 在 320／390／820／1280 四種寬度對 14 個頁面檢查（不橫向捲動、無小於 11px 的字、觸控裝置所有控制項 ≥ 44px），另有 3D 在手機、橫向手機的檢查。
+- **字級與目標**：全站 94 處 6–11px 的字改為 `--fs-label`（11px）／`--fs-small`（12px）；觸控裝置一律 44px 目標；手機表單 16px（避免 iOS 聚焦時放大）。
+- **手機版面**：導覽改抽屜（有遮罩、專案切換、頂端列的數字與 Claude／Codex 額度放到抽屜底部）、檢視器改底部面板、Session 與歷史表格改卡片、其他表格在自己的框內捲動並有邊緣陰影、安全區（瀏海與 Home 條）。手機橫向（高度 ≤ 500px）把畫面全給 3D 場景。320px 的頂端列溢出 37px，已修。
+- **手機的 3D**：預設就是 3D（以前手機預設 2D）；樓層切換面板在手機預設收起；鏡頭距離依畫面比例拉遠，直向也看得到整層。
+- **找到並修掉一個既有的 bug**：用 `?project=` 網址直接開專案時，鏡頭的飛行指令比 OrbitControls 先到，鏡頭被控制器轉回看地面，畫面變成從斜下方看樓板堆；現在飛行指令等控制器存在後才執行。這個 bug 在 e2e 的示範資料重現不了（它的最忙樓層是 1F，不會飛），所以沒有加一個「有沒有它都會過」的測試；以真實資料前後截圖驗證。
+- 沒做：真機（iOS Safari、Android Chrome）實測；這裡只用 Chromium 的手機模擬（觸控、視窗、軟體 WebGL）。
+
+## 2026-10-05（續十三）— iOS 與觸控實測、切版檢查
+
+用真正的 WebKit（iOS Safari 的引擎，Playwright 的 WebKit 2311，iPhone 15／iPhone SE／iPad／iPad Pro 橫向，經區網 http://192.168.x.x，`isSecureContext=false`）跑了一遍：
+
+- **能不能真的操作**：示範模式（有 12 位成員與 runner）以觸控（tap，會檢查元素是否被蓋住）走完整流程：用表單輸入 token 登入 → 3D 出現 → 建立任務（標題、工作說明＝prompt、驗收條件）→ 派給成員 → 看到「待審查」→ 傳訊息 → 在 2D 列表點成員開檢視器 → 抽屜換專案 → 登出。iPhone 15、iPad 全部通過；已寫成 `e2e/touch-flow.spec.ts`（Chrome 手機模擬每次跑；`AETHER_WEBKIT=1` 時多跑一遍 WebKit）。
+- **找到並修掉的問題**：(1) iPad Pro 橫向時側欄底部的「登出」被切掉、按不到（側欄不能捲）；(2) 1000–1320px 寬時頂端列數字的標籤逐字換行（「會／話」），改為 ≤1320px 時數字移到側欄；(3) 檢視器底部面板開著時，抽屜被蓋在下面，登出按不到（z-index）；(4) Safari 不理會原生 select 的高度（18–23px），觸控時改自繪成 44px 並保留系統選單；(5) 3D 場景邊緣的名牌被切掉一半（現在只有整個名牌放得下才顯示）；(6) 按鈕文字換行（`white-space: nowrap`）；(7) 320px 的標題「/ 01」單獨一行；(8) 預覽連結（開發伺服器埠）只有 19px 高。
+- **iOS 專屬**：`apple-mobile-web-app-*`、`apple-touch-icon`（加到主畫面後全螢幕開啟，3D 多出 Safari 工具列的空間）、`-webkit-backdrop-filter`、`touch-action: manipulation`、關掉點擊灰框與長按選單、`:hover` 只在能 hover 的裝置生效（點一下不再卡在 hover 狀態）、token 欄位 `autocapitalize=none`／`autocorrect=off`。直向的相機現在拉遠並更俯視（`fittedOffset`）。
+- **終端機**：觸控裝置加一排按鍵（Esc、Tab、^C、^D、方向鍵、Enter），手機鍵盤沒有這些；按下去不會讓鍵盤收起來。
+- **切版檢查**：`e2e/responsive.spec.ts` 新增「被不會捲動的上層切掉」的偵測，視窗增為六種（加 1194×834、1366×620）。
+- **誠實的限制**：Playwright 的 WebKit 是桌面 macOS 上的 WebKit，不是 iPhone 本機：沒有軟鍵盤（鍵盤彈出時的版面）、沒有真實的觸控手勢（捏合、雙指旋轉 3D 無法在這裡模擬）、GPU 與記憶體上限不同。**3D 在真 iPhone 上的幀率與記憶體仍要你在手機上看一眼。**
+- **真實（live）模式的 prompt**：實測用的是示範模式。真實模式中 Claude／Codex 的 session 是唯讀觀察，手機只能看與切換；要在手機上「下 prompt」要有受管成員（專案開啟 live 執行、runner 已設定倉庫授權），任務才會被真的執行；現在這台的 live 沒有 runner，所以還不能這樣用。
+
+## 2026-10-05（續十四）— 手機版重構：滿版 3D、效能與「看不到全部活躍 session」
+
+使用者實機回報：手機操作延遲卡頓、看不到所有活躍的 session、很難操作、很多操作被遮擋、3D 被大量文字遮住。先查資料（R3F／three.js 在 iOS 的記憶體與效能做法：關抗鋸齒與陰影、像素比上限 1.5、紋理解壓後佔 GPU 記憶體；輪詢在背景停止並放慢；底部分頁列比漢堡選單的可發現度高約 26 個百分點，拇指區、44px 目標），再量測：
+
+- **量測到的主因**：整個站台完全沒有壓縮與快取。首次載入 2.5 MB（JS 583 KB＋3D 引擎 1 MB 未壓縮、一個角色模型 2.1 MB、session API 71 KB），資產 `max-age=0` 每次都要重問；3D 的畫質預設在手機也是「平衡」（抗鋸齒、陰影、像素比 1.5）。我上一版把手機預設改成 3D，等於把這些成本放到手機上。
+- **效能**：建置時為文字與模型檔產生 `.gz`／`.br`（`@fastify/static` preCompressed；瀏覽器只在 HTTPS 才要 brotli，區網 HTTP 走 gzip，所以大型模型只做 gzip）；有雜湊的資產 `immutable`、角色模型一天、首頁 `no-cache`；API 的 JSON 超過 1 KB 就 gzip。結果：首次載入 2.5 MB → 0.88 MB，session API 145 → 19 KB，首次出現 3D 畫面 5.9 → 3.3 秒（4 倍 CPU 節流、10 Mbit 網路下）。事件串流在線時快照輪詢由 5 秒放慢到 30 秒；手機的 3D 不開陰影與抗鋸齒、選取者用 LOD1 其餘 LOD2、背景星空少一半、閒置約 20 fps。
+- **看不到全部活躍 session**：辦公室只畫目前專案的成員，其他專案（例如 ledger-api 的 64 個）的活躍 session 在別的專案裡。手機辦公室右上角加「● N」晶片，點開列出整台機器所有有行程的 session（跨專案），點一下就切到那個專案並飛到座位；Session 頁手機預設只看執行中、執行中的排前面、一次只畫 30 筆（「顯示更多」）。
+- **滿版 3D、少文字**：手機（直向）辦公室改為 3D 佔滿頂端列與分頁列之間；沒有標題、統計、成員條、樓層面板。畫面上只有：左上 3D/2D、右上活躍晶片與重設視角、右側樓層軌（5 個樓層＋一個「⋯」展開分層／追蹤／名稱三個開關）、左下一個樓層名稱晶片、右下新任務按鈕。名稱預設不顯示（選到的成員才有），要看全部再開。選到成員時只出現一條細條（頭像、名稱、狀態、聚焦、詳情、關閉），詳情才展開完整檢視器。
+- **導覽**：直向手機改底部分頁列（辦公室、Session、任務、訊息、更多）；頂端列只剩標誌、專案選單、模式標記；語言、主題、畫質搬進「更多」抽屜。手機橫向沒有分頁列（高度不夠），保留抽屜按鈕與橫向的樓層軌。
+- **驗證**：真 WebKit（iPhone 15、iPhone SE、iPad）以觸控走完整流程（登入、建任務、派工、傳訊息、看成員、切專案、登出）全通過；WebKit 的切版偵測 0 項；Chrome e2e 45 項通過。
+- **誠實的限制**：這裡的 3D 幀率是軟體渲染（SwiftShader）加 4 倍 CPU 節流，只能比較相對差異，不能代表真 iPhone 的 GPU；JS 主執行緒成本量到每秒約 145 ms（已含 4 倍節流，真機約四分之一）。真機上的流暢度仍要你實際看一下。
+
+## 2026-10-05（續十五）— 自動導演鏡頭、看得到誰在做什麼與互相溝通、閒置與殭屍處理、手機文字清點
+
+使用者回報：手機很多操作點下去仍被大量文字遮住；希望自動追蹤活躍對話、電影感全自動鏡頭；最大缺點是鏡頭太遠看不到各代理在做什麼、互相溝通看不出來；閒置與殭屍進程要能顯示與處理。
+
+- **問題分析**：一般視角看整層，角色只有幾個像素，動作與螢幕內容都看不到；訊息只有 0.46 公尺的小信封在同一層的桌子間走，跨層根本沒畫，也沒有「誰在做什麼」的字。
+- **導演**（`director.ts`、`shot-camera.ts`，純函式，有測試）：依序挑「兩個成員剛互傳訊息」（雙人鏡頭，兩人之間一道光弧與一個擴散的光環，起點是寄件者）、等待人類授權或出錯、工作中、審查中、有需要人處理的（休眠／孤兒／殭屍），都沒有就掃一層樓。同一類裡誰最久沒上鏡頭先上，所以每個活躍成員輪流看到；剛看過的 12 秒內不再看。每個鏡頭是一段運動（肩後推進、側面滑入、由低向上的升鏡，推進時視角 36→30°），以書桌自己的座標系擺位（桌子轉了 90° 鏡頭跟著轉）；切換時是滑行而不是跳。一個訊息進來時，若螢幕上的鏡頭不如它重要，等一拍就切過去。
+- **看得到在做什麼**：畫面上只有一行說明（誰、在做什麼：觀察到的 session 取最後一個 hook 的工具名稱或「等待授權」；兩人鏡頭是「A → B · 請求」）；溝通以 `CommLinks` 畫在空中（請求琥珀、決策青、交接紫、資訊藍、子代理灰，20 秒內持續，之後淡出），子代理在 20 秒內有動作就畫它與母 session 的連線。
+- **自動鏡頭預設開啟**（右下「自動」鈕與桌面樓層面板的「自動」可關），碰鏡頭、選成員、聚焦都會交還給你，安靜 10 秒（手機）／30 秒（其他）後收回，但選著成員時不會收回；在瀏覽器自動化下預設關閉（否則 Playwright 等不到「穩定」的目標）。
+- **閒置與殭屍**：手機辦公室右上多一顆「! N」晶片（有休眠、孤兒或殭屍時才出現），點開是清單：原因（「休眠 27 小時」「孤兒 3 分鐘」「殭屍 ×2 (node, sh)」）、聚焦桌位、停止程序（休眠／孤兒，僅擁有者，沿用原本的確認與身分檢查）、**清理殭屍**。殭屍已經死了、殺不掉，能做的是提醒它的父程序收尾：新的 `POST /api/local-sessions/:key/reap-zombies` 對「這個 session 行程樹裡、持有殭屍的存活父程序」送 SIGCHLD（先以 pid＋啟動時間核對身分，不碰樹外的行程，不碰已是殭屍的父程序），等 1.5 秒重看，回報前後數量；父程序卡住或不理會時殭屍會留著，介面照實說「只能等它結束」，不會為了殭屍去停一個正在用的 session。用真的孤兒與真的殭屍（卡住的父程序）驗證過清單、清理與停止。Sessions 頁的殭屍列也有同一個按鈕。
+- **手機文字清點**（在真 WebKit 逐一點過 24 個狀態，量可見字數與覆蓋率）：頁面副標題在手機改為「ⓘ」；工作對話框把「做事的表單」放前面，診斷與驗收條件折疊、說明與結果只顯示三行（點開看全部）；成員檢視器改半高（54dvh），可展開到 88dvh，內容分段折疊；執行中清單與需要處理清單最高 56dvh，並改用 portal 畫在 body 上（之前被場景的浮動按鈕蓋住）；多選清單最高 112px；樣板說明改為「ⓘ」。辦公室各狀態的覆蓋率：選成員 9%、詳情 54%、抽屜 75%（抽屜本來就是導覽）。
+- **誠實的限制**：自動導演在你的手機上的觀感（運鏡速度、停留時間）是我依經驗設的常數，沒有真機可調；導演在即時模式下只看得到觀察到的 session（沒有受管成員就沒有 AETHER 訊息可畫），兩個 Claude／Codex 之間若透過別的管道溝通，這裡看不到，除非有子代理 hook。

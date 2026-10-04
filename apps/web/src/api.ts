@@ -1,4 +1,5 @@
 import type { Command, Mode } from '@aether/contracts';
+import { uuid } from './browser-compat.js';
 export type Session = { actor: { id: string; role: string; projectIds: string[] }; mode: Mode };
 export class ApiError extends Error {
   constructor(
@@ -44,8 +45,8 @@ export async function execute(
       schemaVersion: 1,
       type,
       data,
-      idempotencyKey: crypto.randomUUID(),
-      correlationId: crypto.randomUUID(),
+      idempotencyKey: uuid(),
+      correlationId: uuid(),
       ...(projectId ? { projectId } : {}),
       ...(expectedVersion === undefined ? {} : { expectedVersion }),
     }),

@@ -159,3 +159,16 @@ AETHER 同時處理兩種進程，規則不同。
 | 父進程死亡的子進程 | 子進程輪詢 ppid，變成 1 就自殺（ruflo parent-death watchdog） | 不適用：被啟動的是第三方 CLI，無法在裡面加看門狗；改用重啟時的倖存者回收 |
 | 存活的兩個維度 | 容器還在 vs 代理程序還在（gascity `runtime/liveness.go`、gastown 的 zombie：tmux 在、Claude 不在） | 採用：有無進程、有無動靜分開判斷 |
 | 依賴 | orca、agent-deck、gascity 都自己寫進程樹與存活判斷；沒有人用 `ps-list`／`pidtree`／`tree-kill`／`pidusage` | **不加依賴**：現有的 `ps` 解析（零依賴）涵蓋同樣的欄位，並有真實進程的測試；少一個供應鏈風險面 |
+
+## Claude 訂閱額度（5 小時與 7 天）
+
+調研 27 個 repo，只有兩個真的做了，做法相反：
+
+| 做法 | 出處 | AETHER 的決定 |
+|---|---|---|
+| 讀 Claude Code 傳給 `statusLine` 指令的 JSON 裡有文件記載的 `rate_limits`（`used_percentage`、`resets_at`）；明確拒絕讀憑證庫；不用本機 token 數算百分比；視窗重置後就不再顯示；溢量（>100%）不截斷；過期的數字照顯示但標記 | agent-deck `internal/quota/claude.go`、`model.go` | 採用它的原則：不讀憑證、不自己連網、不猜、不截斷、重置過了就不顯示 |
+| 從 macOS Keychain 取出 OAuth token，帶著它呼叫 `api.anthropic.com/api/oauth/usage` | nimbalyst `ClaudeUsageService.ts` | **不採用**：要讀憑證庫並把 bearer token 送出去，是未公開的端點，而且每個需要這個數字的地方都得重複一次 |
+
+這台機器已經有一份：使用者安裝的 claude-hud 外掛每約 5 分鐘（Claude Code 執行時）向用量端點問一次，結果放在 `~/.claude/plugins/claude-hud/.usage-cache.json`。AETHER 只讀這個檔（`services/claude-limits.ts`，上限 64 KB，只解析數字、方案名與時間，不記錄、不寫入），不碰憑證、不連網；`GET /api/claude-limits`（僅限人類 owner／operator）回傳，頂端列顯示「5 小時 · 7 天」用量，游標停留看重置時間、方案與資料時間。≥85% 變黃，資料超過 15 分鐘或外掛正在退避重試時變淡並註明；沒有這份檔就顯示「—」與原因。
+
+要換成官方有文件的來源，只需讓使用者自己的 `statusLine` 指令把 `rate_limits` 寫進一個檔，再以 `AETHER_CLAUDE_USAGE_FILE` 指向它並加一個解析函式；AETHER 不會自己修改 `~/.claude/settings.json`。
