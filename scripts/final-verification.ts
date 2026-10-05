@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-// FINAL_VERIFICATION.md is generated from docs/FEATURES.json so it can never claim more than the
+// docs/verification/report.md is generated from docs/verification/features.json so it can never claim more than the
 // feature ledger records. Implementation and verification stay separate; "passed" never means
 // "complete", and every non-passed row shows its blockers.
 
@@ -56,7 +56,7 @@ export function renderReport(features: readonly Feature[], generatedFor: string)
   const lines = [
     '# Final verification',
     '',
-    `Generated from \`docs/FEATURES.json\` (${generatedFor}). Do not edit by hand: run \`pnpm verification:report\`.`,
+    `Generated from \`docs/verification/features.json\` (${generatedFor}). Do not edit by hand: run \`pnpm verification:report\`.`,
     '',
     `Features: **${features.length}**. Implementation: ${impl('implemented')} implemented, ${impl('partial')} partial, ${impl('not_started')} not started.`,
     '',
@@ -85,7 +85,7 @@ export function renderReport(features: readonly Feature[], generatedFor: string)
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const raw = JSON.parse(readFileSync('docs/FEATURES.json', 'utf8')) as
+  const raw = JSON.parse(readFileSync('docs/verification/features.json', 'utf8')) as
     Feature[] | { features: Feature[] };
   const features = Array.isArray(raw) ? raw : raw.features;
   const problems = validateLedger(features, existsSync);
@@ -93,18 +93,18 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.error(problems.join('\n'));
     process.exit(1);
   }
-  const output = renderReport(features, 'docs/FEATURES.json');
+  const output = renderReport(features, 'docs/verification/features.json');
   if (process.argv.includes('--check')) {
     const current = (() => {
       try {
-        return readFileSync('docs/FINAL_VERIFICATION.md', 'utf8');
+        return readFileSync('docs/verification/report.md', 'utf8');
       } catch {
         return '';
       }
     })();
     if (current !== output) {
-      console.error('docs/FINAL_VERIFICATION.md is stale: run pnpm verification:report');
+      console.error('docs/verification/report.md is stale: run pnpm verification:report');
       process.exit(1);
     }
-  } else writeFileSync('docs/FINAL_VERIFICATION.md', output);
+  } else writeFileSync('docs/verification/report.md', output);
 }

@@ -1,6 +1,7 @@
 import type { Mode } from '@aether/contracts';
 import { usePreferences } from '../state.js';
 import { useT, PageHeading, Field } from '../ui.js';
+import { ConnectPhone } from './ConnectPhone.js';
 import { A2AClients } from './A2AClients.js';
 import { ExecutionSettings } from './ExecutionSettings.js';
 import { Integrations } from './Integrations.js';
@@ -52,6 +53,7 @@ export function SettingsPage({
         </label>
         <p className="muted">{mode === 'demo' ? t('demoNote') : t('runnerGrantRequired')}</p>
       </div>
+      {canWrite && <ConnectPhone />}
       <Schedules projectId={projectId} canManage={canWrite} />
       <A2AClients projectId={projectId} canManage={owner} />
       <Integrations projectId={projectId} canManage={owner} />

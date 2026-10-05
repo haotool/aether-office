@@ -4,5 +4,6 @@ export { FLOORS, FLOOR_CAPACITY, defaultLayout, floorZones, seatAt, zones } from
 export { apparitionOf, type Apparition } from './animal-states.js';
 export type { SceneMessage } from './carriers.js';
 export type { BranchInfo, Quality } from './scene-types.js';
+export type { ScreenFacts } from './screen-facts.js';
 export type { PerfReport } from './perf.js';
 export type { Pulse, PulseKind } from './director.js';

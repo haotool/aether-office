@@ -10,6 +10,8 @@ type TerminalRow = {
   id: string;
   profile: string;
   state: string;
+  /** What the agent in it is doing, read from its screen; null when nothing is known. */
+  agentState: 'working' | 'waiting' | 'idle' | 'unknown' | null;
   controlOwner: string | null;
   controlEpoch: number;
   leaseUntil: number | null;
@@ -18,6 +20,11 @@ type TerminalList = {
   sessions: TerminalRow[];
   profiles: { machineId: string; name: string; terminalProfiles: string }[];
 };
+const AGENT_LABEL = {
+  working: 'terminalAgentWorking',
+  waiting: 'terminalAgentWaiting',
+  idle: 'terminalAgentIdle',
+} as const;
 function TerminalView({
   projectId,
   id,
@@ -288,7 +295,12 @@ export function Terminals({
       <div className="view-switch">
         {list.data?.sessions.map((s) => (
           <button key={s.id} onClick={() => setSelected(s.id)}>
-            {s.profile} · {s.state} · {s.id.slice(0, 8)}
+            {s.profile} · {s.state}
+            {s.state === 'running' && s.agentState && s.agentState !== 'unknown' && (
+              <> · {t(AGENT_LABEL[s.agentState])}</>
+            )}
+            {' · '}
+            {s.id.slice(0, 8)}
           </button>
         ))}
       </div>

@@ -1,8 +1,10 @@
 import type { Agent, LocalSessionsResponse, Snapshot } from '@aether/contracts';
-import type { Pulse } from '@aether/office-scene/model';
+import type { Pulse, ScreenFacts } from '@aether/office-scene/model';
+import { intensityOf, type Intensity } from './activity-rate.js';
 import {
   LOCAL_PREFIX,
   SUBAGENT_INFIX,
+  activityOf,
   apparitionsOf,
   attentionOf,
   branchResolver,
@@ -55,6 +57,51 @@ export function doingOf(sessions: Sessions, zh: boolean): Record<string, string>
   return out;
 }
 
+/** What each observed member's screen shows: the session's own facts, nothing made up. */
+export function screensOf(sessions: Sessions, now: number): Record<string, ScreenFacts> {
+  const out: Record<string, ScreenFacts> = {};
+  for (const s of sessions) {
+    const activity = activityOf(s, now);
+    const { contextTokens, contextWindow, model } = s.usage;
+    out[`${LOCAL_PREFIX}${s.key}`] = {
+      provider: s.provider,
+      title: s.title,
+      repo: s.repo,
+      branch: s.git?.branch ?? null,
+      ahead: s.git?.ahead ?? 0,
+      behind: s.git?.behind ?? 0,
+      uncommitted: s.git?.uncommitted ?? 0,
+      model,
+      contextPercent:
+        contextTokens !== null && contextWindow ? (contextTokens / contextWindow) * 100 : null,
+      state: ['working', 'idle', 'waiting_permission', 'offline'].includes(activity)
+        ? (activity as ScreenFacts['state'])
+        : 'unknown',
+      tool: s.hook?.tool ?? null,
+      quietMinutes: s.liveness.quietMs === null ? null : Math.floor(s.liveness.quietMs / 60_000),
+      ports: s.ports,
+    };
+  }
+  return out;
+}
+
+/** How hard each observed member is working (see activity-rate.ts); subagents work at least at the base level. */
+export function intensitiesOf(
+  sessions: Sessions,
+  beats: ReadonlyMap<string, number>,
+  now: number,
+): Record<string, Intensity> {
+  const out: Record<string, Intensity> = {};
+  for (const s of sessions) {
+    const level = intensityOf(s, activityOf(s, now) === 'working', beats.get(s.key) ?? 0, now);
+    const id = `${LOCAL_PREFIX}${s.key}`;
+    out[id] = level;
+    for (const c of s.subagents)
+      if (now - c.lastSeen < 20_000) out[`${id}${SUBAGENT_INFIX}${c.id}`] = 1;
+  }
+  return out;
+}
+
 /**
  * Everything the office draws about the machine's own sessions: the members they make, and how the scene dresses them
  * (floor, role, branch, sleeping rabbit, ghost, jiangshi). Recomputed on every render, because liveness depends on the clock.
@@ -64,6 +111,7 @@ export function officeModel(
   sessions: Sessions | undefined,
   projectId: string | undefined,
   locale: 'zh-TW' | 'en',
+  beats: ReadonlyMap<string, number> = new Map(),
 ) {
   const all = sessions ?? [];
   const observed: Agent[] =
@@ -84,6 +132,8 @@ export function officeModel(
     roleOf: roleResolver(all),
     branchOf: branchResolver(all),
     pulses: pulsesOf(data, all, Date.now()),
+    screens: screensOf(all, Date.now()),
+    intensity: intensitiesOf(all, beats, Date.now()),
     doing: doingOf(all, locale === 'zh-TW'),
     attention: attentionOf(all, locale),
   };

@@ -1,0 +1,96 @@
+/* Corner marks, the way instrument panels frame a readout: drawn, not bordered, so they never clip content. */
+.panel::before,
+.fui::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  --m: var(--mint);
+  background:
+    linear-gradient(var(--m), var(--m)) top left / 12px 1.5px no-repeat,
+    linear-gradient(var(--m), var(--m)) top left / 1.5px 12px no-repeat,
+    linear-gradient(var(--m), var(--m)) top right / 12px 1.5px no-repeat,
+    linear-gradient(var(--m), var(--m)) top right / 1.5px 12px no-repeat,
+    linear-gradient(var(--m), var(--m)) bottom left / 12px 1.5px no-repeat,
+    linear-gradient(var(--m), var(--m)) bottom left / 1.5px 12px no-repeat,
+    linear-gradient(var(--m), var(--m)) bottom right / 12px 1.5px no-repeat,
+    linear-gradient(var(--m), var(--m)) bottom right / 1.5px 12px no-repeat;
+  opacity: 0.55;
+}
+.fui {
+  position: relative;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  margin: var(--space-16) 0;
+  font-size: var(--fs-small);
+  color: var(--muted);
+}
+input,
+textarea,
+select {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  padding: var(--space-8) var(--space-12);
+  min-width: 0;
+  max-width: 100%;
+}
+textarea {
+  resize: vertical;
+}
+select option {
+  background: var(--surface);
+  color: var(--text);
+}
+.field-row {
+  display: flex;
+  gap: var(--space-12);
+}
+.field-row > .field {
+  flex: 1;
+  min-width: 0;
+}
+.modal {
+  width: min(560px, calc(100% - 28px));
+  max-height: calc(100dvh - 48px);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  padding: var(--space-24);
+  box-shadow: 0 20px 80px var(--shade);
+}
+.modal::backdrop {
+  background: var(--scrim);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+.modal-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  margin-bottom: var(--space-16);
+}
+.modal-heading h2 {
+  margin: 0;
+  font-size: var(--fs-title);
+}
+.modal > .badge {
+  margin-bottom: var(--space-16);
+}
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-8);
+  margin-top: var(--space-24);
+}
+.error-text {
+  color: var(--red);
+  font-size: var(--fs-small);
+  overflow-wrap: anywhere;
+}

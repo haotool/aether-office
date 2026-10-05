@@ -1,3 +1,7 @@
+import { MultiCam } from './MultiCam.js';
+import { PipWall } from './PipWall.js';
+import { chooseFeeds, type Feed } from './multi-view.js';
+import type { ScreenFacts } from './screen-facts.js';
 import { useMemo, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import type { Agent, Layout } from '@aether/contracts';
@@ -40,6 +44,10 @@ export type OfficeSceneProps = {
   onUserCamera?: () => void;
   /** Which engineering role an agent works in; picks the art on its screen. */
   roleOf?: (agent: Agent) => string;
+  /** What each member is really doing, by id: drawn on that member's screen instead of the role's decorative art. */
+  screens?: Readonly<Record<string, ScreenFacts>>;
+  /** How hard each working member is working, 0 to 3: faster typing, a streaming screen, and at the top a machine that smokes. */
+  intensity?: Readonly<Record<string, 0 | 1 | 2 | 3>>;
   /** The Git branch an agent works on, drawn as a beam from its desk into the core (the default branch). */
   branchOf?: (agent: Agent) => BranchInfo | null;
   /** Members drawn as something else at their own seat: a sleeping rabbit, a ghost, a jiangshi (see animal-states). */
@@ -84,11 +92,30 @@ export function OfficeScene(props: OfficeSceneProps) {
     onToggleAuto: props.onToggleAuto,
     pulses: props.pulses ?? [],
     attention: useMemo(() => new Map(Object.entries(props.attention ?? {})), [props.attention]),
+    intensity: useMemo(() => new Map(Object.entries(props.intensity ?? {})), [props.intensity]),
     directing: (props.autoCamera ?? true) && !props.reducedMotion,
     resumeMs: compact ? 10_000 : 30_000,
     selectedId: props.selectedId,
   });
   const { floor, exploded } = nav;
+  // Several members busy at once: the main camera is on one, the others get a small view each beside it.
+  const [pipsHidden, setPipsHidden] = useState(false);
+  const feedsRef = useRef<Feed[]>([]);
+  const wantPips = !compact && props.quality !== 'low' && !props.reducedMotion && !pipsHidden;
+  const mainSubjects = nav.directed?.shot.subjects.join('|') ?? '';
+  const feeds = useMemo(() => {
+    if (!wantPips) return [];
+    const taken = new Set(mainSubjects ? mainSubjects.split('|') : []);
+    if (props.selectedId) taken.add(props.selectedId);
+    feedsRef.current = chooseFeeds({
+      agents: props.agents,
+      seats: nav.seats,
+      intensity: new Map(Object.entries(props.intensity ?? {})),
+      taken,
+      previous: feedsRef.current,
+    });
+    return feedsRef.current;
+  }, [wantPips, props.agents, nav.seats, props.intensity, mainSubjects, props.selectedId]);
   const auto = (props.autoCamera ?? true) && !props.reducedMotion;
   const onShot = (id: string) => nav.directed?.shot.subjects.includes(id) ?? false;
   const named = (agent: Agent) =>
@@ -174,6 +201,8 @@ export function OfficeScene(props: OfficeSceneProps) {
                 desk={desk}
                 exploded={exploded}
                 role={props.roleOf?.(agent) ?? 'generalist'}
+                facts={props.screens?.[agent.id]}
+                intensity={props.intensity?.[agent.id] ?? 0}
                 apparition={props.apparitions?.[agent.id]}
                 zombie={(props.zombies?.[agent.id] ?? 0) > 0}
                 selected={agent.id === props.selectedId || agent.id === hovered}
@@ -229,12 +258,24 @@ export function OfficeScene(props: OfficeSceneProps) {
             animate={!props.reducedMotion}
             items={beaconsOf(sceneAgents, layout, exploded)}
           />
+          {feeds.length > 0 && <MultiCam feeds={feeds} seats={nav.seats} />}
           <AnimationClock
             active={active || nav.directed !== null}
             smooth={nav.directed !== null}
             slow={compact}
           />
         </Canvas>
+        {feeds.length > 0 && (
+          <PipWall
+            feeds={feeds}
+            agents={props.agents}
+            doing={props.doing}
+            intensity={props.intensity}
+            zh={zh}
+            onSelect={props.onSelect}
+            onClose={() => setPipsHidden(true)}
+          />
+        )}
         <div className="world-labels">
           {sceneAgents.filter(named).map((agent) => (
             <button

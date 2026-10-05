@@ -13,6 +13,10 @@
     "@fastify/websocket": "11.3.1",
     "better-sqlite3": "13.0.3",
     "fastify": "5.12.5",
+    "qrcode": "1.5.4",
     "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/qrcode": "1.5.6"
   }
 }

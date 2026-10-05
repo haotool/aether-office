@@ -1,9 +1,27 @@
 {
   "name": "aether-office",
   "version": "0.4.0-dev.0",
+  "description": "A local-first workspace for coding agents: a 3D office for your Claude Code and Codex sessions, and a workbench to assign, review and verify their work.",
   "private": true,
   "type": "module",
   "license": "MIT",
+  "keywords": [
+    "ai-agents",
+    "claude-code",
+    "codex",
+    "mcp",
+    "threejs",
+    "local-first"
+  ],
+  "author": "haotool",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haotool/aether-office.git"
+  },
+  "homepage": "https://github.com/haotool/aether-office#readme",
+  "bugs": {
+    "url": "https://github.com/haotool/aether-office/issues"
+  },
   "packageManager": "pnpm@12.8.1",
   "engines": {
     "node": ">=24.21.0 <25"
@@ -19,13 +37,15 @@
     "demo": "tsx scripts/dev.ts --demo",
     "start": "node apps/control/dist/main.js",
     "runner": "tsx apps/runner/src/main.ts",
-    "lint": "node scripts/check-boundaries.mjs",
+    "lint": "node scripts/check-boundaries.mjs && node scripts/check-design-tokens.mjs",
     "setup": "tsx scripts/setup.ts",
     "postinstall": "node scripts/prepare-pty.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "hooks": "tsx scripts/hooks.ts",
     "runner:enroll": "tsx apps/runner/src/enroll.ts",
+    "pair": "tsx apps/control/src/pair-cli.ts",
+    "optimize:animals": "node scripts/optimize-animals.mjs",
     "doctor": "tsx scripts/doctor.ts",
     "verification:report": "tsx scripts/final-verification.ts",
     "verification:check": "tsx scripts/final-verification.ts --check",

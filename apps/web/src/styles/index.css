@@ -1,0 +1,42 @@
+/*
+ * The web app's stylesheet, in cascade order: tokens first, then the desktop layers, then the touch and phone layers
+ * (which win over the desktop sizes). Add a rule to the file of the thing it styles; a value comes from tokens.css.
+ *
+ *   tokens        every color, size, space, radius and layer (the only file that may hold a raw value)
+ *   base          reset and typography
+ *   shell         top bar, sidebar, connection state
+ *   office        the office page, 3D shell, toolbar, labels, team strip
+ *   inspector     the member panel
+ *   controls      badges and buttons
+ *   pages, forms, views, login   the pages and their forms
+ *   breakpoints   the desktop sizes (wide, narrow, tablet)
+ *   workbench ... quick-open     features: the scene HUD, telemetry, transcript, git, sessions, quick open
+ *   touch-targets ... phone-density   the touch and phone layers (UI rules in AGENTS.md)
+ */
+@import url('./tokens.css');
+@import url('./base.css');
+@import url('./shell.css');
+@import url('./office.css');
+@import url('./inspector.css');
+@import url('./controls.css');
+@import url('./pages.css');
+@import url('./forms.css');
+@import url('./views.css');
+@import url('./login.css');
+@import url('./breakpoints.css');
+@import url('./workbench.css');
+@import url('./scene-hud.css');
+@import url('./scene-pips.css');
+@import url('./telemetry.css');
+@import url('./transcript.css');
+@import url('./git.css');
+@import url('./sessions.css');
+@import url('./quick-open.css');
+@import url('./touch-targets.css');
+@import url('./compact-desktop.css');
+@import url('./phone-drawer.css');
+@import url('./phone-office.css');
+@import url('./scene-overlays.css');
+@import url('./folds.css');
+@import url('./phone-pages.css');
+@import url('./phone-density.css');

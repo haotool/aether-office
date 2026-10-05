@@ -1,0 +1,41 @@
+/* Folds: a section that closes. Always open where there is room; closed on a phone until it is wanted. */
+.fold {
+  border-top: 1px solid var(--line);
+  margin-top: var(--space-8);
+}
+.fold > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 40px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+.fold > summary::-webkit-details-marker {
+  display: none;
+}
+.fold > summary::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  margin-left: auto;
+  border-right: 2px solid var(--dim);
+  border-bottom: 2px solid var(--dim);
+  transform: rotate(45deg);
+  transition: transform 0.15s;
+}
+.fold[open] > summary::after {
+  transform: rotate(225deg);
+}
+.inspector .fold {
+  margin: 0 var(--space-20);
+}
+.inspector-heading-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.hint-fold {
+  display: none;
+}

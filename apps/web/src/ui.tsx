@@ -8,6 +8,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { usePreferences } from './state.js';
 import { translate, type Key } from './i18n.js';
@@ -53,6 +54,59 @@ export function Modal({
     </dialog>
   );
 }
+/**
+ * A list in a bottom sheet over everything (a phone's way to pick from a few things without leaving the scene): a
+ * title with a count, an action (the close button unless one is given), and the rows as `<li>`s. Escape and the
+ * backdrop close it; focus moves in and returns to what opened it.
+ */
+export function Sheet({
+  title,
+  count,
+  onClose,
+  action,
+  children,
+}: {
+  title: string;
+  count?: number;
+  onClose: () => void;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
+  const t = useT();
+  const ref = useRef<HTMLElement>(null);
+  const close = useRef(onClose);
+  close.current = onClose;
+  useEffect(() => {
+    const opener = document.activeElement;
+    ref.current?.focus();
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close.current();
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      if (opener instanceof HTMLElement) opener.focus();
+    };
+  }, []);
+  return createPortal(
+    <>
+      <button className="sheet-backdrop" aria-label={t('close')} onClick={onClose} />
+      <section ref={ref} tabIndex={-1} className="sheet" role="dialog" aria-label={title}>
+        <header>
+          <h2>
+            {title} {count !== undefined && <small>{count}</small>}
+          </h2>
+          {action ?? (
+            <button className="icon-button" aria-label={t('close')} onClick={onClose}>
+              <X size={20} />
+            </button>
+          )}
+        </header>
+        <ul>{children}</ul>
+      </section>
+    </>,
+    document.body, // out of the overlay's own stacking context, over everything
+  );
+}
+
 /**
  * A section that folds away: open on a screen with room, closed on a phone, where a dialog full of explanation would
  * hide what it is about. The summary is the whole control.
@@ -168,7 +222,12 @@ export function AvatarIcon({
   return (
     <span
       className="avatar-icon"
-      style={{ width: size, height: size, background: `${color}20`, fontSize: size * 0.56 }}
+      style={{
+        width: size,
+        height: size,
+        background: `${color}20`,
+        fontSize: Math.round(size * 0.56),
+      }}
       aria-label={name}
     >
       {icons[species] ?? '◌'}

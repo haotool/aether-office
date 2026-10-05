@@ -62,6 +62,7 @@ if (lan) {
     .map((i) => `http://${i!.address}:${port}`);
   console.log(
     `LAN access is ON: open ${addresses.join(' or ') || '(no private-network address found)'} on a device on this network.\n` +
-      'Plain HTTP: the access token crosses the network unencrypted, so use it only on a network you trust.',
+      'Plain HTTP: the access token crosses the network unencrypted, so use it only on a network you trust.\n' +
+      'To sign a phone in without typing the token, run `pnpm run pair` (a QR code) or use Settings → Connect a phone.',
   );
 }

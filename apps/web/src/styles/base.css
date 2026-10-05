@@ -1,0 +1,93 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 56px 56px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 56px 56px,
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Noto Sans TC',
+    sans-serif;
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+button,
+a,
+input,
+textarea,
+select {
+  outline-offset: 4px;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--mint);
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button {
+  color: inherit;
+  border: 0;
+  background: none;
+}
+h1,
+h2,
+h3,
+h4,
+p {
+  margin-top: 0;
+}
+h1 {
+  font-size: var(--fs-hero);
+  font-weight: 600;
+  letter-spacing: -0.8px;
+  margin-bottom: var(--space-4);
+}
+h2 {
+  font-size: var(--fs-title);
+  letter-spacing: -0.3px;
+}
+h3 {
+  font-size: var(--fs-body);
+}
+p {
+  color: var(--muted);
+}
+code {
+  font-family: ui-monospace, monospace;
+  font-size: var(--fs-small);
+}
+small {
+  font-size: var(--fs-small);
+}
+fieldset {
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--space-8) var(--space-12) var(--space-12); /* the browser's own padding is off the scale */
+  margin: 0 0 var(--space-12);
+}

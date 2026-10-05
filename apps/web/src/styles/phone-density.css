@@ -1,0 +1,199 @@
+/*
+ * Phone density: the sizes of a phone's pages, set so content, not controls, takes the screen. A button is drawn 36 to
+ * 40px and hit at 44px (touch-targets.css), a page title is a title and not a banner, and an explanation is an "i" beside
+ * it rather than a line of its own.
+ */
+@media (max-width: 760px) {
+  h1,
+  .page-heading h1,
+  .office-heading h1 {
+    font-size: var(--fs-heading);
+    line-height: 1.25;
+    margin: 0;
+  }
+  h2 {
+    font-size: var(--fs-lead);
+  }
+  h3 {
+    font-size: var(--fs-body);
+  }
+  .page-padding {
+    padding-top: var(--space-12);
+  }
+  .page-heading {
+    align-items: center;
+    gap: var(--space-8) var(--space-12);
+    margin-bottom: var(--space-12);
+  }
+  .page-heading > div {
+    flex-wrap: nowrap;
+    align-items: center;
+    column-gap: var(--space-4);
+    min-width: 0;
+  }
+  .page-heading .hint-fold {
+    flex-basis: auto; /* the "i" sits beside the title, not under it */
+  }
+  .page-heading button,
+  .page-heading .primary,
+  .page-heading .secondary {
+    padding-inline: var(--space-12);
+    font-size: var(--fs-small);
+  }
+  .primary,
+  .secondary,
+  button:not([class]) {
+    min-height: var(--control-touch);
+    padding-inline: var(--space-16);
+    font-size: var(--fs-body);
+  }
+  .view-switch {
+    gap: var(--space-6);
+    margin: 0 0 var(--space-12);
+  }
+  .view-switch button {
+    min-height: var(--control-touch-sm);
+    padding: 0 var(--space-12);
+    font-size: var(--fs-body);
+  }
+  .field {
+    gap: var(--space-4);
+    margin-bottom: var(--space-12);
+  }
+  .field label {
+    font-size: var(--fs-small);
+  }
+  .field input,
+  .field select,
+  .field textarea,
+  select,
+  input:not([type='checkbox']):not([type='radio']) {
+    padding-block: var(--space-6);
+    padding-inline: var(--space-12);
+    border-radius: var(--r-lg);
+  }
+  .panel,
+  .settings-panel {
+    padding: var(--space-12) var(--space-16);
+  }
+  .task-row {
+    flex-wrap: nowrap;
+    padding: var(--space-12);
+    gap: var(--space-8);
+  }
+  .task-row > svg {
+    flex: none;
+  }
+  .task-row strong {
+    font-size: var(--fs-body);
+  }
+  .task-row small {
+    font-size: var(--fs-small);
+  }
+  .agent-card {
+    padding: var(--space-12);
+  }
+  .badge {
+    padding: var(--space-2) var(--space-8);
+    font-size: var(--fs-label);
+  }
+  .toggle-label {
+    min-height: var(--control-touch-sm);
+    margin: var(--space-12) 0;
+  }
+  /* A member is a row: avatar, name and role, state. */
+  .agent-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+  .agent-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'avatar name state' 'avatar role state';
+    column-gap: var(--space-12);
+    align-items: center;
+    padding: var(--space-8) var(--space-12);
+  }
+  .agent-card-top {
+    grid-area: avatar;
+    margin: 0;
+  }
+  .agent-card-top > svg,
+  .agent-card .provider-tag {
+    display: none;
+  }
+  .agent-card h3 {
+    grid-area: name;
+    margin: 0;
+  }
+  .agent-card p {
+    grid-area: role;
+    margin: 0;
+  }
+  .agent-card footer {
+    grid-area: state;
+  }
+  .message {
+    gap: var(--space-8);
+    padding: var(--space-12) 0;
+  }
+  .message header {
+    margin-bottom: var(--space-4);
+  }
+  .message p {
+    margin: 0 0 var(--space-6);
+    font-size: var(--fs-body);
+  }
+  .sessions-page .filters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .sessions-page .filters input[type='search'],
+  .sessions-page .filters .count {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+  select {
+    padding-right: var(--space-32); /* the arrow has its own room */
+  }
+}
+
+@media (max-width: 380px) {
+  .task-row {
+    padding-inline: var(--space-8);
+  }
+  .task-row .task-priority {
+    display: none; /* the narrowest phones keep the title and the state */
+  }
+}
+
+@media (max-width: 760px) {
+  /* A section heading that follows a panel or a list keeps a clear space above it. */
+  .page-padding > h2,
+  .page-padding section > h2,
+  .panel + h2,
+  .panel + section {
+    margin-top: var(--space-24);
+  }
+  table.stack td {
+    padding: var(--space-6) var(--space-12);
+    gap: var(--space-4) var(--space-8);
+  }
+  .inline-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-8);
+    margin-bottom: var(--space-12);
+  }
+  .inline-form label {
+    display: flex;
+    flex: 1 1 200px;
+    align-items: center;
+    gap: var(--space-8);
+  }
+  .inline-form input {
+    flex: 1;
+    min-width: 0;
+  }
+}

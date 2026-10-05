@@ -22,6 +22,10 @@ function publishPerf(report: PerfReport) {
   (w.__aetherPerfHistory ??= []).push(report); // one report per scene mount
 }
 
+// Opt-in preview: `?intensity=3` shows every member working at that level, with a stand-in screen, to look at the effects
+// (faster typing, streaming screens, smoke) without a hundred busy sessions. Never used otherwise.
+const rushRequested = Number(new URLSearchParams(window.location.search).get('intensity') ?? '');
+
 /** The office itself: the 3D scene (loaded when first shown) or, by choice or when WebGL fails, the 2D list. */
 export function SceneView({
   data,
@@ -53,6 +57,34 @@ export function SceneView({
 }) {
   const t = useT();
   const prefs = usePreferences();
+  const rush =
+    rushRequested >= 1 && rushRequested <= 3
+      ? {
+          intensity: Object.fromEntries(
+            model.agents.map((a) => [a.id, rushRequested as 1 | 2 | 3]),
+          ),
+          screens: Object.fromEntries(
+            model.agents.map((a) => [
+              a.id,
+              {
+                provider: 'claude' as const,
+                title: `${a.name} · ${a.role}`,
+                repo: 'preview',
+                branch: 'main',
+                ahead: 0,
+                behind: 0,
+                uncommitted: 3,
+                model: null,
+                contextPercent: 40,
+                state: 'working' as const,
+                tool: 'Edit',
+                quietMinutes: 0,
+                ports: [],
+              },
+            ]),
+          ),
+        }
+      : null;
   // Recomputed per render on purpose: MessageCarriers dedupes by messageId, so identity does not matter.
   const sceneMessages = data.messages.map((m) => ({
     id: m.id,
@@ -83,6 +115,8 @@ export function SceneView({
         compact={compact}
         pulses={model.pulses}
         doing={model.doing}
+        screens={rush ? rush.screens : model.screens}
+        intensity={rush ? rush.intensity : model.intensity}
         attention={model.attention}
         autoCamera={prefs.autoCamera}
         onToggleAuto={() => prefs.set({ autoCamera: !prefs.autoCamera })}

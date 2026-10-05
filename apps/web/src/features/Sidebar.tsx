@@ -2,7 +2,9 @@ import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import type { Project } from '@aether/contracts';
-import { nav, pageLink } from '../nav.js';
+import { nav, navGroups, pageLink } from '../nav.js';
+
+const icons = new Map<string, (typeof nav)[number][1]>(nav);
 import { useT } from '../ui.js';
 
 /** Page navigation with live counts, the connection state and sign-out. A drawer on a phone. */
@@ -11,6 +13,7 @@ export function Sidebar({
   projects,
   projectId,
   workCount,
+  approvalCount,
   messageCount,
   offline,
   onNavigate,
@@ -22,6 +25,7 @@ export function Sidebar({
   projects: readonly Project[];
   projectId: string | undefined;
   workCount: number;
+  approvalCount: number;
   messageCount: number;
   offline: boolean;
   onNavigate: () => void;
@@ -49,18 +53,27 @@ export function Sidebar({
         </select>
       </label>
       <div className="nav-title desktop-title">WORKSPACE</div>
-      {nav.map(([key, Icon]) => (
-        <NavLink
-          onClick={onNavigate}
-          key={key}
-          to={pageLink(key, projectId)}
-          className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-        >
-          <Icon size={18} />
-          <span>{t(key)}</span>
-          {key === 'tasks' && workCount ? <small>{workCount}</small> : null}
-          {key === 'messages' && messageCount ? <small>{messageCount}</small> : null}
-        </NavLink>
+      {navGroups.map(([group, pages]) => (
+        <div className="nav-group" key={group}>
+          <div className="nav-group-title">{t(group)}</div>
+          {pages.map((key) => {
+            const Icon = icons.get(key)!;
+            return (
+              <NavLink
+                onClick={onNavigate}
+                key={key}
+                to={pageLink(key, projectId)}
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              >
+                <Icon size={18} />
+                <span>{t(key)}</span>
+                {key === 'tasks' && workCount ? <small>{workCount}</small> : null}
+                {key === 'messages' && messageCount ? <small>{messageCount}</small> : null}
+                {key === 'approvals' && approvalCount ? <small>{approvalCount}</small> : null}
+              </NavLink>
+            );
+          })}
+        </div>
       ))}
       {footer}
       <div className="sidebar-bottom">

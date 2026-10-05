@@ -33,11 +33,14 @@ export function Animal({
   reducedMotion,
   quality,
   apparition,
+  pace = 1,
   light = false,
   onError,
 }: {
   agent: Agent;
   apparition?: Apparition | undefined;
+  /** How fast the clips play: a member working flat out types faster. */
+  pace?: number;
   /** A phone: smaller models and textures (the selected one a step down, the rest the smallest). */
   light?: boolean;
   selected: boolean;
@@ -96,6 +99,7 @@ export function Animal({
             node.castShadow = true;
             node.receiveShadow = true;
             if (species === 'ghost') ghostly(node);
+            else if (!light) rimLit(node);
           }
         });
         mixer.current = new AnimationMixer(loaded.scene);
@@ -119,7 +123,7 @@ export function Animal({
       current.current = null;
       asset.release();
     };
-  }, [url, species, invalidate]);
+  }, [url, species, light, invalidate]);
   useEffect(() => {
     if (!model || model.url !== url || !mixer.current) return;
     const animation = model.clips.find((action) => action.name === clip);
@@ -147,7 +151,7 @@ export function Animal({
   }, [model, url, clip, oneShot, reducedMotion, agent.id, invalidate]);
   useFrame((_state, delta) => {
     if (mixer.current && !reducedMotion && !document.hidden)
-      mixer.current.update(Math.min(delta, 0.05));
+      mixer.current.update(Math.min(delta, 0.05) * pace);
   });
   // Where each apparition stands: a ghost floats just over its seat, a jiangshi stands behind the chair, a sleeping
   // rabbit sits where the member does.
@@ -184,6 +188,27 @@ function ghostly(mesh: SkinnedMesh): void {
     material.emissive.set('#8fb4ff');
     material.emissiveMap = material.map;
     material.emissiveIntensity = 0.7;
+    material.needsUpdate = true;
+  }
+}
+
+/**
+ * A soft light along the edge a surface turns away from the eye, in the cool tone of the office, so a character stands
+ * out from the dark floor and keeps its shape against the glow behind it. Skipped on a phone (one more term in every
+ * pixel's shading) and for the ghost, which glows by itself.
+ */
+function rimLit(mesh: SkinnedMesh): void {
+  for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+    if (!(material instanceof MeshStandardMaterial)) continue;
+    material.onBeforeCompile = (shader) => {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <emissivemap_fragment>',
+        `#include <emissivemap_fragment>
+        float rim = pow(1.0 - clamp(dot(normalize(vNormal), normalize(vViewPosition)), 0.0, 1.0), 3.0);
+        totalEmissiveRadiance += vec3(0.42, 0.78, 0.9) * rim * 0.28;`,
+      );
+    };
+    material.customProgramCacheKey = () => 'animal-rim';
     material.needsUpdate = true;
   }
 }

@@ -1,0 +1,198 @@
+@media (max-width: 1100px) {
+  .sessions-page table {
+    min-width: 860px; /* a tablet scrolls the table instead of breaking every cell into single letters */
+  }
+  .sessions-page td:nth-child(n + 3) {
+    min-width: 96px;
+  }
+}
+
+@media (max-width: 760px) {
+  body {
+    font-size: var(--fs-body);
+  }
+  input,
+  textarea,
+  select {
+    font-size: var(--fs-lead); /* below 16px iOS zooms the page when a field takes focus */
+  }
+
+  .page-padding {
+    padding: var(--space-16) calc(var(--space-12) + var(--safe-right)) var(--space-24)
+      calc(var(--space-12) + var(--safe-left));
+  }
+  .page-heading {
+    flex-wrap: wrap;
+    gap: var(--space-8);
+  }
+  .field-row,
+  .filters,
+  .inline-actions {
+    flex-wrap: wrap;
+  }
+  .panel {
+    padding-inline: var(--space-12);
+  }
+
+  /* Tables become cards: one block per row, each cell labelled by its column. */
+  table.stack {
+    display: block;
+    font-size: var(--fs-small);
+  }
+  table.stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%); /* still there for a screen reader */
+  }
+  table.stack tbody,
+  table.stack tr {
+    display: block;
+  }
+  table.stack tr {
+    margin: 0 0 var(--space-12);
+    padding: var(--space-4) 0;
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    background: var(--surface);
+  }
+  table.stack td {
+    display: grid;
+    grid-template-columns: minmax(64px, 28%) minmax(0, 1fr);
+    gap: var(--space-8);
+    padding: var(--space-8) var(--space-12);
+    border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+  table.stack td:last-child {
+    border-bottom: 0;
+  }
+  table.stack td::before {
+    content: attr(data-label);
+    color: var(--dim);
+    font-size: var(--fs-label);
+    letter-spacing: 0.5px;
+  }
+  table.stack td:first-child {
+    display: block; /* the row's title spans the card */
+    font-size: var(--fs-body);
+  }
+  table.stack td:first-child::before {
+    content: none;
+  }
+  table.stack td.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+  }
+  table.stack td.actions::before {
+    content: none;
+  }
+  .sessions-page table {
+    min-width: 0;
+  }
+  .sessions-page .actions button {
+    display: inline-flex;
+    width: auto;
+    min-height: var(--control-touch);
+    padding: var(--space-6) var(--space-12);
+    font-size: var(--fs-small);
+  }
+  .sessions-page .table-scroll {
+    max-height: none;
+    overflow: visible;
+  }
+  .token-split li {
+    flex: 1 1 140px;
+  }
+
+  /* The inspector is a sheet from the bottom edge instead of a column beside the content. */
+  .inspector {
+    position: fixed;
+    inset: auto 0 0 0;
+    top: auto;
+    width: 100%;
+    max-height: 72dvh;
+    z-index: var(--z-inspector-sheet);
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    border-radius: var(--r-xl) var(--r-xl) 0 0;
+    padding-bottom: var(--safe-bottom);
+    box-shadow: 0 -18px 50px var(--shade);
+  }
+
+  /* Office: the scene takes the screen. */
+  .office-page {
+    padding: var(--space-12) calc(var(--space-12) + var(--safe-right)) 0
+      calc(var(--space-12) + var(--safe-left));
+  }
+  .scene-shell {
+    height: calc(100dvh - 190px);
+    min-height: 420px;
+    max-height: none;
+  }
+  .scene-toolbar {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    gap: var(--space-6);
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .building-panel {
+    right: 8px;
+    bottom: calc(8px + var(--safe-bottom));
+    width: min(260px, calc(100% - 16px));
+  }
+  .scene-footer {
+    display: none;
+  }
+}
+
+/* The top bar's numbers: in the sidebar instead whenever the top bar has no room for them (<= 1320px). */
+.sidebar .telemetry {
+  display: none;
+}
+.telemetry dt,
+.telemetry dd {
+  white-space: nowrap; /* a label never wraps letter by letter */
+}
+.sidebar-backdrop {
+  display: none;
+}
+@media (max-width: 1320px) {
+  .sidebar .telemetry {
+    display: grid;
+    grid-template-columns: repeat(
+      2,
+      minmax(0, 1fr)
+    ); /* a label such as 休眠／異常 needs more than a third of the sidebar */
+    gap: var(--space-8) var(--space-12);
+    padding: var(--space-12) var(--space-12);
+    margin-top: auto;
+    border-top: 1px solid var(--line);
+  }
+}
+@media (max-width: 760px), (pointer: coarse) and (max-height: 500px) {
+  .sidebar-backdrop {
+    display: block;
+  }
+}
+
+/* A coarse pointer wins over the compact desktop sizes set before it (breakpoints.css). */
+@media (pointer: coarse) {
+  .sessions-page .actions button,
+  .primary,
+  .secondary {
+    min-height: var(--control-touch);
+  }
+  .section-label a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-touch);
+  }
+}

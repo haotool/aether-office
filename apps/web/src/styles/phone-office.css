@@ -1,0 +1,490 @@
+/*
+ * The phone office: a full-screen scene with a few small controls over it, navigation at the thumb, and nothing that
+ * covers the scene with text. Portrait phones get the tab bar; a phone on its side keeps the drawer.
+ */
+:root {
+  --tabbar-h: 56px;
+  --hud-inset: var(
+    --space-12
+  ); /* every control over the scene keeps the same distance from the screen's edge */
+}
+.tabbar,
+.quick-prefs,
+.chip-active,
+.round,
+.fab,
+.phone-top,
+.member-bar,
+.scene-rail,
+.floor-chip,
+.sheet,
+.sheet-backdrop {
+  display: none;
+}
+
+@media (max-width: 760px) and (min-height: 501px) {
+  .topbar {
+    min-height: calc(48px + var(--safe-top));
+    gap: var(--space-8);
+  }
+  .mobile-menu,
+  .topbar-right > .icon-button,
+  .brand > span {
+    display: none; /* the tab bar's "more" opens the drawer; language and theme live in it */
+  }
+  .brand {
+    width: auto;
+    min-width: var(--control-touch);
+  }
+  .project-picker {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+  }
+  .project-picker .tiny-label {
+    display: none;
+  }
+  .project-picker select {
+    width: 100%;
+    font-size: var(--fs-lead);
+    font-weight: 600;
+    border-color: transparent;
+    background-color: transparent;
+  }
+  .tabbar {
+    display: flex;
+    flex: none;
+    height: calc(var(--tabbar-h) + var(--safe-bottom));
+    padding: 0 var(--safe-right) var(--safe-bottom) var(--safe-left);
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--line);
+    z-index: var(--z-tabbar);
+  }
+  .tab {
+    position: relative;
+    flex: 1;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: var(--space-2);
+    color: var(--dim);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tab-icon {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 28px;
+    border-radius: var(--r-pill);
+    transition: background var(--dur-fast) var(--ease);
+  }
+  .tab-label {
+    font-size: var(--fs-label);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+  }
+  .tab.active,
+  .tab[aria-expanded='true'] {
+    color: var(--mint);
+  }
+  .tab.active .tab-icon,
+  .tab[aria-expanded='true'] .tab-icon {
+    background: color-mix(in srgb, var(--mint) 16%, transparent);
+  }
+  .tab:active .tab-icon {
+    background: color-mix(in srgb, var(--text) 10%, transparent);
+  }
+  .tab b {
+    position: absolute;
+    top: var(--space-4);
+    left: calc(50% + var(--space-6));
+    min-width: 16px;
+    height: 16px;
+    padding: 0 var(--space-4);
+    border-radius: var(--r-pill);
+    background: var(--mint);
+    color: var(--on-accent);
+    font: 700 var(--fs-label) / 16px var(--mono);
+    text-align: center;
+  }
+  .sidebar.open {
+    bottom: 0;
+    z-index: var(--z-sidebar);
+  }
+}
+
+/* Shared by a portrait phone and a phone on its side. */
+@media (max-width: 760px), (pointer: coarse) and (max-height: 500px) {
+  .main-content.immersive {
+    overflow: hidden;
+    padding: 0;
+  }
+  .phone-office {
+    position: relative;
+    height: 100%;
+    background: var(--scene-bg);
+  }
+  .phone-office .canvas-container {
+    position: absolute;
+    inset: 0;
+  }
+  .phone-office .office-2d {
+    position: absolute;
+    inset: 0;
+    padding: var(--space-64) var(--space-12) calc(var(--tabbar-h) + var(--space-24));
+  }
+  .phone-top {
+    position: absolute;
+    z-index: var(--z-hud-top);
+    top: var(--hud-inset);
+    left: var(--hud-inset);
+    right: var(--hud-inset);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-8);
+    pointer-events: none;
+  }
+  .phone-top > *,
+  .phone-top-right > * {
+    pointer-events: auto;
+  }
+  .phone-top-right {
+    display: flex;
+    gap: var(--space-8);
+    pointer-events: none;
+  }
+  .phone-top .segmented button {
+    min-width: 48px;
+    font: 600 var(--fs-meta) var(--mono);
+  }
+  .chip-active,
+  .round,
+  .fab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--glass-line);
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: var(--on-glass);
+    box-shadow: 0 4px 16px var(--shade);
+  }
+  .chip-active {
+    gap: var(--space-8);
+    min-width: 56px;
+    height: var(--control-touch-sm);
+    padding: 0 var(--space-12);
+    border-radius: var(--r-3xl);
+    font: 700 var(--fs-body) var(--mono);
+  }
+  .chip-active i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--dim);
+  }
+  .chip-active i.on {
+    background: var(--mint);
+    box-shadow: 0 0 8px var(--mint);
+  }
+  .round {
+    width: var(--control-touch-sm);
+    height: var(--control-touch-sm);
+    border-radius: 50%;
+  }
+  .fab {
+    position: absolute;
+    z-index: var(--z-hud-top);
+    right: var(--hud-inset);
+    bottom: var(--hud-inset);
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 0;
+    background: var(--mint);
+    color: var(--on-accent);
+  }
+
+  /* Floor rail and switches on the edge, a chip for the floor's name: the only things over the 3D scene. */
+  .scene-rail {
+    position: absolute;
+    z-index: var(--z-hud-tools);
+    right: var(--hud-inset);
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding: var(--space-6);
+    border-radius: var(--r-3xl);
+    border: 1px solid var(--glass-line);
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+  .rail-floor,
+  .rail-tool {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: var(--on-glass);
+    font: 700 var(--fs-body) var(--mono);
+  }
+  .rail-floor {
+    border: 1.5px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+  .rail-floor.current {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+  }
+  .rail-floor i {
+    position: absolute;
+    top: 6px;
+    right: 7px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .rail-floor.current i {
+    background: var(--on-accent);
+  }
+  .rail-tool[aria-pressed='true'] {
+    background: var(--glass-line);
+    color: var(--mint);
+  }
+  .rail-gap {
+    height: 1px;
+    margin: var(--space-2) var(--space-8);
+    background: var(--glass-line);
+  }
+  /* The bottom row: the camera switch and the floor's name, level with the new-task button. */
+  .scene-dock {
+    position: absolute;
+    z-index: var(--z-hud-chip);
+    left: var(--hud-inset);
+    right: calc(var(--hud-inset) * 2 + 52px);
+    bottom: calc(
+      var(--hud-inset) + var(--space-6)
+    ); /* the button is 56 tall, the controls 44: one centre line */
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    pointer-events: none;
+  }
+  .scene-dock > * {
+    pointer-events: auto;
+  }
+  .floor-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-8);
+    min-width: 0;
+    height: var(--control-touch-sm);
+    padding: 0 var(--space-12);
+    border-radius: var(--r-3xl);
+    background: var(--glass-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    color: var(--on-glass);
+    font-size: var(--fs-small);
+    pointer-events: none;
+  }
+  .floor-chip b {
+    color: var(--accent);
+    font-family: var(--mono);
+  }
+  .floor-chip span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .floor-chip small {
+    color: var(--dim);
+    font-family: var(--mono);
+  }
+  /* Names are projected over the scene; on a phone they are small and few. */
+  .world-labels .scene-label {
+    font-size: var(--fs-small);
+    padding: var(--space-2) var(--space-8);
+  }
+
+  /* Sheets: from the bottom edge, thumb height rows, over the tab bar. */
+  .sheet-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-sheet-backdrop);
+    border: 0;
+    background: var(--scrim);
+  }
+  .sheet {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    z-index: var(--z-sheet);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 72dvh;
+    padding-bottom: var(--safe-bottom);
+    border-radius: var(--r-2xl) var(--r-2xl) 0 0;
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+    box-shadow: 0 -18px 50px var(--shade);
+  }
+  .sheet header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: var(--space-16) var(--space-16) var(--space-8);
+  }
+  .sheet h2 {
+    margin: 0;
+    font-size: var(--fs-lead);
+  }
+  .sheet header a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-touch);
+    color: var(--mint);
+  }
+  .sheet ul {
+    margin: 0;
+    padding: 0 var(--space-8) var(--space-8);
+    list-style: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .sheet li > button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-12);
+    width: 100%;
+    min-height: 56px;
+    padding: var(--space-8);
+    border-radius: var(--r-lg);
+    text-align: left;
+  }
+  .sheet li > button:active {
+    background: var(--raised);
+  }
+  .sheet-main {
+    display: grid;
+    min-width: 0;
+  }
+  .sheet-main strong,
+  .sheet-main small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sheet-main small {
+    color: var(--dim);
+  }
+  .sheet-empty {
+    padding: var(--space-24) var(--space-8);
+    color: var(--dim);
+    text-align: center;
+  }
+
+  /* The member in hand: one slim bar over the tab bar. */
+  .member-bar {
+    display: flex;
+    position: fixed;
+    z-index: var(--z-drawer);
+    left: 8px;
+    right: 8px;
+    bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 8px);
+    align-items: center;
+    gap: var(--space-6);
+    padding: var(--space-8) var(--space-4) var(--space-8) var(--space-8);
+    border-radius: var(--r-2xl);
+    border: 1px solid var(--glass-line);
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 28px var(--shade);
+  }
+  .member-bar-text {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+  }
+  .member-bar-text strong,
+  .member-bar-text small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .member-bar-text small {
+    color: var(--dim);
+  }
+  .sheet-backdrop + .inspector {
+    z-index: var(--z-sheet-detail);
+  }
+
+  /* The drawer's foot: language, theme and quality. */
+  .quick-prefs {
+    display: grid;
+    gap: var(--space-8);
+    padding: var(--space-12);
+    border-top: 1px solid var(--line);
+  }
+  .quick-prefs label {
+    display: grid;
+    gap: var(--space-4);
+    color: var(--dim);
+    font-size: var(--fs-label);
+  }
+}
+
+/* On its side the floor rail runs along the bottom and the name chip moves up beside the switches. */
+@media (pointer: coarse) and (max-height: 500px) {
+  .scene-rail {
+    top: auto;
+    bottom: 8px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    flex-direction: row;
+  }
+  .rail-gap {
+    width: 1px;
+    height: auto;
+    margin: var(--space-8) var(--space-2);
+  }
+  .scene-dock {
+    top: calc(
+      var(--hud-inset) + var(--control-touch-sm) + var(--space-8)
+    ); /* below the view switch */
+    right: auto;
+    bottom: auto;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .fab {
+    bottom: 8px;
+  }
+  .member-bar {
+    bottom: 8px;
+    right: 80px;
+  }
+}
+
+@media (max-width: 760px) {
+  .tab span {
+    white-space: nowrap;
+  }
+}

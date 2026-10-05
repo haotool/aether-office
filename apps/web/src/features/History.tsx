@@ -16,6 +16,7 @@ export function History({ projectId }: { projectId: string }) {
       <PageHeading title={t('history')} subtitle={t('historyHint')} />
       {replayTo === null ? (
         <form
+          className="inline-form"
           onSubmit={(e) => {
             e.preventDefault();
             const seq = String(new FormData(e.currentTarget).get('seq') ?? '').trim();

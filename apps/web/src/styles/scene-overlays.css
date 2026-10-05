@@ -1,0 +1,95 @@
+/* The director's caption: one line, who the camera is on and what they are doing. */
+.shot-caption {
+  position: absolute;
+  z-index: var(--z-hud-caption);
+  left: 50%;
+  top: 14px;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  max-width: min(70%, 520px);
+  padding: var(--space-6) var(--space-12);
+  border-radius: var(--r-2xl);
+  border: 1px solid var(--glass-line);
+  background: var(--glass-soft);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: var(--on-glass);
+  font: 600 var(--fs-small) var(--mono);
+  pointer-events: none;
+}
+.shot-caption i {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: rec 1.6s ease-in-out infinite;
+}
+.shot-caption span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@keyframes rec {
+  50% {
+    opacity: 0.25;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shot-caption i {
+    animation: none;
+  }
+}
+.auto-pill {
+  display: none;
+}
+@media (max-width: 760px), (pointer: coarse) and (max-height: 500px) {
+  .phone-office .shot-caption {
+    top: 62px;
+    max-width: calc(100% - 112px); /* clear of the floor rail */
+    transform: none;
+    left: var(--hud-inset);
+  }
+  .auto-pill {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-8);
+    min-height: var(--control-touch-sm);
+    padding: 0 var(--space-12);
+    border-radius: var(--r-3xl);
+    border: 1px solid var(--glass-line);
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: var(--on-glass-muted);
+    font: 700 var(--fs-meta) var(--mono);
+    letter-spacing: 1px;
+  }
+  .auto-pill i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--dim);
+  }
+  .auto-pill[aria-pressed='true'] {
+    color: var(--mint);
+    border-color: color-mix(in srgb, var(--mint) 55%, transparent);
+  }
+  .auto-pill[aria-pressed='true'] i {
+    background: var(--mint);
+    box-shadow: 0 0 8px var(--mint);
+  }
+}
+
+/* A name tag stays one short line, whatever the member's role string says. */
+.scene-label small {
+  display: inline-block;
+  max-width: 46vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}

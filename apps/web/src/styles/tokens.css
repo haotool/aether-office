@@ -1,0 +1,149 @@
+:root {
+  color-scheme: dark;
+  --bg: #050a12;
+  --surface: #0a121c;
+  --raised: #101b28;
+  --selected: #0f2c44;
+  --text: #e8f2f8;
+  --muted: #a3b5c4;
+  --dim: #8da2b3;
+  --line: #1b2b3c;
+  --mint: #43e6df;
+  --blue: #6aa8ff;
+  --violet: #a592ff;
+  --gold: #ffc65c;
+  --gold-tint: #2b2410aa;
+  --gold-border: #6b5320;
+  --red: #ff7a85;
+  --glow: #43e6df47;
+  --aura-a: #0d3a5c55;
+  --aura-b: #2a1b6a40;
+  --shadow: 0 10px 34px #00000066;
+  --grid: #2f4a6112;
+  /* Type floor: no visible text under --fs-label (uppercase mono tags) or --fs-small (everything readable). */
+  --fs-label: 11px;
+  --fs-small: 12px;
+  --fs-body: 14px;
+  /* Pointer targets: 44px for a finger (WCAG 2.5.5, Apple HIG), 32px for a mouse. */
+  --target-touch: 44px; /* the area a finger can hit; a control may look smaller and extend its hit area to this */
+  --control-touch: 40px; /* a button or field as drawn on a touch screen */
+  --control-touch-sm: 36px; /* an icon button, a segment, a chip */
+  --target-fine: 32px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --fs-meta: 13px;
+  --fs-lead: 16px; /* also the size at which iOS stops zooming a focused field */
+  --fs-title: 18px;
+  --fs-heading: 20px;
+  --fs-display: 24px;
+  --fs-hero: 28px;
+  --fs-wordmark-sm: 36px;
+  --fs-wordmark-md: 40px;
+  --fs-wordmark-lg: 64px;
+  /* Spacing: a 4px grid with 2px and 6px half steps. Padding, margin and gap take these and nothing else. */
+  --space-2: 2px;
+  --space-4: 4px;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-40: 40px;
+  --space-48: 48px;
+  --space-64: 64px;
+  /* Corner radius: from a hairline chip to a sheet. 50% (a circle) and --r-pill are the only other shapes. */
+  --r-xs: 2px;
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 8px;
+  --r-xl: 12px;
+  --r-2xl: 16px;
+  --r-3xl: 24px;
+  --r-pill: 999px;
+  /* Layers, lowest first. Overlays on the 3D scene (labels to the top row) sit below the page chrome; sheets sit on top. */
+  --z-base: 1;
+  --z-label-hover: 2;
+  --z-labels: 10;
+  --z-hud: 12;
+  --z-hud-caption: 13;
+  --z-hud-chip: 14;
+  --z-hud-tools: 15;
+  --z-hud-top: 16;
+  --z-inspector: 22;
+  --z-inspector-pinned: 23;
+  --z-topbar: 30;
+  --z-tabbar: 35;
+  --z-drawer: 40;
+  --z-inspector-sheet: 45;
+  --z-sidebar-backdrop: 51;
+  --z-sidebar: 52;
+  --z-sheet-backdrop: 59;
+  --z-sheet: 60;
+  --z-sheet-detail: 61;
+  /* Over the 3D scene: dark glass and light type, the same in both themes (the scene is a night view either way). */
+  --scene-bg: #050e15;
+  --glass: #0a141cd9;
+  --glass-soft: #0a141cb8;
+  --glass-strong: #050f16e0;
+  --glass-label: #10232ee6;
+  --glass-base: #0a1822;
+  --glass-selected: #183f4c;
+  --glass-hover: #1c4a5a;
+  --glass-line: #ffffff24;
+  --glass-line-soft: #748d9245;
+  --glass-line-strong: #78939b70;
+  --glass-line-faint: #a3b4b615;
+  --glass-edge: #2a4b5a;
+  --glass-accent-line: #5ee7e733;
+  --glass-accent-glow: #5ee7e780;
+  --on-glass: #e6f4f6;
+  --on-glass-muted: #9fc2cd;
+  --on-glass-accent: #8fd3dc;
+  --on-accent: #02161c;
+  --on-gold: #1d1500;
+  --white: #fff;
+  /* Shadows and scrims */
+  --scrim: #0008;
+  --shade: #0006;
+  --shade-soft: #0003;
+  --vignette: #00000080;
+  /* The login art and the terminal */
+  --art-1: #284348;
+  --art-2: #152932;
+  --art-3: #0d1d26;
+  --art-ring: #8fddd32b;
+  --art-glow: #6ed4cf08;
+  --terminal-bg: #101923;
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur-fast: 0.15s;
+  --dur: 0.2s;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Noto Sans Mono', monospace;
+}
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #edf3f9;
+  --surface: #ffffff;
+  --raised: #e5eef7;
+  --selected: #d3e6f6;
+  --text: #0d2234;
+  --muted: #46606f;
+  --dim: #46606f;
+  --line: #cdd9e5;
+  --mint: #00707a;
+  --blue: #1f5fc4;
+  --violet: #5a43d1;
+  --gold: #8a5600;
+  --gold-tint: #fbefd2;
+  --gold-border: #d0a65b;
+  --red: #b3222f;
+  --glow: #00a3b030;
+  --aura-a: #b7dcf655;
+  --aura-b: #d6cdfa55;
+  --shadow: 0 10px 30px #1b3a5a1f;
+  --grid: #1f4a7a14;
+}

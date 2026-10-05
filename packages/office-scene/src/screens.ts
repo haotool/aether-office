@@ -13,7 +13,7 @@ const VARIANTS = 3;
 
 type Draw = (g: CanvasRenderingContext2D, r: () => number, accent: string) => void;
 
-const PALETTE = {
+export const PALETTE = {
   bg: '#061019',
   panel: '#0c1c28',
   line: '#1d3a4c',
@@ -26,7 +26,7 @@ const PALETTE = {
   violet: '#a592ff',
 };
 
-function frame(g: CanvasRenderingContext2D, title: string, accent: string) {
+export function frame(g: CanvasRenderingContext2D, title: string, accent: string) {
   g.fillStyle = PALETTE.bg;
   g.fillRect(0, 0, SCREEN_W, SCREEN_H);
   g.fillStyle = PALETTE.panel;
@@ -126,7 +126,7 @@ function bars(
   g.globalAlpha = 1;
 }
 
-function label(
+export function label(
   g: CanvasRenderingContext2D,
   text: string,
   x: number,
@@ -139,7 +139,7 @@ function label(
   g.fillText(text, x, y);
 }
 
-function tile(
+export function tile(
   g: CanvasRenderingContext2D,
   x: number,
   y: number,

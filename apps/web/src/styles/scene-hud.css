@@ -1,0 +1,232 @@
+/* ── Scene HUD: floor readout and the deck selector, drawn as instruments rather than cards ─────────────────── */
+.floor-hud {
+  position: absolute;
+  left: 18px;
+  bottom: 38px;
+  z-index: var(--z-hud);
+  display: grid;
+  gap: var(--space-2);
+  min-width: 190px;
+  padding: var(--space-8) var(--space-12) var(--space-12);
+  background: var(--glass-strong);
+  color: var(--on-glass);
+  font-family: var(--mono);
+  pointer-events: none;
+  --m: var(--accent);
+}
+.floor-hud small {
+  font-size: var(--fs-label);
+  letter-spacing: 1.8px;
+  color: var(--accent);
+}
+.floor-hud b {
+  font-family: inherit;
+  font-size: var(--fs-lead);
+  font-weight: 600;
+  letter-spacing: 0.4px;
+}
+.readouts {
+  display: flex;
+  gap: var(--space-16);
+  margin-top: var(--space-4);
+  font-size: var(--fs-label);
+  letter-spacing: 1.4px;
+  color: var(--on-glass-muted);
+}
+.readouts i {
+  font-style: normal;
+  color: var(--on-glass);
+  font-size: var(--fs-small);
+  font-variant-numeric: tabular-nums;
+  margin-left: var(--space-2);
+}
+.building-panel {
+  position: absolute;
+  top: 70px;
+  right: 16px;
+  z-index: var(--z-hud);
+  width: 244px;
+  padding: var(--space-12) var(--space-12) var(--space-12);
+  background: var(--glass-strong);
+  color: var(--on-glass);
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+}
+.building-panel ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.building-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-8);
+  font-size: var(--fs-label);
+  letter-spacing: 2px;
+  color: var(--on-glass-muted);
+}
+.building-head button {
+  padding: var(--space-2) var(--space-8);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-xs);
+  color: inherit;
+  font: inherit;
+  letter-spacing: 1.4px;
+}
+.building-panel.collapsed {
+  width: auto;
+  padding: var(--space-8) var(--space-8);
+}
+.building-panel.collapsed .building-head {
+  margin: 0;
+  gap: var(--space-12);
+}
+/* A deck is a slab seen edge-on: slanted ends, its own tint, a row of pips for how much of it is busy. */
+.slab {
+  display: grid;
+  grid-template-columns: 30px 1fr auto;
+  grid-template-areas: 'floor name count' 'floor pips pips';
+  align-items: center;
+  column-gap: var(--space-8);
+  row-gap: var(--space-2);
+  width: 100%;
+  margin-bottom: var(--space-4);
+  padding: var(--space-6) var(--space-16) var(--space-6) var(--space-12);
+  color: inherit;
+  text-align: left;
+  background: color-mix(in srgb, var(--accent) 7%, var(--glass-base));
+  clip-path: polygon(11px 0, 100% 0, calc(100% - 11px) 100%, 0 100%);
+  transition: background 0.15s;
+}
+.slab b {
+  grid-area: floor;
+  color: var(--accent);
+  font-size: var(--fs-meta);
+}
+.slab span {
+  grid-area: name;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.slab i {
+  grid-area: count;
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  color: var(--on-glass-muted);
+}
+.pips {
+  grid-area: pips;
+  display: flex;
+  gap: var(--space-2);
+}
+.pips u {
+  width: 100%;
+  height: 3px;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.pips u.on {
+  background: var(--accent);
+}
+@media (hover: hover) {
+  .slab:hover {
+    background: color-mix(in srgb, var(--accent) 15%, var(--glass-base));
+  }
+}
+.slab.current {
+  background: color-mix(in srgb, var(--accent) 30%, var(--glass-base));
+}
+.slab:focus-visible {
+  outline: none;
+  background: color-mix(in srgb, var(--accent) 38%, var(--glass-base));
+  text-decoration: underline;
+}
+.building-tools {
+  display: flex;
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+}
+.building-tools button {
+  flex: 1;
+  padding: var(--space-4) var(--space-6);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-xs);
+  color: inherit;
+  font: inherit;
+  letter-spacing: 1.4px;
+}
+.building-tools button[aria-pressed='true'],
+.building-tools button[aria-expanded='true'] {
+  border-color: var(--mint);
+  color: var(--mint);
+}
+.keys-help {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2) var(--space-8);
+  margin: var(--space-8) 0 0;
+  font-size: var(--fs-label);
+}
+.keys-help dt {
+  color: var(--mint);
+}
+.keys-help dd {
+  margin: 0;
+  color: var(--on-glass-muted);
+}
+@media (max-width: 760px) {
+  .building-panel {
+    top: auto;
+    bottom: 10px;
+    right: 10px;
+    width: 196px;
+  }
+  .floor-hud {
+    display: none;
+  }
+}
+
+.follow-hud {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-hud-caption);
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  min-width: 240px;
+  max-width: 60%;
+  padding: var(--space-8) var(--space-16);
+  background: var(--glass-strong);
+  color: var(--on-glass);
+  font-family: var(--mono);
+  pointer-events: none;
+}
+.follow-hud small {
+  font-size: var(--fs-label);
+  letter-spacing: 2px;
+  color: var(--mint);
+}
+.follow-hud b {
+  font-size: var(--fs-meta);
+}
+.follow-hud span {
+  font-size: var(--fs-label);
+  color: var(--on-glass-muted);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scene-label.unread::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 8px var(--gold);
+  margin-left: var(--space-2);
+}

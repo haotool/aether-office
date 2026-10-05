@@ -1,0 +1,81 @@
+/* The small live views of other busy members, beside the main camera (packages/office-scene/src/MultiCam.tsx). */
+.pip-wall {
+  position: absolute;
+  z-index: var(--z-hud-chip);
+  right: 16px;
+  bottom: 44px;
+  display: flex;
+  gap: var(--space-8);
+  pointer-events: none;
+}
+.pip {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 176px;
+  height: 110px;
+  padding: var(--space-6) var(--space-8);
+  border: 1px solid var(--glass-line);
+  border-radius: var(--r-lg);
+  background: linear-gradient(to top, var(--glass-strong), transparent 55%);
+  color: var(--on-glass);
+  text-align: left;
+  pointer-events: auto;
+}
+.pip:hover {
+  border-color: var(--glass-line-strong);
+}
+.pip-caption {
+  display: grid;
+  min-width: 0;
+}
+.pip-caption b,
+.pip-caption small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pip-caption b {
+  font-size: var(--fs-small);
+}
+.pip-caption small {
+  color: var(--on-glass-muted);
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+}
+.pip-load {
+  position: absolute;
+  top: var(--space-6);
+  right: var(--space-8);
+  display: flex;
+  gap: var(--space-2);
+}
+.pip-load i {
+  width: 4px;
+  height: 10px;
+  border-radius: var(--r-xs);
+  background: var(--glass-line);
+}
+.pip-load i.on {
+  background: var(--gold);
+}
+.pip-close {
+  position: absolute;
+  top: calc(-1 * var(--space-20));
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--glass-line);
+  border-radius: var(--r-pill);
+  background: var(--glass);
+  color: var(--on-glass-muted);
+  pointer-events: auto;
+}
+@media (max-width: 1000px), (pointer: coarse) {
+  .pip-wall {
+    display: none; /* the phone and the narrow screen have the director's quicker cuts instead */
+  }
+}

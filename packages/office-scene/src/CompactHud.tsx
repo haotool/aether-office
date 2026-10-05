@@ -106,30 +106,32 @@ export function CompactHud({
           </>
         )}
       </nav>
-      <button
-        className="auto-pill"
-        aria-pressed={follow}
-        aria-label={zh ? '自動鏡頭' : 'Auto camera'}
-        onClick={onFollow}
-      >
-        <i aria-hidden="true" />
-        {zh ? '自動' : 'AUTO'}
-      </button>
-      <div
-        className="floor-chip"
-        style={{ ['--accent' as string]: department.accent }}
-        role="status"
-      >
-        <b>{exploded ? (zh ? '全棟' : 'ALL') : `${floor + 1}F`}</b>
-        <span>
-          {exploded ? (zh ? '分層展開' : 'Exploded') : zh ? department.zh : department.en}
-        </span>
-        {!exploded && (
-          <small>
-            {members}
-            {working ? ` · ${working}` : ''}
-          </small>
-        )}
+      <div className="scene-dock">
+        <button
+          className="auto-pill"
+          aria-pressed={follow}
+          aria-label={zh ? '自動鏡頭' : 'Auto camera'}
+          onClick={onFollow}
+        >
+          <i aria-hidden="true" />
+          {zh ? '自動' : 'AUTO'}
+        </button>
+        <div
+          className="floor-chip"
+          style={{ ['--accent' as string]: department.accent }}
+          role="status"
+        >
+          <b>{exploded ? (zh ? '全棟' : 'ALL') : `${floor + 1}F`}</b>
+          <span>
+            {exploded ? (zh ? '分層展開' : 'Exploded') : zh ? department.zh : department.en}
+          </span>
+          {!exploded && (
+            <small>
+              {members}
+              {working ? ` · ${working}` : ''}
+            </small>
+          )}
+        </div>
       </div>
     </>
   );

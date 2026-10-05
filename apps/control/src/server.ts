@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { DomainError, type Actor } from '@aether/kernel';
 import { hostPolicy } from './services/host-policy.js';
 import { sessionActor } from './services/identity.js';
+import { createPairingStore } from './services/pairing.js';
 import { refreshMessageWaits } from './services/messages.js';
 import { tickSchedules } from './services/schedules.js';
 import type { Control } from './control.js';
@@ -25,6 +26,7 @@ import { workRoutes } from './routes/work.js';
 export const PUBLIC_ROUTES: ReadonlySet<string> = new Set([
   'GET /health',
   'POST /api/login',
+  'POST /api/pairings/redeem', // the single-use pairing code is the credential
   'GET /api/session', // answers 401 itself
   'POST /api/runner/enroll', // the single-use invitation is the credential
   'POST /api/webhooks/github/:integrationId', // authenticated by HMAC signature
@@ -157,7 +159,17 @@ export function createServer(control: Control, options: ServerOptions) {
     mode: control.ctx.mode,
     version: '0.4.0-dev.0',
   }));
-  const routes: RouteContext = { app, control, options, origin, actor, attempts, streams };
+  const pairings = createPairingStore(() => control.ctx.now());
+  const routes: RouteContext = {
+    app,
+    control,
+    options,
+    origin,
+    actor,
+    attempts,
+    pairings,
+    streams,
+  };
   authRoutes(routes);
   projectRoutes(routes);
   projectListRoutes(routes);

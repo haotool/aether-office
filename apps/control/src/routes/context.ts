@@ -2,12 +2,15 @@ import type { FastifyInstance } from 'fastify';
 import { DomainError, type Actor } from '@aether/kernel';
 import type { SyncOptions } from '../services/integrations.js';
 import type { Control } from '../control.js';
+import type { PairingStore } from '../services/pairing.js';
 
 export type ServerOptions = {
   origin: string;
   /** Also accept requests addressed to this machine's private-network address (see services/host-policy.ts). */
   lan?: boolean;
   serveWeb?: boolean;
+  /** Test seam: the addresses pairing links point at (defaults to this machine's private-network interfaces). */
+  lanAddresses?: (port: string) => string[];
   logger?: boolean;
   /** Test seam: where structured logs go (defaults to stdout). */
   logStream?: { write(line: string): void };
@@ -35,6 +38,8 @@ export type RouteContext = {
   actor: (request: AuthInput) => Actor;
   /** Failed-attempt counters by caller (login, enrolment, A2A), shared so one limit cannot be dodged by another route. */
   attempts: Map<string, { count: number; until: number }>;
+  /** Codes that sign a phone in by scanning (services/pairing.ts). */
+  pairings: PairingStore;
   /** Closers of the open event streams, called when the server shuts down. */
   streams: Set<() => void>;
 };
