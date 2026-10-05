@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import type { AttributedSession } from '@aether/contracts';
 import { activityOf, formatSpan } from '../localSessions.js';
 import { usePreferences } from '../state.js';
-import { Badge, useT } from '../ui.js';
+import { Badge, Sheet, useT } from '../ui.js';
 
 const ORDER = ['active', 'idle', 'dormant', 'orphaned'] as const;
 
@@ -37,52 +36,42 @@ export function ActiveSessions({
         <i aria-hidden="true" className={live.length ? 'on' : ''} />
         {live.length}
       </button>
-      {open &&
-        createPortal(
-          <>
-            <button
-              className="sheet-backdrop"
-              aria-label={t('close')}
-              onClick={() => setOpen(false)}
-            />
-            <section className="sheet" role="dialog" aria-label={t('activeSessions')}>
-              <header>
-                <h2>
-                  {t('activeSessions')} <small>{live.length}</small>
-                </h2>
-                <Link to="/sessions" onClick={() => setOpen(false)}>
-                  {t('sessionsPage')}
-                </Link>
-              </header>
-              <ul>
-                {live.map((s) => (
-                  <li key={s.key}>
-                    <button
-                      onClick={() => {
-                        setOpen(false);
-                        onOpen(s);
-                      }}
-                    >
-                      <span className="sheet-main">
-                        <strong>{s.title ?? s.repo}</strong>
-                        <small>
-                          {s.repo}
-                          {s.git?.branch ? ` · ${s.git.branch}` : ''}
-                          {s.liveness.quietMs !== null
-                            ? ` · ${formatSpan(s.liveness.quietMs, locale)}`
-                            : ''}
-                        </small>
-                      </span>
-                      <Badge state={activityOf(s, Date.now())} />
-                    </button>
-                  </li>
-                ))}
-                {!live.length && <li className="sheet-empty">{t('noActiveSessions')}</li>}
-              </ul>
-            </section>
-          </>,
-          document.body, // out of the overlay's own stacking context, over everything
-        )}
+      {open && (
+        <Sheet
+          title={t('activeSessions')}
+          count={live.length}
+          onClose={() => setOpen(false)}
+          action={
+            <Link to="/sessions" onClick={() => setOpen(false)}>
+              {t('sessionsPage')}
+            </Link>
+          }
+        >
+          {live.map((s) => (
+            <li key={s.key}>
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  onOpen(s);
+                }}
+              >
+                <span className="sheet-main">
+                  <strong>{s.title ?? s.repo}</strong>
+                  <small>
+                    {s.repo}
+                    {s.git?.branch ? ` · ${s.git.branch}` : ''}
+                    {s.liveness.quietMs !== null
+                      ? ` · ${formatSpan(s.liveness.quietMs, locale)}`
+                      : ''}
+                  </small>
+                </span>
+                <Badge state={activityOf(s, Date.now())} />
+              </button>
+            </li>
+          ))}
+          {!live.length && <li className="sheet-empty">{t('noActiveSessions')}</li>}
+        </Sheet>
+      )}
     </>
   );
 }

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowUpRight, Globe2 } from 'lucide-react';
-import { login, type Session } from '../api.js';
+import { login, pair, type Session } from '../api.js';
 import { usePreferences } from '../state.js';
 import { useT, Field } from '../ui.js';
 
@@ -9,6 +9,29 @@ export function Login({ onLogin }: { onLogin: (session: Session) => void }) {
   const prefs = usePreferences();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  // Opened from a pairing QR code: the code is in the address's fragment. It is taken out of the address bar before
+  // anything else (so it is in no history, bookmark or screenshot), then swapped for a session.
+  const [pairing, setPairing] = useState(() => /^#pair=/.test(window.location.hash));
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.hash.slice(1)).get('pair');
+    if (!code) return;
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    pair(code)
+      .then(onLogin)
+      .catch(() => {
+        setError(t('pairFailed'));
+        setPairing(false);
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- once, on arrival
+  if (pairing)
+    return (
+      <main className="login-page">
+        <section className="login-panel" role="status">
+          <img src="/favicon.svg" width="44" height="44" alt="" />
+          <h1>{t('pairing')}</h1>
+        </section>
+      </main>
+    );
   return (
     <main className="login-page">
       <div className="login-art" aria-hidden="true">
@@ -30,7 +53,8 @@ export function Login({ onLogin }: { onLogin: (session: Session) => void }) {
             setBusy(true);
             setError('');
             try {
-              onLogin(await login(String(new FormData(e.currentTarget).get('token'))));
+              const form = new FormData(e.currentTarget);
+              onLogin(await login(String(form.get('token')), form.get('remember') === 'on'));
             } catch (e) {
               setError(e instanceof Error ? e.message : 'LOGIN_FAILED');
             } finally {
@@ -51,6 +75,10 @@ export function Login({ onLogin }: { onLogin: (session: Session) => void }) {
               minLength={32}
             />
           </Field>
+          <label className="toggle-label remember">
+            <input type="checkbox" name="remember" />
+            <span>{t('rememberDevice')}</span>
+          </label>
           {error && (
             <p role="alert" className="error-text">
               {error}

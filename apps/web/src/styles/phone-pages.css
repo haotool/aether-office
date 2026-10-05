@@ -1,0 +1,119 @@
+@media (max-width: 760px), (pointer: coarse) and (max-height: 500px) {
+  /* Explanations and long descriptions give way to the thing they explain. */
+  .hint-text {
+    display: none;
+  }
+  .hint-fold {
+    display: block;
+    flex-basis: 100%;
+  }
+  .hint-fold > summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-touch-sm);
+    height: var(--control-touch-sm);
+    margin: 0;
+    color: var(--dim);
+    font-size: var(--fs-title);
+    cursor: pointer;
+    list-style: none;
+  }
+  .hint-fold > summary::-webkit-details-marker {
+    display: none;
+  }
+  .hint-fold p {
+    margin: 0 0 var(--space-8);
+    color: var(--muted);
+  }
+  .page-heading > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: var(--space-8);
+  }
+  .page-heading > div h1 {
+    flex: 0 1 auto;
+  }
+  .clamp:not(.open) {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .clamp:not(.open)::after {
+    content: ' …';
+    color: var(--dim);
+  }
+  select[multiple] {
+    max-height: 112px; /* a list to scroll, not a box that takes the screen */
+  }
+  /* A dialog puts what you act on first and the explanations after, folded. */
+  dialog.modal[open] {
+    display: flex;
+    flex-direction: column;
+    max-height: 86dvh;
+    margin: calc(var(--safe-top) + var(--space-8)) auto auto;
+  }
+  dialog.modal .fold,
+  dialog.modal .fold-line {
+    order: 5;
+  }
+  .sheet {
+    max-height: 56dvh;
+  }
+  .inspector {
+    max-height: 54dvh;
+  }
+  .inspector.tall {
+    max-height: 88dvh;
+  }
+}
+
+@media (max-width: 760px), (pointer: coarse) and (max-height: 500px) {
+  .chip-attention {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-6);
+    min-width: 56px;
+    height: 44px;
+    padding: 0 var(--space-12);
+    border-radius: var(--r-3xl);
+    border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent);
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: var(--gold);
+    font: 700 var(--fs-body) var(--mono);
+    box-shadow: 0 4px 16px var(--shade);
+  }
+  .chip-attention span {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--on-gold);
+    font-size: var(--fs-small);
+  }
+  .attention-row {
+    display: grid;
+    gap: var(--space-8);
+    padding: var(--space-8) var(--space-8);
+    border-bottom: 1px solid var(--line);
+  }
+  .attention-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+  }
+  .attention-actions button {
+    min-height: var(--control-touch);
+  }
+  .danger-soft {
+    color: var(--red);
+    border-color: color-mix(in srgb, var(--red) 45%, transparent);
+  }
+}

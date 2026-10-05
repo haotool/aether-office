@@ -1,0 +1,32 @@
+{
+  "_": "The workstation's furniture in the desk's own frame (metres, y up, the member sits at +z facing -z). One source for the scene (building.ts, Member.tsx) and for the animal audit (tools/blender/audit_animals.py), so a character is checked against the chair and desk it is really given.",
+  "sitter": {
+    "z": 0.86
+  },
+  "screenY": 1.01,
+  "slab": {
+    "size": [1.8, 0.05, 0.86],
+    "at": [0, 0.575, 0]
+  },
+  "bar": {
+    "size": [1.4, 0.05, 0.08],
+    "at": [0, 0.625, -0.32]
+  },
+  "pedestal": {
+    "radius": 0.16,
+    "height": 0.55,
+    "at": [0, 0.3, -0.05]
+  },
+  "seat": {
+    "size": [0.52, 0.1, 0.48],
+    "at": [0, 0.34, 0.9]
+  },
+  "cushion": {
+    "size": [0.44, 0.04, 0.4],
+    "at": [0, 0.37, 0.88]
+  },
+  "back": {
+    "size": [0.5, 0.3, 0.09],
+    "at": [0, 0.99, 1.22]
+  }
+}

@@ -31,6 +31,13 @@ export const nav = [
   ['settings', Settings2],
 ] as const;
 
+/** The pages by what a person comes for: doing the work, keeping watch, looking after the system. */
+export const navGroups = [
+  ['groupWork', ['office', 'agents', 'tasks', 'messages']],
+  ['groupWatch', ['reviews', 'approvals', 'sessions', 'observations']],
+  ['groupSystem', ['workspace', 'terminals', 'knowledge', 'machines', 'history', 'settings']],
+] as const;
+
 /** The address of a page, keeping the project that is open. */
 export const pageLink = (page: string, projectId: string | undefined) =>
   `/${page}${projectId ? `?project=${projectId}` : ''}`;

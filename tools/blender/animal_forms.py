@@ -2,11 +2,11 @@
 is a zombie) and a lonely ghost (for one whose parent has gone). Both are built on the animals' skeleton, so the same
 pipeline weights, bakes, exports and animates them; the scene tells them apart by file name."""
 import math
-from animal_geometry import HEAD_CENTRE, front_y, materials, mesh_part, ao, ellipsoids
+from animal_geometry import HEAD_CENTRE, front_y, materials, mesh_part, smooth_path, ao, ellipsoids
 import bmesh
 
 # Where the ghost's body runs out: a wisp trailing down and back, in place of legs.
-GHOST_TAIL = [((0, .03, .52), .2), ((0, .08, .36), .14), ((0, .16, .22), .085), ((0, .27, .1), .03)]
+GHOST_TAIL = smooth_path([((0, .03, .52), .2), ((0, .08, .36), .14), ((0, .16, .22), .085), ((0, .27, .1), .03)])
 
 
 def undead_parts(P, mats, lay):

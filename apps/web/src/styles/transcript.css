@@ -1,0 +1,98 @@
+.transcript-toggle {
+  margin-top: var(--space-12);
+}
+.transcript-toggle summary {
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+  letter-spacing: 1.6px;
+  color: var(--mint);
+}
+.live-transcript .analysis {
+  display: grid;
+  gap: var(--space-8);
+  margin: var(--space-8) 0;
+  font-size: var(--fs-small);
+}
+.live-transcript .analysis b {
+  display: block;
+  font-size: var(--fs-label);
+  letter-spacing: 1.4px;
+  color: var(--dim);
+  margin-bottom: var(--space-2);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.chips li {
+  padding: var(--space-2) var(--space-6);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xs);
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+}
+.chips i {
+  font-style: normal;
+  color: var(--mint);
+}
+.mono-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+  color: var(--muted);
+}
+.mono-list li {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.transcript {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 340px;
+  overflow: auto;
+  border-top: 1px solid var(--line);
+}
+.transcript .entry {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: var(--space-8);
+  padding: var(--space-6) 0;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--fs-small);
+}
+.transcript .who {
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+  letter-spacing: 1px;
+  color: var(--dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.transcript .assistant .who {
+  color: var(--mint);
+}
+.transcript .tool .who {
+  color: var(--violet);
+}
+.transcript .error .text {
+  color: var(--red);
+}
+.transcript .text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.transcript .tool .text,
+.transcript .result .text {
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+  color: var(--muted);
+}

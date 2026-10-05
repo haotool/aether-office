@@ -1,9 +1,7 @@
 node_modules
 dist
-.agent-office
 *.log
 .DS_Store
-pw.txt
 __pycache__/
 .research/
 .tools/
@@ -20,3 +18,6 @@ playwright-report/
 
 # hook installer backups
 *.aether-backup
+
+# The animals' Blender sources are rebuilt by tools/blender/build_animals.py (they embed the builder's local paths)
+assets-source/animals/*.blend

@@ -1,0 +1,113 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xs);
+  padding: var(--space-2) var(--space-6);
+  font-family: var(--mono);
+  text-transform: uppercase;
+  font-size: var(--fs-label);
+  white-space: nowrap;
+  color: var(--muted);
+  font-weight: 400;
+  letter-spacing: 0.1px;
+}
+.badge > span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.state-demo {
+  color: var(--gold);
+  background: var(--gold-tint);
+  border-color: var(--gold-border);
+  letter-spacing: 1px;
+  font-size: var(--fs-label);
+}
+.state-working,
+.state-running,
+.state-online,
+.state-live,
+.state-completed {
+  color: var(--mint);
+}
+.state-reviewing,
+.state-waiting_permission,
+.state-indeterminate {
+  color: var(--gold);
+}
+.state-error,
+.state-failed {
+  color: var(--red);
+}
+.primary,
+.secondary,
+button:not([class]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-12);
+  font-size: var(--fs-small);
+  border-radius: var(--r-xs);
+  min-height: 35px;
+}
+.primary {
+  background: var(--mint);
+  color: var(--on-accent);
+  font-weight: 650;
+  border: 0;
+  clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px));
+}
+@media (hover: hover) {
+  .primary:hover {
+    filter: brightness(1.1);
+  }
+}
+.secondary,
+button:not([class]) {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+}
+@media (hover: hover) {
+  .secondary:hover,
+  button:not([class]):hover:not(:disabled) {
+    background: var(--raised);
+  }
+}
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  color: var(--muted);
+  border-radius: var(--r-sm);
+}
+@media (hover: hover) {
+  .icon-button:hover {
+    background: var(--raised);
+    color: var(--text);
+  }
+}
+.text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--fs-label);
+  color: var(--mint);
+  padding: var(--space-2) 0;
+}
+.full-width {
+  width: 100%;
+}
+.muted {
+  color: var(--muted);
+  font-size: var(--fs-small);
+}
+.danger {
+  color: var(--red);
+  margin-top: var(--space-16);
+}

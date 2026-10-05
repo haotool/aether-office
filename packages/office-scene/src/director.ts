@@ -45,6 +45,15 @@ const SCORE: Record<Agent['activity'], { score: number; reason: ShotReason }> = 
 const SECONDS = { pair: 7, closeup: 6, sweep: 6 } as const;
 const NEEDS_A_REASON = 30; // below this nothing is worth a closeup: sweep instead
 
+/**
+ * The more members are busy at once, the shorter a shot: with five agents working, six seconds on each is half a minute
+ * before the last one is seen. Down to a little over half the length, never faster than a person can read the caption.
+ */
+export function pacedSeconds(seconds: number, agents: readonly Agent[]): number {
+  const busy = agents.filter((a) => SCORE[a.activity].score >= 50).length;
+  return Math.round(seconds * Math.max(0.55, 1 - 0.1 * Math.max(0, busy - 1)) * 10) / 10;
+}
+
 const hash = (text: string) => {
   let h = 2166136261;
   for (const c of text) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
@@ -56,6 +65,7 @@ export function chooseShot({
   seats,
   pulses,
   attention,
+  intensity,
   now,
   shown,
   previous,
@@ -65,6 +75,8 @@ export function chooseShot({
   pulses: readonly Pulse[];
   /** Members that want a person (forgotten, ownerless, zombies under them), by id with the reason. */
   attention?: ReadonlyMap<string, string>;
+  /** How hard each working member works (0 to 3): the busiest are on screen more. */
+  intensity?: ReadonlyMap<string, number>;
   now: number;
   /** When each shot key (an agent id, "a>b", "floor:n") last went on screen. */
   shown: ReadonlyMap<string, number>;
@@ -111,7 +123,7 @@ export function chooseShot({
       subjects: [agent.id],
       reason: rule.reason,
       seconds: SECONDS.closeup,
-      score: rule.score + freshness(agent.id),
+      score: rule.score + freshness(agent.id) + (intensity?.get(agent.id) ?? 0) * 6,
       style: (hash(agent.id + (shown.size % 7)) % 3) as 0 | 1 | 2,
     });
   }
@@ -132,7 +144,8 @@ export function chooseShot({
   }
   candidates.sort((a, b) => b.score - a.score || (a.key < b.key ? -1 : 1));
   const best = candidates[0];
-  if (best && best.score >= NEEDS_A_REASON) return best;
+  if (best && best.score >= NEEDS_A_REASON)
+    return { ...best, seconds: pacedSeconds(best.seconds, agents) };
 
   // Nothing to watch: sweep the floor with the most people on it, a different one each time.
   const crowd = new Map<number, number>();

@@ -1,3 +1,4 @@
+import { createFileOnce } from './atomic.js';
 import { StringDecoder } from 'node:string_decoder';
 import { execFileSync, spawn } from 'node:child_process';
 import { groupStopper } from '@aether/providers';
@@ -176,10 +177,11 @@ export class Workspaces {
       baseSha,
       createdAt: Date.now(),
     };
-    writeFileSync(join(this.root, 'registry', id + '.json'), JSON.stringify(workspace, null, 2), {
-      mode: 0o600,
-      flag: 'wx',
-    });
+    createFileOnce(
+      join(this.root, 'registry', id + '.json'),
+      JSON.stringify(workspace, null, 2),
+      0o600,
+    );
     return workspace;
   }
   reviewDiff(id: string, baseSha: string): string {
@@ -254,10 +256,7 @@ export class Workspaces {
       timeoutMs,
     };
     const harness = { ...definition, hash: digest(JSON.stringify(definition)) };
-    writeFileSync(join(this.root, 'harnesses', id + '.json'), JSON.stringify(harness), {
-      mode: 0o400,
-      flag: 'wx',
-    });
+    createFileOnce(join(this.root, 'harnesses', id + '.json'), JSON.stringify(harness), 0o400);
     return harness;
   }
   async verify(id: string, harnessId: string, signal?: AbortSignal): Promise<Verification> {

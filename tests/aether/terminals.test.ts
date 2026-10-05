@@ -110,6 +110,17 @@ it('persists scoped terminal commands, fences takeover and never redispatches un
     expect(readTerminal(control.ctx, viewer.actor, projectId, terminalId)).toMatchObject({
       state: 'running',
     });
+    // The screen says what the agent in it is doing; a report with no new output keeps the last reading.
+    const listed = () =>
+      listTerminals(control.ctx, viewer.actor, projectId).sessions.find((t) => t.id === terminalId);
+    expect(listed()).toMatchObject({ agentState: 'unknown' });
+    reportTerminalSnapshot(control.ctx, machine.actor, {
+      ...snapshot,
+      chunks: [{ seq: 1, data: '\u001b[2K✻ Cooking…\r\n❯ \r\n' }],
+    });
+    expect(listed()).toMatchObject({ agentState: 'working' });
+    reportTerminalSnapshot(control.ctx, machine.actor, { ...snapshot, chunks: [] });
+    expect(listed()).toMatchObject({ agentState: 'working' });
     const acquire = () =>
       control.execute(
         owner.actor,

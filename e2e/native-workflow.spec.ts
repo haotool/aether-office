@@ -55,7 +55,7 @@ test('synthetic provider browser flow: permission, diff, review, commit-bound ve
     .selectOption({ label: 'Synthetic Codex Wire · codex' });
   await page.getByRole('button', { name: '派工', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: '關閉', exact: true }).click();
-  await page.getByRole('link', { name: '工具批准', exact: true }).click();
+  await page.getByRole('link', { name: /^工具批准/ }).click();
   await expect(page.getByRole('button', { name: '允許這次操作', exact: true })).toBeVisible({
     timeout: 15000,
   });
@@ -64,7 +64,7 @@ test('synthetic provider browser flow: permission, diff, review, commit-bound ve
   await expect(page.getByText('等待人類工具批准', { exact: true })).toBeVisible();
   await expect(page.getByText('機器心跳', { exact: true })).toBeVisible();
   await page.getByRole('dialog').getByRole('button', { name: '關閉', exact: true }).click();
-  await page.getByRole('link', { name: '工具批准', exact: true }).click();
+  await page.getByRole('link', { name: /^工具批准/ }).click();
   await page.screenshot({ path: 'evidence/screenshots/e2e-synthetic-approval.png' });
   const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
   expect(axe.violations).toEqual([]);
@@ -90,7 +90,7 @@ test('synthetic provider browser flow: permission, diff, review, commit-bound ve
   await page.getByRole('button', { name: '重試 (1/3)', exact: true }).click();
   await expect(page.getByRole('dialog').getByText('已派工', { exact: true })).toBeVisible();
   await page.getByRole('dialog').getByRole('button', { name: '關閉', exact: true }).click();
-  await page.getByRole('link', { name: '工具批准', exact: true }).click();
+  await page.getByRole('link', { name: /^工具批准/ }).click();
   await expect(page.getByRole('button', { name: '允許這次操作', exact: true })).toBeVisible({
     timeout: 15000,
   });
@@ -113,7 +113,7 @@ test('synthetic provider browser flow: permission, diff, review, commit-bound ve
       .getByRole('button', { name: `重試 (${attempt}/${attempt === 3 ? 4 : 3})`, exact: true })
       .click();
     await page.getByRole('dialog').getByRole('button', { name: '關閉', exact: true }).click();
-    await page.getByRole('link', { name: '工具批准', exact: true }).click();
+    await page.getByRole('link', { name: /^工具批准/ }).click();
     await expect(page.getByRole('button', { name: '允許這次操作', exact: true })).toBeVisible({
       timeout: 15000,
     });

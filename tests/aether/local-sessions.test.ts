@@ -106,9 +106,7 @@ it('attributes a headless session in a Claude scratch directory to the project i
   const projects = [{ id: 'p-bunny', root: '/Users/dev/Tools/accounting-bunny' }];
   const found = attributeSessions(
     [
-      session(
-        '/private/tmp/claude-501/-Users-dev-Tools-accounting-bunny/abc/scratchpad/blind/out',
-      ),
+      session('/private/tmp/claude-501/-Users-dev-Tools-accounting-bunny/abc/scratchpad/blind/out'),
       session('/private/tmp/claude-501/-Users-dev-Tools-other/abc/scratchpad'),
       session('/private/tmp/unrelated/dir'),
     ],

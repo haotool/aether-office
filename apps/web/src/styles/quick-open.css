@@ -1,0 +1,28 @@
+.quick-input {
+  width: 100%;
+}
+.quick-list {
+  max-height: 50vh;
+  overflow: auto;
+  margin: var(--space-8) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.quick-list button {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-12);
+  width: 100%;
+  padding: var(--space-8) var(--space-8);
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+}
+.quick-list [aria-selected='true'] button {
+  background: var(--grid);
+}
+.quick-list small {
+  opacity: 0.6;
+  font-family: var(--mono);
+}

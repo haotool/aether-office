@@ -1,0 +1,190 @@
+/* The narrowest phones: the logo mark stands for the name so the mode badge and both switches still fit. */
+@media (max-width: 360px) {
+  .brand > span {
+    display: none;
+  }
+  .brand {
+    width: auto;
+  }
+}
+
+/* Phones, and phones on their side: navigation is a drawer and the notch and home bar are not content. */
+@media (max-width: 760px), (pointer: coarse) and (max-height: 500px) {
+  .sidebar {
+    display: none;
+  }
+  .top-divider,
+  .project-picker,
+  .add-project,
+  .user-dot {
+    display: none;
+  }
+  .topbar {
+    height: auto;
+    min-height: calc(56px + var(--safe-top));
+    padding: var(--safe-top) calc(var(--space-12) + var(--safe-right)) 0
+      calc(var(--space-12) + var(--safe-left));
+  }
+  .mobile-menu {
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    min-width: var(--control-touch-sm);
+    min-height: var(--control-touch-sm);
+  }
+  .sidebar.open {
+    display: flex;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    top: calc(56px + var(--safe-top));
+    width: min(86vw, 320px);
+    padding-bottom: calc(var(--space-16) + var(--safe-bottom));
+    overflow-y: auto;
+    z-index: var(--z-sidebar); /* above the inspector sheet (--z-inspector-sheet) */
+  }
+  .sidebar-backdrop {
+    position: fixed;
+    inset: calc(56px + var(--safe-top)) 0 0 0;
+    z-index: var(--z-sidebar-backdrop);
+    background: var(--scrim);
+    border: 0;
+  }
+  .sidebar .nav-link {
+    min-height: var(--control-touch);
+    font-size: var(--fs-body);
+  }
+  .main-content {
+    padding-bottom: var(--safe-bottom);
+  }
+  .drawer-project {
+    display: grid;
+    gap: var(--space-6);
+    padding-bottom: var(--space-8);
+  }
+  .drawer-project .nav-title {
+    padding: 0 var(--space-12);
+  }
+  .desktop-title {
+    display: none;
+  }
+}
+.drawer-project {
+  display: none;
+}
+@media (max-width: 760px), (pointer: coarse) and (max-height: 500px) {
+  .drawer-project {
+    display: grid;
+  }
+}
+
+/* On its side a phone has 390px of height: the scene gets all of it. */
+@media (pointer: coarse) and (max-height: 500px) {
+  .office-page {
+    padding: var(--space-8) calc(var(--space-8) + var(--safe-right)) 0
+      calc(var(--space-8) + var(--safe-left));
+  }
+  .office-heading p,
+  .office-stats {
+    display: none;
+  }
+  .office-heading h1 {
+    font-size: var(--fs-title);
+  }
+  .scene-shell {
+    height: calc(100dvh - 118px);
+    min-height: 240px;
+  }
+}
+
+/* A terminal on a touch screen: the keys the phone keyboard lacks. */
+.terminal-keys {
+  display: none;
+}
+@media (pointer: coarse) {
+  .terminal-keys {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+    margin: var(--space-8) 0;
+  }
+  .terminal-keys button {
+    flex: 1 1 56px;
+    min-width: 56px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: var(--surface);
+    font-family: var(--mono);
+  }
+}
+
+/* iOS Safari and other touch browsers. */
+.primary,
+.secondary {
+  white-space: nowrap; /* a button label never breaks onto two lines */
+}
+@media (pointer: coarse) {
+  html {
+    -webkit-tap-highlight-color: transparent; /* no grey flash on a tap */
+  }
+  button,
+  a,
+  select,
+  summary,
+  label,
+  input {
+    touch-action: manipulation; /* no 300ms wait, no double-tap zoom on controls (pinch still zooms the page) */
+  }
+  button,
+  .scene-label,
+  .zone-label,
+  .world-labels {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none; /* no copy/share sheet on a long press of a control */
+  }
+  .main-content {
+    overscroll-behavior: contain;
+  }
+  .brand {
+    min-width: var(--control-touch);
+    min-height: var(--control-touch);
+  }
+  /* Safari ignores a height on a native select; drawing it ourselves makes it a 44px target (the picker is still the system's). */
+  select {
+    -webkit-appearance: none;
+    appearance: none;
+    padding-right: var(--space-32);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%238da2b3' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px 8px;
+  }
+  select[multiple] {
+    background-image: none;
+    padding-right: var(--space-12);
+  }
+  .scene-options select {
+    background-position: right 4px center;
+    padding-right: var(--space-20);
+  }
+}
+@media (pointer: coarse) {
+  .sessions-page td a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-touch);
+  }
+}
+
+@media (max-width: 360px) {
+  .eyebrow span {
+    display: none; /* the decorative "/ 01" would wrap onto a line of its own */
+  }
+}
+
+/* A short screen (an iPad on its side, a small laptop) must still reach the last link and the sign-out button. */
+.sidebar {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}

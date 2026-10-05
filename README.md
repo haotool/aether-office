@@ -1,14 +1,41 @@
 # AETHER OFFICE
 
-A local-first workspace for collaborative coding agents, with a 3D orbital office and a usable 2D workbench. Based on the MIT-licensed AgentSystemLabs/agent-office source; see [third-party notices](THIRD_PARTY_NOTICES.md).
+[![CI](https://github.com/haotool/aether-office/actions/workflows/ci.yml/badge.svg)](https://github.com/haotool/aether-office/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Development version. Not a production-ready release.** The current working slice has a durable SQLite control plane, role checks, persistent messages, tasks, a separately running deterministic fixture provider, React pages and a procedural 3D office. Codex/Claude adapters, run-scoped MCP, isolated Git workspaces, approvals and eight rigged Blender animal families are implemented in the development slice. Live provider smoke, full review/verification, campus art and the remaining profiles are still being implemented against [the full specification](docs/MASTER_SPEC.md).
+**A local-first workspace for coding agents.** AETHER OFFICE shows the Claude Code and Codex sessions running on your
+machine as characters in a 3D office, groups them by project and role, and lets you assign, review and verify work
+across agents from a browser, including from a phone on your local network.
 
-## Run locally
+English · [繁體中文](README.zh-TW.md)
 
-Use Node **24.21.0** and the exact pnpm version in `package.json` (currently **12.8.1**).
+> **Status: development (`0.4.0-dev`).** It is usable and heavily tested, but it is not a production release. The
+> [verification ledger](docs/verification/report.md) states exactly which capabilities are verified and which are not.
 
-pnpm has built-in `setup` and `doctor` commands that shadow package scripts of the same name, so this project's two scripts are always run as `pnpm run setup` and `pnpm run doctor`.
+<p align="center">
+  <img src="docs/images/office-desktop.jpg" alt="The 3D office with the floor panel (demo data)" width="72%">
+  <img src="docs/images/office-phone.jpg" alt="The same office on a phone" width="22%">
+</p>
+
+## Features
+
+- **Sees your agents without setup.** Local Claude Code and Codex sessions are discovered read-only and appear as
+  animal characters, placed on a floor and desk by the engineering role their work belongs to. Optional hooks add exact
+  activity (working, waiting for approval) and subagent attribution.
+- **A 3D office that explains itself.** A camera director cuts to who is talking, waiting, in error or working; messages
+  and subagents are drawn between desks; a sleeping rabbit, a ghost and a jiangshi mark dormant, orphaned and zombie
+  sessions, with one-tap actions to stop or reap them.
+- **A full 2D workbench.** Tasks (list, board, dependency graph), messages and rooms, reviews and approvals, a Git
+  graph and health view, terminals, knowledge, schedules and more. It adapts to phones, tablets and desktops.
+- **Managed execution with safety rails.** A separate runner starts Codex or Claude in isolated Git worktrees, with
+  per-call tool approvals, fixed-SHA review and verification, durable journals and no permission bypass.
+- **Interoperable.** MCP tools for agents, an A2A gateway, an ACP client, hooks, and a typed HTTP API.
+- **Honest by design.** Observed sessions are read-only, demo and fixture data are labeled, and no paid model runs
+  unless you explicitly enable it.
+
+## Quick start
+
+Requires Node.js **24.21.0** and the pnpm version pinned in `package.json`.
 
 ```sh
 pnpm install --frozen-lockfile
@@ -16,68 +43,32 @@ pnpm build
 pnpm demo
 ```
 
-The demo UI is served at `http://127.0.0.1:4311`; control and the independent runner use port 4310. The terminal prints the location of `.data/demo/owner-token`. Read that local file and paste its value into the login form. Do not share the token. The demo uses no paid models and never treats fixture output as live-provider evidence.
+Open `http://127.0.0.1:4311` and sign in with the owner token whose location the terminal prints. The demo uses fixture
+data and calls no paid model. See [Getting started](docs/getting-started.md) for live mode, local-network access from a
+phone, hooks and native execution.
 
-To run the built artifacts:
+## Documentation
 
-```sh
-pnpm run setup --demo
-AETHER_MODE=demo pnpm start
-# In a separate terminal:
-AETHER_MODE=demo node apps/runner/dist/main.js
-```
+| Document                                                 | Contents                                                          |
+| -------------------------------------------------------- | ----------------------------------------------------------------- |
+| [Getting started](docs/getting-started.md)               | Install, demo and live modes, phone access, hooks                 |
+| [Architecture](docs/architecture.md)                     | Components, data flow, modules and their boundaries               |
+| [Configuration](docs/configuration.md)                   | Environment variables and the local native-execution file         |
+| [Native execution](docs/native-execution.md)             | Runner, worktrees, approvals, PTY, observation, process lifecycle |
+| [Security](docs/security.md)                             | Threat model, trust boundaries, safety properties                 |
+| [Design system](docs/design-system.md)                   | UI tokens, components, responsive and accessibility rules         |
+| [Development](docs/development.md)                       | Repository layout, checks, testing, the animals pipeline          |
+| [Provider compatibility](docs/provider-compatibility.md) | Verified Claude Code and Codex releases, ACP and A2A versions     |
+| [Verification ledger](docs/verification/report.md)       | Per-capability implementation and verification status             |
+| [Architecture decisions](docs/adr)                       | Why the project is built the way it is                            |
 
-The built UI is served by control at `http://127.0.0.1:4310`.
+## Contributing
 
-### Open it from a phone or tablet (local network)
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
+Security issues go through [SECURITY.md](SECURITY.md), not public issues.
 
-By default control listens on this machine only. To use it from another device on the same network, start it with `AETHER_HOST=0.0.0.0` (or one interface address):
+## License
 
-```sh
-AETHER_HOST=0.0.0.0 pnpm start
-```
-
-It prints the addresses to open (for example `http://192.168.1.20:4310`). Sign in with the same owner token; the 3D office works on a phone. Requests are accepted only when addressed to a private-network address on the same port (a name on the public internet is refused, which is what stops DNS rebinding). The connection is plain HTTP, so the token crosses the network unencrypted: use it on a network you trust, or put a TLS tunnel (for example Tailscale) in front.
-
-`pnpm run setup` and `pnpm dev` select a separate live data directory. Native execution requires explicit project policy plus local runner configuration; see [native execution and MCP](docs/NATIVE_EXECUTION.md). A live smoke has been run on macOS with Codex CLI 0.160.0 and Claude Code 2.1.288 under their subscription logins (a real Claude ↔ Codex message exchange); see [native execution](docs/NATIVE_EXECUTION.md#live-smoke) and `pnpm run smoke:live`.
-
-## Local sessions (observe-only)
-
-Signed-in owners and operators see recent Claude Code and Codex sessions from this machine as observed characters in the office. Discovery reads only session ids, working directories and file times, plus read-only `git status`; transcripts are not read or stored. Sessions in linked worktrees group under the repository's Git common directory. Set `AETHER_LOCAL_SESSIONS=off` to disable.
-
-For authoritative activity and subagent attribution, opt in to hooks per project:
-
-```sh
-pnpm hooks install --project /path/to/repo   # writes .claude/settings.local.json
-pnpm hooks remove --project /path/to/repo
-```
-
-`--scope user` edits `~/.claude/settings.json` and affects every session on the machine. The receiver records only ids, event names and the working directory in `~/.aether/hook-events.jsonl`.
-
-## Current checks
-
-```sh
-pnpm typecheck
-pnpm lint
-pnpm format:check
-pnpm test
-pnpm build
-pnpm exec playwright test
-```
-
-Browser tests start real control and runner processes, use an isolated SQLite data directory and exercise HTTP without request mocks. Chrome is selected in `playwright.config.ts`. They do not start paid agents. Test reports distinguish fixture, browser, native, GPU and Blender scope; [progress](docs/PROGRESS.md) records actual results and remaining work.
-
-Upstream tests are retained under `tests/*.test.ts` and were run against an unmodified clone; they do not establish acceptance of the new control plane. The old upstream server under `src/server` is a reference retained during the fork transition; new root commands do not launch it.
-
-## Safety model
-
-- Loopback binding with Host/Origin, authentication, HttpOnly cookies and CSRF checks.
-- A command's actor comes from authentication; payloads cannot choose their sender or role.
-- SQLite state, event, outbox and command receipt commit together. Message acknowledgement is separate from persistence.
-- A lost runner moves uncertain work to `indeterminate`; it is not automatically re-executed.
-- No permission bypass, automatic paid model run, remote push or publication is authorized by installing this repo.
-- Worktrees are not sandboxes. Strong hostile-tenant isolation is outside the intended local trusted-operator deployment model.
-
-## Product scope and evidence
-
-`docs/FEATURES.json` preserves the 144 original acceptance statements. Implementation and verification are independent fields. `docs/exec-plans/active.md` tracks the complete work; incomplete items are not dropped to make the build look finished.
+[MIT](LICENSE). Copyright (c) 2026 haotool; portions copyright (c) 2026 AgentSystemLabs, from which this project
+started ([agent-office](https://github.com/AgentSystemLabs/agent-office)). Third-party software and its terms are listed
+in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

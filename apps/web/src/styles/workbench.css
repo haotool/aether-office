@@ -1,0 +1,127 @@
+.canvas-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.world-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: var(--z-labels);
+}
+.world-labels > .scene-label,
+.world-labels > .zone-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+}
+.world-labels > .scene-label,
+.world-labels > .zone-label {
+  pointer-events: auto;
+}
+.approval-list {
+  display: grid;
+  gap: var(--space-16);
+}
+.approval-card {
+  padding: var(--space-24);
+}
+.approval-card pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--bg);
+  padding: var(--space-16);
+  border-radius: var(--r-xl);
+}
+.approval-card dd {
+  margin: 0 0 var(--space-8);
+  overflow-wrap: anywhere;
+  font-family: monospace;
+}
+.approval-card dt {
+  font-size: var(--fs-small);
+  opacity: 0.7;
+}
+.button-row {
+  display: flex;
+  gap: var(--space-12);
+  flex-wrap: wrap;
+}
+.workspace-card {
+  padding: var(--space-24);
+  margin-bottom: var(--space-16);
+  min-width: 0;
+}
+.workspace-card dd,
+.path-label {
+  overflow-wrap: anywhere;
+}
+.diff-view {
+  max-height: 480px;
+  overflow: auto;
+  background: var(--bg);
+  padding: var(--space-16);
+  font: var(--fs-small) / 1.7 var(--mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.terminal-screen {
+  overflow: auto;
+  max-width: 100%;
+  min-height: 340px;
+  padding: var(--space-12);
+  background: var(--terminal-bg);
+  border-radius: var(--r-lg);
+  margin-top: var(--space-16);
+}
+.terminal-screen .xterm {
+  padding: var(--space-4);
+}
+
+.observation-text {
+  max-height: 320px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+
+.task-dag {
+  height: 520px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+}
+.dag-task {
+  height: 94px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  color: var(--text);
+}
+.dag-task button {
+  width: 100%;
+  height: 100%;
+  text-align: left;
+  padding: var(--space-12);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+}
+.dag-task strong {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dag-task small {
+  margin-left: auto;
+  color: var(--muted);
+}
+
+.inspector dd {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}

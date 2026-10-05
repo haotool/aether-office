@@ -2,7 +2,9 @@ import type { Agent, Layout } from '@aether/contracts';
 import { DEPARTMENTS } from '@aether/kernel';
 import { Animal } from './Animal.js';
 import type { Apparition } from './animal-states.js';
+import { DeskEffects } from './DeskEffects.js';
 import { MemberScreen } from './MemberScreen.js';
+import type { ScreenFacts } from './screen-facts.js';
 import { AGENT_OFFSET, floorY } from './scene-geometry.js';
 import type { Quality } from './scene-types.js';
 
@@ -14,6 +16,8 @@ export function Member({
   desk,
   exploded,
   role,
+  facts,
+  intensity,
   apparition,
   zombie,
   selected,
@@ -30,6 +34,8 @@ export function Member({
   desk: Desk;
   exploded: boolean;
   role: string;
+  facts: ScreenFacts | undefined;
+  intensity: 0 | 1 | 2 | 3;
   apparition: Apparition | undefined;
   zombie: boolean;
   selected: boolean;
@@ -50,7 +56,11 @@ export function Member({
         member={agent.id}
         accent={DEPARTMENTS[desk.floor ?? 0]?.accent ?? '#43e6df'}
         activity={agent.activity}
+        facts={facts}
+        theme={DEPARTMENTS[desk.floor ?? 0]?.id ?? 'product'}
+        intensity={intensity}
       />
+      <DeskEffects intensity={intensity} seed={agent.id} />
       <group
         position={[0, 0, 0.86]}
         onClick={(e) => {
@@ -75,6 +85,7 @@ export function Member({
         <Animal
           agent={agent}
           apparition={apparition}
+          pace={1 + intensity * 0.4}
           selected={selected}
           reducedMotion={reducedMotion}
           quality={quality}

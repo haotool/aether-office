@@ -1,7 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { type Command, terminalSnapshotSchema, type TerminalDispatch } from '@aether/contracts';
-import { authorize, DomainError, type Actor } from '@aether/kernel';
+import {
+  authorize,
+  DomainError,
+  terminalAgentState,
+  type Actor,
+  type TerminalAgentState,
+} from '@aether/kernel';
 import { identityActor } from './identity.js';
 import { project, emit, type Context } from './context.js';
 type Session = {
@@ -286,6 +292,15 @@ export function reportTerminalCommand(ctx: Context, actor: Actor, input: unknown
     })
     .immediate();
 }
+/** What the agent is doing, from the screen the runner just reported; a report with no output keeps what was known. */
+function agentStateOf(
+  state: string,
+  chunks: readonly { data: string }[],
+  known: TerminalAgentState | null,
+): TerminalAgentState | null {
+  if (state !== 'running') return null;
+  return chunks.length ? terminalAgentState(chunks.map((c) => c.data).join('')) : known;
+}
 export function reportTerminalSnapshot(ctx: Context, actor: Actor, input: unknown) {
   actor = runner(ctx, actor);
   const data = terminalSnapshotSchema.parse(input);
@@ -294,7 +309,7 @@ export function reportTerminalSnapshot(ctx: Context, actor: Actor, input: unknow
       const row = ctx.sqlite
         .prepare('SELECT * FROM terminal_sessions WHERE id=? AND machineId=?')
         .get(data.terminalId, actor.machineId) as
-        (Session & { snapshot: string | null }) | undefined;
+        (Session & { snapshot: string | null; agentState: TerminalAgentState | null }) | undefined;
       if (!row) throw new DomainError('TERMINAL_NOT_FOUND', 404);
       authorize(actor, 'runner.report', row.projectId);
       const prior = row.snapshot ? terminalSnapshotSchema.parse(JSON.parse(row.snapshot)) : null;
@@ -313,7 +328,7 @@ export function reportTerminalSnapshot(ctx: Context, actor: Actor, input: unknow
           : data.state;
       ctx.sqlite
         .prepare(
-          'UPDATE terminal_sessions SET state=?,snapshot=?,cols=?,rows=?,updatedAt=? WHERE id=?',
+          'UPDATE terminal_sessions SET state=?,snapshot=?,cols=?,rows=?,updatedAt=?,agentState=? WHERE id=?',
         )
         .run(
           state,
@@ -321,6 +336,7 @@ export function reportTerminalSnapshot(ctx: Context, actor: Actor, input: unknow
           data.dimensions.cols,
           data.dimensions.rows,
           ctx.now(),
+          agentStateOf(state, data.chunks, row.agentState),
           row.id,
         );
       if (state !== 'running')
@@ -346,9 +362,9 @@ export function listTerminals(ctx: Context, actor: Actor, projectId: string) {
   return {
     sessions: ctx.sqlite
       .prepare(
-        'SELECT id,profile,state,controlOwner,controlEpoch,leaseUntil,cols,rows,updatedAt FROM terminal_sessions WHERE projectId=? ORDER BY createdAt DESC LIMIT 100',
+        'SELECT id,profile,state,agentState,controlOwner,controlEpoch,leaseUntil,cols,rows,updatedAt FROM terminal_sessions WHERE projectId=? ORDER BY createdAt DESC LIMIT 100',
       )
-      .all(projectId),
+      .all(projectId) as (Session & { agentState: TerminalAgentState | null })[],
     profiles: profiles.map((m) => ({
       ...m,
       terminalProfiles: JSON.stringify(

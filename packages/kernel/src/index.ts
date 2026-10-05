@@ -329,3 +329,8 @@ export {
   type DepartmentId,
   type RoleId,
 } from './departments.js';
+export {
+  plainTerminalLines,
+  terminalAgentState,
+  type TerminalAgentState,
+} from './terminal-state.js';

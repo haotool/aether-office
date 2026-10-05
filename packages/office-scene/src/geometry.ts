@@ -1,5 +1,5 @@
 /** Geometry helpers adapted from AgentSystemLabs/agent-office (MIT), commit 665aeec.
- * Original: src/client/world/toon.ts. See LICENSE and THIRD_PARTY_NOTICES.md.
+ * Adapted from agent-office's src/client/world/toon.ts (MIT, AgentSystemLabs; the upstream application is no longer in this tree). See LICENSE and THIRD_PARTY_NOTICES.md.
  * AETHER uses PBR materials and explicit ownership instead of the upstream global toon cache.
  */
 import * as THREE from 'three';

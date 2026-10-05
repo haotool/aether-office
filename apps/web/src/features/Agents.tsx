@@ -39,7 +39,7 @@ export function Agents({
                   species={agent.species}
                   color={agent.color}
                   name={agent.name}
-                  size={52}
+                  size={44}
                 />
                 <ArrowUpRight size={17} />
               </div>

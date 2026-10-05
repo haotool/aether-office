@@ -1,0 +1,101 @@
+.sessions-page .filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+  margin-bottom: var(--space-12);
+}
+.sessions-page .filters input[type='search'] {
+  flex: 1;
+  min-width: 220px;
+}
+.sessions-page .count {
+  margin-left: auto;
+  font-family: var(--mono);
+  color: var(--dim);
+}
+.sessions-page .table-scroll {
+  max-height: calc(100dvh - 300px);
+  overflow: auto;
+}
+.sessions-page table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-small);
+}
+.sessions-page th,
+.sessions-page td {
+  text-align: left;
+  vertical-align: top;
+  padding: var(--space-6) var(--space-8);
+  border-bottom: 1px solid var(--line);
+}
+.sessions-page td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.sessions-page td:first-child {
+  min-width: 200px;
+  max-width: 300px;
+}
+.sessions-page td small {
+  display: block;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+}
+.sessions-page td b {
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+  color: var(--mint);
+}
+.sessions-page td a {
+  margin-right: var(--space-6);
+  color: var(--mint);
+  font-family: var(--mono);
+}
+.sessions-page td:nth-child(5) {
+  max-width: 160px;
+}
+.sessions-page .actions button {
+  display: block;
+  width: 100%;
+  margin-bottom: var(--space-4);
+  white-space: nowrap;
+  min-height: 26px;
+  padding: var(--space-2) var(--space-8);
+  font-size: var(--fs-label);
+}
+
+.token-split {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin: 0 0 var(--space-12);
+  padding: 0;
+  list-style: none;
+}
+.token-split li {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-8);
+  border: 1px solid var(--grid);
+  font-family: var(--mono);
+}
+.token-split b {
+  font-size: 1.1em;
+}
+
+.sessions-page small.liveness {
+  font-weight: 600;
+}
+.sessions-page small.liveness.active {
+  color: var(--mint);
+}
+.sessions-page small.liveness.dormant,
+.sessions-page small.liveness.orphaned {
+  color: var(--gold);
+}
+.sessions-page small.liveness.zombie {
+  color: var(--red);
+}

@@ -1,0 +1,109 @@
+/*
+ * The touch and phone layers (this file to phone-pages.css), loaded after the desktop ones; the rules it enforces are the UI rules in AGENTS.md and are checked on
+ * every page at 320, 390, 820 and 1280 px by e2e/responsive.spec.ts.
+ *
+ *   phone   <= 760px   one column, drawer navigation, tables become cards, inspector is a bottom sheet
+ *   tablet  761-1100px  sidebar plus content, inspector over the content, tables scroll sideways
+ *   desktop > 1100px   as designed
+ */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  min-height: 100dvh;
+  overscroll-behavior-y: none; /* a pull on the page must not move the 3D scene's page behind it */
+}
+
+/* Fingers: a button or field is drawn 36 to 40px and hit at 44px; a checkbox is reached through its row. */
+@media (pointer: coarse) {
+  button,
+  select,
+  summary,
+  .nav-link,
+  input:not([type='checkbox']):not([type='radio']) {
+    min-height: var(--control-touch);
+  }
+  .project-picker .tiny-label {
+    display: none; /* the 44px select fills the 60px top bar; its label would be cut off above it */
+  }
+  .icon-button {
+    min-width: var(--control-touch-sm);
+    min-height: var(--control-touch-sm);
+    justify-content: center;
+  }
+  .text-button {
+    min-height: var(--control-touch-sm);
+    padding-inline: var(--space-6);
+  }
+  .segmented button,
+  .scene-options > button {
+    min-width: var(--control-touch-sm);
+    min-height: var(--control-touch-sm);
+  }
+  .scene-options select {
+    min-height: var(--control-touch-sm);
+  }
+  /* A control may be drawn at 36 or 40px; a finger still gets 44px: an invisible area reaches past the edges. */
+  .icon-button,
+  .text-button,
+  .primary,
+  .secondary,
+  button:not([class]),
+  .segmented button,
+  .view-switch button,
+  .chip-active,
+  .round,
+  .auto-pill {
+    position: relative;
+  }
+  .icon-button::before,
+  .text-button::before,
+  .primary::before,
+  .secondary::before,
+  button:not([class])::before,
+  .segmented button::before,
+  .view-switch button::before,
+  .chip-active::before,
+  .round::before,
+  .auto-pill::before {
+    content: '';
+    position: absolute;
+    inset: min(0px, calc((100% - var(--target-touch)) / 2));
+  }
+  input[type='checkbox'],
+  input[type='radio'] {
+    width: 22px;
+    height: 22px;
+    flex: none;
+    accent-color: var(--mint);
+  }
+  label:has(> input[type='checkbox']),
+  label:has(> input[type='radio']) {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-8);
+    min-height: var(--control-touch);
+  }
+}
+
+/* Tables that stay tables scroll inside their own box and say so with an edge shadow. */
+.table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  background:
+    linear-gradient(90deg, var(--surface) 30%, transparent) left / 24px 100% no-repeat local,
+    linear-gradient(270deg, var(--surface) 30%, transparent) right / 24px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, var(--shade), transparent) left / 12px 100% no-repeat
+      scroll,
+    radial-gradient(farthest-side at 100% 50%, var(--shade), transparent) right / 12px 100%
+      no-repeat scroll;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

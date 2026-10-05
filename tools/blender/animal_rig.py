@@ -2,7 +2,7 @@
 pose still meets the desk and chair; the face, tail and prop bones are additions."""
 import sys
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'blender' / 'scripts'))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import aokit as ao  # Upstream MIT geometry/rig helpers, attribution retained.
 from mathutils import Vector
 
@@ -12,14 +12,17 @@ FACE_BONES = ['eye', 'joy', 'lid', 'brow']
 MOUTH_BONES = ['smile', 'open', 'oh', 'flat']
 
 
+TAIL_BONES = 5  # a tail bends along its length; five joints make a wave look like one
+
+
 def tail_joints(path):
-    """Four points along the tail's centreline, root to tip, for the three tail bones."""
+    """TAIL_BONES + 1 points along the tail's centreline, root to tip, one pair per tail bone."""
     points = [Vector(p) for p, _ in path]
     if len(points) < 3:
         root = points[0]
-        return [root, root + Vector((0, .1, .01)), root + Vector((0, .2, .02)), root + Vector((0, .3, .03))]
+        return [root + Vector((0, .3 * i / TAIL_BONES, .03 * i / TAIL_BONES)) for i in range(TAIL_BONES + 1)]
     out = []
-    for f in (0.0, 1 / 3, 2 / 3, 1.0):
+    for f in (i / TAIL_BONES for i in range(TAIL_BONES + 1)):
         scaled = f * (len(points) - 1)
         i = min(int(scaled), len(points) - 2)
         out.append(points[i].lerp(points[i + 1], scaled - i))
@@ -38,7 +41,7 @@ def skeleton(lay, tail):
         ('head', (0, 0, 1.065), (0, 0, 1.29), 'neck', True),
     ]
     joints = tail_joints(tail)
-    for i in range(3):
+    for i in range(TAIL_BONES):
         bones.append((f'tail_{i + 1}', tuple(joints[i]), tuple(joints[i + 1]), 'pelvis' if i == 0 else f'tail_{i}', True))
     for side, sign in [('L', 1), ('R', -1)]:
         bones += [

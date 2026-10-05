@@ -26,6 +26,7 @@ export function useSceneNavigation({
   onToggleAuto,
   pulses,
   attention,
+  intensity,
   directing,
   resumeMs,
   selectedId,
@@ -40,6 +41,8 @@ export function useSceneNavigation({
   pulses: readonly Pulse[];
   /** Members that want a person, by id with the reason (see the director). */
   attention: ReadonlyMap<string, string>;
+  /** How hard each working member works, for the director. */
+  intensity: ReadonlyMap<string, number>;
   /** The director is switched on (and motion is allowed). */
   directing: boolean;
   /** How long the camera stays the person's after their last touch before the director takes it back. */
@@ -108,8 +111,8 @@ export function useSceneNavigation({
   }, [layout]);
   const [paused, setPaused] = useState(false);
   const [directed, setDirected] = useState<{ shot: Shot; startedAt: number } | null>(null);
-  const latest = useRef({ agents, seats, pulses, attention });
-  latest.current = { agents, seats, pulses, attention };
+  const latest = useRef({ agents, seats, pulses, attention, intensity });
+  latest.current = { agents, seats, pulses, attention, intensity };
   const shown = useRef(new Map<string, number>());
   const playing = useRef<{ shot: Shot; startedAt: number } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);

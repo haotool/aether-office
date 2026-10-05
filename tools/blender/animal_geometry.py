@@ -8,7 +8,7 @@ import math
 import bmesh
 import bpy
 from mathutils import Euler, Matrix, Vector
-from animal_rig import ao, PROP_REST
+from animal_rig import ao, PROP_REST, TAIL_BONES
 from animal_profiles import PROFILES, UNIFORM
 
 HEAD_CENTRE = (0.0, -0.012, 1.17)
@@ -341,10 +341,68 @@ def ear_parts(P, mats):
     return out
 
 
+def smooth_path(path, per=4):
+    """A centreline through the same points as a smooth curve (Catmull-Rom), `per` samples a span, with the radius
+    carried along: a tail drawn from a few corner points would show them as creases."""
+    if len(path) < 3:
+        return path
+    pts = [Vector(p) for p, _ in path]
+    rad = [r for _, r in path]
+    at = lambda seq, i: seq[max(0, min(len(seq) - 1, i))]
+    out = []
+    for i in range(len(pts) - 1):
+        for s in range(per):
+            t = s / per
+            p0, p1, p2, p3 = (at(pts, i + k) for k in (-1, 0, 1, 2))
+            point = .5 * ((2 * p1) + (p2 - p0) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (3 * p1 - p0 - 3 * p2 + p3) * t ** 3)
+            out.append((tuple(point), rad[i] + (rad[i + 1] - rad[i]) * t))
+    out.append((tuple(pts[-1]), rad[-1]))
+    return out
+
+
+def sweep_tube(bm, path, segs=24):
+    """One smooth tube along a centreline of (point, radius), closed with rounded ends, its rings turned by the least
+    amount from one to the next (a chain of capsules shows a rib at every joint)."""
+    pts = [Vector(p) for p, _ in path]
+    rad = [r for _, r in path]
+    tangents = []
+    for i in range(len(pts)):
+        d = pts[min(i + 1, len(pts) - 1)] - pts[max(i - 1, 0)]
+        tangents.append(d.normalized())
+    rings = []
+    # Rounded ends: three rings that pull in along the tangent like a hemisphere.
+    caps = [math.radians(a) for a in (65, 40, 18)]
+    def ring(centre, r, frame):
+        return [bm.verts.new(centre + (frame @ Vector((math.cos(2 * math.pi * k / segs) * r, math.sin(2 * math.pi * k / segs) * r, 0)))) for k in range(segs)]
+    quat = tangents[0].to_track_quat('Z', 'Y')
+    frames = []
+    for t in tangents:
+        # carry the frame along: the smallest turn taking the last tangent to this one
+        last = quat @ Vector((0, 0, 1))
+        quat = last.rotation_difference(t) @ quat
+        frames.append(quat.to_matrix())
+    root_axis, tip_axis = -tangents[0], tangents[-1]
+    for a in caps:
+        rings.append(ring(pts[0] + root_axis * rad[0] * math.sin(a), rad[0] * math.cos(a), frames[0]))
+    for c, r, f in zip(pts, rad, frames):
+        rings.append(ring(c, r, f))
+    for a in reversed(caps):
+        rings.append(ring(pts[-1] + tip_axis * rad[-1] * math.sin(a), rad[-1] * math.cos(a), frames[-1]))
+    for lo, hi in zip(rings, rings[1:]):
+        for k in range(segs):
+            bm.faces.new((lo[k], lo[(k + 1) % segs], hi[(k + 1) % segs], hi[k]))
+    root = bm.verts.new(pts[0] + root_axis * rad[0])
+    tip = bm.verts.new(pts[-1] + tip_axis * rad[-1])
+    for k in range(segs):
+        bm.faces.new((rings[0][(k + 1) % segs], rings[0][k], root))
+        bm.faces.new((rings[-1][k], rings[-1][(k + 1) % segs], tip))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+
+
 def tail_path(P):
     """The tail's centreline as [(point, radius)], root to tip."""
     kind = P['tail']
-    return {
+    return smooth_path({
         'bush': [((0, .13, .6), .075), ((0, .33, .63), .125), ((0, .53, .72), .15), ((0, .69, .84), .11)],
         'puff': [((0, .16, .6), .085), ((0, .2, .61), .09)],
         'cat': [((0, .13, .6), .045), ((0, .34, .6), .042), ((0, .54, .7), .04), ((0, .62, .88), .04)],
@@ -353,7 +411,7 @@ def tail_path(P):
         'otter': [((0, .13, .6), .1), ((0, .38, .55), .085), ((0, .62, .42), .055), ((0, .76, .33), .03)],
         'wisp': [((0, .03, .52), .2), ((0, .08, .36), .14), ((0, .16, .22), .085), ((0, .27, .1), .03)],
         'none': [((0, .13, .6), .02), ((0, .16, .6), .02)],
-    }[kind]
+    }[kind])
 
 
 def tail_part(P, mats):
@@ -363,7 +421,7 @@ def tail_part(P, mats):
     total = sum(length)
 
     def weights(co):
-        """Blend tail_1..3 by how far along the tail this point is."""
+        """Blend the tail bones by how far along the tail this point is."""
         best, along, run = 1e9, 0.0, 0.0
         for (a, _), (b, _), seg in zip(path, path[1:], length):
             va, vb = Vector(a), Vector(b)
@@ -372,8 +430,7 @@ def tail_part(P, mats):
             if d < best:
                 best, along = d, (run + t * seg) / total
             run += seg
-        centres = (1 / 6, 3 / 6, 5 / 6)
-        w = {f'tail_{i + 1}': max(0.0, 1 - abs(along - c) * 3) for i, c in enumerate(centres)}
+        w = {f'tail_{i + 1}': max(0.0, 1 - abs(along - (i + .5) / TAIL_BONES) * TAIL_BONES) for i in range(TAIL_BONES)}
         total_w = sum(w.values()) or 1.0
         return {k: v / total_w for k, v in w.items() if v > 0}
 
@@ -381,8 +438,7 @@ def tail_part(P, mats):
         if kind == 'puff':
             ao.ellipsoid(bm, (0, .2, .6), (.1, .115, .1), segs=24, rings=16)
             return
-        for (a, ra), (b, rb) in zip(path, path[1:]):
-            ao.limb(bm, a, b, ra, rb, segs=24, rings=14)
+        sweep_tube(bm, path)
 
     tail = mesh_part('tail', mats['fur'], 'tail_1', build, weights)
     patches = []

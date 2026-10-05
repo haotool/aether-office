@@ -3,12 +3,5 @@ dist
 pnpm-lock.yaml
 packages/providers/generated
 assets-source
-/src
-/tests/*.test.ts
-/tests/support
-/blender
 evidence
 docs
-/bin
-/tests/glb.ts
-/vite.config.ts

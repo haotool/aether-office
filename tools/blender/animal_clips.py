@@ -43,12 +43,31 @@ def hold(t, a, b, ramp=.12):
 # ---- Parts of a pose ------------------------------------------------------------------------------
 
 def sit(p, k=1.0):
-    p.move('pelvis', y=-.14 * k, z=-.10 * k)
+    p.move('pelvis', y=-.14 * k, z=-.08 * k)  # world axes: .14 toward the desk, .08 down
     p.turn('chest', 'x', .16 * k)
     p.both('thigh', 'x', -math.pi / 2 * k)
     p.both('shin', 'x', math.pi / 2 * k)
     p.both('upper_arm', 'x', -.60 * k)
     p.both('forearm', 'x', -1.0 * k)
+    for side in 'LR':
+        settle(p, side, k)
+    return p
+
+
+# How an arm rests on the desk once seated: the elbow tucked in under the shoulder (z, mirrored for the right arm),
+# the forearm angled in toward the keyboard, the paw flat. (upper arm z, upper arm x, forearm z, hand x)
+SETTLE = (.3, .05, .15, .45)
+
+
+def settle(p, side, k=1.0, undo=False):
+    """Puts an arm at rest on the desk; with `undo` takes it out again, in the reverse order, so a gesture that is
+    solved against the bare seated pose (see REACH) lands exactly where it was solved."""
+    sign = 1 if side == 'L' else -1
+    upper_z, upper_x, fore_z, hand_x = (v * k for v in SETTLE)
+    steps = [(f'upper_arm_{side}', 'z', sign * upper_z), (f'upper_arm_{side}', 'x', upper_x),
+             (f'forearm_{side}', 'z', sign * fore_z), (f'hand_{side}', 'x', hand_x)]
+    for bone, axis, angle in (reversed(steps) if undo else steps):
+        p.turn(bone, axis, -angle if undo else angle)
     return p
 
 
@@ -58,10 +77,13 @@ def breathe(p, t, n=1, amount=.006):
     return p
 
 
+TAIL_LIFT = (-.03, .08)  # a seated animal's raised tail goes up through the chair back, a drooping one down into the seat
+
+
 def tail(p, t, sway=.2, n=1, lift=0.0, phase=0.0):
-    p.turn('tail_1', 'x', lift)
-    for i, k in enumerate((1.0, .7, .5)):
-        p.turn(f'tail_{i + 1}', 'z', sway * k * wave(t, n, phase - .08 * i))
+    p.turn('tail_1', 'x', max(TAIL_LIFT[0], min(lift, TAIL_LIFT[1])))
+    for i, k in enumerate((1.0, .85, .7, .6, .5)):  # each joint swings a little less and a little later than the one before
+        p.turn(f'tail_{i + 1}', 'z', sway * k * wave(t, n, phase - .05 * i))
     return p
 
 
@@ -135,8 +157,9 @@ def reach(p, side, name, k=1.0):
     if side != solved:
         yaw, spread = -yaw, -spread
     u = f'upper_arm_{side}'
-    p.turn(u, 'y', lerp(0, yaw, k)).turn(u, 'z', lerp(0, spread, k)).turn(u, 'x', lerp(SIT_ARM[0], raise_, k))
-    p.turn(f'forearm_{side}', 'x', lerp(SIT_ARM[3], elbow, k))
+    settle(p, side, k, undo=True)  # solved against the bare seated pose; `sit` has already settled the arm
+    p.turn(u, 'y', lerp(0, yaw, k)).turn(u, 'z', lerp(0, spread, k)).turn(u, 'x', lerp(0, raise_, k))
+    p.turn(f'forearm_{side}', 'x', lerp(0, elbow, k))
     return p
 
 
@@ -282,7 +305,7 @@ def make_clips():
         reach(p, 'R', 'head')
         p.move('pelvis', x=.004 * shake)
         face(p, smile=0.0, oh=1.0)
-        tail(p, t, .05, 5, lift=-.7)
+        tail(p, t, .05, 5, lift=-.25)
         ears(p, t, .02, 5, back=.55)
         return brows(p, .45, .006)
 
@@ -300,10 +323,14 @@ def make_clips():
         return brows(p, -.05, .008)
 
     def celebrate(t):
+        # Seated, like cheer: standing up would put the legs through the hover seat.
         up = max(0.0, wave(t, 2))
-        p = Pose().move('pelvis', z=.07 * up).both('thigh', 'x', -.3 * up).both('shin', 'x', .5 * up)
-        p.both('upper_arm', 'z', -2.5 + .2 * wave(t, 2), mirrored=True).both('forearm', 'z', -.2, mirrored=True)
-        p.turn('head', 'x', -.12)
+        p = sit(Pose())
+        breathe(p, t, 2, .01).move('pelvis', z=.06 * up)
+        reach(p, 'L', 'up')
+        reach(p, 'R', 'up')
+        p.turn('forearm_L', 'x', .25 * wave(t, 2)).turn('forearm_R', 'x', .25 * wave(t, 2, .5))
+        head_turn(p, -.12, 0, .1 * wave(t, 2))
         face(p, eye=0.0, joy=1.0, smile=0.0, open=1.0)
         tail(p, t, .6, 4, lift=.35)
         ears(p, t, .1, 2, out=.2)
@@ -311,12 +338,12 @@ def make_clips():
 
     def sleeping(t):
         p = sit(Pose())
-        p.turn('chest', 'x', .22).turn('neck', 'x', .25).turn('head', 'x', .55).turn('head', 'z', .18)
+        p.turn('chest', 'x', .2).turn('neck', 'x', .15).turn('head', 'x', .4).turn('head', 'z', .18)
         breathe(p, t, 1, .012)
-        arms_forward(p, -1.0, -1.35)
+        arms_forward(p, -.85, -1.2)
         p.move('chest', z=-.02 + .012 * wave(t, 1))
         face(p, eye=0.0, lid=1.0)
-        tail(p, t, .04, 1, lift=-.9)
+        tail(p, t, .04, 1, lift=-.2)
         ears(p, t, .02, 1, back=.7)
         return brows(p, .1, -.004)
 

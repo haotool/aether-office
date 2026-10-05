@@ -2,18 +2,25 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Schedule } from '@aether/contracts';
 import { api, execute } from '../api.js';
+import type { Key } from '../i18n.js';
+import { usePreferences } from '../state.js';
 import { Field, useT } from '../ui.js';
 
-const DAYS = ['日', '一', '二', '三', '四', '五', '六'];
+/** Short weekday names (Sunday first, as the schedule numbers them) in the person's language. */
+function weekdays(locale: string): string[] {
+  const format = new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' });
+  return Array.from({ length: 7 }, (_, day) => format.format(new Date(Date.UTC(2023, 0, 1 + day)))); // 2023-01-01 is a Sunday
+}
 
-function describe(s: Schedule): string {
+function describe(s: Schedule, t: (key: Key) => string, days: string[]): string {
   if (s.spec.kind === 'once') return new Date(s.spec.at).toISOString();
-  if (s.spec.kind === 'daily') return `每日 ${s.spec.time}`;
-  return `每週${s.spec.days.map((d) => DAYS[d]).join('、')} ${s.spec.time}`;
+  if (s.spec.kind === 'daily') return `${t('scheduleDaily')} ${s.spec.time}`;
+  return `${t('scheduleWeekly')} ${s.spec.days.map((d) => days[d]).join(' ')} ${s.spec.time}`;
 }
 
 export function Schedules({ projectId, canManage }: { projectId: string; canManage: boolean }) {
   const t = useT();
+  const days = weekdays(usePreferences((s) => s.locale));
   const client = useQueryClient();
   const [error, setError] = useState('');
   const key = ['schedules', projectId];
@@ -39,7 +46,7 @@ export function Schedules({ projectId, canManage }: { projectId: string; canMana
       <ul className="plain-list">
         {query.data?.schedules.map((s) => (
           <li key={s.id} className="panel">
-            <strong>{s.name}</strong> · {describe(s)} · {s.timezone}
+            <strong>{s.name}</strong> · {describe(s, t, days)} · {s.timezone}
             <br />
             <small>
               {t('scheduleNext')}:{' '}
@@ -100,7 +107,7 @@ export function Schedules({ projectId, canManage }: { projectId: string; canMana
           </Field>
           <fieldset>
             <legend>{t('scheduleDays')}</legend>
-            {DAYS.map((d, i) => (
+            {days.map((d, i) => (
               <label key={d}>
                 <input type="checkbox" name="day" value={i} /> {d}
               </label>

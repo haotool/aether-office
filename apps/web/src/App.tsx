@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { Orbit, X } from 'lucide-react';
 import type { Layout, LocalSessionsResponse, Project, Snapshot } from '@aether/contracts';
-import { api, type Session } from './api.js';
+import { api, forgetCsrf, type Session } from './api.js';
 import { usePreferences } from './state.js';
 import { useT, Empty } from './ui.js';
 import type { Key } from './i18n.js';
@@ -21,6 +21,8 @@ import { QuickPrefs } from './features/QuickPrefs.js';
 import { TabBar } from './features/TabBar.js';
 import { Telemetry } from './features/Telemetry.js';
 import { Topbar } from './features/Topbar.js';
+import { useBeats } from './features/activity-rate.js';
+import { needsYou } from './features/needs-you.js';
 import { officeModel } from './features/office-model.js';
 import { usePhone, usePhoneAny } from './phone.js';
 import { useAdoptRepos } from './adoptProjects.js';
@@ -83,9 +85,21 @@ export function App() {
     queryKey: ['local-sessions'],
     queryFn: () => api<LocalSessionsResponse>('/api/local-sessions'),
     enabled: !!session && ['owner', 'operator'].includes(session.actor.role),
-    refetchInterval: 10000,
+    // Looked at more often while something is working, so how hard it works can be told (activity-rate.ts).
+    refetchInterval: (q) =>
+      q.state.data?.sessions.some((s) => s.hook?.activity === 'working') ? 4000 : 10000,
     retry: false,
   });
+  const beats = useBeats(local.data?.sessions);
+  // Shares the approvals page's cache; looked at every few seconds so the badge on "more" means something.
+  const approvals = useQuery({
+    queryKey: ['approvals', projectId],
+    queryFn: () => api<{ state: string }[]>(`/api/projects/${projectId}/approvals`),
+    enabled: !!session && !!projectId && phone,
+    refetchInterval: 5000,
+    retry: false,
+  });
+  const pendingApprovals = approvals.data?.filter((a) => a.state === 'pending').length ?? 0;
   useAdoptRepos(
     local.data?.sessions,
     session?.actor.role === 'owner' && !!local.data?.enabled,
@@ -111,12 +125,17 @@ export function App() {
     });
     setInspector(true);
   };
+  // A pairing link opened where a session already exists: its code is no use here, and does not stay in the address bar.
+  useEffect(() => {
+    if (session && window.location.hash.startsWith('#pair='))
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+  }, [session]);
   const canWrite = !!session && ['owner', 'operator'].includes(session.actor.role);
   const logout = async () => {
     try {
       await api('/api/logout', { method: 'POST', body: '{}' });
     } finally {
-      sessionStorage.removeItem('aether-csrf');
+      forgetCsrf();
       setSession(null);
       client.clear();
     }
@@ -138,7 +157,8 @@ export function App() {
       />
     );
   const data = snapshot.data;
-  const model = officeModel(data, local.data?.sessions, projectId, prefs.locale);
+  const needs = needsYou(data, pendingApprovals);
+  const model = officeModel(data, local.data?.sessions, projectId, prefs.locale, beats);
   const selected = model.agents.find((a) => a.id === selectedId) ?? null;
   return (
     <div className="application">
@@ -160,8 +180,9 @@ export function App() {
           open={menu}
           projects={projects.data ?? []}
           projectId={projectId}
-          workCount={data?.work.length ?? 0}
-          messageCount={data?.messages.length ?? 0}
+          workCount={needs.tasks}
+          messageCount={needs.messages}
+          approvalCount={needs.more}
           offline={offline}
           onNavigate={() => setMenu(false)}
           onLogout={logout}
@@ -356,7 +377,7 @@ export function App() {
       {phone && (
         <TabBar
           projectId={projectId}
-          counts={{ tasks: data?.work.length ?? 0, messages: data?.messages.length ?? 0 }}
+          counts={needs}
           moreOpen={menu}
           onMore={() => setMenu(!menu)}
         />

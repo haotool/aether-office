@@ -38,15 +38,18 @@ it('keeps implementation and verification separate and shows blockers for anythi
   expect(report).toContain('not a claim of production readiness');
 });
 
-it('docs/FINAL_VERIFICATION.md matches the current feature ledger', () => {
-  const raw = JSON.parse(readFileSync('docs/FEATURES.json', 'utf8')) as
+it('docs/verification/report.md matches the current feature ledger', () => {
+  const raw = JSON.parse(readFileSync('docs/verification/features.json', 'utf8')) as
     Feature[] | { features: Feature[] };
-  const expected = renderReport(Array.isArray(raw) ? raw : raw.features, 'docs/FEATURES.json');
-  expect(readFileSync('docs/FINAL_VERIFICATION.md', 'utf8')).toBe(expected);
+  const expected = renderReport(
+    Array.isArray(raw) ? raw : raw.features,
+    'docs/verification/features.json',
+  );
+  expect(readFileSync('docs/verification/report.md', 'utf8')).toBe(expected);
 });
 
 it('the ledger points only at real files and every pass names its checks', () => {
-  const raw = JSON.parse(readFileSync('docs/FEATURES.json', 'utf8')) as
+  const raw = JSON.parse(readFileSync('docs/verification/features.json', 'utf8')) as
     Feature[] | { features: Feature[] };
   expect(validateLedger(Array.isArray(raw) ? raw : raw.features, existsSync)).toEqual([]);
 });

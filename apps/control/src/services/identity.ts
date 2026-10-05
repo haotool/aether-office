@@ -82,13 +82,20 @@ export function createIdentity(
   });
   return { token, actor: identityActor(ctx, id) };
 }
-export function login(ctx: Context, token: string) {
-  const actor = authenticate(ctx, token);
+/** How long a browser session lasts: a working day, or a month on a device the person chose to remember. */
+export const SESSION_MS = 8 * 60 * 60 * 1000;
+export const REMEMBERED_SESSION_MS = 30 * 24 * 60 * 60 * 1000;
+
+export function login(ctx: Context, token: string, ttlMs = SESSION_MS) {
+  return openSession(ctx, authenticate(ctx, token), ttlMs);
+}
+/** A new session for an identity. Always a fresh id: a session is never carried over from before signing in. */
+export function openSession(ctx: Context, actor: Actor, ttlMs = SESSION_MS) {
   if (actor.role === 'runner' || actor.role === 'agent')
     throw new DomainError('BROWSER_ROLE_REQUIRED', 403);
   const session = secret();
   const csrf = secret();
-  const expiresAt = ctx.now() + 8 * 60 * 60 * 1000;
+  const expiresAt = ctx.now() + ttlMs;
   ctx.sqlite
     .prepare('INSERT INTO browser_sessions VALUES (?,?,?,?)')
     .run(hash(session), actor.id, hash(csrf), expiresAt);

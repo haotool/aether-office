@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Plus, BookOpen } from 'lucide-react';
 import type { Work } from '@aether/contracts';
 import { api, execute } from '../api.js';
-import { Modal, Field, PageHeading, Empty, Badge, useT } from '../ui.js';
+import { Modal, Field, Fold, PageHeading, Empty, Badge, useT } from '../ui.js';
 type Entry = {
   id: string;
   title: string;
@@ -116,43 +116,45 @@ export function Knowledge({
                 </p>
               )}
               {canApprove && entry.classification === 'proposed' && (
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    const decision = (e.nativeEvent as SubmitEvent).submitter?.getAttribute(
-                      'value',
-                    );
-                    if (!decision) return;
-                    const reason = new FormData(e.currentTarget).get('reason');
-                    setBusy(true);
-                    setError('');
-                    try {
-                      await execute(
-                        'knowledge.approve',
-                        { knowledgeId: entry.id, decision, reason },
-                        projectId,
-                        entry.version,
+                <Fold title={t('knowledgeReviewReason')}>
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      const decision = (e.nativeEvent as SubmitEvent).submitter?.getAttribute(
+                        'value',
                       );
-                      await entries.refetch();
-                    } catch (e) {
-                      setError(e instanceof Error ? e.message : 'REQUEST_FAILED');
-                    } finally {
-                      setBusy(false);
-                    }
-                  }}
-                >
-                  <Field label={t('knowledgeReviewReason')}>
-                    <textarea name="reason" required maxLength={2000} />
-                  </Field>
-                  <div className="form-actions">
-                    <button value="reject" className="secondary" disabled={busy}>
-                      {t('knowledgeReject')}
-                    </button>
-                    <button value="approve" className="primary" disabled={busy}>
-                      {t('knowledgeApprove')}
-                    </button>
-                  </div>
-                </form>
+                      if (!decision) return;
+                      const reason = new FormData(e.currentTarget).get('reason');
+                      setBusy(true);
+                      setError('');
+                      try {
+                        await execute(
+                          'knowledge.approve',
+                          { knowledgeId: entry.id, decision, reason },
+                          projectId,
+                          entry.version,
+                        );
+                        await entries.refetch();
+                      } catch (e) {
+                        setError(e instanceof Error ? e.message : 'REQUEST_FAILED');
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
+                  >
+                    <Field label={t('knowledgeReviewReason')}>
+                      <textarea name="reason" required maxLength={2000} />
+                    </Field>
+                    <div className="form-actions">
+                      <button value="reject" className="secondary" disabled={busy}>
+                        {t('knowledgeReject')}
+                      </button>
+                      <button value="approve" className="primary" disabled={busy}>
+                        {t('knowledgeApprove')}
+                      </button>
+                    </div>
+                  </form>
+                </Fold>
               )}
             </article>
           ))}

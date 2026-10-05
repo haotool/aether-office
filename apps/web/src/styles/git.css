@@ -1,0 +1,110 @@
+.git-health h2 {
+  margin-bottom: var(--space-12);
+}
+.readouts-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-20);
+  margin: 0 0 var(--space-12);
+  font-family: var(--mono);
+}
+.readouts-row dt {
+  font-size: var(--fs-label);
+  letter-spacing: 1.4px;
+  color: var(--dim);
+}
+.readouts-row dd {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-variant-numeric: tabular-nums;
+}
+.readouts-row dd.good {
+  color: var(--mint);
+}
+.git-health table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-small);
+}
+.git-health th,
+.git-health td {
+  text-align: left;
+  padding: var(--space-4) var(--space-8);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.git-health tr.reclaimable td:nth-child(2) {
+  color: var(--mint);
+}
+.git-health .table-scroll {
+  max-height: 360px;
+  overflow: auto;
+}
+.git-health .suggestions {
+  max-height: 220px;
+  overflow: auto;
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+  background: var(--bg);
+  padding: var(--space-8);
+}
+
+.git-graph {
+  margin-bottom: var(--space-16);
+}
+.graph-scroll {
+  max-height: 420px;
+  overflow: auto;
+}
+.graph {
+  display: flex;
+  gap: var(--space-6);
+}
+.graph svg {
+  flex-shrink: 0;
+}
+.graph ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  flex: 1;
+}
+.graph li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  font-size: var(--fs-small);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.graph .ref {
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+  padding: 0 var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--mint) 50%, transparent);
+  color: var(--mint);
+  border-radius: var(--r-xs);
+}
+.graph .subject {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.graph .sha {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+  color: var(--dim);
+}
+
+.clean-confirm {
+  margin: 0 0 var(--space-12);
+  padding: var(--space-12);
+  border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line));
+}
+.clean-confirm ul {
+  margin: var(--space-6) 0 var(--space-8);
+}
+.git-health > .secondary {
+  margin-bottom: var(--space-12);
+}
