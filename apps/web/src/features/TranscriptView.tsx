@@ -6,7 +6,9 @@ import { usePreferences } from '../state.js';
 import { useT } from '../ui.js';
 import { pollMs } from './live-link.js';
 import { PendingBubbles } from './PendingBubbles.js';
+import { ThinkingLine } from './ThinkingLine.js';
 import { TurnView } from './TranscriptTurns.js';
+import { turnIds, useFreshIds } from './use-fresh-ids.js';
 import { useLinkLive } from './use-session-stream.js';
 import { anchorOf, groupTurns, newMessagesSince, type Entry } from './turn-groups.js';
 
@@ -65,7 +67,15 @@ export function TranscriptView({
     () => (entries ?? []).filter((e) => e.role === 'user').map((e) => ({ text: e.text, at: e.at })),
     [entries],
   );
+  const ids = useMemo(() => (entries ? turns.flatMap(turnIds) : null), [entries, turns]);
+  const arrived = useFreshIds(sessionKey, ids);
+  const isFresh = (id: string) => !still && arrived(id);
+  const last = turns.at(-1)?.blocks.at(-1);
+  // A running tool group has its own live state; otherwise a working session shows the "working" line.
+  const showThinking =
+    working && !(last?.type === 'tools' && last.calls.some((c) => c.result === null));
   const scroller = useRef<HTMLDivElement>(null);
+  const loaded = useRef(false);
   const following = useRef(true);
   const anchor = useRef<string | null>(null);
   // A smooth scroll to the newest message is under way: its in-between positions are not "scrolled away".
@@ -78,11 +88,15 @@ export function TranscriptView({
     const el = scroller.current;
     if (!el || !entries) return;
     if (following.current) {
-      el.scrollTop = el.scrollHeight;
+      // The first look lands at the bottom at once; what arrives later is followed with a short glide.
+      const glide = loaded.current && !still;
+      jumping.current = glide && el.scrollHeight - el.scrollTop - el.clientHeight > NEAR_BOTTOM_PX;
+      el.scrollTo({ top: el.scrollHeight, behavior: glide ? 'smooth' : 'auto' });
       anchor.current = anchorOf(entries);
       setUnseen(0);
     } else setUnseen(newMessagesSince(entries, anchor.current));
-  }, [entries]);
+    loaded.current = true;
+  }, [entries, still]);
 
   const onScroll = () => {
     const el = scroller.current;
@@ -122,9 +136,17 @@ export function TranscriptView({
       >
         {query.data?.truncated && <p className="conv-note">{t('convTrimmed')}</p>}
         {turns.map((turn, i) => (
-          <TurnView key={`${turn.id}:${i}`} turn={turn} />
+          <TurnView
+            key={`${turn.id}:${i}`}
+            turn={turn}
+            isFresh={isFresh}
+            newest={i === turns.length - 1}
+          />
         ))}
         <PendingBubbles sessionKey={sessionKey} prompts={prompts} />
+        {showThinking && (
+          <ThinkingLine key={prompts.at(-1)?.at ?? 0} since={prompts.at(-1)?.at ?? null} />
+        )}
         {!turns.length && <p className="conv-note">{t('convEmpty')}</p>}
         {children}
       </div>

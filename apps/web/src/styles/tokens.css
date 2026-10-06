@@ -16,8 +16,6 @@
   --gold-border: #6b5320;
   --red: #ff7a85;
   --glow: #43e6df47;
-  --aura-a: #0d3a5c55;
-  --aura-b: #2a1b6a40;
   --shadow: 0 10px 34px #00000066;
   --grid: #2f4a6112;
   /* Type floor: no visible text under --fs-label (uppercase mono tags) or --fs-small (everything readable). */
@@ -27,6 +25,11 @@
   /* Pointer targets: 44px for a finger (WCAG 2.5.5, Apple HIG), 32px for a mouse. */
   --target-touch: 44px; /* the area a finger can hit; a control may look smaller and extend its hit area to this */
   --control-touch: 40px; /* a button or field as drawn on a touch screen */
+  --avatar-chip: 28px; /* a portrait: in a chip, a row, a member, the peek, a card */
+  --avatar-row: 32px;
+  --avatar-member: 36px;
+  --avatar-peek: 40px;
+  --avatar-card: 44px;
   --control-touch-sm: 36px; /* an icon button, a segment, a chip */
   --target-fine: 32px;
   --safe-top: env(safe-area-inset-top, 0px);
@@ -104,6 +107,9 @@
   --on-accent: #02161c;
   --on-gold: #1d1500;
   --white: #fff;
+  /* Provider marks (identification only): Claude's orange, and Codex's near-white (graphite on a light page) */
+  --provider-claude: #d97757;
+  --provider-codex: #e8f2f8;
   /* Shadows and scrims */
   --scrim: #0008;
   --shade: #0006;
@@ -140,8 +146,8 @@
   --gold-border: #d0a65b;
   --red: #b3222f;
   --glow: #00a3b030;
-  --aura-a: #b7dcf655;
-  --aura-b: #d6cdfa55;
   --shadow: 0 10px 30px #1b3a5a1f;
   --grid: #1f4a7a14;
+  --provider-claude: #c4572f;
+  --provider-codex: #2a3744;
 }

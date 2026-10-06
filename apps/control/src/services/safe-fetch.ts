@@ -43,11 +43,11 @@ export function isPublicAddress(ip: string): boolean {
   );
 }
 
-export type Resolver = (host: string) => Promise<string[]>;
+type Resolver = (host: string) => Promise<string[]>;
 const systemResolver: Resolver = async (host) =>
   (await dnsLookup(host, { all: true })).map((r) => r.address);
 
-export type FetchInit = {
+type FetchInit = {
   method?: 'GET' | 'POST';
   headers?: Record<string, string>;
   body?: string;

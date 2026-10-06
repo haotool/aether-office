@@ -6,19 +6,19 @@ import { redactSecrets } from './redaction.js';
 import { MAX_RULES, MAX_RULE_CHARS } from '@aether/providers/approval-config';
 import { cut, summarize } from './permission-summary.js';
 
-export const MAX_PENDING = 20;
-export const MAX_PENDING_PER_SESSION = 5;
+const MAX_PENDING = 20;
+const MAX_PENDING_PER_SESSION = 5;
 export const MAX_REMEMBERED = 100;
-export const CREATES_PER_MINUTE = 60;
-export const MIN_WAIT_MS = 5_000;
-export const MAX_WAIT_MS = 120_000;
+const CREATES_PER_MINUTE = 60;
+const MIN_WAIT_MS = 5_000;
+const MAX_WAIT_MS = 120_000;
 /** A closed request stays readable this long, so a hook that polls a moment late still gets its answer. */
 const KEEP_CLOSED_MS = 5 * 60_000;
 
 export type Decision = { behavior: 'allow' | 'deny'; sessionRules: boolean; message?: string };
 type Entry = PermissionRequestView & { projectId: string; decision: Decision | null };
 
-export type NewRequest = {
+type NewRequest = {
   sessionKey: string;
   projectId: string;
   tool: string;
@@ -158,4 +158,3 @@ export function createPermissionRequests(now: () => number) {
     },
   };
 }
-export type PermissionRequests = ReturnType<typeof createPermissionRequests>;

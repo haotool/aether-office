@@ -47,7 +47,7 @@ type Row = {
 };
 
 export type SyncOptions = { policy?: FetchPolicy; env?: Record<string, string | undefined> };
-export type SyncResult = { imported: number; updated: number; conflicts: number };
+type SyncResult = { imported: number; updated: number; conflicts: number };
 
 const hashOf = (issue: Pick<ExternalIssue, 'title' | 'body'>) =>
   createHash('sha256').update(`${issue.title}\0${issue.body}`).digest('hex');
@@ -200,7 +200,7 @@ export async function syncConnection(
           { workId: string; contentHash: string; conflict: number } | undefined;
         if (!link) {
           const key = `integration:${row.id}:${issue.externalId}`;
-          const created = createWork(ctx, actor, {
+          const created = createWork(ctx, {
             schemaVersion: 1,
             type: 'work.create',
             projectId,

@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { Send, MessageSquare, ArrowUpRight } from 'lucide-react';
 import type { MessageWait, Snapshot } from '@aether/contracts';
 import { api, execute } from '../api.js';
-import { Empty, Field, Badge, PageHeading, AvatarIcon, useT } from '../ui.js';
+import { Empty, Field, Badge, PageHeading, useT } from '../ui.js';
+import { Avatar } from './Avatar.js';
 import { useRooms } from './Rooms.js';
 export function Messages({
   snapshot,
@@ -43,10 +44,9 @@ export function Messages({
                   const sender = snapshot.agents.find((a) => a.id === message.senderId);
                   return (
                     <article className="message" key={message.id}>
-                      <AvatarIcon
+                      <Avatar
+                        seed={sender?.id ?? message.senderId}
                         species={sender?.species ?? 'human'}
-                        color={sender?.color ?? '#8ababd'}
-                        name={sender?.name ?? t('you')}
                       />
                       <div className="message-content">
                         <header>

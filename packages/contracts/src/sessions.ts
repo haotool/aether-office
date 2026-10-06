@@ -37,19 +37,26 @@ export const localSessionSchema = z.object({
   subagents: z.array(z.object({ id: z.string(), type: z.string(), lastSeen: z.number() })),
   // The title the provider itself gave the session (Claude ai-title, Codex thread_name); null when it has none.
   title: z.string().nullable(),
-  // Which engineering role the session's work belongs to, and what that rests on. Decided on the server; the
-  // text it was decided from is never sent.
+  // Which engineering role the session's work belongs to, how sure that is (0 to 1) and why: the strongest reasons as
+  // short redacted `kind: detail` strings (a matched keyword, a kind of file or command), never the text they came from.
+  // Decided on the server; a session with no clear signal is a generalist.
   classification: z.object({
     role: z.string(),
     department: z.string(),
-    basis: z.enum(['title', 'prompt', 'context', 'default']),
-    matched: z.string().nullable(),
+    confidence: z.number().min(0).max(1),
+    evidence: z.array(z.string().max(80)).max(5),
   }),
   // Model and context size from the transcript tail; null when it cannot be read, never zero.
   usage: z.object({
     model: z.string().nullable(),
     contextTokens: z.number().nullable(),
+    // The window the context is measured against: Codex's own figure, else the catalog's, else Claude's 200k (1M for a
+    // `[1m]` model or a context already past 200k). Null while unknown.
     contextWindow: z.number().nullable(),
+    // Share of the window in use, 0 to 100, bounded; null while either side is unknown, never invented.
+    contextPct: z.number().min(0).max(100).nullable(),
+    // When the CLI itself last wrote a compaction marker in the transcript tail (epoch ms); null when it has not.
+    compactedAt: z.number().nullable(),
     // Tokens the session processed that the prompt cache did not already hold (cache reads are left out: the same
     // context is read again every turn, so counting it would make a long session look a hundred times bigger).
     freshTokens: z.number().nullable(),

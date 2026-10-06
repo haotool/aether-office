@@ -188,10 +188,7 @@ export function Sessions({
               {rows.slice(0, shown).map((s) => {
                 const commands = sessionCommands(s);
                 const role = ROLE_LABELS[s.classification.role as RoleId];
-                const window =
-                  s.usage.contextWindow && s.usage.contextTokens !== null
-                    ? Math.round((s.usage.contextTokens / s.usage.contextWindow) * 100)
-                    : null;
+                const window = s.usage.contextPct === null ? null : Math.round(s.usage.contextPct);
                 return (
                   <tr key={s.key}>
                     <td title={s.cwd}>

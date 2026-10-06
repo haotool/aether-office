@@ -1,4 +1,5 @@
 import { stat } from 'node:fs/promises';
+import { toPlainPreview } from '@aether/kernel';
 import { readEdge } from './file-edge.js';
 import { redactSecrets } from './redaction.js';
 
@@ -14,8 +15,7 @@ const TITLE_LENGTH = 80;
 /** Pure. A title made from a task's opening words, for a session whose provider gave it none. */
 export function topicTitle(topic: string | null): string | null {
   if (!topic) return null;
-  const text = redactSecrets(topic).trim();
-  return text.length > TITLE_LENGTH ? `${text.slice(0, TITLE_LENGTH)}…` : text || null;
+  return toPlainPreview(redactSecrets(topic), { maxChars: TITLE_LENGTH + 1 }) || null;
 }
 
 const clip = (v: unknown) =>

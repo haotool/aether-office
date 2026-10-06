@@ -29,7 +29,8 @@ export const lookY = (floor: number, exploded: boolean) =>
 export const OVERVIEW = (exploded: boolean): [number, number, number] =>
   exploded ? [62, 44, 82] : [30, 34, 44];
 export const AGENT_OFFSET: [number, number, number] = [3.4, 3.0, 4.6];
-export const FOLLOW_OFFSET: [number, number, number] = [2.4, 2.1, 3.4];
+/** Following a member: far enough that its name tag, a metre over its head, stays on screen. */
+export const FOLLOW_OFFSET: [number, number, number] = [3.2, 2.9, 4.4];
 export const ZONE_OFFSET: [number, number, number] = [14, 12, 17];
 
 /** Activities in which a member is doing something: they get a lit screen and a flowing branch beam, and are visited by the tour. */

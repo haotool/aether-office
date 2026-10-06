@@ -24,7 +24,10 @@ export function PhoneOffice({
   canWrite,
   sessions,
   owner,
+  covered,
   onSelect,
+  onOpen,
+  onFeed,
   onFocus,
   onTour,
   onNewTask,
@@ -40,7 +43,11 @@ export function PhoneOffice({
   canWrite: boolean;
   sessions: readonly AttributedSession[];
   owner: boolean;
+  /** The full-height sheet hides the scene. */
+  covered: boolean;
   onSelect: (id: string) => void;
+  onOpen: (id: string) => void;
+  onFeed: (id: string) => void;
   onFocus: (focus: string) => void;
   onTour: (action: TourAction) => void;
   onNewTask: () => void;
@@ -55,6 +62,7 @@ export function PhoneOffice({
     <div className="phone-office">
       <SceneView
         compact
+        covered={covered}
         data={data}
         model={model}
         selectedId={selectedId}
@@ -63,6 +71,8 @@ export function PhoneOffice({
         unread={unread}
         canWrite={canWrite}
         onSelect={onSelect}
+        onOpen={onOpen}
+        onFeed={onFeed}
         onTour={onTour}
         onNotice={onNotice}
         onRefresh={onRefresh}

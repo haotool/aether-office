@@ -4,7 +4,7 @@ import type { StalkCommit, Tier, TierShape } from './stalk-types.js';
 export const COMMITS_PER_TIER = 12;
 export const MAX_TIERS = 12;
 /** Open air between the roof and the first tier's flower. */
-export const CROWN_GAP = 6;
+const CROWN_GAP = 6;
 export const TIER_HEIGHT = 3.4;
 export const SPIRE_HEIGHT = 14;
 
@@ -12,12 +12,12 @@ export const SPIRE_HEIGHT = 14;
 export const crownTop = (roof: number, tiers: number) =>
   roof + CROWN_GAP + tiers * TIER_HEIGHT + SPIRE_HEIGHT;
 /** Each tier a little smaller than the one under it, so the crown tapers into the spire. */
-export const tierRadius = (index: number) => Math.max(7.5, 20 - 1.1 * index);
+const tierRadius = (index: number) => Math.max(7.5, 20 - 1.1 * index);
 const runSize = (commits: number) => Math.max(COMMITS_PER_TIER, Math.ceil(commits / MAX_TIERS));
 export const tierCount = (commits: number) => Math.ceil(commits / runSize(commits));
 
 /** The kind of history a tier holds follows what happened in it: merges, then many hands, then parallel branches; otherwise it alternates. */
-export function shapeOf(
+function shapeOf(
   index: number,
   stats: { merges: number; authors: number; branches: number },
 ): TierShape {

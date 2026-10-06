@@ -64,3 +64,9 @@ export function writeSteps(
 
 /** A request that failed because the network is down, not because the server said no. */
 export const isNetworkError = (error: unknown): boolean => error instanceof TypeError;
+
+/** Ends the AETHER terminal (the process in it): the epoch is read fresh, so a takeover by someone else in between is refused. */
+export async function stopTerminal(projectId: string, terminalId: string): Promise<void> {
+  const now = await api<TerminalControl>(`/api/projects/${projectId}/terminals/${terminalId}`);
+  await execute('terminal.stop', { terminalId, epoch: now.controlEpoch }, projectId);
+}

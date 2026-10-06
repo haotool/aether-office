@@ -3,12 +3,30 @@ import { spawnSync } from 'node:child_process';
 import { readFile, writeFile, readdir, copyFile, cp } from 'node:fs/promises';
 import { brotliCompressSync, constants, gzipSync } from 'node:zlib';
 import { join } from 'node:path';
+import { precacheUrls, shellVersion } from './sw-precache.ts';
 function run(args, cwd = process.cwd()) {
   const result = spawnSync(process.execPath, args, { cwd, stdio: 'inherit' });
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 run(['node_modules/typescript/bin/tsc', '--noEmit']);
 run(['node_modules/vite/bin/vite.js', 'build'], 'apps/web');
+// The service worker, with the page and its hashed files to keep (see apps/web/src/sw). Written before the files are
+// pre-compressed so that it gets a .br and a .gz like the rest.
+const shell = precacheUrls(await readdir('apps/web/dist', { recursive: true }));
+await build({
+  entryPoints: ['apps/web/src/sw/sw.ts'],
+  bundle: true,
+  minify: true,
+  format: 'iife',
+  target: 'es2022',
+  outfile: 'apps/web/dist/sw.js',
+  define: {
+    PRECACHE: JSON.stringify(shell),
+    VERSION: JSON.stringify(
+      shellVersion(shell, await readFile('apps/web/dist/index.html', 'utf8')),
+    ),
+  },
+});
 // Next to every text and model file of the web build, a .br and a .gz copy for the server to hand out as they are
 // (@fastify/static preCompressed). A phone on Wi-Fi gets the 3D engine in 280 KB instead of 1 MB, a character in 290 KB
 // instead of 970 KB. Only a copy that is smaller is kept.

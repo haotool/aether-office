@@ -60,7 +60,7 @@ export function parseHudCache(text: string, now: number): ClaudeLimits | null {
 }
 
 /** Where the plugin keeps its cache: next to Claude Code's own config, or wherever AETHER_CLAUDE_USAGE_FILE points. */
-export const usageCacheFile = () =>
+const usageCacheFile = () =>
   process.env['AETHER_CLAUDE_USAGE_FILE'] ??
   join(
     process.env['CLAUDE_CONFIG_DIR'] ?? join(homedir(), '.claude'),

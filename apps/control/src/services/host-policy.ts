@@ -25,7 +25,7 @@ export function isLanHostname(hostname: string): boolean {
   return name === 'localhost' || /^[a-z0-9-]+(\.[a-z0-9-]+)*\.local$/.test(name);
 }
 
-export type HostPolicy = {
+type HostPolicy = {
   host: (header: string | undefined) => boolean;
   origin: (header: string | undefined) => boolean;
 };

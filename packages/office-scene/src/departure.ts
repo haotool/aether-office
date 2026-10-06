@@ -58,7 +58,7 @@ const shortest = (a: number, b: number) =>
 type Desk = Pick<Layout['objects'][number], 'x' | 'z' | 'rotation'>;
 
 /** The way from a desk's chair to the elevator core. Walks straight when no way is found: it is only a picture. */
-export function planDeparture(grid: NavGrid, desk: Desk): Departure {
+function planDeparture(grid: NavGrid, desk: Desk): Departure {
   const deskYaw = (desk.rotation * Math.PI) / 2;
   const seat = {
     x: desk.x + SEAT_DEPTH * Math.sin(deskYaw),

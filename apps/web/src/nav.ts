@@ -32,7 +32,7 @@ export const nav = [
 ] as const;
 
 /** The pages by what a person comes for: doing the work, keeping watch, looking after the system. */
-export const navGroups = [
+const navGroups = [
   ['groupWork', ['office', 'agents', 'tasks', 'messages']],
   ['groupWatch', ['reviews', 'approvals', 'sessions', 'observations']],
   ['groupSystem', ['workspace', 'terminals', 'knowledge', 'machines', 'history', 'settings']],

@@ -1,0 +1,199 @@
+/*
+ * What an agent's reply is made of once rendered (features/Markdown.tsx): headings, nested lists, tables, quotes, links, the
+ * word-by-word reveal of a reply that just arrived, the entrance of new messages, the fold on a long message and the
+ * "working" line. Messages themselves are transcript.css; code blocks and tool chips transcript-tools.css.
+ */
+.markdown .md-heading {
+  margin: var(--space-12) 0 var(--space-4);
+  line-height: 1.35;
+}
+.markdown .md-heading:first-child {
+  margin-top: 0;
+}
+.markdown .md-heading.level-1,
+.markdown .md-heading.level-2 {
+  font-size: var(--fs-lead);
+  letter-spacing: 0.2px;
+}
+.markdown .md-heading.level-3 {
+  font-size: var(--fs-body);
+}
+.markdown .md-heading.level-4,
+.markdown .md-heading.level-5,
+.markdown .md-heading.level-6 {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--fs-small);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+/* A line break in a paragraph is a line break: agents write their lists and steps that way */
+.markdown p {
+  white-space: pre-wrap;
+}
+.markdown ul ul,
+.markdown ol ul,
+.markdown ul ol,
+.markdown ol ol {
+  margin: var(--space-2) 0 var(--space-4);
+}
+.markdown li {
+  margin: var(--space-2) 0;
+  white-space: pre-wrap;
+}
+.markdown li::marker {
+  color: var(--mint);
+}
+.markdown li.task {
+  list-style: none;
+  margin-left: calc(var(--space-20) * -1);
+}
+.md-task {
+  display: inline-block;
+  width: var(--space-20);
+  color: var(--mint);
+}
+.markdown blockquote {
+  margin: 0 0 var(--space-8);
+  padding: var(--space-2) var(--space-12);
+  border-left: 2px solid var(--glass-accent-line);
+  color: var(--muted);
+}
+.markdown hr {
+  height: 1px;
+  margin: var(--space-12) 0;
+  border: 0;
+  background: linear-gradient(90deg, var(--glass-accent-line), transparent);
+}
+.markdown a {
+  color: var(--blue);
+  text-decoration: underline;
+  text-decoration-color: var(--glass-accent-line);
+  text-underline-offset: 2px;
+}
+.markdown del {
+  color: var(--dim);
+}
+.md-table {
+  max-width: 100%;
+  margin: 0 0 var(--space-8);
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+.md-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-small);
+}
+.md-table th,
+.md-table td {
+  padding: var(--space-4) var(--space-8);
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.md-table th {
+  background: var(--raised);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+  letter-spacing: 0.6px;
+  white-space: nowrap;
+}
+.md-table tr:last-child td {
+  border-bottom: 0;
+}
+
+/* A reply that has just arrived: its words fade in one after another (the delay is set per word) */
+.markdown .w {
+  animation: word-in 0.32s var(--ease) both;
+}
+@keyframes word-in {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+/* A message that arrives while you watch: a short rise and fade, never for what was there when it opened */
+.msg.enter,
+.tool-group.enter {
+  animation: msg-in 0.16s var(--ease) both;
+}
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* A long message: folded to a fixed height with a fade and a toggle */
+.long {
+  position: relative;
+}
+.long-body {
+  min-width: 0;
+}
+.long.folded .long-body {
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, black calc(100% - var(--space-48)), transparent);
+}
+.long-toggle {
+  margin-top: var(--space-4);
+  padding: var(--space-2) var(--space-8);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+  letter-spacing: 0.6px;
+}
+@media (hover: hover) {
+  .long-toggle:hover {
+    border-color: var(--glass-accent-line);
+    color: var(--text);
+  }
+}
+@media (pointer: coarse) {
+  .long-toggle {
+    min-height: var(--control-touch-sm);
+  }
+}
+
+/* "Working · 12s": the session is at work and has said nothing new yet */
+.thinking-line {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-8);
+  margin: 0;
+  padding-left: var(--space-12);
+  color: var(--muted);
+  font-size: var(--fs-small);
+}
+.thinking-line .shimmer {
+  background: linear-gradient(110deg, var(--muted) 35%, var(--mint) 50%, var(--muted) 65%) 0 0 /
+    300% 100% no-repeat;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: text-shimmer 2.2s linear infinite;
+}
+.thinking-line time {
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+}
+@keyframes text-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thinking-line .shimmer {
+    background: none;
+    color: var(--muted);
+  }
+}

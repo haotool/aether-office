@@ -24,7 +24,7 @@ export type Probe = {
   list: (directory: string) => string[];
 };
 
-export const realProbe: Probe = {
+const realProbe: Probe = {
   run: (command, args) => {
     const result = spawnSync(command, args, { encoding: 'utf8', timeout: 8000 });
     if ((result.error as NodeJS.ErrnoException | undefined)?.code === 'ENOENT')

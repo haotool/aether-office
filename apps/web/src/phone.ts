@@ -1,9 +1,9 @@
 import { useSyncExternalStore } from 'react';
 
 /** A portrait phone: one column, a tab bar at the thumb, the 3D office filling the screen. */
-export const PHONE_QUERY = '(max-width: 760px) and (min-height: 501px)';
+const PHONE_QUERY = '(max-width: 760px) and (min-height: 501px)';
 /** Anything that gets the phone layout, including a phone on its side (no tab bar there: the height is too short). */
-export const PHONE_ANY_QUERY = '(max-width: 760px), (pointer: coarse) and (max-height: 500px)';
+const PHONE_ANY_QUERY = '(max-width: 760px), (pointer: coarse) and (max-height: 500px)';
 
 function watch(query: string) {
   const media = window.matchMedia(query);

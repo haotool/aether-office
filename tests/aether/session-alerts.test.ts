@@ -91,3 +91,12 @@ it('says only the project name and opens the session; shows an in-page notice wi
   );
   expect(long?.body).toHaveLength(60);
 });
+
+it('keeps Markdown out of an alert, whatever the project is called', () => {
+  const [alert] = planAlerts(
+    [{ ...event('needs-you', null), project: '**my** `repo` [x](https://a.test)' }],
+    { notify: true, hidden: true, permission: 'granted' },
+    labels,
+  );
+  expect(alert?.body).toBe('my repo x');
+});

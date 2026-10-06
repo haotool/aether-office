@@ -1,7 +1,10 @@
 import { CanvasTexture, SRGBColorSpace } from 'three';
 import type { DepartmentId } from '@aether/kernel';
-import { PALETTE, SCREEN_H, SCREEN_W, frame, label, tile } from './screens.js';
-import { elapsedLabel, hashOf, kindOf, type ToolCall } from './screen-work.js';
+import { PALETTE, SCREEN_H, SCREEN_W, frame, label, tile } from './screen-draw.js';
+import { contextLevel } from './context.js';
+import { drawMark } from './provider-marks.js';
+import { hashText } from './random.js';
+import { elapsedLabel, kindOf, type ToolCall } from './screen-work.js';
 
 /**
  * What a member's own screen shows when the scene knows what the member is really doing: the session's title, where
@@ -41,7 +44,7 @@ const STATE: Record<ScreenFacts['state'], { text: string; color: string }> = {
   unknown: { text: '—', color: PALETTE.dim },
 };
 /** How each department's screen is dressed: a title for the work, and the ambient pattern drawn behind and beside the facts. */
-export const SCREEN_THEME: Record<
+const SCREEN_THEME: Record<
   DepartmentId,
   { title: string; pattern: 'code' | 'pipeline' | 'checks' | 'chart' | 'board' }
 > = {
@@ -138,7 +141,7 @@ function row(
 ) {
   const kind = kindOf(call);
   const name = call.target ?? call.tool;
-  const h = hashOf(name);
+  const h = hashText(name); // the same call always draws the same bars
   const base = y + 18;
   const cursor = live && blink ? ' ▌' : '';
   g.font = `17px ${MONO}`;
@@ -228,6 +231,7 @@ function lock(g: CanvasRenderingContext2D, f: ScreenFacts) {
     cx,
     268,
   );
+  if (f.contextPercent !== null) g.fillText(`context ${Math.round(f.contextPercent)}%`, cx, 294);
   g.textAlign = 'left';
 }
 
@@ -247,6 +251,7 @@ function draw(
   blink: boolean,
 ) {
   frame(g, `${SCREEN_THEME[theme].title} · ${f.provider}`, accent);
+  drawMark(g, f.provider, SCREEN_W - 30, 5, 20);
   if (f.state !== 'working' && f.state !== 'waiting_permission') return lock(g, f);
   ambient(g, theme, accent);
 
@@ -296,7 +301,9 @@ function draw(
   if (f.contextPercent !== null) {
     const percent = Math.max(0, Math.min(100, f.contextPercent));
     tile(g, LEFT, 374, WIDTH, 12);
-    g.fillStyle = percent >= 85 ? PALETTE.red : percent >= 60 ? PALETTE.amber : PALETTE.green;
+    g.fillStyle = { calm: PALETTE.green, warm: PALETTE.amber, hot: PALETTE.red }[
+      contextLevel(percent)
+    ];
     g.fillRect(LEFT + 2, 376, ((WIDTH - 4) * percent) / 100, 8);
     label(g, `${Math.round(percent)}% ${f.model ?? ''}`.trim(), LEFT, 399, PALETTE.dim, 12);
   }

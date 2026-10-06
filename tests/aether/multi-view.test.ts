@@ -140,4 +140,49 @@ describe('the director with many busy members', () => {
     expect(shot('a')!.subjects).toEqual(['a']);
     expect(shot('b')!.subjects).toEqual(['b']);
   });
+
+  describe('members pinned to the wall by the person', () => {
+    const none = { intensity: new Map<string, number>(), previous: [] };
+    it('always get a view, busy or not, even alone and even when the main camera is on them', () => {
+      const feeds = chooseFeeds({
+        agents: [agent('e', 'idle'), agent('f', 'idle')],
+        seats,
+        ...none,
+        taken: new Set(['e']),
+        pinned: new Set(['e']),
+      });
+      expect(feeds.map((f) => f.id)).toEqual(['e']); // idle, a single view, and the member is the main shot
+    });
+
+    it('come before the busy ones and take their places when the wall is short', () => {
+      const feeds = chooseFeeds({
+        agents,
+        seats,
+        ...none,
+        taken: new Set(),
+        pinned: new Set(['e']),
+        max: 2,
+      });
+      expect(feeds.map((f) => f.id)).toEqual(['e', 'a']);
+    });
+
+    it('are left out when their floor is not drawn', () => {
+      const upstairs = new Map(seats).set('e', { x: 0, z: 0, floor: 2, rotation: 0 });
+      const feeds = chooseFeeds({
+        agents,
+        seats: upstairs,
+        ...none,
+        taken: new Set(),
+        pinned: new Set(['e']),
+        floor: 0,
+      });
+      expect(feeds.map((f) => f.id)).not.toContain('e');
+    });
+
+    it('get nothing when the canvas has no room for a wall', () => {
+      expect(
+        chooseFeeds({ agents, seats, ...none, taken: new Set(), pinned: new Set(['e']), max: 0 }),
+      ).toEqual([]);
+    });
+  });
 });

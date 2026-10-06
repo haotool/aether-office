@@ -19,7 +19,7 @@ describe('classifySession', () => {
     ['Plan the Q4 roadmap and prioritise the backlog', 'product-manager', 'leadership'],
     ['Research and compare three vector databases', 'research', 'leadership'],
     ['修正前端畫面樣式', 'frontend', 'product'],
-    ['調研業界的授權做法', 'security', 'quality'],
+    ['調研業界的授權做法', 'research', 'leadership'],
     ['部署到測試環境', 'platform', 'platform'],
     // Misreadings found by checking real sessions: provider names, "report" and a fused "CICD".
     ['Exchange nonces with Codex', 'generalist', 'product'],
@@ -28,25 +28,20 @@ describe('classifySession', () => {
     ['pm-conductor 專案進度', 'product-manager', 'leadership'],
     ['Build a KPI dashboard for signups', 'analytics', 'data'],
   ])('%s → %s', (title, role, department) => {
-    expect(classifySession({ title })).toMatchObject({
-      role,
-      department,
-      basis: role === 'generalist' ? 'default' : 'title',
-    });
+    expect(classifySession({ title })).toMatchObject({ role, department });
   });
 
-  it('falls back to the branch and repository, and then to an honest default', () => {
+  it('falls back to the branch and repository, and then to an honest generalist', () => {
     expect(classifySession({ title: null, branch: 'fix/login-csrf', repo: 'web' })).toMatchObject({
       role: 'security',
-      basis: 'context',
     });
     expect(classifySession({ title: 'hello', branch: 'main', repo: 'notes' })).toEqual({
       role: 'generalist',
       department: 'product',
-      basis: 'default',
-      matched: null,
+      confidence: 0,
+      evidence: ['no clear signal'],
     });
-    expect(classifySession({})).toMatchObject({ basis: 'default' });
+    expect(classifySession({})).toMatchObject({ role: 'generalist' });
   });
 
   it('keeps the organisation consistent: every role belongs to the department that lists it', () => {

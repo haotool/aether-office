@@ -52,13 +52,28 @@ Hooks tell AETHER when a session starts a tool, waits for approval or runs a sub
 
 ```sh
 pnpm hooks install --project /path/to/repo   # writes .claude/settings.local.json in that repository
+pnpm hooks status  --project /path/to/repo
 pnpm hooks remove  --project /path/to/repo
 ```
+
+Add `--provider codex` for Codex's hooks (`.codex/hooks.json`; Codex asks you to trust them with `/hooks`).
 
 `--scope user` edits `~/.claude/settings.json` and affects every session on the machine; it is never the default. The
 receiver records only session ids, event names, tool names, the working directory and a short target of a tool call (a
 file's base name, a command's first word and a plain subcommand such as `git push`, a URL's host) in
 `~/.aether/hook-events.jsonl`, never prompts, full commands, arguments, paths or other tool inputs.
+
+### Answer Claude Code permission prompts from the browser (optional)
+
+Remote approvals is off by default. To use it, sign in as the owner, switch it on in Settings, then install the extra hook:
+
+```sh
+pnpm hooks install --remote-approvals [--wait <seconds>]   # Claude Code only; default wait 45 s
+```
+
+A permission prompt is then also shown as a card in the session panel and on the phone. Answering from a phone on plain HTTP
+over the network is refused unless you use HTTPS (for example a Tailscale tunnel) or set `AETHER_REMOTE_APPROVALS_LAN=1`. The
+full model is in [security](security.md#safety-properties).
 
 ## Connect a phone by scanning a QR code
 
@@ -90,6 +105,62 @@ It prints the addresses to open (for example `http://192.168.1.20:4310`). Sign i
 accepted only when addressed to a private-network address on the same port, so a public DNS name pointing at your
 machine is refused (this is what stops DNS rebinding). The connection is plain HTTP and the token crosses the network
 unencrypted: use a network you trust, or put a TLS tunnel such as Tailscale in front. See [security](security.md).
+
+## Upgrading
+
+Pull, then `pnpm install --frozen-lockfile` and `pnpm build`, and **restart the control plane** (`pnpm start`). The running
+server keeps the code it started with, so until it is restarted it answers an updated page in the older shape. After an update that changes
+Remote approvals, switch it off and on again in Settings and reinstall the hook (`pnpm hooks install --remote-approvals`); the
+configuration file gained a `verifyKey`, and the hook falls back to the terminal prompt until it has one.
+
+## Install it on a phone
+
+The office is an installable web app: opened from the home screen it runs full screen, with its own icon, and the shortcuts
+(long-press the icon) go straight to Sessions and Approvals.
+
+- **Android (Chrome, Edge, Samsung Internet):** the page shows an **Install** button, or use the browser menu, Install app.
+- **iPhone and iPad (Safari):** tap Share, then **Add to Home Screen**. The page shows these steps once (dismiss them and
+  they stay away). iOS has no install button for a web page to call.
+- **Desktop Chrome and Edge:** the install icon in the address bar.
+
+**Plain HTTP on the network cannot be installed as a full app and gets no offline shell or update prompt.** Service workers
+(which those need, and Web Push would) work only in a *secure context*: `https://`, or `localhost` / `127.0.0.1`.
+A phone that opens `http://192.168.1.20:4310` still gets the whole office (and Add to Home Screen on iOS gives it its icon
+and full-screen mode), but the page registers nothing and says nothing about it. To get the rest, serve the office over HTTPS:
+
+The control plane accepts only requests addressed to `127.0.0.1:4310` or, with `AETHER_HOST` set, to a private-network
+address on its own port (the DNS-rebinding guard, see [security](security.md)). A TLS proxy in front therefore has to
+present the request to it as `127.0.0.1:4310`. `tailscale serve` on its own has no setting to rewrite the Host header (not tried here), so
+use a proxy that can, such as Caddy, and take the certificate from wherever suits you:
+
+```
+# Caddyfile: office.lan, or <machine>.<tailnet>.ts.net with `tailscale cert`, or an address with mkcert
+office.lan {
+  tls internal                       # or: tls /path/to/cert.pem /path/to/key.pem
+  @own header Origin https://office.lan
+  handle @own {
+    reverse_proxy 127.0.0.1:4310 {
+      header_up Host 127.0.0.1:4310
+      header_up Origin http://127.0.0.1:4310
+    }
+  }
+  handle {
+    reverse_proxy 127.0.0.1:4310 { header_up Host 127.0.0.1:4310 }
+  }
+}
+```
+
+The `Origin` rewrite is limited to the proxy's own address, so a request from another web site still carries a foreign
+Origin and is refused, as before. (This recipe follows the Caddy and control-plane code; it has not been run end to end here.)
+
+| Certificate | What to do | Trade-off |
+| --- | --- | --- |
+| Caddy's own CA (`tls internal`) | Trust Caddy's root certificate on the phone. | Works on the LAN alone; every phone has to trust the CA. |
+| mkcert | `mkcert -install`, `mkcert office.lan`, point `tls` at the files, send `rootCA.pem` (`mkcert -CAROOT`) to the phone and trust it (iOS: install the profile, then Settings, General, About, Certificate Trust Settings). | The CA key must stay private. |
+| Tailscale | Turn on MagicDNS and HTTPS certificates in the admin console, `tailscale cert <machine>.<tailnet>.ts.net`, point `tls` at the files. | A publicly trusted certificate, so nothing to install on the phone; reachable only from your tailnet. |
+
+If a service worker ever misbehaves, open the office once with `?sw=off`: the worker and its caches are removed from that
+browser and it stays off (`?sw=on` turns it back on).
 
 ## Managed execution (optional)
 

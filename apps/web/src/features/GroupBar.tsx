@@ -1,0 +1,88 @@
+import { useState } from 'react';
+import { Copy, DoorOpen, Pin, PinOff, X } from 'lucide-react';
+import type { AttributedSession } from '@aether/contracts';
+import type { GroupBarContext } from '@aether/office-scene';
+import { copyText } from '../browser-compat.js';
+import { sessionCommands } from '../localSessions.js';
+import { useT } from '../ui.js';
+import { groupActions } from './character-actions.js';
+import { clockOutKeys, kindOf, sessionOf, useActor } from './character-session.js';
+import type { CharacterCommand } from './CharacterMenu.js';
+
+/**
+ * The floating bar for the characters picked with Shift or a rectangle: send them home (the clock-out flow for those that
+ * qualify, owner only), pin them to the wall, copy their resume commands, clear the selection.
+ */
+export function GroupBar({
+  ctx,
+  sessions,
+  onCommand,
+  onNotice,
+}: {
+  ctx: GroupBarContext;
+  sessions: readonly AttributedSession[];
+  onCommand: (command: CharacterCommand) => void;
+  onNotice: (message: string) => void;
+}) {
+  const t = useT();
+  const actor = useActor();
+  const [copied, setCopied] = useState(false);
+  const clock = new Set(clockOutKeys(sessions, ctx.ids));
+  const found = ctx.ids.map((id) => ({ id, session: sessionOf(sessions, { id }) }));
+  const actions = groupActions(
+    found.map(({ id, session }) => ({
+      hasSession: session !== null && kindOf(id) === 'observed',
+      clockOut: !!session && clock.has(session.key),
+    })),
+    actor.role,
+    ctx.canPin,
+  );
+  const copy = async () => {
+    const lines = found.flatMap(({ session }) =>
+      session ? [sessionCommands(session).resume] : [],
+    );
+    const ok = await copyText(lines.join('\n'));
+    setCopied(ok);
+    if (ok) onNotice(t('copied'));
+  };
+  return (
+    <div className="group-bar" role="toolbar" aria-label={t('groupBarLabel')}>
+      <span className="group-count" aria-live="polite">
+        {ctx.ids.length} {t('groupSelected')}
+      </span>
+      <button
+        type="button"
+        aria-disabled={actions.sendHome.count === 0}
+        title={actions.sendHome.reason ? t(actions.sendHome.reason) : undefined}
+        onClick={() =>
+          actions.sendHome.count > 0 && onCommand({ type: 'send-home', keys: [...clock] })
+        }
+      >
+        <DoorOpen size={16} aria-hidden="true" />
+        {t('groupSendHome')}
+        {actions.sendHome.count > 0 && ` (${actions.sendHome.count})`}
+      </button>
+      <button
+        type="button"
+        aria-disabled={!!actions.pin.reason}
+        title={actions.pin.reason ? t(actions.pin.reason) : undefined}
+        onClick={() => !actions.pin.reason && ctx.pin(true)}
+      >
+        <Pin size={16} aria-hidden="true" />
+        {t('groupPin')}
+      </button>
+      <button type="button" onClick={() => ctx.pin(false)}>
+        <PinOff size={16} aria-hidden="true" />
+        {t('groupUnpin')}
+      </button>
+      <button type="button" aria-disabled={actions.copy.count === 0} onClick={() => void copy()}>
+        <Copy size={16} aria-hidden="true" />
+        {copied ? t('copied') : t('groupCopy')}
+      </button>
+      <button type="button" className="group-clear" onClick={ctx.clear}>
+        <X size={16} aria-hidden="true" />
+        {t('groupClear')}
+      </button>
+    </div>
+  );
+}

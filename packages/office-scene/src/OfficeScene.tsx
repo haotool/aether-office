@@ -1,27 +1,41 @@
+import type { OfficeSceneProps } from './scene-props.js';
+import { SceneLights } from './SceneLights.js';
+import { pickSpeakers } from './speakers.js';
 import { MultiCam } from './MultiCam.js';
 import { PipWall } from './PipWall.js';
-import { chooseFeeds, feedCapacity, type Feed, type Rect } from './multi-view.js';
-import type { ScreenFacts } from './screen-facts.js';
+import type { Rect } from './multi-view.js';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import type { Agent, Layout } from '@aether/contracts';
+import type { Agent } from '@aether/contracts';
 import { DEPARTMENTS } from '@aether/kernel';
 import { FLOORS, defaultLayout, floorZones } from './layout.js';
-import { OrbitalBackdrop } from './OrbitalBackdrop.js';
-import type { Apparition } from './animal-states.js';
 import { Beanstalk, type StalkHover } from './Beanstalk.js';
-import { layoutStalk, spreadStalk, type StalkCommit } from './stalk-layout.js';
+import { layoutStalk, spreadStalk } from './stalk-layout.js';
 import { EXPLODED_GAP, FLOOR_HEIGHT } from './building.js';
 import { BranchBeams } from './BranchBeams.js';
 import { planDepartures } from './departure.js';
 import { CommLinks } from './CommLinks.js';
-import type { Pulse } from './director.js';
+import { sceneRelations } from './interplay.js';
+import { RelationLines } from './RelationLines.js';
+import { DustMotes, LightShafts } from './Atmosphere.js';
 import { Floor } from './Floor.js';
+import { InteractionLayer, roleLabel } from './InteractionLayer.js';
+import { InteractionProjections } from './InteractionProjections.js';
+import {
+  useSceneInteraction,
+  type CharacterMenuContext,
+  type GroupBarContext,
+  type SceneActions,
+} from './use-scene-interaction.js';
 import { Beacons, ProjectedLabels } from './Labels.js';
+import { compactionLabel } from './context.js';
 import { Member } from './Member.js';
-import { ProjectedSpeech, SpeechLayer, type SceneSpeech } from './Speech.js';
+import { NameTag } from './NameTag.js';
+import { ProjectedSpeech, SpeechLayer } from './Speech.js';
 import { MessageCarriers } from './MessageCarriers.js';
 import { PerfProbe } from './PerfProbe.js';
+import { AdaptiveRatio, ShadowThrottle, Warmup } from './PerfControllers.js';
+import { PIXEL_RATIO_FLOOR, SHADOW_INTERVAL_MS } from './perf-control.js';
 import { SceneCamera } from './SceneCamera.js';
 import { StalkTooltip } from './StalkTooltip.js';
 import { CompactHud } from './CompactHud.js';
@@ -30,60 +44,9 @@ import { AnimationClock, Runtime, SceneBoundary } from './SceneRuntime.js';
 import { ACTIVE, OVERVIEW, ZONE_OFFSET, floorOfDesk, floorY } from './scene-geometry.js';
 import { beaconsOf, beamsOf, labelsOf } from './scene-markers.js';
 import { useSceneNavigation } from './scene-navigation.js';
-import type { BranchInfo, Quality } from './scene-types.js';
-import type { PerfReport } from './perf.js';
-import type { SceneMessage } from './carriers.js';
 
-const SPEECH_AT_ONCE = 6;
-
-export type OfficeSceneProps = {
-  agents: Agent[];
-  layout: Layout | null;
-  selectedId: string | null;
-  onSelect: (id: string) => void;
-  quality: Quality;
-  reducedMotion: boolean;
-  locale: 'zh-TW' | 'en';
-  focus: string;
-  onFailure: () => void;
-  messages?: readonly SceneMessage[];
-  onMessageUnreachable?: (messageId: string, recipientId: string) => void;
-  /** Fired when the user drags, zooms or pans the camera, so automation like a tour can yield. */
-  onUserCamera?: () => void;
-  /** Which engineering role an agent works in; picks the art on its screen. */
-  roleOf?: (agent: Agent) => string;
-  /** What each member is really doing, by id: drawn on that member's screen instead of the role's decorative art. */
-  screens?: Readonly<Record<string, ScreenFacts>>;
-  /** How hard each working member is working, 0 to 3: faster typing, a streaming screen, and at the top a machine that smokes. */
-  intensity?: Readonly<Record<string, 0 | 1 | 2 | 3>>;
-  /** The Git branch an agent works on, drawn as a beam from its desk into the core (the default branch). */
-  branchOf?: (agent: Agent) => BranchInfo | null;
-  /** Members drawn as something else at their own seat: a sleeping rabbit, a ghost, a jiangshi (see animal-states). */
-  apparitions?: Readonly<Record<string, Apparition>>;
-  /** Members with zombie processes under them (id → how many): a jiangshi stands behind each one's chair as well. */
-  zombies?: Readonly<Record<string, number>>;
-  /** Members sent home, by id with the wall-clock moment each begins to leave: they pack up, walk to the elevator and are gone. */
-  leaving?: Readonly<Record<string, number>>;
-  /** Agents with something new for the user (waiting for them, or finished): their labels are marked. */
-  unreadIds?: ReadonlySet<string>;
-  /** Messages and subagent work in the last half minute: drawn between the members and cut to by the camera. */
-  pulses?: readonly Pulse[];
-  /** Members that want a person (forgotten, ownerless, zombies under them), by id with the reason in a few words. */
-  attention?: Readonly<Record<string, string>>;
-  /** What each member is doing right now, in a word or two (a tool, a state), shown by the member on screen. */
-  doing?: Readonly<Record<string, string>>;
-  /** The last prompt and reply of each running member, by id: two bubbles over the head of a few of them at a time. */
-  speech?: Readonly<Record<string, SceneSpeech>>;
-  /** Recent commits of the project's repository, newest first: drawn as a braid of glass up the building's core with a crown above the roof. */
-  beanstalk?: readonly StalkCommit[] | null;
-  /** The camera runs itself (the director). Default on. */
-  autoCamera?: boolean;
-  onToggleAuto?: () => void;
-  /** A phone: lighter rendering (no shadows, no antialiasing, a capped pixel ratio), few names and a minimal HUD. */
-  compact?: boolean;
-  /** When set, the scene renders continuously for a fixed sample and reports measured frame times. */
-  onPerfReport?: (report: PerfReport) => void;
-};
+export type { OfficeSceneProps } from './scene-props.js';
+export type { CharacterMenuContext, GroupBarContext, SceneActions };
 
 export function OfficeScene(props: OfficeSceneProps) {
   const layout = useMemo(
@@ -93,6 +56,7 @@ export function OfficeScene(props: OfficeSceneProps) {
   const zh = props.locale === 'zh-TW';
   const elements = useRef(new Map<string, HTMLElement>());
   const speechElements = useRef(new Map<string, HTMLElement>());
+  const chipElements = useRef(new Map<string, HTMLElement>());
   const [hovered, setHovered] = useState<string | null>(null);
   const compact = props.compact ?? false;
   // Names over the scene hide what is behind them: on a phone only the member in hand has one, until asked for all.
@@ -134,55 +98,18 @@ export function OfficeScene(props: OfficeSceneProps) {
   );
   const stalkTip = useRef<((hover: StalkHover) => void) | null>(null);
   const showStalkTip = useCallback((hover: StalkHover) => stalkTip.current?.(hover), []);
-  // Several members busy at once: the main camera is on one, the others get a small view each beside it.
-  const [pipsHidden, setPipsHidden] = useState(false);
-  const feedsRef = useRef<Feed[]>([]);
-  // Where the small views are on the canvas (MultiCam writes it), and how much room the canvas has for them.
-  const wall = useRef<ReadonlyMap<string, Rect>>(new Map());
+  const [warm, setWarm] = useState(false);
+  const ready = useCallback(() => setWarm(true), []);
   // Where the speech bubbles are drawn this frame: a name tag under one is hidden, not drawn over what the member said.
   const bubbles = useRef(new Map<string, Rect>());
-  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
-  const container = useCallback((node: HTMLDivElement | null) => {
-    if (!node) return;
-    const measure = () => setCanvasSize({ width: node.clientWidth, height: node.clientHeight });
-    const observer = new ResizeObserver(measure);
-    observer.observe(node);
-    measure();
-    return () => observer.disconnect();
-  }, []);
-  const wantPips = !compact && props.quality !== 'low' && !props.reducedMotion && !pipsHidden;
-  const mainSubjects = nav.directed?.shot.subjects.join('|') ?? '';
-  const feeds = useMemo(() => {
-    if (!wantPips) return [];
-    const taken = new Set(mainSubjects ? mainSubjects.split('|') : []);
-    if (props.selectedId) taken.add(props.selectedId);
-    feedsRef.current = chooseFeeds({
-      agents: props.agents,
-      seats: nav.seats,
-      intensity: new Map(Object.entries(props.intensity ?? {})),
-      taken,
-      previous: feedsRef.current,
-      max: feedCapacity(canvasSize.width, canvasSize.height),
-      ...(exploded ? {} : { floor }), // a member on a floor that is not drawn would have an empty view
-    });
-    return feedsRef.current;
-  }, [
-    wantPips,
-    props.agents,
-    nav.seats,
-    props.intensity,
-    mainSubjects,
-    props.selectedId,
-    canvasSize,
-    floor,
-    exploded,
-  ]);
   const auto = (props.autoCamera ?? true) && !props.reducedMotion;
   const onShot = (id: string) => nav.directed?.shot.subjects.includes(id) ?? false;
   const named = (agent: Agent) =>
     namesOn ||
     agent.id === props.selectedId ||
     agent.id === hovered ||
+    agent.id === marks.menuId ||
+    marks.group.has(agent.id) ||
     (!compact && onShot(agent.id)); // on a phone the caption names who the camera is on
 
   const visibleFloors = exploded
@@ -191,24 +118,61 @@ export function OfficeScene(props: OfficeSceneProps) {
   const sceneAgents = props.agents.filter(
     (agent) => exploded || floorOfDesk(layout, agent.id) === floor,
   );
-  // Bubbles go to the selected member and the camera's subjects first, then the busiest working ones (not on a phone).
-  const speakers = sceneAgents
-    .filter((a) => props.speech?.[a.id])
-    .map((a) => {
-      const level = props.intensity?.[a.id] ?? 0;
-      const rank =
-        a.id === props.selectedId || onShot(a.id)
-          ? 4
-          : compact
-            ? 0
-            : Math.max(level, a.activity === 'working' ? 1 : 0);
-      return { agent: a, rank };
-    })
-    .filter((s) => s.rank > 0)
-    .sort((a, b) => b.rank - a.rank)
-    .slice(0, SPEECH_AT_ONCE)
-    .map((s) => s.agent);
+  // Who is turned toward whom (a message in the air), and the faint lines between desks of one repository or session.
+  const { engagements, edges } = sceneRelations({
+    pulses: props.pulses ?? [],
+    seats: nav.seats,
+    agents: sceneAgents,
+    branchOf: props.branchOf,
+    tethers: props.tethers ?? [],
+    focus: hovered ?? props.selectedId,
+    heightOf: (f) => floorY(f, exploded),
+    visible: (f) => exploded || f === floor,
+  });
 
+  const ix = useSceneInteraction({
+    zh,
+    compact,
+    layout,
+    nav,
+    sceneAgents,
+    agents: props.agents,
+    selectedId: props.selectedId,
+    onSelect: props.onSelect,
+    hovered,
+    tags: elements,
+    roleOf: props.roleOf,
+    screens: props.screens,
+    doing: props.doing,
+    intensity: props.intensity,
+    apparitions: props.apparitions,
+    leaving: props.leaving,
+    quality: props.quality,
+    reducedMotion: props.reducedMotion,
+    canArrange: props.canArrange ?? false,
+    onMoveSeat: props.onMoveSeat,
+    hasGroupBar: !!props.groupBar,
+  });
+  const { marks, wall, seatDrag, words } = ix;
+  const roleName = (agent: Agent) => roleLabel(props.roleOf?.(agent) ?? 'generalist', zh);
+
+  const speakers = pickSpeakers({
+    agents: sceneAgents,
+    speech: props.speech,
+    intensity: props.intensity,
+    selectedId: props.selectedId,
+    onShot,
+    compact,
+  });
+
+  // The compaction chip: only while the page says the compaction is happening, and not at all on low quality.
+  const chipped =
+    props.quality === 'low' ? [] : sceneAgents.filter((a) => props.compactions?.[a.id]);
+
+  // The most the scene may render at, by quality; AdaptiveRatio lowers it (to 0.75 at the least) while frames run slow.
+  const maxRatio =
+    props.quality === 'high' ? (compact ? 1.5 : 2) : props.quality === 'balanced' ? 1.5 : 1;
+  const shadowsOn = !compact && props.quality !== 'low';
   const animate = !props.reducedMotion && props.quality !== 'low';
   const active =
     animate || (props.agents.some((a) => ACTIVE.includes(a.activity)) && !props.reducedMotion);
@@ -221,45 +185,29 @@ export function OfficeScene(props: OfficeSceneProps) {
 
   return (
     <SceneBoundary onFailure={props.onFailure}>
-      <div className="canvas-container" ref={container}>
+      <div
+        className="canvas-container"
+        data-following={nav.following ?? undefined}
+        ref={wall.container}
+      >
         <Canvas
           shadows={!compact && props.quality !== 'low'}
           camera={{ position: OVERVIEW(false), fov: 38, near: 0.4, far: 2400 }}
-          frameloop="demand"
-          dpr={
-            props.quality === 'high'
-              ? [1, compact ? 1.5 : 2]
-              : props.quality === 'balanced'
-                ? [1, 1.5]
-                : 1
-          }
+          frameloop={warm && !props.paused ? 'demand' : 'never'}
+          dpr={[PIXEL_RATIO_FLOOR, maxRatio]}
           gl={{
             antialias: !compact && props.quality !== 'low',
             powerPreference: 'high-performance',
             alpha: false,
           }}
         >
-          <color attach="background" args={['#050e15']} />
-          <fog attach="fog" args={['#050e15', 170, 520]} />
-          <OrbitalBackdrop low={compact || props.quality === 'low'} />
-          <ambientLight intensity={0.95} color="#9fd8ff" />
-          <hemisphereLight args={['#cfeeff', '#25414d', 1.7]} />
-          <group position={[0, y, 0]}>
-            <directionalLight
-              position={[-25, 40, 15]}
-              intensity={2.4}
-              color="#e8f6ff"
-              castShadow={!compact && props.quality !== 'low'}
-              shadow-mapSize={props.quality === 'high' ? 4096 : 2048}
-              shadow-camera-left={-38}
-              shadow-camera-right={38}
-              shadow-camera-top={30}
-              shadow-camera-bottom={-30}
-              shadow-camera-far={110}
-              shadow-normalBias={0.05}
-            />
-            <directionalLight position={[20, 15, -20]} intensity={1.2} color={department.accent} />
-          </group>
+          <SceneLights y={y} accent={department.accent} compact={compact} quality={props.quality} />
+          {!exploded && !compact && props.quality !== 'low' && (
+            <group position={[0, y, 0]}>
+              <DustMotes quality={props.quality} animate={animate} />
+              <LightShafts quality={props.quality} animate={animate} />
+            </group>
+          )}
           {visibleFloors.map((index) => (
             <Floor
               key={index}
@@ -282,17 +230,35 @@ export function OfficeScene(props: OfficeSceneProps) {
                 role={props.roleOf?.(agent) ?? 'generalist'}
                 facts={props.screens?.[agent.id]}
                 intensity={props.intensity?.[agent.id] ?? 0}
+                compaction={props.compactions?.[agent.id]}
                 apparition={props.apparitions?.[agent.id]}
                 zombie={(props.zombies?.[agent.id] ?? 0) > 0}
+                engagements={engagements.get(agent.id)}
+                attention={!!props.attention?.[agent.id]}
                 departure={
                   departures[agent.id] && props.leaving?.[agent.id] !== undefined
                     ? { plan: departures[agent.id]!, startAt: props.leaving[agent.id]! }
                     : undefined
                 }
-                selected={agent.id === props.selectedId || agent.id === hovered}
+                selected={agent.id === props.selectedId}
+                ring={
+                  marks.group.has(agent.id)
+                    ? 'group'
+                    : agent.id === props.selectedId
+                      ? 'selected'
+                      : agent.id === hovered
+                        ? 'hover'
+                        : null
+                }
+                emote={ix.emotes.cues[agent.id]}
                 reducedMotion={props.reducedMotion}
                 quality={props.quality}
                 light={compact}
+                onActivate={(id, shift) => {
+                  if (!seatDrag.justEnded()) marks.activate(id, { shift, keyboard: false });
+                }}
+                onMenu={marks.openMenu}
+                onGrab={seatDrag.grab}
                 onSelect={props.onSelect}
                 onFly={nav.fly}
                 onHoverStart={hoverStart}
@@ -313,8 +279,16 @@ export function OfficeScene(props: OfficeSceneProps) {
             labels={labelsOf(sceneAgents.filter(named), layout, floor, exploded && !compact)}
             elements={elements.current}
             selected={props.selectedId}
-            avoid={wall}
+            avoid={wall.wall}
             covered={bubbles}
+          />
+          <ProjectedLabels
+            labels={labelsOf(chipped, layout, floor, exploded && !compact).map((l) => ({
+              ...l,
+              width: 130,
+            }))}
+            elements={chipElements.current}
+            selected={null}
           />
           <ProjectedSpeech
             anchors={labelsOf(speakers, layout, floor, exploded && !compact)}
@@ -328,16 +302,26 @@ export function OfficeScene(props: OfficeSceneProps) {
             keyboardRef={nav.keys}
             directed={nav.directed}
             seats={nav.seats}
+            followPoint={nav.followPoint}
           />
+          <InteractionProjections ix={ix} exploded={exploded} />
           <CommLinks
             pulses={props.pulses ?? []}
             seats={nav.seats}
             heightOf={(f) => floorY(f, exploded)}
             visible={(f) => exploded || f <= floor}
           />
+          <RelationLines edges={edges} animate={!props.reducedMotion} />
           <Runtime onFailure={props.onFailure} />
+          <Warmup onReady={ready} />
+          <AdaptiveRatio ceiling={maxRatio} smooth={nav.directed !== null} />
+          {shadowsOn && <ShadowThrottle intervalMs={SHADOW_INTERVAL_MS[props.quality]} />}
           {props.onPerfReport && (
-            <PerfProbe quality={props.quality} onReport={props.onPerfReport} />
+            <PerfProbe
+              quality={props.quality}
+              onReport={props.onPerfReport}
+              {...(props.perfFrames ? { frames: props.perfFrames } : {})}
+            />
           )}
           {props.branchOf && (
             <BranchBeams
@@ -357,8 +341,8 @@ export function OfficeScene(props: OfficeSceneProps) {
             animate={!props.reducedMotion}
             items={beaconsOf(sceneAgents, layout, exploded)}
           />
-          {feeds.length > 0 && (
-            <MultiCam feeds={feeds} seats={nav.seats} exploded={exploded} wall={wall} />
+          {wall.feeds.length > 0 && (
+            <MultiCam feeds={wall.feeds} seats={nav.seats} exploded={exploded} wall={wall.wall} />
           )}
           <AnimationClock
             active={active || nav.directed !== null}
@@ -366,38 +350,67 @@ export function OfficeScene(props: OfficeSceneProps) {
             slow={compact}
           />
         </Canvas>
-        {feeds.length > 0 && (
+        {!warm && (
+          <div className="scene-warming" role="status">
+            {zh ? '準備場景…' : 'Preparing the scene…'}
+          </div>
+        )}
+        {wall.feeds.length > 0 && (
           <PipWall
-            feeds={feeds}
+            feeds={wall.feeds}
+            pinned={marks.pinned}
             agents={props.agents}
             doing={props.doing}
             intensity={props.intensity}
             zh={zh}
             onSelect={props.onSelect}
-            onClose={() => setPipsHidden(true)}
+            onClose={ix.closeWall}
           />
         )}
         <div className="world-labels">
           {stalk && <StalkTooltip show={stalkTip} strands={stalk.strands} locale={props.locale} />}
           {sceneAgents.filter(named).map((agent) => (
-            <button
+            <NameTag
               key={agent.id}
-              ref={(node) => {
+              agent={agent}
+              provider={props.screens?.[agent.id]?.provider}
+              context={props.screens?.[agent.id]?.contextPercent ?? null}
+              selected={agent.id === props.selectedId}
+              hovered={agent.id === hovered}
+              grouped={marks.group.has(agent.id)}
+              menuOpen={agent.id === marks.menuId}
+              label={`${agent.name}, ${roleName(agent)}, ${words.state[agent.activity]}`}
+              unread={props.unreadIds?.has(agent.id) ?? false}
+              detail={
+                agent.id === hovered || onShot(agent.id)
+                  ? (props.doing?.[agent.id] ?? (compact ? null : agent.role))
+                  : undefined
+              }
+              setElement={(node) => {
                 if (node) elements.current.set(agent.id, node);
                 else elements.current.delete(agent.id);
               }}
-              className={`scene-label ${agent.id === props.selectedId ? 'selected' : ''} ${agent.id === hovered ? 'hovered' : ''} ${props.unreadIds?.has(agent.id) ? 'unread' : ''}`}
-              onPointerDown={nav.userCamera} // a moving camera would slide the tag out from under the finger
-              onClick={() => props.onSelect(agent.id)}
-              onPointerEnter={() => hoverStart(agent.id)}
-              onPointerLeave={() => hoverEnd(agent.id)}
+              onPointerDown={nav.pause}
+              onActivate={(how) => {
+                if (!seatDrag.justEnded()) marks.activate(agent.id, how);
+              }}
+              onMenu={() => marks.openMenu(agent.id)}
+              onGrab={(event) => seatDrag.grab(agent.id, event)}
+              onHover={(on) => (on ? hoverStart(agent.id) : hoverEnd(agent.id))}
+            />
+          ))}
+          {chipped.map((agent) => (
+            <span
+              key={`${agent.id}:${props.compactions![agent.id]!.key}`}
+              ref={(node) => {
+                if (node) chipElements.current.set(agent.id, node);
+                else chipElements.current.delete(agent.id);
+              }}
+              className="compact-chip"
+              role="status"
             >
-              <span style={{ background: agent.color }} />
-              {agent.name}
-              {(agent.id === hovered || onShot(agent.id)) && (
-                <small>{props.doing?.[agent.id] ?? (compact ? null : agent.role)}</small>
-              )}
-            </button>
+              {compactionLabel(props.compactions![agent.id]!, zh)}
+            </span>
           ))}
           {(!compact || namesOn) &&
             !exploded &&
@@ -418,8 +431,21 @@ export function OfficeScene(props: OfficeSceneProps) {
                 </button>
               ))}
         </div>
+        <InteractionLayer
+          ix={ix}
+          zh={zh}
+          compact={compact}
+          still={props.reducedMotion}
+          characterMenu={props.characterMenu}
+          groupBar={props.groupBar}
+        />
+        {props.overlay}
         <SpeechLayer
-          items={speakers.map((a) => ({ id: a.id, speech: props.speech![a.id]! }))}
+          items={speakers.map((a) => ({
+            id: a.id,
+            speech: props.speech![a.id]!,
+            accent: DEPARTMENTS[floorOfDesk(layout, a.id)]?.accent ?? DEPARTMENTS[0]!.accent,
+          }))}
           elements={speechElements.current}
           animate={!props.reducedMotion}
           tags={zh ? { user: '提示', assistant: '回覆' } : { user: 'Prompt', assistant: 'Reply' }}

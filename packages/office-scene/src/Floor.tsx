@@ -1,7 +1,8 @@
 import { memo, useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import type { Layout } from '@aether/contracts';
-import { buildFloor, disposeFloor, type FloorModel } from './building.js';
+import { buildFloor, disposeFloor } from './building.js';
+import type { FloorModel } from './building-parts.js';
 
 export const Floor = memo(function Floor({
   layout,

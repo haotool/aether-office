@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useReducer, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { SetURLSearchParams } from 'react-router-dom';
-import { eventSchema, type LocalSessionsResponse } from '@aether/contracts';
+import { type LocalSessionsResponse } from '@aether/contracts';
 import { api, forgetCsrf, type Session } from './api.js';
 import { activityOf, sessionLink } from './localSessions.js';
+import { isDomainEvent } from './stream-event.js';
 import { useSessionAlerts, type AlertSink } from './notifications.js';
 import {
   TOUR_INTERVAL_MS,
@@ -14,8 +15,38 @@ import {
   type TourAction,
 } from './tour.js';
 
+const TITLE = 'AETHER OFFICE · 軌道辦公室';
+
+/** The theme and language of the document, and a tab title that carries how many things wait for the person. */
+export function useDocumentChrome(theme: string, locale: string, waitingOn: number) {
+  useEffect(() => {
+    document.documentElement.dataset['theme'] = theme;
+    document.documentElement.lang = locale === 'zh-TW' ? 'zh-Hant' : 'en';
+  }, [theme, locale]);
+  useEffect(() => {
+    // The browser's address bar and the phone's status bar take the page's own surface color, whatever the system theme is.
+    const surface = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim();
+    for (const meta of document.querySelectorAll('meta[name="theme-color"]'))
+      meta.setAttribute('content', surface);
+  }, [theme]);
+  useEffect(() => {
+    document.title = waitingOn ? `(${waitingOn}) ${TITLE}` : TITLE;
+  }, [waitingOn]);
+}
+
+/** Brings the feed row of a member into view and focuses it, once the panel has drawn. */
+export function focusFeedRow(id: string) {
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => {
+      const row = document.querySelector<HTMLElement>(`.feed-row[data-agent="${CSS.escape(id)}"]`);
+      row?.scrollIntoView({ block: 'center' });
+      row?.focus();
+    }),
+  );
+}
+
 /** The guided tour: its state and one `act` that also puts the camera focus back where the tour found it. */
-export function useTour(focus: string, setFocus: (focus: string) => void) {
+export function useTour(setFocus: (focus: string) => void) {
   const [tour, dispatch] = useReducer(tourReducer, idle);
   const act = (action: TourAction) => {
     const restore = restoreFocus(tour, action, tourReducer(tour, action));
@@ -67,12 +98,9 @@ export function useProjectStream(
     stream.onopen = () => setOffline(false);
     stream.onerror = () => setOffline(true);
     stream.addEventListener('domain', (e) => {
-      try {
-        eventSchema.parse(JSON.parse((e as MessageEvent).data));
+      if (isDomainEvent(String((e as MessageEvent).data)))
         void client.invalidateQueries({ queryKey: ['snapshot', projectId] });
-      } catch {
-        setOffline(true);
-      }
+      else setOffline(true);
     });
     stream.addEventListener('fault', () => {
       setOffline(true);

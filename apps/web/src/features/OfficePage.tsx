@@ -16,7 +16,9 @@ import type { Layout, Snapshot } from '@aether/contracts';
 import type { Session } from '../api.js';
 import { usePreferences } from '../state.js';
 import type { TourAction, TourState } from '../tour.js';
-import { useT, AvatarIcon } from '../ui.js';
+import { useT } from '../ui.js';
+import { avatarState } from '../avatar/state.js';
+import { Avatar } from './Avatar.js';
 import type { OfficeModel } from './office-model.js';
 import { SceneView } from './SceneView.js';
 
@@ -33,6 +35,8 @@ export function OfficePage({
   unread,
   canWrite,
   onSelect,
+  onOpen,
+  onFeed,
   onFocus,
   onTour,
   onTogglePanel,
@@ -54,6 +58,8 @@ export function OfficePage({
   unread: ReadonlySet<string>;
   canWrite: boolean;
   onSelect: (id: string) => void;
+  onOpen: (id: string) => void;
+  onFeed: (id: string) => void;
   onFocus: (focus: string) => void;
   onTour: (action: TourAction) => void;
   onTogglePanel: () => void;
@@ -199,6 +205,8 @@ export function OfficePage({
             unread={unread}
             canWrite={canWrite}
             onSelect={onSelect}
+            onOpen={onOpen}
+            onFeed={onFeed}
             onTour={onTour}
             onNotice={onNotice}
             onRefresh={onRefresh}
@@ -228,7 +236,11 @@ export function OfficePage({
                 title={`${agent.name} · ${agent.role}`}
                 onClick={() => onSelect(agent.id)}
               >
-                <AvatarIcon name={agent.name} species={agent.species} color={agent.color} />
+                <Avatar
+                  seed={agent.id}
+                  species={agent.species}
+                  state={avatarState(agent.activity)}
+                />
                 <div>
                   <strong>{agent.name}</strong>
                   <small>{agent.role}</small>

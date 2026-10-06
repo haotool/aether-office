@@ -114,7 +114,8 @@
   grid-template-areas:
     'top'
     'meta'
-    'reply';
+    'reply'
+    'ctx';
   gap: var(--space-4);
   min-width: 0;
 }
@@ -133,6 +134,25 @@
   white-space: nowrap;
   font-size: var(--fs-meta);
   font-weight: 650;
+}
+/* How full the session's context window is: a hairline bar under the row's text, in the gauge's steps. */
+.feed-ctx {
+  grid-area: ctx;
+  height: 3px;
+  border-radius: var(--r-pill);
+  background: var(--line);
+  overflow: hidden;
+}
+.feed-ctx i {
+  display: block;
+  height: 100%;
+  background: var(--mint);
+}
+.feed-ctx[data-level='warm'] i {
+  background: var(--gold);
+}
+.feed-ctx[data-level='hot'] i {
+  background: var(--red);
 }
 .feed-time {
   flex: none;

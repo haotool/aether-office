@@ -1,12 +1,11 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { LocalSessionsResponse } from '@aether/contracts';
 import { api, type Session } from './api.js';
+import { isOperator } from './roles.js';
 import { useAdoptRepos } from './adoptProjects.js';
 import { pollMs } from './features/live-link.js';
+import { normalizeSessions } from './local-session-compat.js';
 import { useLinkLive, useSessionStream } from './features/use-session-stream.js';
-
-const isOperator = (session: Session | null) =>
-  !!session && ['owner', 'operator'].includes(session.actor.role);
 
 /**
  * The machine's local sessions for an owner or operator: kept fresh by the change stream, with polling as the net under
@@ -18,8 +17,8 @@ export function useLocalSessions(session: Session | null) {
   const live = useLinkLive();
   const query = useQuery({
     queryKey: ['local-sessions'],
-    queryFn: () => api<LocalSessionsResponse>('/api/local-sessions'),
-    enabled: isOperator(session),
+    queryFn: () => api<LocalSessionsResponse>('/api/local-sessions').then(normalizeSessions),
+    enabled: isOperator(session?.actor.role),
     // Looked at more often while something is working, so how hard it works can be told (activity-rate.ts).
     refetchInterval: (q) =>
       pollMs(
@@ -28,7 +27,7 @@ export function useLocalSessions(session: Session | null) {
       ),
     retry: false,
   });
-  useSessionStream(isOperator(session) && !!query.data?.enabled);
+  useSessionStream(isOperator(session?.actor.role) && !!query.data?.enabled);
   useAdoptRepos(
     query.data?.sessions,
     session?.actor.role === 'owner' && !!query.data?.enabled,

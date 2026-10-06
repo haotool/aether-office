@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
-import { elapsedLabel, hashOf, kindOf } from '../../packages/office-scene/src/screen-work.js';
+import { hashText } from '../../packages/office-scene/src/random.js';
+import { elapsedLabel, kindOf } from '../../packages/office-scene/src/screen-work.js';
 
 it('sorts a tool call into the kind of work its row is drawn as', () => {
   const kind = (tool: string, target: string | null = null) => kindOf({ tool, target });
@@ -17,8 +18,8 @@ it('sorts a tool call into the kind of work its row is drawn as', () => {
 });
 
 it('hashes a name the same way every time and tells how long ago in whole units', () => {
-  expect(hashOf('app.ts')).toBe(hashOf('app.ts'));
-  expect(hashOf('app.ts')).not.toBe(hashOf('main.ts'));
+  expect(hashText('app.ts')).toBe(hashText('app.ts'));
+  expect(hashText('app.ts')).not.toBe(hashText('main.ts'));
   expect([0, 59_999, 60_000, 3_599_000, 7_200_000].map(elapsedLabel)).toEqual([
     '0s',
     '59s',

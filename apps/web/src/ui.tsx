@@ -198,42 +198,6 @@ export function Badge({ state }: { state: string }) {
     </span>
   );
 }
-export function AvatarIcon({
-  species,
-  color,
-  name,
-  size = 36,
-}: {
-  species: string;
-  color: string;
-  name: string;
-  size?: number;
-}) {
-  const icons: Record<string, string> = {
-    fox: '🦊',
-    cat: '🐱',
-    rabbit: '🐰',
-    bear: '🐻',
-    otter: '🦦',
-    raccoon: '🦝',
-    panda: '🐼',
-    dog: '🐕',
-  };
-  return (
-    <span
-      className="avatar-icon"
-      style={{
-        width: size,
-        height: size,
-        background: `${color}20`,
-        fontSize: Math.round(size * 0.56),
-      }}
-      aria-label={name}
-    >
-      {icons[species] ?? '◌'}
-    </span>
-  );
-}
 export function PageHeading({
   title,
   subtitle,

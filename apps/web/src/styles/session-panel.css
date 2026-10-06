@@ -132,6 +132,9 @@
 .panel-tabs .count-badge {
   padding-block: 0;
 }
+.conv-title strong .provider-mark {
+  vertical-align: -2px;
+}
 .conv-title {
   display: grid;
   flex: 1;

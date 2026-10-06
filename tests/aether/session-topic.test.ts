@@ -58,7 +58,7 @@ it('classifies a session by what it was asked to do without sending that text to
   expect(session!.classification).toMatchObject({
     role: 'qa',
     department: 'quality',
-    basis: 'prompt',
+    evidence: ['prompt: flaky, playwright'],
   });
   expect(JSON.stringify(session)).not.toContain('SECRETWORD');
 });

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api, execute, type Session } from '../api.js';
+import { api, type Session } from '../api.js';
 import { uuid } from '../browser-compat.js';
 import {
   CTRL_C,
@@ -17,9 +17,11 @@ import { useOutbox, usePending } from './outbox.js';
 import {
   heldByOther,
   isNetworkError,
+  stopTerminal,
   writeSteps,
   type TerminalControl,
 } from './terminal-driver.js';
+import { isOperator } from '../roles.js';
 
 export type Drive = { terminalId: string; projectId: string };
 
@@ -78,7 +80,7 @@ export function useDrive(sessionKey: string, drive: Drive, working: boolean) {
     staleTime: Infinity,
   });
   const userId = me.data?.actor.id ?? '';
-  const canWrite = ['owner', 'operator'].includes(me.data?.actor.role ?? '');
+  const canWrite = isOperator(me.data?.actor.role);
   const control = useQuery({
     queryKey: ['drive-terminal', drive.terminalId],
     queryFn: () =>
@@ -193,16 +195,7 @@ export function useDrive(sessionKey: string, drive: Drive, working: boolean) {
   }, [sendKey]);
 
   const stopProcess = useCallback(async () => {
-    await guarded(async () => {
-      const now = await api<TerminalControl>(
-        `/api/projects/${drive.projectId}/terminals/${drive.terminalId}`,
-      );
-      await execute(
-        'terminal.stop',
-        { terminalId: drive.terminalId, epoch: now.controlEpoch },
-        drive.projectId,
-      );
-    }).catch(() => undefined);
+    await guarded(() => stopTerminal(drive.projectId, drive.terminalId)).catch(() => undefined);
   }, [drive, guarded]);
 
   return {

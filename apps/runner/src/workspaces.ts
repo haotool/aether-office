@@ -23,7 +23,7 @@ export type Workspace = {
   baseSha: string;
   createdAt: number;
 };
-export type GitState = { head: string; tree: string; indexTree: string; status: string };
+type GitState = { head: string; tree: string; indexTree: string; status: string };
 export type Harness = {
   id: string;
   executable: string;

@@ -59,7 +59,10 @@ export function useSessionStream(enabled: boolean) {
       source = es;
       es.addEventListener('hello', (e) => {
         const seq = Number((JSON.parse((e as MessageEvent<string>).data) as { seq: number }).seq);
-        if (last === null) last = seq;
+        if (last === null) {
+          last = seq;
+          refresh(allQueries()); // what the page read before the baseline may predate it, and no change would ever say so
+        }
         attempt = 0;
         dispatch({ type: 'open', at: Date.now() });
       });

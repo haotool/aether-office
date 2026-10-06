@@ -3,15 +3,15 @@
  * keyboard steps, and a stored value read back safely. The drag itself is `PanelResizer.tsx`.
  */
 export const PANEL_MIN = 320;
-export const PANEL_MAX = 720;
+const PANEL_MAX = 720;
 /** The panel never takes more than this share of the window: the office is the home. */
-export const PANEL_MAX_SHARE = 0.6;
+const PANEL_MAX_SHARE = 0.6;
 /** The collapsed rail: a re-open button and the badges. */
 export const PANEL_RAIL = 48;
 /** A drag this close to the default settles on it. */
 export const PANEL_SNAP = 8;
-export const PANEL_STEP = 16;
-export const PANEL_STEP_LARGE = 64;
+const PANEL_STEP = 16;
+const PANEL_STEP_LARGE = 64;
 /** At or below this window width the panel lies over the office and is not resizable. */
 export const PANEL_OVERLAY_MAX = 1000;
 
@@ -39,7 +39,7 @@ export const dragPanel = (
   viewport: number,
 ): number => snapPanel(clampPanel(startWidth + (startX - x), viewport), viewport);
 
-export type PanelKey = 'ArrowLeft' | 'ArrowRight' | 'Home' | 'End';
+type PanelKey = 'ArrowLeft' | 'ArrowRight' | 'Home' | 'End';
 export const isPanelKey = (key: string): key is PanelKey =>
   key === 'ArrowLeft' || key === 'ArrowRight' || key === 'Home' || key === 'End';
 

@@ -8,7 +8,7 @@ import { environment } from './workspaces.js';
  * It never moves the base branch, never pushes, never resolves conflicts, and never touches the
  * user's checkout: all work happens in a throwaway worktree that is always removed.
  */
-export type MergeResult =
+type MergeResult =
   | { status: 'merged'; baseSha: string; headSha: string; mergeSha: string; candidate: string }
   | { status: 'up_to_date'; baseSha: string; headSha: string }
   | { status: 'conflict'; baseSha: string; headSha: string; files: string[] }

@@ -1,45 +1,17 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, type CSSProperties, type RefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3 } from 'three';
 import type { Rect } from './multi-view.js';
+import { SpeechLines } from './speech-text.js';
+import { useOverflowing, useTeleprompter, useTypedLines } from './use-speech.js';
 
 export type Utterance = { text: string; at: number | null };
 /** The last prompt a member was given and the last thing it answered. */
 export type SceneSpeech = { user: Utterance | null; assistant: Utterance | null };
 
 const FADE_MS = 2 * 60_000; // a bubble this old is dimmed
-const TYPE_MS = 1200; // a new reply types out in about this long, however long it is
-const TYPE_TICK_MS = 30;
 const LIFT_PX = 22; // above the name tag
-
-/** The characters of `text` shown so far: a text that changes after the first look is typed out, unless motion is reduced. */
-function useTyped(text: string, animate: boolean) {
-  const chars = Array.from(text);
-  const [shown, setShown] = useState(chars.length);
-  const previous = useRef(text);
-  useEffect(() => {
-    if (previous.current === text) return;
-    previous.current = text;
-    const total = Array.from(text).length;
-    if (!animate) {
-      setShown(total);
-      return;
-    }
-    const step = Math.max(1, Math.ceil(total / (TYPE_MS / TYPE_TICK_MS)));
-    setShown(0);
-    const timer = setInterval(
-      () =>
-        setShown((n) => {
-          if (n + step < total) return n + step;
-          clearInterval(timer);
-          return total;
-        }),
-      TYPE_TICK_MS,
-    );
-    return () => clearInterval(timer);
-  }, [text, animate]);
-  return chars.slice(0, shown).join('');
-}
+const EDGE_PX = 6; // the closest a bubble comes to the top of the view
 
 function Bubble({
   role,
@@ -54,23 +26,43 @@ function Bubble({
   animate: boolean;
   now: number;
 }) {
-  const text = useTyped(utterance.text, animate && role === 'assistant');
+  const { lines, typing } = useTypedLines(utterance.text, animate && role === 'assistant');
+  const box = useRef<HTMLDivElement>(null);
+  const held = useRef(false);
+  const overflowing = useOverflowing(box, lines);
+  // Text that is still arriving keeps its end in view; once it is whole, a taller text scrolls by itself.
+  useEffect(() => {
+    if (typing && box.current) box.current.scrollTop = box.current.scrollHeight;
+  }, [lines, typing]);
+  useTeleprompter(box, animate && overflowing && !typing, held, utterance.text);
   const old = utterance.at !== null && now - utterance.at > FADE_MS;
   return (
-    <p className={`speech-bubble ${role} ${old ? 'old' : ''}`} aria-label={tag}>
-      <span>{text}</span>
-    </p>
+    <div
+      className={`speech-bubble ${role} ${old ? 'old' : ''} ${typing ? 'typing' : ''}`}
+      role="group"
+      aria-label={tag}
+      data-overflow={overflowing || undefined}
+      onPointerEnter={() => (held.current = true)}
+      onPointerLeave={() => (held.current = false)}
+    >
+      <div className="speech-scroll" ref={box}>
+        <SpeechLines lines={lines} caret={typing} />
+      </div>
+    </div>
   );
 }
 
-/** Two compact bubbles over a member's head, positioned each frame by ProjectedSpeech. Hovering one shows all of it. */
+/**
+ * Two compact bubbles over a member's head, positioned each frame by ProjectedSpeech. The text is rendered, not shown raw
+ * (bold, code, bullets); a taller one scrolls by itself, and hovering a bubble holds it and lets the person read all of it.
+ */
 export function SpeechLayer({
   items,
   elements,
   animate,
   tags,
 }: {
-  items: { id: string; speech: SceneSpeech }[];
+  items: { id: string; speech: SceneSpeech; accent: string }[];
   elements: Map<string, HTMLElement>;
   animate: boolean;
   tags: { user: string; assistant: string };
@@ -78,10 +70,11 @@ export function SpeechLayer({
   const now = Date.now();
   return (
     <div className="world-speech">
-      {items.map(({ id, speech }) => (
+      {items.map(({ id, speech, accent }) => (
         <div
           key={id}
           className="speech"
+          style={{ ['--accent' as string]: accent } as CSSProperties}
           ref={(node) => {
             if (node) elements.set(id, node);
             else elements.delete(id);
@@ -130,7 +123,10 @@ export function ProjectedSpeech({
       if (!element) continue;
       point.current.set(a.x, a.y, a.z).project(camera);
       const x = ((point.current.x + 1) * size.width) / 2;
-      const y = ((1 - point.current.y) * size.height) / 2 - LIFT_PX;
+      // Close up, a member's head is near the top of the view: the bubble slides down to stay whole rather than vanish.
+      const head = ((1 - point.current.y) * size.height) / 2;
+      const y =
+        head > 0 ? Math.max(head - LIFT_PX, element.offsetHeight + EDGE_PX) : head - LIFT_PX;
       const box = {
         left: x - element.offsetWidth / 2,
         right: x + element.offsetWidth / 2,

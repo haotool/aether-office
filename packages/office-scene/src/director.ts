@@ -1,4 +1,5 @@
 import type { Agent } from '@aether/contracts';
+import { hashText } from './random.js';
 
 /**
  * The director: which agent, pair or floor the camera should be on next. Pure: it reads the state of the office and
@@ -12,7 +13,7 @@ export type Seat = { x: number; z: number; floor: number; rotation: number };
 export type PulseKind = 'inform' | 'request' | 'decision' | 'handoff' | 'sub';
 /** One agent reaching another: a message, or a subagent at work for its parent. */
 export type Pulse = { id: string; from: string; to: string; kind: PulseKind; at: number };
-export type ShotReason =
+type ShotReason =
   'message' | 'approval' | 'error' | 'working' | 'review' | 'peer' | 'attention' | 'sweep';
 export type Shot = {
   key: string;
@@ -57,12 +58,6 @@ export function pacedSeconds(seconds: number, agents: readonly Agent[]): number 
   const busy = agents.filter((a) => SCORE[a.activity].score >= 50).length;
   return Math.round(seconds * Math.max(0.7, 1 - 0.06 * Math.max(0, busy - 1)) * 10) / 10;
 }
-
-const hash = (text: string) => {
-  let h = 2166136261;
-  for (const c of text) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
-  return h >>> 0;
-};
 
 export function chooseShot({
   agents,
@@ -112,7 +107,7 @@ export function chooseShot({
       reason: 'message',
       seconds: same ? SECONDS.pair : SECONDS.closeup,
       score: 120 - (age / 1000) * 3 + kindBonus + freshness(key) * 0.5,
-      style: (hash(key) % 3) as 0 | 1 | 2,
+      style: (hashText(key) % 3) as 0 | 1 | 2,
       pulse,
     });
   }
@@ -128,7 +123,7 @@ export function chooseShot({
       reason: rule.reason,
       seconds: SECONDS.closeup,
       score: rule.score + freshness(agent.id) + (intensity?.get(agent.id) ?? 0) * 6,
-      style: (hash(agent.id + (shown.size % 7)) % 3) as 0 | 1 | 2,
+      style: (hashText(agent.id + (shown.size % 7)) % 3) as 0 | 1 | 2,
     });
   }
   // Those that want a person are worth a look between the busy ones: below work, above nothing.
@@ -143,7 +138,7 @@ export function chooseShot({
       reason: 'attention',
       seconds: SECONDS.closeup,
       score: 36 + freshness(`attention:${id}`) * 0.4,
-      style: (hash(id) % 3) as 0 | 1 | 2,
+      style: (hashText(id) % 3) as 0 | 1 | 2,
     });
   }
   // Not back to a subject so soon: the camera does not keep returning to the same desk (and then the same two members).
@@ -174,6 +169,6 @@ export function chooseShot({
     seconds: SECONDS.sweep,
     score: 20,
     // Another bearing each time, so a floor swept twice running is not the same picture.
-    style: ((hash(`floor:${floor}`) + shown.size) % 3) as 0 | 1 | 2,
+    style: ((hashText(`floor:${floor}`) + shown.size) % 3) as 0 | 1 | 2,
   };
 }

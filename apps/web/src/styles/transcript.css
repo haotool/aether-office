@@ -48,6 +48,7 @@
 .msg-who time {
   margin-left: var(--space-4);
   letter-spacing: 0;
+  font-family: var(--mono);
   visibility: hidden; /* hidden, not transparent: invisible text would still be measured for contrast */
 }
 .msg:hover .msg-who time,
@@ -66,6 +67,7 @@
   border: 1px solid var(--line);
   border-radius: var(--r-xl) var(--r-xl) var(--r-xs) var(--r-xl);
   background: var(--selected);
+  box-shadow: inset 0 1px 0 var(--glass-line-faint);
 }
 .msg.user p {
   margin: 0;

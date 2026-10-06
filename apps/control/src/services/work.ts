@@ -14,11 +14,7 @@ import {
 import { insertRow, selectAll, updateRows } from '../db/query.js';
 import { work, dependencies } from '../db/schema.js';
 import { agent, task, emit, type Context } from './context.js';
-export function createWork(
-  ctx: Context,
-  actor: Actor,
-  c: Extract<Command, { type: 'work.create' }>,
-) {
+export function createWork(ctx: Context, c: Extract<Command, { type: 'work.create' }>) {
   const id = randomUUID();
   const tasks = selectAll(ctx.sqlite, work, { projectId: c.projectId });
   const edges = selectAll(ctx.sqlite, dependencies, { projectId: c.projectId });

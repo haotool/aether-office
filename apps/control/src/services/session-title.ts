@@ -1,5 +1,6 @@
 import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
+import { toPlainPreview } from '@aether/kernel';
 import { readEdge } from './file-edge.js';
 
 // The title each provider already stores for its own session picker: Claude Code's `ai-title` entry in the
@@ -8,10 +9,10 @@ const TAIL_BYTES = 256 * 1024;
 const INDEX_BYTES = 2 * 1024 * 1024;
 const MAX_TITLE = 120;
 
+/** A title is plain text: Markdown a provider left in it (emphasis, code, links) is read, not shown. */
 const clean = (v: unknown) => {
   if (typeof v !== 'string') return null;
-  const text = v.replace(/\s+/g, ' ').trim();
-  return text ? text.slice(0, MAX_TITLE) : null;
+  return toPlainPreview(v, { maxChars: MAX_TITLE }) || null;
 };
 
 /** Pure. The latest `ai-title` in a transcript tail. */

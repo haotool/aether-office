@@ -9,12 +9,12 @@ import type { AttributedSession } from '@aether/contracts';
  */
 export type Intensity = 0 | 1 | 2 | 3;
 
-export const BEAT_WINDOW_MS = 60_000;
+const BEAT_WINDOW_MS = 60_000;
 const SUBAGENT_LIVE_MS = 20_000;
 
 type Sessions = readonly AttributedSession[];
 /** For each session, when it was last seen to change and the moments of its changes within the window. */
-export type BeatLog = { seen: Map<string, number>; beats: Map<string, number[]> };
+type BeatLog = { seen: Map<string, number>; beats: Map<string, number[]> };
 
 export const newBeatLog = (): BeatLog => ({ seen: new Map(), beats: new Map() });
 

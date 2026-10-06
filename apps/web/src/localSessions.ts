@@ -7,7 +7,13 @@ import {
   seatAt,
   type Apparition,
 } from '@aether/office-scene/model';
-import { DEPARTMENTS, ROLE_LABELS, classifySession, type Classification } from '@aether/kernel';
+import {
+  DEPARTMENTS,
+  ROLE_LABELS,
+  classifySession,
+  roleOfSubagent,
+  type Classification,
+} from '@aether/kernel';
 
 const SPECIES = ['fox', 'cat', 'rabbit', 'bear', 'otter', 'raccoon', 'panda', 'dog'] as const;
 const WORKING_MS = 2 * 60 * 1000;
@@ -187,12 +193,19 @@ export function mergeLayout(
   return added.length ? { ...layout, objects: [...layout.objects, ...added] } : layout;
 }
 
-/** The role id an agent's screen and floor are chosen by: an observed session's classification, else its role text. */
+/**
+ * The role id an agent's screen is chosen by: an observed session's classification; a subagent works as its type says
+ * (Explore researches, a code reviewer reviews) and otherwise as its parent; a managed agent by its role text.
+ */
 export function roleResolver(sessions: readonly LocalSession[]): (agent: Agent) => string {
-  const byKey = new Map(sessions.map((s) => [s.key, s.classification.role]));
+  const byKey = new Map(sessions.map((s) => [s.key, s]));
   return (agent) => {
     const key = sessionIdOf(agent.id);
-    return (key !== null && byKey.get(key)) || classifySession({ title: agent.role }).role;
+    const session = key === null ? undefined : byKey.get(key);
+    if (!session) return classifySession({ title: agent.role }).role;
+    const childId = agent.id.split(SUBAGENT_INFIX)[1];
+    const type = childId ? session.subagents.find((c) => c.id === childId)?.type : undefined;
+    return (type && roleOfSubagent(type)) || session.classification.role;
   };
 }
 
@@ -204,6 +217,7 @@ export function branchResolver(sessions: readonly LocalSession[]) {
     const s = key === null ? undefined : byKey.get(key);
     if (!s?.git) return null;
     return {
+      repo: s.repo,
       branch: s.git.branch,
       linked: !!s.worktree?.linked,
       dirty: s.git.uncommitted,

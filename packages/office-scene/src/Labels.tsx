@@ -4,6 +4,9 @@ import { Vector3, type Mesh } from 'three';
 import type { Agent } from '@aether/contracts';
 import type { Rect } from './multi-view.js';
 
+/** Camera distance under which a name tag also shows its small details; the overview is about 60 away. */
+const NEAR_DISTANCE = 30;
+
 export function ProjectedLabels({
   labels,
   elements,
@@ -27,7 +30,11 @@ export function ProjectedLabels({
     )) {
       const element = elements.get(label.id);
       if (!element) continue;
-      point.current.set(label.x, label.y, label.z).project(camera);
+      point.current.set(label.x, label.y, label.z);
+      // Close enough to read the details (the provider's mark): the tag's own CSS shows them when this is set.
+      element.dataset['near'] =
+        camera.position.distanceTo(point.current) < NEAR_DISTANCE ? '1' : '0';
+      point.current.project(camera);
       const x = ((point.current.x + 1) * size.width) / 2,
         y = ((1 - point.current.y) * size.height) / 2;
       const visible =

@@ -66,3 +66,25 @@ it('saving a layout is versioned, validated server-side, and bound to agents of 
     f.control.close();
   }
 });
+
+it('a desk can be saved for a session AETHER only observes (a `local:` member), but not for an unknown agent', () => {
+  const f = fixture();
+  try {
+    const save = (objects: PlacedObject[], version: number) =>
+      f.control.execute(
+        f.owner.actor,
+        command('layout.save', layout(objects), f.projectId, version),
+      );
+    expect(
+      save([desk('seat', -10, -6, { agentId: 'local:claude:abc123' })], 0).result['version'],
+    ).toBe(1);
+    // Anything else that is not a registered agent is refused: by the schema (a malformed id, a subagent) or the project.
+    expect(() => save([desk('seat', -10, -6, { agentId: 'localx:abc' })], 1)).toThrow();
+    expect(() => save([desk('seat', -10, -6, { agentId: 'local:claude:abc:sub:x' })], 1)).toThrow();
+    expect(() =>
+      save([desk('seat', -10, -6, { agentId: '00000000-0000-4000-8000-000000000009' })], 1),
+    ).toThrow('AGENT_NOT_FOUND');
+  } finally {
+    f.control.close();
+  }
+});

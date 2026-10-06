@@ -1,14 +1,25 @@
 import type { Agent, Layout } from '@aether/contracts';
 import { DEPARTMENTS } from '@aether/kernel';
-import { Animal } from './Animal.js';
+import { useMemo, useRef } from 'react';
+import { Animal, type EmoteCue, type Ring } from './Animal.js';
+import { createLongPress } from './long-press.js';
 import type { Apparition } from './animal-states.js';
+import { CompactionEffect } from './CompactionEffect.js';
+import { ContextGauge } from './ContextGauge.js';
 import { DeskEffects } from './DeskEffects.js';
 import { Departing } from './Departing.js';
 import { SEAT_DEPTH, WALK_PACE, type Departure } from './departure.js';
 import { MemberScreen } from './MemberScreen.js';
+import { AttentionRing, ContactShadow, ScreenGlow } from './DeskGlow.js';
+import { Poser } from './Poser.js';
+import type { Engagement } from './interplay.js';
 import type { ScreenFacts } from './screen-facts.js';
-import { AGENT_OFFSET, floorY } from './scene-geometry.js';
+import { ACTIVE, AGENT_OFFSET, floorY } from './scene-geometry.js';
+import type { SceneCompaction } from './context.js';
 import type { Quality } from './scene-types.js';
+
+/** Where the compaction effect plays: above a seated member's head, in the desk's frame. */
+const HEAD_Y = 1.75;
 
 type Desk = Layout['objects'][number];
 
@@ -20,13 +31,21 @@ export function Member({
   role,
   facts,
   intensity,
+  compaction,
   apparition,
   zombie,
   departure,
+  engagements,
+  attention,
   selected,
+  ring,
+  emote,
   reducedMotion,
   quality,
   light,
+  onActivate,
+  onMenu,
+  onGrab,
   onSelect,
   onFly,
   onHoverStart,
@@ -39,14 +58,30 @@ export function Member({
   role: string;
   facts: ScreenFacts | undefined;
   intensity: 0 | 1 | 2 | 3;
+  /** A compaction happening now: the paper-to-cube effect over the head (not when motion is reduced or quality is low). */
+  compaction: SceneCompaction | undefined;
   apparition: Apparition | undefined;
   zombie: boolean;
   /** Sent home: the way out and when it begins. The member packs up, walks out and the desk is left empty. */
   departure: { plan: Departure; startAt: number } | undefined;
+  /** Who this member is turned toward right now (a message in the air), newest first. */
+  engagements: readonly Engagement[] | undefined;
+  /** The member wants a person: a ring of light pulses on the floor round its desk. */
+  attention: boolean;
   selected: boolean;
+  /** The ring under the member: chosen, hovered or in the group selection. */
+  ring: Ring | null;
+  /** A reaction the person asked for (see emotes.ts). */
+  emote: EmoteCue | undefined;
   reducedMotion: boolean;
   quality: Quality;
   light: boolean;
+  /** A click or tap (a second one on the chosen member opens its menu; with Shift it joins the group). */
+  onActivate: (id: string, shift: boolean) => void;
+  /** Right click, or a finger held down on the member. */
+  onMenu: (id: string) => void;
+  /** A press with Alt held: the start of dragging the member's desk to another seat; false when dragging is not allowed. */
+  onGrab: (id: string, event: PointerEvent) => boolean;
   onSelect: (id: string) => void;
   onFly: (target: [number, number, number], offset: [number, number, number]) => void;
   onHoverStart: (id: string) => void;
@@ -54,9 +89,14 @@ export function Member({
   onFailure: () => void;
 }) {
   const baseY = floorY(desk.floor ?? 0, exploded);
+  const menu = useRef(onMenu);
+  menu.current = onMenu;
+  const press = useMemo(() => createLongPress(() => menu.current(agent.id)), [agent.id]);
   const animal = {
     agent,
     selected,
+    ring,
+    emote,
     reducedMotion,
     quality,
     light,
@@ -74,12 +114,40 @@ export function Member({
         intensity={intensity}
       />
       <DeskEffects intensity={intensity} seed={agent.id} />
+      <ContextGauge percent={facts?.contextPercent ?? null} />
+      <ScreenGlow
+        accent={DEPARTMENTS[desk.floor ?? 0]?.accent ?? '#43e6df'}
+        level={intensity}
+        on={!light && quality !== 'low' && ACTIVE.includes(agent.activity)}
+      />
+      {(light || quality === 'low') && <ContactShadow z={SEAT_DEPTH} />}
+      {attention && (
+        <AttentionRing z={SEAT_DEPTH * 0.4} animate={!reducedMotion && quality !== 'low'} />
+      )}
+      {compaction && !reducedMotion && quality !== 'low' && (
+        <CompactionEffect key={compaction.key} position={[0, HEAD_Y, SEAT_DEPTH]} />
+      )}
       <group
         position={[0, 0, SEAT_DEPTH]}
         onClick={(e) => {
           e.stopPropagation();
-          onSelect(agent.id);
+          // A click that ends an orbit drag, or the end of a press-and-hold, is not a choice.
+          if (e.delta > 4 || press.consumeClick()) return;
+          onActivate(agent.id, e.shiftKey);
         }}
+        onContextMenu={(e) => {
+          e.stopPropagation();
+          e.nativeEvent.preventDefault();
+          onMenu(agent.id);
+        }}
+        onPointerDown={(e) => {
+          if (e.pointerType === 'touch') press.start(e.clientX, e.clientY);
+          else if (e.altKey && e.button === 0 && onGrab(agent.id, e.nativeEvent))
+            e.stopPropagation();
+        }}
+        onPointerMove={(e) => press.move(e.clientX, e.clientY)}
+        onPointerUp={press.end}
+        onPointerCancel={press.end}
         onDoubleClick={(e) => {
           e.stopPropagation();
           onSelect(agent.id);
@@ -114,7 +182,13 @@ export function Member({
             )}
           </Departing>
         ) : (
-          <Animal {...animal} apparition={apparition} pace={1 + intensity * 0.4} />
+          <Poser
+            seat={{ x: desk.x, z: desk.z, floor: desk.floor ?? 0, rotation: desk.rotation }}
+            engagements={engagements}
+            reducedMotion={reducedMotion}
+          >
+            <Animal {...animal} apparition={apparition} pace={1 + intensity * 0.4} />
+          </Poser>
         )}
         {zombie && !departure && (
           <Animal

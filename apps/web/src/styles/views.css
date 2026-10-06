@@ -267,6 +267,11 @@ th {
 .offline-banner button {
   color: inherit;
 }
+.notice > span {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
 .office-2d {
   padding: var(--space-64) var(--space-20) var(--space-32);
   height: 100%;
@@ -290,4 +295,16 @@ th {
 }
 .mobile-menu {
   display: none;
+}
+.scene-warming {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--scene-bg);
+  color: var(--glass-edge);
+  font-size: var(--fs-small);
+  z-index: var(--z-labels);
+  pointer-events: none; /* a touch still reaches the canvas, as it does the moment the scene is ready */
 }

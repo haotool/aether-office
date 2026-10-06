@@ -20,7 +20,7 @@ export type TerminalUser = {
   id: string;
   role: 'owner' | 'operator' | 'reviewer' | 'viewer' | 'agent' | 'runner';
 };
-export type TerminalChunk = { seq: number; data: string };
+type TerminalChunk = { seq: number; data: string };
 /** Runner-local primitive. Callers must enforce project scope before giving access to a session. */
 export class PtySession {
   readonly id = randomUUID();

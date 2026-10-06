@@ -62,10 +62,60 @@ unverified reference).
 
 See [native execution](native-execution.md#review-verification-and-acceptance).
 
+## Interacting with the characters
+
+Click a character to choose it; click it again (or right-click, press and hold on a phone, or press Enter on its name tag)
+to open its action menu: open the conversation, follow it with the camera, look at its screen, pin it to the wall of small
+views, message it, send a quick reply, interrupt it, continue or fork it in AETHER, copy its resume command, stop it or send
+it home. Each action is offered only when it can really be done and otherwise shows why (a session AETHER only watches cannot
+be typed into; only the owner ends a process; a managed agent has no terminal). Six emotes (wave, thumbs up, high five, cheer,
+stretch, pat) are purely visual. Alt + drag carries a member's desk to another seat (validated like the layout editor, saved
+through the layout API, with an undo), and Shift + click or Shift + drag picks a group to send home, pin or copy resume
+commands for. The design notes and the exact rules are in
+[the design system](design-system.md#interactions-with-the-characters).
+
+## The session panel and the composer
+
+The panel beside the office (a bottom sheet on a phone) opens on a feed of every observed session in four groups: needs you,
+working, recently finished and idle. Choosing a member opens its conversation: turns with the prompt, the reply as Markdown and
+each run of tool calls folded into one line. A session whose process runs inside an AETHER terminal gets a composer (Enter
+sends, `/` opens the CLI's commands and skills, `@` completes file paths, Stop interrupts); any other session stays read-only
+and offers **Continue in AETHER** or **Fork in AETHER**, which start a new AETHER terminal with `claude --resume` or
+`codex resume`. The panel updates from a server-sent change stream and polls only as a slow safety net. The panel can be
+dragged between 320 and 720 px or folded to a rail. Details and the endpoints are in the
+[design system](design-system.md#session-panel) and [architecture](architecture.md#the-http-surface).
+
+## Answering permission prompts (Remote approvals)
+
+Off by default. With `pnpm hooks install --remote-approvals` and the owner's switch in Settings, a Claude Code permission prompt
+is also shown in the panel as a card (Allow once, Allow for this session when Claude offered a rule, Deny with a reason). Only a
+button press decides; with no answer, offline or on any error Claude asks in its terminal as usual. The trust model, the
+signed answers and the plain-HTTP tradeoff for a phone are in [security](security.md#safety-properties).
+
+## Clock out
+
+Sessions that have sat idle for a day or more can be picked in one dialog and sent home together. The server re-checks each one
+(still running, same process, idle long enough, an owner's project) and ends only that process: `SIGTERM`, then `SIGKILL` after
+5 seconds. Transcripts are never deleted. The office shows the members packing up and leaving by the elevator.
+
+## The repository in the office
+
+When a project has a Git repository, its branches rise through the middle of the building as braided strands of glass, one bead
+per commit, and the history builds a flowering crown above the roof: one flower per tier of twelve commits and a great bloom on
+top. The data comes from `GET /api/projects/:id/git-graph` (subjects and authors redacted and bounded). A hover card names the
+commit or the tier. It is on for a desktop and off on a phone by default. See the [design system](design-system.md#the-beanstalk).
+
+## Speech bubbles, context and compaction
+
+Working members show their latest prompt and reply as two bubbles (up to six at once; only the selected or filmed member on a
+phone). Each desk has a gauge for the share of the model's context window in use, which turns amber from 60% and red above 85%;
+a compaction plays a short effect and a chip. Both come from the local session scan (`GET /api/local-sessions/speech`,
+`usage.contextPct`, `usage.compactedAt`) and nothing is stored.
+
 ## Observed sessions on the 3D floor
 
-Sessions are placed on a floor and desk by the engineering role their work belongs to, decided on the server from the session
-title and context (the text it was decided from is never sent). A dormant session is a sleeping rabbit, an orphaned one a ghost,
+Sessions are placed on a floor and desk by the engineering role their work belongs to, decided on the server from what the session did, its
+title, prompt, branch and subagents, with a confidence and the reasons (see [roles](roles.md); the text it was decided from is never sent). A dormant session is a sleeping rabbit, an orphaned one a ghost,
 and zombie processes under a session appear as a jiangshi behind the chair. A member's screen shows what its session is really
 doing (title, repository and branch, uncommitted changes, state, the tool in use, context used, quiet time and ports), and
 nothing that is not known.

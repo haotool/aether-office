@@ -19,7 +19,7 @@ const recordSchema = z.object({
   target: z.string().optional(),
   notification: z.string().optional(),
 });
-export type HookRecord = z.infer<typeof recordSchema>;
+type HookRecord = z.infer<typeof recordSchema>;
 
 export type HookState = {
   activity: 'working' | 'idle' | 'waiting_permission' | 'ended';

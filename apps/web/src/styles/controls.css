@@ -113,9 +113,31 @@ button:not([class]) {
 }
 .avatar-icon {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
+  width: var(--avatar-member);
+  height: var(--avatar-member);
   border: 1px solid var(--glass-line-faint);
   border-radius: var(--r-xl);
   flex-shrink: 0;
+}
+.avatar-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.avatar-chip {
+  width: var(--avatar-chip);
+  height: var(--avatar-chip);
+}
+.avatar-row {
+  width: var(--avatar-row);
+  height: var(--avatar-row);
+}
+.avatar-peek {
+  width: var(--avatar-peek);
+  height: var(--avatar-peek);
+}
+.avatar-card {
+  width: var(--avatar-card);
+  height: var(--avatar-card);
 }

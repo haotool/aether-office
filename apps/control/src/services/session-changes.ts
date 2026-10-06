@@ -9,7 +9,7 @@ import type { Speech } from './session-speech.js';
 export type ChangeKind = 'state' | 'tool' | 'speech' | 'transcript';
 export type SessionChange = { seq: number; key: string; kinds: ChangeKind[] };
 type Print = Record<ChangeKind, string>;
-export type Prints = ReadonlyMap<string, Print>;
+type Prints = ReadonlyMap<string, Print>;
 
 const printOf = (s: LocalSession, speech: Speech | undefined): Print => ({
   state: [s.process, s.liveness.state, s.hook?.activity, s.hook?.lastEvent].join('|'),
@@ -38,10 +38,12 @@ export function diffSessions(
   return { next, changed };
 }
 
-export type Subscription = {
+type Subscription = {
   /** The newest sequence number, and whether the caller missed changes the hub no longer remembers. */
   seq: number;
   resync: boolean;
+  /** Settles once the baseline scan is in: only then is whatever a client reads next at least as new as the baseline. */
+  ready: Promise<void>;
   replay: SessionChange[];
   unsubscribe: () => void;
 };
@@ -65,6 +67,7 @@ export function createSessionHub(options: {
   let prints: Prints | null = null;
   let timer: ReturnType<typeof setInterval> | undefined;
   let busy = false;
+  let baseline: Promise<void> = Promise.resolve();
 
   async function tick() {
     if (busy) return;
@@ -93,7 +96,7 @@ export function createSessionHub(options: {
     subscribe(after: number | null, listener: (change: SessionChange) => void): Subscription {
       listeners.add(listener);
       if (!timer) {
-        void tick(); // the baseline, so the first real change is seen
+        baseline = tick(); // the baseline, so the first real change is seen
         timer = setInterval(() => void tick(), options.intervalMs);
         timer.unref();
       }
@@ -101,6 +104,7 @@ export function createSessionHub(options: {
       return {
         seq,
         resync,
+        ready: baseline,
         replay: after === null || resync ? [] : ring.filter((c) => c.seq > after),
         unsubscribe() {
           listeners.delete(listener);

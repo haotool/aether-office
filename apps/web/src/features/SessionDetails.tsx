@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { Agent, LocalSession, Snapshot } from '@aether/contracts';
 import { ROLE_LABELS } from '@aether/kernel';
 import { classificationOf } from '../localSessions.js';
+import { roleWhy } from './role-why.js';
 import { Badge, useT } from '../ui.js';
 
 const Row = ({
@@ -30,11 +31,8 @@ function Observed({ session }: { session: LocalSession }) {
         {session.cwd}
       </Row>
       <Row label="provider">{session.provider}</Row>
-      <Row
-        label="role"
-        title={kind.basis === 'default' ? 'no keyword matched' : `matched "${kind.matched}"`}
-      >
-        {ROLE_LABELS[kind.role].en} · {kind.basis}
+      <Row label="role" title={kind.evidence.join(' · ')}>
+        {ROLE_LABELS[kind.role].en} · {roleWhy(kind, t)}
       </Row>
       <Row label="process">{session.process}</Row>
       {resources && (

@@ -93,7 +93,7 @@ export function startPhase(seed: string): number {
  * it, the finished children that nobody collected.
  */
 export type Apparition = 'sleeping_rabbit' | 'ghost' | 'zombie';
-export type LivenessName = 'active' | 'idle' | 'dormant' | 'orphaned' | 'ended' | 'unknown';
+type LivenessName = 'active' | 'idle' | 'dormant' | 'orphaned' | 'ended' | 'unknown';
 
 /** What replaces the member, if anything. */
 export function apparitionOf(state: LivenessName): Exclude<Apparition, 'zombie'> | null {

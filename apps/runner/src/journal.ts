@@ -29,7 +29,7 @@ export type ObserverJournal = {
   seen: string[];
   pending: ObservationReport[];
 };
-export type JournalState = {
+type JournalState = {
   schemaVersion: 1;
   observers: Record<string, ObserverJournal>;
   terminalCommands: Record<

@@ -1,16 +1,19 @@
 import { open, stat } from 'node:fs/promises';
 import { withEdge } from './file-edge.js';
 import type { LocalSession } from '@aether/contracts';
+import { compactedAtOf } from './session-context.js';
 
 // Model, context size and spend from a provider transcript. Only counters and the model name are read:
 // no message text is parsed out, kept or returned.
-export type SessionUsage = LocalSession['usage'];
+type SessionUsage = LocalSession['usage'];
 // Read windows, narrowest first. A long Codex turn can push its last turn_context (which names the model) out of the first.
 const TAILS = [128 * 1024, 512 * 1024, 2 * 1024 * 1024];
 const NONE: SessionUsage = {
   model: null,
   contextTokens: null,
   contextWindow: null,
+  contextPct: null,
+  compactedAt: null,
   freshTokens: null,
   limit: null,
 };
@@ -41,7 +44,7 @@ function* linesWithFromEnd(data: Buffer, needles: readonly string[]): Generator<
  * message's usage (new + cached input is the context in use). Absent or malformed → null, never zero.
  */
 export function parseUsage(provider: 'claude' | 'codex', tail: Buffer): SessionUsage {
-  const usage = { ...NONE };
+  const usage = { ...NONE, compactedAt: compactedAtOf(provider, tail) };
   const needles = provider === 'claude' ? ['"usage"'] : ['"token_count"', '"turn_context"'];
   for (const line of linesWithFromEnd(tail, needles)) {
     let entry: Record<string, unknown>;

@@ -18,7 +18,7 @@ const KEYS = new Set([
   'arrowright',
 ]);
 
-export type SceneKeyActions = {
+type SceneKeyActions = {
   floor: number;
   onFloor: (floor: number) => void;
   onToggleFollow: () => void;
@@ -39,9 +39,12 @@ export function useSceneKeys(
     const down = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (target && /^(input|textarea|select)$/i.test(target.tagName)) return;
+      if (target?.closest('[role="menu"]')) return; // the action menu keeps its own arrow keys
       const key = event.key.toLowerCase();
       if (event.metaKey || event.ctrlKey || event.altKey) return;
-      if (KEYS.has(key)) {
+      if (key === 'shift')
+        held.current.add(key); // speed only: a held Shift is no camera move (it also marks a group)
+      else if (KEYS.has(key)) {
         held.current.add(key);
         onCamera();
         if (key.startsWith('arrow')) event.preventDefault();

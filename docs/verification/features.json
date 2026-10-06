@@ -3123,5 +3123,285 @@
       "Hooks are proven only for this repository session so far",
       "Only the 60 most recent sessions are scanned"
     ]
+  },
+  {
+    "id": "OBS-STREAM-01",
+    "requirement": "本機 session 變更以有界的 server-sent event 串流推送（只含 session key 與變更種類，不含內容），並支援續傳、登出或撤銷即中斷；重資料讀取支援 ETag／304。",
+    "scope": "AETHER target; shipped after 0.3, see CHANGELOG.md",
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/routes/session-stream.ts",
+      "apps/control/src/services/session-changes.ts",
+      "apps/web/src/features/use-session-stream.ts",
+      "apps/web/src/features/live-link.ts"
+    ],
+    "testIds": [
+      "tests/aether/session-stream.test.ts",
+      "tests/aether/live-link.test.ts",
+      "tests/aether/api-compression.test.ts",
+      "e2e/live-link.spec.ts"
+    ],
+    "blockers": [
+      "Reconnect backoff and tab-visibility handling are covered by pure tests, not by a run on an unreliable network"
+    ]
+  },
+  {
+    "id": "OBS-COMPOSER-01",
+    "requirement": "在 AETHER 終端機中執行的 session 可由面板輸入框輸入（安全的輸入序列、佇列、停止、斜線指令與 @ 檔案補全）；其他終端機啟動的 session 維持唯讀並提供在 AETHER 繼續或分支。",
+    "scope": "AETHER target; shipped after 0.3, see CHANGELOG.md",
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/routes/composer.ts",
+      "apps/control/src/services/terminal-link.ts",
+      "apps/control/src/services/session-commands.ts",
+      "apps/control/src/services/session-files.ts",
+      "apps/web/src/features/Composer.tsx",
+      "apps/web/src/features/composer-model.ts",
+      "apps/web/src/features/terminal-driver.ts"
+    ],
+    "testIds": [
+      "tests/aether/composer-api.test.ts",
+      "tests/aether/composer-model.test.ts",
+      "tests/aether/session-commands.test.ts",
+      "tests/aether/terminal-resume.test.ts",
+      "e2e/composer.spec.ts"
+    ],
+    "blockers": [
+      "Verified against synthetic terminals; typing into a live Claude Code or Codex prompt was not run (it would use a paid session)"
+    ]
+  },
+  {
+    "id": "OBS-APPROVAL-01",
+    "requirement": "Remote approvals（預設關閉）：Claude Code 權限提示可在面板與手機回答；伺服器簽署每個決定，只有瀏覽器登入者能決定，無答案或任何錯誤時回到終端機提示。",
+    "scope": "AETHER target; shipped after 0.3, see CHANGELOG.md",
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/routes/permissions.ts",
+      "apps/control/src/services/permission-requests.ts",
+      "apps/control/src/services/permission-summary.ts",
+      "apps/control/src/services/remote-approvals.ts",
+      "packages/providers/src/hook-approval.mjs",
+      "packages/providers/src/approval-install.ts",
+      "apps/web/src/features/PermissionCard.tsx"
+    ],
+    "testIds": [
+      "tests/aether/permission-requests.test.ts",
+      "tests/aether/remote-approvals-hardening.test.ts",
+      "tests/aether/remote-approvals-install.test.ts",
+      "tests/aether/hook-approval.test.ts",
+      "tests/aether/permission-feed.test.ts",
+      "tests/aether/route-auth.test.ts"
+    ],
+    "blockers": [
+      "The hook output schema was checked against Claude Code 2.1.289 only",
+      "Any process running as the same user can read the hook token file: a convenience, not a boundary against local code"
+    ]
+  },
+  {
+    "id": "OBS-CLOCKOUT-01",
+    "requirement": "閒置一天以上的 session 可一次下班：伺服器逐一重新檢查（仍在執行、同一行程、閒置夠久、屬於擁有者的專案），SIGTERM 後 SIGKILL，並逐一回報結果。",
+    "scope": "AETHER target; shipped after 0.3, see CHANGELOG.md",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/control/src/services/clock-out.ts",
+      "apps/control/src/services/stop-session.ts",
+      "apps/control/src/routes/local.ts",
+      "apps/web/src/features/ClockOut.tsx",
+      "packages/office-scene/src/departure.ts"
+    ],
+    "testIds": [
+      "tests/aether/clock-out.test.ts",
+      "tests/aether/clock-out-api.test.ts",
+      "tests/aether/stop-session.test.ts",
+      "tests/aether/departure.test.ts"
+    ],
+    "blockers": []
+  },
+  {
+    "id": "OBS-MODELS-01",
+    "requirement": "模型目錄跟隨 CLI：由 Codex 與 Claude Code 自己的快取讀取可用模型與努力等級，標示來源與是否過期，且不寫入任何 CLI 目錄。",
+    "scope": "AETHER target; shipped after 0.3, see CHANGELOG.md",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "packages/providers/src/models.ts",
+      "apps/control/src/routes/local.ts",
+      "apps/web/src/features/ModelPicker.tsx",
+      "apps/web/src/features/DetectedModels.tsx"
+    ],
+    "testIds": [
+      "tests/aether/models.test.ts",
+      "tests/aether/model-picker.test.ts"
+    ],
+    "blockers": []
+  },
+  {
+    "id": "OBS-ROLE-01",
+    "requirement": "session 的職位與部門由單一、確定性的純函式分類器依加權訊號決定，附信心與證據，弱證據留在通才，且三次獨立觀察才換職位。",
+    "scope": "AETHER target; shipped after 0.3, see CHANGELOG.md",
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/kernel/src/classify-session.ts",
+      "packages/kernel/src/role-signals.ts",
+      "apps/control/src/services/session-role.ts",
+      "docs/roles.md"
+    ],
+    "testIds": [
+      "tests/aether/classify-session.test.ts",
+      "tests/aether/session-names.test.ts"
+    ],
+    "blockers": [
+      "Accuracy is 84.9% to 100% on a synthetic corpus and 48% to 90% on 50 hand-labelled real sessions; it is not validated on other users' sessions"
+    ]
+  },
+  {
+    "id": "OBS-CHAR-01",
+    "requirement": "3D 辦公室中可直接操作角色：動作選單（只列出可行動作並說明不可用原因）、表情、懸停卡片、Alt 拖曳換座位（含驗證與復原）與 Shift 群組動作；全部可由鍵盤操作並有語音播報。",
+    "scope": "AETHER target; shipped after 0.3, see CHANGELOG.md",
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/web/src/features/character-actions.ts",
+      "apps/web/src/features/CharacterMenu.tsx",
+      "apps/web/src/features/seat-move.ts",
+      "packages/office-scene/src/InteractionLayer.tsx",
+      "packages/office-scene/src/emotes.ts",
+      "packages/office-scene/src/seat-drag.ts"
+    ],
+    "testIds": [
+      "tests/aether/character-actions.test.ts",
+      "tests/aether/emotes.test.ts",
+      "tests/aether/seat-drag.test.ts",
+      "e2e/z-characters.spec.ts"
+    ],
+    "blockers": [
+      "Touch gestures were exercised with emulated touch, not on a physical phone"
+    ]
+  },
+  {
+    "id": "OBS-GRAPH-01",
+    "requirement": "專案的 Git 歷史畫成穿過大樓中軸的玻璃分支辮與頂端的花冠（每 12 個提交一朵花與一朵大花）；資料取自去識別化且有界的提交圖。",
+    "scope": "AETHER target; shipped after 0.3, see CHANGELOG.md",
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/control/src/services/git-graph.ts",
+      "packages/office-scene/src/stalk-layout.ts",
+      "packages/office-scene/src/crown-layout.ts",
+      "packages/office-scene/src/flower-genome.ts",
+      "packages/office-scene/src/Garden.tsx"
+    ],
+    "testIds": [
+      "tests/aether/git-graph.test.ts",
+      "tests/aether/stalk-layout.test.ts",
+      "tests/aether/flowers.test.ts",
+      "tests/aether/flower-tree.test.ts",
+      "tests/aether/merge-flowers.test.ts"
+    ],
+    "blockers": [
+      "Frame cost was measured on one Apple M4 GPU; integrated GPUs and phones were not measured"
+    ]
+  },
+  {
+    "id": "OBS-CONTEXT-01",
+    "requirement": "每個 session 回報 context 視窗用量與壓縮時間（不解析逐字稿文字）；辦公室以量表、名牌與壓縮效果呈現，並顯示最新提問與回覆的氣泡（有界、已遮蔽、不儲存）。",
+    "scope": "AETHER target; shipped after 0.3, see CHANGELOG.md",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/control/src/services/session-usage.ts",
+      "apps/control/src/services/session-context.ts",
+      "apps/control/src/services/session-speech.ts",
+      "apps/web/src/features/compaction.ts",
+      "packages/office-scene/src/context.ts"
+    ],
+    "testIds": [
+      "tests/aether/session-usage.test.ts",
+      "tests/aether/session-context.test.ts",
+      "tests/aether/session-speech.test.ts",
+      "tests/aether/compaction.test.ts"
+    ],
+    "blockers": []
+  },
+  {
+    "id": "OBS-WALL-01",
+    "requirement": "導演鏡頭平穩（慢速短推軌、不重複拍同一成員）；寬螢幕在至少兩位成員忙碌時顯示最多四個即時視圖的控制室牆面，並依真實訊號呈現工作強度。",
+    "scope": "AETHER target; shipped after 0.3, see CHANGELOG.md",
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/office-scene/src/director.ts",
+      "packages/office-scene/src/multi-view.ts",
+      "packages/office-scene/src/MultiCam.tsx",
+      "packages/office-scene/src/PipWall.tsx",
+      "apps/web/src/features/activity-rate.ts"
+    ],
+    "testIds": [
+      "tests/aether/director.test.ts",
+      "tests/aether/multi-view.test.ts",
+      "tests/aether/activity-rate.test.ts",
+      "tests/aether/perf-control.test.ts",
+      "e2e/director.spec.ts"
+    ],
+    "blockers": [
+      "Visual quality of the camera moves is judged by eye; only the rules (shot choice, pacing, frame layout) are asserted"
+    ]
+  },
+  {
+    "id": "OBS-PANEL-01",
+    "requirement": "session 面板為即時工作區：所有 session 的動態分組、所選 session 的對話、可調寬度與收合，手機上為底部面板；未讀與需要你的計數全站一致。",
+    "scope": "AETHER target; shipped after 0.3, see CHANGELOG.md",
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "apps/web/src/features/SessionPanel.tsx",
+      "apps/web/src/features/SessionFeed.tsx",
+      "apps/web/src/features/SessionConversation.tsx",
+      "apps/web/src/features/SessionSheet.tsx",
+      "apps/web/src/features/PanelResizer.tsx",
+      "apps/web/src/features/panel-width.ts",
+      "apps/web/src/features/needs-you.ts"
+    ],
+    "testIds": [
+      "tests/aether/feed-model.test.ts",
+      "tests/aether/turn-groups.test.ts",
+      "tests/aether/panel-width.test.ts",
+      "tests/aether/needs-you.test.ts",
+      "e2e/session-panel.spec.ts",
+      "e2e/panel-resize.spec.ts"
+    ],
+    "blockers": [
+      "Layout was checked at the six widths of the responsive spec, not on physical devices"
+    ]
+  },
+  {
+    "id": "OBS-NAV-01",
+    "requirement": "預設導覽只顯示 CLI 使用者需要的頁面，進階頁面在設定開啟；通知預設開啟、只含專案名稱；手機可由頂端列掃 QR 配對。",
+    "scope": "AETHER target; shipped after 0.3, see CHANGELOG.md",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/web/src/nav.ts",
+      "apps/web/src/notifications.ts",
+      "apps/web/src/features/Topbar.tsx",
+      "apps/web/src/features/ConnectPhone.tsx",
+      "apps/control/src/services/pairing.ts"
+    ],
+    "testIds": [
+      "tests/aether/nav-advanced.test.ts",
+      "tests/aether/navigation.test.ts",
+      "tests/aether/notifications.test.ts",
+      "tests/aether/pairing.test.ts",
+      "tests/aether/session-alerts.test.ts",
+      "e2e/advanced.spec.ts",
+      "e2e/notifications.spec.ts",
+      "e2e/pairing.spec.ts"
+    ],
+    "blockers": []
   }
 ]

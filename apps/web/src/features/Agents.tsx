@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { Plus, ArrowUpRight } from 'lucide-react';
 import type { Snapshot } from '@aether/contracts';
 import { execute } from '../api.js';
-import { PageHeading, AvatarIcon, Badge, Modal, Field, Empty, useT } from '../ui.js';
+import { avatarState } from '../avatar/state.js';
+import { Avatar } from './Avatar.js';
+import { PageHeading, Badge, Modal, Field, Empty, useT } from '../ui.js';
 export function Agents({
   snapshot,
   onSelect,
@@ -35,11 +37,11 @@ export function Agents({
           {snapshot.agents.map((agent) => (
             <button className="agent-card" onClick={() => onSelect(agent.id)} key={agent.id}>
               <div className="agent-card-top">
-                <AvatarIcon
+                <Avatar
+                  seed={agent.id}
                   species={agent.species}
-                  color={agent.color}
-                  name={agent.name}
-                  size={44}
+                  size="card"
+                  state={avatarState(agent.activity)}
                 />
                 <ArrowUpRight size={17} />
               </div>

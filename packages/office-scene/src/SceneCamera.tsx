@@ -5,7 +5,7 @@ import { MathUtils, PerspectiveCamera, Vector3 } from 'three';
 import { fittedOffset } from './scene-geometry.js';
 import type { Seat } from './director.js';
 import type { Directed } from './scene-navigation.js';
-import { FLY_MS, MIN_DISTANCE, poseAt, type Pose } from './shot-camera.js';
+import { FLY_MS, MIN_DISTANCE, poseAt, type Pose, type V3 } from './shot-camera.js';
 
 export type FlyTo = {
   id: number;
@@ -29,6 +29,7 @@ export function SceneCamera({
   keyboardRef,
   directed,
   seats,
+  followPoint,
 }: {
   command: FlyTo;
   reducedMotion: boolean;
@@ -37,6 +38,8 @@ export function SceneCamera({
   /** The shot the director is playing; null when the camera is the person's. */
   directed: Directed | null;
   seats: ReadonlyMap<string, Seat>;
+  /** A member the person asked to follow: the camera keeps it in the middle (it moves with the seat, never against a hand on the controls). */
+  followPoint?: V3 | null;
 }) {
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
   const camera = useThree((s) => s.camera);
@@ -72,6 +75,8 @@ export function SceneCamera({
   // The shot being played (by its start) and the glide that brings the camera to it from where it was.
   const shot = useRef(0);
   const glide = useRef<{ from: Pose; startedAt: number } | null>(null);
+  const followed = useRef<V3 | null>(null);
+  followed.current = followPoint ?? null;
   const forward = useRef(new Vector3());
   const side = useRef(new Vector3());
   useFrame((_state, delta) => {
@@ -94,6 +99,19 @@ export function SceneCamera({
       invalidate();
       if (c.target.distanceTo(g.target) < 0.04 && camera.position.distanceTo(g.position) < 0.08)
         goal.current = null;
+    }
+    // Following: once a flight is over, the camera and what it looks at slide together towards the member, keeping the
+    // distance and bearing the person has. The seat is still, so this only moves when the seat does (a layout change, a floor).
+    const follow = followed.current;
+    if (follow && !goal.current && !reducedMotion) {
+      const k = 1 - Math.exp(-delta * 3);
+      const move = new Vector3(...follow).sub(c.target).multiplyScalar(k);
+      if (move.lengthSq() > 1e-6) {
+        c.target.add(move);
+        camera.position.add(move);
+        c.update();
+        invalidate();
+      }
     }
     // The director's shot: the camera is put exactly where the shot's move says it is at this moment, never chased
     // towards it, so a held shot holds and a move is the move and nothing else. A near shot is reached by a timed,

@@ -39,7 +39,7 @@ export const SHAPE_KEYS = [
   'filaments', // how many glowing stamens stand in the middle
   'veins', // how strongly the veins glow
 ] as const;
-export type ShapeKey = (typeof SHAPE_KEYS)[number];
+type ShapeKey = (typeof SHAPE_KEYS)[number];
 export type Shape = Record<ShapeKey, number>;
 
 export const SHAPE_RANGE: Record<ShapeKey, [number, number]> = {
@@ -219,7 +219,7 @@ export type Genome = {
   twigs: number;
 };
 
-export type GenomeInput = {
+type GenomeInput = {
   /** The commit hash (or any stable string) the flower grows from. */
   seed: string;
   merges: number;
