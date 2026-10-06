@@ -1,0 +1,93 @@
+/* The "clock out" dialog: pick the long-idle sessions, confirm, read each one's result (features/ClockOut.tsx). */
+.clock-out {
+  display: grid;
+  gap: var(--space-12);
+}
+.clock-out p {
+  margin: 0;
+}
+.clock-out button,
+.clock-out select {
+  min-height: var(--target-touch);
+}
+.clock-out-threshold {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  color: var(--muted);
+}
+.clock-out-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+.clock-out-list {
+  max-height: 40dvh;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+.clock-out-list > li:not(:last-child) .clock-out-row,
+li.clock-out-row:not(:last-child) {
+  border-bottom: 1px solid var(--line);
+}
+.clock-out-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-height: var(--target-touch);
+  padding: var(--space-8) var(--space-12);
+  cursor: pointer;
+}
+li.clock-out-row {
+  cursor: default;
+}
+.clock-out-row input[type='checkbox'] {
+  flex: none;
+  width: var(--space-20);
+  height: var(--space-20);
+  accent-color: var(--mint);
+}
+.clock-out-main {
+  display: grid;
+  min-width: 0;
+}
+.clock-out-main strong {
+  overflow-wrap: anywhere;
+}
+.clock-out-main small {
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+}
+.clock-out-row.cleared small {
+  color: var(--mint);
+}
+.clock-out-row.skipped small {
+  color: var(--gold);
+}
+.clock-out-row.failed small {
+  color: var(--red);
+}
+.clock-out-count,
+.clock-out-empty {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--fs-small);
+}
+.clock-out-go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+}
+.clock-out-offer {
+  display: grid;
+}
+.clock-out-offer .clock-out-go {
+  justify-content: center;
+  min-height: var(--target-touch);
+}

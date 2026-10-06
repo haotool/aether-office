@@ -27,6 +27,11 @@ export const localSessionSchema = z.object({
       lastEvent: z.string(),
       tool: z.string().nullable(),
       at: z.number(),
+      // The last few tool calls, oldest first, with a short redacted target (a file's base name, a command's first
+      // word); never a full command, arguments or content.
+      recent: z.array(
+        z.object({ tool: z.string(), target: z.string().nullable(), at: z.number() }),
+      ),
     })
     .nullable(),
   subagents: z.array(z.object({ id: z.string(), type: z.string(), lastSeen: z.number() })),
@@ -94,3 +99,45 @@ export const claudeLimitsSchema = z.object({
 });
 export type ClaudeLimits = z.infer<typeof claudeLimitsSchema>;
 export type ClaudeLimitsResponse = { limits: ClaudeLimits | null };
+
+// "Clock out": send the sessions that have sat idle for a day or more home in one request. The client names sessions by
+// the key the scanner gave them and the process start time it saw (never a pid); the server decides for each one.
+const DAY_MS = 24 * 60 * 60 * 1000;
+export const CLOCK_OUT_MIN_IDLE_MS = DAY_MS;
+export const CLOCK_OUT_MAX_SESSIONS = 50;
+export const clockOutRequestSchema = z
+  .object({
+    sessions: z
+      .array(
+        z
+          .object({
+            key: z.string().regex(/^(claude|codex):[A-Za-z0-9._-]{1,200}$/),
+            startedAt: z.number().int(),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(CLOCK_OUT_MAX_SESSIONS),
+    // Idle at least this long, checked again on the server against the session's own clock.
+    minIdleMs: z
+      .number()
+      .int()
+      .min(CLOCK_OUT_MIN_IDLE_MS)
+      .max(365 * DAY_MS),
+  })
+  .strict();
+export type ClockOutRequest = z.infer<typeof clockOutRequestSchema>;
+export type ClockOutSkipReason =
+  | 'not_found' // the scanner no longer knows it
+  | 'no_project'
+  | 'forbidden'
+  | 'not_running'
+  | 'active' // not idle long enough any more (or not idle at all): someone is working in it again
+  | 'changed' // not the process the person saw
+  | 'zombie'
+  | 'own_ancestor';
+export type ClockOutItem =
+  | { key: string; outcome: 'cleared'; freedBytes: number | null }
+  | { key: string; outcome: 'skipped'; reason: ClockOutSkipReason }
+  | { key: string; outcome: 'failed'; reason: 'still_running' };
+export type ClockOutResponse = { results: ClockOutItem[] };

@@ -1,7 +1,23 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { createServer } from '../../apps/control/src/server.js';
-import { PAIRING_TTL_MS, createPairingStore } from '../../apps/control/src/services/pairing.js';
+import { createRequire } from 'node:module';
+import {
+  PAIRING_TTL_MS,
+  createPairingStore,
+  lanOrigins,
+  terminalQr,
+} from '../../apps/control/src/services/pairing.js';
 import { fixture } from './fixture.js';
+
+// qrcode belongs to the control app, so it is resolved from there rather than hoisted into the root
+const QRCode = createRequire(new URL('../../apps/control/package.json', import.meta.url))(
+  'qrcode',
+) as {
+  create(
+    text: string,
+    options: { errorCorrectionLevel: string },
+  ): { modules: { size: number; data: Uint8Array } };
+};
 
 const clean: (() => void | Promise<unknown>)[] = [];
 afterEach(async () => {
@@ -32,6 +48,52 @@ describe('the pairing codes', () => {
   });
 });
 
+describe('the addresses a phone can use', () => {
+  const nic = (address: string, internal = false) => [
+    { address, family: 'IPv4' as const, internal, netmask: '', mac: '', cidr: null },
+  ];
+  it('are the real private ones, best first, without link-local or virtual interfaces', () => {
+    const interfaces = {
+      lo0: nic('127.0.0.1', true),
+      utun4: nic('10.8.0.2'),
+      docker0: nic('172.17.0.1'),
+      en1: nic('172.20.1.5'),
+      en2: nic('169.254.9.9'),
+      tailscale0: nic('100.64.0.3'),
+      en3: nic('8.8.8.8'),
+      en0: nic('192.168.1.20'),
+    };
+    expect(lanOrigins('4310', interfaces)).toEqual([
+      'http://192.168.1.20:4310',
+      'http://172.20.1.5:4310',
+    ]);
+  });
+});
+
+describe('the QR code in the terminal', () => {
+  it('is a clean block with a quiet zone that holds the same modules as the code', () => {
+    const url = 'http://192.168.1.20:4310/#pair=AAAAAAAAAAAAAAAAAAAAAA';
+    const { size, data } = QRCode.create(url, { errorCorrectionLevel: 'M' }).modules;
+    const lines = terminalQr(url).split('\n');
+    // eslint-disable-next-line no-control-regex
+    const rows = lines.map((line) => line.replace(/\u001b\[[0-9;]*m/g, ''));
+    const side = size + 8;
+    expect(rows.length).toBe(Math.ceil(side / 2));
+    for (const row of rows) expect([...row]).toHaveLength(side); // every row as wide as the rest
+    expect(lines.every((l) => l.startsWith('\u001b[30;47m') && l.endsWith('\u001b[0m'))).toBe(true);
+    // decode: top and bottom module of every character
+    const dark = (r: number, c: number) => {
+      const glyph = [...rows[Math.floor(r / 2)]!][c]!;
+      return r % 2 === 0 ? '█▀'.includes(glyph) : '█▄'.includes(glyph);
+    };
+    for (let r = 0; r < side; r++)
+      for (let c = 0; c < side; c++) {
+        const inside = r >= 4 && c >= 4 && r < 4 + size && c < 4 + size;
+        expect(dark(r, c)).toBe(inside && !!data[(r - 4) * size + c - 4]);
+      }
+  });
+});
+
 describe('signing a phone in by scanning', () => {
   function setup(lan: boolean) {
     const f = fixture();
@@ -39,7 +101,7 @@ describe('signing a phone in by scanning', () => {
     const app = createServer(f.control, {
       origin: 'http://127.0.0.1:4310',
       lan,
-      lanAddresses: (port) => [`http://192.168.1.20:${port}`],
+      lanAddresses: (port) => [`http://192.168.1.20:${port}`, `http://10.0.0.7:${port}`],
     });
     clean.push(() => app.close());
     return { ...f, app };
@@ -63,6 +125,12 @@ describe('signing a phone in by scanning', () => {
     const link = body.links[0]!;
     expect(link.url).toMatch(/^http:\/\/192\.168\.1\.20:4310\/#pair=[A-Za-z0-9_-]{22}$/); // fragment, not query
     expect(link.svg).toContain('<svg');
+    // one code for every address: the links differ only by host, and only one code is waiting
+    expect(body.links.map((l) => l.url.split('#pair=')[1])).toEqual([
+      link.url.split('#pair=')[1],
+      link.url.split('#pair=')[1],
+    ]);
+    expect(body.links[1]!.url).toMatch(/^http:\/\/10\.0\.0\.7:4310\/#pair=/);
     const code = link.url.split('#pair=')[1]!;
 
     const redeemed = await f.app.inject({

@@ -23,6 +23,7 @@ import { Telemetry } from './features/Telemetry.js';
 import { Topbar } from './features/Topbar.js';
 import { useBeats } from './features/activity-rate.js';
 import { needsYou } from './features/needs-you.js';
+import { useLeaving } from './features/clock-out.js';
 import { officeModel } from './features/office-model.js';
 import { usePhone, usePhoneAny } from './phone.js';
 import { useAdoptRepos } from './adoptProjects.js';
@@ -91,6 +92,7 @@ export function App() {
     retry: false,
   });
   const beats = useBeats(local.data?.sessions);
+  const leaving = useLeaving((s) => s.leaving);
   // Shares the approvals page's cache; looked at every few seconds so the badge on "more" means something.
   const approvals = useQuery({
     queryKey: ['approvals', projectId],
@@ -158,7 +160,7 @@ export function App() {
     );
   const data = snapshot.data;
   const needs = needsYou(data, pendingApprovals);
-  const model = officeModel(data, local.data?.sessions, projectId, prefs.locale, beats);
+  const model = officeModel(data, local.data?.sessions, projectId, prefs.locale, beats, leaving);
   const selected = model.agents.find((a) => a.id === selectedId) ?? null;
   return (
     <div className="application">

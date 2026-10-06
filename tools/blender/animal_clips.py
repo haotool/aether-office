@@ -337,13 +337,16 @@ def make_clips():
         return brows(p, 0, .008)
 
     def sleeping(t):
+        # Folded forward over the desk with the cheek on the forearms, face turned to the side. The loop is 4 s: one slow
+        # breath and one small bob of the head.
         p = sit(Pose())
-        p.turn('chest', 'x', .2).turn('neck', 'x', .15).turn('head', 'x', .4).turn('head', 'z', .18)
-        breathe(p, t, 1, .012)
-        arms_forward(p, -.85, -1.2)
-        p.move('chest', z=-.02 + .012 * wave(t, 1))
+        p.turn('chest', 'x', .55).turn('neck', 'x', .4).turn('head', 'y', 1.15).turn('head', 'z', .1)
+        p.move('pelvis', y=-.07)
+        breathe(p, t, 1, .014)
+        p.both('upper_arm', 'x', -.25).both('forearm', 'x', -.1)
+        p.turn('head', 'x', .04 * wave(t, 1, .25))
         face(p, eye=0.0, lid=1.0)
-        tail(p, t, .04, 1, lift=-.2)
+        tail(p, t, .04, 1, lift=.04)
         ears(p, t, .02, 1, back=.7)
         return brows(p, .1, -.004)
 
@@ -448,7 +451,7 @@ def make_clips():
         'reviewing': (72, reviewing), 'testing': (60, testing),
         'waiting_permission': (72, waiting_permission), 'waiting_peer': (72, waiting_peer),
         'error': (48, error), 'cheer': (48, cheer), 'celebrate': (48, celebrate),
-        'sleeping': (120, sleeping), 'stretch': (96, stretch), 'sip': (96, sip),
+        'sleeping': (96, sleeping), 'stretch': (96, stretch), 'sip': (96, sip),
         'wave': (48, wave_hello), 'shrug': (72, shrug), 'look_around': (96, look_around), 'nod': (48, nod),
         'haunt': (72, haunt), 'hop': (36, hop),
     }

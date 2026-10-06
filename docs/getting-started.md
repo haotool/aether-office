@@ -56,8 +56,9 @@ pnpm hooks remove  --project /path/to/repo
 ```
 
 `--scope user` edits `~/.claude/settings.json` and affects every session on the machine; it is never the default. The
-receiver records only session ids, event names, tool names and the working directory in `~/.aether/hook-events.jsonl`,
-never prompts or tool inputs.
+receiver records only session ids, event names, tool names, the working directory and a short target of a tool call (a
+file's base name, a command's first word and a plain subcommand such as `git push`, a URL's host) in
+`~/.aether/hook-events.jsonl`, never prompts, full commands, arguments, paths or other tool inputs.
 
 ## Connect a phone by scanning a QR code
 
@@ -65,11 +66,13 @@ With LAN access on (below), the quickest way to sign a phone in is a QR code, no
 
 ```sh
 AETHER_HOST=0.0.0.0 pnpm start
-pnpm run pair          # prints a QR code in the terminal
+pnpm run pair          # prints one QR code in the terminal
 ```
 
-Scan it with the phone's camera (same Wi-Fi). Or sign in on the computer and use **Settings → Connect a phone**, which shows
-the QR code and tells you when the phone has used it. A code works **once** and expires in **five minutes**; the code is
+Scan it with the phone's camera (same Wi-Fi). The QR code is for the best address of this computer (a 192.168.x or 10.x
+address on a real network interface; tunnels, containers and link-local addresses are skipped); any other addresses are
+listed beside it and carry the same code. Or sign in on the computer and use **Settings → Connect a phone**, which shows
+the QR code, lets you switch the address it points at, and tells you when the phone has used it. A code works **once** and expires in **five minutes**; the code is
 carried in the link's fragment, which a browser never sends over the network, so it is in no server log. The phone is
 remembered for 30 days. On the sign-in page, "Remember this device" does the same for a typed token (otherwise a session
 lasts 8 hours).

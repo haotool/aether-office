@@ -93,3 +93,60 @@
   white-space: nowrap;
   vertical-align: bottom;
 }
+
+/* A commit on the beanstalk: a glass card by the pointer that never takes it, so the camera keeps orbiting under it. */
+.stalk-tip {
+  position: absolute;
+  z-index: var(--z-hud-chip);
+  display: grid;
+  gap: var(--space-4);
+  max-width: min(280px, calc(50% - var(--space-16)));
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--r-lg);
+  border: 1px solid color-mix(in srgb, var(--strand) 55%, var(--glass-line));
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: var(--on-glass);
+  font-size: var(--fs-small);
+  pointer-events: none;
+  transform: translate(var(--space-16), var(--space-16));
+}
+.stalk-tip.flip {
+  transform: translate(calc(-100% - var(--space-16)), var(--space-16));
+}
+.stalk-tip b {
+  overflow-wrap: anywhere;
+}
+.stalk-tip small {
+  color: var(--on-glass-muted);
+  font-size: var(--fs-small);
+}
+.stalk-tip-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+.stalk-tip code {
+  color: var(--strand);
+  font: 700 var(--fs-small) var(--mono);
+}
+.stalk-tip em {
+  font: 700 var(--fs-label) var(--mono);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--on-glass-accent);
+}
+.stalk-tip-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+.stalk-tip-chips i {
+  padding: 0 var(--space-6);
+  border-radius: var(--r-pill);
+  border: 1px solid color-mix(in srgb, var(--strand) 60%, transparent);
+  font: 600 var(--fs-label) var(--mono);
+  font-style: normal;
+  color: var(--on-glass);
+}

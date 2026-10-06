@@ -1,11 +1,41 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { AdditiveBlending, QuadraticBezierCurve3, TubeGeometry, Vector3, type Mesh } from 'three';
+import {
+  AdditiveBlending,
+  Color,
+  DataTexture,
+  NearestFilter,
+  QuadraticBezierCurve3,
+  RepeatWrapping,
+  TubeGeometry,
+  Vector3,
+  type Mesh,
+  type MeshBasicMaterial,
+} from 'three';
+
+const IDLE_TINT = new Color('#8196ab'); // a member who is not working: the branch colour cooled and greyed
+const IDLE_HZ = 0.3;
+const DASHES = 14; // dashes along an idle beam
+
+/** One dash and one gap along the tube's length, repeated, as an alpha map: the idle beam reads as segments. */
+function dashTexture() {
+  const texture = new DataTexture(
+    Uint8Array.from({ length: 32 }, (_, i) => (i < 16 ? 255 : 0)), // the alpha map reads green, so fill all channels
+    8,
+    1,
+  );
+  texture.wrapS = RepeatWrapping;
+  texture.repeat.set(DASHES, 1);
+  texture.magFilter = texture.minFilter = NearestFilter;
+  texture.needsUpdate = true;
+  return texture;
+}
 
 /**
  * Each member's branch as a beam of light from the desk into the elevator core, which stands for the default branch.
  * A linked worktree is cyan, the main checkout white, uncommitted work amber; while the member works the beam flows
- * toward the core. Only real Git state is drawn: no beam without a branch.
+ * toward the core; an idle member's beam is thin, cool and dashed, and only breathes. Only real Git state is drawn: no
+ * beam without a branch.
  */
 function BranchBeam({
   from,
@@ -30,15 +60,27 @@ function BranchBeam({
     [from[0], from[1], from[2], to[0], to[1], to[2]], // eslint-disable-line react-hooks/exhaustive-deps -- by value
   );
   const geometry = useMemo(
-    () => new TubeGeometry(curve, 28, flowing ? 0.075 : 0.055, 6, false),
+    () => new TubeGeometry(curve, 28, flowing ? 0.075 : 0.04, 6, false),
     [curve, flowing],
   );
   useEffect(() => () => geometry.dispose(), [geometry]);
+  const dashes = useMemo(() => (flowing ? null : dashTexture()), [flowing]);
+  useEffect(() => () => dashes?.dispose(), [dashes]);
+  const tint = useMemo(
+    () => (flowing ? color : new Color(color).lerp(IDLE_TINT, 0.5)),
+    [color, flowing],
+  );
+  const material = useRef<MeshBasicMaterial>(null);
   const packets = useRef<(Mesh | null)[]>([]);
   const clock = useRef(0);
   useFrame((_state, delta) => {
-    if (!flowing || !animate) return;
+    if (!animate) return;
     clock.current += delta;
+    if (!flowing) {
+      if (material.current)
+        material.current.opacity = 0.45 + 0.2 * Math.sin(2 * Math.PI * IDLE_HZ * clock.current);
+      return;
+    }
     packets.current.forEach((mesh, i) => {
       if (!mesh) return;
       mesh.position.copy(curve.getPoint((clock.current * 0.35 + i / 3) % 1));
@@ -48,9 +90,12 @@ function BranchBeam({
     <group>
       <mesh geometry={geometry}>
         <meshBasicMaterial
-          color={color}
+          key={flowing ? 'flow' : 'idle'} // a new material, since an alpha map changes the shader
+          ref={material}
+          color={tint}
+          alphaMap={dashes}
           transparent
-          opacity={flowing ? 0.9 : 0.4}
+          opacity={flowing ? 0.9 : 0.5}
           blending={AdditiveBlending}
           depthWrite={false}
           toneMapped={false}

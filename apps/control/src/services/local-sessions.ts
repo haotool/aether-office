@@ -207,7 +207,13 @@ export async function scanLocalSessions(
       git: info?.git ?? null,
       worktree: info?.worktree ?? null,
       hook: hook
-        ? { activity: hook.activity, lastEvent: hook.lastEvent, tool: hook.tool, at: hook.at }
+        ? {
+            activity: hook.activity,
+            lastEvent: hook.lastEvent,
+            tool: hook.tool,
+            at: hook.at,
+            recent: hook.recent,
+          }
         : null,
       subagents: [...(hook?.subagents ?? []), ...(r.children ?? [])],
       // A `codex exec` run has no thread name; its task's opening words name it. A Claude prompt is never sent.

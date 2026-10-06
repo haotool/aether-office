@@ -71,6 +71,11 @@ export const seatAt = (index: number): [number, number] => [
   ROWS[Math.floor(index / COLUMNS.length) % ROWS.length]!,
 ];
 
+const clampFloor = (floor: number) => Math.min(FLOORS - 1, Math.max(0, floor));
+/** The floors to try for an agent, nearest-first: its own, then each following floor, wrapping round. */
+export const floorsFrom = (floor: number) =>
+  Array.from({ length: FLOORS }, (_, k) => (clampFloor(floor) + k) % FLOORS);
+
 const MIN_DESKS = [12, 8, 8, 8, 8]; // a populated look even on a quiet floor; the ground floor keeps its original twelve
 /**
  * One layout for the whole building. `floorOf` says which floor an agent works on (default: the ground floor); the
@@ -81,9 +86,15 @@ export function defaultLayout(
   floorOf: (agent: Agent) => number = () => 0,
 ): Layout {
   const objects: Layout['objects'] = [];
+  // A floor holds FLOOR_CAPACITY desks; the members beyond it take the next floor with a free desk.
+  const onFloor: Agent[][] = Array.from({ length: FLOORS }, () => []);
+  for (const agent of agents) {
+    const floor = floorsFrom(floorOf(agent)).find((f) => onFloor[f]!.length < FLOOR_CAPACITY);
+    if (floor !== undefined) onFloor[floor]!.push(agent);
+  }
   for (let floor = 0; floor < FLOORS; floor++) {
-    const here = agents.filter((a) => Math.min(FLOORS - 1, Math.max(0, floorOf(a))) === floor);
-    const desks = Math.min(FLOOR_CAPACITY, Math.max(MIN_DESKS[floor] ?? 8, here.length));
+    const here = onFloor[floor]!;
+    const desks = Math.max(MIN_DESKS[floor] ?? 8, here.length);
     for (let i = 0; i < desks; i++) {
       const [x, z] = seatAt(i);
       objects.push({

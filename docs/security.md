@@ -28,7 +28,8 @@ local user's file permissions. Strong sandboxing of agents is outside the intend
 | Agent ↔ platform             | Agents reach the platform only through MCP tools with a credential scoped to one run, one agent and one project, which expires with the run. Peer messages are untrusted text and can authorize nothing. |
 | Untrusted content ↔ UI       | Messages, transcripts, terminal output and provider payloads are rendered as text. The web app uses no `dangerouslySetInnerHTML`, `innerHTML`, `eval` or terminal clipboard/link add-ons (checked by `pnpm lint`). |
 | Outbound requests            | Connectors and A2A artifact fetches go through a guard that blocks private and metadata addresses, pins the connection to the validated address, revalidates redirects and bounds time and size. |
-| Pairing a phone              | A QR code carries a 128-bit one-time code in the URL fragment (never the query: no server log, no Referer). The server keeps only its hash, accepts it once within five minutes, answers alike for an unknown, used or expired code, limits the codes waiting at a time, and the page removes it from the address bar and swaps it for a new session (never reusing one from before sign-in). The person who made it sees whether it was used. |
+| Pairing a phone              | A QR code carries a 128-bit one-time code in the URL fragment (never the query: no server log, no Referer). The server keeps only its hash, accepts it once within five minutes, answers alike for an unknown, used or expired code, limits the codes waiting at a time (one per request, however many network addresses the computer has: the links differ only by host), and the page removes it from the address bar and swaps it for a new session (never reusing one from before sign-in). The person who made it sees whether it was used. |
+| Speech bubbles               | `GET /api/local-sessions/speech` returns the last prompt and the last reply (each at most 400 characters, with times) of every running local session, so the office can show them over the members' heads. It exposes conversation text, so it is for owner and operator only (like the transcript route), reads only the tail of a transcript opened through a key the scanner found, redacts secret patterns, answers at most 40 sessions, and keeps nothing but an in-memory cache keyed by file mtime and size. Off with `AETHER_LOCAL_SESSIONS=off`. |
 | Secrets                      | Tokens are never written to events, logs or URLs; known secret patterns are redacted from transcript text shown in the UI; token files are mode 0600.             |
 
 ## Safety properties
@@ -38,6 +39,15 @@ local user's file permissions. Strong sandboxing of agents is outside the intend
   refused. "Provider acknowledged" is recorded only when the provider's own tool event arrives.
 - **Observation is read-only.** Sessions the operator starts are shown, never controlled, unless the operator explicitly
   stops one (owner only, identity re-checked immediately before a single `SIGTERM`).
+- **Clock out ends processes in bulk, with the same guards.** `POST /api/local-sessions/clock-out` (owner only, an
+  `Idempotency-Key` required, at most 50 sessions) takes session keys and the process start time the person saw, never a
+  pid. For each one the server re-scans and decides on its own clock: the session must still be running, be the same
+  process, be dormant or orphaned and idle at least the requested time (never less than one day), belong to a project the
+  owner may configure, and not be this server or an ancestor of it; otherwise it is skipped with a reason (`active`,
+  `changed`, ...). A process gets `SIGTERM`, then `SIGKILL` after 5 s if it ignored it (re-checking pid and start time
+  before each), and counts as cleared only once it is really gone. Only that one process is signalled (its children are
+  not); transcripts are never deleted. Up to four run at once; every session gets its own result; an audit event
+  `local-session.clock-out.requested` is written per project.
 - **Process identity is `pid` plus start time**, never a name or command line, so a recycled pid is never signalled.
 - **Uncertain work is not retried.** A lost runner moves in-flight work to `indeterminate`; terminal input is not re-sent
   after a restart.

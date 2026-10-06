@@ -1,12 +1,21 @@
-import { expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { Agent } from '../../packages/contracts/src/index.js';
 import {
+  COOLDOWN_MS,
   PULSE_WINDOW_MS,
   chooseShot,
   type Pulse,
   type Seat,
+  type Shot,
 } from '../../packages/office-scene/src/director.js';
-import { poseAt } from '../../packages/office-scene/src/shot-camera.js';
+import {
+  FLY_MAX,
+  MAX_TRAVEL,
+  MIN_DISTANCE,
+  chooseEntry,
+  poseAt,
+  type V3,
+} from '../../packages/office-scene/src/shot-camera.js';
 
 const agent = (id: string, activity: Agent['activity']) => ({ id, activity }) as Agent;
 const seats = new Map<string, Seat>([
@@ -93,7 +102,7 @@ it('moves the camera through a closeup, ending nearer to the desk than it began,
   const desk = seats.get('c')!;
   const dist = (p: [number, number, number]) => Math.hypot(p[0] - desk.x, p[2] - desk.z);
   expect(dist(end.position)).toBeLessThan(dist(start.position));
-  expect(end.fov).toBeLessThan(start.fov);
+  expect(end.fov).toBe(start.fov); // no zoom on top of the dolly
   // The desk is turned a quarter: the same shot on an unturned desk sits on a different axis.
   const turned = poseAt(shot, new Map([['c', { ...desk, rotation: 0 }]]), 1, 0.6);
   expect(turned.position[0]).not.toBeCloseTo(end.position[0], 1);
@@ -129,4 +138,145 @@ it('looks in on a forgotten or ownerless member between the busy ones, but never
     previous: null,
   });
   expect(busy).toMatchObject({ reason: 'working', subjects: ['b'] });
+});
+
+describe('a comfortable director', () => {
+  const sub = (a: V3, b: V3): V3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+  const dot = (a: V3, b: V3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  const len = (a: V3) => Math.hypot(...a);
+  const angle = (a: V3, b: V3) =>
+    Math.acos(Math.min(1, dot(a, b) / (len(a) * len(b)))) * (180 / Math.PI);
+  const shot = (kind: Shot['kind'], subjects: string[], style: 0 | 1 | 2, floor = 0): Shot => ({
+    key: subjects.join('>') || `floor:${floor}`,
+    kind,
+    floor,
+    subjects,
+    reason: 'working',
+    seconds: 8,
+    score: 50,
+    style,
+  });
+  const shots = ([0, 1, 2] as const).flatMap((style) => [
+    shot('closeup', ['a'], style),
+    shot('closeup', ['c'], style, 1),
+    shot('pair', ['a', 'b'], style),
+    shot('pair', ['b', 'a'], style),
+    shot('sweep', [], style),
+  ]);
+  const wide = new Map(seats).set('b', { x: 40, z: -30, floor: 0, rotation: 2 });
+
+  it('moves the camera a short way along one axis: no orbit, no turn, no zoom, a level horizon', () => {
+    for (const map of [seats, wide])
+      for (const s of shots) {
+        const start = poseAt(s, map, 0, 1.6);
+        const end = poseAt(s, map, 1, 1.6);
+        expect(len(sub(end.position, start.position))).toBeLessThanOrEqual(MAX_TRAVEL + 1e-9);
+        expect(
+          angle(sub(start.target, start.position), sub(end.target, end.position)),
+        ).toBeLessThan(1);
+        expect(end.fov).toBe(start.fov);
+        // Halfway is on the straight line between the ends: one axis, not an arc.
+        const mid = poseAt(s, map, 0.5, 1.6).position;
+        const line = sub(end.position, start.position);
+        const part = sub(mid, start.position);
+        expect(len(line) < 1e-9 || angle(line, part) < 0.01 || len(part) < 1e-9).toBe(true);
+      }
+  });
+
+  it("stays outside the controls' nearest distance, which would otherwise hold the camera still instead of moving it", () => {
+    for (const aspect of [0.5, 1.6, 2.4])
+      for (const s of shots)
+        for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+          const at = poseAt(s, seats, t, aspect);
+          expect(len(sub(at.position, at.target))).toBeGreaterThanOrEqual(MIN_DISTANCE - 1e-9);
+        }
+  });
+
+  it('holds perfectly still once the move is done', () => {
+    for (const s of shots) expect(poseAt(s, seats, 1.5, 1.6)).toEqual(poseAt(s, seats, 1, 1.6));
+  });
+
+  it('never reverses: every move goes the same way on the screen', () => {
+    // Forward (into the picture) for a closeup and a sweep, always the same sideways direction for a pair.
+    const along = (s: Shot, map: ReadonlyMap<string, Seat>) => {
+      const start = poseAt(s, map, 0, 1.6);
+      const end = poseAt(s, map, 1, 1.6);
+      const view = sub(start.target, start.position);
+      const move = sub(end.position, start.position);
+      const right: V3 = [-view[2], 0, view[0]]; // view x up
+      return { forward: dot(move, view) / len(view), right: dot(move, right) / len(right) };
+    };
+    for (const s of shots.filter((x) => x.kind !== 'pair'))
+      expect(along(s, seats).forward).toBeGreaterThan(0);
+    const sides = shots
+      .filter((x) => x.kind === 'pair')
+      .flatMap((s) => [along(s, seats).right, along(s, wide).right]);
+    expect(sides.every((v) => v > 0) || sides.every((v) => v < 0)).toBe(true);
+  });
+
+  it('keeps a pair on the same side of the line whoever wrote to whom (the 180 degree rule)', () => {
+    for (const style of [0, 1, 2] as const) {
+      const forward = poseAt(shot('pair', ['a', 'b'], style), seats, 0.5, 1.6);
+      const back = poseAt(shot('pair', ['b', 'a'], style), seats, 0.5, 1.6);
+      expect(back.position[0]).toBeCloseTo(forward.position[0], 6);
+      expect(back.position[2]).toBeCloseTo(forward.position[2], 6);
+    }
+  });
+
+  it('follows the floor when the building is spread apart', () => {
+    const tight = poseAt(shot('closeup', ['c'], 0, 1), seats, 0.5, 1.6);
+    const apart = poseAt(shot('closeup', ['c'], 0, 1), seats, 0.5, 1.6, true);
+    expect(apart.position[1]).toBeGreaterThan(tight.position[1]);
+    expect(apart.target[1]).toBeGreaterThan(tight.target[1]);
+  });
+
+  it('glides only between near shots on one floor, and cuts otherwise', () => {
+    const a = shot('closeup', ['a'], 0);
+    const b = shot('closeup', ['b'], 0);
+    expect(chooseEntry(null, a, seats, 1.6)).toBe('cut');
+    expect(chooseEntry(a, b, seats, 1.6)).toBe('fly'); // four metres apart, moving on
+    expect(chooseEntry(a, shot('closeup', ['c'], 0, 1), seats, 1.6)).toBe('cut'); // another floor
+    expect(chooseEntry(a, b, wide, 1.6)).toBe('cut'); // the length of the building away
+    // Back the way the last shot came from (the same picture again starts where this one began) is a reversal: a cut.
+    const ended = poseAt(a, seats, 1, 1.6).position;
+    expect(len(sub(poseAt(a, seats, 0, 1.6).position, ended))).toBeLessThanOrEqual(FLY_MAX);
+    expect(chooseEntry(a, a, seats, 1.6)).toBe('cut');
+  });
+
+  it('holds a shot long enough to take in, and does not return to the same member within the cooldown', () => {
+    const agents = [agent('a', 'working'), agent('b', 'working')];
+    const at = (ago: number) =>
+      new Map([
+        ['a', NOW - ago],
+        ['b', NOW - ago],
+      ]);
+    const first = choose(agents, { shown: new Map([['b', NOW - 40_000]]) })!;
+    expect(first.seconds).toBeGreaterThanOrEqual(5);
+    expect(first.subjects[0]).toBe('a');
+    // Both were on screen a moment ago: nothing to cut back to, so the floor is swept.
+    expect(choose(agents, { shown: at(COOLDOWN_MS - 1000) })).toMatchObject({ kind: 'sweep' });
+    expect(choose(agents, { shown: at(COOLDOWN_MS + 1000) })).toMatchObject({ kind: 'closeup' });
+    // A pair is not shown with a member who was on a moment ago: the other one alone is.
+    expect(
+      choose(agents, { pulses: [pulse(500)], shown: new Map([['a', NOW - 20_000]]) }),
+    ).toMatchObject({
+      kind: 'closeup',
+      subjects: ['b'],
+    });
+    // Someone waiting on a person is the exception.
+    const urgent = [agent('a', 'waiting_permission'), agent('b', 'working')];
+    expect(choose(urgent, { shown: new Map([['a', NOW - 20_000]]) })?.subjects[0]).toBe('a');
+  });
+
+  it('sweeps from a different bearing when the same floor comes round again', () => {
+    const idle = [agent('a', 'idle'), agent('b', 'idle'), agent('c', 'idle')];
+    const styles = new Set(
+      [0, 1, 2].map(
+        (n) =>
+          choose(idle, { shown: new Map(Array.from({ length: n }, (_, i) => [String(i), 0])) })!
+            .style,
+      ),
+    );
+    expect(styles.size).toBeGreaterThan(1);
+  });
 });

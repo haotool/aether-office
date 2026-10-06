@@ -1,6 +1,7 @@
 import type { Agent, LocalSessionsResponse, Snapshot } from '@aether/contracts';
 import type { Pulse, ScreenFacts } from '@aether/office-scene/model';
 import { intensityOf, type Intensity } from './activity-rate.js';
+import { stillGone } from './clock-out.js';
 import {
   LOCAL_PREFIX,
   SUBAGENT_INFIX,
@@ -78,6 +79,9 @@ export function screensOf(sessions: Sessions, now: number): Record<string, Scree
         ? (activity as ScreenFacts['state'])
         : 'unknown',
       tool: s.hook?.tool ?? null,
+      // A tool is only running until the next event, so its clock starts at the hook's last event.
+      toolSince: s.hook?.tool ? s.hook.at : null,
+      recent: (s.hook?.recent ?? []).map(({ tool, target }) => ({ tool, target })),
       quietMinutes: s.liveness.quietMs === null ? null : Math.floor(s.liveness.quietMs / 60_000),
       ports: s.ports,
     };
@@ -104,7 +108,7 @@ export function intensitiesOf(
 
 /**
  * Everything the office draws about the machine's own sessions: the members they make, and how the scene dresses them
- * (floor, role, branch, sleeping rabbit, ghost, jiangshi). Recomputed on every render, because liveness depends on the clock.
+ * (floor, role, branch, sleeping rabbit, ghost, jiangshi) and who has been sent home. Recomputed on every render, because liveness depends on the clock.
  */
 export function officeModel(
   data: Snapshot | undefined,
@@ -112,6 +116,7 @@ export function officeModel(
   projectId: string | undefined,
   locale: 'zh-TW' | 'en',
   beats: ReadonlyMap<string, number> = new Map(),
+  leaving: Readonly<Record<string, number>> = {},
 ) {
   const all = sessions ?? [];
   const observed: Agent[] =
@@ -128,6 +133,7 @@ export function officeModel(
     agents: data ? [...data.agents, ...observed] : [],
     apparitions: apparitionsOf(all),
     zombies: zombiesOf(all),
+    leaving: stillGone(leaving, all),
     floorOf: floorResolver(all),
     roleOf: roleResolver(all),
     branchOf: branchResolver(all),

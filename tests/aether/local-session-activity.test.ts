@@ -28,6 +28,7 @@ const hook = (activity: 'working' | 'idle' | 'waiting_permission' | 'ended', at 
   lastEvent: 'e',
   tool: null,
   at,
+  recent: [],
 });
 
 it('derives activity from hooks first, then the process table, then file age, and never invents work', () => {

@@ -10,6 +10,7 @@ import {
   Plus,
   RotateCcw,
   SkipForward,
+  Sprout,
   Square,
 } from 'lucide-react';
 import type { Layout, Snapshot } from '@aether/contracts';
@@ -140,6 +141,14 @@ export function OfficePage({
                   </option>
                 ))}
               </select>
+              <button
+                aria-label={t('beanstalk')}
+                title={t('beanstalk')}
+                aria-pressed={prefs.beanstalk}
+                onClick={() => prefs.set({ beanstalk: !prefs.beanstalk })}
+              >
+                <Sprout size={16} />
+              </button>
               {tour.status === 'idle' ? (
                 <button
                   aria-label={t('tourStart')}
@@ -225,6 +234,7 @@ export function OfficePage({
               <button
                 className={`team-chip ${agent.id === selectedId ? 'selected' : ''}`}
                 key={agent.id}
+                title={`${agent.name} · ${agent.role}`}
                 onClick={() => onSelect(agent.id)}
               >
                 <AvatarIcon name={agent.name} species={agent.species} color={agent.color} />

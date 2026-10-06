@@ -1,16 +1,23 @@
-import { useRef } from 'react';
+import { useRef, type RefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, type Mesh } from 'three';
 import type { Agent } from '@aether/contracts';
+import type { Rect } from './multi-view.js';
 
 export function ProjectedLabels({
   labels,
   elements,
   selected,
+  avoid,
+  covered,
 }: {
   labels: { id: string; x: number; y: number; z: number; width: number }[];
   elements: Map<string, HTMLElement>;
   selected: string | null;
+  /** Rectangles drawn over the canvas (the small live views): a tag under one is hidden, not drawn over its picture. */
+  avoid?: RefObject<ReadonlyMap<string, Rect>>;
+  /** Rectangles drawn over the canvas this frame by the speech bubbles (see ProjectedSpeech): a tag under one is hidden too. */
+  covered?: RefObject<ReadonlyMap<string, Rect>>;
 }) {
   const point = useRef(new Vector3());
   useFrame(({ camera, size }) => {
@@ -30,6 +37,13 @@ export function ProjectedLabels({
         x + label.width / 2 < size.width &&
         y > 55 &&
         y < size.height - 30 &&
+        ![...(avoid?.current.values() ?? []), ...(covered?.current.values() ?? [])].some(
+          (r) =>
+            x + label.width / 2 > r.x &&
+            x - label.width / 2 < r.x + r.width &&
+            y + 12 > r.y &&
+            y - 12 < r.y + r.height,
+        ) &&
         !occupied.some(
           (p) => Math.abs(p.x - x) < (p.width + label.width) / 2 + 5 && Math.abs(p.y - y) < 30,
         );

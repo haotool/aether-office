@@ -33,12 +33,15 @@ export function Animal({
   reducedMotion,
   quality,
   apparition,
+  override,
   pace = 1,
   light = false,
   onError,
 }: {
   agent: Agent;
   apparition?: Apparition | undefined;
+  /** A clip the member is held to whatever it is doing: stand_up and wave play once, the rest loop (a member leaving). */
+  override?: ClipName | undefined;
   /** How fast the clips play: a member working flat out types faster. */
   pace?: number;
   /** A phone: smaller models and textures (the selected one a step down, the rest the smallest). */
@@ -60,20 +63,23 @@ export function Animal({
   const current = useRef<AnimationAction | null>(null);
   const lastActivity = useRef<typeof agent.activity | null>(null);
   const gestures = useRef(0);
-  const clip = apparition ? APPARITION_CLIP[apparition] : (oneShot ?? BASE_CLIP[agent.activity]);
+  const held = apparition ?? override; // something other than the activity decides what the member does
+  const clip = apparition
+    ? APPARITION_CLIP[apparition]
+    : (override ?? oneShot ?? BASE_CLIP[agent.activity]);
   const greet = useEffectEvent(() => {
-    if (!reducedMotion && !apparition && greets(agent.activity)) setOneShot('wave');
+    if (!reducedMotion && !held && greets(agent.activity)) setOneShot('wave');
   });
   useEffect(() => {
     const mark = transitionClip(lastActivity.current, agent.activity);
     lastActivity.current = agent.activity;
-    setOneShot(reducedMotion || apparition ? null : mark);
-  }, [agent.activity, reducedMotion, apparition]);
+    setOneShot(reducedMotion || held ? null : mark);
+  }, [agent.activity, reducedMotion, held]);
   useEffect(() => {
     if (selected) greet();
   }, [selected]);
   useEffect(() => {
-    if (!model || reducedMotion || apparition || oneShot || !fidgetFor(agent.activity, agent.id, 0))
+    if (!model || reducedMotion || held || oneShot || !fidgetFor(agent.activity, agent.id, 0))
       return;
     const n = gestures.current;
     const timer = setTimeout(
@@ -84,7 +90,7 @@ export function Animal({
       fidgetDelayMs(agent.id, n),
     );
     return () => clearTimeout(timer);
-  }, [model, reducedMotion, apparition, oneShot, agent.activity, agent.id]);
+  }, [model, reducedMotion, held, oneShot, agent.activity, agent.id]);
   useEffect(() => {
     const asset = acquireAnimal(url);
     let disposed = false;
@@ -133,10 +139,11 @@ export function Animal({
     }
     const player = mixer.current;
     const next = player.clipAction(animation);
-    const once = oneShot !== null;
+    const once =
+      oneShot !== null || (!apparition && (override === 'stand_up' || override === 'wave'));
     const previous = current.current;
     next.reset().setLoop(once ? LoopOnce : LoopRepeat, once ? 1 : Infinity);
-    next.clampWhenFinished = false;
+    next.clampWhenFinished = once && oneShot === null; // a held gesture ends in its last pose, not in the bind pose
     if (previous && previous !== next && !reducedMotion) {
       next.fadeIn(FADE_SECONDS).play();
       previous.fadeOut(FADE_SECONDS);
@@ -148,7 +155,7 @@ export function Animal({
     player.update(0);
     current.current = next;
     invalidate();
-  }, [model, url, clip, oneShot, reducedMotion, agent.id, invalidate]);
+  }, [model, url, clip, oneShot, apparition, override, reducedMotion, agent.id, invalidate]);
   useFrame((_state, delta) => {
     if (mixer.current && !reducedMotion && !document.hidden)
       mixer.current.update(Math.min(delta, 0.05) * pace);

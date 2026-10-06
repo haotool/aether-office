@@ -6,8 +6,11 @@ import { DEPARTMENTS, ROLE_LABELS, type RoleId } from '@aether/kernel';
 import { activityOf, formatSpan, sessionCommands, tokensByDepartment } from '../localSessions.js';
 import { copyText } from '../browser-compat.js';
 import { usePhoneAny } from '../phone.js';
+import { DoorOpen } from 'lucide-react';
 import { PageHeading, useT } from '../ui.js';
 import { reapZombies } from './reap.js';
+import { ClockOut } from './ClockOut.js';
+import { idleSessions } from './clock-out.js';
 import { StopSession } from './StopSession.js';
 
 const LIVENESS_LABEL = {
@@ -47,6 +50,7 @@ export function Sessions({
   const [shown, setShown] = useState(PAGE);
   const [liveness, setLiveness] = useState('');
   const [stopping, setStopping] = useState<AttributedSession | null>(null);
+  const [clockingOut, setClockingOut] = useState(false);
   const [copied, setCopied] = useState('');
   const client = useQueryClient();
   const [reaped, setReaped] = useState<Record<string, string>>({});
@@ -143,6 +147,12 @@ export function Sessions({
             />
             {t('runningOnly')}
           </label>
+          {canStop && idleSessions(sessions, 1).length > 0 && (
+            <button className="secondary" onClick={() => setClockingOut(true)}>
+              <DoorOpen size={16} aria-hidden="true" />
+              {t('clockOut')} ({idleSessions(sessions, 1).length})
+            </button>
+          )}
           <span className="count">
             {rows.length} / {sessions.length}
           </span>
@@ -299,6 +309,9 @@ export function Sessions({
       </div>
       {stopping && (
         <StopSession session={stopping} locale={locale} onClose={() => setStopping(null)} />
+      )}
+      {clockingOut && (
+        <ClockOut sessions={sessions} locale={locale} onClose={() => setClockingOut(false)} />
       )}
     </>
   );

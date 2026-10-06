@@ -1,11 +1,10 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { isIP } from 'node:net';
-import { networkInterfaces } from 'node:os';
 import { resolve } from 'node:path';
 import { Control } from './control.js';
-import { isLanHostname } from './services/host-policy.js';
 import { createServer } from './server.js';
 import { secret } from './services/identity.js';
+import { lanOrigins } from './services/pairing.js';
 import { reconcileTerminals } from './services/terminals.js';
 import { reconcileOffline, reconcileStalled } from './services/runners.js';
 const mode = process.env['AETHER_MODE'] === 'demo' ? 'demo' : 'live';
@@ -33,10 +32,14 @@ const origin = `http://127.0.0.1:${port}`;
 // machine only. The address must be one the machine owns (0.0.0.0 or :: for every interface).
 const host = process.env['AETHER_HOST'] ?? '127.0.0.1';
 if (isIP(host) === 0) throw new Error('INVALID_HOST');
-const lan = !['127.0.0.1', '::1'].includes(host);
+// E2E only: these addresses stand in for the machine's own, and turn the LAN rules on while it still listens on loopback.
+const fixedLan = process.env['AETHER_E2E_LAN_ADDRESSES']?.split(',');
+const lan = fixedLan !== undefined || !['127.0.0.1', '::1'].includes(host);
 const app = createServer(control, {
   origin,
   lan,
+  lanAddresses:
+    fixedLan && ((lanPort) => fixedLan.map((address) => `http://${address}:${lanPort}`)),
   serveWeb: process.env['AETHER_SERVE_WEB'] !== '0',
   logger: true,
 });
@@ -56,10 +59,7 @@ console.log(
   `AETHER ${mode.toUpperCase()}: ${origin}\nOwner access token is stored in ${tokenFile}. It is never embedded in the web bundle.`,
 );
 if (lan) {
-  const addresses = Object.values(networkInterfaces())
-    .flat()
-    .filter((i) => i && i.family === 'IPv4' && isLanHostname(i.address) && !i.internal)
-    .map((i) => `http://${i!.address}:${port}`);
+  const addresses = lanOrigins(String(port));
   console.log(
     `LAN access is ON: open ${addresses.join(' or ') || '(no private-network address found)'} on a device on this network.\n` +
       'Plain HTTP: the access token crosses the network unencrypted, so use it only on a network you trust.\n' +

@@ -11,6 +11,8 @@ type Preferences = {
   view: '2d' | '3d';
   /** The camera runs itself (the director). On until the person turns it off. */
   autoCamera: boolean;
+  /** The Git beanstalk rising past the 3D building. On for a desktop, off on a phone, where it would crowd the scene. */
+  beanstalk: boolean;
   set: (next: Partial<Omit<Preferences, 'set'>>) => void;
 };
 export const usePreferences = create<Preferences>()(
@@ -24,6 +26,7 @@ export const usePreferences = create<Preferences>()(
       // On for a person. Off under browser automation: a camera that is always gliding is never "stable" to a test
       // that waits for a target to hold still before it taps it.
       autoCamera: !navigator.webdriver,
+      beanstalk: !window.matchMedia('(max-width: 760px)').matches,
       view: '3d', // a phone gets the 3D office too; the 2D list is one tap away and the fallback when WebGL fails
       set: (next) => set(next),
     }),
@@ -37,6 +40,7 @@ export const usePreferences = create<Preferences>()(
         notifyApprovals: state.notifyApprovals,
         view: state.view,
         autoCamera: state.autoCamera,
+        beanstalk: state.beanstalk,
       }),
     },
   ),

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Smartphone } from 'lucide-react';
 import { api } from '../api.js';
 import { copyText } from '../browser-compat.js';
-import { useT } from '../ui.js';
+import { Field, useT } from '../ui.js';
 
 type Pairing = {
   id: string;
@@ -24,11 +24,13 @@ export function ConnectPhone() {
   const [status, setStatus] = useState<'pending' | 'paired' | 'expired'>('pending');
   const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState('');
-  const [copied, setCopied] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [address, setAddress] = useState(0);
 
   async function generate() {
     setError('');
     setStatus('pending');
+    setAddress(0);
     try {
       const made = await api<Pairing>('/api/pairings', { method: 'POST', body: '{}' });
       setPairing(made);
@@ -73,22 +75,42 @@ export function ConnectPhone() {
             </p>
           )}
           {status !== 'paired' && !live && <p role="status">{t('pairExpired')}</p>}
-          {live && (
+          {live && pairing.links[address] && (
             <div className="pair-codes">
-              {pairing.links.map((link) => (
-                <figure key={link.origin}>
-                  <img src={asImage(link.svg)} alt={link.origin} width="168" height="168" />
-                  <figcaption>
-                    <button
-                      className="text-button"
-                      onClick={async () => setCopied((await copyText(link.url)) ? link.origin : '')}
-                    >
-                      {link.origin}
-                      {copied === link.origin ? ' ✓' : ''}
-                    </button>
-                  </figcaption>
-                </figure>
-              ))}
+              <figure>
+                <img
+                  src={asImage(pairing.links[address].svg)}
+                  alt={pairing.links[address].origin}
+                  width="168"
+                  height="168"
+                />
+                <figcaption>
+                  <button
+                    className="text-button"
+                    onClick={async () => setCopied(await copyText(pairing.links[address]!.url))}
+                  >
+                    {pairing.links[address].origin}
+                    {copied ? ' ✓' : ''}
+                  </button>
+                </figcaption>
+              </figure>
+              {pairing.links.length > 1 && (
+                <Field label={t('pairAddress')}>
+                  <select
+                    value={address}
+                    onChange={(e) => {
+                      setAddress(Number(e.target.value));
+                      setCopied(false);
+                    }}
+                  >
+                    {pairing.links.map((link, index) => (
+                      <option key={link.origin} value={index}>
+                        {link.origin}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
               <p className="muted" role="timer">
                 {t('pairExpiresIn')} {Math.floor(seconds / 60)}:
                 {String(seconds % 60).padStart(2, '0')}

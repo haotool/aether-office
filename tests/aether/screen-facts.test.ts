@@ -11,7 +11,16 @@ const session = (over: Partial<AttributedSession>) =>
     title: 'Fix the login',
     mtime: NOW - 5_000,
     git: { branch: 'main', upstream: null, ahead: 2, behind: 0, uncommitted: 3 },
-    hook: { activity: 'working', lastEvent: 'PreToolUse', tool: 'Bash', at: NOW - 1000 },
+    hook: {
+      activity: 'working',
+      lastEvent: 'PreToolUse',
+      tool: 'Bash',
+      at: NOW - 1000,
+      recent: [
+        { tool: 'Edit', target: 'app.ts', at: NOW - 9000 },
+        { tool: 'Bash', target: 'pnpm test', at: NOW - 1000 },
+      ],
+    },
     usage: {
       model: 'claude-opus-5-5',
       contextTokens: 50_000,
@@ -37,6 +46,11 @@ it("a member's screen carries only what the session says about itself", () => {
     contextPercent: 25,
     state: 'working',
     tool: 'Bash',
+    toolSince: NOW - 1000,
+    recent: [
+      { tool: 'Edit', target: 'app.ts' },
+      { tool: 'Bash', target: 'pnpm test' },
+    ],
     quietMinutes: 2,
     ports: [5173],
   });
@@ -64,6 +78,8 @@ it('leaves out what is not known instead of filling it in', () => {
   expect(facts).toMatchObject({
     branch: null,
     tool: null,
+    toolSince: null,
+    recent: [],
     title: null,
     model: null,
     contextPercent: null,

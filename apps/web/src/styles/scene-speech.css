@@ -1,0 +1,92 @@
+/* What a working member was last told and last answered, as two bubbles over its head (packages/office-scene Speech.tsx). */
+.world-speech {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: var(--z-base);
+}
+.speech {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden; /* shown once the scene has placed it */
+  display: grid;
+  gap: var(--space-4);
+  width: max-content;
+  max-width: 220px;
+}
+.speech-bubble {
+  position: relative;
+  margin: 0;
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--r-md);
+  border: 1px solid var(--glass-line);
+  font-size: var(--fs-label);
+  line-height: 1.35;
+  color: var(--on-glass);
+  box-shadow: 0 3px 10px var(--shade-soft);
+  transition: opacity var(--dur) var(--ease);
+}
+.speech-bubble span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+/* A tail: the prompt points back to whoever gave it (left), the reply down at the member (right). */
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  width: var(--space-6);
+  height: var(--space-6);
+  background: inherit;
+  border: inherit;
+  border-top: 0;
+  border-left: 0;
+  transform: rotate(45deg);
+}
+.speech-bubble.assistant::after {
+  bottom: calc(var(--space-4) * -1);
+  right: var(--space-12);
+}
+.speech-bubble.user::after {
+  left: calc(var(--space-4) * -1);
+  top: var(--space-6);
+  transform: rotate(135deg);
+}
+.speech-bubble.user {
+  justify-self: start;
+  background: color-mix(in srgb, var(--blue) 24%, var(--glass-strong));
+  border-color: color-mix(in srgb, var(--blue) 55%, transparent);
+}
+.speech-bubble.assistant {
+  justify-self: end;
+  background: color-mix(in srgb, var(--mint) 20%, var(--glass-strong));
+  border-color: var(--glass-accent-line);
+}
+.speech-bubble.old {
+  opacity: 0.5;
+}
+@media (hover: hover) {
+  .speech-bubble {
+    pointer-events: auto;
+  }
+  .speech-bubble:hover {
+    opacity: 1;
+    z-index: var(--z-label-hover);
+  }
+  .speech-bubble:hover span {
+    display: block;
+    max-height: 14em;
+    overflow-y: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .speech-bubble {
+    transition: none;
+  }
+}

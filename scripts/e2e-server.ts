@@ -12,6 +12,7 @@ const env = {
   PORT: '4320',
   AETHER_MODE: 'demo',
   AETHER_DATA_DIR: directory,
+  AETHER_E2E_LAN_ADDRESSES: '127.0.0.1,localhost', // pairing links the phone context can open, without listening on the network
   AETHER_CONTROL_URL: 'http://127.0.0.1:4320',
 };
 const children = ['control', 'runner'].map((name) =>

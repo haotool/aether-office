@@ -7,10 +7,24 @@ type Commit = {
   parents: string[];
   refs: string[];
   subject: string;
+  author: string;
   at: number;
   lane: number;
   edges: { to: number; parent: string }[];
 };
+
+/** The recent commit graph of a project's repository, shared by the graph page and the 3D beanstalk. */
+export function useGitGraph(projectId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['git-graph', projectId],
+    queryFn: () =>
+      api<{ commits: Commit[]; lanes: number }>(`/api/projects/${projectId}/git-graph`),
+    refetchInterval: 30000,
+    retry: false,
+    enabled,
+  });
+}
+
 const ROW = 24;
 const LANE = 14;
 const COLORS = [
@@ -29,13 +43,7 @@ const y = (row: number) => ROW / 2 + row * ROW;
 /** The repository's recent history as a lane graph: who branched where, and where work came back together. */
 export function GitGraph({ projectId }: { projectId: string }) {
   const t = useT();
-  const query = useQuery({
-    queryKey: ['git-graph', projectId],
-    queryFn: () =>
-      api<{ commits: Commit[]; lanes: number }>(`/api/projects/${projectId}/git-graph`),
-    refetchInterval: 30000,
-    retry: false,
-  });
+  const query = useGitGraph(projectId);
   if (query.isPending) return <p className="panel">{t('loading')}</p>;
   if (query.error) return <p className="panel">{query.error.message}</p>;
   const { commits, lanes } = query.data;

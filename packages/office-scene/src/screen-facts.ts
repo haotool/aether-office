@@ -1,11 +1,12 @@
 import { CanvasTexture, SRGBColorSpace } from 'three';
 import type { DepartmentId } from '@aether/kernel';
 import { PALETTE, SCREEN_H, SCREEN_W, frame, label, tile } from './screens.js';
+import { elapsedLabel, hashOf, kindOf, type ToolCall } from './screen-work.js';
 
 /**
  * What a member's own screen shows when the scene knows what the member is really doing: the session's title, where
- * it works, its state and the tool it is in, the context it has used. Every field is a fact read from the session;
- * a field that is not known is left out, never filled in.
+ * it works, its state, its last tool calls (each drawn as the kind of work it is), the tool it is in, the context it has
+ * used. Every field is a fact read from the session; a field that is not known is left out, never filled in.
  */
 export type ScreenFacts = {
   provider: 'claude' | 'codex';
@@ -20,8 +21,11 @@ export type ScreenFacts = {
   /** Share of the context window in use, 0 to 100. */
   contextPercent: number | null;
   state: 'working' | 'idle' | 'waiting_permission' | 'offline' | 'unknown';
-  /** The tool its last hook named. */
+  /** The tool its last hook named, and when that hook came (epoch ms). */
   tool: string | null;
+  toolSince: number | null;
+  /** The last tool calls, oldest first. */
+  recent: readonly ToolCall[];
   /** Whole minutes since anything happened in it. */
   quietMinutes: number | null;
   ports: readonly number[];
@@ -49,8 +53,12 @@ export const SCREEN_THEME: Record<
 };
 /** Where the ambient column sits on a screen, as a share of its width: the stream that scrolls over it shares these. */
 export const BAND = { from: 0.735, to: 0.985 } as const;
-const MAX_TEXTURES = 48;
-const cache = new Map<string, CanvasTexture>();
+
+const LEFT = 24;
+const WIDTH = SCREEN_W * BAND.from - LEFT - 16;
+const ROWS_TOP = 118;
+const ROW_H = 26;
+const ROWS_MAX = 8;
 
 /** Text cut to a width with an ellipsis; one line. */
 function fit(g: CanvasRenderingContext2D, text: string, width: number): string {
@@ -58,20 +66,6 @@ function fit(g: CanvasRenderingContext2D, text: string, width: number): string {
   let end = text.length;
   while (end > 1 && g.measureText(`${text.slice(0, end)}…`).width > width) end--;
   return `${text.slice(0, end)}…`;
-}
-
-/** The title on up to two lines, the second cut with an ellipsis. */
-function wrap(g: CanvasRenderingContext2D, text: string, width: number): string[] {
-  const lines: string[] = [];
-  let rest = text;
-  while (rest && lines.length < 2) {
-    let end = rest.length;
-    while (end > 1 && g.measureText(rest.slice(0, end)).width > width) end--;
-    lines.push(rest.slice(0, end));
-    rest = rest.slice(end);
-  }
-  if (rest) lines[1] = fit(g, `${lines[1]}${rest}`, width);
-  return lines;
 }
 
 /** The pattern of a department's screen in its right-hand column. Abstract shapes, not data: what is real is the text. */
@@ -110,88 +104,231 @@ function ambient(g: CanvasRenderingContext2D, theme: DepartmentId, accent: strin
   g.restore();
 }
 
-function draw(g: CanvasRenderingContext2D, f: ScreenFacts, accent: string, theme: DepartmentId) {
+/** The tab bar of an editor: the files its last edits touched, the newest one lit. */
+function tabs(g: CanvasRenderingContext2D, recent: readonly ToolCall[], accent: string) {
+  const names = [
+    ...new Set(
+      recent.flatMap((c) =>
+        (kindOf(c) === 'edit' || kindOf(c) === 'read') && c.target ? [c.target] : [],
+      ),
+    ),
+  ].slice(-3);
+  const tabWidth = Math.min(136, (WIDTH - 8) / 3);
+  g.font = `14px ${MONO}`;
+  names.forEach((name, i) => {
+    const x = LEFT + i * (tabWidth + 4);
+    const active = i === names.length - 1;
+    g.fillStyle = active ? PALETTE.panel : PALETTE.bg;
+    g.fillRect(x, 88, tabWidth, 22);
+    g.fillStyle = active ? accent : PALETTE.line;
+    g.fillRect(x, active ? 88 : 108, tabWidth, 2);
+    g.fillStyle = active ? PALETTE.text : PALETTE.dim;
+    g.fillText(fit(g, name, tabWidth - 12), x + 6, 104);
+  });
+}
+
+/** One tool call as the kind of work it is. `y` is the row's top; `live` says it is the call being run (cursor, marching bar). */
+function row(
+  g: CanvasRenderingContext2D,
+  call: ToolCall,
+  y: number,
+  accent: string,
+  live: boolean,
+  blink: boolean,
+) {
+  const kind = kindOf(call);
+  const name = call.target ?? call.tool;
+  const h = hashOf(name);
+  const base = y + 18;
+  const cursor = live && blink ? ' ▌' : '';
+  g.font = `17px ${MONO}`;
+  if (kind === 'shell') {
+    g.fillStyle = accent;
+    g.fillText(fit(g, `$ ${name}${cursor}`, WIDTH), LEFT, base);
+  } else if (kind === 'edit' || kind === 'read') {
+    g.fillStyle = PALETTE.text;
+    g.fillText(fit(g, `${kind === 'edit' ? '✎' : '▤'} ${name}${cursor}`, 250), LEFT, base);
+    if (kind === 'edit') {
+      g.fillStyle = PALETTE.red;
+      g.fillRect(LEFT + 262, y + 4, 24 + (h % 90), 5);
+      g.fillStyle = PALETTE.green;
+      g.fillRect(LEFT + 262, y + 12, 24 + ((h >> 8) % 110), 5);
+    }
+  } else if (kind === 'git') {
+    g.strokeStyle = PALETTE.violet;
+    g.lineWidth = 2;
+    g.beginPath();
+    g.moveTo(LEFT + 8, y);
+    g.lineTo(LEFT + 8, y + ROW_H);
+    g.stroke();
+    if (h % 3 === 0) {
+      g.beginPath();
+      g.moveTo(LEFT + 8, y + 13);
+      g.lineTo(LEFT + 20, y + 4);
+      g.stroke();
+    }
+    g.fillStyle = PALETTE.violet;
+    g.beginPath();
+    g.arc(LEFT + 8, y + 13, 5, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = PALETTE.text;
+    g.fillText(fit(g, `${name}${cursor}`, WIDTH - 36), LEFT + 32, base);
+  } else if (kind === 'test') {
+    g.fillStyle = PALETTE.text;
+    g.fillText(fit(g, `▸ ${name}${cursor}`, 190), LEFT, base);
+    const x = LEFT + 202;
+    const w = WIDTH - 202;
+    tile(g, x, y + 4, w, 14);
+    g.fillStyle = live ? PALETTE.amber : PALETTE.blue;
+    // A finished run is a full bar (its outcome is not recorded); the live one is a segment that marches along.
+    if (live) g.fillRect(x + 2 + (blink ? 0 : w / 2), y + 6, w / 2 - 4, 10);
+    else g.fillRect(x + 2, y + 6, w - 4, 10);
+  } else if (kind === 'search') {
+    g.fillStyle = PALETTE.text;
+    g.fillText(`⌕ ${call.tool}${cursor}`, LEFT, base);
+    g.fillStyle = PALETTE.amber;
+    for (let i = 0; i < 3; i++)
+      g.fillRect(LEFT + 130, y + 3 + i * 7, 40 + ((h >> (i * 4)) % 120), 4);
+  } else if (kind === 'web') {
+    g.fillStyle = PALETTE.blue;
+    g.fillText(fit(g, `§ ${name}${cursor}`, 250), LEFT, base);
+    g.fillStyle = PALETTE.dim;
+    for (let i = 0; i < 3; i++)
+      g.fillRect(LEFT + 270 + (i ? 12 : 0), y + 3 + i * 7, 30 + ((h >> (i * 4)) % 90), 4);
+  } else {
+    g.fillStyle = PALETTE.dim;
+    g.fillText(
+      fit(g, `· ${call.tool}${call.target ? ` ${call.target}` : ''}${cursor}`, WIDTH),
+      LEFT,
+      base,
+    );
+  }
+}
+
+/** A dim lock screen: a session that is not doing anything shows no stream, only that it is there. */
+function lock(g: CanvasRenderingContext2D, f: ScreenFacts) {
+  g.fillStyle = 'rgba(6,16,25,0.62)';
+  g.fillRect(0, 31, SCREEN_W, SCREEN_H - 31);
+  const cx = SCREEN_W / 2;
+  g.strokeStyle = PALETTE.dim;
+  g.lineWidth = 4;
+  g.beginPath();
+  g.arc(cx, 156, 16, Math.PI, 0);
+  g.stroke();
+  g.fillStyle = PALETTE.dim;
+  g.fillRect(cx - 24, 156, 48, 36);
+  g.textAlign = 'center';
+  g.font = `600 22px ${SANS}`;
+  g.fillStyle = PALETTE.dim;
+  g.fillText(fit(g, f.title ?? f.repo, SCREEN_W - 120), cx, 238);
+  g.font = `18px ${MONO}`;
+  const state = STATE[f.state].text;
+  g.fillText(
+    f.state === 'idle' && f.quietMinutes !== null ? `${state} · quiet ${f.quietMinutes}m` : state,
+    cx,
+    268,
+  );
+  g.textAlign = 'left';
+}
+
+/** What is being run now, and for how long: the footer's first words. */
+function running(f: ScreenFacts, now: number): string {
+  if (f.state === 'waiting_permission') return '⚠ approval needed';
+  if (!f.tool) return f.state === 'working' ? 'thinking' : '';
+  return `▶ ${f.tool}${f.toolSince === null ? '' : ` ${elapsedLabel(now - f.toolSince)}`}`;
+}
+
+function draw(
+  g: CanvasRenderingContext2D,
+  f: ScreenFacts,
+  accent: string,
+  theme: DepartmentId,
+  now: number,
+  blink: boolean,
+) {
   frame(g, `${SCREEN_THEME[theme].title} · ${f.provider}`, accent);
+  if (f.state !== 'working' && f.state !== 'waiting_permission') return lock(g, f);
   ambient(g, theme, accent);
-  const left = 24;
-  const width = SCREEN_W * BAND.from - left - 16;
-  g.font = `600 26px ${SANS}`;
+
+  g.font = `600 20px ${SANS}`;
   g.fillStyle = PALETTE.text;
-  wrap(g, f.title ?? f.repo, width).forEach((line, i) => g.fillText(line, left, 72 + i * 32));
-  g.font = `20px ${MONO}`;
-  g.fillStyle = accent;
-  g.fillText(fit(g, f.branch ? `${f.repo} ⎇ ${f.branch}` : f.repo, width), left, 148);
+  g.fillText(fit(g, f.title ?? f.repo, WIDTH), LEFT, 56);
   const chips = [
+    f.branch ? `${f.repo} ⎇ ${f.branch}` : f.repo,
     f.ahead ? `↑${f.ahead}` : '',
     f.behind ? `↓${f.behind}` : '',
-    f.uncommitted ? `● ${f.uncommitted} changed` : '',
+    f.uncommitted ? `● ${f.uncommitted}` : '',
   ].filter(Boolean);
-  g.fillStyle = f.uncommitted ? PALETTE.amber : PALETTE.dim;
-  g.fillText(chips.join('   ') || (f.branch ? 'clean' : ''), left, 176);
-  g.fillStyle = PALETTE.line;
-  g.fillRect(left, 192, width, 2);
+  g.font = `15px ${MONO}`;
+  g.fillStyle = accent;
+  g.fillText(fit(g, chips.join('  '), WIDTH), LEFT, 80);
+  tabs(g, f.recent, accent);
 
-  const state = STATE[f.state];
-  g.fillStyle = state.color;
-  g.beginPath();
-  g.arc(left + 11, 226, 11, 0, Math.PI * 2);
-  g.fill();
-  g.font = `700 30px ${MONO}`;
-  g.fillText(state.text, left + 34, 237);
-  g.font = `22px ${MONO}`;
-  if (f.tool) {
+  // The last calls, the newest at the bottom; the one being run is the last when a tool is running.
+  const calls = f.recent.slice(-ROWS_MAX);
+  calls.forEach((call, i) => {
+    const last = i === calls.length - 1;
+    g.globalAlpha = 0.4 + (0.6 * (i + 1)) / calls.length;
+    row(g, call, ROWS_TOP + i * ROW_H, accent, last && f.tool === call.tool, blink);
+  });
+  g.globalAlpha = 1;
+  if (!calls.length) {
+    g.font = `17px ${MONO}`;
     g.fillStyle = accent;
-    g.fillText(fit(g, `$ ${f.tool}${f.state === 'working' ? ' ▌' : ''}`, width), left, 276);
+    g.fillText(`${f.tool ? `$ ${f.tool}` : 'working'}${blink ? ' ▌' : ''}`, LEFT, ROWS_TOP + 18);
   }
 
-  if (f.contextPercent !== null) {
-    const percent = Math.max(0, Math.min(100, f.contextPercent));
-    label(g, `CONTEXT  ${f.model ?? ''}`.trim(), left, 316, PALETTE.dim, 16);
-    g.font = `16px ${MONO}`;
-    g.textAlign = 'right';
-    g.fillStyle = PALETTE.text;
-    g.fillText(`${Math.round(percent)}%`, left + width, 316);
-    g.textAlign = 'left';
-    tile(g, left, 326, width, 16);
-    g.fillStyle = percent >= 85 ? PALETTE.red : percent >= 60 ? PALETTE.amber : PALETTE.green;
-    g.fillRect(left + 2, 328, ((width - 4) * percent) / 100, 12);
-  } else if (f.model) label(g, f.model, left, 316, PALETTE.dim, 16);
-
+  g.fillStyle = PALETTE.line;
+  g.fillRect(LEFT, 340, WIDTH, 2);
   const footer = [
+    running(f, now),
     f.quietMinutes === null ? '' : f.quietMinutes < 1 ? 'active now' : `quiet ${f.quietMinutes}m`,
     ...f.ports.slice(0, 3).map((p) => `:${p}`),
   ].filter(Boolean);
-  if (footer.length) label(g, footer.join('  ·  '), left, 378, PALETTE.dim, 16);
+  label(
+    g,
+    footer.join('  ·  '),
+    LEFT,
+    362,
+    f.state === 'working' ? PALETTE.green : PALETTE.amber,
+    16,
+  );
+  if (f.contextPercent !== null) {
+    const percent = Math.max(0, Math.min(100, f.contextPercent));
+    tile(g, LEFT, 374, WIDTH, 12);
+    g.fillStyle = percent >= 85 ? PALETTE.red : percent >= 60 ? PALETTE.amber : PALETTE.green;
+    g.fillRect(LEFT + 2, 376, ((WIDTH - 4) * percent) / 100, 8);
+    label(g, `${Math.round(percent)}% ${f.model ?? ''}`.trim(), LEFT, 399, PALETTE.dim, 12);
+  }
 }
 
-/** The screen for what a member is really doing. Textures are cached by their facts and the oldest are let go. */
-export function factsTexture(
-  facts: ScreenFacts,
-  accent: string,
-  theme: DepartmentId,
-): CanvasTexture {
-  const key = JSON.stringify([facts, accent, theme]);
-  const hit = cache.get(key);
-  if (hit) {
-    cache.delete(key);
-    cache.set(key, hit); // most recently used last
-    return hit;
-  }
+/**
+ * One member's screen: a canvas drawn again only when its facts or its blink tick change, so the scene can call
+ * `paint` every frame at no cost. Dispose the texture when the member leaves.
+ */
+export function createFactsScreen(accent: string, theme: DepartmentId) {
   const canvas = document.createElement('canvas');
   canvas.width = SCREEN_W;
   canvas.height = SCREEN_H;
   const g = canvas.getContext('2d')!;
-  draw(g, facts, accent, theme);
-  g.fillStyle = 'rgba(255,255,255,0.035)';
-  for (let y = 0; y < SCREEN_H; y += 3) g.fillRect(0, y, SCREEN_W, 1);
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
   texture.anisotropy = 4;
-  cache.set(key, texture);
-  while (cache.size > MAX_TEXTURES) {
-    const [oldest, old] = cache.entries().next().value!;
-    cache.delete(oldest);
-    old.dispose();
-  }
-  return texture;
+  let drawn: ScreenFacts | null = null;
+  let drawnTick = -1;
+  return {
+    texture,
+    /** `tick` counts blink half-periods (a running screen redraws on each); a still screen ignores it. */
+    paint(facts: ScreenFacts, tick: number, now: number) {
+      const live = facts.state === 'working' || facts.state === 'waiting_permission';
+      const step = live ? tick : 0;
+      if (facts === drawn && step === drawnTick) return;
+      drawn = facts;
+      drawnTick = step;
+      draw(g, facts, accent, theme, now, step % 2 === 0);
+      g.fillStyle = 'rgba(255,255,255,0.035)';
+      for (let y = 0; y < SCREEN_H; y += 3) g.fillRect(0, y, SCREEN_W, 1);
+      texture.needsUpdate = true;
+    },
+  };
 }

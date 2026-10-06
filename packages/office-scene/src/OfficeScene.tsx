@@ -1,23 +1,29 @@
 import { MultiCam } from './MultiCam.js';
 import { PipWall } from './PipWall.js';
-import { chooseFeeds, type Feed } from './multi-view.js';
+import { chooseFeeds, feedCapacity, type Feed, type Rect } from './multi-view.js';
 import type { ScreenFacts } from './screen-facts.js';
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import type { Agent, Layout } from '@aether/contracts';
 import { DEPARTMENTS } from '@aether/kernel';
 import { FLOORS, defaultLayout, floorZones } from './layout.js';
 import { OrbitalBackdrop } from './OrbitalBackdrop.js';
 import type { Apparition } from './animal-states.js';
+import { Beanstalk, type StalkHover } from './Beanstalk.js';
+import { layoutStalk, spreadStalk, type StalkCommit } from './stalk-layout.js';
+import { EXPLODED_GAP, FLOOR_HEIGHT } from './building.js';
 import { BranchBeams } from './BranchBeams.js';
+import { planDepartures } from './departure.js';
 import { CommLinks } from './CommLinks.js';
 import type { Pulse } from './director.js';
 import { Floor } from './Floor.js';
 import { Beacons, ProjectedLabels } from './Labels.js';
 import { Member } from './Member.js';
+import { ProjectedSpeech, SpeechLayer, type SceneSpeech } from './Speech.js';
 import { MessageCarriers } from './MessageCarriers.js';
 import { PerfProbe } from './PerfProbe.js';
 import { SceneCamera } from './SceneCamera.js';
+import { StalkTooltip } from './StalkTooltip.js';
 import { CompactHud } from './CompactHud.js';
 import { BuildingPanel, FloorHud, ShotCaption } from './SceneHud.js';
 import { AnimationClock, Runtime, SceneBoundary } from './SceneRuntime.js';
@@ -27,6 +33,8 @@ import { useSceneNavigation } from './scene-navigation.js';
 import type { BranchInfo, Quality } from './scene-types.js';
 import type { PerfReport } from './perf.js';
 import type { SceneMessage } from './carriers.js';
+
+const SPEECH_AT_ONCE = 6;
 
 export type OfficeSceneProps = {
   agents: Agent[];
@@ -54,6 +62,8 @@ export type OfficeSceneProps = {
   apparitions?: Readonly<Record<string, Apparition>>;
   /** Members with zombie processes under them (id → how many): a jiangshi stands behind each one's chair as well. */
   zombies?: Readonly<Record<string, number>>;
+  /** Members sent home, by id with the wall-clock moment each begins to leave: they pack up, walk to the elevator and are gone. */
+  leaving?: Readonly<Record<string, number>>;
   /** Agents with something new for the user (waiting for them, or finished): their labels are marked. */
   unreadIds?: ReadonlySet<string>;
   /** Messages and subagent work in the last half minute: drawn between the members and cut to by the camera. */
@@ -62,6 +72,10 @@ export type OfficeSceneProps = {
   attention?: Readonly<Record<string, string>>;
   /** What each member is doing right now, in a word or two (a tool, a state), shown by the member on screen. */
   doing?: Readonly<Record<string, string>>;
+  /** The last prompt and reply of each running member, by id: two bubbles over the head of a few of them at a time. */
+  speech?: Readonly<Record<string, SceneSpeech>>;
+  /** Recent commits of the project's repository, newest first: drawn as a braid of glass up the building's core with a crown above the roof. */
+  beanstalk?: readonly StalkCommit[] | null;
   /** The camera runs itself (the director). Default on. */
   autoCamera?: boolean;
   onToggleAuto?: () => void;
@@ -78,6 +92,7 @@ export function OfficeScene(props: OfficeSceneProps) {
   );
   const zh = props.locale === 'zh-TW';
   const elements = useRef(new Map<string, HTMLElement>());
+  const speechElements = useRef(new Map<string, HTMLElement>());
   const [hovered, setHovered] = useState<string | null>(null);
   const compact = props.compact ?? false;
   // Names over the scene hide what is behind them: on a phone only the member in hand has one, until asked for all.
@@ -98,9 +113,43 @@ export function OfficeScene(props: OfficeSceneProps) {
     selectedId: props.selectedId,
   });
   const { floor, exploded } = nav;
+  const departures = useMemo(
+    () => planDepartures(layout, Object.keys(props.leaving ?? {})),
+    [layout, props.leaving],
+  );
+  // The spire is laid out from the commits; its tooltip is fed by the spire's pointer events without redrawing the scene.
+  const stalk = useMemo(
+    () =>
+      props.beanstalk?.length
+        ? layoutStalk(props.beanstalk, Date.now(), FLOORS * FLOOR_HEIGHT)
+        : null,
+    [props.beanstalk],
+  );
+  const spire = useMemo(
+    () =>
+      stalk && exploded
+        ? spreadStalk(stalk, { floorHeight: FLOOR_HEIGHT, gap: EXPLODED_GAP })
+        : stalk,
+    [stalk, exploded],
+  );
+  const stalkTip = useRef<((hover: StalkHover) => void) | null>(null);
+  const showStalkTip = useCallback((hover: StalkHover) => stalkTip.current?.(hover), []);
   // Several members busy at once: the main camera is on one, the others get a small view each beside it.
   const [pipsHidden, setPipsHidden] = useState(false);
   const feedsRef = useRef<Feed[]>([]);
+  // Where the small views are on the canvas (MultiCam writes it), and how much room the canvas has for them.
+  const wall = useRef<ReadonlyMap<string, Rect>>(new Map());
+  // Where the speech bubbles are drawn this frame: a name tag under one is hidden, not drawn over what the member said.
+  const bubbles = useRef(new Map<string, Rect>());
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const container = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return;
+    const measure = () => setCanvasSize({ width: node.clientWidth, height: node.clientHeight });
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    measure();
+    return () => observer.disconnect();
+  }, []);
   const wantPips = !compact && props.quality !== 'low' && !props.reducedMotion && !pipsHidden;
   const mainSubjects = nav.directed?.shot.subjects.join('|') ?? '';
   const feeds = useMemo(() => {
@@ -113,9 +162,21 @@ export function OfficeScene(props: OfficeSceneProps) {
       intensity: new Map(Object.entries(props.intensity ?? {})),
       taken,
       previous: feedsRef.current,
+      max: feedCapacity(canvasSize.width, canvasSize.height),
+      ...(exploded ? {} : { floor }), // a member on a floor that is not drawn would have an empty view
     });
     return feedsRef.current;
-  }, [wantPips, props.agents, nav.seats, props.intensity, mainSubjects, props.selectedId]);
+  }, [
+    wantPips,
+    props.agents,
+    nav.seats,
+    props.intensity,
+    mainSubjects,
+    props.selectedId,
+    canvasSize,
+    floor,
+    exploded,
+  ]);
   const auto = (props.autoCamera ?? true) && !props.reducedMotion;
   const onShot = (id: string) => nav.directed?.shot.subjects.includes(id) ?? false;
   const named = (agent: Agent) =>
@@ -130,6 +191,24 @@ export function OfficeScene(props: OfficeSceneProps) {
   const sceneAgents = props.agents.filter(
     (agent) => exploded || floorOfDesk(layout, agent.id) === floor,
   );
+  // Bubbles go to the selected member and the camera's subjects first, then the busiest working ones (not on a phone).
+  const speakers = sceneAgents
+    .filter((a) => props.speech?.[a.id])
+    .map((a) => {
+      const level = props.intensity?.[a.id] ?? 0;
+      const rank =
+        a.id === props.selectedId || onShot(a.id)
+          ? 4
+          : compact
+            ? 0
+            : Math.max(level, a.activity === 'working' ? 1 : 0);
+      return { agent: a, rank };
+    })
+    .filter((s) => s.rank > 0)
+    .sort((a, b) => b.rank - a.rank)
+    .slice(0, SPEECH_AT_ONCE)
+    .map((s) => s.agent);
+
   const animate = !props.reducedMotion && props.quality !== 'low';
   const active =
     animate || (props.agents.some((a) => ACTIVE.includes(a.activity)) && !props.reducedMotion);
@@ -142,7 +221,7 @@ export function OfficeScene(props: OfficeSceneProps) {
 
   return (
     <SceneBoundary onFailure={props.onFailure}>
-      <div className="canvas-container">
+      <div className="canvas-container" ref={container}>
         <Canvas
           shadows={!compact && props.quality !== 'low'}
           camera={{ position: OVERVIEW(false), fov: 38, near: 0.4, far: 2400 }}
@@ -205,6 +284,11 @@ export function OfficeScene(props: OfficeSceneProps) {
                 intensity={props.intensity?.[agent.id] ?? 0}
                 apparition={props.apparitions?.[agent.id]}
                 zombie={(props.zombies?.[agent.id] ?? 0) > 0}
+                departure={
+                  departures[agent.id] && props.leaving?.[agent.id] !== undefined
+                    ? { plan: departures[agent.id]!, startAt: props.leaving[agent.id]! }
+                    : undefined
+                }
                 selected={agent.id === props.selectedId || agent.id === hovered}
                 reducedMotion={props.reducedMotion}
                 quality={props.quality}
@@ -229,6 +313,13 @@ export function OfficeScene(props: OfficeSceneProps) {
             labels={labelsOf(sceneAgents.filter(named), layout, floor, exploded && !compact)}
             elements={elements.current}
             selected={props.selectedId}
+            avoid={wall}
+            covered={bubbles}
+          />
+          <ProjectedSpeech
+            anchors={labelsOf(speakers, layout, floor, exploded && !compact)}
+            elements={speechElements.current}
+            drawn={bubbles}
           />
           <SceneCamera
             command={nav.command}
@@ -254,11 +345,21 @@ export function OfficeScene(props: OfficeSceneProps) {
               beams={beamsOf(sceneAgents, layout, exploded, props.branchOf)}
             />
           )}
+          {spire && (
+            <Beanstalk
+              stalk={spire}
+              animate={animate}
+              low={props.quality === 'low'}
+              onHover={showStalkTip}
+            />
+          )}
           <Beacons
             animate={!props.reducedMotion}
             items={beaconsOf(sceneAgents, layout, exploded)}
           />
-          {feeds.length > 0 && <MultiCam feeds={feeds} seats={nav.seats} />}
+          {feeds.length > 0 && (
+            <MultiCam feeds={feeds} seats={nav.seats} exploded={exploded} wall={wall} />
+          )}
           <AnimationClock
             active={active || nav.directed !== null}
             smooth={nav.directed !== null}
@@ -277,6 +378,7 @@ export function OfficeScene(props: OfficeSceneProps) {
           />
         )}
         <div className="world-labels">
+          {stalk && <StalkTooltip show={stalkTip} strands={stalk.strands} locale={props.locale} />}
           {sceneAgents.filter(named).map((agent) => (
             <button
               key={agent.id}
@@ -316,6 +418,15 @@ export function OfficeScene(props: OfficeSceneProps) {
                 </button>
               ))}
         </div>
+        <SpeechLayer
+          items={speakers.map((a) => ({ id: a.id, speech: props.speech![a.id]! }))}
+          elements={speechElements.current}
+          animate={!props.reducedMotion}
+          tags={zh ? { user: '提示', assistant: '回覆' } : { user: 'Prompt', assistant: 'Reply' }}
+        />
+        {nav.directed?.entry === 'cut' && (
+          <div className="cut-dip" key={nav.directed.startedAt} aria-hidden="true" />
+        )}
         {nav.directed && (
           <ShotCaption
             zh={zh}
