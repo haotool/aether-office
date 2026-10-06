@@ -8,6 +8,7 @@
     "@a2a-js/sdk": "1.3.0",
     "@aether/contracts": "workspace:*",
     "@aether/kernel": "workspace:*",
+    "@aether/providers": "workspace:*",
     "@fastify/cookie": "11.1.2",
     "@fastify/static": "10.1.5",
     "@fastify/websocket": "11.3.1",

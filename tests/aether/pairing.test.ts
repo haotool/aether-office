@@ -5,6 +5,7 @@ import {
   PAIRING_TTL_MS,
   createPairingStore,
   lanOrigins,
+  pairingText,
   terminalQr,
 } from '../../apps/control/src/services/pairing.js';
 import { fixture } from './fixture.js';
@@ -194,5 +195,20 @@ describe('signing a phone in by scanning', () => {
       payload: { token: f.owner.token, remember: true },
     });
     expect(String(month.headers['set-cookie'])).toMatch(/Max-Age=2592000/);
+  });
+});
+
+describe('the pairing text for a terminal', () => {
+  it('shows the QR of the best address, lists the others and says the link is plain HTTP', () => {
+    const links = [
+      { origin: 'http://192.168.1.20:4310', url: 'http://192.168.1.20:4310/#pair=A' },
+      { origin: 'http://10.0.0.5:4310', url: 'http://10.0.0.5:4310/#pair=A' },
+    ];
+    const text = pairingText(links, 300);
+    expect(text).toContain(terminalQr(links[0]!.url));
+    expect(text).toContain('http://192.168.1.20:4310');
+    expect(text).toContain('Same code on the other addresses: http://10.0.0.5:4310');
+    expect(text).toContain('expires in 5 minutes');
+    expect(text).toContain('Plain HTTP');
   });
 });

@@ -120,8 +120,3 @@
   margin-left: auto;
   color: var(--muted);
 }
-
-.inspector dd {
-  overflow-wrap: anywhere;
-  min-width: 0;
-}

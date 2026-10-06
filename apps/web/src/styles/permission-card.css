@@ -1,0 +1,114 @@
+/*
+ * Remote approvals: a permission prompt of Claude Code answered from the panel (ApprovalCard). Shown in the feed row of a
+ * session that needs you, at the top of its conversation, and on a phone as a bar over the peek. Values are tokens.
+ */
+.permission-card {
+  position: relative;
+  display: grid;
+  gap: var(--space-8);
+  padding: var(--space-12);
+  border-bottom: 1px solid var(--gold-border);
+  background: var(--gold-tint);
+  color: var(--text);
+}
+/* The time left, as a thin line along the top edge that runs out */
+.permission-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--gold);
+  transition: width 1s linear;
+}
+.permission-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-6);
+  min-width: 0;
+  color: var(--gold);
+  font-size: var(--fs-small);
+}
+.permission-head svg {
+  flex: none;
+  align-self: center;
+}
+.permission-summary {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-family: var(--mono);
+}
+.permission-left {
+  flex: none;
+  color: var(--muted);
+  font-size: var(--fs-label);
+  font-variant-numeric: tabular-nums;
+}
+.permission-preview {
+  max-height: 160px;
+  margin: 0;
+  padding: var(--space-8);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  font-family: var(--mono);
+  font-size: var(--fs-small);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.permission-rules {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.permission-reason {
+  width: 100%;
+  min-width: 0;
+  font-size: var(--fs-small);
+}
+.permission-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+.permission-actions button {
+  flex: 1 1 auto;
+  min-height: var(--target-touch);
+}
+.permission-actions button:disabled {
+  opacity: 0.5;
+}
+.permission-error {
+  margin: 0;
+  color: var(--red);
+  font-size: var(--fs-small);
+}
+.permission-card.compact {
+  padding: var(--space-8) var(--space-12) var(--space-12);
+}
+
+/* Phone, sheet at its peek height: the pending prompt rides over the 72px member bar. */
+.permission-peek {
+  display: none;
+}
+@media (max-width: 760px), (pointer: coarse) and (max-height: 500px) {
+  .permission-peek {
+    display: block;
+    position: fixed;
+    z-index: var(--z-drawer);
+    left: calc(var(--space-8) + var(--safe-left));
+    right: calc(var(--space-8) + var(--safe-right));
+    bottom: calc(var(--sheet-bottom) + 72px + var(--space-16));
+    border: 1px solid var(--gold-border);
+    border-radius: var(--r-2xl);
+    background: var(--surface);
+    box-shadow: 0 8px 28px var(--shade);
+    overflow: hidden;
+  }
+  .permission-peek .permission-card {
+    border-bottom: 0;
+  }
+}

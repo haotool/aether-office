@@ -153,6 +153,16 @@ export const terminalDimensions = {
   cols: z.number().int().min(10).max(400),
   rows: z.number().int().min(2).max(200),
 };
+/** Start a terminal by resuming (or forking) an existing provider session in the profile's directory. */
+export const terminalResumeSchema = z
+  .object({
+    provider: z.enum(['claude', 'codex']),
+    // Never starts with a dash: it is a positional argument of the CLI, not something it could read as a flag.
+    sessionId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{7,199}$/),
+    fork: z.boolean(),
+  })
+  .strict();
+export type TerminalResume = z.infer<typeof terminalResumeSchema>;
 export const scheduleSpecSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('once'), at: z.number().int().positive() }).strict(),
   z

@@ -4,7 +4,7 @@ import { api } from '../api.js';
 import { useT } from '../ui.js';
 import { quotaNearLimit, quotaText } from './quota.js';
 
-const when = (ms: number) =>
+export const when = (ms: number) =>
   new Intl.DateTimeFormat('en-GB', {
     month: '2-digit',
     day: '2-digit',

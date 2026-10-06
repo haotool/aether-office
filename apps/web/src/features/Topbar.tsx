@@ -4,7 +4,9 @@ import type { LocalSessionsResponse, Project } from '@aether/contracts';
 import type { Session } from '../api.js';
 import { usePreferences } from '../state.js';
 import { useT, Badge } from '../ui.js';
+import { PairPhoneButton } from './ConnectPhone.js';
 import { EmergencyStop } from './EmergencyStop.js';
+import { ConnectionStatus } from './ConnectionStatus.js';
 import { Telemetry } from './Telemetry.js';
 
 /** Brand, project picker and the controls that belong to the person: language, theme, live-mode stop. */
@@ -14,6 +16,8 @@ export function Topbar({
   projectId,
   sessions,
   unread,
+  updatedAt,
+  offline,
   onMenu,
   onProject,
   onNewProject,
@@ -24,6 +28,9 @@ export function Topbar({
   /** The local sessions to summarise, or null when local discovery is off. */
   sessions: LocalSessionsResponse['sessions'] | null;
   unread: number;
+  /** When the local sessions last arrived (ms epoch), and whether the project stream is down. */
+  updatedAt: number;
+  offline: boolean;
   onMenu: () => void;
   onProject: (projectId: string) => void;
   onNewProject: () => void;
@@ -65,11 +72,13 @@ export function Topbar({
         <Plus size={17} />
       </button>
       <div className="topbar-right">
+        {sessions && <ConnectionStatus updatedAt={updatedAt} offline={offline} />}
         {sessions && <Telemetry sessions={sessions} unread={unread} />}
         {session.mode === 'live' && session.actor.role === 'owner' && projectId && (
           <EmergencyStop projectId={projectId} />
         )}
         <Badge state={session.mode} />
+        {['owner', 'operator'].includes(session.actor.role) && <PairPhoneButton variant="icon" />}
         <button
           className="icon-button"
           aria-label={t('language')}

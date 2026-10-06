@@ -2,10 +2,12 @@ import { z } from 'zod';
 import {
   terminalDispatchSchema,
   terminalDimensions,
+  terminalResumeSchema,
   type TerminalDispatch,
   type TerminalSnapshot,
 } from '@aether/contracts';
 import { PtySession, type TerminalUser } from './pty.js';
+import { resumeProfile } from './terminal-resume.js';
 import type { Journal } from './journal.js';
 import type { NativeExecutor } from './native.js';
 type Api = (path: string, body: unknown) => Promise<unknown>;
@@ -46,9 +48,18 @@ export class TerminalRunner {
         const profile = this.native.terminalProfiles.get(c.profile);
         if (!profile || profile.hash !== c.profileHash || profile.root !== c.root)
           throw new Error('TERMINAL_PROFILE_CHANGED');
-        const dimensions = z.object(terminalDimensions).parse(c.payload);
+        const { resume, ...dimensions } = z
+          .object({ ...terminalDimensions, resume: terminalResumeSchema.optional() })
+          .parse(c.payload);
         // ponytail: 8 KiB snapshot fits the bounded HTTP envelope even with ANSI escaping; chunked transport if larger scrollback is needed.
-        this.sessions.set(c.terminalId, new PtySession(profile.profile, dimensions, 8192));
+        this.sessions.set(
+          c.terminalId,
+          new PtySession(
+            resumeProfile(profile.profile, resume, this.native.config.binaries),
+            dimensions,
+            8192,
+          ),
+        );
       } else {
         const pty = this.sessions.get(c.terminalId);
         if (!pty) {

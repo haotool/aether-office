@@ -20,14 +20,14 @@ test('the selected agent lives in the URL, so reload and deep links restore it',
   await login(page);
   await page.locator('.team-chip', { hasText: 'Mika' }).click();
   await expect(page).toHaveURL(/agent=/);
-  const inspector = page.locator('.inspector');
-  await expect(inspector).toContainText('Mika');
+  const panel = page.locator('.session-panel');
+  await expect(panel).toContainText('Mika');
   await page.reload();
-  await expect(page.locator('.inspector')).toContainText('Mika'); // selection survives a reload
+  await expect(page.locator('.session-panel')).toContainText('Mika'); // selection survives a reload
   const url = page.url();
   await page.goto('/tasks');
   await page.goto(url);
-  await expect(page.locator('.inspector')).toContainText('Mika'); // and a pasted deep link
+  await expect(page.locator('.session-panel')).toContainText('Mika'); // and a pasted deep link
 });
 
 test('everything the 3D scene shows has an equivalent in the DOM that works by keyboard', async ({
@@ -47,7 +47,7 @@ test('everything the 3D scene shows has an equivalent in the DOM that works by k
   );
   await page.locator('.team-chip', { hasText: 'Nova' }).focus();
   await page.keyboard.press('Enter');
-  await expect(page.locator('.inspector')).toContainText('Nova'); // selecting by keyboard works without the canvas
+  await expect(page.locator('.session-panel')).toContainText('Nova'); // selecting by keyboard works without the canvas
 });
 
 test('state is never carried by colour alone: every badge has visible text', async ({ page }) => {

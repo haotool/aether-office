@@ -319,6 +319,7 @@ export {
   type ScheduleSpec,
 } from './schedule.js';
 export { parseSkill, SkillError, type ParsedSkill } from './skill.js';
+export { fuzzyRank, fuzzyScore } from './fuzzy.js';
 export { TEMPLATES, isTemplate, type StepPlan, type WorkflowTemplate } from './workflows.js';
 export {
   DEPARTMENTS,

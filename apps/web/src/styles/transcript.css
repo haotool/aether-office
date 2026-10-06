@@ -1,98 +1,208 @@
-.transcript-toggle {
-  margin-top: var(--space-12);
+/*
+ * A conversation in the session panel: turns (a prompt and what the agent did about it), tool calls as slim chips,
+ * code blocks, the "jump to latest" pill, the closed details fold and the foot. Shared by the desktop column and the phone
+ * sheet. Sizes follow the panel's own width (container queries on `.conversation`, see session-panel.css).
+ */
+.conv-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
-.transcript-toggle summary {
+.conv-scroll {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  padding: var(--space-16) var(--space-12);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scroll-padding-bottom: var(--space-16);
+}
+.conv-note {
+  margin: 0;
+  color: var(--dim);
+  font-size: var(--fs-small);
+  text-align: center;
+}
+.turn {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-12);
+}
+.msg {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+  min-width: 0;
+}
+.msg-who {
+  color: var(--dim);
+  font-size: var(--fs-label);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+/* The time shows on hover or focus; a touch screen has no hover, so it is always there. */
+.msg-who time {
+  margin-left: var(--space-4);
+  letter-spacing: 0;
+  visibility: hidden; /* hidden, not transparent: invisible text would still be measured for contrast */
+}
+.msg:hover .msg-who time,
+.msg:focus-within .msg-who time {
+  visibility: visible;
+}
+@media (hover: none) {
+  .msg-who time {
+    visibility: visible;
+  }
+}
+.msg.user {
+  justify-self: end;
+  max-width: min(92%, 64ch);
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl) var(--r-xl) var(--r-xs) var(--r-xl);
+  background: var(--selected);
+}
+.msg.user p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  font-size: var(--fs-body);
+  line-height: 1.55;
+}
+/* The assistant speaks as plain text on the page with a quiet gutter that warms when you read it */
+.msg.assistant {
+  max-width: 72ch;
+  padding-left: var(--space-12);
+  border-left: 2px solid var(--line);
+  transition: border-color var(--dur) var(--ease);
+}
+.msg.assistant:hover,
+.msg.assistant:focus-within {
+  border-left-color: var(--mint);
+}
+.msg.assistant .msg-who {
+  color: var(--mint);
+}
+.markdown {
+  overflow-wrap: anywhere;
+  font-size: var(--fs-body);
+  line-height: 1.65;
+}
+.markdown p {
+  margin: 0 0 var(--space-8);
+}
+.markdown > :last-child {
+  margin-bottom: 0;
+}
+.markdown .md-heading {
+  font-weight: 650;
+}
+.markdown ul,
+.markdown ol {
+  margin: 0 0 var(--space-8);
+  padding-left: var(--space-20);
+}
+.markdown code {
+  padding: 0 var(--space-4);
+  border-radius: var(--r-sm);
+  background: var(--raised);
+  color: var(--blue);
+  font-family: var(--mono);
+  font-size: 0.9em;
+}
+@container panel (min-width: 560px) {
+  .conv-scroll {
+    padding-inline: var(--space-20);
+  }
+}
+@container panel (max-width: 359px) {
+  .conv-scroll {
+    gap: var(--space-12);
+    padding-inline: var(--space-8);
+  }
+  .msg.user {
+    max-width: 100%;
+  }
+}
+
+/* Everything that is not the conversation: closed until asked for, at the end of what scrolls */
+.session-details {
+  margin-top: auto;
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--line);
+}
+.session-details summary {
+  color: var(--dim);
   cursor: pointer;
   font-family: var(--mono);
   font-size: var(--fs-label);
-  letter-spacing: 1.6px;
-  color: var(--mint);
+  letter-spacing: 1.2px;
 }
-.live-transcript .analysis {
-  display: grid;
-  gap: var(--space-8);
-  margin: var(--space-8) 0;
-  font-size: var(--fs-small);
+.session-details dl {
+  margin: var(--space-8) 0 0;
 }
-.live-transcript .analysis b {
-  display: block;
-  font-size: var(--fs-label);
-  letter-spacing: 1.4px;
-  color: var(--dim);
-  margin-bottom: var(--space-2);
-}
-.chips {
+.session-details dl > div {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.chips li {
-  padding: var(--space-2) var(--space-6);
-  border: 1px solid var(--line);
-  border-radius: var(--r-xs);
-  font-family: var(--mono);
-  font-size: var(--fs-label);
-}
-.chips i {
-  font-style: normal;
-  color: var(--mint);
-}
-.mono-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  font-family: var(--mono);
-  font-size: var(--fs-label);
-  color: var(--muted);
-}
-.mono-list li {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.transcript {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  max-height: 340px;
-  overflow: auto;
-  border-top: 1px solid var(--line);
-}
-.transcript .entry {
-  display: grid;
-  grid-template-columns: 64px 1fr;
-  gap: var(--space-8);
-  padding: var(--space-6) 0;
-  border-bottom: 1px solid var(--line);
+  justify-content: space-between;
+  gap: var(--space-12);
+  padding: var(--space-4) 0;
   font-size: var(--fs-small);
 }
-.transcript .who {
-  font-family: var(--mono);
-  font-size: var(--fs-label);
-  letter-spacing: 1px;
+.session-details dt {
+  flex: none;
   color: var(--dim);
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
-.transcript .assistant .who {
-  color: var(--mint);
-}
-.transcript .tool .who {
-  color: var(--violet);
-}
-.transcript .error .text {
-  color: var(--red);
-}
-.transcript .text {
-  white-space: pre-wrap;
+.session-details dd {
+  min-width: 0;
+  margin: 0;
   overflow-wrap: anywhere;
+  text-align: right;
 }
-.transcript .tool .text,
-.transcript .result .text {
-  font-family: var(--mono);
-  font-size: var(--fs-label);
+.session-details h4 {
+  margin: var(--space-12) 0 var(--space-4);
+  color: var(--dim);
+  font-size: var(--fs-small);
+}
+.details-work {
+  display: grid;
+  gap: var(--space-4);
+  font-size: var(--fs-small);
+}
+.details-work p {
+  margin: 0;
   color: var(--muted);
+}
+
+.session-footer {
+  display: grid;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-12);
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+.session-footer p {
+  margin: 0;
+  color: var(--dim);
+  font-size: var(--fs-small);
+  line-height: 1.45;
+}
+.session-footer-actions {
+  display: flex;
+  gap: var(--space-8);
+}
+.session-footer-actions .secondary {
+  flex: 1;
+}
+.conv-waiting {
+  margin: 0;
+  padding: var(--space-6) var(--space-12);
+  border-bottom: 1px solid var(--gold-border);
+  background: var(--gold-tint);
+  color: var(--gold);
+  font-size: var(--fs-small);
 }

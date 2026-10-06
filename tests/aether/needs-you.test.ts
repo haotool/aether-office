@@ -14,6 +14,6 @@ const snapshot = {
 } as unknown as Snapshot;
 
 it('counts what waits for a person, not how much there is', () => {
-  expect(needsYou(snapshot, 2)).toEqual({ tasks: 3, messages: 1, more: 2 });
-  expect(needsYou(undefined, 0)).toEqual({ tasks: 0, messages: 0, more: 0 });
+  expect(needsYou(snapshot, 2, 4)).toEqual({ tasks: 3, messages: 1, approvals: 2, sessions: 4 });
+  expect(needsYou(undefined, 0, 0)).toEqual({ tasks: 0, messages: 0, approvals: 0, sessions: 0 });
 });

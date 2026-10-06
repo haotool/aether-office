@@ -84,6 +84,14 @@ export const localSessionSchema = z.object({
 export type LocalSession = z.infer<typeof localSessionSchema>;
 // A session joined to the AETHER project whose root is its main checkout; null until that project exists.
 export type AttributedSession = LocalSession & { projectId: string | null };
+// A custom slash command or skill found for a session: what follows the slash (`team:review`), a one-line redacted
+// description, where it was found and what it is. Names and descriptions only, never the file.
+export type CustomCommand = {
+  name: string;
+  description: string;
+  source: 'project' | 'user';
+  kind: 'command' | 'skill';
+};
 export type LocalSessionsResponse = { enabled: boolean; sessions: AttributedSession[] };
 
 // Claude's subscription windows, from the numbers a status line already fetched (see services/claude-limits.ts). A
@@ -99,6 +107,28 @@ export const claudeLimitsSchema = z.object({
 });
 export type ClaudeLimits = z.infer<typeof claudeLimitsSchema>;
 export type ClaudeLimitsResponse = { limits: ClaudeLimits | null };
+
+// The models each provider's CLI offers on this machine (packages/providers/src/models.ts), read from the CLIs' own
+// caches and never written. The readers skip anything they do not recognise, so these hold only what was understood.
+export const modelEntrySchema = z.object({
+  id: z.string().max(120),
+  label: z.string().max(80),
+  family: z.string().max(40).optional(),
+  efforts: z.array(z.string().max(20)).max(12),
+  defaultEffort: z.string().max(20).optional(),
+  isAlias: z.boolean(),
+  contextWindow: z.number().int().positive().optional(),
+});
+export const modelCatalogSchema = z.object({
+  provider: z.enum(['claude', 'codex']),
+  models: z.array(modelEntrySchema).max(100),
+  source: z.enum(['cache', 'cli', 'fallback']),
+  fetchedAt: z.number().optional(),
+  stale: z.boolean(),
+});
+export type ModelEntry = z.infer<typeof modelEntrySchema>;
+export type ModelCatalog = z.infer<typeof modelCatalogSchema>;
+export type ModelsResponse = { catalogs: ModelCatalog[] };
 
 // "Clock out": send the sessions that have sat idle for a day or more home in one request. The client names sessions by
 // the key the scanner gave them and the process start time it saw (never a pid); the server decides for each one.

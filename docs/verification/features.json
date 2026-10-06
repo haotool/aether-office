@@ -3096,7 +3096,8 @@
       "apps/control/src/services/hook-spool.ts",
       "apps/web/src/localSessions.ts",
       "apps/web/src/adoptProjects.ts",
-      "apps/web/src/features/Inspector.tsx",
+      "apps/web/src/features/SessionPanel.tsx",
+      "apps/web/src/features/feed-model.ts",
       "packages/contracts/src"
     ],
     "testIds": [
@@ -3104,7 +3105,10 @@
       "tests/aether/agent-processes.test.ts",
       "tests/aether/hook-bridge.test.ts",
       "tests/aether/adopt-projects.test.ts",
-      "e2e/local-sessions.spec.ts"
+      "e2e/local-sessions.spec.ts",
+      "e2e/session-panel.spec.ts",
+      "tests/aether/feed-model.test.ts",
+      "tests/aether/turn-groups.test.ts"
     ],
     "evidencePaths": [
       "evidence/tests-local-sessions-full.log",

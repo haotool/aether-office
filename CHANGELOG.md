@@ -7,8 +7,78 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 Pre-release development (`0.4.0-dev`).
 
+### Security
+
+- Remote approvals review fixes (see docs/security.md). **Re-enable Remote approvals and reinstall the hook after updating**: the
+  config file now also holds a `verifyKey`, and an older file makes the hook fall back to the terminal prompt.
+  - The server signs every decision (HMAC-SHA256 of request id, the hook's nonce and the answer); the hook prints a decision only
+    when the proof verifies, so a process squatting the loopback port cannot answer for a person. The hook also never follows redirects.
+  - Deciding and listing requests need the browser session (cookie, plus CSRF to decide); a bearer token, such as the owner token
+    on disk, is refused. The decision is refused over plain HTTP on a network unless `AETHER_REMOTE_APPROVALS_LAN=1`: by default a
+    phone on the same Wi-Fi can see requests but cannot answer them (use HTTPS, or opt in). Settings and the card say so.
+  - The hook is installed as a private copy in `~/.aether/hooks/` (0700 directory, 0500 files); `pnpm hooks status` reports a
+    modified copy. `~/.aether` is chmod 0700, `approvals.json` is written atomically under a random temp name, and symlinks are
+    refused. A symlinked `settings.json` is written through the link.
+  - The compact approval card offers Review instead of Allow when the call is multi-line, cut short or a change. Summaries show
+    every `MultiEdit` edit and `replace_all`, strip bidirectional, zero-width and C1 control characters before redacting, and put the
+    command before the agent's description.
+  - Redaction also covers JSON-style (`"password": "..."`) and environment-style (`AWS_SECRET_ACCESS_KEY=`, `PGPASSWORD=`,
+    `MY_TOKEN=`) secrets, and structured input by key name.
+  - A correct hook token is never locked out; wrong ones are. The hook routes accept loopback callers only, the failed-attempt
+    map is pruned and capped, the create rate limit runs before the project scan, and a session rule label is shown whole or not
+    offered.
+
 ### Added
 
+- Remote approvals (opt-in, off by default): a Claude Code permission prompt can be answered from the panel and the phone.
+  `pnpm hooks install --remote-approvals` adds one synchronous `PermissionRequest` hook (`packages/providers/src/hook-approval.mjs`),
+  and Settings -> Remote approvals (owner) issues its token. The hook posts a redacted, bounded summary of the tool call to the
+  control plane, waits up to 45 s (configurable, always below the hook's own timeout) and prints Claude's decision JSON; with no
+  answer, offline or any error it prints nothing and Claude asks in its terminal as usual. The panel shows an approval card
+  (Allow once, Allow for this session when Claude offered rules, Deny with a reason, a countdown) in the feed's "Needs you" rows,
+  at the top of the conversation and over the phone's peek sheet, and the needs-you badge and alert count it. Only a button
+  press decides; decisions are owner/operator only and audited (`permission-request.decided`). See docs/security.md.
+- Live session updates. `GET /api/local-sessions/stream` is a bounded server-sent event channel (owner and operator only, 16
+  streams, a heartbeat every 20 s, `Last-Event-ID` resume, a closed stream on logout, revocation or a role change) fed by one
+  shared watcher that diffs the session scan; it names the session and the kind of change, never content. The panel's
+  session list, speech and transcript refetch the moment something changes instead of every 2-10 s, and poll only as a
+  slow safety net while it is live (and at their old intervals when it is not).
+- A connection indicator in the top bar (live, connecting, reconnecting, offline, with the age of the last update).
+  Reconnects back off exponentially with jitter, pause while the tab is hidden and refetch at once on waking, returning to the
+  tab or getting the network back.
+- ETag and `304` for `/api/local-sessions`, `/speech` and a transcript: an idle panel moves about an eighth of the
+  bytes it did (measured: 19.8 KB to 2.4 KB a minute with 10 sessions), a busy one about 40% fewer.
+- A web app manifest and icons (192, 512 and maskable): "Add to Home Screen" opens the office full screen on iOS and Android.
+
+- A composer in the session panel for sessions AETHER can drive. When a session's process runs inside an AETHER terminal the
+  panel's foot is a multi-line input (Enter sends on a desktop, a Send button and quick replies on a phone) that types into
+  that terminal with the safe sequence (clear the line, the text as a paste when it has several lines, Enter a moment later,
+  one write at a time per terminal), shows the message at once as a pending bubble that the transcript's own prompt replaces,
+  queues up to ten messages while offline, busy or while someone else holds the lease, and replaces Send with Stop (Esc, then
+  Ctrl+C, then "Stop process") while the session works. `/` opens a fuzzy menu of the CLI's commands, custom commands and
+  skills (names and descriptions only; those that open a list in the terminal are labelled), `@` completes file paths of the
+  session's directory, and a model chip sends `/model` (Claude) or opens Codex's own picker. A session started in another
+  terminal stays read-only, now with **Continue in AETHER** and **Fork in AETHER**, which start a new AETHER terminal running
+  `claude --resume` / `codex resume` (or the fork) in the same folder. New endpoints: `GET /api/local-sessions/:key/terminal`,
+  `/commands` and `/files`; `terminal.start` takes an optional `resume`.
+- A model catalog that follows the CLIs: `GET /api/models` lists the models Codex (`models_cache.json`, or `codex debug models`
+  when the cache is over a day old) and Claude Code (its model-catalog cache plus the always-present `fable`, `opus`, `sonnet`
+  and `haiku` aliases) offer on this machine, with the effort levels each supports, where the list came from and whether it is
+  stale. Settings → Execution shows it as "Detected models", and a presentational `ModelPicker` (model chips by provider, an
+  effort selector limited to the model, a refresh button) is ready for the session composer. Read-only: nothing is written
+  under `~/.claude` or `~/.codex`.
+- Information architecture for CLI users. The sidebar, phone tab bar and quick open show the office, local sessions, approvals,
+  terminals, history and settings; the pages for orchestrating several agents (tasks, review, team, knowledge, messages,
+  execution hosts, external observation, workspaces, and Settings' schedules, A2A and integrations) are behind **Settings →
+  Advanced features** (off by default; their addresses still open). The phone's tabs become Office, Sessions, Approvals,
+  Terminals.
+- The two office chips are labelled (Running, Needs you), carry their count in an accessible name, and the orange one now
+  counts sessions waiting for an approval or an answer before the forgotten and ownerless ones.
+- Notifications are on by default: a session needs you, an approval waits, a long turn ended while the tab is hidden. They show
+  the project name only, a tap opens the session, the browser's permission is requested on the first click, and a refusal falls
+  back to an in-page notice. The tab title and the sidebar and tab badges count what needs you.
+- "Open on your phone" in the top bar (and the phone drawer) opens the pairing QR, with the plain-HTTP caveat; the control plane
+  prints the LAN addresses and a one-time QR at start when `AETHER_HOST` is set, and one line on how to enable it otherwise.
 - A flowering crown on the beanstalk: every tier of the history (one per 12 commits, up to 12) is a flower grown from its first
   commit's hash (eight blended archetypes, none a closed bud; Fibonacci petal counts, Vogel-spiral florets, glowing stamens,
   glass petals with vein glow and an iridescent edge, optional rings and orbiting pollen) on a stem that leaves the braid and
@@ -51,6 +121,31 @@ Pre-release development (`0.4.0-dev`).
 
 ### Changed
 
+- The session panel can be resized: drag the handle on its left edge (or use the keyboard on it) between 320px and 720px (at
+  most 60% of the window); a double-click resets it, and at the default folds it to a 48px rail with needs-you and unread badges.
+  The width is kept per browser and the 3D office follows it live. Inside, the panel adapts to its own width (a two-column
+  feed from 560px, compact under 360px).
+- Session panel polish: a Feed | Session header with a context meter, feed rows with a status rail and sticky foldable groups, a
+  friendlier empty feed, 14px conversation text with code blocks (language, copy, coloured diffs), tool-call chips with duration,
+  a "jump to latest" pill and skeleton loading, an auto-growing composer with key hints on its lists, and a permission card with
+  its time left as a thin line.
+- "Create task" and "Edit layout" on the office page are behind Settings → Advanced features, like the pages they open.
+- One unread count: the top bar, the sidebar readout and the panel badge all show sessions waiting on you plus finished ones
+  you have not opened (the feed's own definition, remembered per session in this browser).
+- The notification switch moved from the Approvals page to Settings and now covers sessions as well as approvals; the pairing
+  panel moved from Settings to the top bar.
+- The panel beside the 3D office is a live session workspace instead of an identity card. With nothing chosen it is a feed of
+  every observed session in four groups (needs you, working, recently finished, idle), each row with the newest assistant
+  reply, the running tool or what it waits for, the time, and an unread dot (kept per session in this browser). A chosen member
+  opens its conversation first: turns with the prompt, the reply as Markdown and every run of tool calls folded into one line
+  ("read 4 files · edited 2 · ran 1 command"), following the newest message with a "N new" pill when you have scrolled up, and
+  refreshing only while the page is visible. The directory, process, CPU, branch and the rest sit in one closed fold at the end.
+  A session started in a terminal gets an honest read-only foot (copy resume or fork command) instead of a composer, with a
+  slot for the composer of a session AETHER can drive. On a phone the panel is a bottom sheet with a 72px peek (session chips
+  and the newest reply line), a half-height feed and a full-height conversation. The transcript endpoint now returns each
+  tool call's id and a short redacted target, and the last 120 entries.
+- "Show in office" links and feed rows of another project now bring the camera to the member on a phone too (the focus request
+  was only handled on the desktop page).
 - Desk screens show the session's last eight tool calls from the hook spool (a file's base name, a command's first word,
   redacted and bounded; never full commands or arguments) as editor tabs and diff bars, shell lines, a git graph, test bars,
   search results and a web outline, with the running tool's elapsed time and a blinking cursor; idle members show a dim lock

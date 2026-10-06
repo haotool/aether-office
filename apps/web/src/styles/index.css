@@ -6,18 +6,21 @@
  *   base          reset and typography
  *   shell         top bar, sidebar, connection state
  *   office        the office page, 3D shell, toolbar, labels, team strip
- *   inspector     the member panel
+ *   session-panel the session panel: feed and conversation column (the phone sheet is phone-sheet); panel-resize its handle and rail,
+ *                 session-feed its feed rows, transcript-tools code blocks and tool chips
  *   controls      badges and buttons
  *   pages, forms, views, login   the pages and their forms
  *   breakpoints   the desktop sizes (wide, narrow, tablet)
- *   workbench ... quick-open     features: the scene HUD and speech bubbles, telemetry, transcript, git, sessions, clock out, quick open
+ *   workbench ... quick-open     features: the scene HUD and speech bubbles, telemetry, transcript, git, sessions, clock out, approvals, quick open
  *   touch-targets ... phone-density   the touch and phone layers (UI rules in AGENTS.md)
  */
 @import url('./tokens.css');
 @import url('./base.css');
 @import url('./shell.css');
 @import url('./office.css');
-@import url('./inspector.css');
+@import url('./session-panel.css');
+@import url('./panel-resize.css');
+@import url('./session-feed.css');
 @import url('./controls.css');
 @import url('./pages.css');
 @import url('./forms.css');
@@ -30,14 +33,19 @@
 @import url('./scene-speech.css');
 @import url('./telemetry.css');
 @import url('./transcript.css');
+@import url('./transcript-tools.css');
+@import url('./composer.css');
 @import url('./git.css');
 @import url('./sessions.css');
+@import url('./models.css');
 @import url('./clock-out.css');
+@import url('./permission-card.css');
 @import url('./quick-open.css');
 @import url('./touch-targets.css');
 @import url('./compact-desktop.css');
 @import url('./phone-drawer.css');
 @import url('./phone-office.css');
+@import url('./phone-sheet.css');
 @import url('./scene-overlays.css');
 @import url('./folds.css');
 @import url('./phone-pages.css');

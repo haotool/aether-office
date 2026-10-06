@@ -9,7 +9,7 @@ import { redactSecrets } from './redaction.js';
  * collected, every text is cut short and stripped of credentials, and the result is plain text for the browser.
  */
 const TAIL_BYTES = 256 * 1024;
-const MAX_ENTRIES = 60;
+const MAX_ENTRIES = 120; // a turn is mostly tool calls: enough to hold the last few turns whole
 const MAX_TEXT = 1500;
 
 export type TranscriptEntry = {
@@ -18,6 +18,10 @@ export type TranscriptEntry = {
   name: string | null;
   text: string;
   error: boolean;
+  /** The provider's id for a tool call, the same on its result: how a call and its outcome are paired. */
+  toolId: string | null;
+  /** A tool call's target in a few words (a file path, a command), redacted; null for everything else. */
+  summary: string | null;
 };
 export type TranscriptAnalysis = {
   tools: { name: string; count: number }[];
@@ -41,16 +45,73 @@ const stringify = (v: unknown) => (typeof v === 'string' ? v : JSON.stringify(v 
 const INJECTED =
   /^\s*(<environment_context|<user_instructions|# AGENTS\.md|AGENTS\.md instructions|<system-reminder|<command-)/i;
 
+const message = (at: number | null, role: 'user' | 'assistant', text: string): TranscriptEntry => ({
+  at,
+  role,
+  name: null,
+  text: clip(text),
+  error: false,
+  toolId: null,
+  summary: null,
+});
+const call = (at: number | null, name: string, id: unknown, input: unknown): TranscriptEntry => ({
+  at,
+  role: 'tool',
+  name,
+  text: clip(stringify(input), 600),
+  error: false,
+  toolId: typeof id === 'string' ? id : null,
+  summary: summaryOf(input),
+});
+const outcome = (
+  at: number | null,
+  id: unknown,
+  output: unknown,
+  error = false,
+): TranscriptEntry => ({
+  at,
+  role: 'result',
+  name: null,
+  text: clip(stringify(output), 600),
+  error,
+  toolId: typeof id === 'string' ? id : null,
+  summary: null,
+});
+const TARGET_KEYS = [
+  'file_path',
+  'path',
+  'notebook_path',
+  'command',
+  'cmd',
+  'pattern',
+  'query',
+  'url',
+];
+/** The one field of a tool's input that says what it is about, cut short. Input may be a JSON string (Codex). */
+function summaryOf(input: unknown): string | null {
+  let fields = obj(input);
+  if (typeof input === 'string')
+    try {
+      fields = obj(JSON.parse(input));
+    } catch {
+      return null;
+    }
+  for (const key of TARGET_KEYS) {
+    const v = fields[key];
+    const text = Array.isArray(v) ? v.join(' ') : v;
+    if (typeof text === 'string' && text.trim()) return clip(text, 120);
+  }
+  return null;
+}
+
 function claudeEntries(entry: Record<string, unknown>): TranscriptEntry[] {
-  const message = obj(entry['message']);
-  const role = message['role'];
+  const body = obj(entry['message']);
+  const role = body['role'];
   if (role !== 'user' && role !== 'assistant') return [];
   const at = time(entry['timestamp']);
-  const content = message['content'];
+  const content = body['content'];
   if (typeof content === 'string')
-    return INJECTED.test(content)
-      ? []
-      : [{ at, role, name: null, text: clip(content), error: false }];
+    return INJECTED.test(content) ? [] : [message(at, role, content)];
   const out: TranscriptEntry[] = [];
   for (const part of Array.isArray(content) ? content : []) {
     const block = obj(part);
@@ -59,23 +120,11 @@ function claudeEntries(entry: Record<string, unknown>): TranscriptEntry[] {
       typeof block['text'] === 'string' &&
       !INJECTED.test(block['text'])
     )
-      out.push({ at, role, name: null, text: clip(block['text']), error: false });
+      out.push(message(at, role, block['text']));
     else if (block['type'] === 'tool_use')
-      out.push({
-        at,
-        role: 'tool',
-        name: String(block['name'] ?? 'tool'),
-        text: clip(stringify(block['input']), 600),
-        error: false,
-      });
+      out.push(call(at, String(block['name'] ?? 'tool'), block['id'], block['input']));
     else if (block['type'] === 'tool_result')
-      out.push({
-        at,
-        role: 'result',
-        name: null,
-        text: clip(stringify(block['content']), 600),
-        error: block['is_error'] === true,
-      });
+      out.push(outcome(at, block['tool_use_id'], block['content'], block['is_error'] === true));
     // 'thinking' blocks are hidden reasoning: never read.
   }
   return out;
@@ -90,22 +139,12 @@ function codexEntries(entry: Record<string, unknown>): TranscriptEntry[] {
     return (Array.isArray(p['content']) ? p['content'] : [])
       .map((part) => obj(part)['text'])
       .filter((t): t is string => typeof t === 'string' && !INJECTED.test(t))
-      .map((t) => ({ at, role, name: null, text: clip(t), error: false }));
+      .map((t) => message(at, role, t));
   }
   if (p['type'] === 'function_call' || p['type'] === 'custom_tool_call')
-    return [
-      {
-        at,
-        role: 'tool',
-        name: String(p['name'] ?? 'tool'),
-        text: clip(stringify(p['arguments'] ?? p['input']), 600),
-        error: false,
-      },
-    ];
+    return [call(at, String(p['name'] ?? 'tool'), p['call_id'], p['arguments'] ?? p['input'])];
   if (p['type'] === 'function_call_output' || p['type'] === 'custom_tool_call_output')
-    return [
-      { at, role: 'result', name: null, text: clip(stringify(p['output']), 600), error: false },
-    ];
+    return [outcome(at, p['call_id'], p['output'])];
   return []; // 'reasoning' items are hidden reasoning: never read.
 }
 

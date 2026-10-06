@@ -20,6 +20,8 @@ export type ServerOptions = {
   a2a?: boolean;
   /** Test seam: collects every route as it is registered, so tests can sweep them all. */
   routeLog?: { method: string; url: string }[];
+  /** Test seam: the local-session stream's scan interval, heartbeat and client cap (defaults in routes/session-stream.ts). */
+  sessionStream?: { scanMs?: number; heartbeatMs?: number; maxClients?: number };
 };
 
 export type AuthInput = {

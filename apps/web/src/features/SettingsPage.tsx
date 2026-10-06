@@ -1,13 +1,15 @@
 import type { Mode } from '@aether/contracts';
 import { usePreferences } from '../state.js';
 import { useT, PageHeading, Field } from '../ui.js';
-import { ConnectPhone } from './ConnectPhone.js';
+import { NotifyToggle } from './NotifyToggle.js';
 import { A2AClients } from './A2AClients.js';
+import { DetectedModels } from './DetectedModels.js';
 import { ExecutionSettings } from './ExecutionSettings.js';
 import { Integrations } from './Integrations.js';
+import { RemoteApprovals } from './RemoteApprovals.js';
 import { Schedules } from './Schedules.js';
 
-/** Personal preferences, then what a project can be connected to: schedules, A2A, integrations, live execution. */
+/** Personal preferences, then what a project can be connected to; schedules, A2A and integrations only with Advanced on. */
 export function SettingsPage({
   projectId,
   mode,
@@ -51,13 +53,32 @@ export function SettingsPage({
             onChange={(e) => prefs.set({ reducedMotion: e.target.checked })}
           />
         </label>
+        <label className="toggle-label">
+          <span>{t('advancedTitle')}</span>
+          <input
+            type="checkbox"
+            checked={prefs.advanced}
+            onChange={(e) => prefs.set({ advanced: e.target.checked })}
+          />
+        </label>
+        <p className="muted">{t('advancedHint')}</p>
+        <NotifyToggle />
         <p className="muted">{mode === 'demo' ? t('demoNote') : t('runnerGrantRequired')}</p>
       </div>
-      {canWrite && <ConnectPhone />}
-      <Schedules projectId={projectId} canManage={canWrite} />
-      <A2AClients projectId={projectId} canManage={owner} />
-      <Integrations projectId={projectId} canManage={owner} />
-      {mode === 'live' && <ExecutionSettings projectId={projectId} canConfigure={owner} />}
+      {prefs.advanced && (
+        <>
+          <Schedules projectId={projectId} canManage={canWrite} />
+          <A2AClients projectId={projectId} canManage={owner} />
+          <Integrations projectId={projectId} canManage={owner} />
+        </>
+      )}
+      {mode === 'live' && (
+        <>
+          <RemoteApprovals canManage={owner} />
+          <ExecutionSettings projectId={projectId} canConfigure={owner} />
+          <DetectedModels />
+        </>
+      )}
     </>
   );
 }

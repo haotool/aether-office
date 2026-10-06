@@ -1,0 +1,21 @@
+{
+  "name": "AETHER OFFICE · 軌道辦公室",
+  "short_name": "AETHER",
+  "description": "A local-first 3D office for Claude Code and Codex sessions.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#101920",
+  "theme_color": "#101920",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

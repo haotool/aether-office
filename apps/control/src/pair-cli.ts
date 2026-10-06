@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { terminalQr } from './services/pairing.js';
+import { pairingText } from './services/pairing.js';
 
 /**
  * `pnpm run pair`: shows a QR code in the terminal that signs a phone in. It asks the running control plane for a
@@ -34,11 +34,4 @@ if (!made.lan || !made.links.length) {
   );
   process.exit(1);
 }
-const [first, ...others] = made.links;
-console.log(`\n${terminalQr(first!.url)}\n\n${first!.origin}`);
-if (others.length)
-  console.log(`Same code on the other addresses: ${others.map((link) => link.origin).join(', ')}`);
-console.log(
-  `Scan it with the phone's camera (same network). It works once and expires in ${made.ttlSeconds / 60} minutes.\n` +
-    'Plain HTTP: use a network you trust.',
-);
+console.log(pairingText(made.links, made.ttlSeconds));

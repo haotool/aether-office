@@ -27,6 +27,7 @@ test('local sessions are auto-discovered and shown as observe-only 3D agents', a
   await expect(page.locator('canvas')).toBeVisible();
   await label.click();
   await expect(page.getByText('OBSERVE · claude')).toBeVisible();
+  await page.locator('.session-details summary').click(); // the details are one closed fold under the conversation
   await expect(page.getByText('uncommitted', { exact: true })).toBeVisible();
   expect(
     (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())

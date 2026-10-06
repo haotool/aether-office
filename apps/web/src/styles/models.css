@@ -1,0 +1,40 @@
+.model-picker {
+  display: grid;
+  gap: var(--space-16);
+}
+.model-group h3 {
+  font-size: var(--fs-small);
+  color: var(--muted);
+  margin-bottom: var(--space-8);
+}
+.model-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.model-chip {
+  min-height: var(--control-touch-sm);
+  padding: var(--space-4) var(--space-12);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  font-size: var(--fs-small);
+  overflow-wrap: anywhere;
+}
+.model-chip.selected {
+  border-color: var(--mint);
+  background: var(--selected);
+}
+.model-chip:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.model-note {
+  margin-top: var(--space-8);
+}
+.model-note.stale {
+  color: var(--gold);
+}

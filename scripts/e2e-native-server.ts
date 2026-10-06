@@ -120,6 +120,47 @@ writeFileSync(
   terminalFixture,
   "if(!process.stdin.isTTY)process.exit(98);process.stdin.setRawMode(true);process.stdin.setEncoding('utf8');console.log('PTY READY 狐狸');process.stdin.on('data',s=>console.log('PTY ECHO:'+s+' SIZE:'+process.stdout.columns+'x'+process.stdout.rows));",
 );
+// A fake interactive `claude` (never the real one): it shows up as a Claude session, writes its own transcript and hook
+// events under its own home, and `exec -a` gives the process the name the session scanner looks for.
+const home = join(directory, 'home');
+const spool = join(home, 'hook-events.jsonl');
+const resumable = '11111111-2222-4333-8444-555555555555';
+const observedFolder = join(
+  home,
+  '.claude/projects',
+  realpathSync(repository).replace(/[^A-Za-z0-9]/g, '-'),
+);
+mkdirSync(observedFolder, { recursive: true });
+writeFileSync(spool, '');
+const at = (offset: number) => new Date(Date.now() - offset).toISOString();
+writeFileSync(
+  join(observedFolder, `${resumable}.jsonl`),
+  [
+    { type: 'user', cwd: realpathSync(repository) },
+    {
+      type: 'user',
+      timestamp: at(30000),
+      message: { role: 'user', content: 'Earlier question from a terminal' },
+    },
+    {
+      type: 'assistant',
+      timestamp: at(20000),
+      message: {
+        role: 'assistant',
+        model: 'claude-fixture-1',
+        content: [{ type: 'text', text: 'Earlier answer from a terminal' }],
+      },
+    },
+  ]
+    .map((entry) => JSON.stringify(entry))
+    .join('\n') + '\n',
+);
+const claude = join(directory, 'claude');
+writeFileSync(
+  claude,
+  `#!/bin/bash\nexec -a claude ${JSON.stringify(process.execPath)} ${JSON.stringify(resolve('fixtures/processes/claude-tui.mjs'))} --home ${JSON.stringify(home)} --spool ${JSON.stringify(spool)} "$@"\n`,
+  { mode: 0o700 },
+);
 const config = join(directory, 'native.json');
 writeFileSync(
   config,
@@ -144,7 +185,8 @@ writeFileSync(
         timeoutMs: 60000,
       },
     },
-    binaries: { codex: binary },
+    binaries: { codex: binary, claude },
+    cliTerminals: true,
     verifiers: { fixture: { file: verifier, timeoutMs: 3000 } },
   }),
   { mode: 0o600 },
@@ -160,6 +202,8 @@ const env = {
   AETHER_DATA_DIR: directory,
   AETHER_CONTROL_URL: 'http://127.0.0.1:4330',
   AETHER_NATIVE_CONFIG: config,
+  AETHER_LOCAL_SESSIONS_HOME: home,
+  AETHER_HOOK_SPOOL: spool,
 };
 const children = ['control', 'runner'].map((name) =>
   spawn(process.execPath, [`apps/${name}/dist/main.js`], { env, stdio: 'inherit' }),

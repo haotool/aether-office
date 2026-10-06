@@ -1,50 +1,59 @@
 import { NavLink } from 'react-router-dom';
-import { Building2, Layers, ListTodo, Menu, MessagesSquare } from 'lucide-react';
-import { pageLink } from '../nav.js';
+import { Menu } from 'lucide-react';
+import type { Key } from '../i18n.js';
+import { nav, pageLink, tabPages } from '../nav.js';
 import { useT } from '../ui.js';
 
-const TABS = [
-  ['office', Building2],
-  ['sessions', Layers],
-  ['tasks', ListTodo],
-  ['messages', MessagesSquare],
-] as const;
+const icons = new Map<string, (typeof nav)[number][1]>(nav);
+
+type Counts = Record<'tasks' | 'messages' | 'approvals' | 'sessions', number>;
 
 /** Navigation at the thumb on a portrait phone: four pages, and "more" for the rest (the drawer). */
 export function TabBar({
   projectId,
+  advanced,
   counts,
   moreOpen,
   onMore,
 }: {
   projectId: string | undefined;
-  /** Things that need a person, per page; `more` is the approvals waiting in the pages behind it. */
-  counts: Partial<Record<(typeof TABS)[number][0] | 'more', number>>;
+  advanced: boolean;
+  /** Things that need a person, per page. */
+  counts: Counts;
   moreOpen: boolean;
   onMore: () => void;
 }) {
   const t = useT();
+  const tabs: readonly string[] = tabPages(advanced);
+  // What waits in the pages behind "more": the approvals, unless they are a tab themselves.
+  const more = tabs.includes('approvals') ? 0 : counts.approvals;
   return (
     <nav className="tabbar" aria-label={t('project')}>
-      {TABS.map(([key, Icon]) => (
-        <NavLink
-          key={key}
-          to={pageLink(key, projectId)}
-          className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}
-        >
-          <span className="tab-icon">
-            <Icon size={22} aria-hidden="true" />
-          </span>
-          <span className="tab-label">{key === 'sessions' ? t('sessionsTab') : t(key)}</span>
-          {counts[key] ? <b>{counts[key]}</b> : null}
-        </NavLink>
-      ))}
+      {tabs.map((key) => {
+        const Icon = icons.get(key)!;
+        const count = counts[key as keyof Counts] ?? 0;
+        return (
+          <NavLink
+            key={key}
+            to={pageLink(key, projectId)}
+            className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}
+          >
+            <span className="tab-icon">
+              <Icon size={22} aria-hidden="true" />
+            </span>
+            <span className="tab-label">
+              {key === 'sessions' ? t('sessionsTab') : t(key as Key)}
+            </span>
+            {count ? <b>{count}</b> : null}
+          </NavLink>
+        );
+      })}
       <button className="tab" aria-expanded={moreOpen} onClick={onMore}>
         <span className="tab-icon">
           <Menu size={22} aria-hidden="true" />
         </span>
         <span className="tab-label">{t('more')}</span>
-        {counts.more ? <b>{counts.more}</b> : null}
+        {more ? <b>{more}</b> : null}
       </button>
     </nav>
   );

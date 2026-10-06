@@ -69,9 +69,10 @@ AETHER_HOST=0.0.0.0 pnpm start
 pnpm run pair          # prints one QR code in the terminal
 ```
 
-Scan it with the phone's camera (same Wi-Fi). The QR code is for the best address of this computer (a 192.168.x or 10.x
+The control plane prints the same QR code when it starts with `AETHER_HOST` set, and the top bar's **Open on your phone**
+button shows it from any page. Scan it with the phone's camera (same Wi-Fi). The QR code is for the best address of this computer (a 192.168.x or 10.x
 address on a real network interface; tunnels, containers and link-local addresses are skipped); any other addresses are
-listed beside it and carry the same code. Or sign in on the computer and use **Settings → Connect a phone**, which shows
+listed beside it and carry the same code. Or sign in on the computer and use **Open on your phone** in the top bar, which shows
 the QR code, lets you switch the address it points at, and tells you when the phone has used it. A code works **once** and expires in **five minutes**; the code is
 carried in the link's fragment, which a browser never sends over the network, so it is in no server log. The phone is
 remembered for 30 days. On the sign-in page, "Remember this device" does the same for a typed token (otherwise a session

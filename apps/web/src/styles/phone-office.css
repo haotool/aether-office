@@ -203,7 +203,9 @@
     position: absolute;
     z-index: var(--z-hud-top);
     right: var(--hud-inset);
-    bottom: var(--hud-inset);
+    bottom: calc(
+      var(--hud-inset) + 72px + var(--space-8)
+    ); /* above the session sheet's 72px peek */
     width: 52px;
     height: 52px;
     border-radius: 50%;
@@ -276,8 +278,8 @@
     left: var(--hud-inset);
     right: calc(var(--hud-inset) * 2 + 52px);
     bottom: calc(
-      var(--hud-inset) + var(--space-6)
-    ); /* the button is 56 tall, the controls 44: one centre line */
+      var(--hud-inset) + var(--space-6) + 72px + var(--space-8)
+    ); /* the button is 56 tall, the controls 44: one centre line; both stand above the session sheet's 72px peek */
     display: flex;
     align-items: center;
     gap: var(--space-8);
@@ -399,42 +401,6 @@
     text-align: center;
   }
 
-  /* The member in hand: one slim bar over the tab bar. */
-  .member-bar {
-    display: flex;
-    position: fixed;
-    z-index: var(--z-drawer);
-    left: 8px;
-    right: 8px;
-    bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 8px);
-    align-items: center;
-    gap: var(--space-6);
-    padding: var(--space-8) var(--space-4) var(--space-8) var(--space-8);
-    border-radius: var(--r-2xl);
-    border: 1px solid var(--glass-line);
-    background: color-mix(in srgb, var(--surface) 94%, transparent);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 28px var(--shade);
-  }
-  .member-bar-text {
-    display: grid;
-    flex: 1;
-    min-width: 0;
-  }
-  .member-bar-text strong,
-  .member-bar-text small {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .member-bar-text small {
-    color: var(--dim);
-  }
-  .sheet-backdrop + .inspector {
-    z-index: var(--z-sheet-detail);
-  }
-
   /* The drawer's foot: language, theme and quality. */
   .quick-prefs {
     display: grid;
@@ -477,14 +443,31 @@
   .fab {
     bottom: 8px;
   }
-  .member-bar {
-    bottom: 8px;
-    right: 80px;
-  }
 }
 
 @media (max-width: 760px) {
   .tab span {
     white-space: nowrap;
+  }
+}
+
+/* The chips name what they count when the screen has room (a phone on its side); in portrait only the number and an accessible name show. */
+.chip-label {
+  display: none;
+}
+@media (min-width: 480px) {
+  .chip-label {
+    display: inline;
+    font-size: var(--fs-small);
+    font-weight: 600;
+  }
+}
+
+/* A short phone (an SE): the floor rail stands on the new-task button instead of being centred, so they never overlap. */
+@media (max-width: 760px) and (min-height: 501px) and (max-height: 700px) {
+  .scene-rail {
+    top: auto;
+    transform: none;
+    bottom: calc(var(--hud-inset) + 72px + var(--space-8) + 52px + var(--space-8));
   }
 }

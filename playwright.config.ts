@@ -27,6 +27,19 @@ writeFileSync(
     agentType: 'Explore',
   }) + '\n',
 );
+// The suite exercises every page, so it starts with the orchestration pages shown (Settings → Advanced). A spec that
+// checks the CLI-first navigation overrides this with `test.use({ storageState: ... })`.
+const advancedOn = {
+  name: 'aether-ui-preferences',
+  value: JSON.stringify({ state: { advanced: true }, version: 0 }),
+};
+const storageState = {
+  cookies: [],
+  origins: ['http://127.0.0.1:4320', 'http://127.0.0.1:4330'].map((origin) => ({
+    origin,
+    localStorage: [advancedOn],
+  })),
+};
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
@@ -41,6 +54,7 @@ export default defineConfig({
     viewport: { width: 1440, height: 900 },
     trace: 'off',
     screenshot: 'only-on-failure',
+    storageState,
   },
   projects: [
     { name: 'chrome', testIgnore: /ios-only/ },

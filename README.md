@@ -25,8 +25,9 @@ English · [繁體中文](README.zh-TW.md)
 - **A 3D office that explains itself.** A camera director cuts to who is talking, waiting, in error or working; messages
   and subagents are drawn between desks; a sleeping rabbit, a ghost and a jiangshi mark dormant, orphaned and zombie
   sessions, with one-tap actions to stop or reap them.
-- **A full 2D workbench.** Tasks (list, board, dependency graph), messages and rooms, reviews and approvals, a Git
-  graph and health view, terminals, knowledge, schedules and more. It adapts to phones, tablets and desktops.
+- **A full 2D workbench.** Local sessions, approvals, terminals, history and a Git graph and health view by default; turn on
+  Advanced in Settings for tasks (list, board, dependency graph), messages and rooms, reviews, knowledge, schedules and more.
+  It adapts to phones, tablets and desktops, and alerts you (project name only) when a session needs you.
 - **Managed execution with safety rails.** A separate runner starts Codex or Claude in isolated Git worktrees, with
   per-call tool approvals, fixed-SHA review and verification, durable journals and no permission bypass.
 - **Interoperable.** MCP tools for agents, an A2A gateway, an ACP client, hooks, and a typed HTTP API.

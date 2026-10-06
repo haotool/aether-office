@@ -8,17 +8,11 @@
   .sidebar {
     width: 220px;
   }
-  .inspector {
-    width: 310px;
-  }
   .team-chip {
     min-width: 160px;
   }
 }
 @media (max-width: 1250px) {
-  .inspector {
-    width: 235px;
-  }
   .sidebar {
     width: 172px;
   }
@@ -40,9 +34,6 @@
   .compose {
     max-width: none;
   }
-  .inspector-actions {
-    flex-direction: column;
-  }
   .scene-shell {
     min-height: 380px;
   }
@@ -51,18 +42,6 @@
   }
 }
 @media (max-width: 1000px) {
-  .inspector {
-    position: absolute;
-    right: 0;
-    top: 68px;
-    bottom: 0;
-    width: 275px;
-    z-index: var(--z-inspector);
-    box-shadow: -15px 0 60px var(--shade-soft);
-  }
-  .inspector:has(.inspector-empty) {
-    display: none;
-  }
   .login-panel {
     padding: var(--space-40);
   }
@@ -223,11 +202,6 @@
   }
   .office-2d .page-heading {
     display: none;
-  }
-  .inspector {
-    top: 61px;
-    width: min(320px, 90vw);
-    z-index: var(--z-inspector-pinned);
   }
   .task-row {
     padding: var(--space-12) var(--space-8);

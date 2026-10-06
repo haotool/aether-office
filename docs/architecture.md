@@ -61,6 +61,23 @@ activity. Liveness answers two separate questions, whether a process exists and 
 classifies a session as active, idle, dormant, orphaned, ended or unknown. Observed sessions are never given control
 authority.
 
+**Live updates.** `GET /api/local-sessions/stream` is a server-sent event channel for the session panel
+(`routes/session-stream.ts`, `services/session-changes.ts`). One watcher, shared by every client, scans the sessions every
+two seconds while anyone is connected (the scan the polling endpoints already use) and diffs each session's state, tool,
+newest reply and transcript mtime against the previous scan; there is no per-client polling. A change is one event
+(`event: session`, `{seq, key, kinds}`: the session key and what kind of thing changed, never content), at most one per
+session per scan, so at most 0.5 events a second per session. `seq` starts at the clock and only rises; a client resumes with
+`Last-Event-ID` (or `?after=`) and gets what the hub remembers (256 events), or an `event: resync` telling it to refetch.
+A heartbeat comment goes out after 20 s of silence, at most 16 streams are open (429 beyond), a client whose socket holds more
+than 64 KB unsent is dropped (it resumes), and each stream re-checks its credential every two seconds, so a logout, a
+revocation or a role change ends it with `event: fault`. The web app (`features/use-session-stream.ts`, pure parts in
+`features/live-link.ts`) turns events into react-query invalidations, batched for 120 ms; the queries poll only as a 30 s
+safety net while the stream is live and at their old intervals while it is not. It reconnects with exponential backoff and
+jitter (1 s doubling to 30 s), closes while the tab is hidden and, on becoming visible, regaining the network or restoring
+from the back-forward cache, reconnects and refetches at once. The top bar shows live, connecting, reconnecting or offline
+with the age of the last update. The heavy reads (`/api/local-sessions`, `/speech`, one transcript) carry a weak `ETag` and
+answer `If-None-Match` with `304`, on top of gzip.
+
 ## Managed execution
 
 A project owner opts in, a runner is enrolled with a local configuration file, and an assignment starts an agent in its own

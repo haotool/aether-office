@@ -73,17 +73,15 @@
   --z-hud-chip: 14;
   --z-hud-tools: 15;
   --z-hud-top: 16;
-  --z-inspector: 22;
-  --z-inspector-pinned: 23;
+  --z-panel: 22;
   --z-topbar: 30;
   --z-tabbar: 35;
   --z-drawer: 40;
-  --z-inspector-sheet: 45;
+  --z-panel-sheet: 45;
   --z-sidebar-backdrop: 51;
   --z-sidebar: 52;
   --z-sheet-backdrop: 59;
   --z-sheet: 60;
-  --z-sheet-detail: 61;
   /* Over the 3D scene: dark glass and light type, the same in both themes (the scene is a night view either way). */
   --scene-bg: #050e15;
   --glass: #0a141cd9;

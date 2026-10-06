@@ -62,12 +62,6 @@
   .sheet {
     max-height: 56dvh;
   }
-  .inspector {
-    max-height: 54dvh;
-  }
-  .inspector.tall {
-    max-height: 88dvh;
-  }
 }
 
 @media (max-width: 760px), (pointer: coarse) and (max-height: 500px) {

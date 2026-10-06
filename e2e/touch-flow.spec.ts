@@ -53,9 +53,9 @@ test('from a phone: sign in, give a member a task, message a member, and sign ou
   await page.getByRole('button', { name: '2D', exact: true }).tap();
   await page.locator('.agent-card').first().tap();
   await expect(page.locator('.member-bar')).toBeVisible();
-  await page.getByRole('button', { name: '詳細資訊', exact: true }).tap();
-  await expect(page.locator('.inspector')).toBeVisible();
-  await page.locator('.inspector').getByRole('button', { name: '關閉' }).tap();
+  await page.getByRole('button', { name: '開啟對話', exact: true }).tap();
+  await expect(page.locator('.session-sheet.full')).toBeVisible();
+  await page.locator('.session-sheet').getByRole('button', { name: '收合', exact: true }).tap();
 
   await drawer();
   await page.getByRole('button', { name: '登出', exact: true }).tap();
