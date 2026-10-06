@@ -9,6 +9,9 @@ import { ActiveSessions } from './ActiveSessions.js';
 import { AttentionSessions } from './AttentionSessions.js';
 import type { OfficeModel } from './office-model.js';
 import { SceneView } from './SceneView.js';
+import { KpiDashboardLazy } from './KpiDashboardLazy.js';
+import { KpiStrip } from './KpiStrip.js';
+import { useKpiPanel } from './use-kpi-panel.js';
 
 /**
  * The office on a portrait phone: the scene fills the screen and everything else is a small control floating over it
@@ -58,11 +61,14 @@ export function PhoneOffice({
   const prefs = usePreferences();
   const advanced = prefs.advanced;
   const navigate = useNavigate();
+  const kpi = useKpiPanel();
   return (
     <div className="phone-office">
       <SceneView
         compact
         covered={covered}
+        floorKpi={kpi.badges}
+        onOpenFloorKpi={kpi.open}
         data={data}
         model={model}
         selectedId={selectedId}
@@ -108,6 +114,10 @@ export function PhoneOffice({
           )}
         </div>
       </div>
+      <div className="phone-kpi">
+        <KpiStrip usage={kpi.usage} git={kpi.git} running={kpi.running} onOpen={() => kpi.open()} />
+      </div>
+      {kpi.isOpen && <KpiDashboardLazy kpi={kpi} />}
       {canWrite && advanced && (
         <button className="fab" aria-label={t('newWork')} onClick={onNewTask}>
           <Plus size={24} />

@@ -194,7 +194,7 @@ export function buildFloor(layout: Layout, floorIndex: number): FloorModel {
   THEMES[department.id](root, m, model);
   atmosphere(root, m, model, department.accent);
   for (const object of layout.objects) {
-    if ((object.floor ?? 0) !== floorIndex) continue;
+    if ((object.floor ?? 0) !== floorIndex || object.type === 'squad') continue; // a squad zone is not furniture
     const group = new THREE.Group();
     furniture(group, object.type, m);
     group.position.set(object.x, 0, object.z);

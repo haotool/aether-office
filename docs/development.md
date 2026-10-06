@@ -43,6 +43,7 @@ docs/             This documentation, ADRs and the verification ledger
 | `pnpm audit:deps`             | `pnpm audit` for high-severity advisories                                                |
 | `pnpm verify:clean`           | Clean-room install, build and test of the committed tree                                 |
 | `pnpm backup`                 | Create or restore a backup of the control plane's data                                   |
+| `pnpm run oss:check`          | Publishing-readiness scan of the tree (`--history` adds the history); see [release](release/history-cleanup.md) |
 | `pnpm smoke:live`             | Real Claude/Codex smoke test; consumes subscription quota, needs `--confirm-subscription-quota` |
 
 ## Testing
@@ -101,7 +102,28 @@ The furniture's dimensions live in one file, `packages/office-scene/src/desk-sea
 audit, so a character is checked against the chair and desk it is really given. Change an animation, a proportion or the
 desk, run the audit (it must report no clipping), rebuild the models and validate them.
 
+## Contact sheets and GPU perf
+
+Both gates look at a running build (`pnpm build`, then the e2e server or `pnpm demo`), never at a mock.
+
+```sh
+# One labelled PNG per category (scene, life) from real browser screenshots; --gpu uses Chrome on the real GPU (ANGLE Metal)
+node scripts/contact-sheet.mjs --url http://127.0.0.1:4320 --out evidence/contact-sheets --gpu
+node scripts/contact-sheet.mjs --category life --effects rubber-duck,ci-lamp --times 0,1000,2000   # via ?preview=life&effect=<id>&t=<ms>
+
+# Baseline vs variant scene through the perf probe, interleaved and repeated, on the real GPU
+PERF_GPU=1 PERF_VARIANT='preview=life&effect=rubber-duck' pnpm exec playwright test e2e/office-life-perf.spec.ts
+```
+
+The sheets are for a human to review (a pixel diff belongs on the real-GPU runner only). The perf spec writes
+`evidence/office-life-perf.json` with the deltas of [the office-life gates](design/office-life.md#10-tests-and-gates) (median and
+p95 frame time, draw calls, programs, GPU MB, CPU ms per frame), the renderer that produced them and the number of runs; it
+refuses a software renderer. Without `PERF_GPU=1` it is skipped, which is "not run", never "passed". A frame time is capped
+by the display's refresh (16.7 ms at 60 Hz), so judge small deltas by `jsMs` and the draw and program counts, and repeat on a
+loaded machine (`PERF_ROUNDS`).
+
 ## Releasing
 
 There is no release process yet; the project is pre-release. Before one: run `pnpm verify:clean`, review the verification
-ledger, produce a software bill of materials and re-check [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+ledger, produce a software bill of materials and re-check [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). The steps
+to publish, including cleaning the history, are in the [publishing checklist](release/publishing-checklist.md).

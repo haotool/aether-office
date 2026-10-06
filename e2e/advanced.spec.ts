@@ -45,10 +45,10 @@ test('orchestration pages are behind Advanced: out of the sidebar and quick open
 
   await page.getByRole('link', { name: '設定', exact: true }).click();
   await expect(page.getByRole('heading', { name: '排程', exact: true })).toHaveCount(0);
-  await page.getByRole('checkbox', { name: '進階功能' }).check();
+  await page.getByRole('switch', { name: '進階功能' }).check();
   await expect(sidebar.getByRole('link', { name: /^任務/ })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('checkbox', { name: '進階功能' })).toBeChecked(); // kept
+  await expect(page.getByRole('switch', { name: '進階功能' })).toBeChecked(); // kept
 });
 
 test.describe('on a phone', () => {

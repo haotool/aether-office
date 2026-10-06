@@ -14,7 +14,7 @@ import { Messages } from './Messages.js';
 import { Observations } from './Observations.js';
 import { Reviews } from './Reviews.js';
 import { Rooms } from './Rooms.js';
-import { SettingsPage } from './SettingsPage.js';
+import { SettingsPage } from './settings/SettingsPage.js';
 import { Sessions } from './Sessions.js';
 import { Skills } from './Skills.js';
 import { Tasks } from './Tasks.js';

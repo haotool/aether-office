@@ -25,6 +25,7 @@ export function buildNavGrid(
   const rows = Math.ceil((FLOOR.maxZ - FLOOR.minZ) / cell) + 1;
   const blocked = new Uint8Array(cols * rows);
   for (const object of objects) {
+    if (object.type === 'squad') continue; // a squad zone is floor to walk on; its pods are blocked where they are drawn
     const b = objectBounds(object, clearance);
     const c0 = Math.max(0, Math.floor((b.minX - FLOOR.minX) / cell));
     const c1 = Math.min(cols - 1, Math.ceil((b.maxX - FLOOR.minX) / cell));

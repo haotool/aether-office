@@ -1,0 +1,148 @@
+/* Settings: the skeleton, the execution form, facts, shortcuts, links and the undo notice (see settings-kit.css for the row kit). */
+/* A grey bar where an answer will be, so the page does not jump when it arrives. */
+.sskel {
+  display: grid;
+  gap: var(--space-8);
+  min-height: var(--space-48);
+}
+.sskel span {
+  display: block;
+  height: var(--space-16);
+  border-radius: var(--r-md);
+  background: linear-gradient(90deg, var(--raised), var(--selected), var(--raised)) 0 0 / 200% 100%;
+  animation: sshimmer 1.4s linear infinite;
+}
+.sskel span:last-child {
+  width: 60%;
+}
+@keyframes sshimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* The execution policy form, the facts list, shortcuts and links. */
+.sform {
+  display: grid;
+  gap: var(--space-12);
+}
+.sform h3,
+.sform p {
+  margin: 0;
+}
+.sform-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-12);
+}
+.sform-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-12);
+}
+.sform .field {
+  margin: 0;
+}
+.sform .primary {
+  justify-self: start;
+}
+.sfacts {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+}
+.sfacts dt {
+  font-size: var(--fs-small);
+  font-weight: 600;
+}
+.sfacts dd {
+  margin: 0 0 var(--space-8);
+  font-size: var(--fs-small);
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.skeys {
+  display: grid;
+  gap: var(--space-8);
+  margin: 0;
+}
+.skeys > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-12);
+}
+.skeys dt {
+  min-width: 160px;
+}
+.skeys dd {
+  margin: 0;
+  font-size: var(--fs-small);
+  color: var(--muted);
+}
+kbd {
+  display: inline-block;
+  padding: var(--space-2) var(--space-8);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  font-family: var(--mono);
+  font-size: var(--fs-small);
+  white-space: nowrap;
+}
+.slinks,
+.slinklist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8) var(--space-16);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.slinklist a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-touch-sm);
+  color: var(--mint);
+  font-size: var(--fs-small);
+  text-decoration: underline;
+  text-underline-offset: var(--space-4);
+}
+
+/* The notice that lets a change be taken back: it stays above the bottom edge while the page scrolls. */
+.stoast {
+  position: sticky;
+  bottom: var(--space-16);
+  z-index: var(--z-hud);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  max-width: 480px;
+  margin: var(--space-16) auto 0 0;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid var(--glass-accent-line);
+  border-radius: var(--r-xl);
+  background: var(--raised);
+  box-shadow: var(--shadow);
+  font-size: var(--fs-small);
+  animation: stoast-in var(--dur) var(--ease);
+}
+@keyframes stoast-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-8));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .switch-track,
+  .switch-track::after,
+  .sseg button {
+    transition: none;
+  }
+  .sskel span,
+  .stoast {
+    animation: none;
+  }
+}

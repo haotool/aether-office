@@ -112,3 +112,18 @@ it('speaks only for running sessions the scanner found', async () => {
   expect(speech['claude:sess-7']?.user?.text).toBe('hello');
   expect(speech['claude:sess-7']?.assistant?.text).toBe('hi');
 });
+
+it('speaks clean text: the HTML a reply was wrapped in is neutralized before the cut', async () => {
+  resetSpeechCache();
+  const file = await transcript(
+    user('<system-reminder>injected</system-reminder>please check') +
+      reply(
+        '<span class="tx">confirm-rate 的有效設定除了 decision off→on，也包含 R4 false→true。</span>',
+      ),
+  );
+  const speech = await readSpeech('claude', file);
+  expect(speech.assistant?.text).toBe(
+    'confirm-rate 的有效設定除了 decision off→on，也包含 R4 false→true。',
+  );
+  expect(speech.user?.text).toBe('please check');
+});

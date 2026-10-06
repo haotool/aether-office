@@ -28,6 +28,8 @@ Reference documentation: [Codex App Server](https://learn.chatgpt.com/docs/app-s
 | Demo fixture            | Real subprocess, journal and control-plane API                                 | Local process and HTTP browser end-to-end tests                           |
 | Codex native            | App-server, worktrees, runner journal, approval and event bridge               | Synthetic real-process tests; a live smoke test on the installed CLI      |
 | Claude native           | SDK adapter wired to the runner; message normalizer tested                     | Unit tests; a live smoke test on the installed CLI                        |
+| Subagent lifecycle      | Hook records with `agent_id` (start, tool calls, permission, stop); Codex spawned rollouts (`session_meta`, last write) | Synthetic spool files and rollouts in the on-disk formats (`tests/aether/subagent-lifecycle.test.ts`) |
+| Command labels, call outcomes, subagent files | Receiver labels and `ok`; transcript pairing by tool id; `<session>/subagents/agent-*.jsonl` | Synthetic transcripts and spool files in the on-disk formats (`tests/aether/command-tags.test.ts`, `hook-receiver.test.ts`, `tool-outcomes.test.ts`, `subagent-transcripts.test.ts`); shapes confirmed read-only on real files, see below |
 | PTY, observation, ACP   | See [native execution](native-execution.md)                                    | Real PTY and real-file tests; ACP initialize against real adapters        |
 
 A runner publishes only the demo capability by default. A live runner needs `AETHER_NATIVE_CONFIG` pointing at a local JSON file
@@ -98,6 +100,31 @@ field they do not recognise and never throw; a file over 2 MiB is ignored.
   `?refresh=1` skips that.
 - **Never written**: nothing is created or changed under `~/.claude` or `~/.codex`, no network request is made, and no account
   identifier, token or organization field is read into the answer.
+
+## Signals for the office: what each provider gives, what is derived, what is missing
+
+Read-only checks of the installed releases (Claude Code 2.1.289 binary and 756 real subagent files; Codex 0.160.1 binary and
+real rollouts), bounded and never quoted. "Gives" is in the provider's own output; "derived" is computed by AETHER from it;
+"unavailable" is not produced anywhere we read, and is `null` rather than guessed.
+
+| Signal | Claude Code | Codex | Status |
+| --- | --- | --- | --- |
+| Command kind (`tags`) | `PreToolUse.tool_input.command`, or a `Grep` `pattern`, classified in the hook process; only labels from `COMMAND_TAGS` are spooled | `tool_input.cmd` / `command` (string or argument list), same classifier | derived (labels only, arguments dropped) |
+| Tool outcome (`ok`) | gives: `PostToolUse` (the tool succeeded) and `PostToolUseFailure` (it failed; `is_interrupt` marks a stop by the person, recorded as unknown), both with `tool_use_id`; and `tool_result.is_error` in the transcript, read only when the flag is present (a command that exits non-zero is an error: `Exit code N`; a result with no flag says nothing) | the hook's `tool_response` is free-form JSON: `ok` only when it holds a numeric `exit_code` / `metadata.exit_code`; rollout outputs hold `exit_code` in `function_call_output` (JSON or `Exit code: N` text) and `custom_tool_call_output` (a JSON part with a top-level `exit_code`, the common case) | Claude: given. Codex: given only with an exit code, else unavailable |
+| Pairing a result with its call | by `tool_use_id`, exact | by the hook's `tool_use_id` equal to the rollout's `call_id`: this equality was **not** verified (no hook payload is kept on disk), so a call that does not match stays `null` | Claude: verified shape. Codex: unverified, synthetic only |
+| `http.404` / `http.418` result labels | none of the 9 WebFetch results found was an error, so the error text is unknown | n/a | unavailable, not built |
+| Subagent files | `<session>/subagents/agent-<id>.jsonl` (every line has `agentId: <id>` and `isSidechain: true`) and `agent-<id>.meta.json` (`agentType`, `description`, `toolUseId`, `spawnDepth`, and optionally `requestShape`, `model`, `parentAgentId`, `worktreePath`, `stoppedByUser`) | the child rollouts already folded in by I1 | file name `<id>` = the line `agentId` = the hook `agent_id` (the spool of this very engineer session names an `agentId` whose file exists under that name): given |
+| Subagent label | `meta.description` | n/a | given (redacted, plain, 60 characters) |
+| Subagent tokens, tools | `usage` and `tool_use` markers in the subagent's own lines, counted incrementally | not built for rollouts | derived; `perMinute` is measured between scans and is 0 until two samples 10 s apart exist |
+| Subagent last words (`result.summary`) | the last assistant `text` block in a 128 KB tail (the last line is usually a `tool_result`, so it is not "the last line") | n/a | derived (redacted, plain, 160 characters); only once finished |
+| Subagent `result.error` | the parent's `tool_result.is_error` for `meta.toolUseId`; `false` only for a foreground call, since a background launch "succeeds" at once | n/a | derived, usually `null` |
+| Subagent finished | the hook's `SubagentStop`; without hooks only silence for 2 minutes (transcript lines carry no `stop_reason`) | silence for 2 minutes | hook: given; files: derived |
+| Subagent nesting | `meta.parentAgentId` exists (51 of 756 files) | `parent_thread_id` | present, not used: squads stay one level |
+| Conflicted files (`git.conflicts`) | unmerged codes (`UU AA DD AU UA DU UD`) of the `git status --porcelain=v1` the scan already runs | same | derived, no new Git process |
+| Compaction / "PreCompact" | the CLI has `PreCompact` and `PostCompact` hook events, which AETHER does not subscribe to; compaction stays the transcript marker (`usage.compactedAt`) | `compacted` | no new signal invented |
+
+`pnpm hooks install` now also subscribes Claude to `PostToolUseFailure`; installs made earlier show it as missing in
+`pnpm hooks status` until they are installed again.
 
 ## ACP and A2A
 

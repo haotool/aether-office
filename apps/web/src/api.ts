@@ -1,12 +1,13 @@
 import type { Command, Mode } from '@aether/contracts';
 import { uuid } from './browser-compat.js';
+import { errorText, savedLocale } from './error-text.js';
 export type Session = { actor: { id: string; role: string; projectIds: string[] }; mode: Mode };
 export class ApiError extends Error {
   constructor(
     public readonly code: string,
     public readonly status: number,
   ) {
-    super(code);
+    super(errorText(code, savedLocale())); // the message is for a person; `code` is for the code
   }
 }
 const CSRF_KEY = 'aether-csrf';

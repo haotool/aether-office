@@ -4,7 +4,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Orbit, X } from 'lucide-react';
 import type { Layout, Project, Snapshot } from '@aether/contracts';
 import { api } from './api.js';
-import { usePreferences } from './state.js';
+import { usePreferences, useTheme } from './state.js';
 import { isOperator } from './roles.js';
 import { useT, Empty } from './ui.js';
 import type { Key } from './i18n.js';
@@ -52,12 +52,14 @@ const LayoutEditor = lazy(() =>
 export function App() {
   const t = useT();
   const prefs = usePreferences();
+  const theme = useTheme();
   const client = useQueryClient();
   const { session, setSession, checked: sessionChecked, logout } = useAuthSession();
   const [params, setParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const page = (location.pathname.slice(1) || 'office') as Key;
+  // `/settings/<group>` is still the settings page: the page is the first segment.
+  const page = (location.pathname.split('/')[1] || 'office') as Key;
   const [newProject, setNewProject] = useState(false);
   const [newTask, setNewTask] = useState(false);
   const [editor, setEditor] = useState(false);
@@ -125,7 +127,7 @@ export function App() {
   );
   // The tab's title carries what needs the person, so it shows in a background tab.
   useDocumentChrome(
-    prefs.theme,
+    theme,
     prefs.locale,
     needs.approvals + needs.sessions + (prefs.advanced ? needs.tasks + needs.messages : 0),
   );
@@ -371,6 +373,7 @@ export function App() {
                       onClose={() => setEditor(false)}
                       onSaved={refresh}
                       onPreview={setPreview}
+                      liveSquads={model.liveSquads}
                     />
                   </Suspense>
                 )}

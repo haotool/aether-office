@@ -67,6 +67,7 @@ credential.
 | Work and lists          | `work/:workId/{comments,integrations,post-result,diagnostics,reviews}`, `workspaces`, and the read lists (`terminals`, `reservations`, `schedules`, `skills`, `integrations`, `rooms`, `workflows`, `meetings`, `observations`) |
 | Local sessions          | `GET /api/local-sessions` and `/speech` (last prompt and reply), `GET /api/local-sessions/stream` (change stream), `/:key/transcript`, `/:key/stop`, `/:key/reap-zombies`, `POST /api/local-sessions/clock-out` |
 | Composer                | `GET /api/local-sessions/:key/terminal` (the AETHER terminal the session runs in, if any), `/:key/commands`, `/:key/files`                    |
+| Usage KPIs              | `GET /api/usage?range=today\|7d\|30d` (tokens per day, office, project, model and session, plus Claude's and Codex's limit windows) and `GET /api/usage/git` (commits, merges, merged and open branches per project, office and for the building). Owner and operator only; ETag-revalidated. Transcripts are read incrementally (`services/usage-parse.ts`, `usage-stats.ts`): per file an offset, mtime, size and first-bytes signature, appended bytes only, one shared 1 MiB buffer, a turn of the event loop between chunks, at most 4000 files; a request waits 400 ms at most for a scan still reading history and says `scan.complete: false`. A numbers-only rollup (`usage-rollup.json`, mode 0600, keyed by path hash) lives in the data directory and is ignored when its version or time zone differs. |
 | Machine and models      | `GET /api/models` (the models each CLI offers), `/api/claude-limits`, `/api/system`, and per project `git-graph` and `git-health` (`/sizes`, `/clean`) |
 | Permission requests     | Hook side (loopback, its own token): `POST /api/hook/permission-requests`, `GET .../:id` (long poll), `POST .../:id/fallback`. Person side (cookie session): `GET /api/permission-requests`, `POST .../:id/decision`, `GET`/`PUT /api/remote-approvals` |
 | Runner                  | `POST /api/machines`, `/api/runner/{enroll,heartbeat,claim,report,session-credential,jobs/*,terminals/*,observations,approvals/*}`             |
@@ -123,6 +124,24 @@ feature modules in `src/features`. The 3D scene is a separate package whose publ
 (`@aether/office-scene/model`, no Three.js) and the lazily loaded scene component. A camera director chooses shots from
 the same activity, message and attention data the 2D pages use, so the two views never disagree. UI rules and the design
 system: [design system](design-system.md).
+
+### The office layout
+
+A saved layout is a list of objects on the building's floors (`layoutSchema` in `packages/contracts`, validated by
+`validateLayout` in `packages/kernel` for the editor, an import and `layout.save` alike). Objects are furniture (desk, plant,
+sofa, rack, table) or a **squad zone**: floor space beside a supervisor's desk (`anchor`, a desk of the same floor) where its
+subagents sit, with a `span` in half metres and `seats` (0 = grows and shrinks with the squad). A squad zone is floor, not
+furniture: it is walkable, drawn by the squad layer and never by the building. Its rules are the other objects' (bounds, the
+two aisles, no overlap) plus `LAYOUT_SQUAD_ANCHOR` (the anchor is missing, not a desk or on another floor),
+`LAYOUT_SQUAD_DUPLICATE` (two zones on one desk) and `LAYOUT_SQUAD_CAPACITY` (`seats` above `floor((w-0.4)/1.6) *
+floor((d-0.4)/1.6)`).
+
+`schemaVersion` is 1 until a layout holds a squad zone and 2 from then on (`layoutVersionOf`), so a layout without squads
+stays readable by an older server or client; every saved version-1 layout is a valid version-2 layout and no object is ever
+moved by the version change. Squads that are not saved are placed on the fly by `squadLayout` (`office-scene/src/squad`):
+the side of the desk that faces the central aisle first, then the most open floor; when nothing fits (a full floor) the
+subagents keep sitting at desks of their own. The editor can add a zone, edit its anchor, size and seats, and pin the live
+squad.
 
 ## Security posture in one paragraph
 

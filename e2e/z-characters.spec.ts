@@ -78,22 +78,32 @@ test('the 3D model answers like its tag: a pointer cursor and a card on hover, a
   const box = (await tag.boundingBox())!;
   const [cx, cy] = [box.x + box.width / 2, box.y + box.height / 2];
   // The model stands below its tag: look for it with the pointer, as a person would.
+  const over = async (x: number, y: number) => {
+    await page.mouse.move(x, y);
+    await page.waitForTimeout(450);
+    return (
+      (await page
+        .getByRole('tooltip')
+        .filter({ hasText: NAME(1) })
+        .count()) > 0
+    );
+  };
   let hit: [number, number] | null = null;
   for (const dy of [100, 130, 160, 190]) {
     for (const dx of [-80, -55, -30]) {
-      await page.mouse.move(cx + dx, cy + dy);
-      await page.waitForTimeout(450);
-      if (
-        await page
-          .getByRole('tooltip')
-          .filter({ hasText: NAME(1) })
-          .count()
-      )
-        hit = [cx + dx, cy + dy];
+      if (await over(cx + dx, cy + dy)) hit = [cx + dx, cy + dy];
       if (hit) break;
     }
     if (hit) break;
   }
+  // The first point that answers is the model's outline, which its idle sway moves a pixel either way: click further in.
+  for (const deeper of hit ? [60, 40, 20] : []) {
+    if (await over(hit![0], hit![1] + deeper)) {
+      hit = [hit![0], hit![1] + deeper];
+      break;
+    }
+  }
+  if (hit) await over(...hit);
   expect(hit).not.toBeNull();
   expect(await page.evaluate(() => document.body.style.cursor)).toBe('pointer');
   await page.mouse.click(...hit!);

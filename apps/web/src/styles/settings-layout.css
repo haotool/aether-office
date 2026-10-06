@@ -1,0 +1,216 @@
+/*
+ * The Settings page: groups of rows beside a navigation (a column from 560px of page width, a row of tabs under that),
+ * and on a phone a list of groups that each open a page of their own. The widths are the page's own (a container
+ * query), because the sidebar and the session panel take their share of the window.
+ */
+.settings {
+  container: settings / inline-size;
+  max-width: 1040px;
+}
+.settings-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-16);
+}
+.settings-main {
+  display: grid;
+  gap: var(--space-32);
+  min-width: 0;
+  align-content: start;
+}
+.ssection {
+  scroll-margin-top: var(--space-16);
+}
+.ssection > header {
+  margin-bottom: var(--space-12);
+}
+.ssection > header h2 {
+  margin: 0;
+  font-size: var(--fs-title);
+}
+.ssection > header p {
+  margin: var(--space-2) 0 0;
+  font-size: var(--fs-small);
+}
+
+.ssearch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 480px;
+  margin-bottom: var(--space-16);
+}
+.ssearch > svg {
+  position: absolute;
+  left: var(--space-12);
+  color: var(--dim);
+  pointer-events: none;
+}
+.settings .ssearch input[type='search'] {
+  flex: 1;
+  padding-inline: var(--space-40);
+}
+.ssearch input::-webkit-search-cancel-button {
+  appearance: none;
+}
+.ssearch .icon-button {
+  position: absolute;
+  right: var(--space-4);
+}
+
+/* The navigation: tabs in a row of their own under the content width where two columns do not fit. */
+.snav {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-labels);
+  margin-inline: calc(-1 * var(--space-16));
+  padding: var(--space-4) var(--space-16);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.snav ul {
+  display: flex;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.snav a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: var(--control-touch-sm);
+  padding: var(--space-6) var(--space-12);
+  border-radius: var(--r-lg);
+  color: var(--muted);
+  font-size: var(--fs-small);
+  white-space: nowrap;
+  transition:
+    background var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+.snav a[aria-current='location'] {
+  background: var(--selected);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--glass-accent-line);
+}
+@media (hover: hover) {
+  .snav a:hover {
+    color: var(--text);
+    background: var(--raised);
+  }
+}
+@container settings (min-width: 560px) {
+  .settings-layout:not(.single) {
+    grid-template-columns: 176px minmax(0, 1fr);
+    gap: var(--space-32);
+    align-items: start;
+  }
+  .snav {
+    top: var(--space-16);
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: 0;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .snav ul {
+    display: grid;
+    overflow: visible;
+  }
+  .snav a {
+    white-space: normal;
+  }
+  .snav a[aria-current='location'] {
+    box-shadow:
+      inset 2px 0 0 var(--mint),
+      inset 0 0 0 1px var(--glass-accent-line);
+  }
+}
+/* The last group can reach the top of the page, so the mark can reach it too. */
+.settings-layout:not(.single) .settings-main > .ssection:last-child {
+  min-height: calc(100dvh - var(--space-64));
+}
+
+/* A phone: the groups are the page, each a large row; a group opens on its own page under a bar with a way back. */
+.shome ul {
+  display: grid;
+  gap: var(--space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.shome a {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-12);
+  min-height: calc(var(--target-touch) + var(--space-12));
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+}
+.shome a > svg:first-child {
+  color: var(--mint);
+}
+.shome a > svg:last-child {
+  color: var(--dim);
+}
+.shome strong {
+  display: block;
+  font-size: var(--fs-body);
+  overflow-wrap: anywhere;
+}
+.shome small {
+  display: block;
+  color: var(--muted);
+  font-size: var(--fs-small);
+  overflow-wrap: anywhere;
+}
+@media (hover: hover) {
+  .shome a:hover {
+    border-color: var(--mint);
+  }
+}
+.settings-bar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-labels);
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: var(--target-touch);
+  margin: 0 calc(-1 * var(--space-16)) var(--space-12);
+  padding: 0 var(--space-16);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.settings-bar h1 {
+  margin: 0;
+  font-size: var(--fs-title);
+  overflow-wrap: anywhere;
+}
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  min-height: var(--control-touch);
+  padding-right: var(--space-8);
+  color: var(--mint);
+  font-size: var(--fs-small);
+}
+/* A phone on its side has no height to give to a bar that follows the page. */
+@media (max-height: 500px) {
+  .settings-bar,
+  .snav {
+    position: static;
+  }
+}

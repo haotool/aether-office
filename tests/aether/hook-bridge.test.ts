@@ -34,7 +34,10 @@ it('derives parent state and live subagents; subagent traffic never idles the pa
   );
   const s = states.get('claude:s1')!;
   expect(s.activity).toBe('working');
-  expect(s.subagents.map((x) => x.id)).toEqual(['a2']);
+  expect(s.subagents.map((x) => [x.id, x.status])).toEqual([
+    ['a1', 'finished'], // kept for the grace period, so the page sees the transition
+    ['a2', 'running'],
+  ]);
   expect(deriveHookState([rec('Stop', 1)], 2).get('claude:s1')?.activity).toBe('idle');
   expect(deriveHookState([rec('SessionEnd', 1)], 2).get('claude:s1')?.subagents).toEqual([]);
   expect(deriveHookState([rec('SubagentStart', 1, { agentId: 'z' })], 11 * 60_000).size).toBe(1);
@@ -202,7 +205,7 @@ it('keeps only a short target of a tool call: a base name, a first word, a host;
   expect(target('Grep', { pattern: 'SECRET' })).toBeUndefined();
 });
 
-it('lists the last tool calls of a session, newest last, at most eight, without subagent traffic', () => {
+it("lists the last tool calls of a session, newest last, at most eight, a subagent's calls tagged with its id", () => {
   const calls = Array.from({ length: 10 }, (_, i) =>
     rec('PreToolUse', i + 1, { tool: 'Edit', target: `f${i}.ts` }),
   );
@@ -211,7 +214,6 @@ it('lists the last tool calls of a session, newest last, at most eight, without 
     30,
   ).get('claude:s1')!;
   expect(state.recent.map((r) => r.target)).toEqual([
-    'f2.ts',
     'f3.ts',
     'f4.ts',
     'f5.ts',
@@ -219,8 +221,18 @@ it('lists the last tool calls of a session, newest last, at most eight, without 
     'f7.ts',
     'f8.ts',
     'f9.ts',
+    'ls',
   ]);
-  expect(state.recent[7]).toEqual({ tool: 'Edit', target: 'f9.ts', at: 10 });
+  const unknown = { tags: [], ok: null, toolUseId: null };
+  expect(state.recent[6]).toEqual({
+    tool: 'Edit',
+    target: 'f9.ts',
+    at: 10,
+    agentId: null,
+    ...unknown,
+  });
+  expect(state.recent[7]).toEqual({ tool: 'Bash', target: 'ls', at: 20, agentId: 'a', ...unknown });
+  expect(state.tool).toBe('Edit'); // the session's own current tool is not a helper's
 });
 
 it('redacts and bounds a target read from the spool', () => {

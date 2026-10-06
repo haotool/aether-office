@@ -52,7 +52,8 @@
     "audit:deps": "pnpm audit --audit-level=high",
     "verify:clean": "node scripts/clean-room.mjs",
     "backup": "tsx scripts/backup.ts",
-    "smoke:live": "tsx scripts/live-smoke.ts"
+    "smoke:live": "tsx scripts/live-smoke.ts",
+    "oss:check": "node scripts/oss/readiness-check.mjs"
   },
   "devDependencies": {
     "@a2a-js/sdk": "1.3.0",

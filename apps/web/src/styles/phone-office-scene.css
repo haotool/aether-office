@@ -196,11 +196,6 @@
     color: var(--dim);
     font-family: var(--mono);
   }
-  /* Names are projected over the scene; on a phone they are small and few. */
-  .world-labels .scene-label {
-    font-size: var(--fs-small);
-    padding: var(--space-2) var(--space-8);
-  }
 
   /* Sheets: from the bottom edge, thumb height rows, over the tab bar. */
   .sheet-backdrop {

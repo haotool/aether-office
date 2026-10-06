@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { DoorOpen } from 'lucide-react';
 import type { AttributedSession } from '@aether/contracts';
-import { attentionReason, needsAttention } from '../localSessions.js';
+import { attentionReason, needsAttention, rowLabelOf } from '../localSessions.js';
 import { sessionsWaiting } from './needs-you.js';
 import { usePreferences } from '../state.js';
 import { Sheet, useT } from '../ui.js';
@@ -85,7 +85,7 @@ export function AttentionSessions({
           {list.map((s) => (
             <li key={s.key} className="attention-row">
               <span className="sheet-main">
-                <strong>{s.title ?? s.repo}</strong>
+                <strong title={s.title ?? s.repo}>{rowLabelOf(s)}</strong>
                 <small>
                   {[waiting.includes(s) ? t('waitingForYou') : null, attentionReason(s, locale)]
                     .filter(Boolean)

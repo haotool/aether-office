@@ -1,17 +1,12 @@
-import type { Agent, AttributedSession, Layout, LocalSession } from '@aether/contracts';
-import {
-  FLOOR_CAPACITY,
-  apparitionOf,
-  defaultLayout,
-  floorsFrom,
-  seatAt,
-  type Apparition,
-} from '@aether/office-scene/model';
+import type { Agent, AttributedSession, LocalSession } from '@aether/contracts';
+import { SUBAGENT_INFIX } from './subagent-id.js';
+import { apparitionOf, type Apparition } from '@aether/office-scene/model';
 import {
   DEPARTMENTS,
   ROLE_LABELS,
   classifySession,
   roleOfSubagent,
+  shortLabel,
   type Classification,
 } from '@aether/kernel';
 
@@ -19,15 +14,28 @@ const SPECIES = ['fox', 'cat', 'rabbit', 'bear', 'otter', 'raccoon', 'panda', 'd
 const WORKING_MS = 2 * 60 * 1000;
 const GONE_MS = 10 * 60 * 1000;
 export const LOCAL_PREFIX = 'local:';
-export const SUBAGENT_INFIX = ':sub:';
+export { SUBAGENT_INFIX } from './subagent-id.js';
+export { mergeLayout, type MergeOptions } from './layout-merge.js';
 
 const basename = (path: string) => path.split('/').filter(Boolean).pop() ?? '';
-// Names are cut to 24 characters, so an untitled session in a worktree named after its repository is named by what
-// sets the worktree apart (`accounting-bunny-w1119` → `w1119`); the repository is the project it is shown in.
+// An untitled session in a worktree named after its repository is named by what sets the worktree apart
+// (`accounting-bunny-w1119` → `w1119`); the repository is the project it is shown in.
 const place = (s: Pick<LocalSession, 'cwd' | 'repo'>) => {
   const dir = basename(s.cwd) || s.repo;
   return dir.startsWith(`${s.repo}-`) ? dir.slice(s.repo.length + 1) : dir;
 };
+/** The technical id of a session (`cx·01a1`): only ever shown in a tooltip, never as its name. */
+export const tagOf = (s: Pick<LocalSession, 'provider' | 'sessionId'>) =>
+  `${s.provider === 'codex' ? 'cx' : 'cl'}·${s.sessionId.slice(0, 4)}`;
+/** Widest name, in columns (CJK counts two): what a name tag has room for. */
+const NAME_WIDTH = 28;
+/** The short display label of a session: its title on a meaning boundary, brackets balanced, no id prefix. */
+export const labelOf = (s: Pick<LocalSession, 'cwd' | 'repo' | 'title'>) =>
+  shortLabel(s.title ?? place(s), { maxWidth: NAME_WIDTH, repo: s.repo });
+/** Widest title in a list row, in columns; the row's own ellipsis is only a backstop, the cut is made on a boundary. */
+const ROW_WIDTH = 44;
+export const rowLabelOf = (s: Pick<LocalSession, 'title' | 'repo'>) =>
+  shortLabel(s.title ?? s.repo, { maxWidth: ROW_WIDTH });
 const hue = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 360;
 
 export const sessionIdOf = (agentId: string): string | null =>
@@ -64,12 +72,12 @@ function observed(
   return {
     id,
     projectId,
-    name: name.slice(0, 24),
+    name,
     role: role.slice(0, 80),
     provider: 'observe',
     mode: 'observe',
     species: SPECIES[hue(seed) % SPECIES.length]!,
-    color: `hsl(${hue(name)} 70% 62%)`,
+    color: `hsl(${hue(seed)} 70% 62%)`,
     activity,
     version: 1,
     createdAt: at,
@@ -107,28 +115,29 @@ export function sessionsToAgents(
     const roleName = ROLE_LABELS[kind.role][locale === 'zh-TW' ? 'zh' : 'en'];
     const branch = s.git?.branch ? ` · ${s.git.branch}` : '';
     const worktree = s.worktree?.linked ? ' · worktree' : '';
-    // Many sessions share a repository: the directory and a short id tell their characters apart.
-    const tag = `${s.provider === 'codex' ? 'cx' : 'cl'}·${s.sessionId.slice(0, 4)}`;
     const parent = observed(
       `${LOCAL_PREFIX}${s.key}`,
-      `${tag} ${s.title ?? place(s)}`,
+      labelOf(s),
       `${roleName} · ${s.provider}${branch}${worktree}${noteOf(s, locale)}`,
       s.key,
       activityOf(s, now),
       s.mtime,
       projectId,
     );
-    const children = s.subagents.map((c) =>
-      observed(
-        `${LOCAL_PREFIX}${s.key}${SUBAGENT_INFIX}${c.id}`,
-        c.type,
-        `subagent of ${s.repo}${worktree}`,
-        c.id,
-        'working',
-        c.lastSeen,
-        projectId,
-      ),
-    );
+    // A finished subagent has left its seat (the server keeps it a while for the panel and the scene's hand-over).
+    const children = s.subagents
+      .filter((c) => c.status !== 'finished')
+      .map((c) =>
+        observed(
+          `${LOCAL_PREFIX}${s.key}${SUBAGENT_INFIX}${c.id}`,
+          shortLabel(c.type, { maxWidth: NAME_WIDTH }),
+          `subagent of ${s.repo}${worktree}`,
+          c.id,
+          'working',
+          c.lastSeen,
+          projectId,
+        ),
+      );
     return [parent, ...children];
   });
 }
@@ -148,49 +157,6 @@ export function floorResolver(sessions: readonly LocalSession[]): (agent: Agent)
     if (key !== null) return byKey.get(key) ?? 0;
     return floorOfDepartment(classifySession({ title: agent.role }).department);
   };
-}
-
-/**
- * Seats every agent the saved layout has no desk for, on the agent's own floor (the next one with room when it is full), in the first free slot. A saved
- * layout is never rearranged. With no saved layout the whole building is generated.
- */
-export function mergeLayout(
-  layout: Layout | null,
-  managed: readonly Agent[],
-  extra: readonly Agent[],
-  floorOf: (agent: Agent) => number = () => 0,
-): Layout | null {
-  const all = [...managed, ...extra];
-  if (!layout) return extra.length ? defaultLayout(all, floorOf) : null;
-  const seated = new Set(layout.objects.flatMap((o) => (o.agentId ? [o.agentId] : [])));
-  const added: Layout['objects'] = [];
-  const next = new Map<number, number>();
-  const taken = (floor: number, x: number, z: number) =>
-    [...layout.objects, ...added].some(
-      (o) => (o.floor ?? 0) === floor && Math.abs(o.x - x) < 2.4 && Math.abs(o.z - z) < 2.2,
-    );
-  for (const agent of all) {
-    if (seated.has(agent.id)) continue;
-    // A full floor spills its members onto the next floor with a free desk.
-    for (const floor of floorsFrom(floorOf(agent))) {
-      let slot = next.get(floor) ?? 0;
-      while (slot < FLOOR_CAPACITY && taken(floor, ...seatAt(slot))) slot++;
-      if (slot >= FLOOR_CAPACITY) continue;
-      next.set(floor, slot + 1);
-      const [x, z] = seatAt(slot);
-      added.push({
-        id: `desk-obs-${floor}-${slot}`,
-        type: 'desk',
-        x,
-        z,
-        rotation: 0,
-        agentId: agent.id,
-        floor,
-      });
-      break;
-    }
-  }
-  return added.length ? { ...layout, objects: [...layout.objects, ...added] } : layout;
 }
 
 /**

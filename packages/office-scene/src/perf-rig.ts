@@ -55,4 +55,6 @@ export type PerfRig = {
   sample: (frames: number) => Promise<import('./perf.js').PerfReport>;
   scene: Object3D;
   gl: import('three').WebGLRenderer;
+  /** The scene's camera, for a script that checks where a camera move left it. */
+  camera: import('three').Camera;
 };

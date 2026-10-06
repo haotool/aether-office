@@ -21,7 +21,7 @@ test('the office offers task and layout editing only with Advanced on', async ({
   await expect(page.getByRole('button', { name: '建立任務' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: '編輯配置', exact: true })).toHaveCount(0);
   await page.getByRole('link', { name: '設定', exact: true }).click();
-  await page.getByRole('checkbox', { name: '進階功能' }).check();
+  await page.getByRole('switch', { name: '進階功能' }).check();
   await page.getByRole('link', { name: '辦公室', exact: true }).first().click();
   await expect(page.getByRole('button', { name: '建立任務' })).toBeVisible();
   await expect(page.getByRole('button', { name: '編輯配置', exact: true })).toBeVisible();

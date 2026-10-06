@@ -9,11 +9,24 @@ export {
   seatAt,
   zones,
 } from './layout.js';
+export {
+  MAX_SQUAD_SEATS,
+  placeSquads,
+  podsOf,
+  savedSquadOf,
+  squadCapacity,
+  squadLayout,
+  squadObjectOf,
+  type Pod,
+  type SquadRect,
+  type SquadRequest,
+} from './squad/squad-layout.js';
 export { apparitionOf, type Apparition } from './animal-states.js';
 export { STAGGER_MS } from './departure.js';
 export type { SceneMessage } from './carriers.js';
 export type { BranchInfo, Quality } from './scene-types.js';
 export type { ScreenFacts } from './screen-facts.js';
+export type { FloorKpiBadge } from './FloorKpi.js';
 export type { PerfReport } from './perf.js';
 export type { Pulse, PulseKind } from './director.js';
 export type { SceneSpeech, Utterance } from './Speech.js';

@@ -1,0 +1,11 @@
+# Copy to `.oss-private-patterns` (gitignored, never commit it) and list the strings that must not appear in anything you
+# publish: your account and host names, personal e-mail addresses, private paths and addresses.
+#
+# One pattern per line. A pattern is a case-insensitive literal, or `re:<regex>` (a regex that works in both JavaScript
+# and Python). An optional ` ==> replacement` is what history cleanup writes instead; the default is REDACTED.
+# `pnpm run oss:check` fails when one is found; scripts/oss/history-apply.sh rewrites them in every commit and file.
+# Generic patterns (home directories, `*.local` host names, tokens, private IPs) are built in and need no entry here.
+
+jane.doe ==> dev
+re:jane[._-]?doe@\S+\.com ==> user@example.com
+janes-macbook ==> my-laptop

@@ -50,8 +50,32 @@ A change is ready when:
 
 ## Commit messages and pull requests
 
-Use a conventional prefix (`feat`, `fix`, `refactor`, `perf`, `docs`, `test`, `chore`, `ci`) and a sentence that says
-what changed and why. Describe in the pull request what you ran, on which platform, and anything you could not test.
+Use the form `type: subject` or `type(scope): subject`:
+
+- **type** is one of `feat`, `fix`, `refactor`, `perf`, `docs`, `test`, `chore`, `ci`, `build`, `style`, `revert`;
+- **subject** is in the imperative or a plain description, at most **72 characters**, with no trailing period;
+- a longer explanation goes in the **body**, after a blank line, wrapped at about 72 columns: what changed and why, not a
+  list of files.
+
+```text
+fix(control): refuse a pairing code that was already redeemed
+
+The code was removed after the session was created, so two phones scanning the
+same QR code within one tick could both sign in. Remove it first and test both.
+```
+
+A pull request title follows the same rule, because it becomes the subject when the change is squash-merged. CI checks the
+title and the commit subjects of a pull request (`scripts/oss/commit-msg.sh`). To check your own commits as you write them:
+
+```sh
+ln -s ../../scripts/oss/commit-msg.sh .git/hooks/commit-msg
+```
+
+Describe in the pull request what you ran, on which platform, and anything you could not test.
+
+Maintainers preparing a release should read [Cleaning the history before publishing](docs/release/history-cleanup.md) and
+the [publishing checklist](docs/release/publishing-checklist.md); `pnpm run oss:check` runs the publishing-readiness
+checks.
 
 ## Reporting bugs and proposing features
 

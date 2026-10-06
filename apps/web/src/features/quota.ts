@@ -1,6 +1,6 @@
 import type { ClaudeLimits } from '@aether/contracts';
 
-const WARN_AT = 85;
+export const WARN_AT = 85;
 
 /** Pure. The figure for the top bar: the 5-hour and 7-day usage, whichever of them is known. */
 export const quotaText = (limits: ClaudeLimits) =>

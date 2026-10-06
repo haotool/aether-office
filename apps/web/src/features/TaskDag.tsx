@@ -11,7 +11,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import type { Snapshot, Work } from '@aether/contracts';
-import { usePreferences } from '../state.js';
+import { useTheme } from '../state.js';
 import { Badge, useT } from '../ui.js';
 import { taskPositions } from './taskGraph.js';
 type TaskNode = Node<{ work: Work; onSelect: (work: Work) => void }, 'task'>;
@@ -46,7 +46,7 @@ export function TaskDag({
   onSelect: (work: Work) => void;
 }) {
   const t = useT();
-  const theme = usePreferences((s) => s.theme);
+  const theme = useTheme();
   const graph = useMemo(() => {
     try {
       const positions = taskPositions(

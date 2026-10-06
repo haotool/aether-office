@@ -1,16 +1,23 @@
-import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowDown } from 'lucide-react';
+import { ArrowDown, MessageSquareText, Rows2, Rows3, Search } from 'lucide-react';
 import { api } from '../api.js';
 import { usePreferences } from '../state.js';
 import { useT } from '../ui.js';
+import { sameDay } from './conv-time.js';
+import { DaySeparator, NowProvider } from './ConvTime.js';
+import { FindBar, useConvFind } from './ConvFind.js';
 import { pollMs } from './live-link.js';
 import { PendingBubbles } from './PendingBubbles.js';
+import { seenBaseline } from './session-seen.js';
 import { ThinkingLine } from './ThinkingLine.js';
 import { TurnView } from './TranscriptTurns.js';
-import { turnIds, useFreshIds } from './use-fresh-ids.js';
+import { useConvDensity } from './use-conv-density.js';
+import { useConvKeys } from './use-conv-keys.js';
+import { useConvScroll } from './use-conv-scroll.js';
+import { firstUnreadId, turnIds, useFreshIds } from './use-fresh-ids.js';
 import { useLinkLive } from './use-session-stream.js';
-import { anchorOf, groupTurns, newMessagesSince, type Entry } from './turn-groups.js';
+import { groupTurns, reuseTurns, type Entry, type Turn } from './turn-groups.js';
 
 /** Rows where the messages will be, while the first fetch is out: no spinner, no jump when they arrive. */
 function TranscriptSkeleton() {
@@ -31,14 +38,17 @@ function TranscriptSkeleton() {
 
 type Transcript = { entries: Entry[]; updatedAt: number; truncated: boolean };
 
-const NEAR_BOTTOM_PX = 48;
 const POLL_WORKING_MS = 2000;
 const POLL_QUIET_MS = 6000;
 
+const turnAt = (turn: Turn) => turn.user?.at ?? turn.blocks.find((b) => b.at)?.at ?? null;
+
 /**
  * What a session is saying and doing, as turns. It follows the newest message while you are at the bottom; if you have
- * scrolled up to read, it leaves you there and offers a "N new" pill instead. Refetched when the change stream says it moved; polls only while that is down and the page is visible.
- * `children` is drawn at the end of the scrolling area (the session's details).
+ * scrolled up to read, it leaves you there and offers a "N new" pill instead. Refetched when the change stream says it
+ * moved; polls only while that is down and the page is visible. `children` is drawn at the end of the scrolling area (the
+ * session's details). With focus inside: j and k move between turns, `g g` and `G` go to the ends, and Ctrl or Cmd+F opens
+ * a find that searches the loaded messages.
  */
 export function TranscriptView({
   sessionKey,
@@ -61,7 +71,11 @@ export function TranscriptView({
     retry: false,
   });
   const entries = query.data?.entries;
-  const turns = useMemo(() => groupTurns(entries ?? []), [entries]);
+  const previous = useRef<Turn[]>([]);
+  const turns = useMemo(() => {
+    previous.current = reuseTurns(previous.current, groupTurns(entries ?? []));
+    return previous.current;
+  }, [entries]);
   // The prompts the transcript shows: what lets a message typed in the composer give way to its real bubble.
   const prompts = useMemo(
     () => (entries ?? []).filter((e) => e.role === 'user').map((e) => ({ text: e.text, at: e.at })),
@@ -70,92 +84,128 @@ export function TranscriptView({
   const ids = useMemo(() => (entries ? turns.flatMap(turnIds) : null), [entries, turns]);
   const arrived = useFreshIds(sessionKey, ids);
   const isFresh = (id: string) => !still && arrived(id);
+  // When the person last looked is read as the conversation opens: what happened after is "new since you looked".
+  const [seenAt] = useState(() => seenBaseline(sessionKey));
+  const unreadId = useMemo(() => firstUnreadId(turns, seenAt), [turns, seenAt]);
   const last = turns.at(-1)?.blocks.at(-1);
   // A running tool group has its own live state; otherwise a working session shows the "working" line.
   const showThinking =
     working && !(last?.type === 'tools' && last.calls.some((c) => c.result === null));
-  const scroller = useRef<HTMLDivElement>(null);
-  const loaded = useRef(false);
-  const following = useRef(true);
-  const anchor = useRef<string | null>(null);
-  // A smooth scroll to the newest message is under way: its in-between positions are not "scrolled away".
-  const jumping = useRef(false);
-  const [unseen, setUnseen] = useState(0);
-  const [away, setAway] = useState(false);
-
-  // New data: stay with the newest message, or count what arrived out of sight.
-  useLayoutEffect(() => {
-    const el = scroller.current;
-    if (!el || !entries) return;
-    if (following.current) {
-      // The first look lands at the bottom at once; what arrives later is followed with a short glide.
-      const glide = loaded.current && !still;
-      jumping.current = glide && el.scrollHeight - el.scrollTop - el.clientHeight > NEAR_BOTTOM_PX;
-      el.scrollTo({ top: el.scrollHeight, behavior: glide ? 'smooth' : 'auto' });
-      anchor.current = anchorOf(entries);
-      setUnseen(0);
-    } else setUnseen(newMessagesSince(entries, anchor.current));
-    loaded.current = true;
-  }, [entries, still]);
-
-  const onScroll = () => {
-    const el = scroller.current;
-    if (!el) return;
-    const fromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    if (jumping.current && fromBottom >= NEAR_BOTTOM_PX) return;
-    jumping.current = false;
-    following.current = fromBottom < NEAR_BOTTOM_PX;
-    setAway(fromBottom > el.clientHeight);
-    if (following.current && entries) {
-      anchor.current = anchorOf(entries);
-      setUnseen(0);
+  const { scroller, onScroll, toBottom, stopGliding, unseen, away } = useConvScroll(entries, still);
+  const [density, toggleDensity] = useConvDensity();
+  const find = useConvFind(scroller, entries);
+  const onKeys = useConvKeys(scroller, toBottom, stopGliding, still);
+  const closeFind = () => {
+    find.setOpen(false);
+    find.setQuery('');
+    scroller.current?.focus();
+  };
+  // Ctrl/Cmd+F opens the conversation's own find only for a reader whose focus is inside it, and only where matches can be
+  // painted; anywhere else the browser's find is left alone.
+  const onBodyKey = (e: KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f' && find.supported) {
+      e.preventDefault();
+      find.setOpen(true);
     }
   };
-  const toBottom = () => {
-    const el = scroller.current;
-    if (!el) return;
-    following.current = true;
-    jumping.current = !still;
-    anchor.current = entries ? anchorOf(entries) : null;
-    setUnseen(0);
-    setAway(false);
-    el.scrollTo({ top: el.scrollHeight, behavior: still ? 'auto' : 'smooth' });
-  };
 
-  if (query.error) return <p role="alert">{query.error.message}</p>;
+  if (query.error)
+    return (
+      <div className="conv-body">
+        <div className="conv-state" role="alert">
+          <strong>{t('convErrorTitle')}</strong>
+          <p>{query.error.message}</p>
+          <button type="button" className="secondary" onClick={() => void query.refetch()}>
+            {t('convRetry')}
+          </button>
+        </div>
+      </div>
+    );
   if (!entries) return <TranscriptSkeleton />;
   return (
-    <div className="conv-body">
-      <div
-        className="conv-scroll"
-        ref={scroller}
-        onScroll={onScroll}
-        onWheel={() => (jumping.current = false)}
-        onTouchStart={() => (jumping.current = false)}
-        tabIndex={0}
-      >
-        {query.data?.truncated && <p className="conv-note">{t('convTrimmed')}</p>}
-        {turns.map((turn, i) => (
-          <TurnView
-            key={`${turn.id}:${i}`}
-            turn={turn}
-            isFresh={isFresh}
-            newest={i === turns.length - 1}
-          />
-        ))}
-        <PendingBubbles sessionKey={sessionKey} prompts={prompts} />
-        {showThinking && (
-          <ThinkingLine key={prompts.at(-1)?.at ?? 0} since={prompts.at(-1)?.at ?? null} />
+    <NowProvider>
+      <div className="conv-body" data-density={density} onKeyDown={onBodyKey}>
+        {find.open ? (
+          <FindBar find={find} onClose={closeFind} />
+        ) : (
+          <div className="conv-tools">
+            {find.supported && (
+              <button
+                type="button"
+                className="icon-button"
+                aria-label={t('convFind')}
+                title={t('convFind')}
+                aria-keyshortcuts="Control+F Meta+F"
+                onClick={() => find.setOpen(true)}
+              >
+                <Search size={15} aria-hidden />
+              </button>
+            )}
+            <button
+              type="button"
+              className="icon-button"
+              aria-label={density === 'compact' ? t('convComfortable') : t('convCompact')}
+              title={density === 'compact' ? t('convComfortable') : t('convCompact')}
+              aria-pressed={density === 'compact'}
+              onClick={toggleDensity}
+            >
+              {density === 'compact' ? (
+                <Rows3 size={15} aria-hidden />
+              ) : (
+                <Rows2 size={15} aria-hidden />
+              )}
+            </button>
+          </div>
         )}
-        {!turns.length && <p className="conv-note">{t('convEmpty')}</p>}
-        {children}
+        <div
+          className="conv-scroll"
+          ref={scroller}
+          onScroll={onScroll}
+          onWheel={stopGliding}
+          onTouchStart={stopGliding}
+          onKeyDown={onKeys}
+          aria-keyshortcuts="J K G"
+          tabIndex={0}
+        >
+          {query.data?.truncated && <p className="conv-note">{t('convTrimmed')}</p>}
+          {turns.map((turn, i) => {
+            const at = turnAt(turn);
+            const before = i > 0 ? turnAt(turns[i - 1]!) : null;
+            const newDay =
+              at !== null &&
+              (i === 0 ? !sameDay(at, Date.now()) : before !== null && !sameDay(at, before));
+            return (
+              <div key={`${turn.id}:${i}`} className="turn-slot">
+                {newDay && <DaySeparator at={at} />}
+                <TurnView
+                  turn={turn}
+                  isFresh={isFresh}
+                  newest={i === turns.length - 1}
+                  unreadId={unreadId}
+                />
+              </div>
+            );
+          })}
+          <PendingBubbles sessionKey={sessionKey} prompts={prompts} />
+          {showThinking && (
+            <ThinkingLine key={prompts.at(-1)?.at ?? 0} since={prompts.at(-1)?.at ?? null} />
+          )}
+          {!turns.length && (
+            <div className="conv-state">
+              <MessageSquareText size={20} aria-hidden />
+              <strong>{t('convEmpty')}</strong>
+              <p>{t('convEmptyHint')}</p>
+            </div>
+          )}
+          {children}
+        </div>
+        {(unseen > 0 || away) && (
+          <button className="new-pill" onClick={toBottom}>
+            <ArrowDown size={14} aria-hidden />
+            {unseen > 0 ? `${unseen} ${t('convNew')}` : t('convLatest')}
+          </button>
+        )}
       </div>
-      {(unseen > 0 || away) && (
-        <button className="new-pill" onClick={toBottom}>
-          <ArrowDown size={14} aria-hidden />
-          {unseen > 0 ? `${unseen} ${t('convNew')}` : t('convLatest')}
-        </button>
-      )}
-    </div>
+    </NowProvider>
   );
 }

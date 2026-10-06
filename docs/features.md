@@ -12,9 +12,17 @@ and in Settings the schedules, A2A clients and integrations). The switch is per 
 navigation: every page still opens by its address. External observation, meeting rooms and reservations were not removed:
 they have a runner, API, ledger and test footprint, so they sit behind the same switch.
 
+## Settings
+
+Eight groups: General (language, theme with System, motion, quality), Notifications & approvals, Connections (phone pairing,
+install as an app, address and HTTPS), Models & execution (detected models, local sessions, execution policy, terminal commands),
+Office, Advanced (the switch, schedules, A2A, integrations, hosts), Data & privacy (what is stored where, export or reset the
+browser's preferences, sign out) and About (version and mode, shortcuts, links). Search with `/`; `/settings/<group>` opens a
+group. See the [design system](design-system.md#settings).
+
 ## Notifications
 
-On by default and kept per browser (Settings → Notifications). They fire when a local session stops on an approval or a
+On by default and kept per browser (Settings → Notifications & approvals). They fire when a local session stops on an approval or a
 question, when an approval waits, and when a turn of a minute or more ends while the tab is hidden. They carry the project's name
 and never a prompt, a reply or a file; a tap opens the session. The browser's permission prompt appears on the first click
 or key press, never by itself; if it is refused the same alerts appear inside the page. The tab title and the sidebar and tab
@@ -80,7 +88,7 @@ The panel beside the office (a bottom sheet on a phone) opens on a feed of every
 working, recently finished and idle. Choosing a member opens its conversation: turns with the prompt, the reply as Markdown and
 each run of tool calls folded into one line. A session whose process runs inside an AETHER terminal gets a composer (Enter
 sends, `/` opens the CLI's commands and skills, `@` completes file paths, Stop interrupts); any other session stays read-only
-and offers **Continue in AETHER** or **Fork in AETHER**, which start a new AETHER terminal with `claude --resume` or
+and offers **Continue in AETHER** or **Fork in AETHER** (only once a runner with `cliTerminals` is connected; otherwise the buttons are disabled and say so), which start a new AETHER terminal with `claude --resume` or
 `codex resume`. The panel updates from a server-sent change stream and polls only as a slow safety net. The panel can be
 dragged between 320 and 720 px or folded to a rail. Details and the endpoints are in the
 [design system](design-system.md#session-panel) and [architecture](architecture.md#the-http-surface).
@@ -119,3 +127,22 @@ title, prompt, branch and subagents, with a confidence and the reasons (see [rol
 and zombie processes under a session appear as a jiangshi behind the chair. A member's screen shows what its session is really
 doing (title, repository and branch, uncommitted changes, state, the tool in use, context used, quiet time and ports), and
 nothing that is not known.
+
+A session's subagents carry their lifecycle: when each started and ended, whether it waits for a permission, and how many tools it
+ran. Claude Code reports this through hooks (`SubagentStart`, its `PreToolUse` and permission events with an `agent_id`, then
+`SubagentStop`); Codex children are spawned rollouts, started at their `session_meta` time and finished once nothing has been written
+for two minutes. A finished subagent stays in the list for 90 seconds, then goes. `hook.recent` marks a helper's call with its
+`agentId`, and every call carries `tags` (labels from a closed list such as `test`, `git.push.force` or `fs.rm.recursive`: what kind
+of command it was, never its arguments) and `ok` (whether it succeeded, `null` while not known). Claude subagents are also read from
+their own transcript files (`<session>/subagents/agent-<id>.jsonl`), so they are seen without hooks too (running, or finished after two
+quiet minutes), and every Claude subagent gains a `label` (the Task description), its `tokens` (total and per minute) and, once finished,
+a `result` (its last words as plain text, at most 160 characters, secrets redacted). A session's `git.conflicts` counts its unmerged
+files. A Codex child has no tool count, tokens or result.
+
+In the session panel a supervisor and its subagents read as one group, without the 3D scene: the supervisor's feed row carries a
+chip ("3 subagents · 2 working") and folds open to nested rows (status, type, how long, tool calls, "waiting for approval"),
+a finished row dims for its 90 seconds, and the whole group is a keyboard-navigable tree. The supervisor's conversation has a
+squad strip of chips and a "Subagent activity" card per spawn (with that subagent's own recent calls); a subagent's own view has a
+"Spawned by" link back. Their portraits share an accent and a subagent's carries a tether glyph. A Claude session working without
+hooks explains that its subagents need the hook and offers the command. See
+[Squads in the panel](design-system.md#squads-in-the-panel).

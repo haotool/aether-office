@@ -11,7 +11,7 @@ import { mapPool } from './pool.js';
 const run = promisify(execFile);
 // Worktrees inspected at once: each is a few short git processes, mostly waiting on the disk.
 const WIDTH = Math.min(12, availableParallelism());
-const git = async (cwd: string, args: string[], timeout = 8000) =>
+export const git = async (cwd: string, args: string[], timeout = 8000) =>
   (
     await run('git', ['-C', cwd, '-c', 'core.fsmonitor=false', ...args], {
       timeout,
@@ -70,7 +70,7 @@ async function sizeOf(path: string): Promise<number | null> {
   return bytes;
 }
 
-async function defaultBranch(root: string): Promise<string> {
+export async function defaultBranch(root: string): Promise<string> {
   try {
     return (await git(root, ['symbolic-ref', '--short', 'refs/remotes/origin/HEAD']))
       .trim()

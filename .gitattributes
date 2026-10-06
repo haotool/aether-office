@@ -1,0 +1,19 @@
+# Line endings: LF in the repository and in checkouts (the same rule as .editorconfig).
+* text=auto eol=lf
+
+# Binary files are never diffed or merged as text.
+*.glb binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.woff2 binary
+*.zip binary
+*.blend binary
+*.blend1 binary
+
+# Generated files stay out of language statistics and review diffs.
+packages/providers/generated/** linguist-generated=true
+pnpm-lock.yaml linguist-generated=true
+apps/web/public/assets/animals/** linguist-generated=true

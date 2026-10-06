@@ -40,7 +40,7 @@ export function Schedules({ projectId, canManage }: { projectId: string; canMana
   };
   return (
     <section aria-labelledby="schedules-title">
-      <h2 id="schedules-title">{t('schedules')}</h2>
+      <h3 id="schedules-title">{t('schedules')}</h3>
       <p className="muted">{t('schedulesNote')}</p>
       {query.data?.schedules.length === 0 && <p>{t('schedulesEmpty')}</p>}
       <ul className="plain-list">

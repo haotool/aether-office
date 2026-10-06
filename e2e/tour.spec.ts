@@ -13,7 +13,7 @@ test('the camera tour can be paused, skipped, stopped and interrupted by draggin
     .getByLabel('存取權杖', { exact: true })
     .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
   await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
-  const start = page.getByRole('button', { name: '開始導覽', exact: true });
+  const start = page.getByRole('button', { name: '房間導覽', exact: true });
   await start.click();
   await expect(page.getByRole('button', { name: '暫停導覽', exact: true })).toBeVisible();
   await page.getByRole('button', { name: '暫停導覽', exact: true }).click();

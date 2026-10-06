@@ -26,7 +26,7 @@ const obj = (v: unknown): Record<string, unknown> =>
  * The lines of `data` that hold one of `needles`, last first, decoded one at a time. Everything else (megabytes of tool
  * output) is skipped as bytes, never turned into text; stopping early costs nothing.
  */
-function* linesWithFromEnd(data: Buffer, needles: readonly string[]): Generator<string> {
+export function* linesWithFromEnd(data: Buffer, needles: readonly string[]): Generator<string> {
   let limit = data.length;
   while (limit > 0) {
     const hit = Math.max(...needles.map((needle) => data.lastIndexOf(needle, limit - 1)));

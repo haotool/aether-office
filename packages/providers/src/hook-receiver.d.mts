@@ -11,5 +11,12 @@ export function toRecord(
   agentId?: string;
   agentType?: string;
   tool?: string;
+  target?: string;
+  toolUseId?: string;
+  tags?: string[];
+  ok?: boolean;
   notification?: string;
 } | null;
+
+export function outcomeOf(provider: 'claude' | 'codex', payload: unknown): boolean | undefined;
+export function targetOf(input: unknown): string | undefined;

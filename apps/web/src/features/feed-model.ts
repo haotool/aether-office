@@ -1,6 +1,7 @@
 import type { Agent, AttributedSession } from '@aether/contracts';
 import { toPlainPreview } from '@aether/kernel';
-import { LOCAL_PREFIX, activityOf, formatSpan } from '../localSessions.js';
+import { LOCAL_PREFIX, activityOf, formatSpan, rowLabelOf } from '../localSessions.js';
+import type { SquadView } from './feed-squads.js';
 import { sessionWaiting } from './needs-you.js';
 
 /**
@@ -31,6 +32,8 @@ export type FeedItem = {
   at: number;
   unread: boolean;
   stale: boolean;
+  /** Its subagents, nested under it (attached by `groupFeed`); never a row of their own. */
+  squad?: SquadView | null;
 };
 export type Feed = Record<FeedBucket, FeedItem[]>;
 
@@ -82,7 +85,7 @@ export function buildFeed({
         : now - at < FINISHED_MS
           ? 'finished'
           : 'idle';
-    const last = session.hook?.recent?.at(-1);
+    const last = session.hook?.recent?.filter((r) => !r.agentId).at(-1);
     const tool =
       bucket === 'working' || bucket === 'needs'
         ? (session.hook?.tool ?? last?.tool ?? null)
@@ -94,7 +97,7 @@ export function buildFeed({
       agent,
       session,
       bucket,
-      label: session.title ?? session.repo,
+      label: rowLabelOf(session),
       where: [session.title ? session.repo : null, branch].filter(Boolean).join(' · '),
       reply: said ? toPlainPreview(said.text, { maxChars: REPLY_CHARS }) || null : null,
       tool: tool ? (target ? `${tool} ${target}` : tool) : null,

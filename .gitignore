@@ -24,3 +24,6 @@ assets-source/animals/*.blend
 
 # Agent worktrees and local agent settings
 /.claude/
+
+# Maintainer-private strings checked by scripts/oss (see .oss-private-patterns.example)
+.oss-private-patterns

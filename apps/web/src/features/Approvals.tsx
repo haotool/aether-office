@@ -103,7 +103,7 @@ export function Approvals({ projectId }: { projectId: string }) {
           })}
         </div>
       ) : (
-        <Empty title={t('noApprovals')} hint={t('approvalNote')} />
+        <Empty title={t('noApprovals')} hint={t('approvalEmptyHint')} />
       )}
     </>
   );

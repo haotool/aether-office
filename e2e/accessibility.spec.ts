@@ -77,11 +77,11 @@ test('the reduced-motion preference follows the operating system and can be chan
   const page = await context.newPage();
   await login(page);
   await page.getByRole('link', { name: '設定', exact: true }).click();
-  const toggle = page.getByRole('checkbox', { name: /減少動態/ });
+  const toggle = page.getByRole('switch', { name: /減少動態/ });
   await expect(toggle).toBeChecked(); // defaulted from prefers-reduced-motion, not guessed
   await toggle.uncheck();
   await page.reload();
   await page.getByRole('link', { name: '設定', exact: true }).click();
-  await expect(page.getByRole('checkbox', { name: /減少動態/ })).not.toBeChecked(); // the explicit choice persists
+  await expect(page.getByRole('switch', { name: /減少動態/ })).not.toBeChecked(); // the explicit choice persists
   await context.close();
 });

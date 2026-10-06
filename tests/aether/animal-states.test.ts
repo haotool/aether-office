@@ -6,11 +6,7 @@ import {
   APPARITION_MODEL,
   BASE_CLIP,
   CLIPS,
-  FIDGET_MIN_MS,
-  FIDGET_SPREAD_MS,
-  fidgetDelayMs,
   apparitionOf,
-  fidgetFor,
   greets,
   transitionClip,
 } from '../../packages/office-scene/src/animal-states.js';
@@ -39,41 +35,6 @@ describe('animal states', () => {
     expect([...listed].sort()).toEqual([...CLIPS].sort());
   });
 
-  it('picks the same gesture for the same member and moment, and only in states that idle about', () => {
-    expect(fidgetFor('idle', 'member-1', 3)).toBe(fidgetFor('idle', 'member-1', 3));
-    const seen = new Set(Array.from({ length: 40 }, (_, n) => fidgetFor('idle', 'member-1', n)));
-    expect(seen.size).toBeGreaterThan(2); // varied, not one gesture on repeat
-    for (const clip of seen) expect(CLIPS).toContain(clip);
-    // Gestures never claim work, a decision or a message that is not happening.
-    for (const claim of [
-      'thinking',
-      'scratch_head',
-      'nod',
-      'cheer',
-      'typing',
-      'reviewing',
-    ] as const)
-      expect(seen).not.toContain(claim);
-    for (const busy of [
-      'error',
-      'offline',
-      'unknown',
-      'waiting_permission',
-      'waiting_peer',
-      'starting',
-    ] as const)
-      expect(fidgetFor(busy, 'member-1', 0)).toBeNull();
-  });
-
-  it('spaces gestures out by a few seconds, and members differently', () => {
-    const waits = Array.from({ length: 30 }, (_, n) => fidgetDelayMs('member-1', n));
-    for (const wait of waits) {
-      expect(wait).toBeGreaterThanOrEqual(FIDGET_MIN_MS);
-      expect(wait).toBeLessThan(FIDGET_MIN_MS + FIDGET_SPREAD_MS);
-    }
-    expect(fidgetDelayMs('member-2', 0)).not.toBe(fidgetDelayMs('member-1', 0));
-  });
-
   it('cheers when work finishes, and greets only members at ease or at work', () => {
     expect(transitionClip('working', 'idle')).toBe('cheer');
     expect(transitionClip('reviewing', 'idle')).toBe('cheer');
@@ -81,6 +42,9 @@ describe('animal states', () => {
     expect(transitionClip('idle', 'working')).toBeNull();
     expect(transitionClip(null, 'idle')).toBeNull();
     expect(transitionClip('error', 'idle')).toBeNull();
+    expect(transitionClip('working', 'error')).toBe('shrug');
+    expect(transitionClip('error', 'error')).toBeNull();
+    expect(transitionClip(null, 'error')).toBeNull();
     expect(greets('idle') && greets('working') && greets('reviewing')).toBe(true);
     expect(greets('error') || greets('offline') || greets('waiting_permission')).toBe(false);
   });

@@ -29,7 +29,7 @@ export function Integrations({ projectId, canManage }: { projectId: string; canM
   };
   return (
     <section aria-labelledby="integrations-title">
-      <h2 id="integrations-title">{t('integrations')}</h2>
+      <h3 id="integrations-title">{t('integrations')}</h3>
       <p className="muted">{t('integrationsNote')}</p>
       {query.data?.integrations.length === 0 && <p>{t('integrationsEmpty')}</p>}
       <ul className="plain-list">

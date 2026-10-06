@@ -8,6 +8,8 @@ const fixtureHome =
   process.env['AETHER_LOCAL_SESSIONS_HOME'] ?? mkdtempSync(join(tmpdir(), 'aether-e2e-home-'));
 process.env['AETHER_LOCAL_SESSIONS_HOME'] = fixtureHome;
 process.env['AETHER_HOOK_SPOOL'] = join(fixtureHome, 'hook-events.jsonl');
+// ...and never the developer's real Claude usage cache either (the KPI limits and the top bar read it).
+process.env['AETHER_CLAUDE_USAGE_FILE'] ??= join(fixtureHome, 'claude-hud-usage.json');
 mkdirSync(join(fixtureHome, '.claude/projects/p'), { recursive: true });
 mkdirSync(join(fixtureHome, 'fixture-repo'), { recursive: true });
 execFileSync('git', ['init', '-q', join(fixtureHome, 'fixture-repo')]); // sessions join projects by repository
@@ -15,17 +17,26 @@ writeFileSync(
   join(fixtureHome, '.claude/projects/p/e2e-session.jsonl'),
   JSON.stringify({ type: 'user', cwd: join(fixtureHome, 'fixture-repo') }) + '\n',
 );
-writeFileSync(
-  process.env['AETHER_HOOK_SPOOL'],
+// Synthetic hook records (never a real session): one subagent that started and has run two tools, so it stays `running`.
+const farFuture = Date.now() + 3_600_000; // far future so the fixture subagent stays live for the whole run
+const fixtureRecord = (event: string, extra: object = {}) =>
   JSON.stringify({
-    at: Date.now() + 3_600_000, // far future so the fixture subagent stays live for the whole run
+    at: farFuture,
     provider: 'claude',
-    event: 'SubagentStart',
+    event,
     sessionId: 'e2e-session',
     cwd: join(fixtureHome, 'fixture-repo'),
     agentId: 'sub-1',
     agentType: 'Explore',
-  }) + '\n',
+    ...extra,
+  });
+writeFileSync(
+  process.env['AETHER_HOOK_SPOOL'],
+  [
+    fixtureRecord('SubagentStart'),
+    fixtureRecord('PreToolUse', { tool: 'Read' }),
+    fixtureRecord('PreToolUse', { tool: 'Grep' }),
+  ].join('\n') + '\n',
 );
 // The suite exercises every page, so it starts with the orchestration pages shown (Settings → Advanced). A spec that
 // checks the CLI-first navigation overrides this with `test.use({ storageState: ... })`.

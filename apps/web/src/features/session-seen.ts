@@ -55,3 +55,16 @@ export function useSeen() {
   }, []);
   return { seen, markSeen };
 }
+
+/** When the session was last opened, read straight from storage. */
+export function readSeen(key: string): number {
+  return load()[key] ?? 0;
+}
+
+// What "last looked" was when the person opened a session, kept while it stays open: opening it marks it seen right away,
+// so the conversation, which asks for the time before that, needs the earlier value to show "new since you looked".
+const baselines = new Map<string, number>();
+export const holdBaseline = (key: string, at: number) => baselines.set(key, at);
+export const releaseBaseline = (key: string) => baselines.delete(key);
+/** The time the person last looked at the session, from before the current visit began. */
+export const seenBaseline = (key: string): number => baselines.get(key) ?? readSeen(key);

@@ -26,6 +26,13 @@
 | [Design system](design-system.md)   | Tokens, components, the office and panel, responsive rules      |
 | [Dependencies](dependencies.md)     | Notable dependency choices and supply-chain controls            |
 
+## Release
+
+| Document                                                | Contents                                                                  |
+| ------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [Cleaning the history](release/history-cleanup.md)      | The three options (A, B, C), the `scripts/oss` kit, commands, measured results |
+| [Publishing checklist](release/publishing-checklist.md) | From the readiness check to a public repository, branch protection, release |
+
 ## Reference
 
 | Document                                       | Contents                                                |

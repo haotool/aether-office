@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -17,6 +17,7 @@ it('parses branch, upstream, ahead/behind and uncommitted counts', () => {
     ahead: 2,
     behind: 1,
     uncommitted: 2,
+    conflicts: 0,
   });
   expect(parseGitStatus('## feat/x.y\n')).toEqual({
     branch: 'feat/x.y',
@@ -24,7 +25,14 @@ it('parses branch, upstream, ahead/behind and uncommitted counts', () => {
     ahead: 0,
     behind: 0,
     uncommitted: 0,
+    conflicts: 0,
   });
+});
+
+it('counts conflicted paths from the same status read, by git unmerged codes only', () => {
+  const text =
+    '## main\nUU a.ts\nAA b.ts\nDU c.ts\nUD d.ts\nAU e.ts\nUA f.ts\nDD g.ts\n M h.ts\n?? u\nA  i.ts\n';
+  expect(parseGitStatus(text)).toMatchObject({ uncommitted: 10, conflicts: 7 });
 });
 
 it('discovers claude + codex sessions as metadata only, with real git state', async () => {
@@ -66,6 +74,26 @@ it('does not list a session’s subagent transcripts as sessions of their own', 
   resetLocalSessionCache();
   const found = await scanLocalSessions(home, Date.now(), 0, join(home, 'none.jsonl'));
   expect(found.map((s) => s.sessionId)).toEqual(['parent-1']);
+});
+
+it('lists sessions with the same modification time in the same order on every scan', async () => {
+  const home = await mkdtemp(join(tmpdir(), 'aether-tie-'));
+  const dir = join(home, '.claude/projects/-x');
+  await mkdir(dir, { recursive: true });
+  const when = new Date(Date.now() - 60_000);
+  for (const id of ['c', 'a', 'b']) {
+    const file = join(dir, `${id}.jsonl`);
+    await writeFile(file, `${JSON.stringify({ type: 'user', cwd: home })}\n`);
+    await utimes(file, when, when);
+  }
+  for (let scan = 0; scan < 5; scan++) {
+    resetLocalSessionCache();
+    expect((await scanLocalSessions(home)).map((s) => s.key)).toEqual([
+      'claude:a',
+      'claude:b',
+      'claude:c',
+    ]);
+  }
 });
 
 it('folds an active spawned Codex rollout into its parent session as a subagent', async () => {

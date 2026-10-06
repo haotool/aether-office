@@ -1,13 +1,13 @@
-import { Fragment } from 'react';
+import { Fragment, useCallback, useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { ProviderMark, contextLevel } from '@aether/office-scene/model';
 import type { Key } from '../i18n.js';
-import { usePreferences } from '../state.js';
 import { useT } from '../ui.js';
-import { Avatar } from './Avatar.js';
-import { FEED_AVATAR_STATE } from './feed-avatar.js';
+import { FeedRow } from './FeedRow.js';
+import { FeedSquad } from './FeedSquad.js';
 import { PermissionCards } from './PermissionCard.js';
-import { ago, feedItems, type Feed, type FeedBucket, type FeedItem } from './feed-model.js';
+import { SquadAnnouncer } from './SquadAnnouncer.js';
+import { feedItems, type Feed, type FeedBucket } from './feed-model.js';
+import { isSquadOpen, useSquadOpen } from './squad-open.js';
 
 const BUCKET_ORDER = ['needs', 'working', 'finished', 'idle'] as const;
 const HEADINGS: Record<FeedBucket, Key> = {
@@ -16,71 +16,6 @@ const HEADINGS: Record<FeedBucket, Key> = {
   finished: 'feedFinished',
   idle: 'feedIdle',
 };
-
-/** One session: who, the newest thing it said, what it is doing, how long ago. */
-function FeedRow({ item, onOpen }: { item: FeedItem; onOpen: (agentId: string) => void }) {
-  const t = useT();
-  const locale = usePreferences((s) => s.locale);
-  const context = item.session.usage.contextPct;
-  const state =
-    item.reason === 'permission'
-      ? t('feedWaitingPermission')
-      : item.reason === 'attention'
-        ? t('feedWaitingYou')
-        : item.tool;
-  return (
-    <button
-      className={`feed-row bucket-${item.bucket} ${item.stale ? 'stale' : ''}`}
-      data-agent={item.agent.id}
-      onClick={() => onOpen(item.agent.id)}
-    >
-      <Avatar
-        seed={item.agent.id}
-        species={item.agent.species}
-        size="row"
-        state={FEED_AVATAR_STATE[item.bucket]}
-      />
-      <span className="feed-main">
-        <span className="feed-top">
-          <ProviderMark provider={item.session.provider} />
-          <strong title={item.label}>{item.label}</strong>
-          {item.unread && <i className="unread-dot" role="img" aria-label={t('feedUnread')} />}
-          <time className="feed-time">{ago(Date.now() - item.at, locale)}</time>
-        </span>
-        <span className="feed-meta">
-          {item.where && (
-            <span className="feed-where" title={item.where}>
-              {item.where}
-            </span>
-          )}
-          {state && (
-            <span className="feed-state" title={state}>
-              <i className="state-dot" />
-              {state}
-            </span>
-          )}
-        </span>
-        <span className={`feed-reply ${item.reply ? '' : 'none'}`}>
-          {item.reply ?? t('feedNoReply')}
-        </span>
-        {context !== null && (
-          <span
-            className="feed-ctx"
-            role="meter"
-            aria-label={t('convContext')}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(context)}
-            data-level={contextLevel(context)}
-            title={`${t('convContext')} ${Math.round(context)}%`}
-          >
-            <i style={{ width: `${context}%` }} />
-          </span>
-        )}
-      </span>
-    </button>
-  );
-}
 
 /** Nothing to show: say what to do, in words (no picture). */
 function FeedEmpty() {
@@ -97,12 +32,21 @@ function FeedEmpty() {
   );
 }
 
-/** The inbox: sessions grouped by what wants a person first, idle ones folded away. */
+/**
+ * The inbox: sessions grouped by what wants a person first, idle ones folded away. A session with subagents is a tree:
+ * its row, and its subagents nested under it (they are never rows of their own).
+ */
 export function SessionFeed({ feed, onOpen }: { feed: Feed; onOpen: (agentId: string) => void }) {
   const t = useT();
+  const squadOpen = useSquadOpen();
+  // The rows are memoized: a handler that changes every render would redraw all of them on every event.
+  const latest = useRef(onOpen);
+  latest.current = onOpen;
+  const open = useCallback((agentId: string) => latest.current(agentId), []);
   if (!feedItems(feed).length) return <FeedEmpty />;
   return (
     <div className="session-feed">
+      <SquadAnnouncer feed={feed} />
       {BUCKET_ORDER.map(
         (bucket) =>
           feed[bucket].length > 0 && (
@@ -118,7 +62,16 @@ export function SessionFeed({ feed, onOpen }: { feed: Feed; onOpen: (agentId: st
               </summary>
               {feed[bucket].map((item) => (
                 <Fragment key={item.key}>
-                  <FeedRow item={item} onOpen={onOpen} />
+                  {item.squad ? (
+                    <FeedSquad
+                      item={item}
+                      open={isSquadOpen(squadOpen.state, item.key, item.squad)}
+                      onToggle={squadOpen.setOpen}
+                      onOpen={open}
+                    />
+                  ) : (
+                    <FeedRow item={item} onOpen={open} />
+                  )}
                   {bucket === 'needs' && <PermissionCards sessionKey={item.key} compact />}
                 </Fragment>
               ))}

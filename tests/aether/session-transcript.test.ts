@@ -57,10 +57,19 @@ it('reads a Claude transcript: messages, tools and results, never thinking, neve
     }),
   ].join('\n');
   const { entries, analysis } = parseTranscript('claude', tail);
-  expect(entries.map((e) => e.role)).toEqual(['user', 'assistant', 'tool', 'tool', 'result']);
+  expect(entries.map((e) => e.role)).toEqual([
+    'notice',
+    'user',
+    'assistant',
+    'tool',
+    'tool',
+    'result',
+  ]);
   expect(JSON.stringify(entries)).not.toContain('PRIVATE REASONING');
-  expect(JSON.stringify(entries)).not.toContain('injected');
-  expect(entries[4]!.error).toBe(true);
+  // The injected reminder is a context notice, never a message and never raw tags.
+  expect(entries[0]!.notice).toEqual({ kind: 'context', label: 'system', text: 'injected' });
+  expect(entries[0]!.text).toBe('');
+  expect(entries[5]!.error).toBe(true);
   expect(analysis.tools).toEqual([
     { name: 'Edit', count: 1 },
     { name: 'Bash', count: 1 },
@@ -110,7 +119,15 @@ it('reads a Codex transcript: messages, function calls with patches and outputs,
     }),
   ].join('\n');
   const { entries, analysis } = parseTranscript('codex', tail);
-  expect(entries.map((e) => e.role)).toEqual(['user', 'tool', 'tool', 'result', 'assistant']);
+  expect(entries.map((e) => e.role)).toEqual([
+    'notice',
+    'user',
+    'tool',
+    'tool',
+    'result',
+    'assistant',
+  ]);
+  expect(entries[0]!.notice).toMatchObject({ kind: 'context', label: 'environment' });
   expect(JSON.stringify(entries)).not.toContain('PRIVATE');
   expect(analysis.commands).toEqual(['git diff --stat']);
   expect(analysis.files).toEqual(['src/a.ts']);
@@ -219,4 +236,106 @@ it('serves a transcript only to an owner, only by a key the scanner found, never
     await app.close();
     f.control.close();
   }
+});
+
+it('sanitizes HTML and CLI wrappers in messages before they leave the server', () => {
+  const span =
+    '<span class="tx">confirm-rate 的有效設定除了 decision off→on，也包含 R4 false→true。</span>';
+  const tail = [
+    line({
+      type: 'assistant',
+      message: {
+        role: 'assistant',
+        content: [
+          {
+            type: 'text',
+            text: `${span}<br>Array<string> and a < b &amp; <a href="https://x.dev">docs</a>`,
+          },
+        ],
+      },
+    }),
+    line({
+      type: 'user',
+      message: {
+        role: 'user',
+        content:
+          '<command-name>/compact</command-name><command-message>compact</command-message><command-args></command-args>',
+      },
+    }),
+    line({
+      type: 'user',
+      message: {
+        role: 'user',
+        content: '<local-command-caveat>do not answer</local-command-caveat>',
+      },
+    }),
+    line({
+      type: 'user',
+      message: { role: 'user', content: 'note <thinking>private</thinking>to self' },
+    }),
+  ].join('\n');
+  const { entries } = parseTranscript('claude', tail);
+  expect(entries.map((e) => e.text)).toEqual([
+    'confirm-rate 的有效設定除了 decision off→on，也包含 R4 false→true。\nArray<string> and a < b & [docs](https://x.dev)',
+    '',
+    'note to self',
+  ]);
+  expect(entries[1]!.notice).toEqual({ kind: 'command', name: '/compact', args: '' });
+});
+
+const TASK_BLOCK =
+  '<task-notification>\n<task-id>b3k9x2</task-id>\n<tool-use-id>toolu_01X</tool-use-id>\n<output-file>/tmp/t/b3k9x2.output</output-file>\n<status>completed</status>\n<summary>Background command "pnpm test" completed (exit code 0)</summary>\n</task-notification>';
+
+it('turns wrappers into typed, redacted notices and never leaks their tags, ids or paths', () => {
+  const tail = [
+    line({ type: 'user', message: { role: 'user', content: TASK_BLOCK } }),
+    line({
+      type: 'user',
+      message: {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: '<system-reminder>token=SUPERSECRETVALUE1234 be careful</system-reminder>Go on</div>',
+          },
+        ],
+      },
+    }),
+    line({ type: 'user', message: { role: 'user', content: '[Request interrupted by user]' } }),
+    line({
+      type: 'user',
+      message: {
+        role: 'user',
+        content: '<local-command-stdout>Compacted \u001b[1mok\u001b[0m</local-command-stdout>',
+      },
+    }),
+  ].join('\n');
+  const { entries, analysis } = parseTranscript('claude', tail);
+  expect(entries.map((e) => [e.role, e.notice?.kind ?? null, e.text])).toEqual([
+    ['notice', 'task', ''],
+    ['notice', 'context', ''],
+    ['user', null, 'Go on'],
+    ['notice', 'interrupted', ''],
+    ['notice', 'output', ''],
+  ]);
+  expect(entries[0]!.notice).toMatchObject({
+    status: 'completed',
+    exitCode: 0,
+    summary: 'Background command "pnpm test" completed (exit code 0)',
+  });
+  const json = JSON.stringify(entries);
+  expect(json).not.toMatch(/b3k9x2|toolu_01X|\/tmp\/t|SUPERSECRETVALUE1234|<\/?[a-z-]+>|\u001b/);
+  expect(analysis.messages).toEqual({ user: 1, assistant: 0 });
+});
+
+it('sanitizes a Codex message the same way', () => {
+  const tail = line({
+    type: 'response_item',
+    payload: {
+      type: 'message',
+      role: 'assistant',
+      content: [{ type: 'output_text', text: '<div><b>done</b>&nbsp;<code>x &lt; y</code></div>' }],
+    },
+  });
+  expect(parseTranscript('codex', tail).entries[0]!.text).toBe('**done** `x < y`');
 });

@@ -130,7 +130,7 @@ const seatedSchema = z.union([
     .regex(/^local:[A-Za-z0-9._:-]{1,190}$/)
     .refine((value) => !value.includes(':sub:')),
 ]);
-export const furnitureSchema = z
+const deskLikeSchema = z
   .object({
     id: shortText,
     type: z.enum(['desk', 'plant', 'sofa', 'rack', 'table']),
@@ -142,14 +142,43 @@ export const furnitureSchema = z
     floor: z.number().int().min(0).max(4).default(0),
   })
   .strict();
+/** A squad zone: the floor space beside a supervisor's desk where its subagents sit. It is floor, not furniture. */
+const squadSchema = z
+  .object({
+    id: shortText,
+    type: z.literal('squad'),
+    x: z.number().finite().min(-24).max(24),
+    z: z.number().finite().min(-16).max(16),
+    rotation: z.number().int().min(0).max(3),
+    floor: z.number().int().min(0).max(4).default(0),
+    agentId: z.null().default(null),
+    // The supervisor desk's object id, on the same floor.
+    anchor: shortText,
+    span: z.tuple([
+      z.number().min(3).max(12).multipleOf(0.5),
+      z.number().min(2.5).max(8).multipleOf(0.5),
+    ]),
+    // 0 = the zone grows and shrinks with its squad; n = at least n reserved seats.
+    seats: z.number().int().min(0).max(12).default(0),
+  })
+  .strict();
+export const furnitureSchema = z.discriminatedUnion('type', [deskLikeSchema, squadSchema]);
+// Version 1 is every layout saved before squad zones; version 2 is written only when the layout holds a squad zone, so a
+// layout without squads stays readable by an older server or client. Every version-1 layout is a valid version-2 layout.
 export const layoutSchema = z
   .object({
-    schemaVersion: z.literal(1),
+    schemaVersion: z.union([z.literal(1), z.literal(2)]),
     objects: z.array(furnitureSchema).max(600),
     zones: z.array(z.object({ id: shortText, name: shortText })).max(9),
   })
-  .strict();
+  .strict()
+  .refine((l) => l.schemaVersion === 2 || l.objects.every((o) => o.type !== 'squad'), {
+    message: 'A squad zone needs layout version 2',
+    path: ['schemaVersion'],
+  });
 export type Layout = z.infer<typeof layoutSchema>;
+export type Furniture = Layout['objects'][number];
+export type SquadObject = Extract<Furniture, { type: 'squad' }>;
 export const executionPolicySchema = z
   .object({
     liveEnabled: z.boolean(),

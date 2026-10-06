@@ -155,6 +155,57 @@ member is a conversation, not an identity card. Code: `features/SessionPanel.tsx
   also on its result) and a short redacted target (`summary`: a path, a command). Nothing else about the transcript's safety
   changed: key lookup only, bounded tail read, no hidden reasoning, redacted and cut.
 
+### Squads in the panel
+
+A session that has subagents is a squad, and the panel makes the relation plain without the 3D scene: on a phone, in calm mode
+and for a screen reader. The data is what the scene already draws (`session.subagents`, `squadsOf` and
+`officeModel().liveSquads` in `office-model.ts`); nothing is derived twice. Pure rules: `feed-squads.ts` (rows, order, grace,
+accent, elapsed text, announcements), `squad-open.ts` (the fold choice), `squad-text.ts` (the words), `tree-nav.ts` (the keys).
+Components: `FeedRow.tsx`, `FeedSquad.tsx`, `SquadStrip.tsx`, `SubagentCards.tsx`, `SubagentView.tsx`, `HookNote.tsx`,
+`SquadAnnouncer.tsx`; styles `squad.css`; words `locales/squad-en.ts` and `squad-zh.ts`. Tests: `squad-feed.test.ts`,
+`e2e/squad-panel.spec.ts`, `e2e/squad-panel-states.spec.ts`.
+
+- **A subagent is never a feed row.** `groupFeed(feed, now)` attaches each supervisor's `squad` to its row. A squad is a
+  `role="tree"` named "Squad of {name}": the supervisor row is the level 1 `treeitem` (`aria-expanded`), each subagent a level 2
+  `treeitem` with `aria-posinset` and `aria-setsize`. One item is the tab stop (roving `tabindex`); Up and Down, Home and End
+  move, Right opens or enters, Left folds or goes to the parent, Enter opens (`tree-nav.ts` decides). The chevron is for a
+  pointer only (`tabindex="-1"`, hidden from assistive tech), because the keys cover it.
+- **The supervisor row** gets a squad chip: "3 subagents · 2 working", plus "1 waiting for approval" when one waits and "all
+  finished" when none runs. The chip is outlined in the squad's accent.
+- **A nested row** is indented under the supervisor on a rail and a tick in the squad's accent: a status dot (running pulses,
+  waiting for approval is amber, finished is blue, unknown is dim), the type (and the nickname Codex gave it), how long it has run
+  (one shared one-second timer, only while a row runs; hidden from assistive tech because it only counts up), and what the source
+  knows: the tool count (not shown where the source does not count, a Codex child), the last tool, and a task label or result
+  only when the server sent sanitized text (`label` and `result`, read through `toPlainPreview`, 160 characters at most).
+  A row is at least 44px high. Pressing a running subagent opens its own view; a finished one has left the office, so it opens
+  its supervisor, which holds its card.
+- **Order.** Within a squad: waiting for approval first, then running in spawn order (stable, it never jumps as work happens),
+  then finished by when they ended. Among supervisors: the feed's groups are unchanged, and inside a group a supervisor with a
+  subagent waiting for approval comes first, then the newest.
+- **The grace.** The server keeps a finished subagent for 90 seconds (`FINISHED_GRACE_MS`); the panel shows it for the same
+  time, dimmed in color (never by opacity, so the text keeps its contrast), and from 60 seconds on its rail and dot fade.
+- **Fold.** A squad of more than three subagents starts folded, unless one waits for approval (that opens it). A person's
+  choice is kept per supervisor in this browser (`aether.squadOpen`, at most 100 choices) and wins over the default.
+- **Accent.** Each supervisor key maps to one of six accents derived from the theme tokens (mint, blue, violet, two blends, the
+  provider orange), stable for as long as the session lives. The supervisor's and its subagents' portraits are edged in it and a
+  subagent's carries a small tether glyph (`Avatar`: `squadHue`, `tether`), in the feed, the team strip and the conversation
+  header. 3D name tags are the scene's and are not changed here.
+- **Conversation of a supervisor.** A **Squad strip** under the header lists the live subagents as chips (status dot and name; at
+  most eight, then "+N"). A chip scrolls to that subagent's card under the transcript and opens it; the transcript itself stays
+  first and unfolded. **Subagent activity** is a card per spawn: type, status, tool count, duration; opened it lists start,
+  duration, tool calls, last tool, the task and result when sent, and the subagent's own recent calls (`hook.recent` entries
+  whose `agentId` is its id; the transcript itself carries no agent id, so it is not filtered).
+- **A subagent's own view.** It has no transcript of its own, so selecting one shows a "Spawned by {supervisor}" chip (it
+  selects the supervisor), the same facts and its recent calls, and a foot that says it cannot be written to.
+- **Edge states.** A Claude session that works without hooks may have a squad nobody can see: a note says Claude subagents need
+  the hook and offers `pnpm hooks install --project <dir>` with a copy button (it shows only while the session works and has no
+  squad; Codex needs no hook, its helpers are separate rollouts and carry a name and a state, no tool count). A squad whose
+  members all finished reads "all finished" and goes when the grace ends.
+- **Live region.** One polite `role="status"` in the feed says "2 subagents started, 1 subagent finished": what was already
+  there on opening is not announced, and changes are gathered for four seconds so a burst of thirty is one sentence.
+- **Performance.** A folded squad renders only its header. Rows are memoized with a field-by-field comparison, so an event that
+  brings the same facts redraws nothing, and the handler they receive is stable. A 30-subagent squad toggles in one frame.
+
 ### Conversation rendering
 
 Agents write Markdown; a person must never see its syntax where it is not rendered. One pure module owns it:
@@ -181,6 +232,18 @@ used by the scene (no `apps/*` import) and the web app alike. Tests: `markdown-b
   the bottom, and otherwise offers the "N new" / jump pill. A working session ends with a shimmering "Working · 12s" line
   (unless a tool chip is already running). Every assistant message but the newest folds behind "Show more", with a fade, when it is tall
   (`LongText.tsx`).
+- **Conversation tools.** Notices are slim chips between messages (`NoticeChips.tsx`, `transcript-notices.css`; icons are
+  inline SVG, color from tokens, mono for commands). Code blocks (`CodeBlock.tsx`) have a language label, a wrap switch, a
+  copy button, a gutter of line numbers past eight lines (CSS counters, so a selection never copies them) and scroll
+  sideways; tables scroll inside their frame. Times read "just now" and "3 min ago" for the first hour, then the clock; a
+  day line (Today, Yesterday, a date) separates days; "New since you looked" marks the first thing after the time the person
+  last opened the session (`seenBaseline`, taken before opening marks it seen). Hovering a message shows copy as Markdown and
+  as plain text; on a touch screen, tapping the message does. With focus inside the conversation: `j` and `k` move between
+  turns, `g g` and `G` go to the ends, and Ctrl or Cmd+F opens its own find over the loaded messages, painted with the CSS
+  Custom Highlight API (no DOM change; where the API is missing the browser's find is not intercepted). A compact density
+  toggle is kept in this browser. Rows are memoized (`reuseTurns` keeps unchanged turns identical across polls, `Markdown`
+  parses once per text); the transcript holds at most 120 entries (about 950 DOM nodes measured on a 20-turn run), so the turns
+  are not windowed.
 - **Adopted from Happy** (`happy-app/sources/components/markdown/*`, `ShimmerText`, `docs/chat-list-scrolling.md`): its own
   small parser rather than a library (block types text, header, list, numbered list, code, table, rule; unfinished `**` and
   backtick spans degrade to styled text, not markers; links only `http(s)`), the autolink trailing-punctuation trimming, the
@@ -191,6 +254,102 @@ used by the scene (no `apps/*` import) and the web app alike. Tests: `markdown-b
   and cannot expand a block in place, which Happy documents as unsolved; the transcript is at most 120 entries), per-token
   streaming (transcripts arrive as whole messages, so words are revealed rather than tokens), and Happy's 16px chat type (the
   panel is 14px by the type scale).
+
+### Text pipeline
+
+Text enters the product at a few sources and is consumed in many places. Two principles: **sanitize once at the boundary**
+on the server into a small set of trusted types (plain title, plain preview, Markdown body with its HTML neutralized, tool
+target), and **render at the edge** with typed renderers; a consumer never re-derives meaning with an ad-hoc regex. The
+code is `packages/kernel/src/text-*.ts` (no `apps/*` imports): `neutralizeHtml`, `stripCliWrappers`, `cleanTitle`,
+`shortLabel`, `displayWidth`, `balanceBrackets`. Tests: `text-html` (86 table cases plus properties), `text-title`,
+`session-transcript`, `session-title`, `session-speech`, `session-names`, and `e2e/text-pipeline.spec.ts`.
+
+| Source | Where it is read | Sanitized by |
+| --- | --- | --- |
+| Assistant and user messages (Claude, Codex) | `session-transcript.ts`, `session-speech.ts` | `stripCliWrappers` then `neutralizeHtml`, redacted, cut |
+| Tool calls and results, tool target (`summary`) | `session-transcript.ts`, `session-work.ts`, `hook-spool.ts` | Redacted and cut; shown only as text (React escapes), never as Markdown or HTML |
+| A subagent's task description and last words | `subagent-files.ts`, `subagent-transcripts.ts` (through `subagent-text.ts`) | Redacted first, then `stripCliWrappers`, `neutralizeHtml`, `toPlainPreview`, cut to 60 / 160 characters; plain text only |
+| Claude `ai-title`, Codex thread name | `session-title.ts` | `cleanTitle` |
+| A task's opening words (a `codex exec` title) | `session-topic.ts` | `cleanTitle`, redacted |
+| Commit subjects and authors, terminal output | the repository and terminal services | Text only; never rendered as Markdown |
+
+| Sink | Gets | Through |
+| --- | --- | --- |
+| Conversation | Markdown body | `Markdown.tsx` over `parseMarkdown`, which neutralizes HTML again (defence in depth) |
+| Speech bubbles, feed reply, member bar, notifications | Plain or inline segments | `toInlineSegments`, `toPlainPreview` |
+| Name tag, member list, PiP captions, team chips | Short label (28 columns) | `shortLabel` via `labelOf` in `localSessions.ts`; the full title is the tooltip and accessible name |
+| Feed rows, live and attention lists | Row label (44 columns) | `rowLabelOf`; the full title is the `title` attribute |
+| Panel header, sessions list, search | Full clean title | `cleanTitle` on the server; the web normalizes an older server's title in `local-session-compat.ts` |
+| Desk screen header | Short label (40 columns) | `shortLabel` in `screensOf`, then the canvas's own pixel fit |
+| Document title, history pages | No session text | nothing to sanitize |
+
+Rules. `neutralizeHtml` turns HTML in prose into Markdown or text (`<br>` a newline; `<p>`, `<div>`, `<span>` wrappers dropped
+with their text kept; `<a href>` a Markdown link only for http(s); `<code>` inline code; `<pre>` a fence; `<b>`, `<i>`,
+`<s>` emphasis; lists; `<table>` a Markdown table; `<details><summary>` a heading and its body; `<img>` its alt text;
+comments, `<script>` and `<style>` dropped with their content; entities decoded once, `&lt;` becoming an escaped `\<`).
+A tag counts only when its name is on the known list and its syntax is well formed, so `Array<string>`, `Map<K, V>`, `a < b`
+and `x<y>z` stay text, and code spans and fences are never touched. CLI wrappers are decided per tag: `<system-reminder>`,
+`<thinking>`, memory citations and the local-command caveat are dropped; the rest become typed notices (below);
+`<command-name>` is the command as typed (`/compact`) wherever there is no room for a notice (a title, a bubble). A title is a label: control, zero-width and bidi characters
+removed, markup and entities gone, surrounding quotes and bullets stripped, whitespace collapsed, at most about 120
+characters. `shortLabel` drops the `cx·01a1` id prefix and a leading repo name, counts CJK and emoji as two columns, cuts on
+a meaning boundary (sentence or clause punctuation, a space, outside brackets first), never inside a grapheme, and never
+leaves an opening bracket unmatched: a group that opens the label is closed, anywhere else the dangling part is dropped.
+Both are idempotent.
+
+#### Wrappers and notices
+
+The CLIs and models leave XML-style wrappers in text that nothing lists in advance (`<task-notification>` with its `<task-id>`,
+`<tool-use-id>`, `<output-file>`, `<status>`, `<summary>`; `<system-reminder>`, `<command-stdout>`, `<function_results>`,
+`antml:*`, `<ide_opened_file>`, `<turn_aborted>`, a stray `</div>`). A count of the tag names in real transcripts (outside code,
+user and assistant text) showed the long tail: `option`, `root`, `entry`, `environment_context` and its children (`cwd`,
+`shell`, `current_date`, `timezone`), `summary`, `task-id`, `task-notification`, `status`, `output-file`, `tool-use-id`,
+`oai-mem-citation`, `usage`, `result`, `subagent_notification`, `system-reminder`, `turn_aborted`, `command-name`. So the rule is
+structural, not a list (`text-tags.ts`). Outside code spans and fences, a tag whose name is `[A-Za-z][\w:.-]*` is a wrapper
+when:
+
+- it is a **closing tag**: balanced with an opener or stray, it never reaches the screen (`</task-notification>`, `</div>`);
+- or it **opens a balanced pair** (the same name closes later in the text);
+- or its name holds `-`, `_` or `:` and it stands at the start or end of a line, has attributes or is self-closing.
+
+It is **text** when it is an inline generic (no attributes, directly after an identifier character, no closing counterpart:
+`Array<string>`, `a<b>c`, `Promise<void>`), when it is a placeholder in a sentence (`use <your-key> now`), or when it is in
+code. Removing a wrapper keeps its inner text, with a space where two words would otherwise touch and no double space. A stray
+block closer (`</div>` with no `<div>`) breaks nothing. Work is linear: one forward pass, a block is skipped once read, and
+emphasis and link nesting is capped, checked by a 1 MB hostile-input test (`text-wrappers.test.ts`: 93 table cases, the notices, idempotence and 1 MB perf).
+
+`structureWrappers(text)` (`text-wrappers.ts`) returns `{ text, notices }`. Wrappers that carry meaning become **notices**;
+ids, tool-use ids and output paths are never kept:
+
+| Wrapper | Notice |
+| --- | --- |
+| `<task-notification>` (`<subagent_notification>`) | `task`: status, summary, exit code read from the summary, optional result detail |
+| `<command-name>`, `<command-args>` | `command`: name and arguments (`<command-message>` dropped) |
+| `<local-command-stdout/stderr>` | `output`: text without terminal colors, `error` for stderr |
+| `<system-reminder>`, `<environment_context>`, `<ide_*>`, `<user_instructions>`, `<permissions>`, `<skill>`, `<plugin>`, ... | `context`: label and sanitized text, leaf children as `cwd: /x` lines |
+| `<*-hook>` (user-prompt-submit and the like) | `hook` |
+| `<turn_aborted>`, `[Request interrupted by user]` | `interrupted` |
+| thinking, memory citations, the local-command caveat | dropped |
+| anything else | tags removed, inner text kept |
+
+The server (`session-transcript.ts`) turns each notice into its own entry (`role: 'notice'`, `notice: {...}`), redacted and cut
+like a message; the conversation draws it as a chip. A task chip is green only for a completed status with exit code 0 and red
+for a failed or killed status or a non-zero code; every other notice is neutral. Injected context of one place is **one** chip
+("Context added · 3 items") that opens into the sanitized text, so it can be inspected and is never shown as tags.
+`tests/aether/text-sinks.test.ts` fails when a component starts printing a session-text field (`title`, `summary`, `reply`, ...)
+that is not classified in `text-sinks.allowlist.json`.
+
+### Name tags
+
+A name tag is a small glass chip (`NameTag.tsx`, `name-tag.css`): the provider's mark, a status dot that glows in the state's
+colour (`--scene-*` tokens, light on the scene's dark glass in both themes) and the short label, edged in the member's
+department colour. Working shimmers teal, waiting for a person pulses amber, an error is red, idle is calm, offline is dim;
+the unread mark is a gold dot. By camera distance (`data-density`, set each frame in `Labels.tsx`): beyond 85 units only the
+mark and the dot, up to 30 the full chip. Hovered or selected, it opens into a card: repository, role, what it is doing and
+the context share. The technical id (`cx·01a1`) is only in the tooltip, with the full title; the accessible name is the full
+title, role and state. On touch the hit area grows to 44px with a pseudo-element, not with padding. Motion stops under
+`prefers-reduced-motion` and the page's setting. A tag appears with a short fade and scale; it leaves without an
+animation. The projection's overlap and bubble-avoidance logic is unchanged (a far tag only takes 44px of width).
 
 ## Clock out
 
@@ -204,6 +363,24 @@ used by the scene (no `apps/*` import) and the web app alike. Tests: `markdown-b
   one after another (350 ms apart) and are taken up by it; the desk stays empty. With reduced motion they are simply gone.
   `?clockout=N` previews it on every member after N seconds without stopping anything. Controls are 44 px high and use only
   tokens (`styles/clock-out.css`).
+
+## The camera runs itself
+
+Two things move the camera without a hand on it. The **director** cuts between members (one slow dolly per shot, a level
+horizon, no zoom, a dip for a hard cut). The **intro tour** plays on a first visit (`packages/office-scene/src/intro`): a 360°
+orbit of the stacked building (26 s, at most 16.4°/s), a cut under a 400 ms dip to the exploded view, a 15 s rise up the spire to
+the crown, a 4 s hold and a cut back to the start view, 45.8 s in all. It follows the director's comfort rules; `introPoseAt` is
+a pure function of time, and `tests/aether/intro-tour.test.ts` samples it for angular speed, level pitch, distance and the shell.
+
+- **When.** Once per browser session, with the preference `intro: 'auto'`, never under browser automation (`?intro=force`
+  overrides, for tests), after the scene is warm and frames run smoothly. On a phone it plays once ever (finishing it turns the
+  preference off). Replay is in the floor panel and the phone's "more controls"; it ignores the gates.
+- **Ending.** Any input (pointer, wheel, touch, a key, choosing a member) stops it where the camera is; the director returns
+  after its usual quiet spell. Esc jumps to the closing cut and lands on the start view. "Don't show again" sets the preference
+  to `'never'`. Hiding the page ends it quietly.
+- **Reduced motion.** Three still views of 3 s each (start, exploded, crown), cut between, then the start view.
+- **Caption.** A glass pill (`styles/scene-intro.css`, tokens only) with `role="status"`, a Skip button and "Don't show
+  again", bottom left on a desktop and above the controls on a phone. The room tour (8 stops) is kept as "Guided tour (rooms)".
 
 ## The beanstalk
 
@@ -324,20 +501,39 @@ answering and dispatching, not for administering. So:
 - **Explanations fold.** A page title carries an "i" beside it instead of a paragraph under it (`Hint`, `Fold`, `Clamp`).
 - **A member is a row** (avatar, name and role, state), not a card; a table of rows becomes cards (`table.stack`).
 
+## Settings
+
+First principles: a CLI user comes to sign in on a phone, turn notifications and remote approvals on, pick theme, language and
+quality, see which models were found, connect a phone and flip Advanced; an owner configures execution (rare); a viewer reads.
+
+- **Groups** (`features/settings/sections.ts`): General, Notifications & approvals, Connections, Models & execution, Office,
+  Advanced, Data & privacy, About. Every setting is one entry in `entries.ts` (group, label key, description key, extra words in
+  both languages); the page and the search read the same entry, so they cannot drift.
+- **Layout** is a container query on the page's own width, not the window's (the sidebar and session panel take theirs). From
+  560px: a sticky column of links with a mark that follows the scroll (`useScrollSpy`), a link scrolls to its group and sets
+  `/settings/<group>`. Under that: the same links as a row of tabs. A phone (portrait or on its side) shows the groups as large
+  rows (44px and more); a group opens as its own page under a bar with Back (not sticky on a phone on its side). A row puts its
+  control at the right when its group is 560px wide, below the text otherwise.
+- **Kit** (`features/settings/kit.tsx`): `Row`, `Block` (a whole panel gated by search), `Switch` (a native checkbox with
+  `role="switch"`, drawn 36px, hit at 44px), `Segmented` (radiogroup, arrow keys), `SelectBox`, `StatusChip` (word and mark, never
+  colour alone), `CopyCommand` (monospace, scrolls inside its own box, announces "Copied"), `InlineHelp`, `DangerZone`,
+  `Skeleton`, `ErrorLine`. A control is named by its row's label and described by its text; a locked row disables it and says why.
+- **Honesty.** A row shows the real state (notification permission, whether answering is allowed on this connection, secure
+  context, which CLI was read, whether local sessions are on). What the page cannot see is said so: whether the hook is installed
+  is checked in a terminal (`pnpm hooks status`). There is no device or token list because the API has none.
+- **Search**: `/` focuses the box; words must all match the label, description, group name or keywords, in either language; Escape
+  clears. Rows only available with Advanced are skipped until it is on.
+- **Changes** apply at once; Advanced and Remote approvals show a notice with Undo. Preferences stay in the browser's
+  `aether-ui-preferences`; `theme` may now be `system` and a stored `dark` or `light` is unchanged.
+
 ## Many busy members at once
 
 - **How hard a member works** is read from real signals (`apps/web/src/features/activity-rate.ts`): how often something changed
   in its session over the last minute, the CPU of its process tree, and how many subagents work for it, giving 0 to 3. It drives
   the typing speed (a flat-out member types at 2.2x), a stream of bars that scrolls over its screen, and at level 3 smoke and
   sparks over the desk and a faint shake. `?intensity=3` in the address previews it with stand-in data.
-- **A department's screen** keeps the real facts of the session and dresses them differently per department: its own title
-  (BUILD, PIPELINE, CHECKS, ANALYSIS, BOARD) and an abstract ambient column; the pattern is decoration, the text is data.
-  A working screen draws the session's last eight tool calls (`hook.recent`, from the hook spool) as rows by kind: editor
-  tabs and diff bars for Edit/Write, `$ cmd` for shell, a graph for git, bars for test runs, result bars for Grep/Glob,
-  an outline for web; the file names and commands are real, the bars are decoration, and no outcome (pass, exit code) is
-  drawn because none is recorded. A footer shows the running tool with its elapsed time. A member that is idle, ended or
-  unknown shows a dim lock screen instead. Each screen is one canvas redrawn only when its facts change or on the cursor
-  tick (twice a second).
+- **A department's screen** is titled for its department (BUILD, PIPELINE, CHECKS, ANALYSIS, BOARD) and keeps an abstract ambient
+  column; the work on it is described under [Desk screens and behavior](#desk-screens-and-behavior).
 - **The director** favors the hardest worker and holds a shot 8 to 12 seconds (down to 70% of that when many are busy).
   A shot is one slow dolly of at most 4 m along the line of sight: no orbit, no zoom, a level horizon. The camera is put on
   the move at each frame, never chased. A near shot on the same floor is reached by a 1.4 s glide, anything else by a hard
@@ -350,6 +546,53 @@ answering and dispatching, not for administering. So:
   and `MultiCam` draws each view into the rectangle its frame ended up in, so they cannot drift apart; a hidden wall gets no
   renders. Only members on the drawn floor (every floor when spread apart) get a view, name tags are hidden under the
   views, and choosing a view hands the main camera to that member (the director gives way). A view that is still busy stays.
+
+## Desk screens and behavior
+
+**The rule: real facts stay real, everything else is made up and never shown as a fact.** What comes from the session is
+drawn as it is: file names (a tab, the title bar, the code's identifiers), the first words of a command, a host, the tool
+that is running and for how long, how many subagent calls were made, the branch, commits ahead and behind, uncommitted
+files, open ports, the context in use, the model, the state. Everything around those (the code in the editor, the output
+under a command, the shape of a page, the chart in a notebook, a sticker on the desk) is generated, seeded by the member's id
+and the real tool and file, and carries no claim: no pass or fail, no exit code, no numbers in a dashboard, no message
+text. A made-up line may look like code or a build log; it never says how anything ended.
+
+- **The view follows the work** (`screen-layout.ts`), in this order: the state (a member who is not working has a lock
+  screen; one waiting for approval keeps its work behind a dialog that names the real tool and short target), then the kind of tool
+  call in hand (Edit and Write are an editor with tabs from the real recent files, a gutter that shows green bars for the
+  lines being typed and a red mark where lines went, an occasional squiggle, a minimap, a status bar with the real branch and
+  a dirty dot and the real language; Read is the same editor without a caret; Bash is a terminal under the real command head,
+  its output streaming in bursts; a test command is a runner on QA, review, security and platform desks; a diff command is a diff,
+  other git is a commit graph with the real branch and counts; WebFetch and WebSearch are a browser at the real host;
+  Task and its kin are an agents chat whose count is the number of real subagent calls), then the language of the real file
+  (Markdown is a source and preview pane, CSS a design canvas on a frontend or mobile desk, Python, SQL or JSON a notebook on a data,
+  ML or analytics desk), then what the role usually has open. While the model is writing (working, no tool running) a member
+  now and then alt-tabs to its role's reference window. A change of view slides over a copy of the old one.
+- **Variety is seeded and kept apart from the facts.** A desk's profile (`desk-profile.ts`): a dark or light theme (70/30),
+  one of three window looks (traffic lights left, controls right, flat), a second monitor on some roles (a shared, slowly
+  repainted window of docs, a page, a log, a chat or a dashboard, standing where the desk's side pane is), a lock-screen
+  wallpaper, and one to three things on the desk (mug, plant, figure, headphones, notepad, sticky notes), all merged into a single
+  mesh. Roles lean the odds (writers have notepads). The weights live in one table and a test keeps 200 members within them.
+  The code is generated per language from the real extension (`screen-codegen.ts`: balanced brackets, indentation, names drawn from
+  the file's own words); typing runs in human bursts and pauses (`screen-motion.ts`), the view scrolls by easing, and a
+  notification slides in now and then. What is shown depends only on the member, the tool and the file, so a change of
+  context share, quiet minutes or title never reshuffles it (a test holds this).
+- **Cost.** One canvas of 640 by 400 per working member, painted only when due: every 200 ms within 10 m of the camera, 500 ms
+  within 24 m, one second beyond, never twice within 100 ms, and only on a change of facts under reduced motion. The title
+  bar's look is drawn once and copied; scanlines are one shared canvas; a transition borrows a pooled canvas for a third of a
+  second; second monitors share one texture per look. Nothing in `useFrame` allocates.
+- **Behavior** (`behavior.ts`, `use-micro-actions.ts`, `Poser.tsx`): a seeded director gives each seated member small
+  actions from a weighted table by what it is really doing: while the model writes it leans back to think, scratches its head,
+  looks about or sips; while reading it nods; at the keys it takes short hands-off pauses and glances at the second monitor
+  more when it has one; in review it thinks and nods; on an error it shrugs (a facepalm) as the state turns; after a
+  long quiet (8 minutes) an idle member yawns (the stretch clip has a yawn) more; finishing a turn earns a quiet cheer. An idle
+  member never thinks or nods (that would claim work or a decision). Species lean the table (cats stretch, rabbits stay alert,
+  pandas sip), busier members rest less and wait less, no action repeats inside two, waits are seconds and never a metronome, and
+  members differ in phase and in their own slow sway of the chair (up to 10 degrees) and lean. Reduced motion is one calm
+  idle with no actions and no sway; distant members sway at the distance's animation rate. The models carry no clips for a phone check
+  or a facepalm, so those map to the existing ones; adding a clip means the full pipeline in
+  [development](development.md#the-animals).
+- **Preview.** `?intensity=N` gives every member a different stand-in desk and role, in turn, so every kind of screen shows up.
 
 ## Context window, compaction and provider marks
 
@@ -581,6 +824,39 @@ shadow throttle are aimed at them, and are unproven there.
   hand). One fat-line draw call, drawn only for the focused floor and faded with distance. Subagents keep their own desks: they are
   not moved next to the parent.
 - `?talk=1` previews all of it with stand-in traffic (see `scene-preview.ts`).
+
+## KPI dashboards
+
+How the vendors' own dashboards present token use (from their public documentation and the local data shapes; the pages
+were not re-fetched when this was written, so check the names below before relying on a detail):
+
+- **Claude Code `/usage` and `/cost`**: `/usage` shows the subscription's limit windows (current 5-hour session and the
+  weekly limits) as percent bars with the reset time; `/cost` shows, for the current session, spend, duration and tokens
+  by model. **claude.ai Settings, Usage** repeats the plan windows as bars with "resets in". **Claude Console, Usage and
+  Cost**: tokens by model, workspace and API key, daily bars over a chosen range, input / output / cache read / cache
+  creation as separate series, and cost per day.
+- **Codex `/status` and the ChatGPT Codex usage page**: `/status` shows the rate-limit windows (5-hour and weekly) as a bar
+  with percent and reset time, and the session's input, cached input and output tokens. The usage page shows daily bars
+  over a range. The rollout files carry the same numbers: every `token_count` event holds the running `total_token_usage`,
+  the request's own `last_token_usage` (input includes cached input, output includes reasoning) and `rate_limits`
+  (`primary` and `secondary` windows with `used_percent`, `window_minutes`, `resets_at`).
+- **Adopted**: ranges today / 7 days / 30 days; token kinds apart (input, output, cache read, cache write, reasoning);
+  daily bars with a per-day tooltip; by model and by project; rate-limit windows as rings with the percent used and the
+  reset as a countdown and a clock time; the heaviest sessions. **Not adopted**: cost. No price table exists on this
+  machine and prices are not invented, so the dashboard says so. The headline "tokens" excludes cache reads (they dominate
+  every session and are not new work); they are shown in the breakdown.
+- **What the data is**: per session and day, from the transcripts (`services/usage-stats.ts`): Claude's `message.usage` counted once
+  per message id; Codex's running total turned into deltas (a repeat adds nothing; a total that falls, after a reset or
+  compaction, counts the request itself; the first total of a file counts only its own request). Active time is the sum
+  of gaps of at most five minutes between a transcript's events, summed over sessions. Days follow the server's time zone.
+- **Reuse**: the top bar's Claude quota (`quota.ts`, `ClaudeQuota.tsx`, `claude-limits.ts`, the claude-hud cache) is
+  unchanged; the dashboard reads the same file through the same function and adds Codex's windows
+  (`services/codex-limits.ts`, the newest rollouts' last `rate_limits`).
+- **Where**: the strip over the office (`KpiStrip`), the dashboard (`KpiDashboard`, a side panel on a desktop and a bottom
+  sheet on a phone, lazy-loaded), a line per deck in the floor switcher and a plaque for the floor on show (desktop only;
+  `FloorKpi.tsx` in the scene package, plain DOM). Numbers count up over 450 ms by writing the text node (never a React
+  render per frame; instant with reduced motion). Colors come from the `--kpi-*` tokens. Empty states are honest: local
+  sessions off, no usage yet, no repository, no reading for a provider.
 
 ## Verifying a UI change
 

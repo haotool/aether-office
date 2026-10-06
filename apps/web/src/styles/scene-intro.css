@@ -1,0 +1,92 @@
+/* The first-visit camera tour (packages/office-scene/src/intro): its caption pill and the longer dip that hides its cuts. */
+
+/* The tour's cuts dip for 400 ms instead of the director's 150 ms. */
+.cut-dip[data-intro] {
+  animation-duration: 0.4s;
+}
+
+.intro-caption {
+  position: absolute;
+  z-index: var(--z-hud-caption);
+  /* Bottom left, above the floor name and clear of the floor panel on the right (the top has the stats and the toolbar). */
+  left: var(--space-16);
+  bottom: calc(var(--space-64) + var(--space-48) + var(--space-16));
+  display: grid;
+  justify-items: center;
+  gap: var(--space-4);
+  max-width: min(420px, calc(100% - 300px));
+  padding: var(--space-8) var(--space-16);
+  border-radius: var(--r-3xl);
+  border: 1px solid var(--glass-line);
+  background: var(--glass-soft);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: var(--on-glass);
+  text-align: center;
+}
+.intro-caption p {
+  margin: 0;
+  font: 600 var(--fs-body) var(--mono);
+  overflow-wrap: anywhere;
+}
+.intro-hint {
+  color: var(--on-glass-muted);
+  font-size: var(--fs-small);
+  animation: intro-hint-fade 0.6s ease-out 3s forwards;
+}
+@keyframes intro-hint-fade {
+  to {
+    opacity: 0;
+  }
+}
+.intro-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-8);
+}
+.intro-action {
+  min-height: var(--target-touch);
+  padding: 0 var(--space-16);
+  border: 1px solid var(--glass-line);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--on-glass);
+  font: 600 var(--fs-small) var(--mono);
+}
+.intro-action:hover,
+.intro-action:focus-visible {
+  border-color: var(--mint);
+  color: var(--mint);
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro-hint {
+    animation: none;
+  }
+}
+
+/* The replay row of the floor panel. */
+.building-replay {
+  width: 100%;
+  margin-top: var(--space-6);
+  padding: var(--space-4) var(--space-6);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-xs);
+  color: inherit;
+  font: inherit;
+  letter-spacing: 1.4px;
+}
+
+/* On a phone the caption sits above the row of controls over the session sheet's peek, clear of the floor rail. */
+@media (max-width: 760px), (pointer: coarse) and (max-height: 500px) {
+  .intro-caption {
+    left: var(--hud-inset);
+    right: calc(var(--hud-inset) * 2 + 52px);
+    top: auto;
+    bottom: calc(
+      var(--hud-inset) + var(--space-6) + 72px + var(--space-8) + var(--target-touch) +
+        var(--space-8)
+    );
+    max-width: none;
+  }
+}

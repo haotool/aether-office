@@ -23,7 +23,7 @@ function session(key: string, over: Partial<AttributedSession> = {}): Attributed
     cwd: '/work/aether',
     repo: 'aether',
     mtime: NOW - 5 * MIN,
-    git: { branch: 'main', upstream: null, ahead: 0, behind: 0, uncommitted: 0 },
+    git: { branch: 'main', upstream: null, ahead: 0, behind: 0, uncommitted: 0, conflicts: 0 },
     worktree: null,
     hook: null,
     subagents: [],
@@ -148,15 +148,8 @@ it('parses the Markdown an agent writes into data, never into HTML', () => {
   const blocks = parseMarkdown(
     'Intro with `code` and **bold** and *soft*.\n\n- one\n- two\n\n1. first\n\n## Title\n```sh\nls -la\n\nmore\n```\n<script>alert(1)</script>',
   );
-  expect(blocks.map((b) => b.type)).toEqual([
-    'paragraph',
-    'list',
-    'list',
-    'heading',
-    'code',
-    'paragraph',
-  ]);
-  const [intro, bullets, numbered, , code, html] = blocks;
+  expect(blocks.map((b) => b.type)).toEqual(['paragraph', 'list', 'list', 'heading', 'code']); // the trailing <script> element is dropped with its content, so it is no block at all
+  const [intro, bullets, numbered, , code] = blocks;
   expect(intro).toMatchObject({
     inline: [
       { text: 'Intro with ' },
@@ -177,5 +170,5 @@ it('parses the Markdown an agent writes into data, never into HTML', () => {
   });
   expect(numbered).toMatchObject({ ordered: true });
   expect(code).toEqual({ type: 'code', text: 'ls -la\n\nmore', lang: 'sh' });
-  expect(html).toMatchObject({ inline: [{ text: '<script>alert(1)</script>' }] });
+  expect(JSON.stringify(blocks)).not.toContain('script');
 });

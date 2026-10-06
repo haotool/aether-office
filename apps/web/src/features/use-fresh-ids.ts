@@ -28,3 +28,17 @@ export function useFreshIds(scope: string, ids: readonly string[] | null): (id: 
   }
   return (id) => state.current?.fresh.has(id) ?? false;
 }
+
+/**
+ * The first thing in the conversation that happened after `seenAt` (when the person last looked), or null when there is
+ * none or when it is the very first thing shown, which leaves nothing older to divide it from.
+ */
+export function firstUnreadId(turns: readonly Turn[], seenAt: number): string | null {
+  if (!seenAt) return null;
+  const items = turns.flatMap((turn) => [
+    ...(turn.user ? [{ id: promptId(turn), at: turn.user.at }] : []),
+    ...turn.blocks.map((block, i) => ({ id: blockId(turn, i), at: block.at })),
+  ]);
+  const at = items.findIndex((item) => item.at !== null && item.at > seenAt);
+  return at > 0 ? items[at]!.id : null;
+}

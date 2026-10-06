@@ -4,6 +4,8 @@ import type { Apparition } from './animal-states.js';
 import type { SceneMessage } from './carriers.js';
 import type { SceneCompaction } from './context.js';
 import type { Pulse } from './director.js';
+import type { FloorKpiBadge } from './FloorKpi.js';
+import type { IntroProps } from './intro/use-intro-tour.js';
 import type { PerfReport } from './perf.js';
 import type { BranchInfo, Quality } from './scene-types.js';
 import type { ScreenFacts } from './screen-facts.js';
@@ -48,6 +50,8 @@ export type OfficeSceneProps = {
   tethers?: readonly { parent: string; child: string }[];
   /** Members that want a person (forgotten, ownerless, zombies under them), by id with the reason in a few words. */
   attention?: Readonly<Record<string, string>>;
+  /** Each session member's full title, repository and technical id (`cx·01a1`), for its name tag's tooltip and accessible name. */
+  names?: Readonly<Record<string, { title: string; tag: string; repo: string }>>;
   /** What each member is doing right now, in a word or two (a tool, a state), shown by the member on screen. */
   doing?: Readonly<Record<string, string>>;
   /** The last prompt and reply of each running member, by id: two bubbles over the head of a few of them at a time. */
@@ -77,4 +81,10 @@ export type OfficeSceneProps = {
   onMoveSeat?: (move: SeatMove) => void;
   /** Anything the page wants over the scene (a toast), placed in the scene's own box. */
   overlay?: ReactNode;
+  /** KPIs by floor (index = floor): on each deck of the floor switcher, and as the plaque of the floor on show. */
+  floorKpi?: readonly (FloorKpiBadge | null)[];
+  /** The person asked for a floor's KPI dashboard (its plaque). */
+  onOpenFloorKpi?: (floor: number) => void;
+  /** The first-visit camera tour (an orbit, the exploded view, the rise to the crown). Without it there is no tour and no Replay. */
+  intro?: IntroProps;
 };

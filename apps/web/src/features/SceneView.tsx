@@ -1,8 +1,20 @@
 import { lazy, Suspense, useState } from 'react';
 import { Orbit } from 'lucide-react';
 import type { Snapshot } from '@aether/contracts';
-import { STAGGER_MS, type PerfReport, type SceneSpeech } from '@aether/office-scene/model';
+import {
+  STAGGER_MS,
+  type FloorKpiBadge,
+  type PerfReport,
+  type SceneSpeech,
+} from '@aether/office-scene/model';
 import { LOCAL_PREFIX, mergeLayout } from '../localSessions.js';
+import {
+  introForced,
+  introPlayedThisSession,
+  markIntroPlayed,
+  phoneRemembersIntro,
+  shouldAutoplayIntro,
+} from '../intro-gate.js';
 import { usePreferences } from '../state.js';
 import type { Layout } from '@aether/contracts';
 import type { TourAction } from '../tour.js';
@@ -17,7 +29,7 @@ import { useSeatMove } from './seat-move.js';
 import { useGitGraph } from './GitGraph.js';
 import type { OfficeModel } from './office-model.js';
 import { useCompactions } from './use-compactions.js';
-import { standInFacts, useCompactPreview, useTalkPreview } from './scene-preview.js';
+import { standInFacts, standInRole, useCompactPreview, useTalkPreview } from './scene-preview.js';
 import { useSpeechBySession } from './use-session-feed.js';
 
 const OfficeScene = lazy(() =>
@@ -34,6 +46,9 @@ function publishPerf(report: PerfReport) {
   w.__aetherPerf = report;
   (w.__aetherPerfHistory ??= []).push(report); // one report per scene mount
 }
+
+// `?intro=force` plays the first-visit camera tour whatever the preference, the session or automation say (the tests' switch).
+const introForce = introForced(window.location.search);
 
 // Opt-in preview: `?intensity=3` shows every member working at that level, with a stand-in screen, to look at the effects
 // (faster typing, streaming screens, smoke) without a hundred busy sessions. Never used otherwise.
@@ -79,6 +94,8 @@ export function SceneView({
   canWrite,
   compact = false,
   covered = false,
+  floorKpi,
+  onOpenFloorKpi,
   onSelect,
   onOpen,
   onFeed,
@@ -97,6 +114,9 @@ export function SceneView({
   compact?: boolean;
   /** Something covers the scene (the phone's full sheet): it stops drawing meanwhile. */
   covered?: boolean;
+  /** Each floor's KPI badge (index = floor) for the floor switcher and the floor's plaque. */
+  floorKpi?: readonly (FloorKpiBadge | null)[];
+  onOpenFloorKpi?: (floor: number) => void;
   onSelect: (id: string) => void;
   /** Open a member's conversation (the panel, or the full sheet on a phone). */
   onOpen: (id: string) => void;
@@ -110,6 +130,21 @@ export function SceneView({
   const sessions = useCachedSessions();
   const [command, setCommand] = useState<CharacterCommand | null>(null);
   const prefs = usePreferences();
+  const intro = {
+    auto:
+      !covered &&
+      shouldAutoplayIntro({
+        pref: prefs.intro,
+        playedThisSession: introPlayedThisSession(),
+        automated: navigator.webdriver,
+        force: introForce,
+      }),
+    onDone: () => {
+      markIntroPlayed();
+      if (phoneRemembersIntro(compact, introForce)) prefs.set({ intro: 'never' });
+    },
+    onNever: () => prefs.set({ intro: 'never' }),
+  };
   const speech = useSpeech(model, prefs.view === '3d');
   const leaving =
     useClockOutPreview(model, clockOutPreview !== null ? Number(clockOutPreview) || 2 : null) ??
@@ -123,8 +158,9 @@ export function SceneView({
             model.agents.map((a) => [a.id, rushRequested as 1 | 2 | 3]),
           ),
           screens: Object.fromEntries(
-            model.agents.map((a) => [a.id, standInFacts(a, 'claude', 40)]),
+            model.agents.map((a, i) => [a.id, standInFacts(a, i % 2 ? 'codex' : 'claude', 40, i)]),
           ),
+          roles: Object.fromEntries(model.agents.map((a, i) => [a.id, standInRole(i)])),
         }
       : null;
   const realCompactions = useCompactions(model.contexts);
@@ -170,9 +206,13 @@ export function SceneView({
       <OfficeScene
         compact={compact}
         paused={covered}
+        intro={intro}
+        {...(floorKpi ? { floorKpi } : {})}
+        {...(onOpenFloorKpi ? { onOpenFloorKpi } : {})}
         pulses={talk?.pulses ?? model.pulses}
         tethers={talk?.tethers ?? model.tethers}
         doing={model.doing}
+        names={model.names}
         speech={speech}
         screens={standIn?.screens ?? rush?.screens ?? model.screens}
         compactions={standIn?.compactions ?? realCompactions}
@@ -181,7 +221,7 @@ export function SceneView({
         autoCamera={prefs.autoCamera}
         onToggleAuto={() => prefs.set({ autoCamera: !prefs.autoCamera })}
         agents={model.agents}
-        roleOf={model.roleOf}
+        roleOf={rush ? (a) => rush.roles[a.id] ?? 'generalist' : model.roleOf}
         apparitions={model.apparitions}
         zombies={model.zombies}
         leaving={leaving}

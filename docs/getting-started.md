@@ -41,9 +41,13 @@ pnpm build
 pnpm start            # AETHER_MODE defaults to live
 ```
 
-Sign in with the owner token. Recent Claude Code and Codex sessions from this machine appear as observed characters.
+Open the address the terminal prints (`http://127.0.0.1:4310`); `localhost` is refused on purpose (the host check accepts only
+the exact address, which is what stops DNS rebinding) and answers with a JSON `HOST_FORBIDDEN` error. Sign in with the owner
+token. Recent Claude Code and Codex sessions from this machine appear as observed characters.
 Discovery reads session ids, working directories, file times and process information plus read-only `git status`;
-transcript text is read only for the session you open, and never stored. Sessions in linked worktrees group under the
+transcript text is read only for the session you open, and never stored. Live mode alone only *observes*: `pnpm run setup` creates no runner credential, so the terminals page, **Continue in AETHER**,
+the composer and managed agents stay unavailable (the UI says why) until a runner is enrolled with `pnpm runner:enroll`
+and its native file turns on `cliTerminals` (see [native execution](native-execution.md)). Sessions in linked worktrees group under the
 repository's Git common directory. Set `AETHER_LOCAL_SESSIONS=off` to disable discovery.
 
 ### Exact activity with hooks (optional)
@@ -60,8 +64,11 @@ Add `--provider codex` for Codex's hooks (`.codex/hooks.json`; Codex asks you to
 
 `--scope user` edits `~/.claude/settings.json` and affects every session on the machine; it is never the default. The
 receiver records only session ids, event names, tool names, the working directory and a short target of a tool call (a
-file's base name, a command's first word and a plain subcommand such as `git push`, a URL's host) in
-`~/.aether/hook-events.jsonl`, never prompts, full commands, arguments, paths or other tool inputs.
+file's base name, a command's first word and a plain subcommand such as `git push`, a URL's host), labels from a closed
+list (`test`, `build`, `git.push.force`, `fs.rm.recursive`, ... : what kind of command it was) and whether the tool succeeded,
+in `~/.aether/hook-events.jsonl`, never prompts, full commands, arguments, paths, patterns or other tool inputs. After
+upgrading, run `pnpm hooks install` again so Claude Code also reports failed tools (`pnpm hooks status` lists
+`PostToolUseFailure` as missing until you do); without it a failed call stays "not known" unless the transcript says so.
 
 ### Answer Claude Code permission prompts from the browser (optional)
 

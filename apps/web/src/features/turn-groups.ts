@@ -3,14 +3,18 @@
  * turns (a prompt and what the agent did about it), in which consecutive tool calls fold into one group with their
  * results paired back by id.
  */
+import type { Notice } from '@aether/kernel';
+
 export type Entry = {
   at: number | null;
-  role: 'user' | 'assistant' | 'tool' | 'result';
+  role: 'user' | 'assistant' | 'tool' | 'result' | 'notice';
   name: string | null;
   text: string;
   error: boolean;
   toolId: string | null;
   summary: string | null;
+  /** What a CLI wrapper carried (a finished background task, a command, injected context); absent from an older server. */
+  notice?: Notice | null;
 };
 
 type ToolKind = 'read' | 'edit' | 'run' | 'other';
@@ -25,9 +29,10 @@ export type ToolCall = {
   /** Null until the result arrives: the call is still running. */
   result: { text: string; error: boolean; at: number | null } | null;
 };
-type Block =
+export type Block =
   | { type: 'assistant'; text: string; at: number | null }
-  | { type: 'tools'; calls: ToolCall[]; at: number | null };
+  | { type: 'tools'; calls: ToolCall[]; at: number | null }
+  | { type: 'notices'; items: Notice[]; at: number | null };
 export type Turn = {
   /** Stable while the tail slides: the prompt's time and start, or "head" for a turn whose prompt is cut off. */
   id: string;
@@ -61,7 +66,11 @@ export function groupTurns(entries: readonly Entry[]): Turn[] {
     }
     const current = turns.at(-1) ?? open(null);
     const last = current.blocks.at(-1);
-    if (e.role === 'assistant') {
+    if (e.role === 'notice') {
+      if (!e.notice) continue;
+      if (last?.type === 'notices') last.items.push(e.notice);
+      else current.blocks.push({ type: 'notices', items: [e.notice], at: e.at });
+    } else if (e.role === 'assistant') {
       current.blocks.push({ type: 'assistant', text: e.text, at: e.at });
     } else if (e.role === 'tool') {
       const name = e.name ?? 'tool';
@@ -84,6 +93,19 @@ export function groupTurns(entries: readonly Entry[]): Turn[] {
     }
   }
   return turns;
+}
+
+/**
+ * The new turns, each replaced by the previous object when it says the same thing, so a poll that changed only the newest
+ * turn leaves every other row's props identical and its memoized render untouched.
+ */
+export function reuseTurns(previous: readonly Turn[], next: Turn[]): Turn[] {
+  return next.map((turn, i) => {
+    const before = previous[i];
+    return before && before.id === turn.id && JSON.stringify(before) === JSON.stringify(turn)
+      ? before
+      : turn;
+  });
 }
 
 /** A path shortened from the front ("…/src/features/a.ts"): the end of a path is what tells files apart. */

@@ -1,46 +1,13 @@
-import { useState } from 'react';
-import { Check, Copy } from 'lucide-react';
+import { memo, useMemo } from 'react';
 import type { ListItem, MdBlock } from '@aether/kernel';
-import { copyText } from '../browser-compat.js';
 import { useT } from '../ui.js';
+import { CodeBlock } from './CodeBlock.js';
 import { Inline } from './MdInline.js';
-import { diffKind, isDiff, parseMarkdown } from './md-parse.js';
+import { parseMarkdown } from './md-parse.js';
 
 /** Each block of a reply that is revealed starts its fade a little after the one above it. */
 const BLOCK_STAGGER_MS = 120;
 const BLOCK_STAGGER_MAX = 10;
-
-/** A fenced block: its language, a copy button, and +/- colouring when it is a diff. */
-function CodeBlock({ text, lang }: { text: string; lang: string | undefined }) {
-  const t = useT();
-  const [copied, setCopied] = useState(false);
-  const copy = async () => {
-    setCopied(await copyText(text));
-    setTimeout(() => setCopied(false), 1500);
-  };
-  return (
-    <figure className="code-block">
-      <figcaption>
-        <span>{lang ?? ''}</span>
-        <button type="button" className="code-copy" onClick={() => void copy()}>
-          {copied ? <Check size={13} aria-hidden /> : <Copy size={13} aria-hidden />}
-          {copied ? t('copied') : t('codeCopy')}
-        </button>
-      </figcaption>
-      <pre tabIndex={0}>
-        <code>
-          {isDiff(lang)
-            ? text.split('\n').map((line, i) => (
-                <span key={i} className={`diff-line ${diffKind(line)}`}>
-                  {line || ' '}
-                </span>
-              ))
-            : text}
-        </code>
-      </pre>
-    </figure>
-  );
-}
 
 function Item({ item, delay }: { item: ListItem; delay: number | null }) {
   const t = useT();
@@ -149,10 +116,18 @@ function Blocks({ blocks, delay }: { blocks: readonly MdBlock[]; delay: number |
  * images show their alt text and are never fetched. `reveal` fades the words in one after another, for a reply that has
  * just arrived.
  */
-export function Markdown({ text, reveal = false }: { text: string; reveal?: boolean }) {
+export const Markdown = memo(function Markdown({
+  text,
+  reveal = false,
+}: {
+  text: string;
+  reveal?: boolean;
+}) {
+  // Parsed once per text: a poll that changes nothing about this message re-renders nothing here.
+  const blocks = useMemo(() => parseMarkdown(text), [text]);
   return (
     <div className={`markdown ${reveal ? 'reveal' : ''}`}>
-      <Blocks blocks={parseMarkdown(text)} delay={reveal ? 0 : null} />
+      <Blocks blocks={blocks} delay={reveal ? 0 : null} />
     </div>
   );
-}
+});

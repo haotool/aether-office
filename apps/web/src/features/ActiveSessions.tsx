@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { AttributedSession } from '@aether/contracts';
-import { activityOf, formatSpan } from '../localSessions.js';
+import { activityOf, formatSpan, rowLabelOf } from '../localSessions.js';
 import { usePreferences } from '../state.js';
 import { Badge, Sheet, useT } from '../ui.js';
 
@@ -57,7 +57,7 @@ export function ActiveSessions({
                 }}
               >
                 <span className="sheet-main">
-                  <strong>{s.title ?? s.repo}</strong>
+                  <strong title={s.title ?? s.repo}>{rowLabelOf(s)}</strong>
                   <small>
                     {s.repo}
                     {s.git?.branch ? ` · ${s.git.branch}` : ''}

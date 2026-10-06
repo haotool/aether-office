@@ -16,12 +16,11 @@ import type { Agent } from '@aether/contracts';
 import { acquireAnimal } from './animal-assets.js';
 import { Zzz } from './Zzz.js';
 import { animationInterval } from './perf-control.js';
+import { useMicroActions, type BehaviorScene } from './use-micro-actions.js';
 import {
   APPARITION_CLIP,
   APPARITION_MODEL,
   BASE_CLIP,
-  fidgetDelayMs,
-  fidgetFor,
   greets,
   type Apparition,
   startPhase,
@@ -37,6 +36,12 @@ const RING_COLOR: Record<Ring, string> = {
   hover: '#ffffff',
   group: '#ffc65c',
 };
+const CALM: BehaviorScene = {
+  mode: 'working',
+  intensity: 0,
+  secondMonitor: false,
+  quietMinutes: null,
+};
 /** A reaction the person asked for: the clip plays once over what the member is doing; a new `key` plays it again. */
 export type EmoteCue = { clip: ClipName; key: number };
 
@@ -51,6 +56,7 @@ export function Animal({
   override,
   pace = 1,
   light = false,
+  behavior = CALM,
   onError,
 }: {
   agent: Agent;
@@ -59,6 +65,8 @@ export function Animal({
   override?: ClipName | undefined;
   /** How fast the clips play: a member working flat out types faster. */
   pace?: number;
+  /** What the director needs: the kind of work, the intensity, the second monitor (behavior.ts). */
+  behavior?: BehaviorScene;
   /** A phone: smaller models and textures (the selected one a step down, the rest the smallest). */
   light?: boolean;
   selected: boolean;
@@ -82,7 +90,6 @@ export function Animal({
   const [oneShot, setOneShot] = useState<ClipName | null>(null);
   const current = useRef<AnimationAction | null>(null);
   const lastActivity = useRef<typeof agent.activity | null>(null);
-  const gestures = useRef(0);
   const held = apparition ?? override; // something other than the activity decides what the member does
   const clip = apparition
     ? APPARITION_CLIP[apparition]
@@ -104,19 +111,15 @@ export function Animal({
   useEffect(() => {
     if (emote) react(emote);
   }, [emote?.key]); // eslint-disable-line react-hooks/exhaustive-deps -- one reaction per request, not per render
-  useEffect(() => {
-    if (!model || reducedMotion || held || oneShot || !fidgetFor(agent.activity, agent.id, 0))
-      return;
-    const n = gestures.current;
-    const timer = setTimeout(
-      () => {
-        gestures.current = n + 1;
-        setOneShot(fidgetFor(agent.activity, agent.id, n));
-      },
-      fidgetDelayMs(agent.id, n),
-    );
-    return () => clearTimeout(timer);
-  }, [model, reducedMotion, held, oneShot, agent.activity, agent.id]);
+  useMicroActions({
+    enabled: model !== null && !reducedMotion && !held,
+    busy: oneShot !== null,
+    activity: agent.activity,
+    seed: agent.id,
+    species: agent.species,
+    scene: behavior,
+    play: setOneShot,
+  });
   useEffect(() => {
     const asset = acquireAnimal(url);
     let disposed = false;

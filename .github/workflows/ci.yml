@@ -16,6 +16,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # A pull request title becomes the squash-merge subject; the commits must follow the same convention (CONTRIBUTING.md).
+  commit-messages:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Pull request title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: bash scripts/oss/commit-msg.sh --subject "$TITLE"
+      - name: Commit subjects
+        env:
+          BASE: ${{ github.base_ref }}
+        run: bash scripts/oss/commit-msg.sh --range "origin/$BASE..HEAD"
+
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 30

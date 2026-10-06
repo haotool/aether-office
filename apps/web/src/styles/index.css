@@ -7,11 +7,12 @@
  *   shell         top bar, sidebar, connection state
  *   office        the office page, 3D shell, toolbar, labels, team strip
  *   session-panel the session panel: feed and conversation column (the phone sheet is phone-sheet); panel-resize its handle and rail,
- *                 session-feed its feed rows, transcript-tools code blocks and tool chips, transcript-markdown the rendered reply
+ *                 session-feed its feed rows, squad the squad's tree, strip and cards, transcript-tools code blocks and tool chips, transcript-markdown the rendered reply, transcript-notices notice chips, find and day lines
  *   controls      badges and buttons
  *   pages, forms, views, login   the pages and their forms
  *   breakpoints   the desktop sizes (wide, narrow, tablet)
  *   workbench ... quick-open     features: the scene HUD and speech bubbles, the character menu and its marks (character-menu), telemetry, transcript, git, sessions, clock out, approvals, quick open
+ *   settings-kit, settings-layout   Settings: the row kit (switch, segmented, chips, commands) and the page (navigation, phone list)
  *   touch-targets ... phone-density   the touch and phone layers (UI rules in AGENTS.md)
  */
 @import url('./tokens.css');
@@ -21,6 +22,7 @@
 @import url('./session-panel.css');
 @import url('./panel-resize.css');
 @import url('./session-feed.css');
+@import url('./squad.css');
 @import url('./controls.css');
 @import url('./pages.css');
 @import url('./forms.css');
@@ -31,11 +33,14 @@
 @import url('./scene-hud.css');
 @import url('./scene-pips.css');
 @import url('./scene-speech.css');
+@import url('./name-tag.css');
 @import url('./character-menu.css');
 @import url('./telemetry.css');
+@import url('./kpi.css');
 @import url('./transcript.css');
 @import url('./transcript-tools.css');
 @import url('./transcript-markdown.css');
+@import url('./transcript-notices.css');
 @import url('./composer.css');
 @import url('./git.css');
 @import url('./sessions.css');
@@ -43,6 +48,9 @@
 @import url('./clock-out.css');
 @import url('./permission-card.css');
 @import url('./quick-open.css');
+@import url('./settings-kit.css');
+@import url('./settings-content.css');
+@import url('./settings-layout.css');
 @import url('./touch-targets.css');
 @import url('./compact-desktop.css');
 @import url('./phone-drawer.css');
@@ -51,6 +59,7 @@
 @import url('./phone-office-fit.css');
 @import url('./phone-sheet.css');
 @import url('./scene-overlays.css');
+@import url('./scene-intro.css');
 @import url('./folds.css');
 @import url('./phone-pages.css');
 @import url('./phone-density.css');

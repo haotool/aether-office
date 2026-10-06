@@ -1,0 +1,314 @@
+/*
+ * The settings kit (features/settings/kit.tsx): a row with its control, state chips, switch, segmented control,
+ * command to copy, folds, skeleton and notice. A row lays itself out against the width of its group (a container
+ * query), not the window's: the control sits at the right from 560px, and below the text when there is less room.
+ */
+.ssection-body {
+  container: srows / inline-size;
+  position: relative;
+  padding: 0 var(--space-16);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+/* A hairline of light along the top edge, the way a glass panel catches it. */
+.ssection-body::before {
+  content: '';
+  position: absolute;
+  inset: -1px var(--space-24) auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--mint), transparent);
+  opacity: 0.5;
+  pointer-events: none;
+}
+.srow,
+.sblock {
+  padding: var(--space-16) 0;
+  border-top: 1px solid var(--line);
+}
+.srow:first-child,
+.sblock:first-child {
+  border-top: 0;
+}
+.srow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-8) var(--space-16);
+}
+.srow-text h3 {
+  margin: 0;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.srow-text p {
+  margin: var(--space-2) 0 0;
+  font-size: var(--fs-small);
+  overflow-wrap: anywhere;
+}
+.srow-control {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.srow-control select {
+  width: 100%;
+}
+.srow-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-6);
+}
+.srow-extra {
+  display: grid;
+  gap: var(--space-8);
+  min-width: 0;
+}
+.srow-extra p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+@container srows (min-width: 560px) {
+  .srow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+  .srow-control {
+    grid-column: 2;
+    grid-row: 1;
+    justify-content: flex-end;
+  }
+  .srow-control select {
+    width: auto;
+    min-width: 180px;
+  }
+  .srow-status,
+  .srow-extra {
+    grid-column: 1 / -1;
+  }
+  .sseg {
+    width: auto;
+  }
+}
+
+mark {
+  background: color-mix(in srgb, var(--gold) 30%, transparent);
+  color: inherit;
+  border-radius: var(--r-xs);
+}
+
+/* State, in a word and a mark. */
+.schip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-8);
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  font-size: var(--fs-label);
+  line-height: 1.5;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.schip svg {
+  flex: none;
+}
+.schip-ok {
+  color: var(--mint);
+}
+.schip-warn {
+  color: var(--gold);
+}
+.schip-info {
+  color: var(--blue);
+}
+
+/* Switch: the native checkbox is the control (keyboard, forms, assistive technology), the track is drawn over it. */
+.switch {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: 52px;
+  height: var(--control-touch-sm);
+}
+.switch::after {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--space-4)); /* a finger's 44px, past the drawn 36 */
+}
+.switch > input[type='checkbox'] {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-base);
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.switch-track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 28px;
+  transform: translateY(-50%);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--raised);
+  transition:
+    background var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+.switch-track::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--dim);
+  transform: translateY(-50%);
+  transition:
+    transform var(--dur) var(--ease),
+    background var(--dur) var(--ease);
+}
+.switch > input:checked + .switch-track {
+  background: var(--selected);
+  border-color: var(--mint);
+  box-shadow: 0 0 12px var(--glow);
+}
+.switch > input:checked + .switch-track::after {
+  transform: translate(24px, -50%);
+  background: var(--mint);
+}
+.switch > input:focus-visible + .switch-track {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
+}
+.switch > input:disabled {
+  cursor: not-allowed;
+}
+.switch > input:disabled + .switch-track {
+  opacity: 0.4;
+}
+@media (hover: hover) {
+  .switch > input:not(:disabled):hover + .switch-track {
+    border-color: var(--mint);
+  }
+}
+
+/* Segmented: a few exclusive choices, one tab stop, arrow keys inside. */
+.sseg {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  padding: var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  background: var(--bg);
+}
+.sseg button {
+  flex: 1 1 auto;
+  min-height: var(--control-touch-sm);
+  padding: 0 var(--space-12);
+  border-radius: var(--r-lg);
+  font-size: var(--fs-small);
+  color: var(--muted);
+  white-space: nowrap;
+  transition:
+    background var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+.sseg button[aria-checked='true'] {
+  background: var(--selected);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--glass-accent-line);
+}
+@media (hover: hover) {
+  .sseg button[aria-checked='false']:not(:disabled):hover {
+    color: var(--text);
+  }
+}
+
+/* A command to run: its own scrolling box, never the page's. */
+.copycmd {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4) var(--space-8);
+  min-width: 0;
+}
+.copycmd-caption {
+  grid-column: 1 / -1;
+  font-size: var(--fs-small);
+  color: var(--muted);
+}
+.copycmd code {
+  min-width: 0;
+  overflow-x: auto;
+  white-space: pre;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--bg);
+  font-family: var(--mono);
+  font-size: var(--fs-small);
+}
+.copycmd code:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
+}
+
+.shelp summary {
+  cursor: pointer;
+  color: var(--mint);
+  font-size: var(--fs-small);
+}
+.shelp > div {
+  display: grid;
+  gap: var(--space-8);
+  padding-top: var(--space-8);
+}
+.shelp p {
+  margin: 0;
+  font-size: var(--fs-small);
+}
+.sdanger {
+  display: grid;
+  gap: var(--space-8);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid color-mix(in srgb, var(--red) 40%, var(--line));
+  border-radius: var(--r-lg);
+}
+.sdanger h3 {
+  margin: 0;
+  font-size: var(--fs-small);
+  color: var(--red);
+}
+.danger-button {
+  color: var(--red);
+  border-color: color-mix(in srgb, var(--red) 50%, var(--line));
+}
+.sconfirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+}
+.sconfirm p {
+  flex: 1 0 100%;
+  margin: 0;
+  font-size: var(--fs-small);
+}
+.serror {
+  margin: 0;
+  color: var(--red);
+  font-size: var(--fs-small);
+}
