@@ -187,40 +187,6 @@
   }
 }
 
-.follow-hud {
-  position: absolute;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: var(--z-hud-caption);
-  display: grid;
-  justify-items: center;
-  gap: var(--space-2);
-  min-width: 240px;
-  max-width: 60%;
-  padding: var(--space-8) var(--space-16);
-  background: var(--glass-strong);
-  color: var(--on-glass);
-  font-family: var(--mono);
-  pointer-events: none;
-}
-.follow-hud small {
-  font-size: var(--fs-label);
-  letter-spacing: 2px;
-  color: var(--mint);
-}
-.follow-hud b {
-  font-size: var(--fs-meta);
-}
-.follow-hud span {
-  font-size: var(--fs-label);
-  color: var(--on-glass-muted);
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .scene-label.unread::after {
   content: '';
   width: 7px;

@@ -1,13 +1,14 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Orbit, X } from 'lucide-react';
 import type { Layout, Project, Snapshot } from '@aether/contracts';
 import { api } from './api.js';
 import { usePreferences } from './state.js';
+import { isOperator } from './roles.js';
 import { useT, Empty } from './ui.js';
 import type { Key } from './i18n.js';
-import { TaskForm } from './features/Tasks.js';
+import { TaskForm } from './features/TaskForm.js';
 import { SessionPanel } from './features/SessionPanel.js';
 import { SessionSheet, type SheetHeight } from './features/SessionSheet.js';
 import { attentionKeys } from './features/feed-model.js';
@@ -21,6 +22,7 @@ import { Sidebar } from './features/Sidebar.js';
 import { PhoneOffice } from './features/PhoneOffice.js';
 import { QuickPrefs } from './features/QuickPrefs.js';
 import { TabBar } from './features/TabBar.js';
+import { PwaNotices } from './features/PwaNotices.js';
 import { Telemetry } from './features/Telemetry.js';
 import { Topbar } from './features/Topbar.js';
 import { useBeats } from './features/activity-rate.js';
@@ -33,6 +35,8 @@ import { useLocalSessions, usePendingApprovals } from './app-data.js';
 import { sessionIdOf } from './localSessions.js';
 import { useApprovalNotifications, useNotificationPermission } from './notifications.js';
 import {
+  focusFeedRow,
+  useDocumentChrome,
   useFocusRequest,
   useProjectStream,
   useAuthSession,
@@ -40,8 +44,6 @@ import {
   useSessionNotices,
   useTour,
 } from './app-hooks.js';
-
-const TITLE = 'AETHER OFFICE · 軌道辦公室';
 
 const LayoutEditor = lazy(() =>
   import('./features/LayoutEditor.js').then((m) => ({ default: m.LayoutEditor })),
@@ -61,7 +63,7 @@ export function App() {
   const [editor, setEditor] = useState(false);
   const [preview, setPreview] = useState<Layout | null>(null);
   const [focus, setFocus] = useState('overview');
-  const { tour, act } = useTour(focus, setFocus);
+  const { tour, act } = useTour(setFocus);
   // A narrow desktop window shows the panel as an overlay on the office: closed until asked for.
   const [panelOpen, setPanelOpen] = useState(() => window.innerWidth > 1000);
   const [sheet, setSheet] = useState<SheetHeight>('peek');
@@ -71,10 +73,6 @@ export function App() {
   const compact = usePhoneAny(); // portrait or on its side: immersive office, sheets
   const [offline, setOffline] = useState(false);
   const [notice, setNotice] = useState('');
-  useEffect(() => {
-    document.documentElement.dataset['theme'] = prefs.theme;
-    document.documentElement.lang = prefs.locale === 'zh-TW' ? 'zh-Hant' : 'en';
-  }, [prefs.theme, prefs.locale]);
   const projects = useQuery({
     queryKey: ['projects'],
     queryFn: () => api<Project[]>('/api/projects'),
@@ -99,9 +97,7 @@ export function App() {
     () => ({ toast: setNotice, open: (to: string) => navigate(to) }),
     [navigate],
   );
-  const requests = usePermissionRequests(
-    !!session && ['owner', 'operator'].includes(session.actor.role),
-  );
+  const requests = usePermissionRequests(isOperator(session?.actor.role));
   const asking = useMemo(() => askingKeys(requests), [requests]);
   useNotificationPermission(!!session && prefs.notify);
   useApprovalNotifications(
@@ -120,7 +116,7 @@ export function App() {
     sink,
     asking,
   );
-  const canWrite = !!session && ['owner', 'operator'].includes(session.actor.role);
+  const canWrite = isOperator(session?.actor.role);
   const data = snapshot.data;
   const needs = needsYou(
     data,
@@ -128,11 +124,11 @@ export function App() {
     sessionsNeedingYou(sessionsWaiting(local.data?.sessions, Date.now()), asking),
   );
   // The tab's title carries what needs the person, so it shows in a background tab.
-  const waitingOn =
-    needs.approvals + needs.sessions + (prefs.advanced ? needs.tasks + needs.messages : 0);
-  useEffect(() => {
-    document.title = waitingOn ? `(${waitingOn}) ${TITLE}` : TITLE;
-  }, [waitingOn]);
+  useDocumentChrome(
+    prefs.theme,
+    prefs.locale,
+    needs.approvals + needs.sessions + (prefs.advanced ? needs.tasks + needs.messages : 0),
+  );
   useProjectStream(projectId, !!session, snapshot.data?.seq, setOffline);
   const refresh = () => {
     void client.invalidateQueries({ queryKey: ['snapshot', projectId] });
@@ -144,6 +140,20 @@ export function App() {
       return p;
     });
     setPanelOpen(true);
+  };
+  // The character menu: the conversation (the full sheet on a phone), or the feed with the member's row brought into view.
+  const openConversation = (id: string) => {
+    select(id);
+    if (compact) setSheet('full');
+  };
+  const showInFeed = (id: string) => {
+    setParams((p) => {
+      p.delete('agent');
+      return p;
+    });
+    setPanelOpen(true);
+    if (compact) setSheet('half');
+    focusFeedRow(id);
   };
   const model = officeModel(data, local.data?.sessions, projectId, prefs.locale, beats, leaving);
   const selected = model.agents.find((a) => a.id === selectedId) ?? null;
@@ -252,6 +262,7 @@ export function App() {
               <button onClick={refresh}>{t('retry')}</button>
             </div>
           )}
+          <PwaNotices />
           {notice && (
             <div className="notice" role="status">
               {notice}
@@ -304,7 +315,10 @@ export function App() {
                     canWrite={canWrite}
                     sessions={local.data?.sessions ?? []}
                     owner={session.actor.role === 'owner'}
+                    covered={sheet === 'full'}
                     onSelect={select}
+                    onOpen={openConversation}
+                    onFeed={showInFeed}
                     onFocus={setFocus}
                     onTour={act}
                     onNewTask={() => setNewTask(true)}
@@ -324,6 +338,8 @@ export function App() {
                     unread={unread}
                     canWrite={canWrite}
                     onSelect={select}
+                    onOpen={openConversation}
+                    onFeed={showInFeed}
                     onFocus={setFocus}
                     onTour={act}
                     onTogglePanel={() => setPanelOpen(!panelOpen)}

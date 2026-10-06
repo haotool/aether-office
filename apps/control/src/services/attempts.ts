@@ -1,5 +1,5 @@
 /** Failed-attempt counters by caller (login, enrolment, hook), shared so one limit cannot be dodged by another route. */
-export type Attempts = Map<string, { count: number; until: number }>;
+type Attempts = Map<string, { count: number; until: number }>;
 export const MAX_ATTEMPTS = 1000;
 
 /** Forgets the counters whose window has passed, then the oldest ones beyond `max`, so a flood of addresses cannot grow it. */

@@ -17,3 +17,13 @@ export type { ScreenFacts } from './screen-facts.js';
 export type { PerfReport } from './perf.js';
 export type { Pulse, PulseKind } from './director.js';
 export type { SceneSpeech, Utterance } from './Speech.js';
+export {
+  COMPACTION_LIVE_MS,
+  compactionLabel,
+  contextLevel,
+  type ContextLevel,
+  type SceneCompaction,
+} from './context.js';
+export { ProviderMark, type MarkProvider } from './provider-marks.js';
+export { EMOTES, type Emote, type EmoteId } from './emotes.js';
+export type { SeatMove } from './use-seat-drag.js';

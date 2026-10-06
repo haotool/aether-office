@@ -31,7 +31,7 @@ export type AgentProcess = {
   /** TCP ports the agent or anything it started (a dev server) is listening on. */
   ports: number[];
 };
-export type ProcessState = LocalSession['process'];
+type ProcessState = LocalSession['process'];
 /** A finished process nobody collected, and the program it was when it was last seen alive (null if it never was). */
 export type Zombie = { pid: number; startedAt: number; program: string | null };
 

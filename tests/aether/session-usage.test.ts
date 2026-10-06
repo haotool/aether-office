@@ -48,6 +48,8 @@ it('reads Codex context in use, session total, window and the model of the lates
     model: 'gpt-new',
     contextTokens: 500,
     contextWindow: 1000,
+    contextPct: null,
+    compactedAt: null,
     freshTokens: 300, // 900 in all, of which 600 came from the cache
     limit: { usedPercent: 84, windowMinutes: 10080, resetsAt: 1791583205000, plan: 'prolite' },
   });
@@ -74,6 +76,8 @@ it('reads Claude context as new plus cached input of the latest assistant messag
     model: 'claude-sonnet-5-5',
     contextTokens: 250495,
     contextWindow: null,
+    contextPct: null,
+    compactedAt: null,
     freshTokens: null,
     limit: null,
   });
@@ -84,6 +88,8 @@ it('reports unknown as null, never zero, for empty, malformed or counter-less ta
     model: null,
     contextTokens: null,
     contextWindow: null,
+    contextPct: null,
+    compactedAt: null,
     freshTokens: null,
     limit: null,
   };

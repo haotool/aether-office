@@ -4,7 +4,7 @@ import { fuzzyRank } from '@aether/kernel';
 
 const run = promisify(execFile);
 
-export const MAX_FILE_RESULTS = 20;
+const MAX_FILE_RESULTS = 20;
 export const MAX_QUERY_CHARS = 100;
 const MAX_LISTED_BYTES = 4 * 1024 * 1024;
 // Files that hold credentials are never offered for completion, even when Git does not ignore them.

@@ -1,5 +1,7 @@
 import { ChevronDown, ChevronUp, Focus, X } from 'lucide-react';
-import { AvatarIcon, Badge, useT } from '../ui.js';
+import { Badge, useT } from '../ui.js';
+import { Avatar } from './Avatar.js';
+import { FEED_AVATAR_STATE } from './feed-avatar.js';
 import { attentionCount, feedItems, mostUrgent, type Feed, type FeedItem } from './feed-model.js';
 import { PermissionPeek } from './PermissionCard.js';
 import { PanelBody, type PanelProps } from './SessionPanel.js';
@@ -28,7 +30,12 @@ function MemberPeek({
     <div className="member-bar" role="region" aria-label={agent.name}>
       <button className="peek-open" onClick={onOpen}>
         <span className={`peek-avatar bucket-${item?.bucket ?? 'idle'}`}>
-          <AvatarIcon species={agent.species} color={agent.color} name={agent.name} size={40} />
+          <Avatar
+            seed={agent.id}
+            species={agent.species}
+            size="peek"
+            state={FEED_AVATAR_STATE[item?.bucket ?? 'idle']}
+          />
           <i className="state-dot" />
         </span>
         <span className="member-bar-text">
@@ -77,7 +84,12 @@ function FeedPeek({
               aria-label={item.label}
               onClick={() => onChip(item.agent.id)}
             >
-              <AvatarIcon species={item.agent.species} color={item.agent.color} name="" size={28} />
+              <Avatar
+                seed={item.agent.id}
+                species={item.agent.species}
+                size="chip"
+                state={FEED_AVATAR_STATE[item.bucket]}
+              />
               <i className="state-dot" />
               {item.unread && <i className="unread-dot" />}
             </button>

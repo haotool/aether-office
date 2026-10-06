@@ -19,8 +19,16 @@ const session = (over: Partial<LocalSession>): LocalSession => ({
   liveness: { state: 'unknown', startedAt: null, quietMs: null, zombies: [] },
   ports: [],
   title: null,
-  classification: { role: 'generalist', department: 'product', basis: 'default', matched: null },
-  usage: { model: null, contextTokens: null, contextWindow: null, freshTokens: null, limit: null },
+  classification: { role: 'generalist', department: 'product', confidence: 0, evidence: [] },
+  usage: {
+    model: null,
+    contextTokens: null,
+    contextWindow: null,
+    contextPct: null,
+    compactedAt: null,
+    freshTokens: null,
+    limit: null,
+  },
   ...over,
 });
 const hook = (activity: 'working' | 'idle' | 'waiting_permission' | 'ended', at = NOW) => ({

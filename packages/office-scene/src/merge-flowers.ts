@@ -31,7 +31,7 @@ const smallOf = (g: Genome): Genome => ({
   filaments: Math.min(g.filaments, 4),
 });
 
-export type MergeStand = { bloom: Bloom; node: StalkNode };
+type MergeStand = { bloom: Bloom; node: StalkNode };
 
 /**
  * One small flower for each of the newest merge commits (at most `MAX_MERGE_FLOWERS`), grown from the commit's hash and

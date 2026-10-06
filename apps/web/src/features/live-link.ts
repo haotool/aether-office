@@ -19,9 +19,9 @@ export function parseChange(data: string): SessionChange | null {
   }
 }
 
-export const LOCAL_SESSIONS_KEY: QueryKey = ['local-sessions'];
-export const SPEECH_KEY: QueryKey = ['speech'];
-export const transcriptKey = (key: string): QueryKey => ['transcript', key];
+const LOCAL_SESSIONS_KEY: QueryKey = ['local-sessions'];
+const SPEECH_KEY: QueryKey = ['speech'];
+const transcriptKey = (key: string): QueryKey => ['transcript', key];
 
 /** Every query a set of changes makes stale (deduplicated; a query nobody is looking at is only marked, not fetched). */
 export function queriesFor(changes: readonly SessionChange[]): QueryKey[] {

@@ -8,6 +8,7 @@ import { PairPhoneButton } from './ConnectPhone.js';
 import { EmergencyStop } from './EmergencyStop.js';
 import { ConnectionStatus } from './ConnectionStatus.js';
 import { Telemetry } from './Telemetry.js';
+import { isOperator } from '../roles.js';
 
 /** Brand, project picker and the controls that belong to the person: language, theme, live-mode stop. */
 export function Topbar({
@@ -78,7 +79,7 @@ export function Topbar({
           <EmergencyStop projectId={projectId} />
         )}
         <Badge state={session.mode} />
-        {['owner', 'operator'].includes(session.actor.role) && <PairPhoneButton variant="icon" />}
+        {isOperator(session.actor.role) && <PairPhoneButton variant="icon" />}
         <button
           className="icon-button"
           aria-label={t('language')}

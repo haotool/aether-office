@@ -16,7 +16,7 @@ const session = (cwd: string, title: string | null = null) =>
     worktree: null,
     process: 'none',
     liveness: { state: 'ended', startedAt: null, quietMs: null, zombies: [] },
-    classification: { role: 'release', department: 'platform', basis: 'prompt', matched: null },
+    classification: { role: 'release', department: 'platform', confidence: 0.6, evidence: [] },
   }) as never;
 
 it('names an untitled worktree session by what sets its directory apart', () => {

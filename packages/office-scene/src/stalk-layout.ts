@@ -76,7 +76,7 @@ function braid({ y, phase, spread }: Sample, roof: number, top: number): Vec3 {
 }
 
 /** Branch names of a `%D` ref list: no tags, no `HEAD`, no `HEAD ->` prefix. */
-export function branchNames(refs: readonly string[]): string[] {
+function branchNames(refs: readonly string[]): string[] {
   return refs
     .filter((r) => !r.startsWith('tag:'))
     .map((r) => r.replace(/^HEAD -> /, ''))
@@ -86,7 +86,7 @@ export function branchNames(refs: readonly string[]): string[] {
 const isDefault = (name: string) => /^(origin\/)?(main|master)$/.test(name);
 
 /** First-parent chains from the default branch, then from every commit not yet claimed, newest first. */
-export function claimStrands(list: readonly StalkCommit[]): Map<string, number> {
+function claimStrands(list: readonly StalkCommit[]): Map<string, number> {
   const bySha = new Map(list.map((c) => [c.sha, c]));
   const owner = new Map<string, number>();
   let count = 0;
@@ -226,7 +226,7 @@ export function layoutStalk(
 }
 
 /** How far each floor's slab is from the one below it (its own y), and where the slab starts under the floor. */
-export type Exploding = { floorHeight: number; gap: number };
+type Exploding = { floorHeight: number; gap: number };
 const SLAB_BELOW = 1.2;
 const JOIN = 0.2; // the strand leaves one floor's slab and arrives at the next within this much of its own height
 

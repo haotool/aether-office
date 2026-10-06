@@ -4,7 +4,8 @@ import { useFrame } from '@react-three/fiber';
 import { CanvasTexture, RepeatWrapping, SRGBColorSpace, type Group } from 'three';
 import type { Agent } from '@aether/contracts';
 import type { DepartmentId } from '@aether/kernel';
-import { SCREEN_H, SCREEN_W, screenTexture } from './screens.js';
+import { SCREEN_H, SCREEN_W } from './screen-draw.js';
+import { screenTexture } from './screens.js';
 import { BAND, createFactsScreen, type ScreenFacts } from './screen-facts.js';
 
 const WIDTH = 0.76;

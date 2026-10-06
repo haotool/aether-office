@@ -1,0 +1,65 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`avatar > keeps a few seeds as they are 1`] = `
+{
+  "accent": "#dd7c3f",
+  "backdrop": "#2e2119",
+  "backdropDark": true,
+  "blush": true,
+  "dark": "#332823",
+  "earScale": 0.9713295304775238,
+  "earTilt": 0,
+  "eyes": "round",
+  "fur": "#cc7d2c",
+  "gear": [
+    "monocle:#46B58A",
+  ],
+  "inner": "#f1dfbf",
+  "light": "#f7edd3",
+  "marking": "spots",
+  "mouth": "smirk",
+  "species": "fox",
+}
+`;
+
+exports[`avatar > keeps a few seeds as they are 2`] = `
+{
+  "accent": "#ed9ec0",
+  "backdrop": "#2e1922",
+  "backdropDark": true,
+  "blush": false,
+  "dark": "#c5b7a5",
+  "earScale": 0.9825419496372343,
+  "earTilt": -6,
+  "eyes": "determined",
+  "fur": "#eae1d3",
+  "gear": [],
+  "inner": "#eab2b1",
+  "light": "#fff8ef",
+  "marking": "spots",
+  "mouth": "smirk",
+  "species": "rabbit",
+}
+`;
+
+exports[`avatar > keeps a few seeds as they are 3`] = `
+{
+  "accent": "#8c6ae1",
+  "backdrop": "#1f192e",
+  "backdropDark": true,
+  "blush": false,
+  "dark": "#363b3e",
+  "earScale": 0.9394168499857187,
+  "earTilt": -6,
+  "eyes": "round",
+  "fur": "#979d97",
+  "gear": [
+    "leaf:#7C6BE0",
+  ],
+  "inner": "#2d3133",
+  "light": "#ece3d8",
+  "marking": "stripes",
+  "mouth": "grin",
+  "species": "raccoon",
+}
+`;

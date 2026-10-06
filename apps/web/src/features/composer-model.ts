@@ -23,7 +23,7 @@ export const MAX_QUEUE = 10;
 /** After a send the session takes a moment to show as working; a waiting message is not sent into that gap. */
 export const SETTLE_MS = 8000;
 /** A sent message the transcript has not shown after this long is flagged rather than left looking delivered. */
-export const UNCONFIRMED_MS = 90_000;
+const UNCONFIRMED_MS = 90_000;
 const SKEW_MS = 60_000;
 
 /** Pure. Text as it may go to a terminal: line ends are `\n`, and no control character that is not a newline or a tab. */
@@ -67,7 +67,7 @@ export function enqueue(list: readonly Pending[], item: Pending): Pending[] | nu
   return list.filter((p) => p.state === 'queued').length >= MAX_QUEUE ? null : [...list, item];
 }
 
-export type SendGate = {
+type SendGate = {
   online: boolean;
   /** AETHER holds (or can take) the terminal: nobody else's lease is running on it. */
   free: boolean;

@@ -13,7 +13,7 @@ export type Entry = {
   summary: string | null;
 };
 
-export type ToolKind = 'read' | 'edit' | 'run' | 'other';
+type ToolKind = 'read' | 'edit' | 'run' | 'other';
 export type ToolCall = {
   id: string | null;
   name: string;
@@ -25,7 +25,7 @@ export type ToolCall = {
   /** Null until the result arrives: the call is still running. */
   result: { text: string; error: boolean; at: number | null } | null;
 };
-export type Block =
+type Block =
   | { type: 'assistant'; text: string; at: number | null }
   | { type: 'tools'; calls: ToolCall[]; at: number | null };
 export type Turn = {

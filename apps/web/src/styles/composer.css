@@ -133,7 +133,7 @@
   margin: 0;
   padding: var(--space-4) var(--space-12);
   border-top: 1px solid var(--line);
-  color: var(--dim);
+  color: var(--muted);
   font-size: var(--fs-label);
 }
 .composer-menu-hints kbd {
@@ -175,7 +175,7 @@
   color: var(--muted);
 }
 .composer-menu .composer-menu-empty {
-  color: var(--dim);
+  color: var(--muted);
   cursor: default;
 }
 /* What was typed and the transcript has not shown yet */

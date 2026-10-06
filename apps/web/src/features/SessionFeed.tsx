@@ -1,8 +1,11 @@
 import { Fragment } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { ProviderMark, contextLevel } from '@aether/office-scene/model';
 import type { Key } from '../i18n.js';
 import { usePreferences } from '../state.js';
-import { AvatarIcon, useT } from '../ui.js';
+import { useT } from '../ui.js';
+import { Avatar } from './Avatar.js';
+import { FEED_AVATAR_STATE } from './feed-avatar.js';
 import { PermissionCards } from './PermissionCard.js';
 import { ago, feedItems, type Feed, type FeedBucket, type FeedItem } from './feed-model.js';
 
@@ -15,9 +18,10 @@ const HEADINGS: Record<FeedBucket, Key> = {
 };
 
 /** One session: who, the newest thing it said, what it is doing, how long ago. */
-export function FeedRow({ item, onOpen }: { item: FeedItem; onOpen: (agentId: string) => void }) {
+function FeedRow({ item, onOpen }: { item: FeedItem; onOpen: (agentId: string) => void }) {
   const t = useT();
   const locale = usePreferences((s) => s.locale);
+  const context = item.session.usage.contextPct;
   const state =
     item.reason === 'permission'
       ? t('feedWaitingPermission')
@@ -27,16 +31,18 @@ export function FeedRow({ item, onOpen }: { item: FeedItem; onOpen: (agentId: st
   return (
     <button
       className={`feed-row bucket-${item.bucket} ${item.stale ? 'stale' : ''}`}
+      data-agent={item.agent.id}
       onClick={() => onOpen(item.agent.id)}
     >
-      <AvatarIcon
+      <Avatar
+        seed={item.agent.id}
         species={item.agent.species}
-        color={item.agent.color}
-        name={item.label}
-        size={32}
+        size="row"
+        state={FEED_AVATAR_STATE[item.bucket]}
       />
       <span className="feed-main">
         <span className="feed-top">
+          <ProviderMark provider={item.session.provider} />
           <strong title={item.label}>{item.label}</strong>
           {item.unread && <i className="unread-dot" role="img" aria-label={t('feedUnread')} />}
           <time className="feed-time">{ago(Date.now() - item.at, locale)}</time>
@@ -57,6 +63,20 @@ export function FeedRow({ item, onOpen }: { item: FeedItem; onOpen: (agentId: st
         <span className={`feed-reply ${item.reply ? '' : 'none'}`}>
           {item.reply ?? t('feedNoReply')}
         </span>
+        {context !== null && (
+          <span
+            className="feed-ctx"
+            role="meter"
+            aria-label={t('convContext')}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(context)}
+            data-level={contextLevel(context)}
+            title={`${t('convContext')} ${Math.round(context)}%`}
+          >
+            <i style={{ width: `${context}%` }} />
+          </span>
+        )}
       </span>
     </button>
   );

@@ -17,7 +17,7 @@ const RECENT_MS = 7 * 24 * 3600 * 1000;
 const ACTIVE_CHILD_MS = 2 * 60 * 1000;
 const UUID_SUFFIX = /[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 
-export type Child = { id: string; type: string; lastSeen: number };
+type Child = { id: string; type: string; lastSeen: number };
 export type Raw = {
   provider: 'claude' | 'codex';
   sessionId: string;

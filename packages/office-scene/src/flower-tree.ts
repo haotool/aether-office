@@ -8,7 +8,7 @@ import type { Vec3 } from './stalk-types.js';
 export const MAX_TWIG_SEGMENTS = 300;
 export const MAX_BUDS = 40;
 
-export type TwigLimit = { segments: number; buds: number };
+type TwigLimit = { segments: number; buds: number };
 /** What each of `trees` flowers may grow so that together they stay inside the garden's limits (no tier starves another). */
 export const twigShare = (trees: number): TwigLimit => ({
   segments: Math.floor(MAX_TWIG_SEGMENTS / Math.max(1, trees)),
@@ -44,7 +44,7 @@ export type ColonyParams = {
   kill: number;
   maxSegments: number;
 };
-export type Colony = {
+type Colony = {
   /** The roots first, then every grown node in the order it appeared. */
   nodes: Vec3[];
   /** The node each one grew from (-1 for a root). */

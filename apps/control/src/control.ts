@@ -3,13 +3,8 @@ import { randomUUID } from 'node:crypto';
 import { realpathSync } from 'node:fs';
 import {
   commandSchema,
-  agentSchema,
-  workSchema,
   projectSchema,
-  messageSchema,
-  deliverySchema,
   eventSchema,
-  layoutSchema,
   type OfficeEvent,
   type Snapshot,
   type Mode,
@@ -18,7 +13,7 @@ import { authorize, assertVersion, DomainError, type Actor } from '@aether/kerne
 import { validateLayout } from '@aether/kernel';
 import { connect } from './db/connection.js';
 import { insertRow, selectAll, selectIn, selectOne, updateRows } from './db/query.js';
-import { projects, agents, work, dependencies, messages, knowledge } from './db/schema.js';
+import { projects, agents, knowledge } from './db/schema.js';
 import { hash, secret, authenticate, createIdentity, identityActor } from './services/identity.js';
 import { agent, emit, project, type Context } from './services/context.js';
 import { requestIntegration, requestJob } from './services/jobs.js';
@@ -34,6 +29,7 @@ import { skillCommand } from './services/skills.js';
 import { scheduleCommand } from './services/schedules.js';
 import { addReviewComment } from './services/review-comments.js';
 import { reservationCommand } from './services/reservations.js';
+import { buildSnapshot, highWatermark } from './services/snapshot.js';
 import { terminalCommand } from './services/terminals.js';
 import { changeWork, createWork } from './services/work.js';
 import { acknowledge, getMessage, inbox, sendMessage, messageWaits } from './services/messages.js';
@@ -246,10 +242,10 @@ export class Control {
             result = requestJob(this.ctx, actor, c);
             break;
           case 'work.request_review':
-            result = requestReview(this.ctx, actor, c);
+            result = requestReview(this.ctx, c);
             break;
           case 'work.create':
-            result = createWork(this.ctx, actor, c);
+            result = createWork(this.ctx, c);
             break;
           case 'work.dependencies':
           case 'work.extend':
@@ -269,8 +265,10 @@ export class Control {
             break;
           case 'layout.save': {
             validateLayout(c.data.objects);
+            // A session AETHER only observes sits at a desk too (`local:` members are not registered agents).
             for (const object of c.data.objects)
-              if (object.agentId) agent(this.ctx, c.projectId, object.agentId);
+              if (object.agentId && !object.agentId.startsWith('local:'))
+                agent(this.ctx, c.projectId, object.agentId);
             const row = this.ctx.sqlite
               .prepare('SELECT version FROM layouts WHERE projectId=?')
               .get(c.projectId) as { version: number } | undefined;
@@ -382,75 +380,10 @@ export class Control {
     ).map((p) => projectSchema.parse(p));
   }
   snapshot(actor: Actor, projectId: string): Snapshot {
-    actor = this.identity(actor.id);
-    return this.ctx.sqlite
-      .transaction(() => {
-        const p = project(this.ctx, actor, projectId);
-        const seq = this.highWatermark(projectId);
-        const visible = selectAll(this.ctx.sqlite, messages, { projectId }).filter(
-          (m) =>
-            actor.role !== 'agent' ||
-            m.senderId === actor.agentId ||
-            !!this.ctx.sqlite
-              .prepare('SELECT 1 FROM recipient_deliveries WHERE messageId=? AND recipientId=?')
-              .get(m.id, actor.agentId),
-        );
-        const rows = visible.slice(-100).map((m) => ({
-          ...messageSchema.parse(m),
-          deliveries: (
-            this.ctx.sqlite
-              .prepare(
-                'SELECT CAST(sequence AS TEXT) AS sequence,messageId,recipientId,state,acknowledgedAt FROM recipient_deliveries WHERE messageId=?',
-              )
-              .all(m.id) as unknown[]
-          ).map((d) => deliverySchema.parse(d)),
-        }));
-        const layout = this.ctx.sqlite
-          .prepare('SELECT version,data FROM layouts WHERE projectId=?')
-          .get(projectId) as { version: number; data: string } | undefined;
-        return {
-          schemaVersion: 1 as const,
-          seq,
-          project: p,
-          agents: selectAll(this.ctx.sqlite, agents, { projectId }).map((a) =>
-            agentSchema.parse(a),
-          ),
-          work: selectAll(this.ctx.sqlite, work, { projectId }).map((w) => workSchema.parse(w)),
-          dependencies: selectAll(this.ctx.sqlite, dependencies, { projectId }),
-          messages: rows,
-          layout: layout
-            ? { version: layout.version, data: layoutSchema.parse(JSON.parse(layout.data)) }
-            : null,
-          runner: (
-            this.ctx.sqlite
-              .prepare(
-                'SELECT id,name,lastSeen,state,projectIds FROM machines WHERE revokedAt IS NULL',
-              )
-              .all() as {
-              id: string;
-              name: string;
-              lastSeen: number;
-              state: string;
-              projectIds: string;
-            }[]
-          )
-            .filter((m) => (JSON.parse(m.projectIds) as string[]).includes(projectId))
-            .map((m) => ({
-              id: m.id,
-              name: m.name,
-              lastSeen: m.lastSeen,
-              state: this.ctx.now() - m.lastSeen > 15000 ? 'offline' : m.state,
-            })),
-        };
-      })
-      .deferred();
+    return buildSnapshot(this.ctx, this.identity(actor.id), projectId);
   }
   highWatermark(projectId: string): string {
-    return (
-      this.ctx.sqlite
-        .prepare('SELECT CAST(COALESCE(MAX(seq),0) AS TEXT) AS seq FROM events WHERE projectId=?')
-        .get(projectId) as { seq: string }
-    ).seq;
+    return highWatermark(this.ctx, projectId);
   }
   events(actor: Actor, projectId: string, after: string, limit = 200): OfficeEvent[] {
     actor = this.identity(actor.id);

@@ -126,7 +126,7 @@ export function tickSchedules(ctx: Context): number {
             const actor = identityActor(ctx, row.createdBy);
             const template = JSON.parse(row.template) as Schedule['template'];
             const key = `schedule:${row.id}:${decision.occurrence}`;
-            const work = createWork(ctx, actor, {
+            const work = createWork(ctx, {
               schemaVersion: 1,
               type: 'work.create',
               projectId: row.projectId,

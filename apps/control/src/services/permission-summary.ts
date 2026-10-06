@@ -1,7 +1,7 @@
 import { redactSecrets, redactStructured } from './redaction.js';
 
-export const SUMMARY_CHARS = 140;
-export const PREVIEW_CHARS = 1200;
+const SUMMARY_CHARS = 140;
+const PREVIEW_CHARS = 1200;
 
 const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);

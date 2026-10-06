@@ -19,7 +19,17 @@ test('the opt-in perf probe reports measured frame times with the renderer that 
     () => (window as unknown as { __aetherPerf: unknown }).__aetherPerf,
   );
   expect(report).toMatchObject({ stats: { frames: 120 }, quality: expect.any(String) });
-  expect((report as { stats: { medianMs: number } }).stats.medianMs).toBeGreaterThan(0);
+  const measured = report as {
+    stats: { medianMs: number; p99Ms: number };
+    programs: number;
+    gpuMegabytes: number;
+    jsMs: { median: number };
+  };
+  expect(measured.stats.medianMs).toBeGreaterThan(0);
+  expect(measured.stats.p99Ms).toBeGreaterThanOrEqual(measured.stats.medianMs);
+  expect(measured.programs).toBeGreaterThan(0);
+  expect(measured.gpuMegabytes).toBeGreaterThan(0);
+  expect(measured.jsMs.median).toBeGreaterThan(0);
   mkdirSync('evidence', { recursive: true });
   writeFileSync(
     'evidence/perf-report.json',

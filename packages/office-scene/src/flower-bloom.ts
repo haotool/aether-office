@@ -27,8 +27,7 @@ export type Bloom = {
 };
 
 /** A part's `order` (how late in the bloom it appears), 0 to 1 within the flower's own share of the bloom. */
-export const orderOf = (bloom: Bloom, x: number) =>
-  (bloom.after ?? 0) + (1 - (bloom.after ?? 0)) * x;
+const orderOf = (bloom: Bloom, x: number) => (bloom.after ?? 0) + (1 - (bloom.after ?? 0)) * x;
 
 const pale = (c: THREE.Color) => c.clone().lerp(new THREE.Color('#ffffff'), 0.7);
 

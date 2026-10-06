@@ -122,6 +122,14 @@ export const deliverySchema = z.object({
   state: deliveryStateSchema,
   acknowledgedAt: z.number().nullable(),
 });
+/** Who sits at a desk: an agent AETHER manages, or a session it only observes (`local:` and the session's key; a subagent never has a desk of its own). */
+const seatedSchema = z.union([
+  id,
+  z
+    .string()
+    .regex(/^local:[A-Za-z0-9._:-]{1,190}$/)
+    .refine((value) => !value.includes(':sub:')),
+]);
 export const furnitureSchema = z
   .object({
     id: shortText,
@@ -129,7 +137,7 @@ export const furnitureSchema = z
     x: z.number().finite().min(-24).max(24),
     z: z.number().finite().min(-16).max(16),
     rotation: z.number().int().min(0).max(3),
-    agentId: id.nullable().default(null),
+    agentId: seatedSchema.nullable().default(null),
     // The building has one floor per department (0 = Product Engineering). Layouts saved before floors existed are floor 0.
     floor: z.number().int().min(0).max(4).default(0),
   })

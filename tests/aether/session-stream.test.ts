@@ -229,3 +229,25 @@ it('answers the heavy reads with an ETag and a 304 for an unchanged answer, and 
   expect((await get('/api/capabilities')).headers['etag']).toBeUndefined();
   expect((await get('/api/capabilities')).headers['cache-control']).toBe('no-store');
 });
+
+it('says hello only after the baseline scan, so what a page reads next is not older than the baseline', async () => {
+  const s = await start();
+  const read = async () =>
+    (
+      (await (
+        await fetch(`${BASE}/api/local-sessions`, {
+          headers: { authorization: `Bearer ${s.f.owner.token}` },
+        })
+      ).json()) as { sessions: unknown[] }
+    ).sessions.length;
+  expect(await read()).toBe(1); // warms the page's 5 s cache
+  await writeFile(
+    join(s.home, '.claude/projects/-p/sess-2.jsonl'),
+    line({ type: 'user', cwd: s.home, message: { role: 'user', content: 'new' } }),
+  );
+  await new Promise((r) => setTimeout(r, 80)); // older than the stream's own scan window
+  const stream = await s.open();
+  await stream.until((t) => t.includes('event: hello'));
+  expect(await read()).toBe(2); // a session that appeared before the baseline is in what the page reads after hello
+  stream.abort.abort();
+});

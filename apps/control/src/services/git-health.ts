@@ -192,7 +192,7 @@ export async function worktreeSizes(
   return { sizes: Object.fromEntries(sized) };
 }
 
-export type CleanResult = { path: string; outcome: 'removed' | 'skipped'; reason?: string };
+type CleanResult = { path: string; outcome: 'removed' | 'skipped'; reason?: string };
 
 /**
  * Removes worktrees that are merged into the default branch and have nothing uncommitted. Safety, in order:

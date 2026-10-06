@@ -94,6 +94,77 @@
   vertical-align: bottom;
 }
 
+/* The provider's mark on a name tag and in the panel: its own color, from tokens. Close up, or on a selected or hovered tag, it shows. */
+.provider-mark {
+  flex: none;
+}
+.provider-mark[data-provider='claude'] {
+  color: var(--provider-claude);
+}
+.provider-mark[data-provider='codex'] {
+  color: var(--provider-codex);
+}
+.scene-label .provider-mark {
+  display: none;
+}
+.scene-label[data-near='1'] .provider-mark,
+.scene-label.selected .provider-mark,
+.scene-label.hovered .provider-mark {
+  display: block;
+}
+.scene-label .provider-mark[data-provider='codex'] {
+  color: var(--on-glass);
+}
+/* The share of the context window in use, on a hovered or selected tag: calm, warm, hot (the scene's own gauge steps). */
+.label-ctx {
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+.label-ctx[data-level='calm'] {
+  color: var(--mint);
+}
+.label-ctx[data-level='warm'] {
+  color: var(--gold);
+}
+.label-ctx[data-level='hot'] {
+  color: var(--red);
+}
+/* "compacted -31%" over a member's head while its context is being tidied; the scene places it, this fades it in and out. */
+.compact-chip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin-top: var(--space-32); /* just under the name tag, which it is anchored with */
+  visibility: hidden; /* shown once the scene has placed it */
+  padding: var(--space-2) var(--space-8);
+  border: 1px solid var(--glass-accent-line);
+  border-radius: var(--r-pill);
+  background: var(--glass-strong);
+  color: var(--on-glass-accent);
+  font-size: var(--fs-label);
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: chip-life 3s var(--ease) forwards;
+}
+@keyframes chip-life {
+  0% {
+    opacity: 0;
+    translate: 0 var(--space-8);
+  }
+  10%,
+  80% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 calc(var(--space-8) * -1);
+  }
+}
+/* With reduced motion the global rule removes the animation: the chip simply stays until the scene drops it. */
+
 /* A commit on the beanstalk: a glass card by the pointer that never takes it, so the camera keeps orbiting under it. */
 .stalk-tip {
   position: absolute;

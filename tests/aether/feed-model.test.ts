@@ -6,9 +6,9 @@ import {
   buildFeed,
   feedItems,
   mostUrgent,
-  plainText,
   type Speech,
 } from '../../apps/web/src/features/feed-model.js';
+import { toPlainPreview } from '../../packages/kernel/src/index.js';
 import { parseMarkdown } from '../../apps/web/src/features/md-parse.js';
 import { parseSeen, withSeen } from '../../apps/web/src/features/session-seen.js';
 
@@ -28,11 +28,13 @@ function session(key: string, over: Partial<AttributedSession> = {}): Attributed
     hook: null,
     subagents: [],
     title: null,
-    classification: { role: 'engineer', department: 'build', basis: 'default', matched: null },
+    classification: { role: 'engineer', department: 'build', confidence: 0, evidence: [] },
     usage: {
       model: null,
       contextTokens: null,
       contextWindow: null,
+      contextPct: null,
+      compactedAt: null,
       freshTokens: null,
       limit: null,
     },
@@ -115,10 +117,10 @@ it('shows the newest reply as plain text and the title and place of each session
       },
     }),
   );
-  expect(item!.reply).toBe('Done fixed login.ts x');
+  expect(item!.reply).toBe('Done · fixed login.ts · ‹x›');
   expect(item!.label).toBe('Fix login');
   expect(item!.where).toBe('aether · main');
-  expect(plainText('see [the docs](https://x.y) now')).toBe('see the docs now');
+  expect(toPlainPreview('see [the docs](https://x.y) now')).toBe('see the docs now');
 });
 
 it('says how long ago in both languages', () => {
@@ -157,17 +159,23 @@ it('parses the Markdown an agent writes into data, never into HTML', () => {
   const [intro, bullets, numbered, , code, html] = blocks;
   expect(intro).toMatchObject({
     inline: [
-      { type: 'text' },
-      { type: 'code', text: 'code' },
-      { type: 'text' },
-      { type: 'bold', text: 'bold' },
-      { type: 'text' },
-      { type: 'italic', text: 'soft' },
-      { type: 'text' },
+      { text: 'Intro with ' },
+      { text: 'code', code: true },
+      { text: ' and ' },
+      { text: 'bold', bold: true },
+      { text: ' and ' },
+      { text: 'soft', italic: true },
+      { text: '.' },
     ],
   });
-  expect(bullets).toMatchObject({ ordered: false, items: [[{ text: 'one' }], [{ text: 'two' }]] });
+  expect(bullets).toMatchObject({
+    ordered: false,
+    items: [
+      { blocks: [{ inline: [{ text: 'one' }] }] },
+      { blocks: [{ inline: [{ text: 'two' }] }] },
+    ],
+  });
   expect(numbered).toMatchObject({ ordered: true });
   expect(code).toEqual({ type: 'code', text: 'ls -la\n\nmore', lang: 'sh' });
-  expect(html).toMatchObject({ inline: [{ type: 'text', text: '<script>alert(1)</script>' }] });
+  expect(html).toMatchObject({ inline: [{ text: '<script>alert(1)</script>' }] });
 });

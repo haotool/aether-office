@@ -5,7 +5,7 @@ import { redactSecrets } from './redaction.js';
 const run = promisify(execFile);
 const SEP = '\x1f';
 
-export type GraphCommit = {
+type GraphCommit = {
   sha: string;
   parents: string[];
   refs: string[];

@@ -1,4 +1,5 @@
 import type { Agent, AttributedSession } from '@aether/contracts';
+import { toPlainPreview } from '@aether/kernel';
 import { LOCAL_PREFIX, activityOf, formatSpan } from '../localSessions.js';
 import { sessionWaiting } from './needs-you.js';
 
@@ -9,7 +10,7 @@ import { sessionWaiting } from './needs-you.js';
 export type Utterance = { text: string; at: number | null };
 export type Speech = { user: Utterance | null; assistant: Utterance | null };
 export type FeedBucket = 'needs' | 'working' | 'finished' | 'idle';
-export const BUCKETS: readonly FeedBucket[] = ['needs', 'working', 'finished', 'idle'];
+const BUCKETS: readonly FeedBucket[] = ['needs', 'working', 'finished', 'idle'];
 
 export type FeedItem = {
   key: string;
@@ -34,21 +35,12 @@ export type FeedItem = {
 export type Feed = Record<FeedBucket, FeedItem[]>;
 
 /** A session that finished this recently still counts as news; older ones are just idle. */
-export const FINISHED_MS = 30 * 60 * 1000;
+const FINISHED_MS = 30 * 60 * 1000;
 /** Idle this long and a row fades. */
 export const STALE_MS = 2 * 60 * 60 * 1000;
 export const MAX_IDLE_ROWS = 30;
-
-/** A reply as a line of prose: markup that only makes sense rendered (fences, headings, emphasis) is dropped. */
-export function plainText(markdown: string): string {
-  return markdown
-    .replace(/```[^\n]*\n?/g, '')
-    .replace(/^\s{0,3}(#{1,6}|[-*+>]|\d+\.)\s+/gm, '')
-    .replace(/(\*+|`)/g, '')
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
+/** A reply is previewed in a line or two: this many characters is more than any row shows. */
+const REPLY_CHARS = 200;
 
 /** "3 分鐘前", "2 min ago", "剛剛": when something last happened. */
 export function ago(ms: number, locale: 'zh-TW' | 'en'): string {
@@ -90,7 +82,7 @@ export function buildFeed({
         : now - at < FINISHED_MS
           ? 'finished'
           : 'idle';
-    const last = session.hook?.recent.at(-1);
+    const last = session.hook?.recent?.at(-1);
     const tool =
       bucket === 'working' || bucket === 'needs'
         ? (session.hook?.tool ?? last?.tool ?? null)
@@ -104,7 +96,7 @@ export function buildFeed({
       bucket,
       label: session.title ?? session.repo,
       where: [session.title ? session.repo : null, branch].filter(Boolean).join(' · '),
-      reply: said ? plainText(said.text) || null : null,
+      reply: said ? toPlainPreview(said.text, { maxChars: REPLY_CHARS }) || null : null,
       tool: tool ? (target ? `${tool} ${target}` : tool) : null,
       reason: !waiting
         ? null

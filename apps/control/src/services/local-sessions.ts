@@ -7,7 +7,6 @@ import { basename, dirname, join } from 'node:path';
 import { assignProcesses, listAgentProcesses } from './agent-processes.js';
 import { classifyLiveness, CpuWatch } from './session-liveness.js';
 import { readHookState } from './hook-spool.js';
-import { classifySession } from '@aether/kernel';
 import { readClaudeTitle, readCodexTitles } from './session-title.js';
 import { mapPool } from './pool.js';
 import {
@@ -18,7 +17,11 @@ import {
   type Raw,
 } from './session-discovery.js';
 import { readTopic, topicTitle } from './session-topic.js';
+import { windowsOf, withContext } from './session-context.js';
 import { readUsage } from './session-usage.js';
+import { readActions } from './session-work.js';
+import { resetRoles, roleOf } from './session-role.js';
+import { detectModels } from '@aether/providers/models';
 import type { AttributedSession, LocalSession } from '@aether/contracts';
 
 // Read-only discovery of local Claude Code / Codex sessions. Metadata only: id, cwd, mtime.
@@ -164,11 +167,14 @@ export async function scanLocalSessions(
   const infos = await mapPool(repos, GIT_BATCH, async (c) => [c, await repoInfo(c, now)] as const);
   const hooks = await readHookState(spoolFile, now);
   // Each transcript is read through a buffer of a few hundred KB to a few MB: a few at a time, not all sixty.
+  // The model catalogs say how big each model's window is (remembered for a short time, never fatal when missing).
+  const windows = windowsOf(await detectModels().catch(() => []));
   const usages = new Map(
     await mapPool(
       raw,
       READ_WIDTH,
-      async (r) => [r.file, await readUsage(r.provider, r.file)] as const,
+      async (r) =>
+        [r.file, withContext(r.provider, await readUsage(r.provider, r.file), windows)] as const,
     ),
   );
   const codexTitles = await readCodexTitles(home);
@@ -190,6 +196,13 @@ export async function scanLocalSessions(
       raw,
       READ_WIDTH,
       async (r) => [r.file, await readTopic(r.provider, r.file)] as const,
+    ),
+  );
+  const works = new Map(
+    await mapPool(
+      raw,
+      READ_WIDTH,
+      async (r) => [r.file, await readActions(r.provider, r.file)] as const,
     ),
   );
   const states = new Map(infos);
@@ -220,12 +233,19 @@ export async function scanLocalSessions(
       title:
         titles.get(r.file) ??
         (r.provider === 'codex' ? topicTitle(topics.get(r.file) ?? null) : null),
-      classification: classifySession({
-        title: titles.get(r.file) ?? null,
-        prompt: topics.get(r.file) ?? null,
-        branch: info?.git?.branch ?? null,
-        repo: info?.worktree?.project ?? basename(r.cwd),
-      }),
+      classification: roleOf(
+        key,
+        {
+          title: titles.get(r.file) ?? null,
+          prompt: topics.get(r.file) ?? null,
+          branch: info?.git?.branch ?? null,
+          repo: info?.worktree?.project ?? basename(r.cwd),
+          subagents: [...(hook?.subagents ?? []), ...(r.children ?? [])].map((c) => c.type),
+          transcript: works.get(r.file) ?? [],
+          hook: (hook?.recent ?? []).map(({ tool, target }) => ({ tool, target })),
+        },
+        now,
+      ),
       usage: usages.get(r.file)!,
       process: running?.get(key)?.state ?? 'unknown',
       liveness: classifyLiveness({
@@ -262,6 +282,7 @@ export const resetLocalSessionCache = () => {
   identities.clear();
   statuses.clear();
   resetDiscoveryCache();
+  resetRoles();
 };
 
 const canonical = (path: string) => {

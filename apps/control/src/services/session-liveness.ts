@@ -5,7 +5,7 @@ import type { AgentProcess, Zombie } from './agent-processes.js';
  * process there at all, and is anything happening in it. A process can be alive and idle for a day; that is a different
  * thing from an orphan nobody owns or a zombie nobody collected, and each calls for something different from the owner.
  */
-export type LivenessState =
+type LivenessState =
   | 'active' // work seen in the last couple of minutes
   | 'idle' // alive, quiet for a while: waiting for its person
   | 'dormant' // alive, quiet for hours: probably forgotten

@@ -22,9 +22,16 @@ English · [繁體中文](README.zh-TW.md)
 - **Sees your agents without setup.** Local Claude Code and Codex sessions are discovered read-only and appear as
   animal characters, placed on a floor and desk by the engineering role their work belongs to. Optional hooks add exact
   activity (working, waiting for approval) and subagent attribution.
-- **A 3D office that explains itself.** A camera director cuts to who is talking, waiting, in error or working; messages
-  and subagents are drawn between desks; a sleeping rabbit, a ghost and a jiangshi mark dormant, orphaned and zombie
-  sessions, with one-tap actions to stop or reap them.
+- **A 3D office that explains itself.** A camera director cuts to who is talking, waiting, in error or working, and a
+  control-room wall follows the other busy members; messages and subagents are drawn between desks, context use and
+  compaction beside each monitor, and the repository grows through the building as braided branches under a flowering
+  crown. A sleeping rabbit, a ghost and a jiangshi mark dormant, orphaned and zombie sessions.
+- **Act on a character directly.** Click one for its action menu: open the conversation, follow it, pin it to the wall,
+  message it, continue or fork it in AETHER, stop it or send it home with the others that have been idle for days. Alt +
+  drag moves a desk.
+- **A live session panel.** One feed of every session (needs you, working, finished, idle), the conversation of the one
+  you pick, a composer for sessions that run in an AETHER terminal and, if you opt in, Claude Code permission prompts
+  answered from the panel or a phone. Updates arrive over a change stream instead of polling.
 - **A full 2D workbench.** Local sessions, approvals, terminals, history and a Git graph and health view by default; turn on
   Advanced in Settings for tasks (list, board, dependency graph), messages and rooms, reviews, knowledge, schedules and more.
   It adapts to phones, tablets and desktops, and alerts you (project name only) when a session needs you.
@@ -52,14 +59,17 @@ phone, hooks and native execution.
 
 | Document                                                 | Contents                                                          |
 | -------------------------------------------------------- | ----------------------------------------------------------------- |
-| [Getting started](docs/getting-started.md)               | Install, demo and live modes, phone access, hooks                 |
+| [Getting started](docs/getting-started.md)               | Install, demo and live modes, phone access, hooks, upgrading      |
+| [Feature notes](docs/features.md)                        | How navigation, the office, the panel and approvals behave        |
 | [Architecture](docs/architecture.md)                     | Components, data flow, modules and their boundaries               |
 | [Configuration](docs/configuration.md)                   | Environment variables and the local native-execution file         |
 | [Native execution](docs/native-execution.md)             | Runner, worktrees, approvals, PTY, observation, process lifecycle |
+| [Session roles](docs/roles.md)                           | How a session is placed on a floor: signals, evidence, accuracy   |
 | [Security](docs/security.md)                             | Threat model, trust boundaries, safety properties                 |
 | [Design system](docs/design-system.md)                   | UI tokens, components, responsive and accessibility rules         |
 | [Development](docs/development.md)                       | Repository layout, checks, testing, the animals pipeline          |
 | [Provider compatibility](docs/provider-compatibility.md) | Verified Claude Code and Codex releases, ACP and A2A versions     |
+| [Dependencies](docs/dependencies.md)                     | Notable dependency choices and supply-chain controls              |
 | [Verification ledger](docs/verification/report.md)       | Per-capability implementation and verification status             |
 | [Architecture decisions](docs/adr)                       | Why the project is built the way it is                            |
 

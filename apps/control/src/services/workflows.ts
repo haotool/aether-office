@@ -16,7 +16,7 @@ export function startWorkflow(ctx: Context, actor: Actor, c: Start): Workflow {
     .run(workflowId, c.projectId, c.data.template, c.data.title, actor.id, ctx.now());
   const ids: string[] = [];
   plan.forEach((step, position) => {
-    const work = createWork(ctx, actor, {
+    const work = createWork(ctx, {
       schemaVersion: 1,
       type: 'work.create',
       projectId: c.projectId,

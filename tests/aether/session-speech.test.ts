@@ -70,6 +70,28 @@ it('cuts long text on a character boundary and re-reads only when the file chang
   expect((await readSpeech('claude', file)).assistant?.text).toBe('two');
 });
 
+it('never cuts a reply inside a Markdown construct, and redacts before it cuts', async () => {
+  const long = `${'word '.repeat(70)}**${'bold '.repeat(20)}end** and \`code\`\n\`\`\`sh\n${'ls -la\n'.repeat(60)}\`\`\``;
+  const file = await transcript(
+    reply(`api_key=SECRETVALUE ${long}`) +
+      reply(`${'x'.repeat(390)} [docs](https://example.com/a/b)`),
+  );
+  const first = await readSpeech('claude', file);
+  expect(first.assistant?.text).toMatch(/…$/);
+  expect(first.assistant?.text).not.toContain('SECRETVALUE');
+  expect(first.assistant?.text).toMatch(/\*\*$|…`$|…$/);
+  const text = first.assistant!.text;
+  expect((text.match(/\*\*/g) ?? []).length % 2).toBe(0);
+  expect((text.match(/```/g) ?? []).length % 2).toBe(0);
+  // The second reply is the latest: its link is cut inside the address, so only its label survives.
+  await appendFile(
+    file,
+    reply(`${'y'.repeat(385)} [the docs](https://example.com/very/long/address)`),
+  );
+  const cut = (await readSpeech('claude', file)).assistant!.text;
+  expect(cut).not.toMatch(/\]\(|https:\/\/example\.com\/very/);
+});
+
 it('speaks only for running sessions the scanner found', async () => {
   const home = await mkdtemp(join(tmpdir(), 'aether-speech-home-'));
   const dir = join(home, '.claude/projects/-p');

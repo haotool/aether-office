@@ -324,14 +324,34 @@ export { TEMPLATES, isTemplate, type StepPlan, type WorkflowTemplate } from './w
 export {
   DEPARTMENTS,
   ROLE_LABELS,
-  classifySession,
-  type Classification,
   type Department,
   type DepartmentId,
   type RoleId,
 } from './departments.js';
 export {
+  classifySession,
+  scoreSession,
+  settle,
+  roleOfSubagent,
+  type ToolCall,
+  type Classification,
+  type ClassifyInput,
+  type Scored,
+  type Settled,
+} from './classify-session.js';
+export {
   plainTerminalLines,
   terminalAgentState,
   type TerminalAgentState,
 } from './terminal-state.js';
+export { safeHref, parseInline, spansText, type Span } from './markdown-inline.js';
+export { parseMarkdown, type Align, type ListItem, type MdBlock } from './markdown-blocks.js';
+export {
+  toPlainPreview,
+  toInlineSegments,
+  type PreviewKind,
+  type PreviewLine,
+  type PreviewOptions,
+} from './markdown-preview.js';
+export { cutMarkdown, graphemes } from './markdown-cut.js';
+export { countWords, revealWords, splitWords } from './markdown-words.js';

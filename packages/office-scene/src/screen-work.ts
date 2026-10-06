@@ -2,7 +2,7 @@
 export type ToolCall = { tool: string; target: string | null };
 
 /** What kind of work a tool call is, which decides how its row is drawn on a screen. */
-export type WorkKind = 'edit' | 'read' | 'shell' | 'git' | 'test' | 'search' | 'web' | 'other';
+type WorkKind = 'edit' | 'read' | 'shell' | 'git' | 'test' | 'search' | 'web' | 'other';
 
 const EDIT = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit', 'apply_patch']);
 const SHELL = new Set(['Bash', 'shell', 'exec_command', 'local_shell']);
@@ -19,13 +19,6 @@ export function kindOf({ tool, target }: ToolCall): WorkKind {
   }
   if (SEARCH.has(tool)) return 'search';
   return WEB.has(tool) ? 'web' : 'other';
-}
-
-/** A stable number from a name, so the same call always draws the same bars. */
-export function hashOf(text: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
-  return h >>> 0;
 }
 
 /** "7s", "3m", "2h": how long ago, whole units, from milliseconds. */

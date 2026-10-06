@@ -6,7 +6,7 @@ import type { Snapshot, Work } from '@aether/contracts';
 import { api, execute } from '../api.js';
 import { PageHeading, Empty, Badge, useT } from '../ui.js';
 import { Reservations } from './Reservations.js';
-export type WorkspaceData = {
+type WorkspaceData = {
   workspaces: {
     id: string;
     workId: string;

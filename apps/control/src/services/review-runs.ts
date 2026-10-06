@@ -1,13 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import type { Command } from '@aether/contracts';
-import { assertVersion, DomainError, type Actor } from '@aether/kernel';
+import { assertVersion, DomainError } from '@aether/kernel';
 import { task, agent, type Context } from './context.js';
 import { stepConstraint } from './workflows.js';
-export function requestReview(
-  ctx: Context,
-  actor: Actor,
-  c: Extract<Command, { type: 'work.request_review' }>,
-) {
+export function requestReview(ctx: Context, c: Extract<Command, { type: 'work.request_review' }>) {
   const work = task(ctx, c.projectId, c.data.workId);
   assertVersion(work.version, c.expectedVersion);
   if (work.state !== 'reviewing' || !work.headSha || work.reviewBy)

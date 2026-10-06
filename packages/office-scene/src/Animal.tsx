@@ -8,11 +8,14 @@ import {
   SkinnedMesh,
   type AnimationAction,
   type AnimationClip,
+  Vector3,
+  type Group,
   type Object3D,
 } from 'three';
 import type { Agent } from '@aether/contracts';
 import { acquireAnimal } from './animal-assets.js';
 import { Zzz } from './Zzz.js';
+import { animationInterval } from './perf-control.js';
 import {
   APPARITION_CLIP,
   APPARITION_MODEL,
@@ -27,9 +30,21 @@ import {
 } from './animal-states.js';
 const FADE_SECONDS = 0.35;
 type Model = { scene: Object3D; clips: AnimationClip[]; url: string };
+/** The ring on the floor under a character: chosen (cyan), hovered (white) or part of a group selection (gold). */
+export type Ring = 'selected' | 'hover' | 'group';
+const RING_COLOR: Record<Ring, string> = {
+  selected: '#67d3d0',
+  hover: '#ffffff',
+  group: '#ffc65c',
+};
+/** A reaction the person asked for: the clip plays once over what the member is doing; a new `key` plays it again. */
+export type EmoteCue = { clip: ClipName; key: number };
+
 export function Animal({
   agent,
   selected,
+  ring = selected ? 'selected' : null,
+  emote,
   reducedMotion,
   quality,
   apparition,
@@ -47,16 +62,21 @@ export function Animal({
   /** A phone: smaller models and textures (the selected one a step down, the rest the smallest). */
   light?: boolean;
   selected: boolean;
+  ring?: Ring | null;
+  emote?: EmoteCue | undefined;
   reducedMotion: boolean;
   quality: 'low' | 'balanced' | 'high';
   onError: () => void;
 }) {
-  const lod = quality === 'low' ? 2 : selected ? (light ? 1 : 0) : light ? 2 : 1;
+  const lod = quality === 'low' ? 2 : ring ? (light ? 1 : 0) : light ? 2 : 1;
   const species = apparition ? APPARITION_MODEL[apparition] : agent.species;
   const url = `/assets/animals/${species}-lod${lod}.glb`;
   const [model, setModel] = useState<Model | null>(null);
   const mixer = useRef<AnimationMixer | null>(null);
   const invalidate = useThree((s) => s.invalidate);
+  const gl = useThree((s) => s.gl);
+  const stage = useThree((s) => s.scene);
+  const camera = useThree((s) => s.camera);
   const fail = useEffectEvent(onError);
   // One-shots (a gesture, a cheer, a greeting) play over the base clip of the activity, then hand back to it.
   const [oneShot, setOneShot] = useState<ClipName | null>(null);
@@ -78,6 +98,12 @@ export function Animal({
   useEffect(() => {
     if (selected) greet();
   }, [selected]);
+  const react = useEffectEvent((cue: EmoteCue) => {
+    if (!reducedMotion && !held && model) setOneShot(cue.clip);
+  });
+  useEffect(() => {
+    if (emote) react(emote);
+  }, [emote?.key]); // eslint-disable-line react-hooks/exhaustive-deps -- one reaction per request, not per render
   useEffect(() => {
     if (!model || reducedMotion || held || oneShot || !fidgetFor(agent.activity, agent.id, 0))
       return;
@@ -97,8 +123,11 @@ export function Animal({
     let instance: Model | null = null;
     void asset
       .load()
-      .then((loaded) => {
+      .then(async (loaded) => {
         if (!loaded || disposed) return;
+        // Link the character's shaders in parallel before it appears, so its first frame does not stall on them.
+        await gl.compileAsync(loaded.scene, camera, stage).catch(() => undefined);
+        if (disposed) return;
         instance = { ...loaded, url };
         loaded.scene.traverse((node) => {
           if (node instanceof SkinnedMesh) {
@@ -129,7 +158,7 @@ export function Animal({
       current.current = null;
       asset.release();
     };
-  }, [url, species, light, invalidate]);
+  }, [url, species, light, invalidate, gl, camera, stage]);
   useEffect(() => {
     if (!model || model.url !== url || !mixer.current) return;
     const animation = model.clips.find((action) => action.name === clip);
@@ -156,22 +185,35 @@ export function Animal({
     current.current = next;
     invalidate();
   }, [model, url, clip, oneShot, apparition, override, reducedMotion, agent.id, invalidate]);
-  useFrame((_state, delta) => {
-    if (mixer.current && !reducedMotion && !document.hidden)
-      mixer.current.update(Math.min(delta, 0.05) * pace);
+  // Far members are updated at a lower rate (see animationInterval); the time they skipped is applied in one step.
+  const root = useRef<Group>(null);
+  const here = useRef(new Vector3());
+  const owed = useRef(0);
+  useFrame(({ camera }, delta) => {
+    if (!mixer.current || reducedMotion || document.hidden) return;
+    owed.current += Math.min(delta, 0.05);
+    const interval =
+      selected || !root.current
+        ? 0
+        : animationInterval(
+            camera.position.distanceTo(root.current.getWorldPosition(here.current)),
+          );
+    if (owed.current < interval) return;
+    mixer.current.update(owed.current * pace);
+    owed.current = 0;
   });
   // Where each apparition stands: a ghost floats just over its seat, a jiangshi stands behind the chair, a sleeping
   // rabbit sits where the member does.
   const offset: [number, number, number] =
     apparition === 'ghost' ? [0, 0.18, 0] : apparition === 'zombie' ? [0, 0, 0.95] : [0, 0, 0];
   return (
-    <group position={offset}>
+    <group ref={root} position={offset}>
       <group rotation={[0, Math.PI, 0]}>
         {model?.url === url && <primitive object={model.scene} dispose={null} />}
-        {selected && (
+        {ring && (
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.04, 0]}>
-            <ringGeometry args={[0.46, 0.5, 40]} />
-            <meshBasicMaterial color="#67d3d0" />
+            <ringGeometry args={ring === 'hover' ? [0.44, 0.52, 40] : [0.46, 0.5, 40]} />
+            <meshBasicMaterial color={RING_COLOR[ring]} />
           </mesh>
         )}
       </group>

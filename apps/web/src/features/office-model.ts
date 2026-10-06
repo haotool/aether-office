@@ -1,6 +1,7 @@
 import type { Agent, LocalSessionsResponse, Snapshot } from '@aether/contracts';
 import type { Pulse, ScreenFacts } from '@aether/office-scene/model';
 import { intensityOf, type Intensity } from './activity-rate.js';
+import type { ContextReading } from './compaction.js';
 import { stillGone } from './clock-out.js';
 import {
   LOCAL_PREFIX,
@@ -21,7 +22,7 @@ type Sessions = LocalSessionsResponse['sessions'];
 const SUBAGENT_LIVE_MS = 20_000;
 
 /** Messages and subagent work, as the exchanges the camera can cut to and the scene can draw. */
-export function pulsesOf(data: Snapshot | undefined, sessions: Sessions, now: number): Pulse[] {
+function pulsesOf(data: Snapshot | undefined, sessions: Sessions, now: number): Pulse[] {
   const messages = (data?.messages ?? []).flatMap((m) =>
     m.deliveries.map((d) => ({
       id: `${m.id}:${d.recipientId}`,
@@ -45,8 +46,18 @@ export function pulsesOf(data: Snapshot | undefined, sessions: Sessions, now: nu
   return [...messages, ...subagents];
 }
 
+/** Each live subagent with its parent session's member: the office draws a faint tether between them. */
+function tethersOf(sessions: Sessions): { parent: string; child: string }[] {
+  return sessions.flatMap((s) =>
+    s.subagents.map((c) => ({
+      parent: `${LOCAL_PREFIX}${s.key}`,
+      child: `${LOCAL_PREFIX}${s.key}${SUBAGENT_INFIX}${c.id}`,
+    })),
+  );
+}
+
 /** What each observed member is doing right now, in a word: the tool its last hook named, or the state it waits in. */
-export function doingOf(sessions: Sessions, zh: boolean): Record<string, string> {
+function doingOf(sessions: Sessions, zh: boolean): Record<string, string> {
   const out: Record<string, string> = {};
   for (const s of sessions) {
     const id = `${LOCAL_PREFIX}${s.key}`;
@@ -63,7 +74,7 @@ export function screensOf(sessions: Sessions, now: number): Record<string, Scree
   const out: Record<string, ScreenFacts> = {};
   for (const s of sessions) {
     const activity = activityOf(s, now);
-    const { contextTokens, contextWindow, model } = s.usage;
+    const { contextPct, model } = s.usage;
     out[`${LOCAL_PREFIX}${s.key}`] = {
       provider: s.provider,
       title: s.title,
@@ -73,8 +84,7 @@ export function screensOf(sessions: Sessions, now: number): Record<string, Scree
       behind: s.git?.behind ?? 0,
       uncommitted: s.git?.uncommitted ?? 0,
       model,
-      contextPercent:
-        contextTokens !== null && contextWindow ? (contextTokens / contextWindow) * 100 : null,
+      contextPercent: contextPct,
       state: ['working', 'idle', 'waiting_permission', 'offline'].includes(activity)
         ? (activity as ScreenFacts['state'])
         : 'unknown',
@@ -89,8 +99,22 @@ export function screensOf(sessions: Sessions, now: number): Record<string, Scree
   return out;
 }
 
+/** What the compaction detector watches in each observed member: the context in use and the CLI's own marker. */
+function contextsOf(sessions: Sessions): Record<string, ContextReading> {
+  return Object.fromEntries(
+    sessions.map((s) => [
+      `${LOCAL_PREFIX}${s.key}`,
+      {
+        used: s.usage.contextTokens,
+        window: s.usage.contextWindow,
+        compactedAt: s.usage.compactedAt,
+      },
+    ]),
+  );
+}
+
 /** How hard each observed member is working (see activity-rate.ts); subagents work at least at the base level. */
-export function intensitiesOf(
+function intensitiesOf(
   sessions: Sessions,
   beats: ReadonlyMap<string, number>,
   now: number,
@@ -138,7 +162,9 @@ export function officeModel(
     roleOf: roleResolver(all),
     branchOf: branchResolver(all),
     pulses: pulsesOf(data, all, Date.now()),
+    tethers: tethersOf(all),
     screens: screensOf(all, Date.now()),
+    contexts: contextsOf(all),
     intensity: intensitiesOf(all, beats, Date.now()),
     doing: doingOf(all, locale === 'zh-TW'),
     attention: attentionOf(all, locale),

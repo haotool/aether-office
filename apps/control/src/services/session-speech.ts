@@ -1,5 +1,6 @@
 import { stat } from 'node:fs/promises';
 import type { LocalSession } from '@aether/contracts';
+import { cutMarkdown } from '@aether/kernel';
 import { readEdge } from './file-edge.js';
 import { sessionFile } from './local-sessions.js';
 import { parseTranscript } from './session-transcript.js';
@@ -11,15 +12,14 @@ import { parseTranscript } from './session-transcript.js';
  */
 const TAIL_BYTES = 128 * 1024;
 const MAX_TEXT = 400;
-export const MAX_SPEECH_SESSIONS = 40;
+const MAX_SPEECH_SESSIONS = 40;
 
 export type Utterance = { text: string; at: number | null };
 export type Speech = { user: Utterance | null; assistant: Utterance | null };
 
-const cut = (text: string) => {
-  const chars = Array.from(text); // code points: never half of a surrogate pair
-  return chars.length > MAX_TEXT ? `${chars.slice(0, MAX_TEXT).join('')}…` : text;
-};
+// Redaction has already happened (the transcript parser); the cut then keeps whole characters and closes any fence,
+// code span or emphasis it would leave open, so the page never has to show a half-written Markdown construct.
+const cut = (text: string) => cutMarkdown(text, MAX_TEXT);
 
 const cache = new Map<string, { mtimeMs: number; size: number; speech: Speech }>();
 export const resetSpeechCache = () => cache.clear();

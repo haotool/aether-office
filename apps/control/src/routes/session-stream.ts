@@ -89,6 +89,7 @@ export function sessionStreamRoutes({ app, actor, options, streams }: RouteConte
       streams.add(close);
       request.raw.on('close', close);
       reply.raw.on('close', close);
+      await subscription.ready; // a page that reads after "hello" never sees less than the baseline the changes are measured from
       write(
         `id: ${subscription.seq}\nevent: hello\ndata: ${JSON.stringify({ seq: subscription.seq })}\n\n`,
       );

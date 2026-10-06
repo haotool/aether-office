@@ -30,12 +30,16 @@ docs/             This documentation, ADRs and the verification ledger
 | `pnpm build`                  | Builds control, runner and web (the build also pre-compresses assets)                    |
 | `pnpm start`                  | Runs the built control plane                                                             |
 | `pnpm typecheck`              | `tsc --noEmit` over apps, packages, tests and scripts                                    |
-| `pnpm lint`                   | Module boundaries and design tokens                                                      |
+| `pnpm lint`                   | Module boundaries (`scripts/check-boundaries.mjs`) and design tokens (`scripts/check-design-tokens.mjs`) |
 | `pnpm format` / `format:check`| Prettier                                                                                 |
-| `pnpm test`                   | Vitest (`tests/aether`)                                                                  |
+| `pnpm test`                   | Vitest (`tests/aether`); `test:unit`, `test:integration` and `test:security` run one file each |
 | `pnpm exec playwright test`   | End-to-end suite in Chrome                                                               |
+| `pnpm run setup`              | Creates the data directory and the owner token (`--demo` for the demo's)                   |
+| `pnpm hooks <install\|remove\|status>` | Installs, removes or reports the Claude Code or Codex hooks (see [getting started](getting-started.md#exact-activity-with-hooks-optional)) |
+| `pnpm run pair` / `pnpm runner:enroll` | Prints a phone-pairing QR code / enrolls a runner with a one-time invitation                |
 | `pnpm run doctor`             | Reports OS, Node, pnpm, Git and provider CLI versions and what is missing                |
 | `pnpm verification:report` / `verification:check` | Regenerate / check the verification report from the ledger           |
+| `node scripts/audit-dependencies.mjs [package...]` | Reads the registry metadata of the dev dependencies (network) for the dependency ledger entry |
 | `pnpm audit:deps`             | `pnpm audit` for high-severity advisories                                                |
 | `pnpm verify:clean`           | Clean-room install, build and test of the committed tree                                 |
 | `pnpm backup`                 | Create or restore a backup of the control plane's data                                   |

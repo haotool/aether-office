@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react';
 import { Focus } from 'lucide-react';
+import { ProviderMark } from '@aether/office-scene/model';
 import type { Agent, AttributedSession, Snapshot } from '@aether/contracts';
-import { AvatarIcon, Badge, useT } from '../ui.js';
+import { avatarState } from '../avatar/state.js';
+import { Badge, useT } from '../ui.js';
+import { Avatar } from './Avatar.js';
 import { PermissionCards } from './PermissionCard.js';
 import { requestsFor, usePermissionRequests } from './permission-requests.js';
 import { SessionDetails } from './SessionDetails.js';
@@ -9,9 +12,7 @@ import { SessionFooter } from './SessionFooter.js';
 import { TranscriptView } from './TranscriptView.js';
 
 const contextPercent = (s: AttributedSession) =>
-  s.usage.contextTokens !== null && s.usage.contextWindow
-    ? Math.round((s.usage.contextTokens / s.usage.contextWindow) * 100)
-    : null;
+  s.usage.contextPct === null ? null : Math.round(s.usage.contextPct);
 
 /**
  * The selected member as a conversation: who and in what state, then the transcript (newest at the bottom), then one
@@ -72,9 +73,16 @@ export function SessionConversation({
           </span>
         </div>
         <div className="conv-identity">
-          <AvatarIcon species={agent.species} color={agent.color} name={agent.name} size={32} />
+          <Avatar
+            seed={agent.id}
+            species={agent.species}
+            size="row"
+            state={avatarState(agent.activity)}
+          />
           <div className="conv-title">
-            <strong title={title}>{title}</strong>
+            <strong title={title}>
+              {session && <ProviderMark provider={session.provider} />} {title}
+            </strong>
             <small title={where}>{where}</small>
           </div>
           <Badge state={agent.activity} />

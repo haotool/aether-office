@@ -1,4 +1,5 @@
 /** Pure rules for the alerts about local sessions: what is worth a notification, what it says, and where it is shown. */
+import { toPlainPreview } from '@aether/kernel';
 export type SessionEvent = {
   key: string;
   kind: 'needs-you' | 'finished';
@@ -73,7 +74,7 @@ export function planAlerts(
     .map((e) => ({
       tag: `${e.kind}:${e.key}`,
       title: e.kind === 'needs-you' ? labels.needsYou : labels.finished,
-      body: e.project.slice(0, BODY_MAX),
+      body: toPlainPreview(e.project, { maxChars: BODY_MAX }),
       to: e.to,
       via: context.permission === 'granted' ? 'native' : 'toast',
     }));

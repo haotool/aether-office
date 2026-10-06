@@ -8,6 +8,7 @@ import type { Feed } from './multi-view.js';
  */
 export function PipWall({
   feeds,
+  pinned,
   agents,
   doing,
   intensity,
@@ -16,6 +17,8 @@ export function PipWall({
   onClose,
 }: {
   feeds: readonly Feed[];
+  /** Members the person pinned: their view is marked and stays. */
+  pinned: ReadonlySet<string>;
   agents: readonly Agent[];
   doing: Readonly<Record<string, string>> | undefined;
   intensity: Readonly<Record<string, number>> | undefined;
@@ -44,8 +47,9 @@ export function PipWall({
           return (
             <button
               key={feed.id}
-              className="pip"
+              className={`pip ${pinned.has(feed.id) ? 'pinned' : ''}`}
               data-feed={feed.id}
+              data-pinned={pinned.has(feed.id) || undefined}
               aria-label={zh ? `切換到 ${agent.name}` : `Switch to ${agent.name}`}
               onClick={() => onSelect(feed.id)}
             >

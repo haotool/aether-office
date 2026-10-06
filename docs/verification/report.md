@@ -2,12 +2,12 @@
 
 Generated from `docs/verification/features.json` (docs/verification/features.json). Do not edit by hand: run `pnpm verification:report`.
 
-Features: **145**. Implementation: 115 implemented, 30 partial, 0 not started.
+Features: **157**. Implementation: 127 implemented, 30 partial, 0 not started.
 
 | Verification | Count | Meaning |
 |---|---|---|
-| passed | 88 | Verified by the listed tests at the scope stated in the ledger. |
-| partial | 57 | Some behaviour is verified; the blockers column names what is not. |
+| passed | 92 | Verified by the listed tests at the scope stated in the ledger. |
+| partial | 65 | Some behaviour is verified; the blockers column names what is not. |
 | blocked | 0 | Cannot be verified in this environment (for example, it needs paid or authenticated provider sessions). |
 | failed | 0 | A check ran and failed. |
 | not_run | 0 | No check has been run. |
@@ -15,7 +15,7 @@ Features: **145**. Implementation: 115 implemented, 30 partial, 0 not started.
 
 A passing build or test run is not a claim of production readiness. This file lists what the ledger can support, and what it cannot.
 
-## passed (88)
+## passed (92)
 
 | ID | Implementation | Requirement | Blockers |
 |---|---|---|---|
@@ -107,8 +107,12 @@ A passing build or test run is not a claim of production readiness. This file li
 | INT-06 | implemented | schedule 依 timezone 觸發，重啟不重複派工。 | UI creates daily/weekly schedules only (the API also accepts one-off); A schedule only creates unassigned work; there is no scheduled auto-assignment by design |
 | QA-07 | implemented | 最終重新 clean install／build／start／smoke 驗證成功或列具體失敗。 | — |
 | QA-08 | implemented | FINAL_VERIFICATION 明確區分 passed／failed／blocked／not_run。 | — |
+| OBS-CLOCKOUT-01 | implemented | 閒置一天以上的 session 可一次下班：伺服器逐一重新檢查（仍在執行、同一行程、閒置夠久、屬於擁有者的專案），SIGTERM 後 SIGKILL，並逐一回報結果。 | — |
+| OBS-MODELS-01 | implemented | 模型目錄跟隨 CLI：由 Codex 與 Claude Code 自己的快取讀取可用模型與努力等級，標示來源與是否過期，且不寫入任何 CLI 目錄。 | — |
+| OBS-CONTEXT-01 | implemented | 每個 session 回報 context 視窗用量與壓縮時間（不解析逐字稿文字）；辦公室以量表、名牌與壓縮效果呈現，並顯示最新提問與回覆的氣泡（有界、已遮蔽、不儲存）。 | — |
+| OBS-NAV-01 | implemented | 預設導覽只顯示 CLI 使用者需要的頁面，進階頁面在設定開啟；通知預設開啟、只含專案名稱；手機可由頂端列掃 QR 配對。 | — |
 
-## partial (57)
+## partial (65)
 
 | ID | Implementation | Requirement | Blockers |
 |---|---|---|---|
@@ -169,3 +173,11 @@ A passing build or test run is not a claim of production readiness. This file li
 | QA-05 | partial | 每個需求的 code path／test ID／evidence 可查驗。 | 完整產品尚未完成；不能把局部測試當最終 gate。 |
 | QA-06 | partial | 所有文件與命令對照最新程式，沒有假 endpoint／假腳本。 | 完整產品尚未完成；不能把局部測試當最終 gate。 |
 | OBS-LOCAL-01 | implemented | 自動載入本機 Claude／Codex session；以 Git common dir 歸屬 worktree，以 hook 事件歸屬子代理；observe-only 3D 顯示。 | Activity is a file-mtime heuristic until hooks are trusted and fire; without a running process it is shown idle; Process-to-session matching is by --resume id, else by provider and directory in recency order; a Claude session that changed directory shows no process; Sessions in no git repository and outside a project scratch directory (for example a Codex Desktop thread in a plugin workspace) cannot be attributed and are not shown; Spawned Codex subagents are shown only while their rollout changed in the last 2 minutes; Hooks are proven only for this repository session so far; Only the 60 most recent sessions are scanned |
+| OBS-STREAM-01 | implemented | 本機 session 變更以有界的 server-sent event 串流推送（只含 session key 與變更種類，不含內容），並支援續傳、登出或撤銷即中斷；重資料讀取支援 ETag／304。 | Reconnect backoff and tab-visibility handling are covered by pure tests, not by a run on an unreliable network |
+| OBS-COMPOSER-01 | implemented | 在 AETHER 終端機中執行的 session 可由面板輸入框輸入（安全的輸入序列、佇列、停止、斜線指令與 @ 檔案補全）；其他終端機啟動的 session 維持唯讀並提供在 AETHER 繼續或分支。 | Verified against synthetic terminals; typing into a live Claude Code or Codex prompt was not run (it would use a paid session) |
+| OBS-APPROVAL-01 | implemented | Remote approvals（預設關閉）：Claude Code 權限提示可在面板與手機回答；伺服器簽署每個決定，只有瀏覽器登入者能決定，無答案或任何錯誤時回到終端機提示。 | The hook output schema was checked against Claude Code 2.1.289 only; Any process running as the same user can read the hook token file: a convenience, not a boundary against local code |
+| OBS-ROLE-01 | implemented | session 的職位與部門由單一、確定性的純函式分類器依加權訊號決定，附信心與證據，弱證據留在通才，且三次獨立觀察才換職位。 | Accuracy is 84.9% to 100% on a synthetic corpus and 48% to 90% on 50 hand-labelled real sessions; it is not validated on other users' sessions |
+| OBS-CHAR-01 | implemented | 3D 辦公室中可直接操作角色：動作選單（只列出可行動作並說明不可用原因）、表情、懸停卡片、Alt 拖曳換座位（含驗證與復原）與 Shift 群組動作；全部可由鍵盤操作並有語音播報。 | Touch gestures were exercised with emulated touch, not on a physical phone |
+| OBS-GRAPH-01 | implemented | 專案的 Git 歷史畫成穿過大樓中軸的玻璃分支辮與頂端的花冠（每 12 個提交一朵花與一朵大花）；資料取自去識別化且有界的提交圖。 | Frame cost was measured on one Apple M4 GPU; integrated GPUs and phones were not measured |
+| OBS-WALL-01 | implemented | 導演鏡頭平穩（慢速短推軌、不重複拍同一成員）；寬螢幕在至少兩位成員忙碌時顯示最多四個即時視圖的控制室牆面，並依真實訊號呈現工作強度。 | Visual quality of the camera moves is judged by eye; only the rules (shot choice, pacing, frame layout) are asserted |
+| OBS-PANEL-01 | implemented | session 面板為即時工作區：所有 session 的動態分組、所選 session 的對話、可調寬度與收合，手機上為底部面板；未讀與需要你的計數全站一致。 | Layout was checked at the six widths of the responsive spec, not on physical devices |

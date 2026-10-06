@@ -19,7 +19,7 @@ function csrfToken(): string | null {
   }
 }
 /** Keeps the token for as long as the session lasts: for a tab, or for a device the person chose to remember. */
-export function keepCsrf(csrf: string, remember: boolean) {
+function keepCsrf(csrf: string, remember: boolean) {
   sessionStorage.setItem(CSRF_KEY, csrf);
   try {
     if (remember) localStorage.setItem(CSRF_KEY, csrf);

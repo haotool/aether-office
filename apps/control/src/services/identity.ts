@@ -83,7 +83,7 @@ export function createIdentity(
   return { token, actor: identityActor(ctx, id) };
 }
 /** How long a browser session lasts: a working day, or a month on a device the person chose to remember. */
-export const SESSION_MS = 8 * 60 * 60 * 1000;
+const SESSION_MS = 8 * 60 * 60 * 1000;
 export const REMEMBERED_SESSION_MS = 30 * 24 * 60 * 60 * 1000;
 
 export function login(ctx: Context, token: string, ttlMs = SESSION_MS) {

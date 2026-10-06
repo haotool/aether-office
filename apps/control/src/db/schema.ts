@@ -4,7 +4,7 @@ import { table } from './query.js';
 
 // The shape of the rows the control plane reads and writes through db/query.ts. The tables themselves are created by
 // migration.sql and migrations/; a test keeps the two in step.
-export type ProjectRow = {
+type ProjectRow = {
   id: string;
   name: string;
   root: string | null;
@@ -12,7 +12,7 @@ export type ProjectRow = {
   version: number;
   createdAt: number;
 };
-export type AgentRow = {
+type AgentRow = {
   id: string;
   projectId: string;
   name: string;
@@ -47,8 +47,8 @@ export type WorkRow = {
   reviewBy: string | null;
   verifiedSha: string | null;
 };
-export type DependencyRow = { workId: string; dependsOn: string; projectId: string };
-export type MessageRow = {
+type DependencyRow = { workId: string; dependsOn: string; projectId: string };
+type MessageRow = {
   id: string;
   projectId: string;
   threadId: string;
@@ -60,7 +60,7 @@ export type MessageRow = {
   expiresAt: number;
   roomId: string | null;
 };
-export type IdentityRow = {
+type IdentityRow = {
   id: string;
   role: Role;
   name: string;
@@ -72,7 +72,7 @@ export type IdentityRow = {
   createdAt: number;
   expiresAt: number | null;
 };
-export type KnowledgeRow = {
+type KnowledgeRow = {
   id: string;
   projectId: string;
   title: string;

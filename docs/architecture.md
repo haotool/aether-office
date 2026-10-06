@@ -20,7 +20,7 @@ flowchart LR
 
 | Path                      | Role                                                                                                                                                                    |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/control`            | The control plane: authentication, roles, commands, events, tasks, messages, reviews, approvals, local-session discovery, the HTTP API and the built web app. Owns the only SQLite database. |
+| `apps/control`            | The control plane: authentication, roles, commands, events, tasks, messages, reviews, approvals, local-session discovery and its change stream, permission requests, the HTTP API and the built web app. Owns the only SQLite database. |
 | `apps/runner`             | A separate process that does the work the control plane must not: starts and supervises agents in isolated Git worktrees, runs PTYs, observes transcripts, runs verifiers. It never writes the control database; it claims jobs and reports results over HTTP. |
 | `apps/web`                | The React app: 2D workbench pages, the phone layout, the design system (`src/styles`), i18n (zh-TW and English).                                                          |
 | `packages/office-scene`   | The 3D office: building, characters, camera director, communication links. Loaded lazily so the main bundle contains no Three.js.                                        |
@@ -53,6 +53,26 @@ Enforced by `pnpm lint` (`scripts/check-boundaries.mjs`):
 - **Runner durability.** The runner records intent in a local journal before any side effect and does not blindly retry
   after a restart. Files that must exist whole (workspace registry, harnesses) are created atomically.
 
+## The HTTP surface
+
+Routes are registered per area in `apps/control/src/routes`; every `/api/` route needs an authenticated actor except
+the few listed in `PUBLIC_ROUTES` (`server.ts`, pinned by `tests/aether/route-auth.test.ts`): login, pairing redemption,
+runner enrollment, the GitHub webhook, the A2A card and endpoint, and the approval hook, each of which carries its own
+credential.
+
+| Area                    | Routes                                                                                                                                         |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sign-in                 | `POST /api/login`, `POST /api/logout`, `GET /api/session`, `/api/pairings` (create, status, redeem)                                            |
+| Commands and project    | `POST /api/commands`; `GET /api/projects`; per project: `snapshot`, `events`, `stream` (the project's event log as server-sent events), `inbox`, `messages/:id`, `knowledge`, `approvals`, `execution` |
+| Work and lists          | `work/:workId/{comments,integrations,post-result,diagnostics,reviews}`, `workspaces`, and the read lists (`terminals`, `reservations`, `schedules`, `skills`, `integrations`, `rooms`, `workflows`, `meetings`, `observations`) |
+| Local sessions          | `GET /api/local-sessions` and `/speech` (last prompt and reply), `GET /api/local-sessions/stream` (change stream), `/:key/transcript`, `/:key/stop`, `/:key/reap-zombies`, `POST /api/local-sessions/clock-out` |
+| Composer                | `GET /api/local-sessions/:key/terminal` (the AETHER terminal the session runs in, if any), `/:key/commands`, `/:key/files`                    |
+| Machine and models      | `GET /api/models` (the models each CLI offers), `/api/claude-limits`, `/api/system`, and per project `git-graph` and `git-health` (`/sizes`, `/clean`) |
+| Permission requests     | Hook side (loopback, its own token): `POST /api/hook/permission-requests`, `GET .../:id` (long poll), `POST .../:id/fallback`. Person side (cookie session): `GET /api/permission-requests`, `POST .../:id/decision`, `GET`/`PUT /api/remote-approvals` |
+| Runner                  | `POST /api/machines`, `/api/runner/{enroll,heartbeat,claim,report,session-credential,jobs/*,terminals/*,observations,approvals/*}`             |
+| Interoperability        | `POST /a2a` and `/.well-known/agent-card.json` (when `AETHER_A2A=on`), `POST /api/webhooks/github/:integrationId`, integration sync          |
+| Operations              | `POST /api/identities/:id/revoke`, `GET /api/metrics`, `GET /health`                                                                           |
+
 ## Observing sessions
 
 Claude Code and Codex sessions that you start yourself are discovered read-only (`apps/control/src/services/session-*.ts`):
@@ -77,6 +97,18 @@ jitter (1 s doubling to 30 s), closes while the tab is hidden and, on becoming v
 from the back-forward cache, reconnects and refetches at once. The top bar shows live, connecting, reconnecting or offline
 with the age of the last update. The heavy reads (`/api/local-sessions`, `/speech`, one transcript) carry a weak `ETag` and
 answer `If-None-Match` with `304`, on top of gzip.
+
+**Driving a session from the browser.** When the process behind a session runs inside an AETHER terminal
+(`services/terminal-link.ts`), `GET /api/local-sessions/:key/terminal` says which one, and the panel's composer types into it
+through the ordinary `terminal.input` command under the terminal lease. A session started elsewhere is never typed into; it
+can be continued or forked in a new AETHER terminal (`terminal.start` with `resume`). **Clock out**
+(`POST /api/local-sessions/clock-out`, `services/clock-out.ts`) ends idle processes in bulk with the same checks as a single
+stop. The model catalog (`GET /api/models`) is read from the CLIs' own caches and never written.
+
+**Permission requests.** With Remote approvals on, a Claude Code hook posts each permission prompt to the control plane,
+which keeps it in memory (`services/permission-requests.ts`, bounded, never persisted) until a person decides in the browser
+or the hook's wait ends. The server signs every decision so the hook can tell it from an impostor. Details:
+[security](security.md#safety-properties).
 
 ## Managed execution
 

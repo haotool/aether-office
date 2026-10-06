@@ -70,7 +70,7 @@ const nativeConfigSchema = z
       .optional(),
   })
   .strict();
-export type NativeConfig = z.infer<typeof nativeConfigSchema>;
+type NativeConfig = z.infer<typeof nativeConfigSchema>;
 /** Machine-local opt-in and repository grants cannot be supplied by a task prompt. */
 export class NativeExecutor {
   readonly workspaces: Workspaces;

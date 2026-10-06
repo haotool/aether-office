@@ -16,7 +16,7 @@ import { connect } from './db/connection.js';
 // Backups use SQLite's online backup API, never a plain file copy: with WAL active, copying only
 // the main .db would miss committed data and could capture a torn state.
 
-export type BackupManifest = {
+type BackupManifest = {
   format: 1;
   file: string;
   sha256: string;

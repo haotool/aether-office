@@ -25,11 +25,14 @@ const nameOf = (s: AttributedSession) => s.title ?? s.repo;
  * leaving the office. The server re-checks every session (see services/clock-out.ts).
  */
 export function ClockOut({
-  sessions,
+  sessions: all,
+  only,
   locale,
   onClose,
 }: {
   sessions: readonly AttributedSession[];
+  /** Offer just these sessions (by key): the character menu and the group bar send chosen ones home. The same guards apply. */
+  only?: readonly string[];
   locale: 'zh-TW' | 'en';
   onClose: () => void;
 }) {
@@ -37,6 +40,10 @@ export function ClockOut({
   const client = useQueryClient();
   const navigate = useNavigate();
   const send = useLeaving((s) => s.send);
+  const sessions = useMemo(
+    () => (only ? all.filter((s) => only.includes(s.key)) : all),
+    [all, only],
+  );
   const [days, setDays] = useState<IdleDays>(1);
   const idle = useMemo(() => idleSessions(sessions, days), [sessions, days]);
   const [picked, setPicked] = useState<ReadonlySet<string>>(() => new Set(idle.map((s) => s.key)));

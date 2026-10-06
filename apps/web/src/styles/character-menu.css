@@ -1,0 +1,355 @@
+/*
+ * Direct interaction with the characters in the office (packages/office-scene InteractionLayer): the hover card, the action
+ * menu beside a character (a bottom sheet on a phone, see phone-office.css), the emote icons, the bar for a group, the
+ * marquee, the seat-drag hint and the undo toast. All of it sits over the scene without taking the pointer from orbiting.
+ */
+.char-layer {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-hud-tools);
+  pointer-events: none;
+  overflow: hidden;
+}
+.char-card,
+.char-menu-anchor,
+.emote-anchor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0; /* shown once the scene has placed it; focusable meanwhile, which `visibility: hidden` is not */
+}
+.char-card {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 140px;
+  max-width: 260px;
+  margin-top: calc(var(--space-24) * -1); /* above the name tag it is anchored with */
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--glass-line-strong);
+  border-radius: var(--r-lg);
+  background: var(--glass-strong);
+  color: var(--on-glass);
+  font-size: var(--fs-small);
+  pointer-events: none;
+}
+.char-card strong {
+  font-size: var(--fs-body);
+}
+.char-card span {
+  color: var(--on-glass-muted);
+}
+.char-card [data-state='working'] {
+  color: var(--mint);
+}
+.char-card [data-state='waiting_permission'],
+.char-card [data-state='error'] {
+  color: var(--gold);
+}
+
+.char-menu-anchor {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100% - var(--space-64)); /* a short canvas: the menu scrolls inside it */
+  pointer-events: auto;
+}
+.char-menu {
+  display: grid;
+  gap: var(--space-2);
+  width: 280px;
+  min-height: 0;
+  margin: 0;
+  padding: var(--space-6);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  border: 1px solid var(--glass-line-strong);
+  border-radius: var(--r-xl);
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 34px var(--shade);
+  color: var(--on-glass);
+}
+.char-menu-title {
+  padding: var(--space-4) var(--space-8) var(--space-6);
+  border-bottom: 1px solid var(--glass-line-soft);
+  color: var(--on-glass-accent);
+  font-size: var(--fs-small);
+  font-weight: 650;
+}
+.char-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+  width: 100%;
+  min-height: var(--target-fine);
+  padding: var(--space-6) var(--space-8);
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--on-glass);
+  font-size: var(--fs-small);
+  text-align: left;
+  touch-action: manipulation;
+}
+/* In the phone's bottom sheet (phone-office.css spreads a row's two ends apart): icon and words together, a finger tall. */
+.sheet li > .char-item {
+  justify-content: flex-start;
+  min-height: var(--target-touch);
+}
+.char-item > svg {
+  flex: none;
+  margin-top: var(--space-2);
+}
+.char-item small {
+  display: block;
+  color: var(--on-glass-muted);
+  font-size: var(--fs-label);
+  font-weight: 400;
+}
+.char-item[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+.char-item[aria-disabled='true'] > svg,
+.char-item[aria-disabled='true'] > span {
+  opacity: 0.7;
+}
+.char-item[data-on] {
+  color: var(--mint);
+}
+.char-item.danger:not([aria-disabled='true']) {
+  color: var(--red);
+}
+.char-item:focus-visible,
+.char-react button:focus-visible,
+.char-replies button:focus-visible,
+.group-bar button:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: -2px;
+}
+@media (hover: hover) {
+  .char-item:not([aria-disabled='true']):hover,
+  .char-react button:not([aria-disabled='true']):hover {
+    background: var(--glass-hover);
+  }
+}
+.char-react {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-6) var(--space-8) var(--space-4);
+  border-bottom: 1px solid var(--glass-line-soft);
+}
+.char-react small {
+  color: var(--on-glass-muted);
+  font-size: var(--fs-label);
+}
+.char-react [role='group'] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+.char-react button {
+  display: grid;
+  place-items: center;
+  width: var(--target-fine);
+  height: var(--target-fine);
+  border: 1px solid var(--glass-line-soft);
+  border-radius: var(--r-md);
+  background: var(--glass-soft);
+  font-size: var(--fs-lead);
+}
+.char-react button[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.char-message,
+.char-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  margin: 0 var(--space-4) var(--space-4);
+  padding: var(--space-6);
+  border: 1px solid var(--glass-line-soft);
+  border-radius: var(--r-lg);
+  background: var(--glass-base);
+}
+.char-message textarea {
+  flex: 1 1 100%;
+  min-height: var(--space-48);
+  padding: var(--space-6) var(--space-8);
+  border: 1px solid var(--glass-line-strong);
+  border-radius: var(--r-md);
+  background: var(--glass-soft);
+  color: var(--on-glass);
+  font-size: var(--fs-lead);
+  resize: none;
+}
+.char-message button,
+.char-replies button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--target-fine);
+  padding: var(--space-4) var(--space-12);
+  border: 1px solid var(--glass-line-strong);
+  border-radius: var(--r-md);
+  background: var(--glass-selected);
+  color: var(--on-glass);
+  font-size: var(--fs-small);
+}
+.char-message .error,
+.char-replies .error {
+  flex: 1 1 100%;
+  margin: 0;
+  color: var(--red);
+  font-size: var(--fs-label);
+}
+
+/* An icon rising over a head, then gone; with reduced motion it only fades. */
+.emote-sprite {
+  display: block;
+  margin-top: calc(var(--space-24) * -1);
+  font-size: var(--fs-hero);
+  line-height: 1;
+  animation: emote-rise 1.8s var(--ease) forwards;
+}
+.char-layer.still .emote-sprite {
+  animation-name: emote-fade;
+}
+@keyframes emote-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.6);
+  }
+  18% {
+    opacity: 1;
+    transform: translateY(0) scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-48px) scale(1);
+  }
+}
+@keyframes emote-fade {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .emote-sprite {
+    animation-name: emote-fade;
+  }
+}
+
+.marquee {
+  position: absolute;
+  border: 1px dashed var(--mint);
+  background: color-mix(in srgb, var(--mint) 14%, transparent);
+  pointer-events: none;
+}
+.seat-hint {
+  position: absolute;
+  top: var(--space-64);
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: var(--space-6) var(--space-12);
+  border: 1px solid var(--glass-accent-line);
+  border-radius: var(--r-pill);
+  background: var(--glass-strong);
+  color: var(--on-glass);
+  font-size: var(--fs-small);
+  pointer-events: none;
+}
+.seat-hint.blocked {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.group-bar,
+.undo-toast {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+  max-width: calc(100% - 2 * var(--space-16));
+  padding: var(--space-6) var(--space-8);
+  border: 1px solid var(--glass-line-strong);
+  border-radius: var(--r-xl);
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: var(--on-glass);
+  font-size: var(--fs-small);
+  pointer-events: auto;
+}
+.group-bar {
+  top: var(--space-64); /* under the toolbar, clear of the wall of small views at the bottom */
+}
+.undo-toast {
+  bottom: var(--space-16);
+  z-index: var(--z-hud-top);
+}
+.group-count {
+  padding: 0 var(--space-8);
+  color: var(--gold);
+  font-weight: 650;
+}
+.group-bar button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--target-fine);
+  padding: var(--space-4) var(--space-8);
+  border: 1px solid var(--glass-line-soft);
+  border-radius: var(--r-md);
+  background: var(--glass-soft);
+  color: var(--on-glass);
+  font-size: var(--fs-small);
+}
+.group-bar button[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.undo-toast .icon-button {
+  color: var(--on-glass);
+}
+
+/* The marks on a tag and a view: in the group (gold), pinned to the wall (gold frame). */
+.scene-label {
+  -webkit-touch-callout: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+.scene-label.grouped {
+  border-color: var(--gold);
+}
+.pip.pinned {
+  border-color: var(--gold);
+}
+.pip.pinned .pip-cam::after {
+  content: ' · PIN';
+  color: var(--gold);
+}
+
+@media (pointer: coarse) {
+  .char-item,
+  .char-react button,
+  .char-message button,
+  .char-replies button,
+  .group-bar button {
+    min-height: var(--target-touch);
+  }
+  .char-react button {
+    width: var(--target-touch);
+    height: var(--target-touch);
+  }
+}

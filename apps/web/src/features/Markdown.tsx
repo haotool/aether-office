@@ -1,21 +1,14 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { Check, Copy } from 'lucide-react';
+import type { ListItem, MdBlock } from '@aether/kernel';
 import { copyText } from '../browser-compat.js';
 import { useT } from '../ui.js';
-import { diffKind, isDiff, parseMarkdown, type Inline } from './md-parse.js';
+import { Inline } from './MdInline.js';
+import { diffKind, isDiff, parseMarkdown } from './md-parse.js';
 
-const inline = (parts: Inline[]): ReactNode[] =>
-  parts.map((p, i) =>
-    p.type === 'code' ? (
-      <code key={i}>{p.text}</code>
-    ) : p.type === 'bold' ? (
-      <strong key={i}>{p.text}</strong>
-    ) : p.type === 'italic' ? (
-      <em key={i}>{p.text}</em>
-    ) : (
-      p.text
-    ),
-  );
+/** Each block of a reply that is revealed starts its fade a little after the one above it. */
+const BLOCK_STAGGER_MS = 120;
+const BLOCK_STAGGER_MAX = 10;
 
 /** A fenced block: its language, a copy button, and +/- colouring when it is a diff. */
 function CodeBlock({ text, lang }: { text: string; lang: string | undefined }) {
@@ -49,30 +42,117 @@ function CodeBlock({ text, lang }: { text: string; lang: string | undefined }) {
   );
 }
 
-/** An agent's reply, rendered as elements (never as HTML), so nothing it says can inject markup. */
-export function Markdown({ text }: { text: string }) {
+function Item({ item, delay }: { item: ListItem; delay: number | null }) {
+  const t = useT();
+  const [first, ...rest] = item.blocks;
+  const lead = first?.type === 'paragraph' ? first : null;
   return (
-    <div className="markdown">
-      {parseMarkdown(text).map((block, i) => {
-        if (block.type === 'code') return <CodeBlock key={i} text={block.text} lang={block.lang} />;
-        if (block.type === 'list') {
-          const List = block.ordered ? 'ol' : 'ul';
-          return (
-            <List key={i}>
-              {block.items.map((item, j) => (
-                <li key={j}>{inline(item)}</li>
+    <li className={item.checked !== null ? 'task' : undefined}>
+      {item.checked !== null && (
+        <span className="md-task" role="img" aria-label={item.checked ? t('mdDone') : t('mdTodo')}>
+          {item.checked ? '☑' : '☐'}
+        </span>
+      )}
+      {lead && <Inline spans={lead.inline} delay={delay} />}
+      <Blocks blocks={lead ? rest : item.blocks} delay={delay} />
+    </li>
+  );
+}
+
+function Table({
+  block,
+  delay,
+}: {
+  block: Extract<MdBlock, { type: 'table' }>;
+  delay: number | null;
+}) {
+  const align = (i: number) => ({ textAlign: block.align[i] ?? undefined });
+  return (
+    <div className="md-table">
+      <table>
+        <thead>
+          <tr>
+            {block.head.map((spans, i) => (
+              <th key={i} style={align(i)}>
+                <Inline spans={spans} delay={delay} />
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {block.rows.map((row, r) => (
+            <tr key={r}>
+              {row.map((spans, i) => (
+                <td key={i} style={align(i)}>
+                  <Inline spans={spans} delay={delay} />
+                </td>
               ))}
-            </List>
-          );
-        }
-        return block.type === 'heading' ? (
-          <p key={i} className="md-heading">
-            {inline(block.inline)}
-          </p>
-        ) : (
-          <p key={i}>{inline(block.inline)}</p>
-        );
-      })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Block({ block, delay }: { block: MdBlock; delay: number | null }) {
+  switch (block.type) {
+    case 'code':
+      return <CodeBlock text={block.text} lang={block.lang} />;
+    case 'list': {
+      const List = block.ordered ? 'ol' : 'ul';
+      return (
+        <List start={block.ordered && block.start !== 1 ? block.start : undefined}>
+          {block.items.map((item, i) => (
+            <Item key={i} item={item} delay={delay} />
+          ))}
+        </List>
+      );
+    }
+    case 'heading':
+      return (
+        <p className={`md-heading level-${block.level}`}>
+          <Inline spans={block.inline} delay={delay} />
+        </p>
+      );
+    case 'table':
+      return <Table block={block} delay={delay} />;
+    case 'quote':
+      return (
+        <blockquote>
+          <Blocks blocks={block.blocks} delay={delay} />
+        </blockquote>
+      );
+    case 'rule':
+      return <hr />;
+    case 'paragraph':
+      return (
+        <p>
+          <Inline spans={block.inline} delay={delay} />
+        </p>
+      );
+  }
+}
+
+function Blocks({ blocks, delay }: { blocks: readonly MdBlock[]; delay: number | null }) {
+  return blocks.map((block, i) => (
+    <Block
+      key={i}
+      block={block}
+      delay={delay === null ? null : delay + Math.min(i, BLOCK_STAGGER_MAX) * BLOCK_STAGGER_MS}
+    />
+  ));
+}
+
+/**
+ * An agent's reply, rendered as elements (never as HTML), so nothing it says can inject markup: links are http(s) only,
+ * images show their alt text and are never fetched. `reveal` fades the words in one after another, for a reply that has
+ * just arrived.
+ */
+export function Markdown({ text, reveal = false }: { text: string; reveal?: boolean }) {
+  return (
+    <div className={`markdown ${reveal ? 'reveal' : ''}`}>
+      <Blocks blocks={parseMarkdown(text)} delay={reveal ? 0 : null} />
     </div>
   );
 }

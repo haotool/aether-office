@@ -3,10 +3,12 @@ import type { Agent, Layout } from '@aether/contracts';
 import { FLOORS, zones } from './layout.js';
 import { PULSE_WINDOW_MS, chooseShot, type Pulse, type Seat, type Shot } from './director.js';
 import type { FlyTo } from './SceneCamera.js';
-import { chooseEntry } from './shot-camera.js';
+import { chooseEntry, toWorld, type V3 } from './shot-camera.js';
+import SEATING from './desk-seating.json';
 import { useSceneKeys } from './scene-keys.js';
 import {
   AGENT_OFFSET,
+  FOLLOW_OFFSET,
   OVERVIEW,
   ZONE_OFFSET,
   floorOfDesk,
@@ -91,8 +93,11 @@ export function useSceneNavigation({
     }
   }, [perFloor]); // eslint-disable-line react-hooks/exhaustive-deps -- only the head count decides the starting floor
 
+  const [following, setFollowing] = useState<string | null>(null);
+  // Any other flight (a floor, a zone, a double click) ends a follow; `follow` sets it again after its own.
   const fly = useCallback((target: [number, number, number], offset: [number, number, number]) => {
     sequence.current += 1;
+    setFollowing(null);
     setCommand({ id: sequence.current, target, offset });
   }, []);
   const goToFloor = useCallback(
@@ -123,7 +128,8 @@ export function useSceneNavigation({
   const playing = useRef<Directed | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const resume = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const running = directing && !paused;
+  // Following a member is the person's choice of shot: the director yields until it ends.
+  const running = directing && !paused && !following;
 
   const cut = useCallback(() => {
     clearTimeout(timer.current);
@@ -199,6 +205,12 @@ export function useSceneNavigation({
   );
   useEffect(() => () => clearTimeout(resume.current), []);
   const userCamera = useCallback(() => {
+    setFollowing(null); // a drag, a wheel turn or a key press ends the follow
+    takeOver();
+    onUserCamera?.();
+  }, [takeOver, onUserCamera]);
+  // A press on a name tag: the director steps back and a tour yields, but a follow is kept (nothing moved the camera).
+  const pause = useCallback(() => {
     takeOver();
     onUserCamera?.();
   }, [takeOver, onUserCamera]);
@@ -229,6 +241,40 @@ export function useSceneNavigation({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- focus changes drive the camera, not floor or layout edits
   }, [focus]);
 
+  const seatWorld = (id: string, local: [number, number, number], baseOnly = false) => {
+    const seat = seats.get(id);
+    if (!seat) return null;
+    const point = toWorld(seat, local, baseOnly ? 0 : floorY(seat.floor, exploded));
+    return baseOnly ? ([point[0] - seat.x, point[1], point[2] - seat.z] as V3) : point;
+  };
+  // Follow: the camera flies to the member and then keeps it in frame (SceneCamera tracks `followPoint`).
+  const follow = useCallback(
+    (id: string | null) => {
+      const seat = id ? seats.get(id) : undefined;
+      if (!id || !seat) return setFollowing(null);
+      userChoseFloor.current = true;
+      setFloor(seat.floor);
+      fly([seat.x, floorY(seat.floor, exploded) + 0.7, seat.z], FOLLOW_OFFSET);
+      setFollowing(id);
+      takeOver(true);
+    },
+    [seats, exploded, fly, takeOver],
+  );
+  // A close-up of the member's monitor, from the sitter's side (the camera keeps the controls' minimum distance).
+  const lookAtScreen = useCallback(
+    (id: string) => {
+      const target = seatWorld(id, [0, SEATING.screenY, -0.3]);
+      const offset = seatWorld(id, [0.55, 0.45, 3.9], true);
+      const seat = seats.get(id);
+      if (!target || !offset || !seat) return;
+      userChoseFloor.current = true;
+      setFloor(seat.floor);
+      fly(target, offset);
+      takeOver(true);
+    },
+    [seats, exploded, fly, takeOver], // eslint-disable-line react-hooks/exhaustive-deps -- seatWorld reads the same seats and exploded
+  );
+
   const toggleFollow = useCallback(() => {
     setPaused(false);
     onToggleAuto?.();
@@ -256,6 +302,19 @@ export function useSceneNavigation({
     seats,
     paused,
     perFloor,
+    following,
+    follow,
+    lookAtScreen,
+    /** Where the camera keeps looking while a member is followed. */
+    followPoint:
+      following && seats.has(following)
+        ? ([
+            seats.get(following)!.x,
+            floorY(seats.get(following)!.floor, exploded) + 0.7,
+            seats.get(following)!.z,
+          ] as V3)
+        : null,
+    pause,
     fly,
     goToFloor,
     toggleFollow,

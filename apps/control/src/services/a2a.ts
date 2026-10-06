@@ -269,10 +269,10 @@ export class A2AGateway {
           });
           return bus.finished();
         }
-        const actor = identityActor(this.control.ctx, client.createdBy);
+        identityActor(this.control.ctx, client.createdBy); // a revoked or expired creator cannot open work
         const now = this.control.ctx.now();
         const work = this.control.ctx.sqlite.transaction(() => {
-          const created = createWork(this.control.ctx, actor, {
+          const created = createWork(this.control.ctx, {
             schemaVersion: 1,
             type: 'work.create',
             projectId: client.projectId,

@@ -11,7 +11,7 @@ export type Carrier = {
   points: Point[];
   length: number;
 };
-export type CarrierPlan = {
+type CarrierPlan = {
   carriers: Carrier[];
   unreachable: { messageId: string; recipientId: string }[];
   seen: Set<string>;

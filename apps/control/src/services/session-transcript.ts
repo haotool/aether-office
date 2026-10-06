@@ -12,7 +12,7 @@ const TAIL_BYTES = 256 * 1024;
 const MAX_ENTRIES = 120; // a turn is mostly tool calls: enough to hold the last few turns whole
 const MAX_TEXT = 1500;
 
-export type TranscriptEntry = {
+type TranscriptEntry = {
   at: number | null;
   role: 'user' | 'assistant' | 'tool' | 'result';
   name: string | null;
@@ -23,7 +23,7 @@ export type TranscriptEntry = {
   /** A tool call's target in a few words (a file path, a command), redacted; null for everything else. */
   summary: string | null;
 };
-export type TranscriptAnalysis = {
+type TranscriptAnalysis = {
   tools: { name: string; count: number }[];
   commands: string[];
   files: string[];

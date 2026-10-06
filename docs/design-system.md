@@ -23,7 +23,8 @@ changed pages have been looked at on a phone-sized and a tablet-sized screen.
 
 `apps/web/src/styles/index.css` loads the files in cascade order: tokens, base, shell, office, session panel, controls,
 pages, forms, views, login, the desktop breakpoints, the feature files (scene HUD, telemetry, transcript, git, sessions,
-quick open) and finally the touch and phone layers. A rule goes in the file of the thing it styles, never in a catch-all.
+quick open) and finally the touch and phone layers (`touch-targets`, `compact-desktop`, `phone-drawer`, `phone-office`
+with its `-scene` and `-fit` continuations, `phone-sheet`, `phone-pages`, `phone-density`). A rule goes in the file of the thing it styles, never in a catch-all.
 The file list is documented at the top of `index.css`.
 
 ## Components
@@ -54,7 +55,7 @@ classes `primary`, `secondary`, `icon-button` and `text-button`; a new variant i
 
 - The scene works by touch and fits a portrait screen (`fittedOffset`). On a phone it _is_ the page: it fills the screen
   between a slim top bar and the tab bar, with no heading, stats or panels over it. Only a floor rail, a few round buttons,
-  one chip and, for the member in hand, one slim bar are drawn over it. Names are hidden until asked for. The 2D list is
+  two chips (Running, Needs you) and, for the member in hand, one slim bar are drawn over it. Names are hidden until asked for. The 2D list is
   always one tap away.
 - Rendering is lighter on a phone: no shadows, no antialiasing, pixel ratio ≤ 1.5, smaller models, about 20 frames a
   second when idle, and no rim light.
@@ -126,7 +127,7 @@ member is a conversation, not an identity card. Code: `features/SessionPanel.tsx
   It is a `role="separator"` with `aria-valuenow/min/max`: Left and Right widen and narrow by 16px, Shift by 64px, Home and End
   go to the limits, Enter or a double-click resets to the default and, already there, folds the panel to a rail, Esc during a
   drag puts the width back. Limits and rules are pure (`panel-width.ts`): minimum 320px, maximum the smaller of 720px and 60%
-  of the window, a drag within 8px of the default settles on it, and the default is what the panel used to be fixed at (440px
+  of the window, a drag within 8px of the default settles on it, and the default follows the window (440px
   from 1800px, 320px up to 1250px, else 380px). The choice is a preference (`panelWidth`, `null` = the default) stored in this
   browser; a smaller window clamps what is shown without losing the choice. The width is one CSS variable, `--panel-w`, on
   `.app-body`: while dragging it is written once per animation frame and React does not render, so the office (a flex sibling)
@@ -153,6 +154,43 @@ member is a conversation, not an identity card. Code: `features/SessionPanel.tsx
 - **Server.** `GET /api/local-sessions/:key/transcript` returns up to 120 entries, each with the provider's tool id (`toolId`,
   also on its result) and a short redacted target (`summary`: a path, a command). Nothing else about the transcript's safety
   changed: key lookup only, bounded tail read, no hidden reasoning, redacted and cut.
+
+### Conversation rendering
+
+Agents write Markdown; a person must never see its syntax where it is not rendered. One pure module owns it:
+`packages/kernel/src/markdown-*.ts` (blocks, inline runs, `toPlainPreview`, `toInlineSegments`, `cutMarkdown`, word helpers),
+used by the scene (no `apps/*` import) and the web app alike. Tests: `markdown-blocks`, `markdown-preview`, `session-speech`.
+
+- **Where each place gets its text.** Conversation: `Markdown.tsx` renders the blocks as elements (headings, nested, numbered
+  and task lists, tables, quotes, rules, fences with language, bold, italic, strike, code, links, images as alt text; never
+  `dangerouslySetInnerHTML`; a link is kept only for `http(s)` and opens with `rel="noopener noreferrer"`, `javascript:` and
+  the like are plain text; no image is fetched; single line breaks stay line breaks, so Chinese lines are not joined by a
+  space). Speech bubbles: `toInlineSegments` runs rendered as bold, code chips, bullets and small-label headings. Feed row
+  reply, phone peek line and member bar: `toPlainPreview` (`feed-model.ts`). Session titles (Claude `ai-title`, Codex
+  thread name, a task's opening words) and notification bodies (`alert-rules.ts`): `toPlainPreview` too. The speech endpoint
+  cuts a reply with `cutMarkdown` after redaction, so no fence, code span, `**`, `~~`, link or half table is left open.
+  Hover card, desk monitor and PiP captions only ever show names, roles, tools and these titles.
+- **Bubble.** Glass with a neon edge in the member's department color, a faint scanline and a tail; five lines for a reply,
+  two for a prompt, then the text scrolls by itself (`use-speech.ts`: 30px/s, 1.2s pause at each end, two passes, then it stays
+  at the end; one requestAnimationFrame loop per overflowing bubble, no React render). Hovering holds it and shows more of it;
+  with reduced motion it never scrolls and is a clamped preview with a fade, expanding on hover. A changed reply types out
+  word by word (`Intl.Segmenter`, so Chinese and English alike) with a blinking caret; a new bubble springs in, an old one dims.
+  Close up, a bubble slides down to stay whole instead of vanishing off the top.
+- **Conversation.** A reply that arrives while the panel is open fades in word by word and enters with an 8px rise in 160ms;
+  what was there at the first look never animates (`use-fresh-ids.ts`). The view glides to a new message while you are at
+  the bottom, and otherwise offers the "N new" / jump pill. A working session ends with a shimmering "Working · 12s" line
+  (unless a tool chip is already running). Every assistant message but the newest folds behind "Show more", with a fade, when it is tall
+  (`LongText.tsx`).
+- **Adopted from Happy** (`happy-app/sources/components/markdown/*`, `ShimmerText`, `docs/chat-list-scrolling.md`): its own
+  small parser rather than a library (block types text, header, list, numbered list, code, table, rule; unfinished `**` and
+  backtick spans degrade to styled text, not markers; links only `http(s)`), the autolink trailing-punctuation trimming, the
+  shimmer for "thinking", tool runs folded into one chip, and the idea that the newest message is the one fixed reference of a
+  chat. **Orca's** native chat previews a message as whitespace-collapsed prose (`nativeChatUserMessagePreview`), which is the
+  rule of `toPlainPreview`.
+- **Skipped, and why.** Mermaid (no diagrams, no remote fetch), an inverted virtual list (it exists for React Native recycling
+  and cannot expand a block in place, which Happy documents as unsolved; the transcript is at most 120 entries), per-token
+  streaming (transcripts arrive as whole messages, so words are revealed rather than tokens), and Happy's 16px chat type (the
+  panel is 14px by the type scale).
 
 ## Clock out
 
@@ -313,10 +351,236 @@ answering and dispatching, not for administering. So:
   renders. Only members on the drawn floor (every floor when spread apart) get a view, name tags are hidden under the
   views, and choosing a view hands the main camera to that member (the director gives way). A view that is still busy stays.
 
+## Context window, compaction and provider marks
+
+- **Context share** is `usage.contextPct` on a local session: the latest request's input side (Claude: input plus cache
+  creation plus cache read of the last assistant message; Codex: `last_token_usage.input_tokens` of the last `token_count`)
+  over the model's window. The window is Codex's own `model_context_window`, else the detected catalog's figure, else
+  Claude's 200k (1M for a `[1m]` model, and 1M once more than 200k is in use: Claude Code does not write the long-context
+  choice into the transcript, so a 1M session below 200k reads as a share of 200k). Unknown stays `null`, never zero.
+  One rule colors it everywhere (`contextLevel` in `packages/office-scene/src/context.ts`): calm under 60%, warm (amber)
+  from 60 to 85, hot (red) above 85.
+- **In the office** a thin column beside each desk monitor fills from the desk up (`ContextGauge`, chosen over a ring on the
+  name tag because it still reads at overview distance, where tags are hidden); its fill moves with an eased tween (0.4 to
+  1.4 s, longer for a bigger move). The name tag shows the percentage on hover and selection; the desk screen shows it in
+  its footer (and on the lock screen); the panel header meter and a hairline bar in each feed row use the same value.
+- **Compaction** is noticed from two kinds of evidence (`apps/web/src/features/compaction.ts`, pure, one tracker per
+  session): the CLI's own marker (Claude `system` entry with subtype `compact_boundary`, Codex item type `compacted`; the
+  server returns its time as `usage.compactedAt`) and a fall of the context in use to under half and by more than 20k
+  tokens between two observations of the same window. A fall that follows a marker within 90 s is the same compaction, a
+  model switch (different window) and a new session are not compactions, and a marker already in the transcript when a session
+  first appears counts only if under 30 s old. When one is noticed the page hands it to the scene for 3 s: the member's
+  sheets of paper burst out and are drawn into a small glowing cube above its head (one `Points` draw plus a cube and a ring,
+  2.5 s, `CompactionEffect`), the gauge's fill shrinks, and a chip under the name tag says "compacted −N%" / "已壓縮 −N%".
+  Reduced motion keeps only the chip and the gauge's tween; low quality draws none of it (the gauge still moves).
+  `?compact=1` previews it on stand-in members every 8 seconds.
+- **Provider marks** (`provider-marks.tsx`) are small inline SVGs on a 24 by 24 grid, drawn from a few strokes (Claude: a
+  starburst of eight rays in `--provider-claude`; Codex: a knot of three interlaced loops in `--provider-codex`), and the
+  same strokes are drawn on the desk screen's header canvas. They are simplified, not copies; they identify the provider
+  only (see THIRD_PARTY_NOTICES.md). They show on a name tag only when the camera is within 30 m of it or the tag is
+  selected or hovered, and always in the feed row and the conversation header.
+
+## Avatars
+
+A character's portrait is its own animal, drawn from its id alone (`apps/web/src/avatar/`, pure; nothing is stored).
+`avatarSpec(seed, species)` seeds a small stream (FNV-1a into mulberry32) and picks: fur, accent and backdrop hues shifted
+inside curated ranges of the 3D model's colors (`tools/blender/animal_profiles.py`), one of eight eye styles, six mouths, a
+blush, a species marking (stripes, spots, blaze, a dog's patch; the panda's eye patches and the raccoon's mask are always
+drawn), ear tilt and size, and zero to two accessories. Accessories live in slots (head, eyes, audio, neck, face), at most one
+per slot, headphones never sit under a hat, and tall rabbit ears take no beanie or cap. The role does not bias the choice: an
+avatar is a function of the id and species only, so it never changes when a classification flips. The backdrop is the light or
+dark tint that gives the fur at least 3:1 contrast, so a portrait reads on both themes.
+
+- **State** (`avatar/state.ts`) swaps only the eyes and mouth and adds one mark: working = focused eyes and a sweat drop,
+  needs you = wide eyes and a red `!` badge, finished = smile and a green check, sleeping/offline = closed eyes and "zz",
+  error = crossed eyes, idle = the base. Feed rows and the phone sheet take the state from the row's bucket, other places
+  from the agent's activity. The provider mark stays on the name tag, never in the portrait.
+- **Component** `features/Avatar.tsx`: an `<img>` of a cached data-URI SVG (no inline HTML), `aria-hidden` next to a name,
+  `role="img"` with a `label` when alone. Sizes are tokens (`--avatar-chip/row/member/peek/card`); the box is fixed, so
+  switching a state never shifts layout. `avatarUrl` is the same drawing for a canvas texture.
+- Every portrait is under 4 KB of SVG. Tests: `tests/aether/avatar.test.ts`.
+
+## Interactions with the characters
+
+The person can act on a character directly in the 3D office. Everything below is drawn over the canvas
+(`packages/office-scene/src/InteractionLayer.tsx`, styled in `styles/character-menu.css`) and never takes the pointer from
+orbiting: the layer is `pointer-events: none` except the menu, the group bar and the toast.
+
+**Ways in.** A character is reached by its 3D model and by its name tag, which is also the keyboard's way to it (the tag is a
+button: Tab to it, `aria-haspopup="menu"`, an `aria-label` of name, role and state).
+
+| Gesture                                        | Does                                                                                   |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------- |
+| click, tap                                     | chooses the member (camera and panel as before); a second one on the chosen member opens its menu |
+| right click, Shift+F10, press-and-hold (touch) | opens the menu (and chooses the member)                                                |
+| Enter or Space on a focused tag                | opens the menu at once                                                                 |
+| Shift + click, Shift + drag on the floor       | adds to a group / draws a marquee; a floating bar offers the group actions             |
+| Alt + drag (a model or a tag), desktop only    | carries the member's desk to another seat (see below)                                  |
+| hover (a mouse), 300 ms                        | a card with name, role, state, context share and current tool; a ring under the model; the cursor becomes a pointer |
+| Esc                                            | closes the menu, cancels a carry, clears a group, in that order                        |
+
+**The action menu** (`CharacterMenu.tsx`) is a floating `role="menu"` beside the character, kept inside the canvas (it scrolls
+inside a short one), with arrow keys, Home and End to move and focus returning to the character's tag when it closes. On a
+phone the same items are a bottom `Sheet` with 44 px rows. Every action is always listed; one that is not possible is disabled
+(`aria-disabled`, still focusable) with a one-line reason under it. What is possible is decided by one pure model,
+`apps/web/src/features/character-actions.ts` (table-tested in `tests/aether/character-actions.test.ts`), from the kind of
+member (managed agent, observed session, subagent), the signed-in role, whether the session runs in an AETHER terminal
+(and whether another person holds it), whether it is working, whether it is a clock-out candidate:
+
+- **Open conversation**, **Show in feed**, **Follow camera** (a toggle: the camera flies to the member and keeps it in frame
+  until the person drags, zooms or presses a camera key; the director yields while it lasts), **Look at screen** (a close-up of
+  the desk monitor from the sitter's side), **Pin to wall** (a toggle: the member always gets one of the small live views, busy
+  or not; off on a phone, low quality, reduced motion or when the wall is full).
+- **Quick message**, **Quick replies** (continue / yes / no), **Interrupt** (Esc) go through the composer's own terminal driver
+  (`terminal-driver.ts`: a lease, one ordered run of writes), only for a session that runs in an AETHER terminal that is free
+  and not working (Interrupt: working). A sent message appears in the conversation as a pending bubble like any other. A
+  session AETHER only watches shows **Continue in AETHER** in place of Quick message, and **Fork in AETHER**, **Copy resume
+  command**, the same flows as the conversation's foot.
+- **Stop session** (a confirm; an AETHER terminal for an owner or operator, or the process of a forgotten or ownerless session
+  for the owner, as on the Sessions page) and, for a clock-out candidate, **Send home** (the clock-out dialog with just this
+  session; owner only).
+
+**Emotes** (Wave, Thumbs up, High five, Cheer, Stretch, Pat) are only drawn: a clip the animal already has (`emotes.ts` maps each
+to one of `wave`, `nod`, `celebrate`, `cheer`, `stretch`, there being no thumbs-up clip, a nod stands in) plays once over
+what the member is doing, and an icon rises over its head for 1.8 s. One per character per 2.5 s (a second is refused with an
+announcement, not queued), at most four icons at once, not for a sleeping rabbit, a ghost or a member leaving. Reduced motion
+plays no clip and the icon only fades. Nothing is sent to the session.
+
+**Carrying a desk** (desktop, owner or operator): Alt + drag shows a ghost of the desk's footprint on the floor, snapped to
+the layout editor's 0.5 m grid, green where the layout rules allow it and red where not (the message says whether it is out of
+the office, blocks an aisle or overlaps something: the check is the kernel's `validateLayout`, the same as the editor, an import
+and the API). Release on green saves the layout through `layout.save`, release on red or Esc cancels, and a toast offers Undo
+(which saves the previous layout again). A session AETHER only watches has its seat saved too (the layout accepts `local:`
+members); desks of sessions that are gone are dropped when a seat is saved so remembered seats do not pile up. A plain drag
+is always the camera: without Alt nothing moves.
+
+**Groups.** Shift + click adds the chosen member and another to a group, Shift + drag on the floor selects every character
+inside the rectangle (gold ring and tag). The bar offers Send home (the clock-out dialog with only the group's candidates:
+running, quiet a day or more, owner only; it lists exactly those and asks to confirm), Pin / Unpin, Copy resume commands and
+Clear selection.
+
+**Accessibility.** Every action is reachable from the keyboard; each change (menu opened or closed, an emote, follow, pin, a
+seat moved or refused, the size of a group) is spoken through one polite live region; reduced motion removes clips, rising
+and the follow's easing; both locales.
+
 ## Loading performance
 
 Text and model files are served pre-compressed (the build writes `.gz` and `.br`), hashed assets are `immutable`, JSON
 answers are gzipped, and polling backs off when the event stream is up. A page's first load on a phone stays under 1 MB.
+
+### Phone budgets and what was measured
+
+Measured in headless Chrome with `--use-angle=metal` (`ANGLE Metal Renderer: Apple M4`) emulating a Moto G Power class phone
+(412 by 915, device pixel ratio 2.625, 4x CPU throttle, Wi-Fi / Fast 4G / Slow 4G profiles), 12 sessions, one run per cell unless
+a range is given; run-to-run noise on timings is about 100 ms, so bytes and main-thread totals are the firm numbers. WebKit could
+not be run (the installed build does not match this Playwright), so nothing below is an iOS measurement.
+
+| Budget (phone, first load)                           | Now                                                                  |
+| ---------------------------------------------------- | -------------------------------------------------------------------- |
+| Page, panel and styles (no 3D office)                | 189 KB transferred; entry script 157 KB brotli / 187 KB gzip         |
+| 3D office on top (engine + 8 characters at LOD 2)    | 2.3 MB: engine 266 KB brotli, characters 8 x about 260 KB gzip       |
+| The panel does not wait for the office               | Slow 4G: panel ready at 2.2 s with the office and at 2.2 s without   |
+| Interaction on the panel (sheet open, tap a row)     | 96 ms event with the 3D office off, 240 to 340 ms with it running (4x CPU) |
+| Scene cost while nothing happens                     | 14% of the main thread at 4x CPU (4% for the page without the scene) |
+| GPU memory of the scene (`renderer.info` estimate)   | 57 MB, 111 draw calls, 86 k triangles, 15 programs                   |
+
+The scene already redraws about 20 times a second on a phone, draws on demand and stops while the tab is hidden. What this
+round changed: the entry bundle no longer carries zod (the event stream is checked by `stream-event.ts`; the schemas load with
+the pages that use them), entry gzip 218 to 187 KB (brotli 182 to 157), first load without the scene 212 to 189 KB, first contentful
+paint 628 to 496 ms on Fast 4G and 1.6 to 1.5 s on Slow 4G; and **the scene stops drawing while the full-height sheet covers it**:
+main-thread time over 3 s with the conversation open fell from 1.0 to 1.3 s to 0.07 to 0.29 s (4x CPU), and of 32 pointer events in
+the sheet, 20 to 23 had been slow (16 ms or more, worst 54 ms) against 0 to 8 (worst 18 ms). Closing the sheet costs one catch-up
+frame (the event goes from 250 to 330 ms to 450 to 660 ms at 4x CPU), a trade made for the time spent reading.
+
+Tried and left out: `content-visibility: auto` on feed rows (150 sessions: opening the sheet takes 180 to 280 ms against 96 ms at 12,
+and the change measured no difference, because the cost is the first render, not layout), and a list library (not needed under
+about 150 rows). Texture compression (KTX2) is not worth a transcoder at 57 MB of GPU memory. The numbers come from
+Playwright with the Chrome DevTools protocol and the `?perf=1` probe; no measuring tool is added to the repository.
+
+## Installable app (PWA)
+
+`manifest.webmanifest` carries `id`, `scope`, `display` with `display_override` (`standalone`, `minimal-ui`), `lang`, `categories`,
+icons (any and maskable, 192 and 512) and shortcuts to Sessions and Approvals. `index.html` has `viewport-fit=cover`, the iOS web
+app tags (`black-translucent` status bar, so every pinned surface pads with `--safe-top` and friends from `tokens.css`),
+`theme-color` for both schemes (kept equal to `--surface` of the chosen theme by `App.tsx`), `100dvh` heights,
+`overscroll-behavior-y: none` and inputs of 16px on a phone. `PwaNotices` shows the install offer (Chromium's
+`beforeinstallprompt`, or on iOS the Share steps, once; a dismissal is remembered) and the update notice. The service worker
+(`apps/web/src/sw`, built by `scripts/build.mjs`) keeps only the page and hashed files, registers only in a secure context
+and waits for the person before updating; see [security](security.md#the-service-worker). Screenshots are not in the manifest:
+Chrome's richer install sheet wants them, but they would be tracked binaries that go stale with every redesign.
+
+## Performance and quality tiers
+
+Measured on a real GPU (headless Chrome with `--use-angle=metal`, `ANGLE Metal Renderer: Apple M4`, vsync off), 12 members at
+`/office?intensity=3`, device pixel ratio 2, `?perf=N` probe (`PerfProbe`, which also leaves `window.__aetherPerfRig.sample(n)`
+for re-sampling after a script switches a piece off). Software rendering (SwiftShader) numbers mean nothing and are not quoted.
+
+| Tier     | Pixel ratio (cap) | Shadows                            | Characters                      | Air, desk glow, threads | Wall | Programs | GPU memory (est.) |
+| -------- | ----------------- | ---------------------------------- | ------------------------------- | ----------------------- | ---- | -------- | ----------------- |
+| low      | 1                 | none (soft footprint under each)   | LOD 2                         | none (attention ring on) | no   | 19       | 67 MB             |
+| balanced | 1.5               | 2048 map, redrawn at about 12 Hz   | LOD 1                           | 110 motes, 3 shafts     | yes  | 42       | 108 MB            |
+| high     | 2                 | 4096 map, redrawn at 20 Hz         | LOD 1 (selected: LOD 0)         | 240 motes, 5 shafts     | yes  | 42       | 210 MB            |
+
+A phone (`compact`) is low-like (no shadows, no air, footprints) at a cap of 1.5 on high. Reduced motion freezes the air and
+the breathing of lines and rings and never turns members toward each other. The pixel ratio of every tier may fall to 0.75 (see below).
+
+**Where the time goes** (high, wall off, 1440 by 900; frame time p50 in ms, switching one piece off): all 3.0, shadows off 1.5,
+characters off 2.7, static building off 2.9, desk screens off 2.9, additive effects off 2.8, name tags 2.9 (DOM, not the GPU). The shadow
+pass is the cost: 27 casters, 122,000 of their 156,000 triangles are the twelve skinned characters, drawn again into a 4096 map
+every frame. Of the JS main thread (about 5% of one core while ambient), program lookup per object is 20%, skeleton bone
+uploads 13%, matrix updates 10%.
+
+**What was done, and what it measured** (same build, interleaved runs of the probe; p50 / p95 ms):
+
+| Change                                             | 1440x900 wall off | 1920x1080 wall on |
+| -------------------------------------------------- | ----------------- | ----------------- |
+| Before                                             | 3.1 / 5.7         | 6.3 to 6.8 / 14   |
+| Shadow map redrawn at 20 Hz, not every render       | 1.85 / 3.7        | 5.4 to 5.8 / 13   |
+| Animation updates by distance (30, 15, 5 Hz)       | within noise (0.3 at 1080p, 12 members) | |
+| Warm-up behind the loading cover                    | no frame-time change; worst startup frame 250 to 325 ms down to about 150 to 215 ms | |
+
+At the scene's own pace (no probe; CPU seconds of the renderer and GPU processes over 20 s, one run each, so read the order and not
+the decimals): the moving camera went from 5.7 and 5.6 to 4.9 and 4.4, the 1080p wall from 5.7 and 4.5 to 4.6 and 3.0, a still
+camera with the wall off did not move (2.1 and 1.5 against 2.0 to 2.4 and 1.4 to 1.6). The new air, desk glow, rings and lines cost
+under 0.1 ms (alternating on and off in one page, four rounds).
+
+**Rules the code follows** (pure parts in `perf-control.ts`, `interplay.ts`, `air.ts`, tested in `tests/aether`):
+
+- The shadow map does not depend on the camera and what casts into it moves slowly, so `ShadowThrottle` redraws it every 50 ms (high)
+  or 83 ms (balanced), and schedules one more render if a change would otherwise wait. The extra views of the wall never redraw it.
+- A character farther than 22 m from the camera updates its mixer at 30 Hz, from 45 m at 15 Hz, from 90 m at 5 Hz; the time it skipped
+  is applied in one step. The selected member always runs at full rate.
+- `AdaptiveRatio` (dynamic resolution): over a rolling median of 30 frames it steps the pixel ratio down by 0.25 when frames run 40%
+  over the target (60 Hz while the camera moves, 30 Hz at the ambient pace), never under 0.75, with a 1 s cooldown; it steps back up
+  after 90 frames within 5% of the target and a 4 s cooldown, and doubles that wait when a step up had to be undone. It never rises
+  above the screen's own ratio or the tier's cap. Gaps over 250 ms (an idle scene) are not frames.
+- `Warmup` compiles every program with `compileAsync` while the canvas is held back behind a "Preparing the scene" cover (at most 4 s),
+  and each character's shaders are compiled before it appears. It compiles variants a frame never uses, so the program count doubled (21 to 42).
+- Floors above the focused one and members on other floors are not drawn (cutaway), floors are merged per material (about 35 meshes),
+  and the ambient pace is 24 ms (see `AnimationClock`); none of that changed.
+
+**Not done, because it did not pay or was not measurable here**: instancing of furniture (a floor is already about 35 draws),
+`matrixAutoUpdate = false` on the building (matrix updates are 10% of a JS main thread that is idle 95% of the time), pooling the desk
+canvas textures (they repaint only when facts change or twice a second), a post-processing bloom pass (emissive materials and additive
+planes carry the glow instead), swaying plants and ceiling flicker (the plants are merged into the floor's geometry), zone floor
+markers (the lit pads already mark them). Integrated GPUs and phones were not available to measure: the adaptive ratio and the
+shadow throttle are aimed at them, and are unproven there.
+
+## Alive and futuristic, cheaply
+
+- **Air.** Dust motes (one `Points` draw, positions animated in the vertex shader) and a few window light shafts (one mesh), both
+  tinted by the local hour: cool blue at night, warm gold by day, easing through dawn (5 to 8) and dusk (17 to 20). Focused floor only.
+- **Desk.** The screen's light spills on the desk in the department's color while the member works (stronger the harder it works);
+  a member who wants a person has an amber ring pulsing on the floor round the desk; where there are no real shadows (low, phone) a
+  soft footprint sits under each character.
+- **Messages.** While a message is current the sender and receiver turn toward each other (at most 0.5 rad, a glance), a glowing
+  envelope arcs from the sender's head to the receiver's in 1.8 s, and the receiver nods when it lands. Subagent work stays a stream
+  of light and only the subagent looks at its parent. Links fade with distance from the camera (full under 30 m, gone at 110 m).
+- **Threads and tethers.** With a member hovered or selected, a thin cyan line joins it to the members of the same repository (else
+  the same branch) on the floor, nearest six; a violet tether joins every session to its live subagents (brighter for the member in
+  hand). One fat-line draw call, drawn only for the focused floor and faded with distance. Subagents keep their own desks: they are
+  not moved next to the parent.
+- `?talk=1` previews all of it with stand-in traffic (see `scene-preview.ts`).
 
 ## Verifying a UI change
 
