@@ -119,6 +119,22 @@ export function terminalQr(text: string): string {
   return lines.join('\n');
 }
 
+/** What a terminal shows for a pairing code: the QR code for the best address, the other addresses, and the caveats. */
+export function pairingText(
+  links: readonly { origin: string; url: string }[],
+  ttlSeconds: number,
+): string {
+  const [first, ...others] = links;
+  return [
+    `\n${terminalQr(first!.url)}\n\n${first!.origin}`,
+    ...(others.length
+      ? [`Same code on the other addresses: ${others.map((link) => link.origin).join(', ')}`]
+      : []),
+    `Scan it with the phone's camera (same network). It works once and expires in ${ttlSeconds / 60} minutes.`,
+    'Plain HTTP: the access token is not encrypted on the network, so use a network you trust.',
+  ].join('\n');
+}
+
 /** One link per address, all with the same code (the code is what is single-use, not the address), each with its QR code as an SVG. The code is in the fragment, never the query. */
 export async function pairingLinks(origins: readonly string[], code: string) {
   return Promise.all(

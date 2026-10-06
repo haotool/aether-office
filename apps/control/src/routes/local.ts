@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { homedir } from 'node:os';
+import { detectModels } from '@aether/providers/models';
 import { readClaudeLimits } from '../services/claude-limits.js';
 import { listAgentProcesses } from '../services/agent-processes.js';
 import { emit } from '../services/context.js';
@@ -230,6 +231,14 @@ export function localRoutes({ app, control, actor }: RouteContext) {
   app.get('/api/claude-limits', async (request) => {
     requireOperator(actor(request));
     return { limits: await readClaudeLimits() };
+  });
+  // The models the Claude and Codex CLIs on this machine offer, read from their caches (never written, no secrets). Any
+  // signed-in role may read it; ?refresh=1 skips the short in-memory memory.
+  app.get<{ Querystring: { refresh?: string } }>('/api/models', async (request) => {
+    actor(request);
+    return {
+      catalogs: await detectModels(process.env, { refresh: request.query.refresh === '1' }),
+    };
   });
   // Machine load and free disk, for the people running agents on it.
   app.get('/api/system', async (request) => {

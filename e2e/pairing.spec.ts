@@ -25,12 +25,12 @@ test('a phone scans the link, ends up signed in without a token, and the link wo
     .getByLabel('存取權杖', { exact: true })
     .fill(readFileSync(join(runtime().directory, 'owner-token'), 'utf8').trim());
   await page.getByRole('button', { name: /進入辦公室/ }).click();
-  await page.getByRole('link', { name: '設定' }).click();
-  await expect(page.getByRole('heading', { name: '連接手機' })).toBeVisible();
+  // "Open on your phone" is in the top bar of every page: no digging through Settings.
   const made = page.waitForResponse(
     (r) => r.url().endsWith('/api/pairings') && r.request().method() === 'POST',
   );
-  await page.getByRole('button', { name: '產生 QR code' }).click();
+  await page.getByRole('button', { name: '在手機上開啟' }).click();
+  await expect(page.getByRole('dialog').getByText(/純 HTTP/)).toBeVisible(); // says honestly what it is
   const { links } = (await (await made).json()) as { links: { origin: string; url: string }[] };
   await expect(page.getByRole('img', { name: links[0]!.origin })).toBeVisible();
   // two addresses, one code: the selector only switches which link the QR code shows

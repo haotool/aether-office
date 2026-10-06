@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { HOOK_MARKER, eventsFor } from './claude-hooks.js';
+import { APPROVAL_TAG, HOOK_MARKER, eventsFor } from './claude-hooks.js';
 import { JsonRpcProcess } from './jsonrpc.js';
 
 export type HookState = 'installed' | 'partial' | 'not_installed';
@@ -40,6 +40,25 @@ export async function fileHookStatus(path: string, provider: 'claude' | 'codex')
     state: stateOf(present.size, wanted.length),
     missing: wanted.filter((e) => !present.has(e)),
   };
+}
+
+/** Is the opt-in synchronous PermissionRequest hook of Remote approvals in this Claude settings file? */
+export async function fileRemoteApprovals(path: string): Promise<boolean> {
+  try {
+    const parsed: unknown = JSON.parse(await readFile(path, 'utf8'));
+    const groups =
+      isObject(parsed) && isObject(parsed['hooks']) ? parsed['hooks']['PermissionRequest'] : null;
+    return list(groups).some((group) =>
+      list(isObject(group) ? group['hooks'] : null).some(
+        (hook) =>
+          isObject(hook) &&
+          typeof hook['command'] === 'string' &&
+          hook['command'].includes(`${HOOK_MARKER}:${APPROVAL_TAG}`),
+      ),
+    );
+  } catch {
+    return false;
+  }
 }
 
 export type CodexHookTrust = { event: string; trusted: boolean; enabled: boolean };

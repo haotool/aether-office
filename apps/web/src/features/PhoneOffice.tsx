@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Plus, RotateCcw } from 'lucide-react';
 import type { AttributedSession, Layout, Snapshot } from '@aether/contracts';
+import { sessionLink } from '../localSessions.js';
 import { usePreferences } from '../state.js';
 import type { TourAction } from '../tour.js';
 import { useT } from '../ui.js';
@@ -48,6 +49,7 @@ export function PhoneOffice({
 }) {
   const t = useT();
   const prefs = usePreferences();
+  const advanced = prefs.advanced;
   const navigate = useNavigate();
   return (
     <div className="phone-office">
@@ -79,22 +81,11 @@ export function PhoneOffice({
           ))}
         </div>
         <div className="phone-top-right">
-          <ActiveSessions
-            sessions={sessions}
-            onOpen={(s) =>
-              navigate(
-                `/office?${s.projectId ? `project=${s.projectId}&` : ''}agent=${encodeURIComponent(`local:${s.key}`)}&focus=1`,
-              )
-            }
-          />
+          <ActiveSessions sessions={sessions} onOpen={(s) => navigate(sessionLink(s))} />
           <AttentionSessions
             sessions={sessions}
             owner={owner}
-            onOpen={(s) =>
-              navigate(
-                `/office?${s.projectId ? `project=${s.projectId}&` : ''}agent=${encodeURIComponent(`local:${s.key}`)}&focus=1`,
-              )
-            }
+            onOpen={(s) => navigate(sessionLink(s))}
           />
           {prefs.view === '3d' && (
             <button
@@ -107,7 +98,7 @@ export function PhoneOffice({
           )}
         </div>
       </div>
-      {canWrite && (
+      {canWrite && advanced && (
         <button className="fab" aria-label={t('newWork')} onClick={onNewTask}>
           <Plus size={24} />
         </button>

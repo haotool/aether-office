@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Smartphone } from 'lucide-react';
 import { api } from '../api.js';
 import { copyText } from '../browser-compat.js';
-import { Field, useT } from '../ui.js';
+import { Field, Modal, useT } from '../ui.js';
 
 type Pairing = {
   id: string;
@@ -39,6 +39,9 @@ export function ConnectPhone() {
     }
   }
   useEffect(() => {
+    void generate();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- asked for once, when the panel opens
+  useEffect(() => {
     if (!pairing || !pairing.lan) return;
     const tick = () => setSeconds(Math.max(0, Math.round((pairing.expiresAt - Date.now()) / 1000)));
     tick();
@@ -61,14 +64,12 @@ export function ConnectPhone() {
 
   const live = pairing && status === 'pending' && seconds > 0;
   return (
-    <section className="connect-phone panel" aria-labelledby="connect-phone-title">
-      <h2 id="connect-phone-title">
-        <Smartphone size={18} aria-hidden="true" /> {t('pairTitle')}
-      </h2>
+    <div className="connect-phone">
       <p className="muted">{t('pairHint')}</p>
       {pairing && !pairing.lan && <p role="status">{t('pairNoLan')}</p>}
       {pairing?.lan && (
         <>
+          <p className="muted">{t('pairHttp')}</p>
           {status === 'paired' && (
             <p role="status" className="paired">
               ✓ {t('pairPaired')}
@@ -127,6 +128,36 @@ export function ConnectPhone() {
       <button className="secondary" onClick={() => void generate()}>
         {pairing ? t('pairAgain') : t('pairGenerate')}
       </button>
-    </section>
+    </div>
+  );
+}
+
+/** "Open on your phone": a button that opens the pairing panel from anywhere in the app, not only from Settings. */
+export function PairPhoneButton({ variant }: { variant: 'icon' | 'text' }) {
+  const t = useT();
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      {variant === 'icon' ? (
+        <button
+          className="icon-button"
+          aria-label={t('pairOpen')}
+          title={t('pairOpen')}
+          onClick={() => setOpen(true)}
+        >
+          <Smartphone size={18} />
+        </button>
+      ) : (
+        <button className="secondary" onClick={() => setOpen(true)}>
+          <Smartphone size={18} aria-hidden="true" />
+          {t('pairOpen')}
+        </button>
+      )}
+      {open && (
+        <Modal title={t('pairTitle')} onClose={() => setOpen(false)}>
+          <ConnectPhone />
+        </Modal>
+      )}
+    </>
   );
 }

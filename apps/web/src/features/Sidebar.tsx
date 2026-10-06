@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import type { Project } from '@aether/contracts';
-import { nav, navGroups, pageLink } from '../nav.js';
+import { nav, pageLink, visibleGroups } from '../nav.js';
 
 const icons = new Map<string, (typeof nav)[number][1]>(nav);
 import { useT } from '../ui.js';
@@ -12,8 +12,10 @@ export function Sidebar({
   open,
   projects,
   projectId,
+  advanced,
   workCount,
   approvalCount,
+  sessionCount,
   messageCount,
   offline,
   onNavigate,
@@ -24,8 +26,11 @@ export function Sidebar({
   open: boolean;
   projects: readonly Project[];
   projectId: string | undefined;
+  /** Show the pages for orchestrating several agents too (Settings → Advanced). */
+  advanced: boolean;
   workCount: number;
   approvalCount: number;
+  sessionCount: number;
   messageCount: number;
   offline: boolean;
   onNavigate: () => void;
@@ -53,7 +58,7 @@ export function Sidebar({
         </select>
       </label>
       <div className="nav-title desktop-title">WORKSPACE</div>
-      {navGroups.map(([group, pages]) => (
+      {visibleGroups(advanced).map(([group, pages]) => (
         <div className="nav-group" key={group}>
           <div className="nav-group-title">{t(group)}</div>
           {pages.map((key) => {
@@ -70,6 +75,7 @@ export function Sidebar({
                 {key === 'tasks' && workCount ? <small>{workCount}</small> : null}
                 {key === 'messages' && messageCount ? <small>{messageCount}</small> : null}
                 {key === 'approvals' && approvalCount ? <small>{approvalCount}</small> : null}
+                {key === 'sessions' && sessionCount ? <small>{sessionCount}</small> : null}
               </NavLink>
             );
           })}

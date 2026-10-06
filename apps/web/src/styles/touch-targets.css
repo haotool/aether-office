@@ -2,8 +2,8 @@
  * The touch and phone layers (this file to phone-pages.css), loaded after the desktop ones; the rules it enforces are the UI rules in AGENTS.md and are checked on
  * every page at 320, 390, 820 and 1280 px by e2e/responsive.spec.ts.
  *
- *   phone   <= 760px   one column, drawer navigation, tables become cards, inspector is a bottom sheet
- *   tablet  761-1100px  sidebar plus content, inspector over the content, tables scroll sideways
+ *   phone   <= 760px   one column, drawer navigation, tables become cards, the session panel is a bottom sheet
+ *   tablet  761-1100px  sidebar plus content, session panel over the content, tables scroll sideways
  *   desktop > 1100px   as designed
  */
 html {
@@ -54,6 +54,8 @@ body {
   .view-switch button,
   .chip-active,
   .round,
+  .sheet-chip,
+  .tool-summary,
   .auto-pill {
     position: relative;
   }
@@ -66,6 +68,8 @@ body {
   .view-switch button::before,
   .chip-active::before,
   .round::before,
+  .sheet-chip::before,
+  .tool-summary::before,
   .auto-pill::before {
     content: '';
     position: absolute;

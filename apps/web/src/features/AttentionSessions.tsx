@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { DoorOpen } from 'lucide-react';
 import type { AttributedSession } from '@aether/contracts';
 import { attentionReason, needsAttention } from '../localSessions.js';
+import { sessionsWaiting } from './needs-you.js';
 import { usePreferences } from '../state.js';
 import { Sheet, useT } from '../ui.js';
 import { reapZombies } from './reap.js';
@@ -33,7 +34,9 @@ export function AttentionSessions({
   const [clockingOut, setClockingOut] = useState(false);
   const [result, setResult] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState('');
-  const list = sessions.filter(needsAttention);
+  // First what only a person can move on (an approval, a question), then what is merely forgotten or ownerless.
+  const waiting = sessionsWaiting(sessions, Date.now());
+  const list = [...waiting, ...sessions.filter((s) => needsAttention(s) && !waiting.includes(s))];
   const idle = idleSessions(sessions, 1);
   if (!list.length && !open && !clockingOut) return null;
   const reap = async (s: AttributedSession) => {
@@ -56,10 +59,11 @@ export function AttentionSessions({
       <button
         className="chip-attention"
         aria-expanded={open}
-        aria-label={`${t('needsAttention')} ${list.length}`}
+        aria-label={`${t('needsAttention')}: ${list.length}`}
         onClick={() => setOpen(true)}
       >
         <span aria-hidden="true">!</span>
+        <span className="chip-label">{t('chipNeedsYou')}</span>
         {list.length}
       </button>
       {open && (
@@ -82,7 +86,11 @@ export function AttentionSessions({
             <li key={s.key} className="attention-row">
               <span className="sheet-main">
                 <strong>{s.title ?? s.repo}</strong>
-                <small>{attentionReason(s, locale)}</small>
+                <small>
+                  {[waiting.includes(s) ? t('waitingForYou') : null, attentionReason(s, locale)]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </small>
                 {result[s.key] && <small role="status">{result[s.key]}</small>}
               </span>
               <span className="attention-actions">

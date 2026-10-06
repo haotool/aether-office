@@ -1,9 +1,7 @@
 import { lazy, Suspense, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Orbit } from 'lucide-react';
 import type { Snapshot } from '@aether/contracts';
 import { STAGGER_MS, type PerfReport, type SceneSpeech } from '@aether/office-scene/model';
-import { api } from '../api.js';
 import { LOCAL_PREFIX, mergeLayout } from '../localSessions.js';
 import { usePreferences } from '../state.js';
 import type { Layout } from '@aether/contracts';
@@ -12,6 +10,7 @@ import { useT } from '../ui.js';
 import { Agents } from './Agents.js';
 import { useGitGraph } from './GitGraph.js';
 import type { OfficeModel } from './office-model.js';
+import { useSpeechBySession } from './use-session-feed.js';
 
 const OfficeScene = lazy(() =>
   import('@aether/office-scene').then((m) => ({ default: m.OfficeScene })),
@@ -38,7 +37,6 @@ const STAND_IN_SPEECH: SceneSpeech = {
     at: null,
   },
 };
-const SPEECH_POLL_MS = 6000;
 
 // Opt-in preview: `?clockout=N` sends every member home N seconds (default 2) after the scene opens, one after another, to look at the
 // walk out without real sessions to stop. Nothing is stopped; it only moves the drawn members.
@@ -46,19 +44,10 @@ const clockOutPreview = new URLSearchParams(window.location.search).get('clockou
 
 /** The last prompt and reply of every running session, by office member id. Polled only while there is someone to show. */
 function useSpeech(model: OfficeModel, enabled: boolean): Record<string, SceneSpeech> {
-  const query = useQuery({
-    queryKey: ['speech'],
-    queryFn: () =>
-      api<{ speech: Record<string, SceneSpeech> }>('/api/local-sessions/speech').then(
-        (r) => r.speech,
-      ),
-    enabled: enabled && model.observed.length > 0,
-    refetchInterval: SPEECH_POLL_MS,
-    retry: false,
-  });
+  const speech = useSpeechBySession(enabled && model.observed.length > 0);
   if (speechPreview) return Object.fromEntries(model.agents.map((a) => [a.id, STAND_IN_SPEECH]));
   return Object.fromEntries(
-    Object.entries(query.data ?? {}).map(([key, speech]) => [`${LOCAL_PREFIX}${key}`, speech]),
+    Object.entries(speech).map(([key, value]) => [`${LOCAL_PREFIX}${key}`, value]),
   );
 }
 

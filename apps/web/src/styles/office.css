@@ -71,6 +71,9 @@
 .lilac {
   background: var(--violet);
 }
+.red {
+  background: var(--red);
+}
 .quiet {
   background: var(--dim);
 }

@@ -30,10 +30,11 @@ export function ActiveSessions({
       <button
         className="chip-active"
         aria-expanded={open}
-        aria-label={`${t('activeSessions')} ${live.length}`}
+        aria-label={`${t('activeSessions')}: ${live.length}`}
         onClick={() => setOpen(true)}
       >
         <i aria-hidden="true" className={live.length ? 'on' : ''} />
+        <span className="chip-label">{t('chipRunning')}</span>
         {live.length}
       </button>
       {open && (

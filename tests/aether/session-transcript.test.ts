@@ -116,6 +116,60 @@ it('reads a Codex transcript: messages, function calls with patches and outputs,
   expect(analysis.files).toEqual(['src/a.ts']);
 });
 
+it('pairs a tool call with its result by id and gives each call a short, redacted target', () => {
+  const claude = [
+    line({
+      type: 'assistant',
+      message: {
+        role: 'assistant',
+        content: [
+          { type: 'tool_use', id: 'toolu_1', name: 'Read', input: { file_path: '/repo/src/a.ts' } },
+          {
+            type: 'tool_use',
+            id: 'toolu_2',
+            name: 'Bash',
+            input: { command: 'curl -H "Authorization: Bearer abcdefghijklmnopqrstuvwxyz" x' },
+          },
+        ],
+      },
+    }),
+    line({
+      type: 'user',
+      message: {
+        role: 'user',
+        content: [{ type: 'tool_result', tool_use_id: 'toolu_1', content: 'file text' }],
+      },
+    }),
+  ].join('\n');
+  const { entries } = parseTranscript('claude', claude);
+  expect(entries.map((e) => [e.toolId, e.summary])).toEqual([
+    ['toolu_1', '/repo/src/a.ts'],
+    ['toolu_2', expect.stringContaining('curl')],
+    ['toolu_1', null],
+  ]);
+  expect(JSON.stringify(entries)).not.toContain('abcdefghijklmnopqrstuvwxyz');
+  const codex = [
+    line({
+      type: 'response_item',
+      payload: {
+        type: 'function_call',
+        name: 'exec_command',
+        call_id: 'call_7',
+        arguments: JSON.stringify({ cmd: 'ls -la' }),
+      },
+    }),
+    line({
+      type: 'response_item',
+      payload: { type: 'function_call_output', call_id: 'call_7', output: 'clean' },
+    }),
+  ].join('\n');
+  const parsed = parseTranscript('codex', codex).entries;
+  expect(parsed.map((e) => [e.toolId, e.summary])).toEqual([
+    ['call_7', 'ls -la'],
+    ['call_7', null],
+  ]);
+});
+
 it('serves a transcript only to an owner, only by a key the scanner found, never by a path', async () => {
   const home = await mkdtemp(join(tmpdir(), 'aether-transcript-'));
   const dir = join(home, '.claude/projects/-p');

@@ -1,0 +1,79 @@
+/*
+ * The session panel's width: the drag handle on its left edge and the collapsed rail (features/PanelResizer.tsx,
+ * SessionPanel.tsx). The width itself is `--panel-w`, see session-panel.css.
+ */
+/*
+ * The drag handle: a 16px hit area over the panel's left edge with a hairline and a grip that show on hover and drag. It
+ * sits above the sticky group headers (--z-base) that reach the panel's edge.
+ */
+.panel-resizer {
+  position: absolute;
+  z-index: var(--z-label-hover);
+  top: 0;
+  bottom: 0;
+  left: -8px;
+  width: 16px;
+  cursor: col-resize;
+  touch-action: none;
+}
+.panel-resizer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 5px;
+  width: 6px;
+  background: linear-gradient(90deg, transparent, var(--glow), transparent);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+.panel-resizer::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 6px;
+  width: 4px;
+  height: 40px;
+  transform: translateY(-50%);
+  border-radius: var(--r-pill);
+  background: var(--dim);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+@media (hover: hover) {
+  .panel-resizer:hover::before,
+  .panel-resizer:hover::after {
+    opacity: 1;
+  }
+}
+.panel-resizer:focus-visible {
+  outline: none;
+}
+.panel-resizer:focus-visible::before,
+.panel-resizer:focus-visible::after,
+.app-body[data-resizing] .panel-resizer::before,
+.app-body[data-resizing] .panel-resizer::after {
+  opacity: 1;
+}
+.panel-resizer:focus-visible::after,
+.app-body[data-resizing] .panel-resizer::after {
+  background: var(--mint);
+}
+
+/* Collapsed: a 48px rail with the way back in and what wants a look */
+.panel-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-12) 0;
+}
+.panel-rail .count-badge {
+  min-width: var(--space-24);
+  text-align: center;
+}
+.panel-rail .count-badge.unread {
+  border-color: var(--mint);
+  background: transparent;
+  color: var(--mint);
+}

@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { Control } from './control.js';
 import { createServer } from './server.js';
 import { secret } from './services/identity.js';
-import { lanOrigins } from './services/pairing.js';
+import { lanOrigins, pairingText } from './services/pairing.js';
 import { reconcileTerminals } from './services/terminals.js';
 import { reconcileOffline, reconcileStalled } from './services/runners.js';
 const mode = process.env['AETHER_MODE'] === 'demo' ? 'demo' : 'live';
@@ -62,7 +62,30 @@ if (lan) {
   const addresses = lanOrigins(String(port));
   console.log(
     `LAN access is ON: open ${addresses.join(' or ') || '(no private-network address found)'} on a device on this network.\n` +
-      'Plain HTTP: the access token crosses the network unencrypted, so use it only on a network you trust.\n' +
-      'To sign a phone in without typing the token, run `pnpm run pair` (a QR code) or use Settings → Connect a phone.',
+      'Plain HTTP: the access token crosses the network unencrypted, so use it only on a network you trust.',
+  );
+  // A phone can be signed in right away: the same one-time code `pnpm run pair` makes, shown as a QR code.
+  if (process.env['AETHER_HOST']) {
+    const base = `http://${['0.0.0.0', '::'].includes(host) ? '127.0.0.1' : host}:${port}`;
+    try {
+      const response = await fetch(`${base}/api/pairings`, {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${readFileSync(tokenFile, 'utf8').trim()}`,
+          origin: base,
+        },
+      });
+      const made = (await response.json()) as {
+        ttlSeconds: number;
+        links: { origin: string; url: string }[];
+      };
+      console.log(pairingText(made.links, made.ttlSeconds));
+    } catch {
+      console.log('Run `pnpm run pair` for a QR code that signs a phone in.');
+    }
+  }
+} else {
+  console.log(
+    'Only this computer can connect. To use it from a phone on your network: AETHER_HOST=0.0.0.0 pnpm start (a QR code is then shown here).',
   );
 }

@@ -38,6 +38,28 @@ are never treated as one id. Approvals keep their request id and are decided onc
 errors are distinct from normal completion. Input and output token usage is recorded when available; model reasoning is not
 collected. No `--yolo`, `--dangerously-skip-permissions` or automatic switch to a paid API exists anywhere.
 
+## Remote approvals (synchronous `PermissionRequest` hook)
+
+Contract used, taken from Claude Code's hooks documentation and checked against the installed CLI (`claude` 2.1.289: its
+hook-output schema is in the binary): the hook receives `{hook_event_name: "PermissionRequest", tool_name, tool_input,
+permission_suggestions?, ...}` on stdin and may print, with exit code 0,
+`{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"allow"|"deny", "message"?, "updatedInput"?,
+"updatedPermissions"?, "interrupt"?}}}`. No output, a non-zero exit, a parse failure or a timeout leaves the permission flow
+unchanged: Claude asks in the terminal. Exit code 2 is not a deny for this event; a deny must be the JSON. `async: true` is
+ignored for this event, so the entry is synchronous and carries its own `timeout` (the wait plus 15 s). `updatedPermissions` is
+an array of permission-update objects (`{type: "addRules", behavior: "allow", destination: "session", rules: [{toolName,
+ruleContent?}]}`), not strings (one documentation summary said strings; the CLI's schema says objects). AETHER implements allow,
+deny with a message, and allow-for-session using the rules from `permission_suggestions` with `destination` forced to
+`session`; it does not use `updatedInput`.
+
+The installer entry is tagged `aether-office-hook:PermissionRequest:wait` and is added only by `pnpm hooks install
+--remote-approvals [--wait <seconds>]`; installing again without the flag removes it, `pnpm hooks remove` removes everything,
+and `pnpm hooks status` reports it. The hook and its helper are installed as a private copy in `~/.aether/hooks/` (settings point
+at the copy, not at the repository; `status` reports `modified` if the copy changed). Claude only: Codex has no equivalent here. There is no version gate: the design fails
+safe (an older CLI that ignores the output simply shows its own prompt after the wait), and the schema was verified only on
+2.1.289. The hook's fallback (offline, hung server, no config, bad input) is tested with the script run as a real child
+process (`tests/aether/hook-approval.test.ts`).
+
 ## External observation readers
 
 `apps/runner/src/observer.ts` provides bounded readers for transcripts outside AETHER's control.
@@ -55,6 +77,27 @@ collected. No `--yolo`, `--dangerously-skip-permissions` or automatic switch to 
   symlink rejection have real-file tests. Reader output never authorizes commands or marks managed work complete.
 
 Compatibility is established with synthetic fixtures; no private provider file has been read.
+
+## Model catalog
+
+`GET /api/models` (any signed-in role) lists the models each CLI offers, so a new release appears without an AETHER update.
+The CLIs' caches are private files with no format guarantee, so the readers (`packages/providers/src/models.ts`) skip every
+field they do not recognise and never throw; a file over 2 MiB is ignored.
+
+- **Codex**: `~/.codex/models_cache.json` (`AETHER_CODEX_HOME`). Only models with `visibility: "list"`, best `priority` first,
+  with their reasoning levels and context window. When the cache is missing or its `fetched_at` is over 24 hours old, `codex debug models`
+  is run (no shell, 5 second timeout, bounded output; it prints the local catalog and runs no model). If that fails the old
+  cache is shown.
+- **Claude Code**: the newest `~/.claude/cache/model-catalog/*cc.json` / `*ccd.json` (`AETHER_CLAUDE_HOME`): the main-section
+  models with their effort options, plus `additionalModelOptionsCache` of `~/.claude.json` (the 1M-context variants; with
+  `AETHER_CLAUDE_HOME` set, `<home>/.claude.json`). The aliases `fable`, `opus`, `sonnet`, `haiku` are always listed first, so
+  there is a working choice with no cache at all. Aliases resolve to the newest model of their family inside the CLI; full IDs
+  are shown to pin one.
+- **Freshness**: each answer says its source (`cache`, `cli` or `fallback`) and when it was fetched, and is marked `stale`
+  after 7 days. Answers are kept in memory for 30 seconds per source file (mtime and size), 10 minutes after a CLI probe;
+  `?refresh=1` skips that.
+- **Never written**: nothing is created or changed under `~/.claude` or `~/.codex`, no network request is made, and no account
+  identifier, token or organization field is read into the answer.
 
 ## ACP and A2A
 

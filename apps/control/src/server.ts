@@ -3,6 +3,7 @@ import cookie from '@fastify/cookie';
 import staticFiles from '@fastify/static';
 import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
 import { z } from 'zod';
 import { DomainError, type Actor } from '@aether/kernel';
@@ -16,11 +17,15 @@ import type { AuthInput, RouteContext, ServerOptions } from './routes/context.js
 import { adminRoutes } from './routes/admin.js';
 import { authRoutes } from './routes/auth.js';
 import { externalRoutes } from './routes/external.js';
+import { composerRoutes } from './routes/composer.js';
 import { localRoutes } from './routes/local.js';
+import { permissionRoutes } from './routes/permissions.js';
 import { projectListRoutes } from './routes/project-lists.js';
 import { projectRoutes } from './routes/project.js';
 import { runnerRoutes } from './routes/runner.js';
+import { sessionStreamRoutes } from './routes/session-stream.js';
 import { workRoutes } from './routes/work.js';
+import { pruneAttempts } from './services/attempts.js';
 
 /** Routes that answer without a session or bearer token, and why. Everything else under /api requires one. */
 export const PUBLIC_ROUTES: ReadonlySet<string> = new Set([
@@ -32,7 +37,14 @@ export const PUBLIC_ROUTES: ReadonlySet<string> = new Set([
   'POST /api/webhooks/github/:integrationId', // authenticated by HMAC signature
   'GET /.well-known/agent-card.json', // public by the A2A spec
   'POST /a2a', // its own bearer scheme
+  // The hook's own bearer token (Remote approvals): it can create a request and read or close that one request.
+  'POST /api/hook/permission-requests',
+  'GET /api/hook/permission-requests/:id',
+  'POST /api/hook/permission-requests/:id/fallback',
 ]);
+
+/** The reads that carry an ETag: the session list, its speech and one session's transcript (not the stream). */
+const REVALIDATED = /^\/api\/local-sessions(?:\/speech|\/[^/]+\/transcript)?$/;
 
 export function createServer(control: Control, options: ServerOptions) {
   const origin = new URL(options.origin);
@@ -66,6 +78,7 @@ export function createServer(control: Control, options: ServerOptions) {
     refreshMessageWaits(control.ctx);
     tickSchedules(control.ctx); // catches up after a restart: one occurrence at most, never a burst
     waitTimer = setInterval(() => {
+      pruneAttempts(attempts, control.ctx.now());
       try {
         refreshMessageWaits(control.ctx);
       } catch {
@@ -117,6 +130,25 @@ export function createServer(control: Control, options: ServerOptions) {
   app.addHook('preHandler', async (request) => {
     const url = request.routeOptions.url ?? '';
     if (url.startsWith('/api/') && !PUBLIC_ROUTES.has(`${request.method} ${url}`)) actor(request);
+  });
+  // The heavy reads of the session panel are revalidated rather than resent: an unchanged answer is a 304 with no body.
+  app.addHook('onSend', async (request, reply, payload) => {
+    const path = request.url.split('?')[0]!;
+    if (
+      request.method !== 'GET' ||
+      reply.statusCode !== 200 ||
+      typeof payload !== 'string' ||
+      !REVALIDATED.test(path)
+    )
+      return payload;
+    const etag = `W/"${createHash('sha1').update(payload).digest('base64url')}"`;
+    reply.header('etag', etag).header('cache-control', 'private, no-cache');
+    const given = String(request.headers['if-none-match'] ?? '');
+    if (given.split(',').some((v) => v.trim() === etag)) {
+      reply.code(304);
+      return '';
+    }
+    return payload;
   });
   // API answers are JSON and compress about tenfold; a phone on Wi-Fi waits for the bytes, not for the CPU.
   app.addHook('onSend', async (request, reply, payload) => {
@@ -176,6 +208,9 @@ export function createServer(control: Control, options: ServerOptions) {
   workRoutes(routes);
   runnerRoutes(routes);
   localRoutes(routes);
+  permissionRoutes(routes);
+  sessionStreamRoutes(routes);
+  composerRoutes(routes);
   externalRoutes(routes);
   adminRoutes(routes);
   if (options.serveWeb) {

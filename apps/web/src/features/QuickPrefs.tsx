@@ -1,9 +1,10 @@
 import { Globe2, Moon, Sprout, Sun } from 'lucide-react';
 import { usePreferences } from '../state.js';
 import { useT } from '../ui.js';
+import { PairPhoneButton } from './ConnectPhone.js';
 
 /** Language, theme and 3D quality, at the foot of the drawer: the top bar has no room for them on a phone. */
-export function QuickPrefs() {
+export function QuickPrefs({ canPair }: { canPair: boolean }) {
   const t = useT();
   const prefs = usePreferences();
   return (
@@ -32,6 +33,7 @@ export function QuickPrefs() {
         <Sprout size={18} />
         {t('beanstalk')}
       </button>
+      {canPair && <PairPhoneButton variant="text" />}
       <label>
         <span>{t('quality')}</span>
         <select

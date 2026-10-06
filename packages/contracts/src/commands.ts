@@ -8,6 +8,7 @@ import {
   scheduleTemplateSchema,
   speciesSchema,
   terminalDimensions,
+  terminalResumeSchema,
 } from './core.js';
 
 const envelope = {
@@ -23,7 +24,14 @@ export const commandSchema = z.discriminatedUnion('type', [
     .object({
       ...projectEnvelope,
       type: z.literal('terminal.start'),
-      data: z.object({ machineId: id, profile: shortText, ...terminalDimensions }).strict(),
+      data: z
+        .object({
+          machineId: id,
+          profile: shortText,
+          ...terminalDimensions,
+          resume: terminalResumeSchema.optional(),
+        })
+        .strict(),
     })
     .strict(),
   z

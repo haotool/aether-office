@@ -5,6 +5,7 @@ import {
   login,
   openSession,
 } from '../services/identity.js';
+import { MAX_ATTEMPTS, pruneAttempts } from '../services/attempts.js';
 import { PAIRING_TTL_MS, lanOrigins, pairingLinks } from '../services/pairing.js';
 import { DomainError } from '@aether/kernel';
 import { z } from 'zod';
@@ -35,7 +36,7 @@ export function authRoutes({
     const last = attempts.get(key);
     if (last && last.until > now && last.count >= 10)
       throw new DomainError('LOGIN_RATE_LIMIT', 429);
-    if (attempts.size > 1000) for (const [k, v] of attempts) if (v.until <= now) attempts.delete(k);
+    if (attempts.size >= MAX_ATTEMPTS) pruneAttempts(attempts, now);
     attempts.set(key, {
       count: last && last.until > now ? last.count + 1 : 1,
       until: last && last.until > now ? last.until : now + 300000,

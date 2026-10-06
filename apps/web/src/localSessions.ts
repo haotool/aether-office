@@ -1,4 +1,4 @@
-import type { Agent, Layout, LocalSession } from '@aether/contracts';
+import type { Agent, AttributedSession, Layout, LocalSession } from '@aether/contracts';
 import {
   FLOOR_CAPACITY,
   apparitionOf,
@@ -28,6 +28,10 @@ export const sessionIdOf = (agentId: string): string | null =>
   agentId.startsWith(LOCAL_PREFIX)
     ? agentId.slice(LOCAL_PREFIX.length).split(SUBAGENT_INFIX)[0]!
     : null;
+
+/** The address that shows a session in the office, focused: what a tap on its alert or its row opens. */
+export const sessionLink = (s: Pick<AttributedSession, 'key' | 'projectId'>) =>
+  `/office?${s.projectId ? `project=${s.projectId}&` : ''}agent=${encodeURIComponent(`${LOCAL_PREFIX}${s.key}`)}&focus=1`;
 
 export function activityOf(session: LocalSession, now: number): Agent['activity'] {
   // Hook events are authoritative when installed; otherwise the process table, then a file-mtime heuristic.

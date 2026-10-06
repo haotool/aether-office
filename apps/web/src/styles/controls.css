@@ -111,3 +111,11 @@ button:not([class]) {
   color: var(--red);
   margin-top: var(--space-16);
 }
+.avatar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--glass-line-faint);
+  border-radius: var(--r-xl);
+  flex-shrink: 0;
+}

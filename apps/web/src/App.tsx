@@ -1,35 +1,47 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Orbit, X } from 'lucide-react';
-import type { Layout, LocalSessionsResponse, Project, Snapshot } from '@aether/contracts';
-import { api, forgetCsrf, type Session } from './api.js';
+import type { Layout, Project, Snapshot } from '@aether/contracts';
+import { api } from './api.js';
 import { usePreferences } from './state.js';
 import { useT, Empty } from './ui.js';
 import type { Key } from './i18n.js';
 import { TaskForm } from './features/Tasks.js';
-import { Inspector } from './features/Inspector.js';
+import { SessionPanel } from './features/SessionPanel.js';
+import { SessionSheet, type SheetHeight } from './features/SessionSheet.js';
+import { attentionKeys } from './features/feed-model.js';
+import { useSessionFeed } from './features/use-session-feed.js';
 import { AppQuickOpen } from './features/AppQuickOpen.js';
 import { Login } from './features/Login.js';
 import { OfficePage } from './features/OfficePage.js';
 import { ProjectForm } from './features/ProjectForm.js';
 import { ProjectPage } from './features/ProjectPage.js';
 import { Sidebar } from './features/Sidebar.js';
-import { MemberSheet } from './features/MemberSheet.js';
 import { PhoneOffice } from './features/PhoneOffice.js';
 import { QuickPrefs } from './features/QuickPrefs.js';
 import { TabBar } from './features/TabBar.js';
 import { Telemetry } from './features/Telemetry.js';
 import { Topbar } from './features/Topbar.js';
 import { useBeats } from './features/activity-rate.js';
-import { needsYou } from './features/needs-you.js';
+import { needsYou, sessionsNeedingYou, sessionsWaiting } from './features/needs-you.js';
+import { askingKeys, usePermissionRequests } from './features/permission-requests.js';
 import { useLeaving } from './features/clock-out.js';
 import { officeModel } from './features/office-model.js';
 import { usePhone, usePhoneAny } from './phone.js';
-import { useAdoptRepos } from './adoptProjects.js';
+import { useLocalSessions, usePendingApprovals } from './app-data.js';
 import { sessionIdOf } from './localSessions.js';
-import { useApprovalNotifications } from './notifications.js';
-import { useProjectStream, useQuickOpen, useTour, useUnreadSessions } from './app-hooks.js';
+import { useApprovalNotifications, useNotificationPermission } from './notifications.js';
+import {
+  useFocusRequest,
+  useProjectStream,
+  useAuthSession,
+  useQuickOpen,
+  useSessionNotices,
+  useTour,
+} from './app-hooks.js';
+
+const TITLE = 'AETHER OFFICE · 軌道辦公室';
 
 const LayoutEditor = lazy(() =>
   import('./features/LayoutEditor.js').then((m) => ({ default: m.LayoutEditor })),
@@ -39,10 +51,10 @@ export function App() {
   const t = useT();
   const prefs = usePreferences();
   const client = useQueryClient();
-  const [session, setSession] = useState<Session | null>(null);
-  const [sessionChecked, setSessionChecked] = useState(false);
+  const { session, setSession, checked: sessionChecked, logout } = useAuthSession();
   const [params, setParams] = useSearchParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const page = (location.pathname.slice(1) || 'office') as Key;
   const [newProject, setNewProject] = useState(false);
   const [newTask, setNewTask] = useState(false);
@@ -50,19 +62,15 @@ export function App() {
   const [preview, setPreview] = useState<Layout | null>(null);
   const [focus, setFocus] = useState('overview');
   const { tour, act } = useTour(focus, setFocus);
-  const [inspector, setInspector] = useState(true);
+  // A narrow desktop window shows the panel as an overlay on the office: closed until asked for.
+  const [panelOpen, setPanelOpen] = useState(() => window.innerWidth > 1000);
+  const [sheet, setSheet] = useState<SheetHeight>('peek');
   const [menu, setMenu] = useState(false);
   const quick = useQuickOpen();
   const phone = usePhone(); // portrait: tab bar
   const compact = usePhoneAny(); // portrait or on its side: immersive office, sheets
   const [offline, setOffline] = useState(false);
   const [notice, setNotice] = useState('');
-  useEffect(() => {
-    api<Session>('/api/session')
-      .then(setSession)
-      .catch(() => setSession(null))
-      .finally(() => setSessionChecked(true));
-  }, []);
   useEffect(() => {
     document.documentElement.dataset['theme'] = prefs.theme;
     document.documentElement.lang = prefs.locale === 'zh-TW' ? 'zh-Hant' : 'en';
@@ -82,39 +90,49 @@ export function App() {
     refetchInterval: offline ? 5000 : 30000,
     retry: 1,
   });
-  const local = useQuery({
-    queryKey: ['local-sessions'],
-    queryFn: () => api<LocalSessionsResponse>('/api/local-sessions'),
-    enabled: !!session && ['owner', 'operator'].includes(session.actor.role),
-    // Looked at more often while something is working, so how hard it works can be told (activity-rate.ts).
-    refetchInterval: (q) =>
-      q.state.data?.sessions.some((s) => s.hook?.activity === 'working') ? 4000 : 10000,
-    retry: false,
-  });
+  const local = useLocalSessions(session);
   const beats = useBeats(local.data?.sessions);
   const leaving = useLeaving((s) => s.leaving);
-  // Shares the approvals page's cache; looked at every few seconds so the badge on "more" means something.
-  const approvals = useQuery({
-    queryKey: ['approvals', projectId],
-    queryFn: () => api<{ state: string }[]>(`/api/projects/${projectId}/approvals`),
-    enabled: !!session && !!projectId && phone,
-    refetchInterval: 5000,
-    retry: false,
-  });
-  const pendingApprovals = approvals.data?.filter((a) => a.state === 'pending').length ?? 0;
-  useAdoptRepos(
-    local.data?.sessions,
-    session?.actor.role === 'owner' && !!local.data?.enabled,
-    () => {
-      void client.invalidateQueries({ queryKey: ['projects'] });
-      void client.invalidateQueries({ queryKey: ['local-sessions'] });
-    },
+  const pendingApprovals = usePendingApprovals(session, projectId);
+  // An alert is a browser notification when permitted, otherwise a notice in the page; a tap opens what it is about.
+  const sink = useMemo(
+    () => ({ toast: setNotice, open: (to: string) => navigate(to) }),
+    [navigate],
   );
-  useApprovalNotifications(projectId, !!session && prefs.notifyApprovals, t('approvalNeeded'));
-  const unread = useUnreadSessions(local.data?.sessions, selectedId, prefs.notifyApprovals, {
-    needsYou: t('sessionNeedsYou'),
-    finished: t('sessionFinished'),
-  });
+  const requests = usePermissionRequests(
+    !!session && ['owner', 'operator'].includes(session.actor.role),
+  );
+  const asking = useMemo(() => askingKeys(requests), [requests]);
+  useNotificationPermission(!!session && prefs.notify);
+  useApprovalNotifications(
+    projectId,
+    !!session && prefs.notify,
+    {
+      title: t('approvalNeeded'),
+      project: projects.data?.find((p) => p.id === projectId)?.name ?? '',
+    },
+    sink,
+  );
+  useSessionNotices(
+    local.data?.sessions,
+    prefs.notify,
+    { needsYou: t('sessionNeedsYou'), finished: t('sessionFinished') },
+    sink,
+    asking,
+  );
+  const canWrite = !!session && ['owner', 'operator'].includes(session.actor.role);
+  const data = snapshot.data;
+  const needs = needsYou(
+    data,
+    pendingApprovals,
+    sessionsNeedingYou(sessionsWaiting(local.data?.sessions, Date.now()), asking),
+  );
+  // The tab's title carries what needs the person, so it shows in a background tab.
+  const waitingOn =
+    needs.approvals + needs.sessions + (prefs.advanced ? needs.tasks + needs.messages : 0);
+  useEffect(() => {
+    document.title = waitingOn ? `(${waitingOn}) ${TITLE}` : TITLE;
+  }, [waitingOn]);
   useProjectStream(projectId, !!session, snapshot.data?.seq, setOffline);
   const refresh = () => {
     void client.invalidateQueries({ queryKey: ['snapshot', projectId] });
@@ -125,21 +143,27 @@ export function App() {
       if (projectId) p.set('project', projectId);
       return p;
     });
-    setInspector(true);
+    setPanelOpen(true);
   };
-  // A pairing link opened where a session already exists: its code is no use here, and does not stay in the address bar.
-  useEffect(() => {
-    if (session && window.location.hash.startsWith('#pair='))
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
-  }, [session]);
-  const canWrite = !!session && ['owner', 'operator'].includes(session.actor.role);
-  const logout = async () => {
-    try {
-      await api('/api/logout', { method: 'POST', body: '{}' });
-    } finally {
-      forgetCsrf();
-      setSession(null);
-      client.clear();
+  const model = officeModel(data, local.data?.sessions, projectId, prefs.locale, beats, leaving);
+  const selected = model.agents.find((a) => a.id === selectedId) ?? null;
+  const selectedKey = selectedId ? sessionIdOf(selectedId) : null;
+  const selectedSession = local.data?.sessions.find((x) => x.key === selectedKey) ?? null;
+  const feed = useSessionFeed(local.data?.sessions, selectedKey);
+  const unread = attentionKeys(feed); // the same sessions every badge counts
+  const deselect = () =>
+    setParams((p) => {
+      p.delete('agent');
+      return p;
+    });
+  useFocusRequest(params, setParams, selected?.id, setFocus);
+  // A row of the feed: the office of the session's own project, with the camera on its desk.
+  const open = (id: string) => {
+    const own = local.data?.sessions.find((x) => x.key === sessionIdOf(id))?.projectId;
+    if (own && own !== projectId) setParams({ project: own, agent: id, focus: '1' });
+    else {
+      select(id);
+      setFocus(id);
     }
   };
   if (!sessionChecked)
@@ -158,10 +182,6 @@ export function App() {
         }}
       />
     );
-  const data = snapshot.data;
-  const needs = needsYou(data, pendingApprovals);
-  const model = officeModel(data, local.data?.sessions, projectId, prefs.locale, beats, leaving);
-  const selected = model.agents.find((a) => a.id === selectedId) ?? null;
   return (
     <div className="application">
       <Topbar
@@ -170,6 +190,8 @@ export function App() {
         projectId={projectId}
         sessions={local.data?.enabled ? local.data.sessions : null}
         unread={unread.size}
+        updatedAt={local.dataUpdatedAt}
+        offline={offline}
         onMenu={() => setMenu(!menu)}
         onProject={(id) => {
           setParams({ project: id });
@@ -182,9 +204,11 @@ export function App() {
           open={menu}
           projects={projects.data ?? []}
           projectId={projectId}
+          advanced={prefs.advanced}
           workCount={needs.tasks}
           messageCount={needs.messages}
-          approvalCount={needs.more}
+          approvalCount={needs.approvals}
+          sessionCount={needs.sessions}
           offline={offline}
           onNavigate={() => setMenu(false)}
           onLogout={logout}
@@ -195,7 +219,7 @@ export function App() {
           }}
           footer={
             <>
-              <QuickPrefs />
+              <QuickPrefs canPair={canWrite} />
               {local.data?.enabled ? (
                 <Telemetry sessions={local.data.sessions} unread={unread.size} />
               ) : null}
@@ -212,6 +236,7 @@ export function App() {
         {quick.open && (
           <AppQuickOpen
             page={page}
+            advanced={prefs.advanced}
             projectId={projectId}
             projects={projects.data ?? []}
             sessions={local.data?.sessions ?? []}
@@ -301,21 +326,11 @@ export function App() {
                     onSelect={select}
                     onFocus={setFocus}
                     onTour={act}
-                    onToggleInspector={() => setInspector(!inspector)}
+                    onTogglePanel={() => setPanelOpen(!panelOpen)}
                     onNewTask={() => setNewTask(true)}
                     onEditLayout={() => setEditor(true)}
                     onNotice={setNotice}
                     onRefresh={refresh}
-                    focusSelected={params.get('focus') === '1'}
-                    onFocusHandled={() =>
-                      setParams(
-                        (p) => {
-                          p.delete('focus');
-                          return p;
-                        },
-                        { replace: true },
-                      )
-                    }
                   />
                 ) : (
                   <ProjectPage
@@ -347,38 +362,36 @@ export function App() {
             )
           )}
         </main>
-        {compact && data && selected ? (
-          <MemberSheet
-            key={selected.id}
+        {compact && data && page === 'office' && (
+          <SessionSheet
+            height={sheet}
+            onHeight={setSheet}
             agent={selected}
-            session={local.data?.sessions.find((x) => x.key === sessionIdOf(selected.id)) ?? null}
+            session={selectedSession}
             snapshot={data}
-            onClose={() =>
-              setParams((p) => {
-                p.delete('agent');
-                return p;
-              })
-            }
-            onFocus={() => setFocus(selected.id)}
+            feed={feed}
+            onOpen={open}
+            onBack={deselect}
+            onFocus={() => selected && setFocus(selected.id)}
           />
-        ) : null}
-        {!compact && inspector && data && (
-          <Inspector
+        )}
+        {!compact && panelOpen && data && (
+          <SessionPanel
             agent={selected}
-            session={
-              local.data?.sessions.find((x) => x.key === sessionIdOf(selected?.id ?? '')) ?? null
-            }
+            session={selectedSession}
             snapshot={data}
-            onClose={() => setInspector(false)}
-            onFocus={() => {
-              if (selected) setFocus(selected.id);
-            }}
+            feed={feed}
+            onOpen={open}
+            onBack={deselect}
+            onFocus={() => selected && setFocus(selected.id)}
+            onClose={() => setPanelOpen(false)}
           />
         )}
       </div>
       {phone && (
         <TabBar
           projectId={projectId}
+          advanced={prefs.advanced}
           counts={needs}
           moreOpen={menu}
           onMore={() => setMenu(!menu)}

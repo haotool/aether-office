@@ -1,0 +1,247 @@
+/*
+ * What the agent shows inside a message and around it: code blocks and diffs, tool-call chips, the jump-to-latest pill and the
+ * loading skeleton (features/Markdown.tsx, TranscriptTurns.tsx, TranscriptView.tsx). The messages are transcript.css.
+ */
+.code-block {
+  margin: 0 0 var(--space-8);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--bg);
+}
+.code-block figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--space-24);
+  padding: 0 var(--space-4) 0 var(--space-12);
+  border-bottom: 1px solid var(--line);
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+}
+.code-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-6);
+  border-radius: var(--r-sm);
+  color: var(--muted);
+  font-size: var(--fs-label);
+  outline-offset: -2px;
+}
+@media (hover: hover) {
+  .code-copy:hover {
+    background: var(--raised);
+    color: var(--text);
+  }
+}
+@media (pointer: coarse) {
+  .code-copy {
+    min-height: var(--control-touch-sm);
+  }
+}
+.code-block pre {
+  margin: 0;
+  padding: var(--space-8) var(--space-12);
+  overflow: auto;
+}
+.markdown .code-block pre code {
+  padding: 0;
+  background: none;
+  color: var(--muted);
+  font-size: var(--fs-small);
+}
+.diff-line {
+  display: block;
+  min-width: max-content;
+}
+.diff-line.add {
+  background: var(--glow);
+  color: var(--mint);
+}
+.diff-line.del {
+  background: var(--gold-tint);
+  color: var(--red);
+}
+.diff-line.hunk {
+  color: var(--violet);
+}
+
+/* Tool calls: a slim chip per run of them (a shimmer while it runs, how long it took), the calls under it on request */
+.tool-group {
+  justify-self: start;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--bg);
+}
+.tool-group.running {
+  border-color: var(--glass-accent-line);
+}
+.tool-summary {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  width: 100%;
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--r-lg);
+  color: var(--muted);
+  font-size: var(--fs-small);
+  text-align: left;
+  outline-offset: -2px;
+}
+@media (hover: hover) {
+  .tool-summary:hover {
+    color: var(--text);
+  }
+}
+.tool-group.running .tool-summary {
+  overflow: hidden;
+}
+.tool-group.running .tool-summary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, var(--glow) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: panel-shimmer 1.8s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes panel-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+.tool-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.tool-summary svg {
+  flex: none;
+  margin-left: auto;
+  transition: transform var(--dur) var(--ease);
+}
+.tool-summary[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+.tool-span {
+  flex: none;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+  font-variant-numeric: tabular-nums;
+}
+.tool-live,
+.tool-failed {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--fs-label);
+  white-space: nowrap;
+}
+.tool-live {
+  color: var(--mint);
+}
+.tool-failed {
+  color: var(--red);
+}
+.tool-rows {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: var(--space-6) var(--space-12) var(--space-8);
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+.tool-rows li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-8);
+  min-width: 0;
+  font-size: var(--fs-small);
+}
+.tool-rows b {
+  flex: none;
+  color: var(--violet);
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+}
+.tool-target {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+}
+.tool-rows .error .tool-target {
+  color: var(--red);
+}
+
+/* Jump to latest / N new */
+.new-pill {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-12);
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--control-touch-sm);
+  padding: var(--space-6) var(--space-12);
+  border-radius: var(--r-pill);
+  background: var(--mint);
+  box-shadow: var(--shadow);
+  color: var(--on-accent);
+  font-size: var(--fs-small);
+  font-weight: 650;
+  animation: rise-in var(--dur) var(--ease);
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    translate: 0 var(--space-8);
+  }
+}
+
+/* Loading: rows where the messages will be */
+.skeleton .skeleton-row {
+  display: grid;
+  gap: var(--space-8);
+}
+.skeleton-row i {
+  display: block;
+  height: var(--space-12);
+  border-radius: var(--r-sm);
+  background: linear-gradient(90deg, var(--raised) 30%, var(--selected) 50%, var(--raised) 70%) 0
+    0 / 200% 100%;
+  animation: skeleton-sweep 1.4s ease-in-out infinite;
+}
+.skeleton-row.user {
+  justify-items: end;
+}
+.skeleton-row.user i {
+  width: 60%;
+}
+.skeleton-row.reply i:first-child {
+  width: 92%;
+}
+.skeleton-row.reply i:last-child {
+  width: 70%;
+}
+.skeleton-row.tools i {
+  width: 40%;
+  height: var(--space-24);
+  border-radius: var(--r-lg);
+}
+.skeleton-row.tools i:last-child {
+  display: none;
+}
+@keyframes skeleton-sweep {
+  to {
+    background-position: -200% 0;
+  }
+}

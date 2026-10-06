@@ -41,7 +41,7 @@
     width: min(86vw, 320px);
     padding-bottom: calc(var(--space-16) + var(--safe-bottom));
     overflow-y: auto;
-    z-index: var(--z-sidebar); /* above the inspector sheet (--z-inspector-sheet) */
+    z-index: var(--z-sidebar); /* above the session sheet (--z-panel-sheet) */
   }
   .sidebar-backdrop {
     position: fixed;

@@ -223,6 +223,9 @@ importers:
       '@aether/kernel':
         specifier: workspace:*
         version: link:../../packages/kernel
+      '@aether/providers':
+        specifier: workspace:*
+        version: link:../../packages/providers
       '@fastify/cookie':
         specifier: 11.1.2
         version: 11.1.2

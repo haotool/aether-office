@@ -121,6 +121,21 @@ project's root; the UI cannot supply an arbitrary executable, arguments or direc
 CLI with no extra flags, so its own prompts and slash commands work in the browser. Such sessions are also found by local
 session discovery. Starting a terminal runs a real local program and creates no task result or approval evidence.
 
+- **What AETHER can drive, and what it cannot.** AETHER types only into a terminal it started (a runner PTY). The session
+  panel's composer therefore appears only for a session whose process is that terminal's child (or under it): the control
+  plane matches the scanner's process for the session to a running terminal by pid and start time, walking up the process
+  tree (`services/terminal-link.ts`). A session started in any other terminal, in an editor, or in Codex Desktop is
+  observed only: there is no route that writes to it and none is pretended. For such a session the panel offers **Continue**
+  and **Fork in AETHER**: `terminal.start` with `resume: { provider, sessionId, fork }`, which the runner turns into
+  `claude --resume <id> [--fork-session]` or `codex resume <id>` / `codex fork <id>`, in the profile's directory. Only the
+  `cliTerminals` profiles qualify (the profile must be exactly the provider's own binary with no arguments of its own); a
+  hand-written profile keeps what its owner wrote, and the id is a single positional argument that cannot read as a flag. The
+  button needs a profile whose folder is the session's own folder; a session in a linked worktree has none until that
+  worktree is granted. Managed runs (Agent SDK, `codex app-server`) are not terminals and have no composer; they take
+  messages through Messages.
+- What a composer send does: Ctrl+U, the text (bracketed paste when multi-line), Enter after 150 ms, each as an ordinary
+  `terminal.input` under the lease, so everything below applies. Esc and Ctrl+C for Stop are the same route. "Applied" still
+  means only that the runner wrote it to the PTY; the transcript is what shows the CLI took it.
 - A terminal is read-only by default. An owner or operator can take control (30 s lease renewed by input; an epoch fences stale
   controllers). Reloading the page returns to read-only while the process keeps running; closing it does not stop it.
 - Input is queued; "applied" means only that the runner wrote it to the PTY. The local journal records acceptance before the side

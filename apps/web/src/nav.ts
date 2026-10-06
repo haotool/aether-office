@@ -38,6 +38,39 @@ export const navGroups = [
   ['groupSystem', ['workspace', 'terminals', 'knowledge', 'machines', 'history', 'settings']],
 ] as const;
 
+/**
+ * The pages for orchestrating several agents (tasks, review, team, knowledge, messages, machines, observed sources,
+ * workspaces). Out of the navigation until "Advanced" is turned on in Settings; their addresses always work.
+ */
+const ADVANCED_PAGES: ReadonlySet<string> = new Set([
+  'agents',
+  'tasks',
+  'messages',
+  'workspace',
+  'reviews',
+  'knowledge',
+  'machines',
+  'observations',
+]);
+
+/** The page list a person sees: everything with Advanced on, otherwise the CLI-first set. */
+export const visibleNav = (advanced: boolean) =>
+  nav.filter(([key]) => advanced || !ADVANCED_PAGES.has(key));
+
+/** The navigation groups without the hidden pages; a group left empty is dropped. */
+export const visibleGroups = (advanced: boolean) =>
+  navGroups
+    .map(
+      ([group, pages]) => [group, pages.filter((p) => advanced || !ADVANCED_PAGES.has(p))] as const,
+    )
+    .filter(([, pages]) => pages.length > 0);
+
+/** The pages on the phone's tab bar; "More" opens the drawer with the rest. */
+export const tabPages = (advanced: boolean) =>
+  advanced
+    ? (['office', 'sessions', 'tasks', 'messages'] as const)
+    : (['office', 'sessions', 'approvals', 'terminals'] as const);
+
 /** The address of a page, keeping the project that is open. */
 export const pageLink = (page: string, projectId: string | undefined) =>
   `/${page}${projectId ? `?project=${projectId}` : ''}`;

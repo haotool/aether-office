@@ -23,6 +23,7 @@ import { hash, secret, authenticate, createIdentity, identityActor } from './ser
 import { agent, emit, project, type Context } from './services/context.js';
 import { requestIntegration, requestJob } from './services/jobs.js';
 import { decideApproval } from './services/approvals.js';
+import { createPermissionRequests } from './services/permission-requests.js';
 import { concludeMeeting, startMeeting } from './services/meetings.js';
 import { startWorkflow } from './services/workflows.js';
 import { roomCommand } from './services/rooms.js';
@@ -54,6 +55,8 @@ export function redactSecrets(
 
 export class Control {
   readonly ctx: Context;
+  /** Permission prompts waiting for a person (Remote approvals); in memory, bounded. */
+  readonly permissionRequests = createPermissionRequests(() => this.ctx.now());
   constructor(
     filename: string,
     options: { mode: 'demo' | 'live'; cursorSecret?: string; now?: () => number },

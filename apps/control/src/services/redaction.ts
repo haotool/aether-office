@@ -18,12 +18,35 @@ const SECRET_PATTERNS = [
   /\bAIza[0-9A-Za-z_-]{35}\b/g,
 ];
 const CREDENTIAL_URL_PATTERN = /\b[A-Za-z0-9._%+-]+:[A-Za-z0-9._%+-]+@(?=[^/\s]+)/g;
-const SECRET_ASSIGNMENT_PATTERN =
-  /\b(token|access[_-]?token|refresh[_-]?token|api[_-]?key|client[_-]?secret|secret|password|account[_-]?key)\s*[:=]\s*(?:"[^"\r\n]*"|'[^'\r\n]*'|[^&\s,;]+)/gi;
+const SECRET_WORD = 'token|secret|password|passwd|api[_-]?key|account[_-]?key|private[_-]?key';
+// A name that contains one of those words (`password`, `AWS_SECRET_ACCESS_KEY`, `PGPASSWORD`, `MY_TOKEN`), plain,
+// shell-style or quoted as JSON (`"password": "..."`), then its value.
+const SECRET_ASSIGNMENT_PATTERN = new RegExp(
+  `(["']?)\\b([A-Za-z0-9_-]{0,64}(?:${SECRET_WORD})[A-Za-z0-9_-]{0,64})\\1\\s*[:=]\\s*(?:"[^"\\r\\n]*"|'[^'\\r\\n]*'|[^&\\s,;]+)`,
+  'gi',
+);
+const SECRET_KEY_PATTERN = new RegExp(SECRET_WORD, 'i');
+const MAX_DEPTH = 6;
 
 export function redactSecrets(value: string): string {
   let text = value.replace(CREDENTIAL_URL_PATTERN, '[redacted-credential]@');
-  text = text.replace(SECRET_ASSIGNMENT_PATTERN, (_match, key: string) => `${key}=[redacted]`);
+  text = text.replace(
+    SECRET_ASSIGNMENT_PATTERN,
+    (_match, quote: string, key: string) => `${quote}${key}${quote}=[redacted]`,
+  );
   for (const pattern of SECRET_PATTERNS) text = text.replace(pattern, '[redacted-secret]');
   return text;
+}
+
+/** A tool input with the value of every key named like a secret replaced, before it is stringified. Pure; bounded depth. */
+export function redactStructured(value: unknown, depth = 0): unknown {
+  if (typeof value !== 'object' || value === null) return value;
+  if (depth >= MAX_DEPTH) return '[nested]';
+  if (Array.isArray(value)) return value.map((item) => redactStructured(item, depth + 1));
+  return Object.fromEntries(
+    Object.entries(value).map(([key, item]) => [
+      key,
+      SECRET_KEY_PATTERN.test(key) ? '[redacted]' : redactStructured(item, depth + 1),
+    ]),
+  );
 }

@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import { useEffect, useMemo, useReducer, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import type { SetURLSearchParams } from 'react-router-dom';
 import { eventSchema, type LocalSessionsResponse } from '@aether/contracts';
-import { activityOf, sessionIdOf } from './localSessions.js';
-import { useSessionAlerts, type SessionEvent } from './notifications.js';
+import { api, forgetCsrf, type Session } from './api.js';
+import { activityOf, sessionLink } from './localSessions.js';
+import { useSessionAlerts, type AlertSink } from './notifications.js';
 import {
   TOUR_INTERVAL_MS,
   idle,
@@ -81,37 +83,82 @@ export function useProjectStream(
 }
 
 /**
- * Sessions that started waiting for a human, or finished, since they were last looked at (keys). Raises the
- * notification too; selecting a session reads it.
+ * Raises the alerts for sessions that started waiting for a human, or finished (alert-rules.ts). What counts as unread is
+ * the feed's business (features/feed-model.ts), so every badge shows the same number.
  */
-export function useUnreadSessions(
+export function useSessionNotices(
   sessions: LocalSessionsResponse['sessions'] | undefined,
-  selectedId: string | null,
   notify: boolean,
   labels: { needsYou: string; finished: string },
-): ReadonlySet<string> {
-  const [unread, setUnread] = useState<ReadonlySet<string>>(new Set());
+  sink: AlertSink,
+  /** Sessions with a permission request waiting here: they need a person now, whatever their hooks last said. */
+  asking: ReadonlySet<string>,
+) {
   const briefs = useMemo(
     () =>
       sessions?.map((s) => ({
         key: s.key,
-        activity: activityOf(s, Date.now()),
-        title: s.title ?? s.repo,
+        activity: asking.has(s.key) ? 'waiting_permission' : activityOf(s, Date.now()),
+        project: s.repo,
+        to: sessionLink(s),
       })),
-    [sessions],
+    [sessions, asking],
   );
   const alertLabels = useMemo(
     () => ({ needsYou: labels.needsYou, finished: labels.finished }),
     [labels.needsYou, labels.finished],
   );
-  const markUnread = useCallback(
-    (events: SessionEvent[]) => setUnread((u) => new Set([...u, ...events.map((e) => e.key)])),
-    [],
-  );
-  useSessionAlerts(briefs, notify, alertLabels, markUnread);
+  useSessionAlerts(briefs, notify, alertLabels, sink);
+}
+
+/** Who is signed in: the session the server knows this browser by, and the way out. */
+export function useAuthSession() {
+  const client = useQueryClient();
+  const [session, setSession] = useState<Session | null>(null);
+  const [checked, setChecked] = useState(false);
   useEffect(() => {
-    const key = selectedId ? sessionIdOf(selectedId) : null;
-    if (key && unread.has(key)) setUnread((u) => new Set([...u].filter((k) => k !== key)));
-  }, [selectedId, unread]);
-  return unread;
+    api<Session>('/api/session')
+      .then(setSession)
+      .catch(() => setSession(null))
+      .finally(() => setChecked(true));
+  }, []);
+  // A pairing link opened where a session already exists: its code is no use here, and does not stay in the address bar.
+  useEffect(() => {
+    if (session && window.location.hash.startsWith('#pair='))
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+  }, [session]);
+  const logout = async () => {
+    try {
+      await api('/api/logout', { method: 'POST', body: '{}' });
+    } finally {
+      forgetCsrf();
+      setSession(null);
+      client.clear();
+    }
+  };
+  return { session, setSession, checked, logout };
+}
+
+/**
+ * A link asked for the selected member to be brought into view ("show in office", a feed row of another project): the
+ * camera flies to it once it has a desk in the scene (on a phone and on a desktop), and the request leaves the address.
+ */
+export function useFocusRequest(
+  params: URLSearchParams,
+  setParams: SetURLSearchParams,
+  selectedAgentId: string | undefined,
+  setFocus: (focus: string) => void,
+) {
+  const requested = params.get('focus') === '1';
+  useEffect(() => {
+    if (!requested || !selectedAgentId) return;
+    setFocus(selectedAgentId);
+    setParams(
+      (p) => {
+        p.delete('focus');
+        return p;
+      },
+      { replace: true },
+    );
+  }, [requested, selectedAgentId, setFocus, setParams]);
 }

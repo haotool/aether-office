@@ -5,3 +5,4 @@ export * from './events.js';
 export * from './runner.js';
 export * from './sessions.js';
 export * from './records.js';
+export * from './permissions.js';

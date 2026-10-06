@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   ArrowUpRight,
@@ -36,13 +35,11 @@ export function OfficePage({
   onSelect,
   onFocus,
   onTour,
-  onToggleInspector,
+  onTogglePanel,
   onNewTask,
   onEditLayout,
   onNotice,
   onRefresh,
-  focusSelected,
-  onFocusHandled,
 }: {
   data: Snapshot;
   session: Session;
@@ -59,24 +56,14 @@ export function OfficePage({
   onSelect: (id: string) => void;
   onFocus: (focus: string) => void;
   onTour: (action: TourAction) => void;
-  onToggleInspector: () => void;
+  onTogglePanel: () => void;
   onNewTask: () => void;
   onEditLayout: () => void;
   onNotice: (message: string) => void;
   onRefresh: () => void;
-  /** A link asked for the selected member to be brought into view ("show in office"). */
-  focusSelected: boolean;
-  onFocusHandled: () => void;
 }) {
   const t = useT();
   const prefs = usePreferences();
-  // The camera flies to the member once it has a desk: the request waits for the member to appear in the scene.
-  const present = selectedId !== null && model.agents.some((a) => a.id === selectedId);
-  useEffect(() => {
-    if (!focusSelected || !present) return;
-    onFocus(selectedId);
-    onFocusHandled();
-  }, [focusSelected, present, selectedId, onFocus, onFocusHandled]);
   return (
     <>
       <>
@@ -89,13 +76,15 @@ export function OfficePage({
             <p>{t('subtitle')}</p>
           </div>
           <div className="office-heading-actions">
-            <button className="secondary" onClick={onToggleInspector} aria-label={t('details')}>
+            <button className="secondary" onClick={onTogglePanel} aria-label={t('panelTitle')}>
               <PanelRightClose size={17} />
             </button>
-            <button className="primary" disabled={!canWrite} onClick={onNewTask}>
-              <Plus size={16} />
-              {t('newWork')}
-            </button>
+            {prefs.advanced && (
+              <button className="primary" disabled={!canWrite} onClick={onNewTask}>
+                <Plus size={16} />
+                {t('newWork')}
+              </button>
+            )}
           </div>
         </div>
         <div className="office-stats">
@@ -189,14 +178,16 @@ export function OfficePage({
               >
                 <RotateCcw size={16} />
               </button>
-              <button
-                aria-label={t('editLayout')}
-                title={t('editLayout')}
-                disabled={!canWrite}
-                onClick={onEditLayout}
-              >
-                <PencilRuler size={16} />
-              </button>
+              {prefs.advanced && (
+                <button
+                  aria-label={t('editLayout')}
+                  title={t('editLayout')}
+                  disabled={!canWrite}
+                  onClick={onEditLayout}
+                >
+                  <PencilRuler size={16} />
+                </button>
+              )}
             </div>
           </div>
           <SceneView
