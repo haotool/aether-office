@@ -106,6 +106,11 @@
   --on-glass-accent: #8fd3dc;
   --on-accent: #02161c;
   --on-gold: #1d1500;
+  /* Status colors that stay light on the scene's dark glass in both themes (name tags, beacons) */
+  --scene-mint: #43e6df;
+  --scene-blue: #6aa8ff;
+  --scene-gold: #ffc65c;
+  --scene-red: #ff7a85;
   --white: #fff;
   /* Provider marks (identification only): Claude's orange, and Codex's near-white (graphite on a light page) */
   --provider-claude: #d97757;
@@ -123,6 +128,13 @@
   --art-glow: #6ed4cf08;
   --terminal-bg: #101923;
   /* Motion */
+  /* The kinds of tokens in the KPI charts: one color per kind, the same in the bar, the legend and the day bars. */
+  --kpi-input: var(--mint);
+  --kpi-output: var(--blue);
+  --kpi-cache-read: var(--dim);
+  --kpi-cache-write: var(--gold);
+  --kpi-reasoning: var(--violet);
+
   --ease: cubic-bezier(0.2, 0, 0, 1);
   --dur-fast: 0.15s;
   --dur: 0.2s;

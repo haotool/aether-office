@@ -3,6 +3,8 @@ import type { Agent } from '@aether/contracts';
 import { DEPARTMENTS } from '@aether/kernel';
 import type { PulseKind, Shot } from './director.js';
 import { FLOORS } from './layout.js';
+import { SlabKpi, type FloorKpiBadge } from './FloorKpi.js';
+import { introWords } from './intro/intro-text.js';
 
 const PIPS = 8;
 const pad = (n: number) => String(n).padStart(3, '0');
@@ -134,18 +136,24 @@ export function BuildingPanel({
   exploded,
   follow,
   perFloor,
+  kpi,
   onFloor,
   onExplode,
   onFollow,
+  onReplayIntro,
 }: {
   zh: boolean;
   floor: number;
   exploded: boolean;
   follow: boolean;
   perFloor: readonly FloorCount[];
+  /** Each floor's KPIs, when the page has them: shown under the deck's name. */
+  kpi?: readonly (FloorKpiBadge | null)[] | undefined;
   onFloor: (floor: number) => void;
   onExplode: () => void;
   onFollow: () => void;
+  /** Plays the first-visit tour again (absent when the page has no tour). */
+  onReplayIntro?: (() => void) | undefined;
 }) {
   const [open, setOpen] = useState(rememberedOpen);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -193,6 +201,7 @@ export function BuildingPanel({
                         <u key={n} className={n < lit ? 'on' : ''} />
                       ))}
                     </em>
+                    {kpi?.[d.floor] && <SlabKpi badge={kpi[d.floor]!} />}
                   </button>
                 </li>
               );
@@ -209,6 +218,11 @@ export function BuildingPanel({
               {zh ? '操作' : 'KEYS'}
             </button>
           </div>
+          {onReplayIntro && (
+            <button className="building-replay" onClick={onReplayIntro}>
+              {introWords(zh).replay}
+            </button>
+          )}
           {helpOpen && <KeysHelp zh={zh} />}
         </>
       )}

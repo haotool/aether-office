@@ -33,7 +33,7 @@ export function A2AClients({ projectId, canManage }: { projectId: string; canMan
   if (!query.data) return null;
   return (
     <section aria-labelledby="a2a-title">
-      <h2 id="a2a-title">A2A</h2>
+      <h3 id="a2a-title">A2A</h3>
       {!query.data.enabled ? (
         <p role="status">{t('a2aDisabled')}</p>
       ) : (

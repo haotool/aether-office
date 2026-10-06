@@ -44,35 +44,11 @@ export const BASE_CLIP = {
   unknown: 'shrug',
 } as const satisfies Record<Activity, ClipName>;
 
-/**
- * Small gestures an animal makes now and then while it is in a state, so a long wait is not a frozen pose. They only
- * ever show a person taking a moment (never a decision, a result or a message): an idle member does not "think".
- */
-const FIDGETS: Partial<Record<Activity, readonly ClipName[]>> = {
-  idle: ['stretch', 'sip', 'look_around'],
-  working: ['thinking', 'scratch_head', 'sip', 'look_around'],
-  reviewing: ['thinking', 'look_around', 'sip'],
-};
-
-export const FIDGET_MIN_MS = 7000;
-export const FIDGET_SPREAD_MS = 9000;
-
-/** The nth gesture for this member in this state, or null when the state has none. Deterministic per member. */
-export function fidgetFor(activity: Activity, seed: string, n: number): ClipName | null {
-  const choices = FIDGETS[activity];
-  if (!choices) return null;
-  return choices[Math.floor(seeded(`${seed}:fidget:${n}`)() * choices.length)]!;
-}
-
-/** How long to wait before the nth gesture. */
-export function fidgetDelayMs(seed: string, n: number): number {
-  return FIDGET_MIN_MS + Math.floor(seeded(`${seed}:wait:${n}`)() * FIDGET_SPREAD_MS);
-}
-
-/** A real change of activity worth marking: finishing work earns a cheer, an approval a nod of thanks. */
+/** A real change of activity worth marking: finishing work earns a quiet cheer, an approval a nod of thanks, an error a shrug. */
 export function transitionClip(previous: Activity | null, next: Activity): ClipName | null {
   if ((previous === 'working' || previous === 'reviewing') && next === 'idle') return 'cheer';
   if (previous === 'waiting_permission' && next === 'working') return 'nod';
+  if (previous !== null && previous !== 'error' && next === 'error') return 'shrug';
   return null;
 }
 

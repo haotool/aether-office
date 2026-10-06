@@ -4,7 +4,7 @@ import type { QueryKey } from '@tanstack/react-query';
  * The live link to the control plane, as pure functions: what a change event refreshes, how long to wait before
  * reconnecting, and what the connection indicator says. The EventSource itself lives in use-session-stream.ts.
  */
-export type ChangeKind = 'state' | 'tool' | 'speech' | 'transcript';
+export type ChangeKind = 'state' | 'tool' | 'speech' | 'transcript' | 'squad' | 'outcome';
 export type SessionChange = { seq: number; key: string; kinds: ChangeKind[] };
 
 /** Parses an event's data; anything that is not a change is ignored rather than trusted. */

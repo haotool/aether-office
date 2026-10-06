@@ -16,8 +16,9 @@ export const HOOK_EVENTS = [
   'Stop',
   'PermissionRequest',
 ] as const;
-// Claude Code also reports permission and idle prompts as Notification events (notification_type).
-const CLAUDE_ONLY_EVENTS = ['Notification'] as const;
+// Claude Code also reports permission and idle prompts as Notification events (notification_type), and a tool that failed
+// as PostToolUseFailure (PostToolUse runs only for a tool that succeeded), which is how a call's outcome is known.
+const CLAUDE_ONLY_EVENTS = ['Notification', 'PostToolUseFailure'] as const;
 export const eventsFor = (provider: 'claude' | 'codex') =>
   provider === 'claude' ? [...HOOK_EVENTS, ...CLAUDE_ONLY_EVENTS] : [...HOOK_EVENTS];
 

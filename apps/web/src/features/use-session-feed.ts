@@ -5,10 +5,11 @@ import { api } from '../api.js';
 import { sessionsToAgents } from '../localSessions.js';
 import { usePreferences } from '../state.js';
 import { buildFeed, feedItems, type Feed, type Speech } from './feed-model.js';
+import { groupFeed } from './feed-squads.js';
 import { pollMs } from './live-link.js';
 import { askingKeys, usePermissionRequests } from './permission-requests.js';
 import { useLinkLive } from './use-session-stream.js';
-import { useSeen } from './session-seen.js';
+import { holdBaseline, releaseBaseline, useSeen } from './session-seen.js';
 
 const SPEECH_POLL_MS = 6000;
 
@@ -49,8 +50,16 @@ export function useSessionFeed(
   const feed = useMemo(() => {
     const now = Date.now();
     const agents = sessionsToAgents(sessions, '', now, locale);
-    return buildFeed({ sessions, agents, speech, seen, now, asking });
+    return groupFeed(buildFeed({ sessions, agents, speech, seen, now, asking }), now);
   }, [sessions, locale, speech, seen, asking]);
+  // First, before the effect below marks it seen: what "last looked" was as this visit began.
+  useEffect(() => {
+    if (!selectedKey) return;
+    holdBaseline(selectedKey, seen[selectedKey] ?? 0);
+    return () => void releaseBaseline(selectedKey);
+    // The state at the moment of selection is the point: a later change to `seen` must not move it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedKey]);
   const openedAt = feedItems(feed).find((i) => i.key === selectedKey)?.at;
   useEffect(() => {
     if (selectedKey && openedAt !== undefined) markSeen(selectedKey, openedAt);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { intensityOf, newBeatLog, recordBeats } from '../../apps/web/src/features/activity-rate.js';
-import type { AttributedSession } from '../../packages/contracts/src/index.js';
+import { subagentSchema, type AttributedSession } from '../../packages/contracts/src/index.js';
 
 const session = (over: Partial<AttributedSession> = {}) =>
   ({
@@ -30,19 +30,23 @@ describe('how hard a session works', () => {
     expect(intensityOf(session({ resources: { cpuPercent: 60, rssBytes: 1 } }), true, 0, now)).toBe(
       2,
     );
-    const helpers = [
-      { id: 'a', type: 'x', lastSeen: now - 1000 },
-      { id: 'b', type: 'x', lastSeen: now - 2000 },
-    ];
+    const helper = (id: string, lastSeen: number, status = 'running') =>
+      subagentSchema.parse({ id, type: 'x', lastSeen, status });
+    const helpers = [helper('a', now - 1000), helper('b', now - 2000)];
     expect(intensityOf(session({ subagents: helpers }), true, 3, now)).toBe(3);
-    // A subagent that has gone quiet no longer counts.
+    // A finished subagent does not count, even if it was heard from a moment ago.
     expect(
       intensityOf(
-        session({ subagents: [{ id: 'a', type: 'x', lastSeen: now - 60_000 }] }),
+        session({ subagents: [...helpers, helper('c', now - 500, 'finished')] }),
         true,
-        0,
+        3,
         now,
       ),
+    ).toBe(3);
+    expect(
+      intensityOf(session({ subagents: [helper('c', now - 500, 'finished')] }), true, 3, now),
     ).toBe(1);
+    // A subagent that has gone quiet no longer counts.
+    expect(intensityOf(session({ subagents: [helper('a', now - 60_000)] }), true, 0, now)).toBe(1);
   });
 });

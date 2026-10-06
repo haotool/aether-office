@@ -84,17 +84,7 @@
   }
 }
 
-/* A name tag stays one short line, whatever the member's role string says. */
-.scene-label small {
-  display: inline-block;
-  max-width: 46vw;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  vertical-align: bottom;
-}
-
-/* The provider's mark on a name tag and in the panel: its own color, from tokens. Close up, or on a selected or hovered tag, it shows. */
+/* The provider's mark on a name tag and in the panel: its own color, from tokens. */
 .provider-mark {
   flex: none;
 }
@@ -103,14 +93,6 @@
 }
 .provider-mark[data-provider='codex'] {
   color: var(--provider-codex);
-}
-.scene-label .provider-mark {
-  display: none;
-}
-.scene-label[data-near='1'] .provider-mark,
-.scene-label.selected .provider-mark,
-.scene-label.hovered .provider-mark {
-  display: block;
 }
 .scene-label .provider-mark[data-provider='codex'] {
   color: var(--on-glass);

@@ -30,7 +30,7 @@ import {
 import { Beacons, ProjectedLabels } from './Labels.js';
 import { compactionLabel } from './context.js';
 import { Member } from './Member.js';
-import { NameTag } from './NameTag.js';
+import { NameTag, tipOf } from './NameTag.js';
 import { ProjectedSpeech, SpeechLayer } from './Speech.js';
 import { MessageCarriers } from './MessageCarriers.js';
 import { PerfProbe } from './PerfProbe.js';
@@ -40,10 +40,12 @@ import { SceneCamera } from './SceneCamera.js';
 import { StalkTooltip } from './StalkTooltip.js';
 import { CompactHud } from './CompactHud.js';
 import { BuildingPanel, FloorHud, ShotCaption } from './SceneHud.js';
+import { FloorPlaque } from './FloorKpi.js';
 import { AnimationClock, Runtime, SceneBoundary } from './SceneRuntime.js';
 import { ACTIVE, OVERVIEW, ZONE_OFFSET, floorOfDesk, floorY } from './scene-geometry.js';
 import { beaconsOf, beamsOf, labelsOf } from './scene-markers.js';
 import { useSceneNavigation } from './scene-navigation.js';
+import { IntroCaption, IntroDip, useIntroTour } from './intro/index.js';
 
 export type { OfficeSceneProps } from './scene-props.js';
 export type { CharacterMenuContext, GroupBarContext, SceneActions };
@@ -63,6 +65,18 @@ export function OfficeScene(props: OfficeSceneProps) {
   const [namesOn, setNamesOn] = useState(!compact);
   const hoverStart = (id: string) => setHovered(id);
   const hoverEnd = (id: string) => setHovered((h) => (h === id ? null : h));
+  const [warm, setWarm] = useState(false);
+  const ready = useCallback(() => setWarm(true), []);
+  const intro = useIntroTour({
+    props: props.intro,
+    warm,
+    reducedMotion: props.reducedMotion,
+    agents: props.agents,
+    layout,
+    commits: props.beanstalk?.length ?? 0,
+    selectedId: props.selectedId,
+    focus: props.focus,
+  });
   const nav = useSceneNavigation({
     agents: props.agents,
     layout,
@@ -75,6 +89,7 @@ export function OfficeScene(props: OfficeSceneProps) {
     directing: (props.autoCamera ?? true) && !props.reducedMotion,
     resumeMs: compact ? 10_000 : 30_000,
     selectedId: props.selectedId,
+    intro,
   });
   const { floor, exploded } = nav;
   const departures = useMemo(
@@ -98,8 +113,6 @@ export function OfficeScene(props: OfficeSceneProps) {
   );
   const stalkTip = useRef<((hover: StalkHover) => void) | null>(null);
   const showStalkTip = useCallback((hover: StalkHover) => stalkTip.current?.(hover), []);
-  const [warm, setWarm] = useState(false);
-  const ready = useCallback(() => setWarm(true), []);
   // Where the speech bubbles are drawn this frame: a name tag under one is hidden, not drawn over what the member said.
   const bubbles = useRef(new Map<string, Rect>());
   const auto = (props.autoCamera ?? true) && !props.reducedMotion;
@@ -182,6 +195,7 @@ export function OfficeScene(props: OfficeSceneProps) {
     [layout, floor],
   );
   const department = DEPARTMENTS[floor]!;
+  const filming = nav.directed !== null || intro.active; // the camera runs itself: full-rate frames
 
   return (
     <SceneBoundary onFailure={props.onFailure}>
@@ -191,7 +205,7 @@ export function OfficeScene(props: OfficeSceneProps) {
         ref={wall.container}
       >
         <Canvas
-          shadows={!compact && props.quality !== 'low'}
+          shadows={shadowsOn && 'percentage'} // three has dropped the soft map: "true" would log a warning each load
           camera={{ position: OVERVIEW(false), fov: 38, near: 0.4, far: 2400 }}
           frameloop={warm && !props.paused ? 'demand' : 'never'}
           dpr={[PIXEL_RATIO_FLOOR, maxRatio]}
@@ -303,6 +317,7 @@ export function OfficeScene(props: OfficeSceneProps) {
             directed={nav.directed}
             seats={nav.seats}
             followPoint={nav.followPoint}
+            introPose={intro.pose}
           />
           <InteractionProjections ix={ix} exploded={exploded} />
           <CommLinks
@@ -314,7 +329,7 @@ export function OfficeScene(props: OfficeSceneProps) {
           <RelationLines edges={edges} animate={!props.reducedMotion} />
           <Runtime onFailure={props.onFailure} />
           <Warmup onReady={ready} />
-          <AdaptiveRatio ceiling={maxRatio} smooth={nav.directed !== null} />
+          <AdaptiveRatio ceiling={maxRatio} smooth={filming} />
           {shadowsOn && <ShadowThrottle intervalMs={SHADOW_INTERVAL_MS[props.quality]} />}
           {props.onPerfReport && (
             <PerfProbe
@@ -344,11 +359,7 @@ export function OfficeScene(props: OfficeSceneProps) {
           {wall.feeds.length > 0 && (
             <MultiCam feeds={wall.feeds} seats={nav.seats} exploded={exploded} wall={wall.wall} />
           )}
-          <AnimationClock
-            active={active || nav.directed !== null}
-            smooth={nav.directed !== null}
-            slow={compact}
-          />
+          <AnimationClock active={active || filming} smooth={filming} slow={compact} />
         </Canvas>
         {!warm && (
           <div className="scene-warming" role="status">
@@ -379,12 +390,19 @@ export function OfficeScene(props: OfficeSceneProps) {
               hovered={agent.id === hovered}
               grouped={marks.group.has(agent.id)}
               menuOpen={agent.id === marks.menuId}
-              label={`${agent.name}, ${roleName(agent)}, ${words.state[agent.activity]}`}
+              label={`${props.names?.[agent.id]?.title ?? agent.name}, ${roleName(agent)}, ${words.state[agent.activity]}`}
+              tip={tipOf(agent, props.names?.[agent.id])}
+              accent={DEPARTMENTS[floorOfDesk(layout, agent.id)]?.accent ?? DEPARTMENTS[0]!.accent}
+              still={!!props.reducedMotion}
               unread={props.unreadIds?.has(agent.id) ?? false}
-              detail={
-                agent.id === hovered || onShot(agent.id)
-                  ? (props.doing?.[agent.id] ?? (compact ? null : agent.role))
-                  : undefined
+              meta={
+                agent.id === hovered || agent.id === props.selectedId || onShot(agent.id)
+                  ? [
+                      props.names?.[agent.id]?.repo,
+                      roleName(agent),
+                      props.doing?.[agent.id],
+                    ].filter((part): part is string => !!part)
+                  : null
               }
               setElement={(node) => {
                 if (node) elements.current.set(agent.id, node);
@@ -450,6 +468,16 @@ export function OfficeScene(props: OfficeSceneProps) {
           animate={!props.reducedMotion}
           tags={zh ? { user: '提示', assistant: '回覆' } : { user: 'Prompt', assistant: 'Reply' }}
         />
+        {intro.dip && <IntroDip id={intro.dip} />}
+        {intro.caption && (
+          <IntroCaption
+            caption={intro.caption}
+            facts={intro.facts}
+            zh={zh}
+            onSkip={intro.interrupt}
+            onNever={intro.never}
+          />
+        )}
         {nav.directed?.entry === 'cut' && (
           <div className="cut-dip" key={nav.directed.startedAt} aria-hidden="true" />
         )}
@@ -474,19 +502,30 @@ export function OfficeScene(props: OfficeSceneProps) {
             onExplode={nav.toggleExploded}
             onFollow={nav.toggleFollow}
             onLabels={() => setNamesOn((v) => !v)}
+            onReplayIntro={intro.available ? intro.replay : undefined}
           />
         ) : (
           <>
             <FloorHud zh={zh} exploded={exploded} floor={floor} perFloor={nav.perFloor} />
+            {!exploded && props.floorKpi?.[floor] && props.onOpenFloorKpi && (
+              <FloorPlaque
+                zh={zh}
+                floor={floor}
+                badge={props.floorKpi[floor]!}
+                onOpen={props.onOpenFloorKpi}
+              />
+            )}
             <BuildingPanel
               zh={zh}
               floor={floor}
               exploded={exploded}
               follow={auto}
               perFloor={nav.perFloor}
+              kpi={props.floorKpi}
               onFloor={nav.showFloor}
               onExplode={nav.toggleExploded}
               onFollow={nav.toggleFollow}
+              onReplayIntro={intro.available ? intro.replay : undefined}
             />
           </>
         )}

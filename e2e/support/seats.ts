@@ -52,27 +52,35 @@ export function removeSeatSessions() {
   rmSync(folder, { recursive: true, force: true });
 }
 
-export async function enter(page: Page, locale: 'zh-TW' | 'en' = 'en') {
+export async function enter(
+  page: Page,
+  locale: 'zh-TW' | 'en' = 'en',
+  project = 'fixture-seats',
+  theme: 'dark' | 'light' = 'dark',
+) {
   const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
     directory: string;
   };
-  await page.addInitScript((l) => {
-    window.localStorage.setItem(
-      'aether-ui-preferences',
-      JSON.stringify({
-        state: {
-          advanced: true,
-          locale: l,
-          theme: 'dark',
-          quality: 'balanced',
-          view: '3d',
-          reducedMotion: false,
-          autoCamera: false,
-        },
-        version: 0,
-      }),
-    );
-  }, locale);
+  await page.addInitScript(
+    ([l, th]) => {
+      window.localStorage.setItem(
+        'aether-ui-preferences',
+        JSON.stringify({
+          state: {
+            advanced: true,
+            locale: l,
+            theme: th,
+            quality: 'balanced',
+            view: '3d',
+            reducedMotion: false,
+            autoCamera: false,
+          },
+          version: 0,
+        }),
+      );
+    },
+    [locale, theme] as const,
+  );
   await page.goto('/');
   await page
     .getByLabel(locale === 'en' ? 'Access token' : '存取權杖', { exact: true })
@@ -81,10 +89,10 @@ export async function enter(page: Page, locale: 'zh-TW' | 'en' = 'en') {
     .getByRole('button', { name: locale === 'en' ? 'Enter office' : '進入辦公室', exact: true })
     .click();
   const picker = page.locator('.project-picker select');
-  await expect(picker.locator('option', { hasText: 'fixture-seats' })).toBeAttached({
+  await expect(picker.locator('option', { hasText: project })).toBeAttached({
     timeout: 20000,
   });
-  await picker.selectOption({ label: 'fixture-seats' });
+  await picker.selectOption({ label: project });
 }
 
 /** The way a person brings a member into view: its row in the feed flies the camera to its desk. */

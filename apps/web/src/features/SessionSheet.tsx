@@ -101,7 +101,10 @@ function FeedPeek({
         </button>
       </div>
       <p className={`peek-line ${top?.reply ? '' : 'none'}`}>
-        {top ? (top.reply ?? t('feedNoReply')) : t('feedEmptyTitle')}
+        {top
+          ? (top.reply ??
+            t(top.session.process === 'running' ? 'feedNoReply' : 'feedReplyNotLoaded'))
+          : t('feedEmptyTitle')}
       </p>
     </div>
   );

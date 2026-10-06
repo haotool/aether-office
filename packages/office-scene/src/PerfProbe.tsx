@@ -41,7 +41,7 @@ export function PerfProbe({
   // The main view's own counts: with the control-room wall, the last render of a frame is a small view.
   const main = useRef<{ calls: number; triangles: number; ms: number } | null>(null);
   const lastMain = useRef<{ calls: number; triangles: number; ms: number } | null>(null);
-  const { gl, scene, invalidate, size } = useThree();
+  const { gl, scene, camera, invalidate, size } = useThree();
 
   useEffect(() => {
     const render = gl.render.bind(gl);
@@ -110,6 +110,7 @@ export function PerfProbe({
       sample: (count) => sample(count),
       scene,
       gl,
+      camera,
       report,
     };
     (window as unknown as { __aetherPerfRig?: unknown }).__aetherPerfRig = rig;

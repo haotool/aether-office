@@ -55,3 +55,70 @@ test('the layout editor adds, moves, undoes, redoes and saves, and the saved lay
   await page.reload();
   expect((await saved())?.data.objects.some((o) => o.x === 6.5)).toBe(true); // persisted on the server, not just in the page
 });
+
+test('the layout editor adds a squad zone beside a desk, saves it as layout version 2 and reloads it', async ({
+  page,
+}) => {
+  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
+    directory: string;
+  };
+  await page.goto('/');
+  await page
+    .getByLabel('存取權杖', { exact: true })
+    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
+  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  const projectId = (
+    (await (await page.request.get('/api/projects')).json()) as { id: string }[]
+  )[0]!.id;
+  const saved = async () => {
+    const snapshot = (await (
+      await page.request.get(`/api/projects/${projectId}/snapshot`)
+    ).json()) as {
+      layout: {
+        data: {
+          schemaVersion: number;
+          objects: { type: string; anchor?: string; seats?: number }[];
+        };
+      } | null;
+    };
+    return snapshot.layout?.data;
+  };
+
+  await page.getByRole('button', { name: '編輯配置', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  const options = dialog.getByLabel('物件', { exact: true }).locator('option');
+  await options.first().waitFor({ state: 'attached' });
+  const initial = await options.count();
+  // The first object of the ground floor is a desk: its squad zone goes beside it, in the free floor space.
+  await dialog.getByRole('button', { name: '新增小隊區域', exact: true }).click();
+  await expect(options).toHaveCount(initial + 1);
+  await expect(dialog.getByLabel('主管辦公桌', { exact: true })).toBeVisible();
+  await dialog.getByLabel('座位數（0 = 自動）', { exact: true }).fill('2');
+  await dialog.getByLabel('W (m)', { exact: true }).fill('4.5');
+  await dialog.getByRole('button', { name: '儲存', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+
+  await expect
+    .poll(async () => (await saved())?.objects.filter((o) => o.type === 'squad').length)
+    .toBe(1);
+  const layout = (await saved())!;
+  expect(layout.schemaVersion).toBe(2); // version 2 is written only because the layout holds a squad
+  expect(layout.objects.find((o) => o.type === 'squad')).toMatchObject({ seats: 2 });
+
+  await page.reload();
+  await page.getByRole('button', { name: '編輯配置', exact: true }).click();
+  const editor = page.getByRole('dialog');
+  const zone = editor
+    .getByLabel('物件', { exact: true })
+    .locator('option', { hasText: '小隊區域' });
+  await expect(zone).toHaveCount(1); // the saved zone comes back
+
+  // Removing it returns the file to version 1, so an older build can still read it.
+  await editor
+    .getByLabel('物件', { exact: true })
+    .selectOption((await zone.getAttribute('value'))!);
+  await editor.getByRole('button', { name: '移除', exact: true }).click();
+  await editor.getByRole('button', { name: '儲存', exact: true }).click();
+  await expect(editor).toHaveCount(0);
+  await expect.poll(async () => (await saved())?.schemaVersion).toBe(1);
+});

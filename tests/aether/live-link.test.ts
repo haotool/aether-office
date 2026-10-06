@@ -17,12 +17,16 @@ import {
 } from '../../apps/web/src/features/feed-model.js';
 
 it('maps changes to the queries they make stale, once each', () => {
-  const change = (key: string, ...kinds: ('state' | 'tool' | 'speech' | 'transcript')[]) => ({
+  const change = (
+    key: string,
+    ...kinds: ('state' | 'tool' | 'speech' | 'transcript' | 'squad' | 'outcome')[]
+  ) => ({
     seq: 1,
     key,
     kinds,
   });
   expect(queriesFor([change('claude:a', 'state')])).toEqual([['local-sessions']]);
+  expect(queriesFor([change('claude:a', 'squad', 'outcome')])).toEqual([['local-sessions']]);
   expect(queriesFor([change('claude:a', 'speech')])).toEqual([
     ['speech'],
     ['transcript', 'claude:a'],

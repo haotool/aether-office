@@ -3,10 +3,10 @@ import type { Speech } from './session-speech.js';
 
 /**
  * What changed in the local sessions, derived from the scan the server already runs: no per-client polling. An event
- * names a session and what kind of thing changed, never the content; the browser then asks the usual endpoints, which
+ * names a session and what kind of thing changed (state, tool, speech, transcript, squad, outcome), never the content; the browser then asks the usual endpoints, which
  * are the only place the (redacted) content is returned.
  */
-export type ChangeKind = 'state' | 'tool' | 'speech' | 'transcript';
+export type ChangeKind = 'state' | 'tool' | 'speech' | 'transcript' | 'squad' | 'outcome';
 export type SessionChange = { seq: number; key: string; kinds: ChangeKind[] };
 type Print = Record<ChangeKind, string>;
 type Prints = ReadonlyMap<string, Print>;
@@ -16,6 +16,14 @@ const printOf = (s: LocalSession, speech: Speech | undefined): Print => ({
   tool: s.hook?.tool ?? '',
   speech: [speech?.user?.text, speech?.assistant?.text].join('\u0000'),
   transcript: String(s.mtime),
+  // A helper came, went, changed status or made a tool call, or returned: ids, statuses and counts, never their words.
+  squad: s.subagents
+    .map((c) => [c.id, c.status, c.tools?.count ?? '', c.result ? 'r' : ''].join(':'))
+    .join('|'),
+  // A tool call started or ended (its time and outcome), or the conflict count moved: numbers and flags only.
+  outcome: [...(s.hook?.recent.map((c) => `${c.at}:${c.ok}`) ?? []), s.git?.conflicts ?? ''].join(
+    '|',
+  ),
 });
 
 /** Pure. The prints of this scan and the sessions that differ from `prev` (none at all when there is no baseline yet). */

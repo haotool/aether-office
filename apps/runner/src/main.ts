@@ -6,7 +6,16 @@ import { NativeExecutor } from './native.js';
 import { assertIndependentStorage } from './storage.js';
 const mode = process.env['AETHER_MODE'] === 'demo' ? 'demo' : 'live';
 const directory = resolve(process.env['AETHER_DATA_DIR'] ?? `.data/${mode}`);
-const token = readFileSync(resolve(directory, 'runner-token'), 'utf8').trim();
+const token = (() => {
+  try {
+    return readFileSync(resolve(directory, 'runner-token'), 'utf8').trim();
+  } catch {
+    console.error(
+      `No runner credential in ${directory}. Enroll this machine first: pnpm runner:enroll (see docs/getting-started.md).`,
+    );
+    return process.exit(1);
+  }
+})();
 const configPath = process.env['AETHER_NATIVE_CONFIG'];
 const nativeConfig =
   mode === 'live' && configPath

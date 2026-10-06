@@ -1,4 +1,5 @@
 import { stat } from 'node:fs/promises';
+import { structureWrappers, type Notice } from '@aether/kernel';
 import { readEdge } from './file-edge.js';
 import { redactSecrets } from './redaction.js';
 
@@ -14,7 +15,7 @@ const MAX_TEXT = 1500;
 
 type TranscriptEntry = {
   at: number | null;
-  role: 'user' | 'assistant' | 'tool' | 'result';
+  role: 'user' | 'assistant' | 'tool' | 'result' | 'notice';
   name: string | null;
   text: string;
   error: boolean;
@@ -22,6 +23,8 @@ type TranscriptEntry = {
   toolId: string | null;
   /** A tool call's target in a few words (a file path, a command), redacted; null for everything else. */
   summary: string | null;
+  /** What a CLI wrapper carried (a finished background task, a slash command, injected context), redacted; else null. */
+  notice: Notice | null;
 };
 type TranscriptAnalysis = {
   tools: { name: string; count: number }[];
@@ -42,24 +45,54 @@ const time = (v: unknown) => {
 };
 const stringify = (v: unknown) => (typeof v === 'string' ? v : JSON.stringify(v ?? ''));
 // Context a provider injects ahead of the user's own words is not part of the conversation.
-const INJECTED =
-  /^\s*(<environment_context|<user_instructions|# AGENTS\.md|AGENTS\.md instructions|<system-reminder|<command-)/i;
+const INJECTED = /^\s*(# AGENTS\.md|AGENTS\.md instructions)/i;
+// Bounds the work the sanitizer does on one message; the stored text is cut much shorter afterwards.
+const SANITIZE_CHARS = 12_000;
 
-const message = (at: number | null, role: 'user' | 'assistant', text: string): TranscriptEntry => ({
+/** The words of a message with CLI wrappers resolved and HTML neutralized, and the notices the wrappers carried. */
+const spoken = (raw: string) =>
+  INJECTED.test(raw) ? { text: '', notices: [] } : structureWrappers(raw.slice(0, SANITIZE_CHARS));
+
+/** A notice with every free-text field redacted and cut: it is shown to people, so it is held to the same rules as a message. */
+function redactNotice(n: Notice): Notice {
+  switch (n.kind) {
+    case 'task':
+      return { ...n, summary: clip(n.summary, 200), detail: clip(n.detail, MAX_TEXT) };
+    case 'command':
+      return { ...n, name: clip(n.name, 80), args: clip(n.args, 300) };
+    case 'output':
+      return { ...n, text: clip(n.text, MAX_TEXT) };
+    case 'context':
+      return { ...n, text: clip(n.text, MAX_TEXT) };
+    case 'hook':
+      return { ...n, text: clip(n.text, MAX_TEXT) };
+    case 'interrupted':
+      return n;
+  }
+}
+
+const blank = (at: number | null, role: TranscriptEntry['role']): TranscriptEntry => ({
   at,
   role,
   name: null,
-  text: clip(text),
+  text: '',
   error: false,
   toolId: null,
   summary: null,
+  notice: null,
 });
+/** The entries of one message: its notices first (what the tools added), then the words, when there are any. */
+function said(at: number | null, role: 'user' | 'assistant', raw: string): TranscriptEntry[] {
+  const { text, notices } = spoken(raw);
+  return [
+    ...notices.map((n) => ({ ...blank(at, 'notice'), notice: redactNotice(n) })),
+    ...(text ? [{ ...blank(at, role), text: clip(text) }] : []),
+  ];
+}
 const call = (at: number | null, name: string, id: unknown, input: unknown): TranscriptEntry => ({
-  at,
-  role: 'tool',
+  ...blank(at, 'tool'),
   name,
   text: clip(stringify(input), 600),
-  error: false,
   toolId: typeof id === 'string' ? id : null,
   summary: summaryOf(input),
 });
@@ -69,13 +102,10 @@ const outcome = (
   output: unknown,
   error = false,
 ): TranscriptEntry => ({
-  at,
-  role: 'result',
-  name: null,
+  ...blank(at, 'result'),
   text: clip(stringify(output), 600),
   error,
   toolId: typeof id === 'string' ? id : null,
-  summary: null,
 });
 const TARGET_KEYS = [
   'file_path',
@@ -110,17 +140,12 @@ function claudeEntries(entry: Record<string, unknown>): TranscriptEntry[] {
   if (role !== 'user' && role !== 'assistant') return [];
   const at = time(entry['timestamp']);
   const content = body['content'];
-  if (typeof content === 'string')
-    return INJECTED.test(content) ? [] : [message(at, role, content)];
+  if (typeof content === 'string') return said(at, role, content);
   const out: TranscriptEntry[] = [];
   for (const part of Array.isArray(content) ? content : []) {
     const block = obj(part);
-    if (
-      block['type'] === 'text' &&
-      typeof block['text'] === 'string' &&
-      !INJECTED.test(block['text'])
-    )
-      out.push(message(at, role, block['text']));
+    if (block['type'] === 'text' && typeof block['text'] === 'string')
+      out.push(...said(at, role, block['text']));
     else if (block['type'] === 'tool_use')
       out.push(call(at, String(block['name'] ?? 'tool'), block['id'], block['input']));
     else if (block['type'] === 'tool_result')
@@ -138,8 +163,8 @@ function codexEntries(entry: Record<string, unknown>): TranscriptEntry[] {
     const role = p['role'];
     return (Array.isArray(p['content']) ? p['content'] : [])
       .map((part) => obj(part)['text'])
-      .filter((t): t is string => typeof t === 'string' && !INJECTED.test(t))
-      .map((t) => message(at, role, t));
+      .filter((t): t is string => typeof t === 'string')
+      .flatMap((t) => said(at, role, t));
   }
   if (p['type'] === 'function_call' || p['type'] === 'custom_tool_call')
     return [call(at, String(p['name'] ?? 'tool'), p['call_id'], p['arguments'] ?? p['input'])];

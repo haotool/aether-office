@@ -52,19 +52,54 @@
   color: var(--muted);
   font-size: var(--fs-small);
 }
-.diff-line {
+.code-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.code-copy[aria-pressed='true'] {
+  background: var(--raised);
+  color: var(--mint);
+}
+.code-line {
   display: block;
   min-width: max-content;
 }
-.diff-line.add {
+/* Wrapping: long lines fold at the block's edge instead of scrolling sideways */
+.code-block.wrap .code-line {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+/* Line numbers are drawn by CSS, so selecting and copying the code never includes them */
+.code-block.numbered code {
+  counter-reset: line;
+}
+.code-block.numbered .code-line {
+  display: grid;
+  grid-template-columns: calc(var(--digits, 2) * 1ch + var(--space-8)) minmax(0, 1fr);
+  min-width: max-content;
+}
+.code-block.numbered.wrap .code-line {
+  min-width: 0;
+}
+.code-block.numbered .code-line::before {
+  content: counter(line);
+  counter-increment: line;
+  padding-right: var(--space-8);
+  color: var(--dim);
+  text-align: right;
+  user-select: none;
+}
+.code-line.add {
   background: var(--glow);
   color: var(--mint);
 }
-.diff-line.del {
+.code-line.del {
   background: var(--gold-tint);
   color: var(--red);
 }
-.diff-line.hunk {
+.code-line.hunk {
   color: var(--violet);
 }
 
@@ -199,6 +234,10 @@
   font-size: var(--fs-small);
   font-weight: 650;
   animation: rise-in var(--dur) var(--ease);
+}
+/* The accent is dark teal on a light page: white type clears 4.5:1 where the dark on-accent would not */
+:root[data-theme='light'] .new-pill {
+  color: var(--white);
 }
 @keyframes rise-in {
   from {

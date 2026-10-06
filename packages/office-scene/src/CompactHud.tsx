@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { DEPARTMENTS } from '@aether/kernel';
 import { FLOORS } from './layout.js';
+import { introWords } from './intro/intro-text.js';
 import type { FloorCount } from './SceneHud.js';
 
 const icon = {
@@ -31,6 +32,7 @@ export function CompactHud({
   onExplode,
   onFollow,
   onLabels,
+  onReplayIntro,
 }: {
   zh: boolean;
   floor: number;
@@ -42,6 +44,8 @@ export function CompactHud({
   onExplode: () => void;
   onFollow: () => void;
   onLabels: () => void;
+  /** Plays the first-visit tour again (absent when the page has no tour). */
+  onReplayIntro?: (() => void) | undefined;
 }) {
   // The three switches stay folded until asked for: the rail is five floors and one button.
   const [toolsOpen, setToolsOpen] = useState(false);
@@ -103,6 +107,17 @@ export function CompactHud({
                 <path d="M4 7h16M4 12h10M4 17h13" />
               </Svg>
             </button>
+            {onReplayIntro && (
+              <button
+                className="rail-tool"
+                aria-label={introWords(zh).replay}
+                onClick={onReplayIntro}
+              >
+                <Svg>
+                  <path d="M8 5v14l11-7-11-7Z" />
+                </Svg>
+              </button>
+            )}
           </>
         )}
       </nav>

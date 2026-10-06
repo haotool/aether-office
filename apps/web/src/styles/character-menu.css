@@ -329,9 +329,6 @@
   user-select: none;
   touch-action: manipulation;
 }
-.scene-label.grouped {
-  border-color: var(--gold);
-}
 .pip.pinned {
   border-color: var(--gold);
 }

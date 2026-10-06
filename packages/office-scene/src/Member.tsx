@@ -10,6 +10,10 @@ import { DeskEffects } from './DeskEffects.js';
 import { Departing } from './Departing.js';
 import { SEAT_DEPTH, WALK_PACE, type Departure } from './departure.js';
 import { MemberScreen } from './MemberScreen.js';
+import { DeskItems } from './DeskItems.js';
+import { deskProfile } from './desk-profile.js';
+import { LONG_QUIET_MINUTES, workMode } from './behavior.js';
+import type { BehaviorScene } from './use-micro-actions.js';
 import { AttentionRing, ContactShadow, ScreenGlow } from './DeskGlow.js';
 import { Poser } from './Poser.js';
 import type { Engagement } from './interplay.js';
@@ -91,6 +95,20 @@ export function Member({
   const baseY = floorY(desk.floor ?? 0, exploded);
   const menu = useRef(onMenu);
   menu.current = onMenu;
+  const profile = useMemo(() => deskProfile(agent.id, role), [agent.id, role]);
+  const mode = workMode(facts);
+  const quiet = facts?.quietMinutes ?? null;
+  const longQuiet = quiet !== null && quiet >= LONG_QUIET_MINUTES;
+  const behavior = useMemo<BehaviorScene>(
+    () => ({
+      mode,
+      intensity,
+      secondMonitor: profile.monitors === 2,
+      // Only whether it has been quiet a long while matters, so the director's timer is not reset every minute.
+      quietMinutes: quiet === null ? null : longQuiet ? LONG_QUIET_MINUTES : 0,
+    }),
+    [mode, intensity, profile.monitors, quiet === null, longQuiet], // eslint-disable-line react-hooks/exhaustive-deps -- quiet is only read as null or not
+  );
   const press = useMemo(() => createLongPress(() => menu.current(agent.id)), [agent.id]);
   const animal = {
     agent,
@@ -112,7 +130,11 @@ export function Member({
         facts={facts}
         theme={DEPARTMENTS[desk.floor ?? 0]?.id ?? 'product'}
         intensity={intensity}
+        profile={profile}
+        reducedMotion={reducedMotion}
+        rich={!light && quality !== 'low'}
       />
+      {!light && quality !== 'low' && <DeskItems profile={profile} />}
       <DeskEffects intensity={intensity} seed={agent.id} />
       <ContextGauge percent={facts?.contextPercent ?? null} />
       <ScreenGlow
@@ -184,10 +206,16 @@ export function Member({
         ) : (
           <Poser
             seat={{ x: desk.x, z: desk.z, floor: desk.floor ?? 0, rotation: desk.rotation }}
+            seed={agent.id}
             engagements={engagements}
             reducedMotion={reducedMotion}
           >
-            <Animal {...animal} apparition={apparition} pace={1 + intensity * 0.4} />
+            <Animal
+              {...animal}
+              apparition={apparition}
+              pace={1 + intensity * 0.4}
+              behavior={behavior}
+            />
           </Poser>
         )}
         {zombie && !departure && (

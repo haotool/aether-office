@@ -19,6 +19,7 @@ const session = (over: Partial<LocalSession> = {}): LocalSession =>
     process: 'running',
     mtime: 1,
     hook: null,
+    subagents: [],
     liveness: { state: 'active' },
     ...over,
   }) as LocalSession;
@@ -46,6 +47,82 @@ it('diffs scans into the kinds of change per session, with no events for a first
   expect(hooked.changed[0]!.kinds.sort()).toEqual(['state', 'tool']);
   const gone = diffSessions(first.next, [], {});
   expect(gone.changed).toEqual([{ key: 'claude:a', kinds: ['state'] }]);
+});
+
+it('names squad and outcome changes by kind alone: ids, statuses, counts and flags, never words', () => {
+  const child = (over: object = {}) => ({
+    id: 'a1',
+    type: 'Explore',
+    status: 'running',
+    tools: { count: 1, last: 'Read', lastAt: 1 },
+    result: null,
+    ...over,
+  });
+  const call = (ok: boolean | null) => ({
+    tool: 'Bash',
+    target: null,
+    at: 5,
+    agentId: null,
+    tags: ['test'],
+    ok,
+  });
+  const hooked = (ok: boolean | null) =>
+    ({
+      activity: 'working',
+      lastEvent: 'PostToolUse',
+      tool: null,
+      at: 1,
+      recent: [call(ok)],
+    }) as never;
+  const first = diffSessions(null, [session({ subagents: [child()] as never })], {});
+  const changed = (over: Partial<LocalSession>) =>
+    diffSessions(first.next, [session({ subagents: [child()] as never, ...over })], {}).changed;
+  expect(changed({})).toEqual([]);
+  expect(
+    diffSessions(first.next, [session({ subagents: [child({ status: 'finished' })] as never })], {})
+      .changed,
+  ).toEqual([{ key: 'claude:a', kinds: ['squad'] }]);
+  expect(
+    diffSessions(
+      first.next,
+      [session({ subagents: [child({ tools: { count: 2, last: 'Edit', lastAt: 2 } })] as never })],
+      {},
+    ).changed,
+  ).toEqual([{ key: 'claude:a', kinds: ['squad'] }]);
+  expect(
+    diffSessions(
+      first.next,
+      [
+        session({
+          subagents: [
+            child({ result: { summary: 'SECRETWORDS', error: null, chars: 11 } }),
+          ] as never,
+        }),
+      ],
+      {},
+    ).changed,
+  ).toEqual([{ key: 'claude:a', kinds: ['squad'] }]);
+  const withCall = diffSessions(
+    first.next,
+    [session({ subagents: [child()] as never, hook: hooked(null) })],
+    {},
+  );
+  expect(withCall.changed[0]!.kinds).toContain('outcome');
+  const settled = diffSessions(
+    withCall.next,
+    [session({ subagents: [child()] as never, hook: hooked(true) })],
+    {},
+  );
+  expect(settled.changed).toEqual([{ key: 'claude:a', kinds: ['outcome'] }]);
+  const conflict = diffSessions(
+    first.next,
+    [session({ subagents: [child()] as never, git: { conflicts: 2 } as never })],
+    {},
+  );
+  expect(conflict.changed).toEqual([{ key: 'claude:a', kinds: ['outcome'] }]);
+  expect(JSON.stringify([withCall.changed, settled.changed, conflict.changed])).not.toContain(
+    'SECRETWORDS',
+  );
 });
 
 type Fixture = Awaited<ReturnType<typeof setup>>;

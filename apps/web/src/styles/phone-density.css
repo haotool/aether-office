@@ -72,8 +72,7 @@
     padding-inline: var(--space-12);
     border-radius: var(--r-lg);
   }
-  .panel,
-  .settings-panel {
+  .panel {
     padding: var(--space-12) var(--space-16);
   }
   .task-row {

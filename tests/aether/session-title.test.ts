@@ -30,3 +30,13 @@ it('maps Codex thread ids to names, the last entry winning and junk ignored', ()
   );
   expect([...names]).toEqual([['a', 'Renamed']]);
 });
+
+it('cleans a title: markup, entities, unbalanced brackets and invisible characters', () => {
+  const title = (aiTitle: string) =>
+    parseClaudeTitle(JSON.stringify({ type: 'ai-title', aiTitle }));
+  expect(title('<span class="a">Fix &amp; ship</span>')).toBe('Fix & ship');
+  expect(title('【審查邊界（擁有者 10-05')).toBe('【審查邊界】');
+  expect(title('a​b‮c')).toBe('abc');
+  const names = parseCodexIndex(JSON.stringify({ id: 'a', thread_name: '「未完成的 (標題' }));
+  expect(names.get('a')).toBe('「未完成的」');
+});

@@ -42,7 +42,9 @@ export function intensityOf(
 ): Intensity {
   if (!working) return 0;
   const cpu = session.resources?.cpuPercent ?? 0;
-  const helpers = session.subagents.filter((c) => now - c.lastSeen < SUBAGENT_LIVE_MS).length;
+  const helpers = session.subagents.filter(
+    (c) => c.status !== 'finished' && now - c.lastSeen < SUBAGENT_LIVE_MS,
+  ).length;
   const load = beatsPerMinute / 6 + cpu / 50 + helpers;
   return load >= 2.5 ? 3 : load >= 1 ? 2 : 1;
 }

@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react';
+import { Fragment, memo, useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { usePreferences } from '../state.js';
 import { useT } from '../ui.js';
+import { Ago } from './ConvTime.js';
 import { LongText } from './LongText.js';
-import { blockId, promptId } from './use-fresh-ids.js';
 import { Markdown } from './Markdown.js';
+import { MessageActions } from './MessageActions.js';
+import { Notices } from './NoticeChips.js';
+import { blockId, promptId } from './use-fresh-ids.js';
 import {
   countCalls,
   groupSpanMs,
@@ -14,9 +17,6 @@ import {
   type ToolCall,
   type Turn,
 } from './turn-groups.js';
-
-const clock = (at: number | null) =>
-  at ? new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
 /** Consecutive tool calls as one line ("read 4 files · edited 2"); a tap lists each call with its target. */
 function ToolGroup({ calls, fresh }: { calls: ToolCall[]; fresh: boolean }) {
@@ -64,46 +64,79 @@ function ToolGroup({ calls, fresh }: { calls: ToolCall[]; fresh: boolean }) {
   );
 }
 
+/** The line that marks where what you have not seen starts. */
+function UnreadDivider() {
+  const t = useT();
+  return (
+    <div className="unread-divider" role="separator">
+      <span>{t('convUnread')}</span>
+    </div>
+  );
+}
+
 /**
  * A prompt, then what the agent said and did about it. What `isFresh` says arrived while the conversation was open
  * enters with a short rise, and a fresh reply fades in word by word. Every assistant message but the newest folds when tall.
+ * `unreadId` is the first thing that happened after the person last looked: the divider goes just before it.
  */
-export function TurnView({
+export const TurnView = memo(function TurnView({
   turn,
   isFresh,
   newest,
+  unreadId,
 }: {
   turn: Turn;
   isFresh: (id: string) => boolean;
   newest: boolean;
+  unreadId: string | null;
 }) {
   const t = useT();
   const lastReply = newest ? turn.blocks.findLastIndex((b) => b.type === 'assistant') : -1;
   return (
-    <article className="turn">
+    <article className="turn" data-turn tabIndex={-1}>
       {turn.user && (
-        <div className={`msg user ${isFresh(promptId(turn)) ? 'enter' : ''}`}>
-          <span className="msg-who">
-            {t('role_user')} <time>{clock(turn.user.at)}</time>
-          </span>
-          <p>{turn.user.text}</p>
-        </div>
+        <>
+          {unreadId === promptId(turn) && <UnreadDivider />}
+          <div className={`msg user ${isFresh(promptId(turn)) ? 'enter' : ''}`} tabIndex={-1}>
+            <span className="msg-who">
+              {t('role_user')} <Ago at={turn.user.at} />
+              <MessageActions text={turn.user.text} />
+            </span>
+            <p>{turn.user.text}</p>
+          </div>
+        </>
       )}
       {turn.blocks.map((block, i) => {
-        const fresh = isFresh(blockId(turn, i));
+        const id = blockId(turn, i);
+        const fresh = isFresh(id);
+        const divider = unreadId === id && <UnreadDivider key={`${id}:unread`} />;
+        if (block.type === 'notices')
+          return (
+            <Fragment key={i}>
+              {divider}
+              <Notices items={block.items} fresh={fresh} />
+            </Fragment>
+          );
         return block.type === 'assistant' ? (
-          <div key={i} className={`msg assistant ${fresh ? 'enter' : ''}`}>
-            <span className="msg-who">
-              {t('role_assistant')} <time>{clock(block.at)}</time>
-            </span>
-            <LongText foldable={i !== lastReply}>
-              <Markdown text={block.text} reveal={fresh} />
-            </LongText>
-          </div>
+          <Fragment key={i}>
+            {divider}
+            <div className={`msg assistant ${fresh ? 'enter' : ''}`} tabIndex={-1}>
+              <span className="msg-who">
+                {t('role_assistant')} <Ago at={block.at} />
+                <MessageActions text={block.text} />
+              </span>
+              <LongText foldable={i !== lastReply}>
+                <Markdown text={block.text} reveal={fresh} />
+              </LongText>
+            </div>
+          </Fragment>
         ) : (
-          <ToolGroup key={i} calls={block.calls} fresh={fresh} />
+          <Fragment key={i}>
+            {divider}
+            <ToolGroup calls={block.calls} fresh={fresh} />
+          </Fragment>
         );
       })}
     </article>
   );
-}
+});

@@ -1,5 +1,81 @@
 import { z } from 'zod';
 
+// The closed vocabulary of command labels (packages/providers/src/command-tags.mjs): what kind of command a tool call was,
+// never its arguments. A test keeps this list and the classifier's the same.
+export const commandTagSchema = z.enum([
+  'test',
+  'build',
+  'typecheck',
+  'lint',
+  'install',
+  'docker',
+  'deploy',
+  'publish',
+  'release',
+  'ci.watch',
+  'git.commit',
+  'git.push',
+  'git.push.force',
+  'git.merge',
+  'git.rebase',
+  'git.reset.hard',
+  'git.conflict.marker',
+  'gh.pr.approve',
+  'fs.rm.recursive',
+  'sudo',
+  'curl.pipe',
+  'editor.vim',
+  'search.todo',
+]);
+export type CommandTag = z.infer<typeof commandTagSchema>;
+
+// One helper agent of a session. Every field after `lastSeen` is defaulted so a payload from an older control plane
+// still parses: `unknown` and null mean "not known", never a guess.
+export const subagentSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  lastSeen: z.number(),
+  // Where the facts come from: a hook record, a transcript file, or a Codex rollout.
+  source: z.enum(['hook', 'transcript', 'rollout']).default('hook'),
+  status: z.enum(['running', 'waiting_permission', 'finished', 'unknown']).default('unknown'),
+  startedAt: z.number().nullable().default(null),
+  endedAt: z.number().nullable().default(null),
+  // Codex names its helpers; a short label, never free text from a prompt.
+  nickname: z.string().max(40).nullable().default(null),
+  // Tool calls the subagent made (hook records only), with the last tool's name.
+  tools: z
+    .object({
+      count: z.number().int().nonnegative(),
+      last: z.string().nullable(),
+      lastAt: z.number().nullable(),
+    })
+    .nullable()
+    .default(null),
+  // What the parent asked it to do, in a few words: the Task description, run through the text pipeline. Null when unknown.
+  label: z.string().max(60).nullable().default(null),
+  // What it spent (transcript files only): new input, cache writes and output tokens, and the rate over the last minute
+  // measured between scans (0 until two samples exist).
+  tokens: z
+    .object({
+      total: z.number().int().nonnegative(),
+      perMinute: z.number().nonnegative(),
+      sampledAt: z.number(),
+    })
+    .nullable()
+    .default(null),
+  // Its last words, as plain text cut to 160 characters (redacted first). `error` is true or false only when the parent's
+  // own tool result for the call says so; null when that is not known.
+  result: z
+    .object({
+      summary: z.string().max(160),
+      error: z.boolean().nullable(),
+      chars: z.number().int().nonnegative(),
+    })
+    .nullable()
+    .default(null),
+});
+export type Subagent = z.infer<typeof subagentSchema>;
+
 export const localSessionSchema = z.object({
   key: z.string(),
   provider: z.enum(['claude', 'codex']),
@@ -14,6 +90,8 @@ export const localSessionSchema = z.object({
       ahead: z.number(),
       behind: z.number(),
       uncommitted: z.number(),
+      // Files in a conflicted state (git's unmerged codes in `status`), counted from the same read; 0 on an older server.
+      conflicts: z.number().int().nonnegative().default(0),
     })
     .nullable(),
   // Canonical identity: sessions share a project when they share the Git common directory.
@@ -30,11 +108,21 @@ export const localSessionSchema = z.object({
       // The last few tool calls, oldest first, with a short redacted target (a file's base name, a command's first
       // word); never a full command, arguments or content.
       recent: z.array(
-        z.object({ tool: z.string(), target: z.string().nullable(), at: z.number() }),
+        z.object({
+          tool: z.string(),
+          target: z.string().nullable(),
+          at: z.number(),
+          // The subagent that made the call (Claude's agent_id); null for the session's own calls.
+          agentId: z.string().nullable().default(null),
+          // What kind of command it was, from a closed vocabulary; never arguments, paths or patterns.
+          tags: z.array(commandTagSchema).max(4).default([]),
+          // How it ended: true or false only when the provider said so, null while unknown (never guessed).
+          ok: z.boolean().nullable().default(null),
+        }),
       ),
     })
     .nullable(),
-  subagents: z.array(z.object({ id: z.string(), type: z.string(), lastSeen: z.number() })),
+  subagents: z.array(subagentSchema),
   // The title the provider itself gave the session (Claude ai-title, Codex thread_name); null when it has none.
   title: z.string().nullable(),
   // Which engineering role the session's work belongs to, how sure that is (0 to 1) and why: the strongest reasons as

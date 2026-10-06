@@ -6,7 +6,7 @@ import { chipText } from './model-chip.js';
 
 export type ModelChoice = { provider: ModelCatalog['provider']; id: string; effort?: string };
 
-const SOURCE_NOTE = {
+export const SOURCE_NOTE = {
   cache: 'modelsSourceCache',
   cli: 'modelsSourceCli',
   fallback: 'modelsSourceFallback',

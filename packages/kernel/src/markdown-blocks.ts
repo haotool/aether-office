@@ -1,4 +1,5 @@
 import { parseInline, type Span } from './markdown-inline.js';
+import { neutralizeHtml } from './text-html.js';
 
 /**
  * Pure. The block structure of an agent's reply: paragraphs, headings, nested bullet / numbered / task lists, tables,
@@ -173,5 +174,7 @@ function parseBlocks(lines: string[]): MdBlock[] {
   return blocks;
 }
 
+// Defence in depth: the server already neutralized the HTML in what it sends, and this makes every renderer safe on its
+// own (a tag that is not code never reaches the screen as a tag). It changes nothing in text that was already clean.
 export const parseMarkdown = (source: string): MdBlock[] =>
-  parseBlocks(source.replace(/\r\n?/g, '\n').split('\n'));
+  parseBlocks(neutralizeHtml(source.replace(/\r\n?/g, '\n')).split('\n'));

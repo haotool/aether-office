@@ -30,6 +30,7 @@ export function SceneCamera({
   directed,
   seats,
   followPoint,
+  introPose,
 }: {
   command: FlyTo;
   reducedMotion: boolean;
@@ -40,6 +41,8 @@ export function SceneCamera({
   seats: ReadonlyMap<string, Seat>;
   /** A member the person asked to follow: the camera keeps it in the middle (it moves with the seat, never against a hand on the controls). */
   followPoint?: V3 | null;
+  /** The first-visit tour's camera: its pose this frame, or null when the tour does not hold the camera (see intro/). */
+  introPose?: ((aspect: number) => Pose | null) | undefined;
 }) {
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
   const camera = useThree((s) => s.camera);
@@ -82,6 +85,20 @@ export function SceneCamera({
   useFrame((_state, delta) => {
     const c = controls.current;
     if (!c) return;
+    // The first-visit tour holds the camera exactly where its path says, like a shot: nothing chases, nothing is blended.
+    const tour = introPose?.(latestAspect.current) ?? null;
+    if (tour) {
+      goal.current = null;
+      camera.position.set(...tour.position);
+      c.target.set(...tour.target);
+      if (camera instanceof PerspectiveCamera && camera.fov !== tour.fov) {
+        camera.fov = tour.fov;
+        camera.updateProjectionMatrix();
+      }
+      c.update();
+      invalidate();
+      return;
+    }
     // Smooth fly-to: ease the camera and what it looks at toward the destination.
     const g = goal.current;
     if (g?.snap) {

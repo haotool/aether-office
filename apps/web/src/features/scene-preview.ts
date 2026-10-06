@@ -8,35 +8,188 @@ import {
   type ScreenFacts,
 } from '@aether/office-scene/model';
 
+type Call = { tool: string; target: string | null };
+/** What a stand-in member is doing: its recent calls, the last of which is the one running. */
+const STAND_IN_WORK: { recent: Call[]; ports?: number[] }[] = [
+  {
+    recent: [
+      { tool: 'Grep', target: null },
+      { tool: 'Read', target: 'auth-service.ts' },
+      { tool: 'Edit', target: 'auth-service.ts' },
+    ],
+  },
+  {
+    recent: [
+      { tool: 'Edit', target: 'app.ts' },
+      { tool: 'Bash', target: 'pnpm test' },
+    ],
+  },
+  {
+    recent: [
+      { tool: 'Edit', target: 'router.go' },
+      { tool: 'Bash', target: 'git diff' },
+    ],
+  },
+  { recent: [{ tool: 'Bash', target: 'pnpm install' }] },
+  {
+    recent: [
+      { tool: 'Read', target: 'README.md' },
+      { tool: 'WebFetch', target: 'docs.example.com' },
+    ],
+  },
+  {
+    recent: [
+      { tool: 'Read', target: 'plan.md' },
+      { tool: 'Task', target: null },
+    ],
+  },
+  {
+    recent: [
+      { tool: 'Read', target: 'guide.md' },
+      { tool: 'Edit', target: 'guide.md' },
+    ],
+  },
+  {
+    recent: [
+      { tool: 'Read', target: 'train_model.py' },
+      { tool: 'Edit', target: 'train_model.py' },
+    ],
+  },
+  {
+    recent: [
+      { tool: 'Read', target: 'button.css' },
+      { tool: 'Edit', target: 'button.css' },
+    ],
+  },
+  { recent: [{ tool: 'Edit', target: 'OrderService.java' }] },
+  {
+    recent: [
+      { tool: 'Read', target: 'lib.rs' },
+      { tool: 'Edit', target: 'lib.rs' },
+    ],
+  },
+  {
+    recent: [
+      { tool: 'Edit', target: 'schema.sql' },
+      { tool: 'Bash', target: 'pnpm build' },
+    ],
+  },
+  {
+    recent: [
+      { tool: 'Edit', target: 'Dockerfile.yml' },
+      { tool: 'Bash', target: 'docker build' },
+    ],
+  },
+  {
+    recent: [
+      { tool: 'Edit', target: 'index.ts' },
+      { tool: 'Bash', target: 'git status' },
+    ],
+  },
+  {
+    recent: [
+      { tool: 'Edit', target: 'server.js' },
+      { tool: 'Bash', target: 'node server.js' },
+    ],
+    ports: [3000],
+  },
+  {
+    recent: [
+      { tool: 'Read', target: 'deploy.sh' },
+      { tool: 'Edit', target: 'deploy.sh' },
+    ],
+  },
+  {
+    recent: [
+      { tool: 'Grep', target: null },
+      { tool: 'Read', target: 'config.json' },
+      { tool: 'Edit', target: 'config.json' },
+    ],
+  },
+  {
+    recent: [
+      { tool: 'Edit', target: 'Panel.tsx' },
+      { tool: 'Edit', target: 'Panel.test.tsx' },
+      { tool: 'Bash', target: 'vitest' },
+    ],
+  },
+];
+
+/** The roles a preview's members go through in turn, so each role's habits (a QA desk, a data desk) show up. */
+const STAND_IN_ROLES = [
+  'frontend',
+  'qa',
+  'data',
+  'sre',
+  'docs',
+  'security',
+  'product-manager',
+  'ml',
+  'backend',
+  'release',
+  'architect',
+  'review',
+  'analytics',
+  'platform',
+  'research',
+  'mobile',
+  'fullstack',
+  'generalist',
+];
+export const standInRole = (index: number): string =>
+  STAND_IN_ROLES[index % STAND_IN_ROLES.length]!;
+
+const nameHash = (name: string) => [...name].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+
+/** A stand-in screen for the opt-in previews (`?intensity=`, `?compact=`): invented on purpose, never shown otherwise. It varies by member so the desks differ. */
+
+/** What a deterministic effect preview asks for: draw this effect as it looks `t` ms after it started. */
+export type PreviewParams = { effect: string; t: number };
+
+const EFFECT_ID = /^[a-z][a-z0-9-]{0,39}$/;
+
+/**
+ * `?preview=life&effect=<id>&t=<ms>`: the address of one frame of one office-life effect, so a contact sheet can render
+ * every effect at fixed times. Null when the address is not a preview or names no valid effect. `t` defaults to 0 and
+ * must be a whole number of milliseconds (anything else is rejected, not rounded, so a sheet never shows a wrong frame).
+ * Accepts a full URL, a path with a query, or just a query string.
+ */
+export function previewParams(url: string): PreviewParams | null {
+  const query = url.includes('?') ? url.slice(url.indexOf('?') + 1) : url;
+  const params = new URLSearchParams(query.split('#')[0]);
+  const effect = params.get('effect');
+  if (params.get('preview') !== 'life' || effect === null || !EFFECT_ID.test(effect)) return null;
+  const raw = params.get('t');
+  if (raw === null) return { effect, t: 0 };
+  return /^\d{1,7}$/.test(raw) ? { effect, t: Number(raw) } : null;
+}
+
 /** A stand-in screen for the opt-in previews (`?intensity=`, `?compact=`): invented on purpose, never shown otherwise. */
 export function standInFacts(
   agent: Pick<Agent, 'name' | 'role'>,
   provider: ScreenFacts['provider'],
   contextPercent: number | null,
+  /** The member's place in the office: members in a row go through the scenarios in turn, so every kind of desk shows up. */
+  index = 0,
 ): ScreenFacts {
+  const hash = nameHash(agent.name);
+  const work = STAND_IN_WORK[index % STAND_IN_WORK.length]!;
   return {
     provider,
     title: `${agent.name} · ${agent.role}`,
     repo: 'preview',
-    branch: 'main',
-    ahead: 0,
+    branch: hash % 3 ? 'main' : 'feat/preview',
+    ahead: hash % 4,
     behind: 0,
     uncommitted: 3,
     model: null,
     contextPercent,
     state: 'working',
-    tool: 'Edit',
-    toolSince: Date.now(),
-    recent: [
-      { tool: 'Grep', target: null },
-      { tool: 'Read', target: 'index.ts' },
-      { tool: 'Edit', target: 'index.ts' },
-      { tool: 'Bash', target: 'pnpm test' },
-      { tool: 'Bash', target: 'git commit' },
-      { tool: 'Edit', target: 'index.ts' },
-    ],
+    tool: work.recent[work.recent.length - 1]!.tool,
+    toolSince: Date.now() - (hash % 9000),
+    recent: work.recent,
     quietMinutes: 0,
-    ports: [],
+    ports: work.ports ?? [],
   };
 }
 
@@ -80,7 +233,7 @@ export function useCompactPreview(agents: readonly Agent[], enabled: boolean) {
   if (!enabled) return null;
   return {
     screens: Object.fromEntries(
-      agents.map((a, i) => [a.id, standInFacts(a, i % 2 ? 'codex' : 'claude', state.pct)]),
+      agents.map((a, i) => [a.id, standInFacts(a, i % 2 ? 'codex' : 'claude', state.pct, i)]),
     ),
     compactions: state.event
       ? Object.fromEntries(agents.map((a) => [a.id, state.event as SceneCompaction]))

@@ -24,6 +24,7 @@ describe('a session from a control plane older than this page', () => {
             limit: null,
           },
           hook: { activity: 'working', tool: 'Bash' },
+          git: { branch: 'main', upstream: null, ahead: 0, behind: 0, uncommitted: 1 },
         },
       ],
     } as unknown as LocalSessionsResponse;
@@ -33,6 +34,24 @@ describe('a session from a control plane older than this page', () => {
     expect(s!.usage.contextPct).toBeNull();
     expect(s!.usage.compactedAt).toBeNull();
     expect(s!.hook?.recent).toEqual([]);
+    expect(s!.git?.conflicts).toBe(0);
+  });
+
+  it('fills a call from before labels and outcomes with "no label, outcome not known"', () => {
+    const old = {
+      enabled: true,
+      sessions: [
+        {
+          key: 'k',
+          classification: { role: 'qa', department: 'quality' },
+          usage: {},
+          hook: { recent: [{ tool: 'Bash', target: 'pnpm test', at: 1 }] },
+        },
+      ],
+    } as unknown as LocalSessionsResponse;
+    expect(normalizeSessions(old).sessions[0]!.hook?.recent).toEqual([
+      { tool: 'Bash', target: 'pnpm test', at: 1, agentId: null, tags: [], ok: null },
+    ]);
   });
 
   it('keeps a current session as it is', () => {

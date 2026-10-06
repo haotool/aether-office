@@ -41,6 +41,7 @@ const app = createServer(control, {
   lanAddresses:
     fixedLan && ((lanPort) => fixedLan.map((address) => `http://${address}:${lanPort}`)),
   serveWeb: process.env['AETHER_SERVE_WEB'] !== '0',
+  dataDir: directory,
   logger: true,
 });
 const timer = setInterval(() => {

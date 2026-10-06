@@ -19,8 +19,12 @@ import type { TourAction, TourState } from '../tour.js';
 import { useT } from '../ui.js';
 import { avatarState } from '../avatar/state.js';
 import { Avatar } from './Avatar.js';
+import { squadAccentOf } from './feed-squads.js';
 import type { OfficeModel } from './office-model.js';
 import { SceneView } from './SceneView.js';
+import { KpiDashboardLazy } from './KpiDashboardLazy.js';
+import { KpiStrip } from './KpiStrip.js';
+import { useKpiPanel } from './use-kpi-panel.js';
 
 /** The office page: heading and counts, the 3D scene (or the 2D list) with its toolbar, and the team strip. */
 export function OfficePage({
@@ -70,6 +74,7 @@ export function OfficePage({
 }) {
   const t = useT();
   const prefs = usePreferences();
+  const kpi = useKpiPanel();
   return (
     <>
       <>
@@ -108,6 +113,7 @@ export function OfficePage({
           </span>
           <span className="stats-note">{session.mode === 'demo' ? t('demoNote') : t('live')}</span>
         </div>
+        <KpiStrip usage={kpi.usage} git={kpi.git} running={kpi.running} onOpen={() => kpi.open()} />
         <div className="scene-shell">
           <div className="scene-toolbar">
             <div className="segmented">
@@ -204,6 +210,8 @@ export function OfficePage({
             preview={preview}
             unread={unread}
             canWrite={canWrite}
+            floorKpi={kpi.badges}
+            onOpenFloorKpi={kpi.open}
             onSelect={onSelect}
             onOpen={onOpen}
             onFeed={onFeed}
@@ -211,6 +219,7 @@ export function OfficePage({
             onNotice={onNotice}
             onRefresh={onRefresh}
           />
+          {kpi.isOpen && <KpiDashboardLazy kpi={kpi} />}
           <div className="scene-footer">
             <span>
               <Orbit size={13} /> AETHER / ORBITAL CAMPUS
@@ -240,6 +249,7 @@ export function OfficePage({
                   seed={agent.id}
                   species={agent.species}
                   state={avatarState(agent.activity)}
+                  {...squadAccentOf(agent.id, model.liveSquads)}
                 />
                 <div>
                   <strong>{agent.name}</strong>

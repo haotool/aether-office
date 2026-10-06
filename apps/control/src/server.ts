@@ -19,6 +19,7 @@ import { authRoutes } from './routes/auth.js';
 import { externalRoutes } from './routes/external.js';
 import { composerRoutes } from './routes/composer.js';
 import { localRoutes } from './routes/local.js';
+import { usageRoutes } from './routes/usage.js';
 import { permissionRoutes } from './routes/permissions.js';
 import { projectListRoutes } from './routes/project-lists.js';
 import { projectRoutes } from './routes/project.js';
@@ -44,7 +45,7 @@ export const PUBLIC_ROUTES: ReadonlySet<string> = new Set([
 ]);
 
 /** The reads that carry an ETag: the session list, its speech and one session's transcript (not the stream). */
-const REVALIDATED = /^\/api\/local-sessions(?:\/speech|\/[^/]+\/transcript)?$/;
+const REVALIDATED = /^\/api\/(?:local-sessions(?:\/speech|\/[^/]+\/transcript)?|usage(?:\/git)?)$/;
 
 export function createServer(control: Control, options: ServerOptions) {
   const origin = new URL(options.origin);
@@ -208,6 +209,7 @@ export function createServer(control: Control, options: ServerOptions) {
   workRoutes(routes);
   runnerRoutes(routes);
   localRoutes(routes);
+  usageRoutes(routes);
   permissionRoutes(routes);
   sessionStreamRoutes(routes);
   composerRoutes(routes);

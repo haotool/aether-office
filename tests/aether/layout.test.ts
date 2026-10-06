@@ -34,7 +34,7 @@ describe('layout validation (the same rules guard the editor, an import and the 
     const good = layout([desk('a', -10, -6)]);
     expect(layoutSchema.safeParse(good).success).toBe(true);
     expect(layoutSchema.safeParse({ ...good, extra: 1 }).success).toBe(false);
-    expect(layoutSchema.safeParse({ ...good, schemaVersion: 2 }).success).toBe(false);
+    expect(layoutSchema.safeParse({ ...good, schemaVersion: 3 as never }).success).toBe(false);
     expect(
       layoutSchema.safeParse(layout([{ ...desk('a', 1, 1), type: 'spaceship' as never }])).success,
     ).toBe(false);

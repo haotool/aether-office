@@ -2,7 +2,7 @@
 export type ToolCall = { tool: string; target: string | null };
 
 /** What kind of work a tool call is, which decides how its row is drawn on a screen. */
-type WorkKind = 'edit' | 'read' | 'shell' | 'git' | 'test' | 'search' | 'web' | 'other';
+export type WorkKind = 'edit' | 'read' | 'shell' | 'git' | 'test' | 'search' | 'web' | 'other';
 
 const EDIT = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit', 'apply_patch']);
 const SHELL = new Set(['Bash', 'shell', 'exec_command', 'local_shell']);

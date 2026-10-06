@@ -19,6 +19,10 @@ import {
 import { readTopic, topicTitle } from './session-topic.js';
 import { windowsOf, withContext } from './session-context.js';
 import { readUsage } from './session-usage.js';
+import { readSessionSignals } from './session-signals.js';
+import { resetSubagentTranscripts } from './subagent-transcripts.js';
+import { resetOutcomeCache } from './tool-outcomes.js';
+import type { ReadBudget } from './subagent-usage.js';
 import { readActions } from './session-work.js';
 import { resetRoles, roleOf } from './session-role.js';
 import { detectModels } from '@aether/providers/models';
@@ -32,7 +36,12 @@ export const MAX_SESSIONS = 60;
 const MAX_REPOS = 400; // every shown session's directory is classified, none is left unowned by a cap
 const GIT_BATCH = 10; // bounds concurrent git processes
 const READ_WIDTH = 6; // transcripts read at once
+// Bytes of subagent transcripts a scan may read in all; a larger backlog is caught up over the next scans.
+const SUBAGENT_BYTES_PER_SCAN = 32 * 1024 * 1024;
 const cpuWatch = new CpuWatch();
+
+// The two-letter codes `git status --porcelain=v1` uses for a path with an unresolved merge.
+const UNMERGED = /^(?:DD|AU|UD|UA|DU|AA|UU) /;
 
 export function parseGitStatus(text: string): NonNullable<LocalSession['git']> {
   const lines = text.split('\n').filter(Boolean);
@@ -48,6 +57,7 @@ export function parseGitStatus(text: string): NonNullable<LocalSession['git']> {
     ahead: Number(/ahead (\d+)/.exec(flags)?.[1] ?? 0),
     behind: Number(/behind (\d+)/.exec(flags)?.[1] ?? 0),
     uncommitted: lines.filter((l) => !l.startsWith('## ')).length,
+    conflicts: lines.filter((l) => UNMERGED.test(l)).length,
   };
 }
 
@@ -205,11 +215,24 @@ export async function scanLocalSessions(
       async (r) => [r.file, await readActions(r.provider, r.file)] as const,
     ),
   );
+  const budget: ReadBudget = { bytes: SUBAGENT_BYTES_PER_SCAN };
+  const signals = new Map(
+    await mapPool(
+      raw,
+      READ_WIDTH,
+      async (r) =>
+        [
+          r.file,
+          await readSessionSignals(r, hooks.get(`${r.provider}:${r.sessionId}`), now, budget),
+        ] as const,
+    ),
+  );
   const states = new Map(infos);
   const value = raw.map((r): LocalSession => {
     const key = `${r.provider}:${r.sessionId}`;
     const info = states.get(r.cwd);
     const hook = hooks.get(key);
+    const signal = signals.get(r.file)!;
     return {
       key,
       provider: r.provider,
@@ -225,10 +248,10 @@ export async function scanLocalSessions(
             lastEvent: hook.lastEvent,
             tool: hook.tool,
             at: hook.at,
-            recent: hook.recent,
+            recent: signal.recent,
           }
         : null,
-      subagents: [...(hook?.subagents ?? []), ...(r.children ?? [])],
+      subagents: signal.subagents,
       // A `codex exec` run has no thread name; its task's opening words name it. A Claude prompt is never sent.
       title:
         titles.get(r.file) ??
@@ -240,9 +263,11 @@ export async function scanLocalSessions(
           prompt: topics.get(r.file) ?? null,
           branch: info?.git?.branch ?? null,
           repo: info?.worktree?.project ?? basename(r.cwd),
-          subagents: [...(hook?.subagents ?? []), ...(r.children ?? [])].map((c) => c.type),
+          subagents: signal.subagents.map((c) => c.type),
           transcript: works.get(r.file) ?? [],
-          hook: (hook?.recent ?? []).map(({ tool, target }) => ({ tool, target })),
+          hook: (hook?.recent ?? [])
+            .filter((c) => !c.agentId) // the session's own calls: its helpers' work says what they do, not what it does
+            .map(({ tool, target }) => ({ tool, target })),
         },
         now,
       ),
@@ -283,6 +308,8 @@ export const resetLocalSessionCache = () => {
   statuses.clear();
   resetDiscoveryCache();
   resetRoles();
+  resetOutcomeCache();
+  resetSubagentTranscripts();
 };
 
 const canonical = (path: string) => {

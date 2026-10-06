@@ -4,8 +4,13 @@ import { Vector3, type Mesh } from 'three';
 import type { Agent } from '@aether/contracts';
 import type { Rect } from './multi-view.js';
 
-/** Camera distance under which a name tag also shows its small details; the overview is about 60 away. */
+/**
+ * How much of a name tag shows by camera distance (the overview is about 60 away): close, the whole chip; beyond the
+ * overview only the provider's mark and the status dot, which is all the width such a tag takes.
+ */
 const NEAR_DISTANCE = 30;
+const FAR_DISTANCE = 85;
+const FAR_WIDTH = 44;
 
 export function ProjectedLabels({
   labels,
@@ -31,32 +36,35 @@ export function ProjectedLabels({
       const element = elements.get(label.id);
       if (!element) continue;
       point.current.set(label.x, label.y, label.z);
-      // Close enough to read the details (the provider's mark): the tag's own CSS shows them when this is set.
-      element.dataset['near'] =
-        camera.position.distanceTo(point.current) < NEAR_DISTANCE ? '1' : '0';
+      const distance = camera.position.distanceTo(point.current);
+      const density = distance < NEAR_DISTANCE ? 'near' : distance > FAR_DISTANCE ? 'far' : 'mid';
+      element.dataset['density'] = density; // the tag's own CSS decides what each step shows
+      const shrunk =
+        density === 'far' && label.id !== selected && element.classList.contains('scene-label');
+      const width = shrunk ? FAR_WIDTH : label.width;
       point.current.project(camera);
       const x = ((point.current.x + 1) * size.width) / 2,
         y = ((1 - point.current.y) * size.height) / 2;
       const visible =
         point.current.z >= -1 &&
         point.current.z <= 1 &&
-        x - label.width / 2 > 0 && // the whole tag fits, not just its centre
-        x + label.width / 2 < size.width &&
+        x - width / 2 > 0 && // the whole tag fits, not just its centre
+        x + width / 2 < size.width &&
         y > 55 &&
         y < size.height - 30 &&
         ![...(avoid?.current.values() ?? []), ...(covered?.current.values() ?? [])].some(
           (r) =>
-            x + label.width / 2 > r.x &&
-            x - label.width / 2 < r.x + r.width &&
+            x + width / 2 > r.x &&
+            x - width / 2 < r.x + r.width &&
             y + 12 > r.y &&
             y - 12 < r.y + r.height,
         ) &&
         !occupied.some(
-          (p) => Math.abs(p.x - x) < (p.width + label.width) / 2 + 5 && Math.abs(p.y - y) < 30,
+          (p) => Math.abs(p.x - x) < (p.width + width) / 2 + 5 && Math.abs(p.y - y) < 30,
         );
       element.style.visibility = visible ? 'visible' : 'hidden';
       element.style.transform = `translate(${x}px,${y}px) translate(-50%,-50%)`;
-      if (visible) occupied.push({ x, y, width: label.width });
+      if (visible) occupied.push({ x, y, width });
     }
   });
   return null;

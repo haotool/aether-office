@@ -1,0 +1,214 @@
+/*
+ * A member's name tag over the scene (packages/office-scene NameTag.tsx): a small glass chip with the provider's mark, a status
+ * dot that glows in the state's colour and the short label. `--accent` is the member's department colour (its neon edge).
+ * By camera distance (`data-density`, set each frame by the projection): far, the mark and the dot only; mid and near, the
+ * label. Hovered or selected, the chip opens into a card with a second line (repository, role, what it is doing) and the
+ * context share. States: working shimmers teal, waiting for a person pulses amber, an error pulses red, idle is calm and
+ * offline is dim. Position and visibility are the projection's (workbench.css); motion is off under `data-still` and
+ * `prefers-reduced-motion`. The technical id is only in the native tooltip.
+ */
+.scene-label {
+  --accent: var(--scene-mint);
+  --state: var(--scene-mint);
+  position: relative;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--space-6);
+  row-gap: var(--space-2);
+  max-width: min(18rem, 80vw);
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--r-xl);
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--accent) 14%, var(--glass-strong)),
+    var(--glass-strong)
+  );
+  color: var(--on-glass);
+  font-size: var(--fs-label);
+  line-height: 1.3;
+  white-space: nowrap;
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--accent) 22%, transparent),
+    0 3px 10px var(--shade-soft);
+  transition:
+    border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease),
+    background var(--dur) var(--ease),
+    padding var(--dur) var(--ease);
+  animation: tag-in var(--dur) var(--ease) both;
+}
+.scene-label:focus-visible {
+  outline: 2px solid var(--on-glass);
+  outline-offset: 2px;
+}
+.scene-label .tag-name {
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+.scene-label .tag-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--state);
+  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--state) 70%, transparent);
+}
+.scene-label .tag-unread {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--scene-gold);
+  box-shadow: 0 0 8px var(--scene-gold);
+}
+.scene-label .tag-meta {
+  flex-basis: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--on-glass-muted);
+  font-size: var(--fs-label);
+  animation: tag-meta-in var(--dur) var(--ease) both;
+}
+
+/* State: the dot's colour, and how the whole chip behaves */
+.scene-label[data-state='reviewing'],
+.scene-label[data-state='waiting_peer'] {
+  --state: var(--scene-blue);
+}
+.scene-label[data-state='waiting_permission'] {
+  --state: var(--scene-gold);
+  border-color: color-mix(in srgb, var(--scene-gold) 75%, transparent);
+  animation:
+    tag-in var(--dur) var(--ease) both,
+    tag-attention 1.8s ease-in-out infinite;
+}
+.scene-label[data-state='error'] {
+  --state: var(--scene-red);
+  border-color: color-mix(in srgb, var(--scene-red) 70%, transparent);
+}
+.scene-label[data-state='idle'] {
+  --state: var(--on-glass-muted);
+}
+.scene-label[data-state='offline'] {
+  --state: var(--on-glass-muted);
+  opacity: 0.62;
+}
+.scene-label[data-state='offline'] .tag-dot {
+  box-shadow: none;
+}
+.scene-label[data-state='working']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    color-mix(in srgb, var(--scene-mint) 28%, transparent) 50%,
+    transparent 70%
+  );
+  background-size: 250% 100%;
+  pointer-events: none;
+  animation: tag-shimmer 2.8s linear infinite;
+}
+
+/* Density by distance: far, only the mark and the dot (a hovered or selected tag always opens) */
+.scene-label[data-density='far']:not(.selected):not(.hovered) {
+  padding: var(--space-4);
+}
+.scene-label[data-density='far']:not(.selected):not(.hovered) :is(.tag-name, .tag-unread) {
+  display: none;
+}
+.scene-label[data-density='far']:not(.selected):not(.hovered)::before {
+  display: none;
+}
+
+/* Opened: hovered lifts and brightens the edge, selected holds it, a group member is edged in gold */
+.scene-label.hovered {
+  z-index: var(--z-label-hover);
+  border-color: color-mix(in srgb, var(--accent) 85%, var(--white));
+  box-shadow:
+    0 0 14px color-mix(in srgb, var(--accent) 45%, transparent),
+    0 4px 12px var(--shade-soft);
+}
+.scene-label.selected {
+  border-color: var(--accent);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--accent) 26%, var(--glass-selected)),
+    var(--glass-selected)
+  );
+  box-shadow:
+    0 0 14px color-mix(in srgb, var(--accent) 50%, transparent),
+    0 3px 10px var(--shade-soft);
+}
+.scene-label.grouped {
+  border-color: var(--scene-gold);
+}
+
+/* A finger needs 44px: the chip stays small, its touch area grows around it */
+@media (pointer: coarse) {
+  .scene-label::after {
+    content: '';
+    position: absolute;
+    inset: calc(-1 * var(--space-12)) calc(-1 * var(--space-8));
+  }
+}
+@media (max-width: 760px) {
+  .world-labels .scene-label {
+    font-size: var(--fs-small);
+  }
+  .world-labels .scene-label .tag-meta {
+    font-size: var(--fs-label);
+  }
+}
+
+@keyframes tag-in {
+  from {
+    opacity: 0;
+    scale: 0.92;
+  }
+}
+@keyframes tag-meta-in {
+  from {
+    opacity: 0;
+    translate: 0 calc(-1 * var(--space-2));
+  }
+}
+@keyframes tag-shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+@keyframes tag-attention {
+  50% {
+    box-shadow:
+      0 0 16px color-mix(in srgb, var(--scene-gold) 70%, transparent),
+      0 3px 10px var(--shade-soft);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-label,
+  .scene-label .tag-meta {
+    animation: none;
+    transition: none;
+  }
+  .scene-label::before {
+    display: none;
+  }
+}
+.scene-label[data-still='1'],
+.scene-label[data-still='1'] .tag-meta {
+  animation: none;
+  transition: none;
+}
+.scene-label[data-still='1']::before {
+  display: none;
+}

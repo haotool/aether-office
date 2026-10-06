@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Agent, Layout } from '@aether/contracts';
 import { FLOORS, zones } from './layout.js';
+import { busiestFloor, floorCounts } from './floor-counts.js';
+import type { IntroTour } from './intro/use-intro-tour.js';
 import { PULSE_WINDOW_MS, chooseShot, type Pulse, type Seat, type Shot } from './director.js';
 import type { FlyTo } from './SceneCamera.js';
 import { chooseEntry, toWorld, type V3 } from './shot-camera.js';
@@ -11,7 +13,6 @@ import {
   FOLLOW_OFFSET,
   OVERVIEW,
   ZONE_OFFSET,
-  floorOfDesk,
   floorY,
   lookY,
 } from './scene-geometry.js';
@@ -38,6 +39,7 @@ export function useSceneNavigation({
   directing,
   resumeMs,
   selectedId,
+  intro,
 }: {
   agents: readonly Agent[];
   layout: Layout;
@@ -56,6 +58,8 @@ export function useSceneNavigation({
   /** How long the camera stays the person's after their last touch before the director takes it back. */
   resumeMs: number;
   selectedId: string | null;
+  /** The first-visit tour: while it is active the director waits and the tour sets the floor and the exploded view. */
+  intro?: IntroTour | undefined;
 }) {
   const keys = useRef(new Set<string>());
   const [floor, setFloor] = useState(0);
@@ -67,31 +71,26 @@ export function useSceneNavigation({
   });
   const sequence = useRef(0);
 
-  const perFloor = useMemo(() => {
-    const counts = Array.from({ length: FLOORS }, () => ({ total: 0, working: 0 }));
-    for (const agent of agents) {
-      const entry = counts[Math.min(FLOORS - 1, floorOfDesk(layout, agent.id))]!;
-      entry.total++;
-      if (['working', 'reviewing'].includes(agent.activity)) entry.working++;
-    }
-    return counts;
-  }, [agents, layout]);
+  const perFloor = useMemo(() => floorCounts(agents, layout), [agents, layout]);
 
   // Start on the busiest floor (most work, then most members) until the user picks one themselves.
   const userChoseFloor = useRef(false);
   useEffect(() => {
     if (userChoseFloor.current) return;
-    let best = -1;
-    let score = 0;
-    perFloor.forEach((entry, i) => {
-      const s = entry.working * 1000 + entry.total;
-      if (s > score) [best, score] = [i, s];
-    });
-    if (best >= 0 && best !== floor) {
+    const best = busiestFloor(perFloor);
+    if (best !== null && best !== floor) {
       setFloor(best);
       fly([0, lookY(best, exploded), 0], OVERVIEW(exploded));
     }
   }, [perFloor]); // eslint-disable-line react-hooks/exhaustive-deps -- only the head count decides the starting floor
+
+  // The tour sets the floor and the exploded view while it plays, and what it leaves is the person's from then on.
+  useEffect(() => {
+    if (!intro?.drive) return;
+    userChoseFloor.current = true;
+    setFloor(intro.drive.floor);
+    setExploded(intro.drive.exploded);
+  }, [intro?.drive?.floor, intro?.drive?.exploded]); // eslint-disable-line react-hooks/exhaustive-deps -- the values are the dependencies
 
   const [following, setFollowing] = useState<string | null>(null);
   // Any other flight (a floor, a zone, a double click) ends a follow; `follow` sets it again after its own.
@@ -129,7 +128,7 @@ export function useSceneNavigation({
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const resume = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   // Following a member is the person's choice of shot: the director yields until it ends.
-  const running = directing && !paused && !following;
+  const running = directing && !paused && !following && !intro?.active;
 
   const cut = useCallback(() => {
     clearTimeout(timer.current);
@@ -204,16 +203,19 @@ export function useSceneNavigation({
     [resumeMs],
   );
   useEffect(() => () => clearTimeout(resume.current), []);
+  const interruptIntro = intro?.interrupt;
   const userCamera = useCallback(() => {
     setFollowing(null); // a drag, a wheel turn or a key press ends the follow
+    interruptIntro?.();
     takeOver();
     onUserCamera?.();
-  }, [takeOver, onUserCamera]);
+  }, [takeOver, onUserCamera, interruptIntro]);
   // A press on a name tag: the director steps back and a tour yields, but a follow is kept (nothing moved the camera).
   const pause = useCallback(() => {
+    interruptIntro?.();
     takeOver();
     onUserCamera?.();
-  }, [takeOver, onUserCamera]);
+  }, [takeOver, onUserCamera, interruptIntro]);
   // Choosing a member is the person's doing too.
   const firstSelection = useRef(true);
   useEffect(() => {

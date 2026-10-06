@@ -49,6 +49,7 @@ export function PanelBody({
         trailing={trailing}
         onBack={onBack}
         onFocus={onFocus}
+        onOpen={onOpen}
       />
     );
   const count = attentionCount(feed);

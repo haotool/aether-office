@@ -117,7 +117,8 @@
 }
 /* A message that arrives while you watch: a short rise and fade, never for what was there when it opened */
 .msg.enter,
-.tool-group.enter {
+.tool-group.enter,
+.sys-notice.enter {
   animation: msg-in 0.16s var(--ease) both;
 }
 @keyframes msg-in {

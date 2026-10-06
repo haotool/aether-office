@@ -11,9 +11,12 @@ Pre-release development (`0.4.0-dev`).
 
 - **Restart the control plane after upgrading.** The running server keeps the code it started with and answers an updated
   page in the older shape until it is restarted.
-- **Re-enable Remote approvals and reinstall the hook** (Settings → Remote approvals off and on, then
+- **Re-enable Remote approvals and reinstall the hook** (Settings → Notifications & approvals, off and on, then
   `pnpm hooks install --remote-approvals`). The configuration file now also holds a `verifyKey`; with an older file the hook falls
   back to Claude's terminal prompt.
+- **Run `pnpm hooks install` again** (for each project or scope you installed it in) to also record failed tool calls: Claude
+  Code reports them as `PostToolUseFailure`, which `pnpm hooks status` lists as missing until then. Until you do, a failed call is
+  "not known" unless the session's transcript says so.
 - **Answering approvals from a phone over plain HTTP is refused by default.** Use HTTPS (for example a Tailscale tunnel) or opt
   in with `AETHER_REMOTE_APPROVALS_LAN=1`.
 - The pages for orchestrating several agents are hidden until **Settings → Advanced features** is on; their addresses still open.
@@ -22,7 +25,68 @@ Pre-release development (`0.4.0-dev`).
 
 ### Added
 
+**Office life**
+
+- Signals the office effects can rely on, derived on the server and bounded: a tool call in `hook.recent` carries `tags` (labels
+  from a closed vocabulary of 23, such as `test`, `build`, `git.push.force`, `fs.rm.recursive`, `sudo`, `curl.pipe`; arguments,
+  paths, branch names and patterns are never kept) and `ok` (`true` or `false` only when Claude Code's hooks, the transcript's
+  `is_error` or a Codex exit code say so, else `null`). Claude subagents are read from their own transcript files, so they appear
+  without hooks and gain `label`, `tokens` (total and per minute) and, once finished, a plain redacted `result` of at most 160
+  characters. A session's `git.conflicts` counts unmerged files. The live stream gains the content-free kinds `squad` and
+  `outcome`. See [provider compatibility](docs/provider-compatibility.md#signals-for-the-office-what-each-provider-gives-what-is-derived-what-is-missing).
+- A session's subagents carry their lifecycle (`source`, `status`, `startedAt`, `endedAt`, `nickname`, `tools`), and a finished
+  subagent stays for 90 seconds instead of vanishing. `hook.recent` gains `agentId`. Older control planes' answers still parse.
+- The office layout can hold a squad zone: floor beside a supervisor's desk for its subagents (`schemaVersion` 2, written only
+  when a layout has one; every existing layout stays valid and no desk moves). The layout editor adds, sizes and pins zones.
+  Subagents are not seated in them yet.
+- The session panel shows the supervisor and subagent relation in 2D: a squad group per supervisor with nested subagent rows
+  (status dot, type, elapsed time, tool count, "waiting for approval", finished rows dimmed through the 90 s grace),
+  collapsible with the choice remembered, keyboard navigable as a tree, with a count chip ("3 subagents · 2 working"). A
+  supervisor's conversation gains a squad strip and a "Subagent activity" card per spawn; a subagent's own view links back with
+  "Spawned by". Squad members share an accent and a subagent's portrait carries a tether glyph. A Claude session working without
+  hooks says its subagents need the hook and offers the install command. Changes are announced in one throttled live region.
+
+**Settings**
+
+- Settings is rebuilt as eight groups (General, Notifications & approvals, Connections, Models & execution, Office, Advanced,
+  Data & privacy, About) with a sticky navigation and scroll mark on a larger screen, and on a phone a list of groups that each
+  open their own page with a Back button. `/settings/<group>` and `#<group>` open a group.
+- Every row says what is true now: notification permission and how to re-enable it, whether answering over this connection is
+  allowed, whether the page is a secure context, whether each CLI was read, whether local sessions are on (with the environment
+  variable), the install state. Owner- or operator-only rows are locked with the reason. Terminal commands (doctor, hook status and
+  install, the remote-approval hook) have copy buttons.
+- Search (press `/`) narrows the rows by label and description in either language and marks the words.
+- Theme gains **System**; a stored `dark` or `light` keeps its meaning. A change to Advanced or Remote approvals shows a notice
+  with Undo. Export or reset the browser's preferences from Data & privacy.
+- Switches are `role="switch"` (specs that looked for a checkbox now look for a switch).
+  **KPIs**
+
+- Token and Git KPIs on every office. A strip over the office (tokens today with a week's sparkline, sessions running, commits
+  today, branches merged this week) opens a dashboard (a side panel, a bottom sheet on a phone) for the building and for each
+  office: tokens by kind (input, output, cache read, cache write, reasoning), per day for 7 and 30 days, by model, by project,
+  the heaviest sessions, Claude's and Codex's rate-limit windows as rings with the reset, and commits, merges, merged and open
+  branches, authors, lines and the oldest open branch. Each deck of the floor switcher shows its tokens today with a bar and a
+  rate, and the floor on show has a plaque (desktop). Counted from the local transcripts incrementally (appended bytes only,
+  a numbers-only rollup in the data directory, history read in the background); no cost is shown because no price table exists
+  on the machine. New routes `GET /api/usage` and `GET /api/usage/git` (owner and operator).
+
 **Session panel and composer**
+
+- Wrappers never show as code in the conversation: any XML-style tag outside code (`<task-notification>`, `<system-reminder>`,
+  `<function_results>`, a stray `</div>`) is removed by a structural rule while `Array<string>` and placeholders stay text, and
+  the wrappers that carry meaning become chips: a finished background task with its real exit code, a slash command, command
+  output, "Context added" (one chip that opens into clean text), a hook, "Interrupted by user". Task ids and output paths are
+  never shown.
+- The conversation gains day lines, "New since you looked", relative times, copy as Markdown or plain text, code blocks with a
+  wrap switch and line numbers, find (Ctrl or Cmd+F, highlights without touching the page), `j`/`k`/`g g`/`G` between turns,
+  a compact density, and empty and error states with a retry.
+- A text pipeline: HTML an agent or the CLI left in a message (`<span class="tx">`, `<br>`, tables, `&nbsp;`) is neutralized
+  once on the server into Markdown or text, injected context, thinking and slash-command wrappers are resolved, and titles
+  are cleaned and shortened on a meaning boundary with balanced brackets (the unbalanced `【…（…` of a cut title is fixed).
+  One tested kernel module (`neutralizeHtml`, `cleanTitle`, `shortLabel`) serves the server, the page and the scene.
+- Name tags are redesigned as small glass chips: provider mark, a glowing status dot, a short label (no id prefix; the id and
+  full title are in the tooltip), a department-colour edge, state accents, density by distance and an opened card with the
+  repository, role and context share on hover or selection.
 
 - Installable app: a complete manifest (id, scope, display override, categories, maskable 192 and 512 icons, shortcuts to Sessions
   and Approvals), `theme-color` per scheme that follows the theme chosen in the app, an install button where the browser offers
@@ -100,9 +164,17 @@ Pre-release development (`0.4.0-dev`).
 - Context window and compaction: a gauge beside each desk monitor (calm, amber from 60%, red above 85%), the share on name tags
   and in the panel, and a short effect with a "compacted -N%" chip when the CLI compacts. Small Claude and Codex marks appear on
   name tags, desk screens, feed rows and the conversation header. Sessions report `usage.contextPct` and `usage.compactedAt`.
-- Members working hard type faster, their screens stream and, flat out, smoke and spark. Desk screens show the session's last
-  eight tool calls from the hook spool (a file's base name, a command's first word; never full commands or arguments) and a dim
-  lock screen when idle. Screens are themed per department.
+- Members working hard type faster, their screens stream and, flat out, smoke and spark. Desk screens look like the work being
+  done: an editor with tabs from the real recent files and code in the real file's language, a terminal under the real command,
+  a browser at the real host, a test runner, a commit graph or diff, an agents chat, a notebook, a design canvas, a Markdown
+  preview, a dashboard, a lock screen when idle and a prompt dialog while waiting for approval, chosen by the kind of tool call
+  and the role. Real facts stay real (file names, command heads, tool, branch, counts, state); everything else is generated,
+  seeded by the member and never claims an outcome. Desks differ: a dark or light theme, window chrome, a second monitor on
+  some roles, and a mug, plant, figure, headphones, notepad or sticky notes. Characters act less like loops: a seeded director
+  picks small actions by work mode, species and desk (thinking while the model writes, nodding while reading, a glance at the
+  second monitor, a yawn after a long quiet, a shrug on an error), with cool-downs, human waits and a slow sway of the chair.
+  Screens are painted at 5, 2 or 1 Hz by distance (once per change under reduced motion). `?intensity=N` previews a different
+  desk and role per member.
 - A control-room wall of up to four live views follows the other busy members on a wide screen, with a load meter, neon corners
   and scan lines; a pinned member always gets a view.
 - Working members show their latest prompt and reply as two bubbles over their heads (up to six at once; only the selected or
@@ -115,6 +187,14 @@ Pre-release development (`0.4.0-dev`).
 - Performance: the shadow map is redrawn at 20 Hz, distant characters animate less often, the pixel ratio adapts down to 0.75
   when frames run slow, and shaders compile behind a short loading cover. The `?perf=N` probe reports p99, CPU time per frame,
   programs and estimated GPU memory.
+- A first-visit intro tour: a slow 360° orbit of the building, the exploded view, a rise up the spire to the flowering crown, then
+  the start view. It plays once per browser session (once ever on a phone), any input stops it where the camera is, Esc lands on
+  the start view, "Don't show again" and a Replay button are in the controls, and reduced motion shows three stills. The
+  8-stop room tour is renamed "Guided tour (rooms)". `e2e/intro-perf.spec.ts` (`PERF_GPU=1`) measures its frames.
+- `scripts/contact-sheet.mjs` renders the scene's views (and, later, each office-life effect at fixed times through
+  `?preview=life&effect=<id>&t=<ms>`) into one labelled sheet per category for a visual review, and
+  `e2e/office-life-perf.spec.ts` (`PERF_GPU=1`) measures a baseline against a variant scene on a real GPU, interleaved and
+  repeated, into `evidence/office-life-perf.json`.
 
 **Foundations**
 
@@ -131,6 +211,16 @@ Pre-release development (`0.4.0-dev`).
 - A Blender pipeline for the animals with a desk-and-chair clipping audit, a loop-seam check and a review renderer.
 - Claude subscription limits in the top bar, read from an existing local file.
 - A verification ledger and a generated report.
+
+**Release tooling**
+
+- `scripts/oss`: a publishing-readiness check (`pnpm run oss:check`; personal paths, private strings, secrets, large and
+  path-embedding binaries, community files, licenses, documentation links, `.gitignore`, commit hygiene; `--history` scans every
+  commit) and a reproducible history cleanup that never touches this repository: `history-plan.mjs` (strategies A, B and C, with
+  milestone proposals), `history-apply.sh` (a throwaway clone and `git filter-repo`), `history-verify.sh` (tree, authorship,
+  size, gitleaks, install, typecheck, tests, go or no-go). See [docs/release](docs/release/history-cleanup.md).
+- `.mailmap`, `.gitattributes`, a gitleaks configuration, a commit-message convention (`type: subject`, at most 72 characters)
+  with an optional `commit-msg` hook and a CI job that checks pull request titles and commit subjects, and a publishing checklist.
 
 ### Changed
 
@@ -153,6 +243,8 @@ Pre-release development (`0.4.0-dev`).
 
 ### Fixed
 
+- The floor plaque no longer covers the middle of the scene (it sits above the floor readout), the KPI strip no longer squeezes the scene below the control-room wall's minimum height on a roomy window, and sessions with the same modification time keep their order (and their desks) from one scan to the next.
+- A runner started before it is enrolled prints how to enroll instead of a stack trace; the terminals and approvals pages say how to get profiles and prompts into them; the errors a CLI user can hit (wrong token, live agents off, no runner) are worded in both languages instead of raw codes; a finished session no longer claims it has no reply; the office no longer logs a removed-shadow-map warning on every load.
 - A page left open across a rebuild no longer goes blank: a chunk that cannot load reloads the page once, and any other render
   error shows a Reload button instead of an empty screen.
 - Close-up camera shots now push in (the orbit controls' nearest distance had held the camera still), and members sent home walk

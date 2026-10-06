@@ -1,5 +1,5 @@
 import { Globe2, Moon, Sprout, Sun } from 'lucide-react';
-import { usePreferences } from '../state.js';
+import { usePreferences, useTheme } from '../state.js';
 import { useT } from '../ui.js';
 import { PairPhoneButton } from './ConnectPhone.js';
 
@@ -7,6 +7,7 @@ import { PairPhoneButton } from './ConnectPhone.js';
 export function QuickPrefs({ canPair }: { canPair: boolean }) {
   const t = useT();
   const prefs = usePreferences();
+  const theme = useTheme();
   return (
     <div className="quick-prefs">
       <button
@@ -20,10 +21,10 @@ export function QuickPrefs({ canPair }: { canPair: boolean }) {
       <button
         className="secondary"
         aria-label={t('appearance')}
-        onClick={() => prefs.set({ theme: prefs.theme === 'dark' ? 'light' : 'dark' })}
+        onClick={() => prefs.set({ theme: theme === 'dark' ? 'light' : 'dark' })}
       >
-        {prefs.theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-        {prefs.theme === 'dark' ? t('light') : t('dark')}
+        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+        {theme === 'dark' ? t('light') : t('dark')}
       </button>
       <button
         className="secondary"

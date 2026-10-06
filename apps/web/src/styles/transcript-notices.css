@@ -1,0 +1,278 @@
+/*
+ * What sits between and around the messages of a conversation (features/NoticeChips.tsx, ConvFind.tsx, ConvTime.tsx,
+ * TranscriptView.tsx): system notices as slim chips, the day and "new since you looked" lines, the tool row with find and
+ * density, the find bar and its highlights, message actions, the empty and error states, and the compact density.
+ */
+.turn-slot {
+  display: grid;
+  gap: var(--space-8);
+  min-width: 0;
+}
+.turn:focus-visible {
+  outline: 1px solid var(--glass-accent-line);
+  outline-offset: var(--space-4);
+  border-radius: var(--r-lg);
+}
+
+/* Notices: a CLI wrapper that carried meaning (a finished task, a command, added context) as one quiet row */
+.notices {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.sys-notice {
+  max-width: 100%;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--bg);
+  color: var(--muted);
+  font-size: var(--fs-small);
+}
+.sys-notice.enter {
+  animation: msg-in 0.16s var(--ease) both;
+}
+.notice-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--r-lg);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  outline-offset: -2px;
+}
+button.notice-head > svg:last-child {
+  flex: none;
+  margin-left: auto;
+  transition: transform var(--dur) var(--ease);
+}
+button.notice-head[aria-expanded='true'] > svg:last-child {
+  transform: rotate(180deg);
+}
+@media (hover: hover) {
+  button.notice-head:hover {
+    color: var(--text);
+  }
+}
+.notice-icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--dim);
+}
+.sys-notice.ok .notice-icon {
+  color: var(--mint);
+}
+.sys-notice.failed {
+  border-color: var(--gold-border);
+}
+.sys-notice.failed .notice-icon,
+.sys-notice.failed .notice-label {
+  color: var(--red);
+}
+.notice-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.notice-gist {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--dim);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.notice-label.mono,
+.notice-gist.mono {
+  font-family: var(--mono);
+}
+.notice-body {
+  display: grid;
+  gap: var(--space-8);
+  padding: var(--space-6) var(--space-12) var(--space-8);
+  border-top: 1px solid var(--line);
+}
+.notice-section h5 {
+  margin: 0 0 var(--space-2);
+  color: var(--dim);
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+.notice-text {
+  max-height: calc(var(--space-64) * 4);
+  margin: 0;
+  overflow: auto;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* The day a message was sent on, and where what you have not seen starts */
+.day-separator,
+.unread-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  color: var(--dim);
+  font-size: var(--fs-label);
+  letter-spacing: 0.6px;
+}
+.day-separator::before,
+.day-separator::after,
+.unread-divider::before,
+.unread-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+.unread-divider {
+  color: var(--gold);
+}
+.unread-divider::before,
+.unread-divider::after {
+  background: var(--gold-border);
+}
+
+/* The row above the messages: find and density */
+.conv-tools {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-8);
+  border-bottom: 1px solid var(--line);
+}
+.conv-tools .icon-button[aria-pressed='true'] {
+  color: var(--mint);
+}
+.find-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-8);
+  border-bottom: 1px solid var(--line);
+}
+.find-bar input {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--target-fine);
+  padding: 0 var(--space-8);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  color: var(--text);
+  font-size: var(--fs-lead); /* 16px: a focused field this size does not zoom a phone */
+}
+.find-count {
+  flex: none;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+  font-variant-numeric: tabular-nums;
+}
+.find-count.none {
+  color: var(--red);
+}
+::highlight(conv-find) {
+  background-color: var(--gold-tint);
+  color: var(--gold);
+  text-decoration: underline;
+}
+::highlight(conv-find-current) {
+  background-color: var(--gold);
+  color: var(--on-gold);
+}
+
+/* Copy a message: beside its time, on hover or focus. A touch screen has no hover: tapping a message focuses it and shows them */
+.msg {
+  outline: none;
+}
+.msg-actions {
+  display: inline-flex;
+  gap: var(--space-2);
+  margin-left: var(--space-4);
+  letter-spacing: 0;
+  visibility: hidden;
+}
+.msg:hover .msg-actions,
+.msg:focus-within .msg-actions {
+  visibility: visible;
+}
+.msg-actions button {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--dim);
+  text-transform: none;
+}
+@media (hover: hover) {
+  .msg-actions button:hover {
+    background: var(--raised);
+    color: var(--text);
+  }
+}
+/* A finger still gets a 44px target: an invisible area reaches past the icon */
+@media (pointer: coarse) {
+  .msg-actions button::after {
+    content: '';
+    position: absolute;
+    inset: calc(var(--space-12) * -1);
+  }
+}
+
+/* Nothing yet, or it could not be loaded */
+.conv-state {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-4);
+  margin: var(--space-24) var(--space-12);
+  color: var(--muted);
+  text-align: center;
+}
+.conv-state svg {
+  color: var(--dim);
+}
+.conv-state strong {
+  color: var(--text);
+  font-size: var(--fs-body);
+}
+.conv-state p {
+  max-width: 40ch;
+  margin: 0;
+  font-size: var(--fs-small);
+  overflow-wrap: anywhere;
+}
+.conv-state button {
+  margin-top: var(--space-8);
+}
+
+/* A tighter reading: less air between turns and lines */
+.conv-body[data-density='compact'] .conv-scroll {
+  gap: var(--space-8);
+}
+.conv-body[data-density='compact'] .turn,
+.conv-body[data-density='compact'] .turn-slot {
+  gap: var(--space-6);
+}
+.conv-body[data-density='compact'] .markdown,
+.conv-body[data-density='compact'] .msg.user p {
+  line-height: 1.4;
+}
+.conv-body[data-density='compact'] .markdown p,
+.conv-body[data-density='compact'] .markdown ul,
+.conv-body[data-density='compact'] .markdown ol {
+  margin-bottom: var(--space-4);
+}

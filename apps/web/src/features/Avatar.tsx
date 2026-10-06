@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { CornerDownRight } from 'lucide-react';
 import { renderAvatar, type AvatarState } from '../avatar/render.js';
 
 type AvatarSize = 'chip' | 'row' | 'member' | 'peek' | 'card';
@@ -31,19 +32,31 @@ export const Avatar = memo(function Avatar({
   size = 'member',
   state = 'idle',
   label,
+  squadHue,
+  tether = false,
 }: {
   seed: string;
   species: string;
   size?: AvatarSize;
   state?: AvatarState;
   label?: string;
+  /** The squad's accent (see `squadHue`): a supervisor and its subagents share it, so they read as one group. */
+  squadHue?: number;
+  /** A subagent: a small tether glyph at the corner says it is tied to its supervisor. */
+  tether?: boolean;
 }) {
   return (
     <span
       className={`avatar-icon avatar-${size}`}
+      data-squad={squadHue}
       {...(label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true })}
     >
       <img src={avatarUrl(seed, species, state)} alt="" draggable={false} />
+      {tether && (
+        <i className="avatar-tether">
+          <CornerDownRight size={9} aria-hidden="true" />
+        </i>
+      )}
     </span>
   );
 });

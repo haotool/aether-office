@@ -136,3 +136,31 @@ it('shows a duration at a glance', () => {
   expect(shortDuration(8400)).toBe('8s');
   expect(shortDuration(125_000)).toBe('2m 05s');
 });
+
+it('puts notices in the current turn without opening one, and joins a run of them', () => {
+  const turns = groupTurns([
+    e('notice', '', { notice: { kind: 'context', label: 'system', text: 'a' } }),
+    e('user', 'go', { at: 1000 }),
+    e('notice', '', { notice: { kind: 'command', name: '/compact', args: '' } }),
+    e('notice', '', { notice: { kind: 'interrupted' } }),
+    e('assistant', 'done'),
+    e('notice', '', { notice: null }), // an entry from an older server carries nothing to show
+  ]);
+  expect(turns.map((t) => [t.user?.text ?? null, t.blocks.map((b) => b.type)])).toEqual([
+    [null, ['notices']],
+    ['go', ['notices', 'assistant']],
+  ]);
+  const second = turns[1]!.blocks[0];
+  expect(second?.type === 'notices' && second.items.map((n) => n.kind)).toEqual([
+    'command',
+    'interrupted',
+  ]);
+});
+
+it('does not count a notice as a new message', () => {
+  const entries = [
+    e('user', 'a', { at: 1 }),
+    e('notice', '', { at: 2, notice: { kind: 'interrupted' } }),
+  ];
+  expect(newMessagesSince(entries, anchorOf(entries.slice(0, 1)))).toBe(0);
+});

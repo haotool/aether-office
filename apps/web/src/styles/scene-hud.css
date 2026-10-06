@@ -186,13 +186,3 @@
     display: none;
   }
 }
-
-.scene-label.unread::after {
-  content: '';
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--gold);
-  box-shadow: 0 0 8px var(--gold);
-  margin-left: var(--space-2);
-}

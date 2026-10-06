@@ -1,4 +1,5 @@
 import type { Agent, Layout } from '@aether/contracts';
+import { displayWidth } from '@aether/kernel';
 import { floorZones } from './layout.js';
 import type { BranchInfo } from './scene-types.js';
 import { ACTIVE, floorY } from './scene-geometry.js';
@@ -24,7 +25,7 @@ export function labelsOf(
               x: d.x,
               y: floorY(d.floor ?? 0, exploded) + 2,
               z: d.z,
-              width: a.name.length * 6 + 25,
+              width: displayWidth(a.name) * 6 + 40, // columns, CJK counting two; the mark, dot and padding come on top
             },
           ]
         : [];

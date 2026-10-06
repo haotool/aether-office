@@ -285,7 +285,16 @@ export function nextOccurrence(
   };
 }
 
-export { validateLayout, objectBounds, objectSize, type PlacedObject } from './layout.js';
+export {
+  SQUAD_MARGIN,
+  SQUAD_PITCH,
+  layoutVersionOf,
+  objectBounds,
+  objectSize,
+  squadCapacity,
+  validateLayout,
+  type PlacedObject,
+} from './layout.js';
 export {
   normalizePattern,
   patternsOverlap,
@@ -355,3 +364,13 @@ export {
 } from './markdown-preview.js';
 export { cutMarkdown, graphemes } from './markdown-cut.js';
 export { countWords, revealWords, splitWords } from './markdown-words.js';
+export { neutralizeHtml } from './text-html.js';
+export { structureWrappers, stripCliWrappers, type Notice } from './text-wrappers.js';
+export {
+  cleanTitle,
+  shortLabel,
+  displayWidth,
+  graphemeWidth,
+  type LabelOptions,
+} from './text-title.js';
+export { balanceBrackets } from './text-brackets.js';

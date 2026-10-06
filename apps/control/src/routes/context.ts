@@ -9,6 +9,8 @@ export type ServerOptions = {
   /** Also accept requests addressed to this machine's private-network address (see services/host-policy.ts). */
   lan?: boolean;
   serveWeb?: boolean;
+  /** The data directory: where the usage KPIs keep their numbers-only rollup between runs (none: memory only). */
+  dataDir?: string;
   /** Test seam: the addresses pairing links point at (defaults to this machine's private-network interfaces). */
   lanAddresses?: (port: string) => string[];
   logger?: boolean;

@@ -1,5 +1,7 @@
 import { readdir, stat } from 'node:fs/promises';
 import { basename, isAbsolute, join } from 'node:path';
+import type { Subagent } from '@aether/contracts';
+import { FINISHED_GRACE_MS } from './hook-spool.js';
 import type { AgentProcess } from './agent-processes.js';
 import { readEdge } from './file-edge.js';
 import { mapPool } from './pool.js';
@@ -14,22 +16,25 @@ const MAX_SCAN_ENTRIES = 8 * 1024;
 // is chosen later (local-sessions.ts), after it is known which sessions have a process.
 const MAX_CANDIDATES = 2000;
 const RECENT_MS = 7 * 24 * 3600 * 1000;
-const ACTIVE_CHILD_MS = 2 * 60 * 1000;
-const UUID_SUFFIX = /[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
+export const ACTIVE_CHILD_MS = 2 * 60 * 1000;
+const NICKNAME_CHARS = 40;
+export const UUID_SUFFIX = /[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 
-type Child = { id: string; type: string; lastSeen: number };
 export type Raw = {
   provider: 'claude' | 'codex';
   sessionId: string;
   cwd: string;
   mtime: number;
-  children?: Child[];
+  children?: Subagent[];
   file: string;
   shared?: boolean; // hosted by a long-running app server (Codex Desktop), not by its own process
 };
 type Candidate = { file: string; mtime: number; size: number };
+type Spawn = { parent: string; type: string; nickname: string | null; startedAt: number | null };
 type CodexMeta = {
+  timestamp?: string;
   payload?: {
+    timestamp?: string;
     source?:
       | string
       | {
@@ -49,17 +54,21 @@ export const encodeRoot = (root: string) => root.replace(/[^A-Za-z0-9]/g, '-');
 
 // A Codex rollout names its origin; a spawned one also carries its parent's thread id and its own role.
 function codexMeta(text: string): {
-  spawn: { parent: string; type: string } | null;
+  spawn: Spawn | null;
   shared: boolean;
 } {
   try {
-    const source = (JSON.parse(text.slice(0, text.indexOf('\n'))) as CodexMeta).payload?.source;
+    const meta = JSON.parse(text.slice(0, text.indexOf('\n'))) as CodexMeta;
+    const source = meta.payload?.source;
+    const started = Date.parse(meta.payload?.timestamp ?? meta.timestamp ?? '');
     const spawn = typeof source === 'object' ? source?.subagent?.thread_spawn : undefined;
     return {
       spawn: spawn?.parent_thread_id
         ? {
             parent: spawn.parent_thread_id,
             type: spawn.agent_role ?? spawn.agent_nickname ?? 'subagent',
+            nickname: spawn.agent_nickname?.slice(0, NICKNAME_CHARS) ?? null,
+            startedAt: Number.isFinite(started) ? started : null,
           }
         : null,
       shared: typeof source === 'string' && source !== 'exec' && source !== 'cli',
@@ -80,7 +89,7 @@ const cwdOf = (text: string) => {
   }
 };
 
-type Head = {
+export type Head = {
   cwd: string;
   sessionId: string;
   meta: ReturnType<typeof codexMeta> | null;
@@ -90,7 +99,11 @@ type Head = {
 const heads = new Map<string, { size: number; head: Head | null }>();
 const MAX_HEADS = 4096;
 
-async function headOf(provider: Raw['provider'], file: string, size: number): Promise<Head | null> {
+export async function headOf(
+  provider: Raw['provider'],
+  file: string,
+  size: number,
+): Promise<Head | null> {
   const known = heads.get(file);
   if (known && (known.head || known.size === size)) return known.head;
   let head: Head | null = null;
@@ -165,7 +178,7 @@ async function rawOf(provider: Raw['provider'], c: Candidate) {
 /** Every session file changed in the last week, identified. Which of them are shown is decided by the caller. */
 export async function discoverRaw(home: string, now = Date.now()): Promise<Raw[]> {
   const found: (Raw & {
-    spawn?: { parent: string; type: string } | null;
+    spawn?: Spawn | null;
   })[] = [];
   for (const provider of ['claude', 'codex'] as const) {
     const list: Candidate[] = [];
@@ -175,7 +188,9 @@ export async function discoverRaw(home: string, now = Date.now()): Promise<Raw[]
       now,
       list,
     );
-    list.sort((a, b) => b.mtime - a.mtime);
+    // Files stat'ed in parallel finish in any order: equal mtimes (a copied or extracted folder) tie-break on the path, so the
+    // sessions, and the desks the office seats them at, keep their order from one scan to the next.
+    list.sort((a, b) => b.mtime - a.mtime || (a.file < b.file ? -1 : 1));
     const read = await mapPool(list.slice(0, MAX_CANDIDATES), HEAD_WIDTH, (c) =>
       rawOf(provider, c),
     );
@@ -185,13 +200,27 @@ export async function discoverRaw(home: string, now = Date.now()): Promise<Raw[]
   const ids = new Set(found.map((r) => r.sessionId));
   const parents = new Map(found.map((r) => [r.sessionId, r]));
   const roots = found.filter((r) => !(r.spawn && ids.has(r.spawn.parent)));
-  for (const r of found)
-    if (r.spawn && ids.has(r.spawn.parent) && now - r.mtime < ACTIVE_CHILD_MS)
-      (parents.get(r.spawn.parent)!.children ??= []).push({
-        id: r.sessionId,
-        type: r.spawn.type,
-        lastSeen: Math.round(r.mtime),
-      });
+  // A rollout that has not been written for ACTIVE_CHILD_MS is finished; it stays for the grace period, then goes.
+  for (const r of found) {
+    if (!r.spawn || !ids.has(r.spawn.parent)) continue;
+    const quiet = now - r.mtime;
+    if (quiet >= ACTIVE_CHILD_MS + FINISHED_GRACE_MS) continue;
+    const finished = quiet >= ACTIVE_CHILD_MS;
+    (parents.get(r.spawn.parent)!.children ??= []).push({
+      id: r.sessionId,
+      type: r.spawn.type,
+      lastSeen: Math.round(r.mtime),
+      source: 'rollout',
+      status: finished ? 'finished' : 'running',
+      startedAt: r.spawn.startedAt,
+      endedAt: finished ? Math.round(r.mtime) : null,
+      nickname: r.spawn.nickname,
+      tools: null,
+      label: null,
+      tokens: null,
+      result: null,
+    });
+  }
   return roots.sort((a, b) => b.mtime - a.mtime).map(({ spawn: _s, ...r }) => r);
 }
 

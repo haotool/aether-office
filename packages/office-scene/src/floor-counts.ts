@@ -1,0 +1,26 @@
+import type { Agent, Layout } from '@aether/contracts';
+import { FLOORS } from './layout.js';
+import { floorOfDesk } from './scene-geometry.js';
+import type { FloorCount } from './SceneHud.js';
+
+/** Members and working members per floor (index = floor). */
+export function floorCounts(agents: readonly Agent[], layout: Layout): FloorCount[] {
+  const counts = Array.from({ length: FLOORS }, () => ({ total: 0, working: 0 }));
+  for (const agent of agents) {
+    const entry = counts[Math.min(FLOORS - 1, floorOfDesk(layout, agent.id))]!;
+    entry.total++;
+    if (['working', 'reviewing'].includes(agent.activity)) entry.working++;
+  }
+  return counts;
+}
+
+/** The floor to start on: most work, then most members; null when the office is empty. */
+export function busiestFloor(counts: readonly FloorCount[]): number | null {
+  let best: number | null = null;
+  let score = 0;
+  counts.forEach((entry, i) => {
+    const s = entry.working * 1000 + entry.total;
+    if (s > score) [best, score] = [i, s];
+  });
+  return best;
+}
