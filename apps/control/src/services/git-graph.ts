@@ -10,6 +10,7 @@ export type GraphCommit = {
   parents: string[];
   refs: string[];
   subject: string;
+  author: string;
   at: number;
   lane: number;
   /** Lanes this row connects down to, one per parent. */
@@ -53,18 +54,19 @@ export function layoutGraph(commits: readonly Omit<GraphCommit, 'lane' | 'edges'
   return { commits: out, lanes: width };
 }
 
-/** Pure. `git log --format=%H%x1f%P%x1f%D%x1f%s%x1f%ct`. */
+/** Pure. `git log --format=%H%x1f%P%x1f%D%x1f%s%x1f%ct%x1f%an`. */
 export function parseLog(text: string): Omit<GraphCommit, 'lane' | 'edges'>[] {
   return text
     .split('\n')
     .filter(Boolean)
     .map((line) => {
-      const [sha, parents, refs, subject, at] = line.split(SEP);
+      const [sha, parents, refs, subject, at, author] = line.split(SEP);
       return {
         sha: sha!,
         parents: parents ? parents.split(' ').filter(Boolean) : [],
         refs: refs ? refs.split(', ').filter(Boolean) : [],
         subject: redactSecrets(subject ?? '').slice(0, 160),
+        author: redactSecrets(author ?? '').slice(0, 80),
         at: Number(at) * 1000,
       };
     });
@@ -80,7 +82,7 @@ export async function gitGraph(root: string, limit = 150) {
       '--all',
       '--date-order',
       `-n${Math.min(400, Math.max(10, limit))}`,
-      `--format=%H${SEP}%P${SEP}%D${SEP}%s${SEP}%ct`,
+      `--format=%H${SEP}%P${SEP}%D${SEP}%s${SEP}%ct${SEP}%an`,
     ],
     {
       timeout: 10000,

@@ -261,11 +261,17 @@
   display: block;
   font-weight: 500;
 }
+/* One line each, cut with an ellipsis: a long name or role must not make the row taller and take the scene's height. */
+.team-chip strong,
+.team-chip small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .team-chip small {
   font-size: var(--fs-label);
   color: var(--dim);
   display: block;
-  white-space: nowrap;
 }
 .team-chip .dot {
   margin-left: auto;

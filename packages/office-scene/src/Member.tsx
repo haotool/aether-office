@@ -3,6 +3,8 @@ import { DEPARTMENTS } from '@aether/kernel';
 import { Animal } from './Animal.js';
 import type { Apparition } from './animal-states.js';
 import { DeskEffects } from './DeskEffects.js';
+import { Departing } from './Departing.js';
+import { SEAT_DEPTH, WALK_PACE, type Departure } from './departure.js';
 import { MemberScreen } from './MemberScreen.js';
 import type { ScreenFacts } from './screen-facts.js';
 import { AGENT_OFFSET, floorY } from './scene-geometry.js';
@@ -20,6 +22,7 @@ export function Member({
   intensity,
   apparition,
   zombie,
+  departure,
   selected,
   reducedMotion,
   quality,
@@ -38,6 +41,8 @@ export function Member({
   intensity: 0 | 1 | 2 | 3;
   apparition: Apparition | undefined;
   zombie: boolean;
+  /** Sent home: the way out and when it begins. The member packs up, walks out and the desk is left empty. */
+  departure: { plan: Departure; startAt: number } | undefined;
   selected: boolean;
   reducedMotion: boolean;
   quality: Quality;
@@ -49,6 +54,14 @@ export function Member({
   onFailure: () => void;
 }) {
   const baseY = floorY(desk.floor ?? 0, exploded);
+  const animal = {
+    agent,
+    selected,
+    reducedMotion,
+    quality,
+    light,
+    onError: onFailure,
+  };
   return (
     <group position={[desk.x, baseY, desk.z]} rotation={[0, (desk.rotation * Math.PI) / 2, 0]}>
       <MemberScreen
@@ -62,7 +75,7 @@ export function Member({
       />
       <DeskEffects intensity={intensity} seed={agent.id} />
       <group
-        position={[0, 0, 0.86]}
+        position={[0, 0, SEAT_DEPTH]}
         onClick={(e) => {
           e.stopPropagation();
           onSelect(agent.id);
@@ -82,17 +95,28 @@ export function Member({
           document.body.style.cursor = '';
         }}
       >
-        <Animal
-          agent={agent}
-          apparition={apparition}
-          pace={1 + intensity * 0.4}
-          selected={selected}
-          reducedMotion={reducedMotion}
-          quality={quality}
-          light={light}
-          onError={onFailure}
-        />
-        {zombie && (
+        {departure ? (
+          <Departing
+            plan={departure.plan}
+            startAt={departure.startAt}
+            reducedMotion={reducedMotion}
+            bag={apparition !== 'ghost'}
+            bagColor={agent.color}
+          >
+            {(clip) => (
+              <Animal
+                {...animal}
+                // A sleeping rabbit wakes as the member it is; a ghost has only its own way of going.
+                apparition={clip && apparition === 'sleeping_rabbit' ? undefined : apparition}
+                override={clip ?? undefined}
+                pace={clip === 'walk' ? WALK_PACE : 1}
+              />
+            )}
+          </Departing>
+        ) : (
+          <Animal {...animal} apparition={apparition} pace={1 + intensity * 0.4} />
+        )}
+        {zombie && !departure && (
           <Animal
             agent={agent}
             apparition="zombie"

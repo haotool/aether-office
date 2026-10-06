@@ -2,11 +2,34 @@ import type { Agent } from '@aether/contracts';
 import type { Seat, Shot } from './director.js';
 
 /**
- * Picture-in-picture: when several members are busy at once the main camera can only be on one of them, so the others
- * get a small live view each (a closeup at their desk) beside it. Which ones: the busiest working members the main shot
- * is not already on. A view that is still earning its place stays, so the wall does not reshuffle every few seconds.
+ * The control-room wall: when several members are busy at once the main camera can only be on one of them, so the
+ * others get a small live view each (a closeup at their desk) beside it. Which ones: the busiest working members the
+ * main shot is not already on, that the scene is drawing (the floor on screen, or every floor when the building is
+ * spread apart). A view that is still earning its place stays, so the wall does not reshuffle every few seconds.
  */
-export const MAX_FEEDS = 3;
+export const MAX_FEEDS = 4;
+/** What the wall needs beside it: the floor card at the left, the margin at the right; a view is at least this wide. */
+const WALL_CLEARANCE = 272;
+const VIEW_MIN = 150;
+const VIEW_GAP = 8;
+
+/** Shorter than this the wall would sit on the floor switcher at the right of the canvas. */
+const MIN_HEIGHT = 540;
+
+/** How many views fit along the bottom of a canvas this size without covering the floor card or the floor switcher. */
+export const feedCapacity = (width: number, height: number) =>
+  height < MIN_HEIGHT
+    ? 0
+    : Math.max(
+        0,
+        Math.min(
+          MAX_FEEDS,
+          Math.floor((width - WALL_CLEARANCE + VIEW_GAP) / (VIEW_MIN + VIEW_GAP)),
+        ),
+      );
+
+/** A rectangle in CSS pixels from the top left of the canvas. */
+export type Rect = { x: number; y: number; width: number; height: number };
 const WORKING: readonly Agent['activity'][] = [
   'working',
   'reviewing',
@@ -31,6 +54,7 @@ export function chooseFeeds({
   intensity,
   taken,
   previous,
+  floor,
   max = MAX_FEEDS,
 }: {
   agents: readonly Agent[];
@@ -39,6 +63,8 @@ export function chooseFeeds({
   /** Members already on the main screen or chosen by the person: not shown twice. */
   taken: ReadonlySet<string>;
   previous: readonly Feed[];
+  /** The one floor the scene is drawing; leave out when it draws them all. A member elsewhere is not on screen. */
+  floor?: number;
   max?: number;
 }): Feed[] {
   const busy = agents
@@ -46,6 +72,7 @@ export function chooseFeeds({
       (a) =>
         (WORKING.includes(a.activity) || (intensity.get(a.id) ?? 0) > 0) &&
         seats.has(a.id) &&
+        (floor === undefined || seats.get(a.id)!.floor === floor) &&
         !taken.has(a.id),
     )
     .map((a) => ({
@@ -59,20 +86,28 @@ export function chooseFeeds({
   const chosen = [
     ...busy.filter((b) => keep.has(b.agent.id)),
     ...busy.filter((b) => !keep.has(b.agent.id)),
-  ].slice(0, max);
-  return chosen.map(({ agent }) => {
-    const seat = seats.get(agent.id)!;
+  ]
+    .slice(0, max)
+    .map((b) => b.agent.id);
+  // Each view stays in its slot and a newcomer takes a vacated one: a frame that moves in the page restarts its
+  // power-on dip (see scene-pips.css), which blanks the picture for as long as the dip lasts.
+  const chosenIds = new Set(chosen);
+  const fresh = chosen.filter((id) => !keep.has(id));
+  const slots = previous.map((f) => (chosenIds.has(f.id) ? f.id : fresh.shift()));
+  const order = [...slots, ...fresh].filter((id): id is string => !!id);
+  return order.map((id) => {
+    const seat = seats.get(id)!;
     return {
-      id: agent.id,
+      id,
       shot: {
-        key: `feed:${agent.id}`,
+        key: `feed:${id}`,
         kind: 'closeup',
         floor: seat.floor,
-        subjects: [agent.id],
+        subjects: [id],
         reason: 'working',
         seconds: 12,
         score: 0,
-        style: (hash(agent.id) % 3) as 0 | 1 | 2,
+        style: (hash(id) % 3) as 0 | 1 | 2,
       },
     };
   });

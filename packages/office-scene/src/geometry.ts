@@ -4,7 +4,7 @@
  */
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-function roundedBox(w: number, h: number, d: number, r = 0.06): THREE.BufferGeometry {
+function roundedBox(w: number, h: number, d: number, r = 0.06, hole = 0): THREE.BufferGeometry {
   const shape = new THREE.Shape();
   const x = -w / 2,
     y = -d / 2;
@@ -18,6 +18,7 @@ function roundedBox(w: number, h: number, d: number, r = 0.06): THREE.BufferGeom
   shape.quadraticCurveTo(x, y + d, x, y + d - r);
   shape.lineTo(x, y + r);
   shape.quadraticCurveTo(x, y, x + r, y);
+  if (hole > 0) shape.holes.push(new THREE.Path().absarc(0, 0, hole, 0, 2 * Math.PI, true));
   const geo = new THREE.ExtrudeGeometry(shape, { depth: h, bevelEnabled: false, curveSegments: 4 });
   geo.rotateX(-Math.PI / 2);
   geo.translate(0, -h / 2, 0);
@@ -30,8 +31,10 @@ export function box(
   size: [number, number, number],
   position: [number, number, number],
   radius = 0.03,
+  /** A round hole through the middle (radius), for the shaft the building is organised around. */
+  hole = 0,
 ): THREE.Mesh {
-  const mesh = new THREE.Mesh(roundedBox(...size, radius), material);
+  const mesh = new THREE.Mesh(roundedBox(...size, radius, hole), material);
   mesh.position.set(...position);
   mesh.castShadow = true;
   mesh.receiveShadow = true;

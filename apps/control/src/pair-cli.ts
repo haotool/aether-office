@@ -1,11 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import QRCode from 'qrcode';
+import { terminalQr } from './services/pairing.js';
 
 /**
  * `pnpm run pair`: shows a QR code in the terminal that signs a phone in. It asks the running control plane for a
- * one-time code with the owner token from the data directory (the token itself is never printed), then prints each link
- * and its QR code. The code works once and expires in five minutes.
+ * one-time code with the owner token from the data directory (the token itself is never printed), then prints one QR code, for
+ * the best address, and lists the others (the code is the same on every address). The code works once and expires in five minutes.
  */
 const mode = process.argv.includes('--demo') ? 'demo' : 'live';
 const directory = resolve(process.env['AETHER_DATA_DIR'] ?? `.data/${mode}`);
@@ -34,11 +34,11 @@ if (!made.lan || !made.links.length) {
   );
   process.exit(1);
 }
-for (const link of made.links) {
-  console.log(`\n${link.origin}`);
-  console.log(await QRCode.toString(link.url, { type: 'terminal', small: true }));
-}
+const [first, ...others] = made.links;
+console.log(`\n${terminalQr(first!.url)}\n\n${first!.origin}`);
+if (others.length)
+  console.log(`Same code on the other addresses: ${others.map((link) => link.origin).join(', ')}`);
 console.log(
-  `Scan one with the phone's camera (same network). It works once and expires in ${made.ttlSeconds / 60} minutes.\n` +
+  `Scan it with the phone's camera (same network). It works once and expires in ${made.ttlSeconds / 60} minutes.\n` +
     'Plain HTTP: use a network you trust.',
 );

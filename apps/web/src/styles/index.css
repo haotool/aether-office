@@ -10,7 +10,7 @@
  *   controls      badges and buttons
  *   pages, forms, views, login   the pages and their forms
  *   breakpoints   the desktop sizes (wide, narrow, tablet)
- *   workbench ... quick-open     features: the scene HUD, telemetry, transcript, git, sessions, quick open
+ *   workbench ... quick-open     features: the scene HUD and speech bubbles, telemetry, transcript, git, sessions, clock out, quick open
  *   touch-targets ... phone-density   the touch and phone layers (UI rules in AGENTS.md)
  */
 @import url('./tokens.css');
@@ -27,10 +27,12 @@
 @import url('./workbench.css');
 @import url('./scene-hud.css');
 @import url('./scene-pips.css');
+@import url('./scene-speech.css');
 @import url('./telemetry.css');
 @import url('./transcript.css');
 @import url('./git.css');
 @import url('./sessions.css');
+@import url('./clock-out.css');
 @import url('./quick-open.css');
 @import url('./touch-targets.css');
 @import url('./compact-desktop.css');

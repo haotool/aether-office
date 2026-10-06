@@ -7,6 +7,9 @@ import { box, mergeStatic } from './geometry.js';
 /** Floor-to-floor distance of the stacked building, and the extra gap the exploded view adds. */
 export const FLOOR_HEIGHT = 7;
 export const EXPLODED_GAP = 11;
+/** The slabs are open this far from the axis, and the core's caps are rings from here out: the Git spire rises through. */
+const WELL = 1.7;
+const CORE_COLLAR = 1.35;
 
 type Materials = ReturnType<typeof createMaterials>;
 
@@ -173,9 +176,10 @@ function cylinder(
 
 /** Hull, deck, light channels, facade and ceiling rails shared by every floor, tinted with the department's colour. */
 function shell(root: THREE.Group, m: Materials, floor: number) {
-  box(root, m.hull, [54.4, 0.9, 38.4], [0, -0.75, 0], 0.5);
-  box(root, m.slab, [53, 0.3, 37], [0, -0.2, 0], 0.3);
-  box(root, m.deck, [52, 0.14, 36], [0, -0.04, 0], 0.2);
+  // The slabs are open round the elevator core, so the Git spire can rise through the whole building.
+  box(root, m.hull, [54.4, 0.9, 38.4], [0, -0.75, 0], 0.5, WELL);
+  box(root, m.slab, [53, 0.3, 37], [0, -0.2, 0], 0.3, WELL);
+  box(root, m.deck, [52, 0.14, 36], [0, -0.04, 0], 0.2, WELL);
   // Panel joints as thin light lines: the deck reads as a lit grid rather than a flat tile.
   for (let x = -24; x <= 24; x += 4) box(root, m.accentSoft, [0.035, 0.012, 35.6], [x, 0.04, 0], 0);
   for (let z = -16; z <= 16; z += 4) box(root, m.accentSoft, [51.6, 0.012, 0.035], [0, 0.04, z], 0);
@@ -234,8 +238,24 @@ function core(root: THREE.Group, m: Materials, model: FloorModel) {
   cylinder(root, m.glass, 1.5, 1.5, 6.0, [0, 3, 0], 40, true);
   cylinder(root, m.holoCyan, 0.55, 0.55, 5.9, [0, 3, 0], 24);
   cylinder(root, m.cyan, 0.12, 0.12, 5.9, [0, 3, 0], 12);
-  cylinder(root, m.graphite, 1.6, 1.6, 0.16, [0, 0.1, 0], 40);
-  cylinder(root, m.graphite, 1.6, 1.6, 0.16, [0, 6.0, 0], 40);
+  // Open collars, not caps: the spire passes through the core.
+  for (const y of [0.1, 6.0]) {
+    const collar = new THREE.Mesh(
+      new THREE.LatheGeometry(
+        [
+          [CORE_COLLAR, -0.08],
+          [1.62, -0.08],
+          [1.62, 0.08],
+          [CORE_COLLAR, 0.08],
+          [CORE_COLLAR, -0.08],
+        ].map(([r, h]) => new THREE.Vector2(r, h)),
+        40,
+      ),
+      m.graphite,
+    );
+    collar.position.y = y;
+    root.add(collar);
+  }
   ring(m.accent, 3.6, 0.1, 0.1, root);
   ring(m.cyan, 3.05, 0.03, 0.1, root);
   // Moving rings are children of the floor, not merged, so they can turn.

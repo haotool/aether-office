@@ -1,6 +1,9 @@
 import { open, stat } from 'node:fs/promises';
 import { z } from 'zod';
+import { redactSecrets } from './redaction.js';
 
+const RECENT_TOOLS = 8;
+const TARGET_CHARS = 48;
 const TAIL_BYTES = 512 * 1024;
 const SUBAGENT_STALE_MS = 10 * 60 * 1000;
 
@@ -13,6 +16,7 @@ const recordSchema = z.object({
   agentId: z.string().optional(),
   agentType: z.string().optional(),
   tool: z.string().optional(),
+  target: z.string().optional(),
   notification: z.string().optional(),
 });
 export type HookRecord = z.infer<typeof recordSchema>;
@@ -22,6 +26,8 @@ export type HookState = {
   lastEvent: string;
   at: number;
   tool: string | null; // the tool being run, from PreToolUse until the next event
+  // The last tool calls, oldest first: the tool and a short redacted target (a file's base name, a command's first word).
+  recent: { tool: string; target: string | null; at: number }[];
   subagents: { id: string; type: string; lastSeen: number }[];
 };
 
@@ -66,6 +72,7 @@ export function deriveHookState(
           lastEvent: r.event,
           at: r.at,
           tool: null,
+          recent: [],
           subagents: [],
         });
       continue;
@@ -77,11 +84,23 @@ export function deriveHookState(
         : WORKING_EVENTS.has(r.event)
           ? 'working'
           : 'idle';
+    const recent = states.get(key)?.recent ?? [];
     states.set(key, {
       activity,
       lastEvent: r.event,
       at: r.at,
       tool: r.event === 'PreToolUse' ? (r.tool ?? null) : null,
+      recent:
+        r.event === 'PreToolUse' && r.tool
+          ? [
+              ...recent,
+              {
+                tool: r.tool,
+                target: r.target ? redactSecrets(r.target).slice(0, TARGET_CHARS) : null,
+                at: r.at,
+              },
+            ].slice(-RECENT_TOOLS)
+          : recent,
       subagents: [],
     });
   }

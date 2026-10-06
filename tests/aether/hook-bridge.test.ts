@@ -174,3 +174,61 @@ it('marks a session as waiting for approval from PermissionRequest or a permissi
   expect(record?.notification).toBe('permission_prompt');
   expect(JSON.stringify(record)).not.toContain('SECRET');
 });
+
+it('keeps only a short target of a tool call: a base name, a first word, a host; never a path, arguments or a pattern', () => {
+  const target = (tool: string, input: unknown) =>
+    (
+      toRecord('claude', {
+        session_id: 's',
+        cwd: '/x',
+        hook_event_name: 'PreToolUse',
+        tool_name: tool,
+        tool_input: input,
+      }) as { target?: string } | null
+    )?.target;
+  expect(target('Edit', { file_path: '/home/me/secret-project/src/app.ts' })).toBe('app.ts');
+  expect(target('Bash', { command: 'TOKEN=abc123 /usr/bin/curl -H "x: SECRET" https://x' })).toBe(
+    'curl',
+  );
+  expect(target('Bash', { command: 'git push --force origin main' })).toBe('git push');
+  expect(target('Bash', { command: 'echo SECRET' })).toBe('echo');
+  expect(target('Bash', { command: '"$(whoami)"' })).toBeUndefined();
+  expect(
+    target('WebFetch', { url: 'https://user:pw@docs.example.com/a?k=SECRET' }),
+  ).toBeUndefined();
+  expect(target('WebFetch', { url: 'https://docs.example.com/a?k=SECRET' })).toBe(
+    'docs.example.com',
+  );
+  expect(target('Grep', { pattern: 'SECRET' })).toBeUndefined();
+});
+
+it('lists the last tool calls of a session, newest last, at most eight, without subagent traffic', () => {
+  const calls = Array.from({ length: 10 }, (_, i) =>
+    rec('PreToolUse', i + 1, { tool: 'Edit', target: `f${i}.ts` }),
+  );
+  const state = deriveHookState(
+    [...calls, rec('PreToolUse', 20, { tool: 'Bash', target: 'ls', agentId: 'a' })],
+    30,
+  ).get('claude:s1')!;
+  expect(state.recent.map((r) => r.target)).toEqual([
+    'f2.ts',
+    'f3.ts',
+    'f4.ts',
+    'f5.ts',
+    'f6.ts',
+    'f7.ts',
+    'f8.ts',
+    'f9.ts',
+  ]);
+  expect(state.recent[7]).toEqual({ tool: 'Edit', target: 'f9.ts', at: 10 });
+});
+
+it('redacts and bounds a target read from the spool', () => {
+  const secret = `sk-${'a'.repeat(30)}${'b'.repeat(80)}`;
+  const records = parseSpool(
+    JSON.stringify(rec('PreToolUse', 1, { tool: 'Bash', target: secret })),
+  );
+  const recent = deriveHookState(records, 2).get('claude:s1')!.recent[0]!;
+  expect(recent.target).not.toContain('aaaa');
+  expect(recent.target!.length).toBeLessThanOrEqual(48);
+});

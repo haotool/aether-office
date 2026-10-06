@@ -42,16 +42,20 @@ const SCORE: Record<Agent['activity'], { score: number; reason: ShotReason }> = 
   unknown: { score: 2, reason: 'working' },
   offline: { score: 0, reason: 'working' },
 };
-const SECONDS = { pair: 7, closeup: 6, sweep: 6 } as const;
+// Long enough to take a shot in and to read its caption; a shot is one slow move (see shot-camera.ts), not a tour.
+const SECONDS = { pair: 9, closeup: 8, sweep: 12 } as const;
+/** A member, pair or floor just shown is not shown again for this long, unless it wants a person at once. */
+export const COOLDOWN_MS = 30_000;
+const URGENT: readonly ShotReason[] = ['approval', 'error'];
 const NEEDS_A_REASON = 30; // below this nothing is worth a closeup: sweep instead
 
 /**
- * The more members are busy at once, the shorter a shot: with five agents working, six seconds on each is half a minute
- * before the last one is seen. Down to a little over half the length, never faster than a person can read the caption.
+ * The more members are busy at once, the shorter a shot: with five agents working, eight seconds on each is most of a
+ * minute before the last one is seen. Down to 70% of the length, never faster than a person can read the caption.
  */
 export function pacedSeconds(seconds: number, agents: readonly Agent[]): number {
   const busy = agents.filter((a) => SCORE[a.activity].score >= 50).length;
-  return Math.round(seconds * Math.max(0.55, 1 - 0.1 * Math.max(0, busy - 1)) * 10) / 10;
+  return Math.round(seconds * Math.max(0.7, 1 - 0.06 * Math.max(0, busy - 1)) * 10) / 10;
 }
 
 const hash = (text: string) => {
@@ -142,8 +146,13 @@ export function chooseShot({
       style: (hash(id) % 3) as 0 | 1 | 2,
     });
   }
-  candidates.sort((a, b) => b.score - a.score || (a.key < b.key ? -1 : 1));
-  const best = candidates[0];
+  // Not back to a subject so soon: the camera does not keep returning to the same desk (and then the same two members).
+  const cooling = (c: Shot) =>
+    !URGENT.includes(c.reason) &&
+    [c.key, ...c.subjects].some((key) => now - (shown.get(key) ?? -Infinity) < COOLDOWN_MS);
+  const fresh = candidates.filter((c) => !cooling(c));
+  fresh.sort((a, b) => b.score - a.score || (a.key < b.key ? -1 : 1));
+  const best = fresh[0];
   if (best && best.score >= NEEDS_A_REASON)
     return { ...best, seconds: pacedSeconds(best.seconds, agents) };
 
@@ -164,6 +173,7 @@ export function chooseShot({
     reason: 'sweep',
     seconds: SECONDS.sweep,
     score: 20,
-    style: (hash(`floor:${floor}`) % 3) as 0 | 1 | 2,
+    // Another bearing each time, so a floor swept twice running is not the same picture.
+    style: ((hash(`floor:${floor}`) + shown.size) % 3) as 0 | 1 | 2,
   };
 }

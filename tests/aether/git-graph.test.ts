@@ -4,11 +4,18 @@ import { layoutGraph, parseLog } from '../../apps/control/src/services/git-graph
 it('lays a branch and its merge out in two lanes, like git log --graph', () => {
   // m3 merges f2 into main: main m1 ← m2 ← m3, feature m1 ← f1 ← f2, m3 = merge(m2, f2)
   const { commits, lanes } = layoutGraph([
-    { sha: 'm3', parents: ['m2', 'f2'], refs: ['HEAD -> main'], subject: 'merge', at: 5 },
-    { sha: 'f2', parents: ['f1'], refs: [], subject: 'f2', at: 4 },
-    { sha: 'm2', parents: ['m1'], refs: [], subject: 'm2', at: 3 },
-    { sha: 'f1', parents: ['m1'], refs: [], subject: 'f1', at: 2 },
-    { sha: 'm1', parents: [], refs: [], subject: 'root', at: 1 },
+    {
+      sha: 'm3',
+      parents: ['m2', 'f2'],
+      refs: ['HEAD -> main'],
+      subject: 'merge',
+      author: 'a',
+      at: 5,
+    },
+    { sha: 'f2', parents: ['f1'], refs: [], subject: 'f2', author: 'a', at: 4 },
+    { sha: 'm2', parents: ['m1'], refs: [], subject: 'm2', author: 'a', at: 3 },
+    { sha: 'f1', parents: ['m1'], refs: [], subject: 'f1', author: 'a', at: 2 },
+    { sha: 'm1', parents: [], refs: [], subject: 'root', author: 'a', at: 1 },
   ]);
   expect(lanes).toBe(2);
   expect(commits.map((c) => [c.sha, c.lane])).toEqual([
@@ -26,13 +33,14 @@ it('lays a branch and its merge out in two lanes, like git log --graph', () => {
 
 it('parses log lines and redacts secrets in subjects', () => {
   const [c] = parseLog(
-    'abc\x1fp1 p2\x1fHEAD -> main, origin/main\x1fadd key ghp_abcdefghijklmnopqrstuvwxyz0123\x1f100\n',
+    'abc\x1fp1 p2\x1fHEAD -> main, origin/main\x1fadd key ghp_abcdefghijklmnopqrstuvwxyz0123\x1f100\x1fAda\n',
   );
   expect(c).toMatchObject({
     sha: 'abc',
     parents: ['p1', 'p2'],
     refs: ['HEAD -> main', 'origin/main'],
     at: 100000,
+    author: 'Ada',
   });
   expect(c!.subject).not.toContain('ghp_');
 });

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { devices, expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -14,17 +14,43 @@ test('a pairing link that is wrong or used up says so, leaves no code in the add
   await expect(page.getByLabel('存取權杖', { exact: true })).toBeVisible();
 });
 
-test('the settings page offers a QR code, and says what is missing when the server is not open to the network', async ({
+// The e2e server pretends 127.0.0.1 and localhost are its network addresses (AETHER_E2E_LAN_ADDRESSES), so a pairing link can
+// be opened here without listening on the real network.
+test('a phone scans the link, ends up signed in without a token, and the link works once', async ({
   page,
+  browser,
 }) => {
   await page.goto('/');
   await page
     .getByLabel('存取權杖', { exact: true })
     .fill(readFileSync(join(runtime().directory, 'owner-token'), 'utf8').trim());
   await page.getByRole('button', { name: /進入辦公室/ }).click();
-  await expect(page.getByRole('link', { name: '設定' })).toBeVisible(); // signed in
   await page.getByRole('link', { name: '設定' }).click();
   await expect(page.getByRole('heading', { name: '連接手機' })).toBeVisible();
+  const made = page.waitForResponse(
+    (r) => r.url().endsWith('/api/pairings') && r.request().method() === 'POST',
+  );
   await page.getByRole('button', { name: '產生 QR code' }).click();
-  await expect(page.getByText(/目前只允許本機連線/)).toBeVisible(); // the e2e server listens on loopback only
+  const { links } = (await (await made).json()) as { links: { origin: string; url: string }[] };
+  await expect(page.getByRole('img', { name: links[0]!.origin })).toBeVisible();
+  // two addresses, one code: the selector only switches which link the QR code shows
+  await page.getByLabel('手機連線的位址').selectOption({ index: 1 });
+  await expect(page.getByRole('img', { name: links[1]!.origin })).toBeVisible();
+  expect(links[0]!.url.split('#pair=')[1]).toBe(links[1]!.url.split('#pair=')[1]);
+
+  const phone = await browser.newContext({ ...devices['Pixel 7'] });
+  const phonePage = await phone.newPage();
+  await phonePage.goto(links[0]!.url);
+  await expect.poll(async () => (await phone.request.get('/api/session')).status()).toBe(200);
+  expect(new URL(phonePage.url()).hash).toBe(''); // the code never stays in the address bar
+  await expect(phonePage.getByLabel('存取權杖', { exact: true })).toBeHidden(); // no token typed
+  await expect(page.getByText('手機已連線')).toBeVisible({ timeout: 10000 }); // the desktop sees it was used
+
+  const second = await browser.newContext({ ...devices['Pixel 7'] });
+  const secondPage = await second.newPage();
+  await secondPage.goto(links[1]!.url);
+  await expect(secondPage.getByText(/配對碼已失效或已使用過/)).toBeVisible(); // single use
+  expect((await second.request.get('/api/session')).status()).toBe(401);
+  await phone.close();
+  await second.close();
 });

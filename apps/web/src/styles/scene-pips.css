@@ -1,32 +1,124 @@
-/* The small live views of other busy members, beside the main camera (packages/office-scene/src/MultiCam.tsx). */
+/* The control-room wall: small live views of other busy members beside the main camera. The frames are laid out here and
+   packages/office-scene/src/MultiCam.tsx draws each view into the rectangle its frame ended up in. */
 .pip-wall {
   position: absolute;
   z-index: var(--z-hud-chip);
   right: 16px;
   bottom: 44px;
   display: flex;
-  gap: var(--space-8);
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-6);
+  /* Clear of the floor card at the left (packages/office-scene/src/multi-view.ts says how many views fit). */
+  max-width: calc(100% - 4 * var(--space-64) - var(--space-16));
   pointer-events: none;
+}
+.pip-row {
+  display: flex;
+  gap: var(--space-8);
+  width: 100%;
+  justify-content: flex-end;
+}
+.pip-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-8);
+  border-radius: var(--r-pill);
+  background: var(--glass-soft);
+  color: var(--on-glass);
+  font: 700 var(--fs-label) var(--mono);
+  letter-spacing: 1px;
+}
+.pip-bar i,
+.pip-cam::before {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: rec 1.6s ease-in-out infinite;
 }
 .pip {
   position: relative;
   display: flex;
+  flex: 0 1 auto;
   flex-direction: column;
   justify-content: flex-end;
   width: 176px;
-  height: 110px;
+  min-width: 0;
+  aspect-ratio: 8 / 5;
   padding: var(--space-6) var(--space-8);
-  border: 1px solid var(--glass-line);
-  border-radius: var(--r-lg);
+  border: 1px solid var(--glass-accent-line);
+  border-radius: var(--r-sm);
   background: linear-gradient(to top, var(--glass-strong), transparent 55%);
+  box-shadow: 0 0 12px var(--glow);
   color: var(--on-glass);
   text-align: left;
   pointer-events: auto;
+  cursor: pointer;
 }
-.pip:hover {
-  border-color: var(--glass-line-strong);
+.pip:hover,
+.pip:focus-visible {
+  border-color: var(--glass-accent-glow);
+}
+/* Neon corners. */
+.pip::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--mint), var(--mint)) left top / 14px 2px no-repeat,
+    linear-gradient(var(--mint), var(--mint)) left top / 2px 14px no-repeat,
+    linear-gradient(var(--mint), var(--mint)) right top / 14px 2px no-repeat,
+    linear-gradient(var(--mint), var(--mint)) right top / 2px 14px no-repeat,
+    linear-gradient(var(--mint), var(--mint)) left bottom / 14px 2px no-repeat,
+    linear-gradient(var(--mint), var(--mint)) left bottom / 2px 14px no-repeat,
+    linear-gradient(var(--mint), var(--mint)) right bottom / 14px 2px no-repeat,
+    linear-gradient(var(--mint), var(--mint)) right bottom / 2px 14px no-repeat;
+}
+/* Scan lines, and the dark glass that lifts off when the view powers on. */
+.pip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 2px,
+    var(--shade-soft) 2px 3px
+  );
+  animation: pip-on 0.5s var(--ease) both;
+}
+@keyframes pip-on {
+  from {
+    background-color: var(--scene-bg);
+  }
+}
+.pip-cam,
+.pip-load {
+  position: absolute;
+  top: var(--space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-6);
+  border-radius: var(--r-xs);
+  background: var(--glass-soft);
+  font: 700 var(--fs-label) var(--mono);
+}
+.pip-cam {
+  left: var(--space-8);
+}
+.pip-load {
+  right: var(--space-8);
+  gap: var(--space-2);
 }
 .pip-caption {
+  position: relative;
+  z-index: var(--z-base);
   display: grid;
   min-width: 0;
 }
@@ -44,13 +136,6 @@
   font-family: var(--mono);
   font-size: var(--fs-label);
 }
-.pip-load {
-  position: absolute;
-  top: var(--space-6);
-  right: var(--space-8);
-  display: flex;
-  gap: var(--space-2);
-}
 .pip-load i {
   width: 4px;
   height: 10px;
@@ -61,13 +146,11 @@
   background: var(--gold);
 }
 .pip-close {
-  position: absolute;
-  top: calc(-1 * var(--space-20));
-  right: 0;
   display: grid;
   place-items: center;
   width: 20px;
   height: 20px;
+  margin-left: auto;
   border: 1px solid var(--glass-line);
   border-radius: var(--r-pill);
   background: var(--glass);
@@ -76,6 +159,21 @@
 }
 @media (max-width: 1000px), (pointer: coarse) {
   .pip-wall {
-    display: none; /* the phone and the narrow screen have the director's quicker cuts instead */
+    display: none; /* the phone and the narrow screen have the director's cuts instead; MultiCam then draws nothing */
+  }
+}
+
+/* A hard cut between shots: the picture dips to the night colour and comes back in 150 ms, so the jump is not seen. */
+.cut-dip {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-labels);
+  background: var(--scene-bg);
+  pointer-events: none;
+  animation: cut-dip 0.15s ease-out both;
+}
+@keyframes cut-dip {
+  to {
+    opacity: 0;
   }
 }

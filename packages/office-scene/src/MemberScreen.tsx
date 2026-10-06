@@ -1,11 +1,11 @@
 import SEATING from './desk-seating.json';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { CanvasTexture, RepeatWrapping, SRGBColorSpace, type Group } from 'three';
 import type { Agent } from '@aether/contracts';
 import type { DepartmentId } from '@aether/kernel';
 import { SCREEN_H, SCREEN_W, screenTexture } from './screens.js';
-import { BAND, factsTexture, type ScreenFacts } from './screen-facts.js';
+import { BAND, createFactsScreen, type ScreenFacts } from './screen-facts.js';
 
 const WIDTH = 0.76;
 const HEIGHT = (WIDTH * SCREEN_H) / SCREEN_W;
@@ -51,13 +51,21 @@ export function MemberScreen({
   /** How hard the member is working, 0 to 3. */
   intensity: 0 | 1 | 2 | 3;
 }) {
-  const texture = useMemo(
-    () => (facts ? factsTexture(facts, accent, theme) : screenTexture(role, member, accent)),
-    [facts, role, member, accent, theme],
+  const real = facts !== undefined;
+  const live = useMemo(
+    () => (real ? createFactsScreen(accent, theme) : null),
+    [real, accent, theme],
   );
-  const stream = useMemo(() => (facts ? streamTexture(accent) : null), [facts, accent]);
+  useEffect(() => () => live?.texture.dispose(), [live]);
+  const texture = useMemo(
+    () => live?.texture ?? screenTexture(role, member, accent),
+    [live, role, member, accent],
+  );
+  const stream = useMemo(() => (real ? streamTexture(accent) : null), [real, accent]);
   const shake = useRef<Group>(null);
   useFrame((state, delta) => {
+    // Twice a second: the cursor blinks and the running tool's clock moves. Nothing is drawn unless the tick or the facts changed.
+    if (live && facts) live.paint(facts, Math.floor(state.clock.elapsedTime * 2), Date.now());
     if (stream && intensity > 0) stream.offset.y -= delta * STREAM_SPEED[intensity];
     if (shake.current)
       shake.current.position.x =

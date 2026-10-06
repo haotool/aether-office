@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { DoorOpen } from 'lucide-react';
 import type { AttributedSession } from '@aether/contracts';
 import { attentionReason, needsAttention } from '../localSessions.js';
 import { usePreferences } from '../state.js';
 import { Sheet, useT } from '../ui.js';
 import { reapZombies } from './reap.js';
+import { ClockOut } from './ClockOut.js';
+import { idleSessions } from './clock-out.js';
 import { StopSession } from './StopSession.js';
 
 /**
@@ -27,10 +30,12 @@ export function AttentionSessions({
   const client = useQueryClient();
   const [open, setOpen] = useState(false);
   const [stopping, setStopping] = useState<AttributedSession | null>(null);
+  const [clockingOut, setClockingOut] = useState(false);
   const [result, setResult] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState('');
   const list = sessions.filter(needsAttention);
-  if (!list.length && !open) return null;
+  const idle = idleSessions(sessions, 1);
+  if (!list.length && !open && !clockingOut) return null;
   const reap = async (s: AttributedSession) => {
     setBusy(s.key);
     try {
@@ -59,6 +64,20 @@ export function AttentionSessions({
       </button>
       {open && (
         <Sheet title={t('needsAttention')} count={list.length} onClose={() => setOpen(false)}>
+          {owner && idle.length > 0 && (
+            <li className="attention-row clock-out-offer">
+              <button
+                className="primary clock-out-go"
+                onClick={() => {
+                  setOpen(false);
+                  setClockingOut(true);
+                }}
+              >
+                <DoorOpen size={18} aria-hidden="true" />
+                {t('clockOut')} ({idle.length})
+              </button>
+            </li>
+          )}
           {list.map((s) => (
             <li key={s.key} className="attention-row">
               <span className="sheet-main">
@@ -100,6 +119,9 @@ export function AttentionSessions({
       )}
       {stopping && (
         <StopSession session={stopping} locale={locale} onClose={() => setStopping(null)} />
+      )}
+      {clockingOut && (
+        <ClockOut sessions={sessions} locale={locale} onClose={() => setClockingOut(false)} />
       )}
     </>
   );

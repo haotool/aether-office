@@ -1,9 +1,9 @@
 import type { Agent, Layout, LocalSession } from '@aether/contracts';
 import {
-  FLOORS,
   FLOOR_CAPACITY,
   apparitionOf,
   defaultLayout,
+  floorsFrom,
   seatAt,
   type Apparition,
 } from '@aether/office-scene/model';
@@ -141,7 +141,7 @@ export function floorResolver(sessions: readonly LocalSession[]): (agent: Agent)
 }
 
 /**
- * Seats every agent the saved layout has no desk for, on the agent's own floor, in the first free slot. A saved
+ * Seats every agent the saved layout has no desk for, on the agent's own floor (the next one with room when it is full), in the first free slot. A saved
  * layout is never rearranged. With no saved layout the whole building is generated.
  */
 export function mergeLayout(
@@ -161,21 +161,24 @@ export function mergeLayout(
     );
   for (const agent of all) {
     if (seated.has(agent.id)) continue;
-    const floor = Math.min(FLOORS - 1, Math.max(0, floorOf(agent)));
-    let slot = next.get(floor) ?? 0;
-    while (slot < FLOOR_CAPACITY && taken(floor, ...seatAt(slot))) slot++;
-    if (slot >= FLOOR_CAPACITY) continue; // a full floor: the agent has no desk, as before
-    next.set(floor, slot + 1);
-    const [x, z] = seatAt(slot);
-    added.push({
-      id: `desk-obs-${floor}-${slot}`,
-      type: 'desk',
-      x,
-      z,
-      rotation: 0,
-      agentId: agent.id,
-      floor,
-    });
+    // A full floor spills its members onto the next floor with a free desk.
+    for (const floor of floorsFrom(floorOf(agent))) {
+      let slot = next.get(floor) ?? 0;
+      while (slot < FLOOR_CAPACITY && taken(floor, ...seatAt(slot))) slot++;
+      if (slot >= FLOOR_CAPACITY) continue;
+      next.set(floor, slot + 1);
+      const [x, z] = seatAt(slot);
+      added.push({
+        id: `desk-obs-${floor}-${slot}`,
+        type: 'desk',
+        x,
+        z,
+        rotation: 0,
+        agentId: agent.id,
+        floor,
+      });
+      break;
+    }
   }
   return added.length ? { ...layout, objects: [...layout.objects, ...added] } : layout;
 }

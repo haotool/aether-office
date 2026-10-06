@@ -3,6 +3,7 @@ import type { Agent, Layout } from '@aether/contracts';
 import { FLOORS, zones } from './layout.js';
 import { PULSE_WINDOW_MS, chooseShot, type Pulse, type Seat, type Shot } from './director.js';
 import type { FlyTo } from './SceneCamera.js';
+import { chooseEntry } from './shot-camera.js';
 import { useSceneKeys } from './scene-keys.js';
 import {
   AGENT_OFFSET,
@@ -12,6 +13,11 @@ import {
   floorY,
   lookY,
 } from './scene-geometry.js';
+
+/** The shot on screen, when it began, and how the camera came to it: a glide from where it was, or a hard cut. */
+export type Directed = { shot: Shot; startedAt: number; entry: 'cut' | 'fly' };
+/** A shot is never cut short by a message sooner than this: two cuts in a breath is what makes people dizzy. */
+const MIN_HOLD_MS = 5000;
 
 /**
  * Where the camera is and which floor is shown: the floor (the busiest one at first), the exploded view, flights to a
@@ -110,11 +116,11 @@ export function useSceneNavigation({
     return map;
   }, [layout]);
   const [paused, setPaused] = useState(false);
-  const [directed, setDirected] = useState<{ shot: Shot; startedAt: number } | null>(null);
+  const [directed, setDirected] = useState<Directed | null>(null);
   const latest = useRef({ agents, seats, pulses, attention, intensity });
   latest.current = { agents, seats, pulses, attention, intensity };
   const shown = useRef(new Map<string, number>());
-  const playing = useRef<{ shot: Shot; startedAt: number } | null>(null);
+  const playing = useRef<Directed | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const resume = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const running = directing && !paused;
@@ -128,7 +134,16 @@ export function useSceneNavigation({
       shown: shown.current,
       previous: playing.current?.shot ?? null,
     });
-    playing.current = next ? { shot: next, startedAt: now } : null;
+    // A glide only between shots that are near each other; anything else is a hard cut (the camera is not asked to
+    // fly across the building). With no shot before it (or the person's hands just off the camera) it is a cut.
+    const previous = playing.current?.shot ?? null;
+    playing.current = next
+      ? {
+          shot: next,
+          startedAt: now,
+          entry: chooseEntry(previous, next, latest.current.seats, 1.6),
+        }
+      : null;
     setDirected(playing.current);
     if (!next) {
       timer.current = setTimeout(cut, 4000); // nothing to show yet: look again shortly
@@ -158,7 +173,11 @@ export function useSceneNavigation({
     lastPulse.current = newest.id;
     const current = playing.current;
     if (!running || Date.now() - newest.at > PULSE_WINDOW_MS) return;
-    if (current && current.shot.reason !== 'message' && Date.now() - current.startedAt > 2500)
+    if (
+      current &&
+      current.shot.reason !== 'message' &&
+      Date.now() - current.startedAt > MIN_HOLD_MS
+    )
       cut();
   }, [pulses, running, cut]);
 

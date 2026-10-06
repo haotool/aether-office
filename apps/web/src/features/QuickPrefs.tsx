@@ -1,4 +1,4 @@
-import { Globe2, Moon, Sun } from 'lucide-react';
+import { Globe2, Moon, Sprout, Sun } from 'lucide-react';
 import { usePreferences } from '../state.js';
 import { useT } from '../ui.js';
 
@@ -23,6 +23,14 @@ export function QuickPrefs() {
       >
         {prefs.theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         {prefs.theme === 'dark' ? t('light') : t('dark')}
+      </button>
+      <button
+        className="secondary"
+        aria-pressed={prefs.beanstalk}
+        onClick={() => prefs.set({ beanstalk: !prefs.beanstalk })}
+      >
+        <Sprout size={18} />
+        {t('beanstalk')}
       </button>
       <label>
         <span>{t('quality')}</span>

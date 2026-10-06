@@ -1,5 +1,5 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import { networkInterfaces } from 'node:os';
+import { networkInterfaces, type NetworkInterfaceInfo } from 'node:os';
 import QRCode from 'qrcode';
 import { DomainError } from '@aether/kernel';
 import { isLanHostname } from './host-policy.js';
@@ -61,15 +61,65 @@ export function createPairingStore(now: () => number) {
 }
 export type PairingStore = ReturnType<typeof createPairingStore>;
 
-/** The addresses a phone on this network can reach the server at (private IPv4 interfaces), with the port. */
-export function lanOrigins(port: string): string[] {
-  return Object.values(networkInterfaces())
-    .flat()
-    .filter((i) => i && i.family === 'IPv4' && !i.internal && isLanHostname(i.address))
-    .map((i) => `http://${i!.address}:${port}`);
+/** Interfaces that are not the network a phone is on: tunnels, containers, VMs, Apple's peer-to-peer links. */
+const VIRTUAL_INTERFACE =
+  /^(lo|utun|awdl|llw|bridge|docker|br-|veth|virbr|vmnet|vboxnet|zt|tailscale)/i;
+
+/** Lower is better: home and office networks first, then 172.16/12, then anything else private (Tailscale, ...). */
+const rank = (address: string) =>
+  /^(192\.168|10)\./.test(address) ? 0 : address.startsWith('172.') ? 1 : 2;
+
+/**
+ * The addresses a phone on this network can reach the server at (private IPv4 on real interfaces; link-local and virtual
+ * ones skipped), best first, with the port.
+ */
+export function lanOrigins(
+  port: string,
+  interfaces: NodeJS.Dict<NetworkInterfaceInfo[]> = networkInterfaces(),
+): string[] {
+  return Object.entries(interfaces)
+    .filter(([name]) => !VIRTUAL_INTERFACE.test(name))
+    .flatMap(([, list]) => list ?? [])
+    .filter(
+      (i) =>
+        i.family === 'IPv4' &&
+        !i.internal &&
+        isLanHostname(i.address) &&
+        !i.address.startsWith('169.254.'),
+    )
+    .map((i) => i.address)
+    .sort((a, b) => rank(a) - rank(b))
+    .map((address) => `http://${address}:${port}`);
 }
 
-/** The pairing link for each address, with its QR code as an SVG. The code is in the fragment, never the query. */
+const QUIET_ZONE = 4; // modules of blank border the QR standard asks for
+
+/**
+ * A QR code for a terminal: black on white (set explicitly, so it scans on a dark theme too), two modules per text row
+ * as half blocks, a quiet zone around it and an even number of rows so no row is left half drawn.
+ */
+export function terminalQr(text: string): string {
+  const { size, data } = QRCode.create(text, { errorCorrectionLevel: 'M' }).modules;
+  const side = size + 2 * QUIET_ZONE;
+  const dark = (row: number, column: number) => {
+    const r = row - QUIET_ZONE;
+    const c = column - QUIET_ZONE;
+    return r >= 0 && c >= 0 && r < size && c < size && !!data[r * size + c];
+  };
+  const lines: string[] = [];
+  for (let row = 0; row < side; row += 2) {
+    let line = '';
+    for (let column = 0; column < side; column++) {
+      const top = dark(row, column);
+      const bottom = dark(row + 1, column);
+      line += top ? (bottom ? '█' : '▀') : bottom ? '▄' : ' ';
+    }
+    lines.push(`\u001b[30;47m${line}\u001b[0m`);
+  }
+  return lines.join('\n');
+}
+
+/** One link per address, all with the same code (the code is what is single-use, not the address), each with its QR code as an SVG. The code is in the fragment, never the query. */
 export async function pairingLinks(origins: readonly string[], code: string) {
   return Promise.all(
     origins.map(async (origin) => {
