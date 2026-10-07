@@ -31,11 +31,11 @@ export type Classification = {
 };
 
 type Tally = { score: number; evidence: string[] };
-export type Scored = Classification & { byRole: Partial<Record<RoleId, Tally>> };
+type Scored = Classification & { byRole: Partial<Record<RoleId, Tally>> };
 
 /** Below this much evidence in total, or this confidence, a session stays a generalist rather than a wrong guess. */
-export const MIN_SCORE = 1.5;
-export const MIN_CONFIDENCE = 0.4;
+const MIN_SCORE = 1.5;
+const MIN_CONFIDENCE = 0.4;
 const SOURCE_CAP = 4; // one source (a title, a prompt, the recent work) cannot carry a role further than this
 const ACTIVITY_CAP = 6;
 const RECENT_ACTIONS = 40;
@@ -178,7 +178,7 @@ function view(
   const own = byRole[role]?.score ?? 0;
   const rival = Object.entries(byRole)
     .filter(([r]) => r !== role && !(role === 'fullstack' && (r === 'frontend' || r === 'backend')))
-    .reduce((best, [, t]) => Math.max(best, t!.score), 0);
+    .reduce((best, [, t]) => Math.max(best, t?.score ?? 0), 0);
   return {
     confidence: Math.round(confidenceOf(own, rival) * 100) / 100,
     evidence: (byRole[role]?.evidence ?? []).slice(0, MAX_EVIDENCE).map(clip),
@@ -225,7 +225,7 @@ export function scoreSession(input: ClassifyInput): Scored {
   const best = ranked[0]?.[0] ?? null;
   if (best === null) return result('generalist', byRole, null);
   const { confidence } = view(byRole, best);
-  const strong = ledger.byRole.get(best)!.score >= MIN_SCORE && confidence >= MIN_CONFIDENCE;
+  const strong = (ledger.byRole.get(best)?.score ?? 0) >= MIN_SCORE && confidence >= MIN_CONFIDENCE;
   return result(strong ? best : 'generalist', byRole, best);
 }
 
@@ -249,9 +249,9 @@ export type Settled = {
   /** Why the held role was last seen to be right, kept for while the latest look shows nothing for it. */
   evidence: string[];
 };
-export const SWITCH_LOOKS = 3;
-export const LOOK_GAP_MS = 15_000;
-export const SWITCH_MARGIN = 1.5;
+const SWITCH_LOOKS = 3;
+const LOOK_GAP_MS = 15_000;
+const SWITCH_MARGIN = 1.5;
 
 /** Pure. Folds one new look at a session into what was decided before; returns the held role's view and the new state. */
 export function settle(
@@ -260,8 +260,9 @@ export function settle(
   now: number,
 ): { state: Settled; classification: Classification } {
   const hold = (state: Omit<Settled, 'evidence'>) => {
-    const best = Object.entries(next.byRole).sort((a, b) => b[1]!.score - a[1]!.score)[0]?.[0] as
-      RoleId | undefined;
+    const best = Object.entries(next.byRole).sort(
+      (a, b) => (b[1]?.score ?? 0) - (a[1]?.score ?? 0),
+    )[0]?.[0] as RoleId | undefined;
     const shown = result(
       state.role,
       next.byRole,

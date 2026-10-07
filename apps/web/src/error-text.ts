@@ -1,4 +1,4 @@
-import { translate, type Key, type Locale } from './i18n.js';
+import { resolveLocale, translate, type Key, type Locale } from './i18n.js';
 
 // What a person can run into without the orchestration pages, in words. Any other code is shown as it is: a code is
 // better than a guess about what went wrong.
@@ -18,6 +18,7 @@ const WORDS: Record<string, Key> = {
   VERSION_CONFLICT: 'errVersionConflict',
   PROJECT_ROOT_NOT_FOUND: 'errProjectRootNotFound',
   PROJECT_ROOT_INVALID: 'errProjectRootInvalid',
+  PROJECT_NOT_FOUND: 'errProjectNotFound',
 };
 
 export const errorText = (code: string, locale: Locale): string => {
@@ -31,8 +32,8 @@ export const savedLocale = (): Locale => {
     const saved = JSON.parse(localStorage.getItem('aether-ui-preferences') ?? '{}') as {
       state?: { locale?: Locale };
     };
-    return saved.state?.locale === 'en' ? 'en' : 'zh-TW';
+    return saved.state?.locale ?? resolveLocale(navigator.language);
   } catch {
-    return 'zh-TW'; // no storage (a test, a private window): the product's default language
+    return resolveLocale(typeof navigator === 'undefined' ? undefined : navigator.language); // no storage (a test, a private window)
   }
 };

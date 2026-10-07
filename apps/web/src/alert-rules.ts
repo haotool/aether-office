@@ -10,7 +10,7 @@ export type SessionEvent = {
   turnMs: number | null;
 };
 export type Brief = { key: string; activity: string; project: string; to: string };
-export type Seen = { activity: string; since: number };
+type Seen = { activity: string; since: number };
 
 /** A turn shorter than this is not worth interrupting someone for when they come back to the tab anyway. */
 export const LONG_TURN_MS = 60_000;

@@ -7,7 +7,7 @@ import { useSyncExternalStore } from 'react';
 const DISMISSED = 'aether-install-dismissed';
 
 type InstallEvent = Event & { prompt(): Promise<void> };
-export type InstallHint = 'prompt' | 'ios' | null;
+type InstallHint = 'prompt' | 'ios' | null;
 
 export function isIos(userAgent: string, touchPoints: number): boolean {
   // iPadOS reports itself as a Mac, with a touch screen.

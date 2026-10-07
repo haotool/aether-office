@@ -191,11 +191,13 @@ export function squadLayout(layout: Layout, deskId: string, count: number): Squa
   });
   // The side that faces the aisle at x = 0 first, then the most open floor; the generation order breaks ties.
   const aisleSide: Side = desk.x > 0 ? 'west' : 'east';
-  const ranked = fitting.map((c, i) => ({
-    c,
-    key: [c.side === aisleSide ? 0 : 1, -room(c.box, boxes), i],
-  }));
-  ranked.sort((a, b) => a.key[0]! - b.key[0]! || a.key[1]! - b.key[1]! || a.key[2]! - b.key[2]!);
+  const ranked = fitting.map(
+    (c, i): { c: (typeof fitting)[number]; key: [number, number, number] } => ({
+      c,
+      key: [c.side === aisleSide ? 0 : 1, -room(c.box, boxes), i],
+    }),
+  );
+  ranked.sort((a, b) => a.key[0] - b.key[0] || a.key[1] - b.key[1] || a.key[2] - b.key[2]);
   return ranked[0]?.c.rect ?? null;
 }
 

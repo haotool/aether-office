@@ -34,8 +34,8 @@ export const PRESS_TOTAL_MS = PRESS_MS.down + PRESS_MS.hold + PRESS_MS.up;
 /** The walk to the desk takes at most this long (a long way is walked faster). */
 export const WALK_CAP_MS = 8000;
 /** The folder floats at the chest, this far in front of the carrier and this high. */
-export const HELD_AHEAD_M = 0.35;
-export const HELD_Y = 1.0;
+const HELD_AHEAD_M = 0.35;
+const HELD_Y = 1.0;
 /** The in-tray's folders are this thick, and at most this many are stacked. */
 export const FOLDER_THICKNESS = 0.014;
 export const TRAY_STACK_MAX = 5;
@@ -51,9 +51,9 @@ const STAMP_Z = -0.22;
 /** The upper tray's top over the desk (see the dressing in squad-art.ts): folders lie on it. */
 const TRAY_TOP_M = 0.08;
 
-export type Desk = { x: number; z: number; rotation: number };
+type Desk = { x: number; z: number; rotation: number };
 /** The desk's hand-over places, in the floor's frame. */
-export type DeskPlaces = {
+type DeskPlaces = {
   spot: Point;
   tray: readonly [number, number, number];
   stamp: readonly [number, number, number];
@@ -76,7 +76,7 @@ export function deskPlaces(desk: Desk, side: 1 | -1): DeskPlaces {
   };
 }
 
-export type Route = {
+type Route = {
   /** The chair, then the way to the desk's side; in the seat's frame. */
   toSpot: Point[];
   /** From the desk's side to the core. */
@@ -107,7 +107,7 @@ export function routeHandover(
 ): Route {
   const toSpot = pathIn(grid, chair, places.spot, chair, frameYaw);
   const exit = pathIn(grid, places.spot, { x: 0, z: 0 }, chair, frameYaw);
-  const spot = toSpot[toSpot.length - 1]!;
+  const spot = toSpot.at(-1) ?? places.spot;
   const tray = toChairFrame(chair, frameYaw, { x: places.tray[0], z: places.tray[2] });
   const walkMetres = length(toSpot);
   const speed = Math.max(WALK_SPEED, walkMetres / (WALK_CAP_MS / 1000));
@@ -121,7 +121,7 @@ export function routeHandover(
   };
 }
 
-export type Timeline = {
+type Timeline = {
   /** Queued in the seat with the folder shown, until here (the desk takes one stamp at a time). */
   wait: number;
   standEnd: number;
@@ -194,6 +194,8 @@ export type MemberPose = {
   gone: boolean;
 };
 
+const ORIGIN: Point = { x: 0, z: 0 };
+
 /** Where the carrier is, `elapsed` ms after it finished (a `walk` plan only). */
 export function memberAt(plan: HandoverPlan, elapsed: number): MemberPose {
   const { route, t } = plan;
@@ -208,8 +210,8 @@ export function memberAt(plan: HandoverPlan, elapsed: number): MemberPose {
     gone: false,
     ...over,
   });
-  const chair = route.toSpot[0]!;
-  const spot = route.toSpot[route.toSpot.length - 1]!;
+  const [chair = ORIGIN] = route.toSpot;
+  const spot = route.toSpot.at(-1) ?? chair;
   if (elapsed < t.wait) return pose(chair, SEATED_HEADING);
   if (elapsed < t.standEnd) return pose(chair, SEATED_HEADING, { clip: 'stand_up' });
   if (elapsed < t.walkEnd) {
@@ -252,7 +254,7 @@ export function memberAt(plan: HandoverPlan, elapsed: number): MemberPose {
 }
 
 /** A folder's place in the floor's frame (y is the height over the floor), how big and which way it lies. */
-export type FolderPose = {
+type FolderPose = {
   state: 'hidden' | 'held' | 'glide' | 'pop';
   x: number;
   y: number;

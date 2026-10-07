@@ -26,8 +26,8 @@ export const eventsFor = (provider: 'claude' | 'codex') =>
 export const APPROVAL_TAG = 'PermissionRequest:wait';
 /** The hook's own timeout is the wait plus this, so Claude never cuts the hook off before it has closed its request. */
 const APPROVAL_SLACK_S = 15;
-export const DEFAULT_APPROVAL_WAIT_S = 45;
-export type RemoteApprovals = { script: string; waitSeconds?: number };
+const DEFAULT_APPROVAL_WAIT_S = 45;
+type RemoteApprovals = { script: string; waitSeconds?: number };
 
 type HookCmd = { type?: string; command?: string; [k: string]: unknown };
 type Group = { matcher?: string; hooks?: HookCmd[]; [k: string]: unknown };

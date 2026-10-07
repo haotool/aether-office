@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { Agent } from '@aether/contracts';
 import { assignSeats, type Seat } from '@aether/office-scene/model';
+import { useLatest } from '../use-latest.js';
 import { loadSeats, saveSeats, serializeSeats } from '../seat-store.js';
 
 /**
@@ -22,12 +23,12 @@ export function useSeats(
     : held.current.seats;
   const text = serializeSeats(seats);
   const saved = useRef('');
+  const now = useLatest({ seated: agents.length > 0, seats });
   useEffect(() => {
-    if (!agents.length || saved.current === `${projectId}${text}`) return;
+    if (!now.current.seated || saved.current === `${projectId}${text}`) return;
     saved.current = `${projectId}${text}`;
-    saveSeats(projectId, seats);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `text` is `seats`' content
-  }, [projectId, text]);
+    saveSeats(projectId, now.current.seats);
+  }, [projectId, text, now]); // `text` is `seats`' content
   held.current = { projectId, seats };
   return seats;
 }

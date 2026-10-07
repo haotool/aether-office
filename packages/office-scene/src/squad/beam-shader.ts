@@ -15,7 +15,7 @@ import { DITHER_END, DITHER_PARS, DITHERED } from '../dither.js';
 const SEGMENTS = 48;
 const SIDES = 16;
 /** The beam's width where it enters the core's glass (the core's radius is 1.5). */
-export const CORE_WIDTH = 1.2;
+const CORE_WIDTH = 1.2;
 /** Heights the beam runs between, over the floor: above the crosses, under the ceiling rails. */
 export const BEAM_FROM_Y = 2.6;
 export const BEAM_TO_Y = 4.6;

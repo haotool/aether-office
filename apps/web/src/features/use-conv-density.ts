@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export type Density = 'comfortable' | 'compact';
+type Density = 'comfortable' | 'compact';
 const STORAGE_KEY = 'aether.convDensity';
 
 const load = (): Density => {

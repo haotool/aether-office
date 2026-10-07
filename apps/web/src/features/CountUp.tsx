@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePreferences } from '../state.js';
+import { useLatest } from '../use-latest.js';
 import { compact } from './kpi-model.js';
 
 const DURATION_MS = 450;
@@ -13,6 +14,7 @@ export function CountUp({ value, format }: { value: number; format?: (n: number)
   const locale = usePreferences((s) => s.locale);
   const reduced = usePreferences((s) => s.reducedMotion);
   const show = (n: number) => (format ? format(n) : compact(n, locale));
+  const showNow = useLatest(show);
   const node = useRef<HTMLSpanElement>(null);
   const shown = useRef(0);
   // The first text is fixed at mount: React never rewrites the node afterwards, the effect below owns it.
@@ -22,7 +24,7 @@ export function CountUp({ value, format }: { value: number; format?: (n: number)
     if (!el) return;
     if (reduced || shown.current === value) {
       shown.current = value;
-      el.textContent = show(value);
+      el.textContent = showNow.current(value);
       return;
     }
     const from = shown.current;
@@ -31,13 +33,13 @@ export function CountUp({ value, format }: { value: number; format?: (n: number)
     const step = (now: number) => {
       const p = Math.min(1, (now - started) / DURATION_MS);
       shown.current = from + (value - from) * easeOut(p);
-      el.textContent = show(Math.round(shown.current));
+      el.textContent = showNow.current(Math.round(shown.current));
       if (p < 1) frame = requestAnimationFrame(step);
     };
     frame = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frame);
-    // `show` closes over the locale and the formatter only; the value and the motion preference decide when to run.
-  }, [value, reduced, locale]); // eslint-disable-line react-hooks/exhaustive-deps
+    // The formatter is read through the ref; the value, the motion preference and the locale decide when to run.
+  }, [value, reduced, locale, showNow]);
   return (
     <span ref={node} className="count-up">
       {first}

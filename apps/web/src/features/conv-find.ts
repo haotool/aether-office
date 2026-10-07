@@ -15,7 +15,7 @@ export function matchOffsets(text: string, query: string, limit = 1000): number[
 
 type HighlightApi = { set(name: string, highlight: unknown): void; delete(name: string): void };
 const registry = (): HighlightApi | null => {
-  const css = globalThis.CSS as unknown as { highlights?: HighlightApi } | undefined;
+  const css = globalThis.CSS as { highlights?: HighlightApi } | undefined;
   return css?.highlights && typeof Highlight !== 'undefined' ? css.highlights : null;
 };
 

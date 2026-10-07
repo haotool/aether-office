@@ -6,6 +6,7 @@ import { TerminalKeys } from './TerminalKeys.js';
 import { terminalSnapshotSchema } from '@aether/contracts';
 import { api, execute } from '../api.js';
 import { Field, PageHeading, useT } from '../ui.js';
+import { useLatest } from '../use-latest.js';
 type TerminalRow = {
   id: string;
   profile: string;
@@ -25,51 +26,34 @@ const AGENT_LABEL = {
   waiting: 'terminalAgentWaiting',
   idle: 'terminalAgentIdle',
 } as const;
-function TerminalView({
-  projectId,
-  id,
-  userId,
-  canWrite,
-}: {
-  projectId: string;
-  id: string;
-  userId: string;
-  canWrite: boolean;
-}) {
-  const t = useT();
-  const [error, setError] = useState('');
-  const [armed, setArmed] = useState(false);
-  const [gap, setGap] = useState(false);
-  const [exit, setExit] = useState<{ exitCode: number; signal: number | null } | null>(null);
-  const query = useQuery({
-    queryKey: ['terminal', projectId, id],
-    queryFn: () =>
-      api<
-        TerminalRow & {
-          snapshot: string | null;
-          commands: { id: string; kind: string; state: string; result: string | null }[];
-        }
-      >(`/api/projects/${projectId}/terminals/${id}`),
-    refetchInterval: (q) => (q.state.data?.state === 'exited' ? false : 250),
-    retry: false,
-  });
+type TerminalDetail = TerminalRow & {
+  snapshot: string | null;
+  commands: { id: string; kind: string; state: string; result: string | null }[];
+};
+type TerminalAccess = { enabled: boolean; epoch: number };
+type TerminalAct = (
+  type: 'terminal.takeover' | 'terminal.release' | 'terminal.stop' | 'terminal.resize',
+  extra?: Record<string, unknown>,
+) => Promise<void>;
+
+/**
+ * The xterm instance of one terminal: typed text is batched (50 ms, 8 KiB) and sent in order while `access` allows
+ * it. A rejected send disarms the terminal and reports the error.
+ */
+function useXterm(
+  projectId: string,
+  id: string,
+  access: { current: TerminalAccess },
+  onDisarm: (message: string) => void,
+  onError: (message: string) => void,
+) {
+  const report = useLatest({ onDisarm, onError }); // a new callback never rebuilds the screen
   const host = useRef<HTMLDivElement>(null);
   const terminal = useRef<Terminal | null>(null);
   const cursor = useRef(0);
-  const access = useRef({ enabled: false, epoch: 0 });
-  const data = query.data;
-  const writable =
-    canWrite &&
-    armed &&
-    !query.error &&
-    data?.state === 'running' &&
-    data.controlOwner === userId &&
-    (data.leaseUntil ?? 0) > Date.now();
   useEffect(() => {
-    access.current = { enabled: !!writable, epoch: data?.controlEpoch ?? 0 };
-    if (terminal.current) terminal.current.options.disableStdin = !writable;
-  }, [writable, data?.controlEpoch]);
-  useEffect(() => {
+    const element = host.current;
+    if (!element) return;
     const term = new Terminal({
       cols: 80,
       rows: 24,
@@ -80,7 +64,7 @@ function TerminalView({
       theme: { background: '#101923', foreground: '#edf2f7' },
     });
     terminal.current = term;
-    term.open(host.current!);
+    term.open(element);
     term.textarea?.setAttribute('aria-label', 'PTY input');
     // Terminal output cannot request clipboard access. No link-opening addon is loaded.
     const clipboard = term.parser.registerOscHandler(52, () => true);
@@ -101,14 +85,13 @@ function TerminalView({
         })
         .catch((e) => {
           access.current.enabled = false;
-          setArmed(false);
-          setError(e instanceof Error ? e.message : 'TERMINAL_INPUT_UNKNOWN');
+          report.current.onDisarm(e instanceof Error ? e.message : 'TERMINAL_INPUT_UNKNOWN');
         });
     };
     const input = term.onData((text) => {
       if (!access.current.enabled) return;
       if (buffer.length + text.length > 8192) {
-        setError('PTY_INPUT_LIMIT');
+        report.current.onError('PTY_INPUT_LIMIT');
         return;
       }
       buffer += text;
@@ -123,55 +106,59 @@ function TerminalView({
       terminal.current = null;
       cursor.current = 0;
     };
-  }, [projectId, id]);
+  }, [projectId, id, access, report]);
+  return { host, terminal, cursor };
+}
+
+/** Replays the server's snapshot into the screen: new chunks only, a reset when the cursor cannot be continued. */
+function useSnapshotSync(
+  snapshotText: string | null | undefined,
+  screen: Pick<ReturnType<typeof useXterm>, 'terminal' | 'cursor'>,
+  on: {
+    exit: (exit: { exitCode: number; signal: number | null } | null) => void;
+    gap: () => void;
+    error: (message: string) => void;
+  },
+) {
+  const { terminal, cursor } = screen;
+  const latest = useRef(on);
+  latest.current = on;
   useEffect(() => {
-    if (!data?.snapshot || !terminal.current) return;
+    const term = terminal.current;
+    if (!snapshotText || !term) return;
     try {
-      const snapshot = terminalSnapshotSchema.parse(JSON.parse(data.snapshot));
-      setExit(snapshot.exit);
+      const snapshot = terminalSnapshotSchema.parse(JSON.parse(snapshotText));
+      latest.current.exit(snapshot.exit);
       const first = snapshot.chunks[0]?.seq ?? snapshot.cursor + 1;
       if (cursor.current > snapshot.cursor || cursor.current < first - 1) {
-        terminal.current.reset();
+        term.reset();
         cursor.current = 0;
-        setGap(true);
+        latest.current.gap();
       }
-      if (snapshot.gap) setGap(true);
-      terminal.current.resize(snapshot.dimensions.cols, snapshot.dimensions.rows);
-      for (const chunk of snapshot.chunks)
-        if (chunk.seq > cursor.current) terminal.current.write(chunk.data);
+      if (snapshot.gap) latest.current.gap();
+      term.resize(snapshot.dimensions.cols, snapshot.dimensions.rows);
+      for (const chunk of snapshot.chunks) if (chunk.seq > cursor.current) term.write(chunk.data);
       cursor.current = snapshot.cursor;
     } catch {
-      setError('TERMINAL_SNAPSHOT_INVALID');
+      latest.current.error('TERMINAL_SNAPSHOT_INVALID');
     }
-  }, [data?.snapshot]);
-  async function act(
-    type: 'terminal.takeover' | 'terminal.release' | 'terminal.stop' | 'terminal.resize',
-    extra: Record<string, unknown> = {},
-  ) {
-    if (!data) return;
-    setError('');
-    try {
-      await execute(type, { terminalId: id, epoch: data.controlEpoch, ...extra }, projectId);
-      setArmed(type === 'terminal.takeover' || (type === 'terminal.resize' && armed));
-      await query.refetch();
-      if (type === 'terminal.takeover') terminal.current?.focus();
-    } catch (e) {
-      setArmed(false);
-      setError(e instanceof Error ? e.message : 'TERMINAL_COMMAND_FAILED');
-    }
-  }
+  }, [snapshotText, terminal, cursor]);
+}
+
+function TerminalControls({
+  canWrite,
+  writable,
+  data,
+  act,
+}: {
+  canWrite: boolean;
+  writable: boolean;
+  data: TerminalDetail | undefined;
+  act: TerminalAct;
+}) {
+  const t = useT();
   return (
-    <article className="panel">
-      <p>
-        {writable ? t('terminalControlled') : t('terminalReadOnly')} · {data?.state ?? t('loading')}
-      </p>
-      <p className="muted">{t('terminalInputNote')}</p>
-      {gap && <p role="status">{t('terminalGap')}</p>}
-      {data?.commands[0] && (
-        <p>
-          {t('terminalCommandState')}: {data.commands[0].kind} · {data.commands[0].state}
-        </p>
-      )}
+    <>
       <div className="form-actions">
         <button
           disabled={!canWrite || data?.state !== 'running'}
@@ -209,6 +196,87 @@ function TerminalView({
         </Field>
         <button disabled={!writable}>{t('terminalResize')}</button>
       </form>
+    </>
+  );
+}
+
+function TerminalView({
+  projectId,
+  id,
+  userId,
+  canWrite,
+}: {
+  projectId: string;
+  id: string;
+  userId: string;
+  canWrite: boolean;
+}) {
+  const t = useT();
+  const [error, setError] = useState('');
+  const [armed, setArmed] = useState(false);
+  const [gap, setGap] = useState(false);
+  const [exit, setExit] = useState<{ exitCode: number; signal: number | null } | null>(null);
+  const query = useQuery({
+    queryKey: ['terminal', projectId, id],
+    queryFn: () => api<TerminalDetail>(`/api/projects/${projectId}/terminals/${id}`),
+    refetchInterval: (q) => (q.state.data?.state === 'exited' ? false : 250),
+    retry: false,
+  });
+  const access = useRef<TerminalAccess>({ enabled: false, epoch: 0 });
+  const data = query.data;
+  const writable =
+    canWrite &&
+    armed &&
+    !query.error &&
+    data?.state === 'running' &&
+    data.controlOwner === userId &&
+    (data.leaseUntil ?? 0) > Date.now();
+  const screen = useXterm(
+    projectId,
+    id,
+    access,
+    (message) => {
+      setArmed(false);
+      setError(message);
+    },
+    setError,
+  );
+  const { host, terminal } = screen;
+  useEffect(() => {
+    access.current = { enabled: !!writable, epoch: data?.controlEpoch ?? 0 };
+    if (terminal.current) terminal.current.options.disableStdin = !writable;
+  }, [writable, data?.controlEpoch, terminal]);
+  useSnapshotSync(data?.snapshot, screen, {
+    exit: setExit,
+    gap: () => setGap(true),
+    error: setError,
+  });
+  const act: TerminalAct = async (type, extra = {}) => {
+    if (!data) return;
+    setError('');
+    try {
+      await execute(type, { terminalId: id, epoch: data.controlEpoch, ...extra }, projectId);
+      setArmed(type === 'terminal.takeover' || (type === 'terminal.resize' && armed));
+      await query.refetch();
+      if (type === 'terminal.takeover') terminal.current?.focus();
+    } catch (e) {
+      setArmed(false);
+      setError(e instanceof Error ? e.message : 'TERMINAL_COMMAND_FAILED');
+    }
+  };
+  return (
+    <article className="panel">
+      <p>
+        {writable ? t('terminalControlled') : t('terminalReadOnly')} · {data?.state ?? t('loading')}
+      </p>
+      <p className="muted">{t('terminalInputNote')}</p>
+      {gap && <p role="status">{t('terminalGap')}</p>}
+      {data?.commands[0] && (
+        <p>
+          {t('terminalCommandState')}: {data.commands[0].kind} · {data.commands[0].state}
+        </p>
+      )}
+      <TerminalControls canWrite={canWrite} writable={writable} data={data} act={act} />
       {exit && (
         <p>
           Exit code: {exit.exitCode} · Signal: {exit.signal ?? '—'}
@@ -220,6 +288,103 @@ function TerminalView({
     </article>
   );
 }
+type TerminalProfile = { machineId: string; profile: string; label: string };
+
+/** Every terminal profile of every machine, as one choice each. */
+function profilesOf(profiles: TerminalList['profiles'] | undefined): TerminalProfile[] {
+  return (
+    profiles?.flatMap((m) =>
+      (JSON.parse(m.terminalProfiles) as { name: string }[]).map((p) => ({
+        machineId: m.machineId,
+        profile: p.name,
+        label: `${m.name} · ${p.name}`,
+      })),
+    ) ?? []
+  );
+}
+
+function StartTerminalForm({
+  profiles,
+  canWrite,
+  projectId,
+  onStarted,
+}: {
+  profiles: TerminalProfile[];
+  canWrite: boolean;
+  projectId: string;
+  onStarted: (id: string) => Promise<void>;
+}) {
+  const t = useT();
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const start = async (form: HTMLFormElement) => {
+    setBusy(true);
+    setError('');
+    const value = JSON.parse(String(new FormData(form).get('profile'))) as {
+      machineId: string;
+      profile: string;
+    };
+    try {
+      const result = await execute('terminal.start', { ...value, cols: 80, rows: 24 }, projectId);
+      await onStarted(String(result.result['id']));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'TERMINAL_START_FAILED');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <>
+      <form
+        className="panel"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void start(e.currentTarget);
+        }}
+      >
+        <Field label={t('terminalProfile')}>
+          <select name="profile">
+            {profiles.map((p) => (
+              <option
+                key={p.machineId + p.profile}
+                value={JSON.stringify({ machineId: p.machineId, profile: p.profile })}
+              >
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <button disabled={!canWrite || busy}>{t('terminalStart')}</button>
+      </form>
+      {error && <p role="alert">{error}</p>}
+    </>
+  );
+}
+
+function SessionButtons({
+  sessions,
+  onSelect,
+}: {
+  sessions: TerminalRow[] | undefined;
+  onSelect: (id: string) => void;
+}) {
+  const t = useT();
+  return (
+    <div className="view-switch">
+      {sessions?.map((s) => (
+        <button key={s.id} onClick={() => onSelect(s.id)}>
+          {s.profile} · {s.state}
+          {s.state === 'running' && s.agentState && s.agentState !== 'unknown' && (
+            <> · {t(AGENT_LABEL[s.agentState])}</>
+          )}
+          {' · '}
+          {s.id.slice(0, 8)}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function Terminals({
   projectId,
   userId,
@@ -231,79 +396,29 @@ export function Terminals({
 }) {
   const t = useT();
   const [selected, setSelected] = useState<string | null>(null);
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
   const list = useQuery({
     queryKey: ['terminals', projectId],
     queryFn: () => api<TerminalList>(`/api/projects/${projectId}/terminals`),
     refetchInterval: 2000,
   });
-  const profiles =
-    list.data?.profiles.flatMap((m) =>
-      (JSON.parse(m.terminalProfiles) as { name: string }[]).map((p) => ({
-        machineId: m.machineId,
-        profile: p.name,
-        label: `${m.name} · ${p.name}`,
-      })),
-    ) ?? [];
+  const profiles = profilesOf(list.data?.profiles);
   return (
     <>
       <PageHeading title={t('terminals')} subtitle={t('terminalNote')} />
       {profiles.length ? (
-        <form
-          className="panel"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            setBusy(true);
-            setError('');
-            const value = JSON.parse(String(new FormData(e.currentTarget).get('profile'))) as {
-              machineId: string;
-              profile: string;
-            };
-            try {
-              const result = await execute(
-                'terminal.start',
-                { ...value, cols: 80, rows: 24 },
-                projectId,
-              );
-              setSelected(String(result.result['id']));
-              await list.refetch();
-            } catch (e) {
-              setError(e instanceof Error ? e.message : 'TERMINAL_START_FAILED');
-            } finally {
-              setBusy(false);
-            }
+        <StartTerminalForm
+          profiles={profiles}
+          canWrite={canWrite}
+          projectId={projectId}
+          onStarted={async (id) => {
+            setSelected(id);
+            await list.refetch();
           }}
-        >
-          <Field label={t('terminalProfile')}>
-            <select name="profile">
-              {profiles.map((p) => (
-                <option
-                  key={p.machineId + p.profile}
-                  value={JSON.stringify({ machineId: p.machineId, profile: p.profile })}
-                >
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <button disabled={!canWrite || busy}>{t('terminalStart')}</button>
-        </form>
+        />
       ) : (
         <p>{t('terminalNoProfile')}</p>
       )}
-      <div className="view-switch">
-        {list.data?.sessions.map((s) => (
-          <button key={s.id} onClick={() => setSelected(s.id)}>
-            {s.profile} · {s.state}
-            {s.state === 'running' && s.agentState && s.agentState !== 'unknown' && (
-              <> · {t(AGENT_LABEL[s.agentState])}</>
-            )}
-            {' · '}
-            {s.id.slice(0, 8)}
-          </button>
-        ))}
-      </div>
+      <SessionButtons sessions={list.data?.sessions} onSelect={setSelected} />
       {selected && (
         <TerminalView
           key={selected}
@@ -313,7 +428,7 @@ export function Terminals({
           canWrite={canWrite}
         />
       )}{' '}
-      {(error || list.error) && <p role="alert">{error || list.error?.message}</p>}
+      {list.error && <p role="alert">{list.error.message}</p>}
     </>
   );
 }

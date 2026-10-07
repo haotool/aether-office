@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { Color, InstancedBufferAttribute, PlaneGeometry, ShaderMaterial, Vector3 } from 'three';
 import { DITHER_END, DITHER_PARS, DITHERED } from './dither.js';
 import { seeded } from './random.js';
+import { setUniform } from './uniforms.js';
 
 const COUNT = 44;
 const noRaycast = () => null;
@@ -111,10 +112,10 @@ export function Clouds({
     [geometry, material],
   );
   useFrame((state) => {
-    material.uniforms['time']!.value = animate ? state.clock.elapsedTime : 0;
-    material.uniforms['opacity']!.value = shown.current;
-    material.uniforms['tip']!.value.set(0, top, 0);
-    material.uniforms['tint']!.value.set(tint);
+    setUniform(material, 'time', animate ? state.clock.elapsedTime : 0);
+    setUniform(material, 'opacity', shown.current);
+    material.uniforms['tip']?.value.set(0, top, 0);
+    material.uniforms['tint']?.value.set(tint);
   });
   return (
     <instancedMesh

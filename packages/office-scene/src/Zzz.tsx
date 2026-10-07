@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { CanvasTexture, SRGBColorSpace, type Sprite } from 'three';
+import { context2d } from './canvas-2d.js';
 
 const LETTERS = 3;
 const CYCLE_SECONDS = 3.3;
@@ -11,7 +12,7 @@ export function Zzz({ reducedMotion }: { reducedMotion: boolean }) {
   const texture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 128;
-    const g = canvas.getContext('2d')!;
+    const g = context2d(canvas);
     g.font = 'bold 96px ui-sans-serif, system-ui, sans-serif';
     g.textAlign = 'center';
     g.textBaseline = 'middle';

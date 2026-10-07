@@ -8,7 +8,7 @@ import { sessionWaiting } from './needs-you.js';
  * Pure. The session feed: every observed session as one row, sorted into what a person should look at first: those
  * waiting on them, those working, those that just finished (with an unread marker) and the rest, idle.
  */
-export type Utterance = { text: string; at: number | null };
+type Utterance = { text: string; at: number | null };
 export type Speech = { user: Utterance | null; assistant: Utterance | null };
 export type FeedBucket = 'needs' | 'working' | 'finished' | 'idle';
 const BUCKETS: readonly FeedBucket[] = ['needs', 'working', 'finished', 'idle'];
@@ -42,8 +42,8 @@ export type Feed = Record<FeedBucket, FeedItem[]>;
 /** A session that finished this recently still counts as news; older ones are just idle. */
 const FINISHED_MS = 30 * 60 * 1000;
 /** Idle this long and a row fades. */
-export const STALE_MS = 2 * 60 * 60 * 1000;
-export const MAX_IDLE_ROWS = 30;
+const STALE_MS = 2 * 60 * 60 * 1000;
+const MAX_IDLE_ROWS = 30;
 /** A reply is previewed in a line or two: this many characters is more than any row shows. */
 const REPLY_CHARS = 200;
 

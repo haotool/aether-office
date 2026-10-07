@@ -1,23 +1,92 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import type { Mode } from '@aether/contracts';
-import { usePhoneAny } from '../../phone.js';
-import { usePreferences } from '../../state.js';
 import { Empty, PageHeading, useT } from '../../ui.js';
-import { ADVANCED_ONLY } from './AdvancedSection.js';
 import { SettingsContext, type Notice } from './context.js';
-import { ENTRIES } from './entries.js';
-import { searchSettings } from './search.js';
-import { SECTIONS, sectionFromLocation, settingsPath, type SectionId } from './sections.js';
-import { Section } from './SectionBody.js';
+import { SECTIONS, settingsPath } from './sections.js';
+import { Section, type SettingsScope } from './SectionBody.js';
 import { HomeList, SideNav } from './SettingsNav.js';
 import { SettingsSearch } from './SettingsSearch.js';
-import { useScrollSpy } from './useScrollSpy.js';
+import { useSettingsPage, type SettingsPageState } from './useSettingsPage.js';
 
-const NOTICE_MS = 6000;
-const isTyping = (target: EventTarget | null) =>
-  target instanceof HTMLElement && target.closest('input, textarea, select, [contenteditable]');
+/** The brief message at the foot of the page, with an undo when the change can be taken back. */
+function SettingsToast({ notice, onDismiss }: { notice: Notice; onDismiss: () => void }) {
+  const t = useT();
+  return (
+    <div className="stoast" role="status">
+      <span>{notice.text}</span>
+      {notice.undo && (
+        <button
+          type="button"
+          className="text-button"
+          onClick={() => {
+            notice.undo?.();
+            onDismiss();
+          }}
+        >
+          {t('undo')}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** The title row: a back link and the group's name on a phone's group page, otherwise the heading and the search. */
+function SettingsHeader({ page, projectId }: { page: SettingsPageState; projectId: string }) {
+  const t = useT();
+  const detailMeta = SECTIONS.find((s) => s.id === page.detail);
+  if (detailMeta)
+    return (
+      <header className="settings-bar">
+        <Link className="back-link" to={settingsPath(null, projectId)}>
+          <ChevronLeft size={20} aria-hidden="true" />
+          {t('settings')}
+        </Link>
+        <h1>{t(detailMeta.label)}</h1>
+      </header>
+    );
+  return (
+    <>
+      <PageHeading title={t('settings')} />
+      <SettingsSearch
+        ref={page.searchBox}
+        query={page.query}
+        count={page.matches ? page.matches.size : null}
+        onChange={page.setQuery}
+      />
+    </>
+  );
+}
+
+/** The groups: the phone's list, the empty search result, or the navigation column beside the rows. */
+function SettingsGroups({
+  page,
+  projectId,
+  scope,
+}: {
+  page: SettingsPageState;
+  projectId: string;
+  scope: SettingsScope;
+}) {
+  const t = useT();
+  const { drill, searching, requested, withMatches, query } = page;
+  if (drill && !requested)
+    return <HomeList sections={SECTIONS} projectId={projectId} onGo={page.go} />;
+  if (searching && !withMatches.length)
+    return <Empty title={`${t('stNoResults')} “${query.trim()}”`} />;
+  return (
+    <div className={`settings-layout ${drill || searching ? 'single' : ''}`}>
+      {!drill && !searching && (
+        <SideNav sections={SECTIONS} active={page.active} projectId={projectId} onGo={page.go} />
+      )}
+      <div className="settings-main">
+        {(drill ? SECTIONS.filter((s) => s.id === page.detail) : withMatches).map((s) => (
+          <Section key={s.id} id={s.id} scope={scope} heading={!drill} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /**
  * Settings: the groups as a column of links beside the rows (scrolling the page moves the mark, a link scrolls to its
@@ -35,124 +104,17 @@ export function SettingsPage({
   owner: boolean;
   canWrite: boolean;
 }) {
-  const t = useT();
-  const prefs = usePreferences();
-  const phone = usePhoneAny();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const searchBox = useRef<HTMLInputElement>(null);
-  const [query, setQuery] = useState('');
-  const [notice, setNotice] = useState<Notice | null>(null);
-  const requested = sectionFromLocation(location.pathname, location.hash);
-  const matches = useMemo(() => {
-    const found = searchSettings(query);
-    return found && new Set([...found].filter((id) => prefs.advanced || !ADVANCED_ONLY.has(id)));
-  }, [query, prefs.advanced]);
-  const searching = matches !== null;
-  const withMatches = SECTIONS.filter(
-    (s) => !matches || ENTRIES.some((e) => e.section === s.id && matches.has(e.id)),
-  );
-  const drill = phone && !searching;
+  const page = useSettingsPage(projectId);
   const scope = { projectId, mode, owner, canWrite };
-  const spied = useScrollSpy(
-    withMatches.map((s) => s.id),
-    !phone && !searching,
-  );
-  const active: SectionId | null = spied ?? requested ?? withMatches[0]?.id ?? null;
-
-  const scrollTo = useCallback(
-    (id: SectionId) =>
-      document
-        .getElementById(`s-${id}`)
-        ?.scrollIntoView({ block: 'start', behavior: prefs.reducedMotion ? 'auto' : 'smooth' }),
-    [prefs.reducedMotion],
-  );
-  const go = (id: SectionId) => {
-    navigate(settingsPath(id, projectId));
-    if (!phone) scrollTo(id);
-  };
-  // An address that names a group (a link, the back button) brings it into view; a phone's page starts at its top.
-  useEffect(() => {
-    if (phone) document.querySelector('.main-content')?.scrollTo(0, 0);
-    else if (requested && !searching) scrollTo(requested);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only a change of address moves the page
-  }, [requested, phone]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target)) return;
-      e.preventDefault();
-      searchBox.current?.focus();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-
-  useEffect(() => {
-    if (!notice) return;
-    const timer = setTimeout(() => setNotice(null), NOTICE_MS);
-    return () => clearTimeout(timer);
-  }, [notice]);
-
-  const search = (
-    <SettingsSearch
-      ref={searchBox}
-      query={query}
-      count={matches ? matches.size : null}
-      onChange={setQuery}
-    />
-  );
-  const detail = drill && requested ? requested : null;
-  const detailMeta = SECTIONS.find((s) => s.id === detail);
   return (
-    <SettingsContext.Provider value={{ query, matches, notify: setNotice }}>
+    <SettingsContext.Provider
+      value={{ query: page.query, matches: page.matches, notify: page.setNotice }}
+    >
       <div className="settings">
-        {detailMeta ? (
-          <header className="settings-bar">
-            <Link className="back-link" to={settingsPath(null, projectId)}>
-              <ChevronLeft size={20} aria-hidden="true" />
-              {t('settings')}
-            </Link>
-            <h1>{t(detailMeta.label)}</h1>
-          </header>
-        ) : (
-          <>
-            <PageHeading title={t('settings')} />
-            {search}
-          </>
-        )}
-        {drill && !requested ? (
-          <HomeList sections={SECTIONS} projectId={projectId} onGo={go} />
-        ) : searching && !withMatches.length ? (
-          <Empty title={`${t('stNoResults')} “${query.trim()}”`} />
-        ) : (
-          <div className={`settings-layout ${drill || searching ? 'single' : ''}`}>
-            {!drill && !searching && (
-              <SideNav sections={SECTIONS} active={active} projectId={projectId} onGo={go} />
-            )}
-            <div className="settings-main">
-              {(drill ? SECTIONS.filter((s) => s.id === detail) : withMatches).map((s) => (
-                <Section key={s.id} id={s.id} scope={scope} heading={!drill} />
-              ))}
-            </div>
-          </div>
-        )}
-        {notice && (
-          <div className="stoast" role="status">
-            <span>{notice.text}</span>
-            {notice.undo && (
-              <button
-                type="button"
-                className="text-button"
-                onClick={() => {
-                  notice.undo?.();
-                  setNotice(null);
-                }}
-              >
-                {t('undo')}
-              </button>
-            )}
-          </div>
+        <SettingsHeader page={page} projectId={projectId} />
+        <SettingsGroups page={page} projectId={projectId} scope={scope} />
+        {page.notice && (
+          <SettingsToast notice={page.notice} onDismiss={() => page.setNotice(null)} />
         )}
       </div>
     </SettingsContext.Provider>

@@ -148,7 +148,7 @@ By default the control plane listens on this machine only. To use it from anothe
 AETHER_HOST=0.0.0.0 pnpm start
 ```
 
-It prints the addresses to open (for example `http://192.168.1.20:4310`). Sign in with the same owner token. Requests are
+It prints the addresses to open (for example `http://192.0.2.20:4310`). Sign in with the same owner token. Requests are
 accepted only when addressed to a private-network address on the same port, so a public DNS name pointing at your
 machine is refused (this is what stops DNS rebinding). The connection is plain HTTP and the token crosses the network
 unencrypted: use a network you trust, or put a TLS tunnel such as Tailscale in front. See [security](security.md).
@@ -172,7 +172,7 @@ The office is an installable web app: opened from the home screen it runs full s
 
 **Plain HTTP on the network cannot be installed as a full app and gets no offline shell or update prompt.** Service workers
 (which those need, and Web Push would) work only in a *secure context*: `https://`, or `localhost` / `127.0.0.1`.
-A phone that opens `http://192.168.1.20:4310` still gets the whole office (and Add to Home Screen on iOS gives it its icon
+A phone that opens `http://192.0.2.20:4310` still gets the whole office (and Add to Home Screen on iOS gives it its icon
 and full-screen mode), but the page registers nothing and says nothing about it. To get the rest, serve the office over HTTPS:
 
 The control plane accepts only requests addressed to `127.0.0.1:4310` or, with `AETHER_HOST` set, to a private-network
@@ -181,10 +181,10 @@ present the request to it as `127.0.0.1:4310`. `tailscale serve` on its own has 
 use a proxy that can, such as Caddy, and take the certificate from wherever suits you:
 
 ```
-# Caddyfile: office.lan, or <machine>.<tailnet>.ts.net with `tailscale cert`, or an address with mkcert
-office.lan {
+# Caddyfile: office.example, or <machine>.<tailnet>.ts.net with `tailscale cert`, or an address with mkcert
+office.example {
   tls internal                       # or: tls /path/to/cert.pem /path/to/key.pem
-  @own header Origin https://office.lan
+  @own header Origin https://office.example
   handle @own {
     reverse_proxy 127.0.0.1:4310 {
       header_up Host 127.0.0.1:4310
@@ -205,7 +205,7 @@ Origin and is refused, as before. (This recipe follows the Caddy and control-pla
 | Certificate | What to do | Trade-off |
 | --- | --- | --- |
 | Caddy's own CA (`tls internal`) | Trust Caddy's root certificate on the phone. | Works on the LAN alone; every phone has to trust the CA. |
-| mkcert | `mkcert -install`, `mkcert office.lan`, point `tls` at the files, send `rootCA.pem` (`mkcert -CAROOT`) to the phone and trust it (iOS: install the profile, then Settings, General, About, Certificate Trust Settings). | The CA key must stay private. |
+| mkcert | `mkcert -install`, `mkcert office.example`, point `tls` at the files, send `rootCA.pem` (`mkcert -CAROOT`) to the phone and trust it (iOS: install the profile, then Settings, General, About, Certificate Trust Settings). | The CA key must stay private. |
 | Tailscale | Turn on MagicDNS and HTTPS certificates in the admin console, `tailscale cert <machine>.<tailnet>.ts.net`, point `tls` at the files. | A publicly trusted certificate, so nothing to install on the phone; reachable only from your tailnet. |
 
 If a service worker ever misbehaves, open the office once with `?sw=off`: the worker and its caches are removed from that

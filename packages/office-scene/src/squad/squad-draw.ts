@@ -1,13 +1,13 @@
 // What the squad layers draw, worked out once per change of the frame: one entry per squad with its zone, its pods and
 // the supervisor's desk. Pure; the layers add the clock (the glide, the beam's brightness) on top.
 import type { Layout } from '@aether/contracts';
-import { DEPARTMENTS } from '@aether/kernel';
 import { SEAT_DEPTH } from '../departure.js';
+import { departmentAt } from '../scene-geometry.js';
 import { handoverSide } from './handover/plan.js';
 import type { SquadMemberState } from './squad-model.js';
 import type { PlacedZone, PodSeat } from './squad-seats.js';
 
-export type DrawPod = {
+type DrawPod = {
   x: number;
   z: number;
   /** The member sitting here, if any. */
@@ -86,7 +86,7 @@ export function drawSquads(
         deskZ: desk.z,
         deskRotation: desk.rotation,
         side: handoverSide(desk, zone.rect),
-        accent: DEPARTMENTS[zone.rect.floor]?.accent ?? DEPARTMENTS[0]!.accent,
+        accent: departmentAt(zone.rect.floor).accent,
         overflow: frame.members.filter(
           (m) =>
             m.supervisor === zone.supervisor &&

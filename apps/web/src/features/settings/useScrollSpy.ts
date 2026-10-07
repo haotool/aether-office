@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLatest } from '../../use-latest.js';
 
 /**
  * The last of the sections that reach the upper part of the scrolling page (its `s-<id>` element), so the navigation
@@ -7,8 +8,10 @@ import { useEffect, useState } from 'react';
 export function useScrollSpy<T extends string>(ids: readonly T[], enabled: boolean): T | null {
   const [active, setActive] = useState<T | null>(null);
   const key = ids.join();
+  const idList = useLatest(ids);
   useEffect(() => {
     if (!enabled) return;
+    const ids = idList.current;
     const seen = new Set<string>();
     const observer = new IntersectionObserver(
       (entries) => {
@@ -25,7 +28,6 @@ export function useScrollSpy<T extends string>(ids: readonly T[], enabled: boole
       if (element) observer.observe(element);
     }
     return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `key` is the content of `ids`
-  }, [key, enabled]);
+  }, [key, enabled, idList]); // `key` is the content of `ids`
   return active;
 }

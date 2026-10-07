@@ -1,28 +1,46 @@
-import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import type { Skill } from '@aether/contracts';
 import { api, execute } from '../api.js';
-import { Field, useT, whyNot } from '../ui.js';
+import { Field, useT } from '../ui.js';
+import { EnableToggle, useCommandRunner } from './panel-kit.js';
+
+function SkillRow({
+  skill: s,
+  canManage,
+  onToggle,
+}: {
+  skill: Skill;
+  canManage: boolean;
+  onToggle: () => void;
+}) {
+  const t = useT();
+  return (
+    <li className="panel">
+      <strong>{s.name}</strong> · {s.enabled ? t('skillEnabled') : t('skillDisabled')}
+      <p>{s.description}</p>
+      {s.warnings.map((w) => (
+        <p key={w} role="note" className="muted">
+          ⚠ {w}
+        </p>
+      ))}
+      <details>
+        <summary>{t('skillBody')}</summary>
+        <pre className="preserve-space">{s.body}</pre>
+      </details>
+      <EnableToggle enabled={s.enabled} canManage={canManage} onToggle={onToggle} />
+    </li>
+  );
+}
 
 export function Skills({ projectId, canManage }: { projectId: string; canManage: boolean }) {
   const t = useT();
-  const client = useQueryClient();
-  const [error, setError] = useState('');
   const key = ['skills', projectId];
+  const { error, run } = useCommandRunner([key], false);
   const query = useQuery({
     queryKey: key,
     queryFn: () => api<{ skills: Skill[] }>(`/api/projects/${projectId}/skills`),
     refetchInterval: 5000,
   });
-  const run = async (fn: () => Promise<unknown>) => {
-    setError('');
-    try {
-      await fn();
-      await client.invalidateQueries({ queryKey: key });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'REQUEST_FAILED');
-    }
-  };
   return (
     <section aria-labelledby="skills-title">
       <h2 id="skills-title">{t('skills')}</h2>
@@ -30,35 +48,21 @@ export function Skills({ projectId, canManage }: { projectId: string; canManage:
       {query.data?.skills.length === 0 && <p>{t('skillsEmpty')}</p>}
       <ul className="plain-list">
         {query.data?.skills.map((s) => (
-          <li key={s.id} className="panel">
-            <strong>{s.name}</strong> · {s.enabled ? t('skillEnabled') : t('skillDisabled')}
-            <p>{s.description}</p>
-            {s.warnings.map((w) => (
-              <p key={w} role="note" className="muted">
-                ⚠ {w}
-              </p>
-            ))}
-            <details>
-              <summary>{t('skillBody')}</summary>
-              <pre className="preserve-space">{s.body}</pre>
-            </details>
-            <button
-              disabled={!canManage}
-              {...whyNot(canManage, t('needOwner'))}
-              onClick={() =>
-                run(() =>
-                  execute(
-                    'skill.toggle',
-                    { skillId: s.id, enabled: !s.enabled },
-                    projectId,
-                    s.version,
-                  ),
-                )
-              }
-            >
-              {s.enabled ? t('scheduleDisable') : t('scheduleEnable')}
-            </button>
-          </li>
+          <SkillRow
+            key={s.id}
+            skill={s}
+            canManage={canManage}
+            onToggle={() =>
+              void run(() =>
+                execute(
+                  'skill.toggle',
+                  { skillId: s.id, enabled: !s.enabled },
+                  projectId,
+                  s.version,
+                ),
+              )
+            }
+          />
         ))}
       </ul>
       {canManage && (

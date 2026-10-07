@@ -57,16 +57,20 @@
   "apps/web/src/features/StopSession.tsx": {
     "session.title": "session-title"
   },
+  "apps/web/src/features/TaskActions.tsx": {
+    "w.title": "authored-title"
+  },
   "apps/web/src/features/TaskDag.tsx": {
     "data.work.title": "authored-title"
+  },
+  "apps/web/src/features/TaskDetail.tsx": {
+    "prerequisite.title": "authored-title",
+    "work.title": "authored-title"
   },
   "apps/web/src/features/TaskForm.tsx": {
     "work.title": "authored-title"
   },
   "apps/web/src/features/Tasks.tsx": {
-    "current.title": "authored-title",
-    "prerequisite.title": "authored-title",
-    "w.title": "authored-title",
     "work.title": "authored-title"
   },
   "apps/web/src/features/TranscriptTurns.tsx": {

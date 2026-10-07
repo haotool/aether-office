@@ -1,4 +1,5 @@
 import { decodeCodeEntities, decodeEntities } from './text-entities.js';
+import { closingTicks } from './markdown-inline.js';
 import { htmlTable } from './text-table.js';
 import { factsOf, isWrapper, tagSets, TAG_NAME, type TagSets } from './text-tags.js';
 
@@ -57,10 +58,8 @@ const attrOf = (attrs: string, name: string): string | null => {
   return value === undefined ? null : decodeCodeEntities(value);
 };
 const stripTags = (text: string) => text.replace(/<\/?[a-zA-Z][^<>]*>/g, '');
-const fenceFor = (code: string, min: number, ch: string) =>
-  ch.repeat(
-    Math.max(min, ...(code.match(new RegExp(`${ch}+`, 'g')) ?? []).map((r) => r.length + 1)),
-  );
+const fenceFor = (code: string, min: number) =>
+  '`'.repeat(Math.max(min, ...(code.match(/`+/g) ?? []).map((r) => r.length + 1)));
 
 function wrapEmphasis(inner: string, mark: string): string {
   const [, lead = '', body = '', trail = ''] = /^(\s*)([\s\S]*?)(\s*)$/.exec(inner) ?? [];
@@ -75,163 +74,205 @@ function wrapLink(inner: string, href: string | null): string {
 }
 
 type Open = { name: string; start: number; href: string | null };
+type Tag = { name: string; closing: boolean; selfClosing: boolean; attrs: string };
 
-function prose(text: string, sets: TagSets): string {
-  // Pieces, not one string: slicing a string that is being appended to copies it every time, which made a long run of
-  // `<b>x</b>` quadratic. `last` is the final character written, for the spacing around a removed wrapper.
-  const out: string[] = [];
-  let last = '';
-  const put = (piece: string) => {
-    if (!piece) return;
-    out.push(piece);
-    last = piece.at(-1)!;
-  };
-  /** After a tag is removed at `at`: a space where it sat between two words, and no double space where it sat between two. */
-  const dropped = (at: number) => {
-    put(gap(last, text[at]));
-    let next = at;
-    if (last === ' ') while (text[next] === ' ') next++;
-    return next;
-  };
-  const lowered = text.toLowerCase();
-  const lower = lowered.length === text.length ? lowered : text;
-  const open: Open[] = [];
-  const lists: { ordered: boolean; n: number }[] = [];
-  const close = (entry: Open) => {
-    const inner = out.splice(entry.start).join('');
-    put(
-      entry.name === 'a' ? wrapLink(inner, entry.href) : wrapEmphasis(inner, EMPHASIS[entry.name]!),
-    );
-    last = out.at(-1)?.at(-1) ?? '';
-  };
-  const skipTo = (marker: string, from: number) => {
-    const end = lower.indexOf(marker, from);
-    return end < 0 ? text.length : end + marker.length;
-  };
+/**
+ * The state of one `prose` run. Pieces, not one string: slicing a string that is being appended to copies it every time,
+ * which made a long run of `<b>x</b>` quadratic. `last` is the final character written, for the spacing around a removed
+ * wrapper.
+ */
+type Run = {
+  text: string;
+  lower: string;
+  sets: TagSets;
+  out: string[];
+  last: string;
+  open: Open[];
+  lists: { ordered: boolean; n: number }[];
+};
 
-  let i = 0;
-  while (i < text.length) {
-    const c = text[i]!;
-    if (c === '\\' && i + 1 < text.length) {
-      put(text.slice(i, i + 2));
-      i += 2;
-    } else if (c === '`') {
-      const n = /^`+/.exec(text.slice(i, i + 64))![0].length;
-      const end = closingTicks(text, i + n, n);
-      // A run of ticks that is not exactly closed is not a code span; the next candidate starts after it.
-      put(end < 0 ? text.slice(i, i + n) : text.slice(i, end + n));
-      i = end < 0 ? i + n : end + n;
-    } else if (c !== '<') {
-      PLAIN.lastIndex = i;
-      const run = PLAIN.exec(text)![0];
-      put(decodeEntities(run));
-      i += run.length;
-    } else if (text.startsWith('<!--', i)) {
-      i = skipTo('-->', i + 4);
-    } else {
-      TAG.lastIndex = i;
-      const m = TAG.exec(text);
-      const name = m?.[2]!.toLowerCase();
-      const attrs = m?.[3] ?? '';
-      const generic =
-        !!m && !m[1] && name!.length === 1 && !attrs && /[A-Za-z0-9_]/.test(text[i - 1] ?? '');
-      if (m && !generic && !KNOWN.has(name!)) {
-        const facts = factsOf(text, i, i + m[0].length, {
-          closing: !!m[1],
-          selfClosing: !!m[4],
-          attrs,
-        });
-        if (isWrapper(name!, facts, sets)) {
-          i += m[0].length;
-          i = dropped(i);
-          continue;
-        }
-      }
-      if (!m || !KNOWN.has(name!) || generic) {
-        CUT_TAG.lastIndex = i;
-        const cut = CUT_TAG.exec(text);
-        if (cut && (KNOWN.has(cut[1]!.toLowerCase()) || /[-_:]/.test(cut[1]!))) i += cut[0].length;
-        else {
-          put('<');
-          i++;
-        }
-        continue;
-      }
-      const closing = m[1] === '/';
-      i += m[0].length;
-      if (DROP_WITH_CONTENT.has(name!)) {
-        if (!closing) i = skipPast(text, skipTo(`</${name}`, i));
-      } else if (name === 'pre' && !closing) {
-        const end = lower.indexOf('</pre', i);
-        const inner = end < 0 ? text.slice(i) : text.slice(i, end);
-        const lang = /<code[^>]*\sclass\s*=\s*["'][^"']*language-([\w+-]+)/i.exec(inner)?.[1] ?? '';
-        const code = decodeCodeEntities(stripTags(inner)).replace(/^\n|\n$/g, '');
-        const fence = fenceFor(code, 3, '`');
-        put(`\n\n${fence}${lang}\n${code}\n${fence}\n\n`);
-        i = end < 0 ? text.length : skipPast(text, end);
-      } else if (name === 'code' && !closing) {
-        const end = lower.indexOf('</code', i);
-        const code = decodeCodeEntities(stripTags(end < 0 ? text.slice(i) : text.slice(i, end)))
-          .replace(/\s*\n\s*/g, ' ')
-          .trim();
-        const ticks = fenceFor(code, 1, '`');
-        const pad = code.startsWith('`') || code.endsWith('`') ? ' ' : '';
-        if (code) put(`${ticks}${pad}${code}${pad}${ticks}`);
-        i = end < 0 ? text.length : skipPast(text, end);
-      } else if (name === 'table' && !closing) {
-        const end = lower.indexOf('</table', i);
-        put(htmlTable(end < 0 ? text.slice(i) : text.slice(i, end), neutralizeHtml));
-        i = end < 0 ? text.length : skipPast(text, end);
-      } else if (name === 'img') {
-        put(decodeEntities(attrOf(attrs, 'alt') ?? ''));
-      } else if (name === 'br') put('\n');
-      else if (name === 'hr') put('\n\n---\n\n');
-      else if (EMPHASIS[name!] !== undefined || name === 'a') {
-        if (closing) {
-          const at = open.findLastIndex((o) => group(o.name) === group(name!));
-          if (at >= 0) for (const entry of open.splice(at).reverse()) close(entry);
-        } else if (!m[4] && open.length < MAX_OPEN)
-          open.push({
-            name: name!,
-            start: out.length,
-            href: name === 'a' ? attrOf(attrs, 'href') : null,
-          });
-      } else if (name === 'ul' || name === 'ol') {
-        if (closing) lists.pop();
-        else lists.push({ ordered: name === 'ol', n: 0 });
-        put('\n');
-      } else if (name === 'li') {
-        if (!closing) {
-          const list = lists.at(-1);
-          if (list) list.n++;
-          const marker = list?.ordered ? `${list.n}.` : '-';
-          put(`\n${'  '.repeat(Math.max(0, lists.length - 1))}${marker} `);
-        }
-      } else if (/^h[1-6]$/.test(name!)) {
-        put(closing ? '\n\n' : `\n\n${'#'.repeat(Number(name![1]))} `);
-      } else if (name === 'summary') put(closing ? '\n\n' : '\n\n#### ');
-      else if (name === 'blockquote') put(closing ? '\n\n' : '\n\n> ');
-      // A block tag breaks the paragraph; a closer that opens nothing in this text is only noise, and breaks nothing.
-      else if (BLOCKS.has(name!)) {
-        if (closing && !sets.opens.has(name!)) i = dropped(i);
-        else put('\n\n');
-      }
-      // Every other known tag (span, font, small, sub, …) is only a wrapper: dropped, its text kept.
-    }
-  }
-  for (const entry of open.reverse()) close(entry);
-  return out.join('');
+function put(run: Run, piece: string) {
+  if (!piece) return;
+  run.out.push(piece);
+  run.last = piece.slice(-1);
 }
 
-/** Where the run of exactly `n` backticks that closes a code span starts, or -1. */
-function closingTicks(text: string, from: number, n: number): number {
-  for (let j = text.indexOf('`', from); j >= 0; j = text.indexOf('`', j)) {
-    let m = 0;
-    while (text[j + m] === '`') m++;
-    if (m === n) return j;
-    j += m;
+/** After a tag is removed at `at`: a space where it sat between two words, and no double space where it sat between two. */
+function dropped(run: Run, at: number): number {
+  put(run, gap(run.last, run.text[at]));
+  let next = at;
+  if (run.last === ' ') while (run.text[next] === ' ') next++;
+  return next;
+}
+
+function close(run: Run, entry: Open) {
+  const inner = run.out.splice(entry.start).join('');
+  put(
+    run,
+    entry.name === 'a'
+      ? wrapLink(inner, entry.href)
+      : wrapEmphasis(inner, EMPHASIS[entry.name] ?? ''),
+  );
+  run.last = run.out.at(-1)?.at(-1) ?? '';
+}
+
+function skipTo(run: Run, marker: string, from: number): number {
+  const end = run.lower.indexOf(marker, from);
+  return end < 0 ? run.text.length : end + marker.length;
+}
+
+function prose(text: string, sets: TagSets): string {
+  const lowered = text.toLowerCase();
+  const run: Run = {
+    text,
+    lower: lowered.length === text.length ? lowered : text,
+    sets,
+    out: [],
+    last: '',
+    open: [],
+    lists: [],
+  };
+  let i = 0;
+  while (i < text.length) i = step(run, i);
+  for (const entry of run.open.reverse()) close(run, entry);
+  return run.out.join('');
+}
+
+/** Reads what starts at `i` and returns where the next read starts. */
+function step(run: Run, i: number): number {
+  const { text } = run;
+  const c = text[i];
+  if (c === '\\') {
+    put(run, text.slice(i, i + 2));
+    return i + 2;
   }
-  return -1;
+  if (c === '`') return codeSpan(run, i);
+  if (c !== '<') {
+    PLAIN.lastIndex = i;
+    const plain = PLAIN.exec(text)?.[0] ?? '';
+    put(run, decodeEntities(plain));
+    return i + plain.length;
+  }
+  return text.startsWith('<!--', i) ? skipTo(run, '-->', i + 4) : tag(run, i);
+}
+
+function codeSpan(run: Run, i: number): number {
+  const { text } = run;
+  const n = /^`+/.exec(text.slice(i, i + 64))?.[0].length ?? 1;
+  const end = closingTicks(text, i + n, n);
+  // A run of ticks that is not exactly closed is not a code span; the next candidate starts after it.
+  put(run, end < 0 ? text.slice(i, i + n) : text.slice(i, end + n));
+  return end < 0 ? i + n : end + n;
+}
+
+/** A `<` that starts something that may be a tag: a known tag is converted, a wrapper dropped, anything else is text. */
+function tag(run: Run, i: number): number {
+  const { text } = run;
+  TAG.lastIndex = i;
+  const m = TAG.exec(text);
+  if (!m) return literalOrCut(run, i);
+  const [whole, slash = '', raw = '', attrs = '', self = ''] = m;
+  const name = raw.toLowerCase();
+  const generic = !slash && name.length === 1 && !attrs && /[A-Za-z0-9_]/.test(text[i - 1] ?? '');
+  if (generic) return literalOrCut(run, i);
+  const end = i + whole.length;
+  if (!KNOWN.has(name)) {
+    const facts = factsOf(text, i, end, { closing: !!slash, selfClosing: !!self, attrs });
+    return isWrapper(name, facts, run.sets) ? dropped(run, end) : literalOrCut(run, i);
+  }
+  return knownTag(run, end, { name, closing: slash === '/', selfClosing: !!self, attrs });
+}
+
+/** A `<` that is no tag: kept as text, unless it opens a tag cut off inside its attributes, which is dropped. */
+function literalOrCut(run: Run, i: number): number {
+  CUT_TAG.lastIndex = i;
+  const cut = CUT_TAG.exec(run.text);
+  const cutName = cut?.[1] ?? '';
+  if (cut && (KNOWN.has(cutName.toLowerCase()) || /[-_:]/.test(cutName))) return i + cut[0].length;
+  put(run, '<');
+  return i + 1;
+}
+
+/** A tag of the HTML list that ended at `i`. */
+function knownTag(run: Run, i: number, t: Tag): number {
+  const { name, closing } = t;
+  if (DROP_WITH_CONTENT.has(name))
+    return closing ? i : skipPast(run.text, skipTo(run, `</${name}`, i));
+  if (!closing && (name === 'pre' || name === 'code' || name === 'table'))
+    return rawElement(run, i, name);
+  if (name === 'img') put(run, decodeEntities(attrOf(t.attrs, 'alt') ?? ''));
+  else if (name === 'br') put(run, '\n');
+  else if (name === 'hr') put(run, '\n\n---\n\n');
+  else if (EMPHASIS[name] !== undefined || name === 'a') inlineTag(run, t);
+  else return structureTag(run, i, t);
+  return i;
+}
+
+/** `<pre>`, `<code>` and `<table>`: everything up to the closer is read as one piece. */
+function rawElement(run: Run, i: number, name: 'pre' | 'code' | 'table'): number {
+  const { text } = run;
+  const end = run.lower.indexOf(`</${name}`, i);
+  const inner = end < 0 ? text.slice(i) : text.slice(i, end);
+  if (name === 'pre') put(run, preBlock(inner));
+  else if (name === 'code') put(run, codeInline(inner));
+  else put(run, htmlTable(inner, neutralizeHtml));
+  return end < 0 ? text.length : skipPast(text, end);
+}
+
+function preBlock(inner: string): string {
+  const lang = /<code[^>]*\sclass\s*=\s*["'][^"']*language-([\w+-]+)/i.exec(inner)?.[1] ?? '';
+  const code = decodeCodeEntities(stripTags(inner)).replace(/^\n|\n$/g, '');
+  const fence = fenceFor(code, 3);
+  return `\n\n${fence}${lang}\n${code}\n${fence}\n\n`;
+}
+
+function codeInline(inner: string): string {
+  const code = decodeCodeEntities(stripTags(inner))
+    .replace(/\s*\n\s*/g, ' ')
+    .trim();
+  const ticks = fenceFor(code, 1);
+  const pad = code.startsWith('`') || code.endsWith('`') ? ' ' : '';
+  return code ? `${ticks}${pad}${code}${pad}${ticks}` : '';
+}
+
+/** Emphasis and links: an opener is remembered, its closer wraps everything written since. */
+function inlineTag(run: Run, t: Tag) {
+  const { name } = t;
+  if (t.closing) {
+    const at = run.open.findLastIndex((o) => group(o.name) === group(name));
+    if (at >= 0) for (const entry of run.open.splice(at).reverse()) close(run, entry);
+  } else if (!t.selfClosing && run.open.length < MAX_OPEN)
+    run.open.push({
+      name,
+      start: run.out.length,
+      href: name === 'a' ? attrOf(t.attrs, 'href') : null,
+    });
+}
+
+/** Lists, headings, quotes and block tags: they break the paragraph. Every other known tag is only a wrapper, dropped. */
+function structureTag(run: Run, i: number, t: Tag): number {
+  const { name, closing } = t;
+  if (name === 'ul' || name === 'ol') {
+    if (closing) run.lists.pop();
+    else run.lists.push({ ordered: name === 'ol', n: 0 });
+    put(run, '\n');
+  } else if (name === 'li') {
+    if (!closing) {
+      const list = run.lists.at(-1);
+      if (list) list.n++;
+      const marker = list?.ordered ? `${list.n}.` : '-';
+      put(run, `\n${'  '.repeat(Math.max(0, run.lists.length - 1))}${marker} `);
+    }
+  } else if (/^h[1-6]$/.test(name)) {
+    put(run, closing ? '\n\n' : `\n\n${'#'.repeat(Number(name.slice(1)))} `);
+  } else if (name === 'summary') put(run, closing ? '\n\n' : '\n\n#### ');
+  else if (name === 'blockquote') put(run, closing ? '\n\n' : '\n\n> ');
+  // A block tag breaks the paragraph; a closer that opens nothing in this text is only noise, and breaks nothing.
+  else if (BLOCKS.has(name)) {
+    if (closing && !run.sets.opens.has(name)) return dropped(run, i);
+    put(run, '\n\n');
+  }
+  return i;
 }
 
 const WIDE_OR_END = /[\s.,;:!?)\]}\u2e80-\u9fff\uff00-\uffef\u3000-\u303f]/;
@@ -248,27 +289,28 @@ const skipPast = (text: string, from: number) => {
   return end < 0 ? text.length : end + 1;
 };
 
-/** The lines outside fenced blocks: where tags are read. */
-function proseOf(markdown: string): string {
-  const lines: string[] = [];
+/** Whether each line is inside a fenced block (its fence lines included): tags are not read there. */
+function fencedLines(lines: string[]): boolean[] {
   let fence: string | null = null;
-  for (const line of markdown.split('\n')) {
+  return lines.map((line) => {
     const mark = FENCE_LINE.exec(line)?.[1];
-    if (fence !== null) {
-      if (mark && mark[0] === fence[0] && mark.length >= fence.length && CLOSING_FENCE.test(line))
-        fence = null;
-    } else if (mark) fence = mark;
-    else lines.push(line);
-  }
-  return lines.join('\n');
+    if (fence === null) {
+      fence = mark ?? null;
+      return fence !== null;
+    }
+    if (mark && mark[0] === fence[0] && mark.length >= fence.length && CLOSING_FENCE.test(line))
+      fence = null;
+    return true;
+  });
 }
 
 export function neutralizeHtml(markdown: string): string {
   if (!markdown.includes('<') && !markdown.includes('&')) return markdown;
+  const lines = markdown.split('\n');
+  const fenced = fencedLines(lines);
+  const sets = tagSets(lines.filter((_, i) => !fenced[i]).join('\n'));
   const pieces: string[] = [];
   let buffer: string[] = [];
-  let fence: string | null = null;
-  const sets = tagSets(proseOf(markdown));
   const flush = () => {
     if (buffer.length)
       pieces.push(
@@ -278,18 +320,12 @@ export function neutralizeHtml(markdown: string): string {
       );
     buffer = [];
   };
-  for (const line of markdown.split('\n')) {
-    const mark = FENCE_LINE.exec(line)?.[1];
-    if (fence !== null) {
-      pieces.push(line);
-      if (mark && mark[0] === fence[0] && mark.length >= fence.length && CLOSING_FENCE.test(line))
-        fence = null;
-    } else if (mark) {
+  lines.forEach((line, i) => {
+    if (fenced[i]) {
       flush();
       pieces.push(line);
-      fence = mark;
     } else buffer.push(line);
-  }
+  });
   flush();
   return pieces.join('\n').replace(/^\n+|\s+$/g, '');
 }

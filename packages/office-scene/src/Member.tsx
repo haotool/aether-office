@@ -1,8 +1,8 @@
 import type { Agent, Layout } from '@aether/contracts';
-import { DEPARTMENTS } from '@aether/kernel';
 import { useMemo, useRef } from 'react';
 import { Animal, type EmoteCue, type Ring } from './Animal.js';
 import { createLongPress } from './long-press.js';
+import { characterEvents } from './character-events.js';
 import type { Apparition } from './animal-states.js';
 import { CompactionEffect } from './CompactionEffect.js';
 import { ContextGauge } from './ContextGauge.js';
@@ -19,7 +19,7 @@ import { Poser } from './Poser.js';
 import type { Engagement } from './interplay.js';
 import type { TurnCue } from './use-pose-cues.js';
 import type { ScreenFacts } from './screen-facts.js';
-import { ACTIVE, AGENT_OFFSET, floorY } from './scene-geometry.js';
+import { ACTIVE, departmentAt, floorY } from './scene-geometry.js';
 import type { SceneCompaction } from './context.js';
 import type { Quality } from './scene-types.js';
 
@@ -28,36 +28,8 @@ const HEAD_Y = 1.75;
 
 type Desk = Layout['objects'][number];
 
-/** One member at a desk: its screen, its character (and a jiangshi behind the chair when zombies are under it). */
-export function Member({
-  agent,
-  desk,
-  exploded,
-  role,
-  facts,
-  intensity,
-  compaction,
-  apparition,
-  zombie,
-  departure,
-  engagements,
-  attention,
-  selected,
-  ring,
-  emote,
-  turn,
-  reducedMotion,
-  quality,
-  light,
-  onActivate,
-  onMenu,
-  onGrab,
-  onSelect,
-  onFly,
-  onHoverStart,
-  onHoverEnd,
-  onFailure,
-}: {
+/** One member at a desk, as the scene tells it. */
+type MemberProps = {
   agent: Agent;
   desk: Desk;
   exploded: boolean;
@@ -95,145 +67,151 @@ export function Member({
   onHoverStart: (id: string) => void;
   onHoverEnd: (id: string) => void;
   onFailure: () => void;
-}) {
-  const baseY = floorY(desk.floor ?? 0, exploded);
-  const menu = useRef(onMenu);
-  menu.current = onMenu;
-  const profile = useMemo(() => deskProfile(agent.id, role), [agent.id, role]);
+};
+
+/** What the micro-action director needs; only whether it has been quiet a long while matters, so its timer is not reset every minute. */
+function useBehavior(
+  facts: ScreenFacts | undefined,
+  intensity: 0 | 1 | 2 | 3,
+  secondMonitor: boolean,
+) {
   const mode = workMode(facts);
   const quiet = facts?.quietMinutes ?? null;
-  const longQuiet = quiet !== null && quiet >= LONG_QUIET_MINUTES;
-  const behavior = useMemo<BehaviorScene>(
+  const known = quiet !== null;
+  const longQuiet = known && quiet >= LONG_QUIET_MINUTES;
+  return useMemo<BehaviorScene>(
     () => ({
       mode,
       intensity,
-      secondMonitor: profile.monitors === 2,
-      // Only whether it has been quiet a long while matters, so the director's timer is not reset every minute.
-      quietMinutes: quiet === null ? null : longQuiet ? LONG_QUIET_MINUTES : 0,
+      secondMonitor,
+      quietMinutes: known ? (longQuiet ? LONG_QUIET_MINUTES : 0) : null,
     }),
-    [mode, intensity, profile.monitors, quiet === null, longQuiet], // eslint-disable-line react-hooks/exhaustive-deps -- quiet is only read as null or not
+    [mode, intensity, secondMonitor, known, longQuiet],
   );
-  const press = useMemo(() => createLongPress(() => menu.current(agent.id)), [agent.id]);
-  const animal = {
-    agent,
-    selected,
-    ring,
-    emote,
-    reducedMotion,
-    quality,
-    light,
-    onError: onFailure,
-  };
+}
+
+type Profile = ReturnType<typeof deskProfile>;
+
+/** The screen and what stands and glows around the desk, in the desk's frame. */
+function DeskFurnishings({ p, profile }: { p: MemberProps; profile: Profile }) {
+  const { agent, facts, intensity, quality, reducedMotion } = p;
+  const department = departmentAt(p.desk.floor ?? 0);
+  const lit = !p.light && quality !== 'low';
   return (
-    <group position={[desk.x, baseY, desk.z]} rotation={[0, (desk.rotation * Math.PI) / 2, 0]}>
+    <>
       <MemberScreen
-        role={role}
+        role={p.role}
         member={agent.id}
-        accent={DEPARTMENTS[desk.floor ?? 0]?.accent ?? '#43e6df'}
+        accent={department.accent}
         activity={agent.activity}
         facts={facts}
-        theme={DEPARTMENTS[desk.floor ?? 0]?.id ?? 'product'}
+        theme={department.id}
         intensity={intensity}
         profile={profile}
         reducedMotion={reducedMotion}
-        rich={!light && quality !== 'low'}
+        rich={lit}
       />
-      {!light && quality !== 'low' && <DeskItems profile={profile} />}
+      {lit && <DeskItems profile={profile} />}
       <DeskEffects intensity={intensity} seed={agent.id} />
       <ContextGauge percent={facts?.contextPercent ?? null} />
       <ScreenGlow
-        accent={DEPARTMENTS[desk.floor ?? 0]?.accent ?? '#43e6df'}
+        accent={department.accent}
         level={intensity}
-        on={!light && quality !== 'low' && ACTIVE.includes(agent.activity)}
+        on={lit && ACTIVE.includes(agent.activity)}
       />
-      {(light || quality === 'low') && <ContactShadow z={SEAT_DEPTH} />}
-      {attention && (
+      {!lit && <ContactShadow z={SEAT_DEPTH} />}
+      {p.attention && (
         <AttentionRing z={SEAT_DEPTH * 0.4} animate={!reducedMotion && quality !== 'low'} />
       )}
-      {compaction && !reducedMotion && quality !== 'low' && (
-        <CompactionEffect key={compaction.key} position={[0, HEAD_Y, SEAT_DEPTH]} />
+      {p.compaction && !reducedMotion && quality !== 'low' && (
+        <CompactionEffect key={p.compaction.key} position={[0, HEAD_Y, SEAT_DEPTH]} />
       )}
-      <group
-        position={[0, 0, SEAT_DEPTH]}
-        onClick={(e) => {
-          e.stopPropagation();
-          // A click that ends an orbit drag, or the end of a press-and-hold, is not a choice.
-          if (e.delta > 4 || press.consumeClick()) return;
-          onActivate(agent.id, e.shiftKey);
-        }}
-        onContextMenu={(e) => {
-          e.stopPropagation();
-          e.nativeEvent.preventDefault();
-          onMenu(agent.id);
-        }}
-        onPointerDown={(e) => {
-          if (e.pointerType === 'touch') press.start(e.clientX, e.clientY);
-          else if (e.altKey && e.button === 0 && onGrab(agent.id, e.nativeEvent))
-            e.stopPropagation();
-        }}
-        onPointerMove={(e) => press.move(e.clientX, e.clientY)}
-        onPointerUp={press.end}
-        onPointerCancel={press.end}
-        onDoubleClick={(e) => {
-          e.stopPropagation();
-          onSelect(agent.id);
-          onFly([desk.x, baseY + 0.7, desk.z], AGENT_OFFSET);
-        }}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          onHoverStart(agent.id);
-          document.body.style.cursor = 'pointer';
-        }}
-        onPointerOut={() => {
-          onHoverEnd(agent.id);
-          document.body.style.cursor = '';
-        }}
-      >
-        {departure ? (
-          <Departing
-            plan={departure.plan}
-            startAt={departure.startAt}
-            reducedMotion={reducedMotion}
-            bag={apparition !== 'ghost'}
-            bagColor={agent.color}
-          >
-            {(clip) => (
-              <Animal
-                {...animal}
-                // A sleeping rabbit wakes as the member it is; a ghost has only its own way of going.
-                apparition={clip && apparition === 'sleeping_rabbit' ? undefined : apparition}
-                override={clip ?? undefined}
-                pace={clip === 'walk' ? WALK_PACE : 1}
-              />
-            )}
-          </Departing>
-        ) : (
-          <Poser
-            seat={{ x: desk.x, z: desk.z, floor: desk.floor ?? 0, rotation: desk.rotation }}
-            seed={agent.id}
-            engagements={engagements}
-            turn={turn}
-            reducedMotion={reducedMotion}
-          >
+    </>
+  );
+}
+
+/** The character at its desk: leaving with its bag, or seated and turning toward whoever it talks to; a jiangshi behind the chair when zombies are under it. */
+function MemberBody({ p, behavior }: { p: MemberProps; behavior: BehaviorScene }) {
+  const { agent, desk, apparition, departure, reducedMotion, quality, light } = p;
+  const animal = {
+    selected: p.selected,
+    ring: p.ring,
+    emote: p.emote,
+    reducedMotion,
+    quality,
+    light,
+    onError: p.onFailure,
+  };
+  return (
+    <>
+      {departure ? (
+        <Departing
+          plan={departure.plan}
+          startAt={departure.startAt}
+          reducedMotion={reducedMotion}
+          bag={apparition !== 'ghost'}
+          bagColor={agent.color}
+        >
+          {(clip) => (
             <Animal
+              agent={agent}
               {...animal}
-              apparition={apparition}
-              pace={1 + intensity * 0.4}
-              behavior={behavior}
+              // A sleeping rabbit wakes as the member it is; a ghost has only its own way of going.
+              apparition={clip && apparition === 'sleeping_rabbit' ? undefined : apparition}
+              override={clip ?? undefined}
+              pace={clip === 'walk' ? WALK_PACE : 1}
             />
-          </Poser>
-        )}
-        {zombie && !departure && (
+          )}
+        </Departing>
+      ) : (
+        <Poser
+          seat={{ x: desk.x, z: desk.z, floor: desk.floor ?? 0, rotation: desk.rotation }}
+          seed={agent.id}
+          engagements={p.engagements}
+          turn={p.turn}
+          reducedMotion={reducedMotion}
+        >
           <Animal
             agent={agent}
-            apparition="zombie"
-            selected={false}
-            reducedMotion={reducedMotion}
-            quality={quality}
-            light={light}
-            onError={onFailure}
+            {...animal}
+            apparition={apparition}
+            pace={1 + p.intensity * 0.4}
+            behavior={behavior}
           />
-        )}
+        </Poser>
+      )}
+      {p.zombie && !departure && (
+        <Animal
+          agent={agent}
+          apparition="zombie"
+          selected={false}
+          reducedMotion={reducedMotion}
+          quality={quality}
+          light={light}
+          onError={p.onFailure}
+        />
+      )}
+    </>
+  );
+}
+
+/** One member at a desk: its screen, its character (and a jiangshi behind the chair when zombies are under it). */
+export function Member(p: MemberProps) {
+  const { agent, desk } = p;
+  const baseY = floorY(desk.floor ?? 0, p.exploded);
+  const menu = useRef(p.onMenu);
+  menu.current = p.onMenu;
+  const profile = useMemo(() => deskProfile(agent.id, p.role), [agent.id, p.role]);
+  const behavior = useBehavior(p.facts, p.intensity, profile.monitors === 2);
+  const press = useMemo(() => createLongPress(() => menu.current(agent.id)), [agent.id]);
+  return (
+    <group position={[desk.x, baseY, desk.z]} rotation={[0, (desk.rotation * Math.PI) / 2, 0]}>
+      <DeskFurnishings p={p} profile={profile} />
+      <group
+        position={[0, 0, SEAT_DEPTH]}
+        {...characterEvents(agent.id, [desk.x, baseY + 0.7, desk.z], press, p)}
+      >
+        <MemberBody p={p} behavior={behavior} />
       </group>
     </group>
   );

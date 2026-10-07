@@ -9,6 +9,7 @@ import {
   SINK_MS,
   STAND_MS,
   WALK_SPEED,
+  pathLength,
   WAVE_MS,
   type Departure,
 } from '../departure.js';
@@ -20,15 +21,15 @@ const POD_RADIUS = 0.6;
 /** The turn to face the supervisor and the sit (the sit_down clip's length). */
 export const TURN_MS = 400;
 export const SIT_MS = 1000;
-export const MATERIALIZE_MS = 800;
+const MATERIALIZE_MS = 800;
 /** The longest walk each tier shows; a farther pod, or a lower tier, has the subagent appear in its seat instead. */
 const WALK_LIMIT: Record<Quality, number> = { high: 14, balanced: 10, low: 0 };
 /** Facing the desk, in the seat's frame (the model looks along +z and the chair is behind the desk). */
 const SEATED_HEADING = Math.PI;
 
-export type ArrivalMode = 'walk' | 'materialize' | 'appear';
+type ArrivalMode = 'walk' | 'materialize' | 'appear';
 /** Where a walker stands and how its frame is turned in the world. */
-export type Frame = { origin: Point; frameYaw: number };
+type Frame = { origin: Point; frameYaw: number };
 export type Arrival = Frame & {
   /** The core, then the way to the chair, in the seat's frame (the chair is the origin). */
   points: Point[];
@@ -51,11 +52,7 @@ export type ErrandPose = {
   done: boolean;
 };
 
-export const length = (points: readonly Point[]) =>
-  points.reduce(
-    (sum, p, i) => (i ? sum + Math.hypot(p.x - points[i - 1]!.x, p.z - points[i - 1]!.z) : 0),
-    0,
-  );
+export const length = pathLength;
 export const heading = (from: Point, to: Point, otherwise: number) =>
   from.x === to.x && from.z === to.z ? otherwise : Math.atan2(to.x - from.x, to.z - from.z);
 export const shortest = (a: number, b: number) =>

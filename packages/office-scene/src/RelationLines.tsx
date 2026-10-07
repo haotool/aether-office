@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { AdditiveBlending, Color, type InstancedInterleavedBuffer } from 'three';
+import { AdditiveBlending, Color, type InterleavedBufferAttribute } from 'three';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
@@ -20,10 +20,13 @@ const WIDTH = 1.8;
 export function RelationLines({ edges, animate }: { edges: readonly Edge[]; animate: boolean }) {
   // The edges are new objects on every render; the geometry is rebuilt only when a position changes.
   const shape = edges.map((e) => `${e.a}|${e.b}`).join(';');
+  const latest = useRef(edges);
+  latest.current = edges;
   const { lines, material, geometry } = useMemo(() => {
+    const built = latest.current;
     const geometry = new LineSegmentsGeometry();
-    geometry.setPositions(edges.flatMap((e) => [...e.a, ...e.b]));
-    geometry.setColors(new Array<number>(edges.length * 6).fill(0));
+    geometry.setPositions(built.flatMap((e) => [...e.a, ...e.b]));
+    geometry.setColors(new Array<number>(built.length * 6).fill(0));
     const material = new LineMaterial({
       linewidth: WIDTH,
       vertexColors: true,
@@ -35,7 +38,6 @@ export function RelationLines({ edges, animate }: { edges: readonly Edge[]; anim
     const lines = new LineSegments2(geometry, material);
     lines.frustumCulled = false;
     return { lines, material, geometry };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- by value, see `shape`
   }, [shape]);
   useEffect(
     () => () => {
@@ -48,9 +50,7 @@ export function RelationLines({ edges, animate }: { edges: readonly Edge[]; anim
     const ratio = gl.getPixelRatio();
     material.resolution.set(size.width * ratio, size.height * ratio);
     material.linewidth = WIDTH * ratio;
-    const start = geometry.getAttribute('instanceColorStart') as unknown as {
-      data: InstancedInterleavedBuffer;
-    };
+    const start = geometry.getAttribute('instanceColorStart') as InterleavedBufferAttribute;
     const array = start.data.array as Float32Array; // six floats per edge: start rgb, end rgb
     const breath = animate
       ? 0.75 + 0.25 * Math.sin(clock.elapsedTime * BREATH_HZ * Math.PI * 2)

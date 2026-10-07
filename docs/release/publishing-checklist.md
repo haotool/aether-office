@@ -8,7 +8,7 @@ beyond the readiness check: pushing and changing GitHub settings stay manual dec
 
 - [ ] Copy `.oss-private-patterns.example` to `.oss-private-patterns` and list your private strings.
 - [ ] `pnpm install --frozen-lockfile && pnpm build`, then `pnpm run oss:check`. Fix every **FAIL**; read every **WARN**
-      (shipped assets over 1 MB and documentation host names such as `office.lan` are expected).
+      (shipped assets over 1 MB and documentation host names such as `office.example` are expected).
 - [ ] Decide the canonical author identity in `.mailmap` (a GitHub noreply address is
       `<id>+haotool@users.noreply.github.com`; the id is the `id` field of `https://api.github.com/users/haotool`).
       This is the maintainer's decision: the file lists the identity that exists today, and nothing in the tooling changes it.

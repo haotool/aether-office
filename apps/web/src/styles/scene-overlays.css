@@ -3,12 +3,12 @@
   position: absolute;
   z-index: var(--z-hud-caption);
   left: 50%;
-  top: 14px;
+  top: 14px; /* token-lint: geometry */
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   gap: var(--space-8);
-  max-width: min(70%, 520px);
+  max-width: min(70%, 520px); /* token-lint: geometry */
   padding: var(--space-6) var(--space-12);
   border-radius: var(--r-2xl);
   border: 1px solid var(--glass-line);
@@ -21,11 +21,11 @@
 }
 .shot-caption i {
   flex: none;
-  width: 8px;
-  height: 8px;
+  width: 8px; /* token-lint: geometry */
+  height: 8px; /* token-lint: geometry */
   border-radius: 50%;
   background: var(--red);
-  animation: rec 1.6s ease-in-out infinite;
+  animation: rec 1.6s ease-in-out infinite; /* token-lint: loop */
 }
 .shot-caption span {
   overflow: hidden;
@@ -47,8 +47,8 @@
 }
 @media (max-width: 760px), (pointer: coarse) and (max-height: 500px) {
   .phone-office .shot-caption {
-    top: 62px;
-    max-width: calc(100% - 112px); /* clear of the floor rail */
+    top: 62px; /* token-lint: geometry */
+    max-width: calc(100% - 112px); /* clear of the floor rail token-lint: geometry */
     transform: none;
     left: var(--hud-inset);
   }
@@ -69,8 +69,8 @@
     letter-spacing: 1px;
   }
   .auto-pill i {
-    width: 9px;
-    height: 9px;
+    width: 9px; /* token-lint: geometry */
+    height: 9px; /* token-lint: geometry */
     border-radius: 50%;
     background: var(--dim);
   }
@@ -80,7 +80,7 @@
   }
   .auto-pill[aria-pressed='true'] i {
     background: var(--mint);
-    box-shadow: 0 0 8px var(--mint);
+    box-shadow: 0 0 8px var(--mint); /* token-lint: glow */
   }
 }
 
@@ -128,7 +128,7 @@
   font-weight: 650;
   white-space: nowrap;
   pointer-events: none;
-  animation: chip-life 3s var(--ease) forwards;
+  animation: chip-life 3s var(--ease) forwards; /* token-lint: animation */
 }
 @keyframes chip-life {
   0% {
@@ -153,7 +153,7 @@
   z-index: var(--z-hud-chip);
   display: grid;
   gap: var(--space-4);
-  max-width: min(280px, calc(50% - var(--space-16)));
+  max-width: min(280px, calc(50% - var(--space-16))); /* token-lint: geometry */
   padding: var(--space-8) var(--space-12);
   border-radius: var(--r-lg);
   border: 1px solid color-mix(in srgb, var(--strand) 55%, var(--glass-line));

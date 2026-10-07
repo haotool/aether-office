@@ -58,9 +58,7 @@ export function PhoneOffice({
   onRefresh: () => void;
 }) {
   const t = useT();
-  const prefs = usePreferences();
-  const advanced = prefs.advanced;
-  const navigate = useNavigate();
+  const advanced = usePreferences((s) => s.advanced);
   const kpi = useKpiPanel();
   return (
     <div className="phone-office">
@@ -83,37 +81,7 @@ export function PhoneOffice({
         onNotice={onNotice}
         onRefresh={onRefresh}
       />
-      <div className="phone-top">
-        <div className="segmented" role="group" aria-label={t('office')}>
-          {(['3d', '2d'] as const).map((view) => (
-            <button
-              key={view}
-              className={prefs.view === view ? 'selected' : ''}
-              aria-pressed={prefs.view === view}
-              onClick={() => prefs.set({ view })}
-            >
-              {view === '3d' ? '3D' : '2D'}
-            </button>
-          ))}
-        </div>
-        <div className="phone-top-right">
-          <ActiveSessions sessions={sessions} onOpen={(s) => navigate(sessionLink(s))} />
-          <AttentionSessions
-            sessions={sessions}
-            owner={owner}
-            onOpen={(s) => navigate(sessionLink(s))}
-          />
-          {prefs.view === '3d' && (
-            <button
-              className="round"
-              aria-label={t('reset')}
-              onClick={() => onFocus(focus === 'overview' ? 'atrium' : 'overview')}
-            >
-              <RotateCcw size={18} />
-            </button>
-          )}
-        </div>
-      </div>
+      <PhoneTop sessions={sessions} owner={owner} focus={focus} onFocus={onFocus} />
       <div className="phone-kpi">
         <KpiStrip usage={kpi.usage} git={kpi.git} running={kpi.running} onOpen={() => kpi.open()} />
       </div>
@@ -123,6 +91,56 @@ export function PhoneOffice({
           <Plus size={24} />
         </button>
       )}
+    </div>
+  );
+}
+
+/** The controls floating over the top of the phone's scene: the view switch, the session lists and the camera reset. */
+function PhoneTop({
+  sessions,
+  owner,
+  focus,
+  onFocus,
+}: {
+  sessions: readonly AttributedSession[];
+  owner: boolean;
+  focus: string;
+  onFocus: (focus: string) => void;
+}) {
+  const t = useT();
+  const prefs = usePreferences();
+  const navigate = useNavigate();
+  return (
+    <div className="phone-top">
+      <div className="segmented" role="group" aria-label={t('office')}>
+        {(['3d', '2d'] as const).map((view) => (
+          <button
+            key={view}
+            className={prefs.view === view ? 'selected' : ''}
+            aria-pressed={prefs.view === view}
+            onClick={() => prefs.set({ view })}
+          >
+            {view === '3d' ? '3D' : '2D'}
+          </button>
+        ))}
+      </div>
+      <div className="phone-top-right">
+        <ActiveSessions sessions={sessions} onOpen={(s) => navigate(sessionLink(s))} />
+        <AttentionSessions
+          sessions={sessions}
+          owner={owner}
+          onOpen={(s) => navigate(sessionLink(s))}
+        />
+        {prefs.view === '3d' && (
+          <button
+            className="round"
+            aria-label={t('reset')}
+            onClick={() => onFocus(focus === 'overview' ? 'atrium' : 'overview')}
+          >
+            <RotateCcw size={18} />
+          </button>
+        )}
+      </div>
     </div>
   );
 }

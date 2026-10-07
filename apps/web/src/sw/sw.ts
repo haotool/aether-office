@@ -21,7 +21,9 @@ type Worker = {
   addEventListener(type: 'fetch', listener: (event: FetchEvent) => void): void;
   addEventListener(type: 'message', listener: (event: Event & { data: unknown }) => void): void;
 };
-const worker = self as unknown as Worker;
+/** A service worker has no `window`; its global scope is this `self`. */
+declare const self: Worker;
+const worker = self;
 const CACHE = cacheName(VERSION);
 
 worker.addEventListener('install', (event) => {

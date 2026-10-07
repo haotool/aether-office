@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { Layout } from '@aether/contracts';
 import { box } from './geometry.js';
-import RAW_SEATING from './desk-seating.json';
+import { SEATING } from './seating.js';
 import { type Materials } from './building-materials.js';
 import { cylinder } from './building-parts.js';
 
@@ -12,13 +12,6 @@ import { cylinder } from './building-parts.js';
  * seat. Every height and size of the slab and the seat comes from desk-seating.json, which the animal audit checks the
  * characters against (tools/blender/audit_animals.py): change them there, not here.
  */
-type V3 = [number, number, number];
-/** desk-seating.json, with its sizes and positions typed as the points they are. */
-const SEATING = RAW_SEATING as unknown as Record<
-  'slab' | 'bar' | 'pedestal' | 'seat' | 'cushion' | 'back',
-  { size: V3; at: V3; radius: number; height: number }
-> & { sitter: { z: number }; screenY: number };
-
 function desk(group: THREE.Group, m: Materials) {
   const { slab, bar, pedestal, seat, cushion, back } = SEATING;
   const top = slab.at[1] + slab.size[1] / 2; // the desk's working surface

@@ -3,7 +3,7 @@
 Behavioral notes for capabilities that are not obvious from the UI. The authoritative per-capability status is the
 [verification ledger](verification/report.md).
 
-**Contents.** What you see and use: [Navigation](#navigation-the-advanced-switch) · [Settings](#settings) ·
+**Contents.** What you see and use: [First run](#first-run-language-titles-and-the-keyboard) · [Navigation](#navigation-the-advanced-switch) · [Settings](#settings) ·
 [Notifications](#notifications) · [Connecting a phone](#connecting-a-phone) · [The session panel and the composer](#the-session-panel-and-the-composer) ·
 [Text in the conversation](#text-in-the-conversation-wrappers-notices-and-markdown) · [Answering permission prompts](#answering-permission-prompts-remote-approvals) ·
 [Clock out](#clock-out) · [KPIs](#token-and-git-kpis) · [Models](#detected-models). The office: [Interacting with the characters](#interacting-with-the-characters) ·
@@ -11,6 +11,28 @@ Behavioral notes for capabilities that are not obvious from the UI. The authorit
 [Office life](#office-life-little-moments-in-the-3d-office) · [The first-visit tour](#the-first-visit-tour) ·
 [Observed sessions, roles and squads](#observed-sessions-on-the-3d-floor). The orchestration workbench (behind Advanced):
 [Task dependency graph](#task-dependency-graph) · [Project knowledge](#project-knowledge-and-human-review) · [Agent review](#agent-review).
+
+## First run, language, titles and the keyboard
+
+- **Nothing running yet.** With no project, or no character and no session anywhere, the office page is a calm panel: what
+  AETHER shows, three steps (start `claude` or `codex` in a project folder; the character appears within seconds; optionally
+  install the hooks), the commands with copy buttons, `pnpm run doctor` for when it does not show up, and "Create a project by
+  hand" as a secondary action. With exactly one session in live mode a one-line note says what the speech bubbles and the
+  figures wait for.
+- **Language.** The first visit follows `navigator.language` (anything starting with `zh` is Traditional Chinese, the rest
+  English), the login page and the document `lang` included. The choice is stored with the other preferences and a saved
+  preference is never overridden.
+- **Addresses.** A project in the address that this person cannot open (stale, mistyped) falls back to the first project with a
+  short notice; an unknown page shows "Page not found" with a link home (an unknown Settings group still opens the Settings home). Errors that cannot be
+  retried (a missing project, 404) have no Retry button.
+- **Tab title.** `<page> · AETHER OFFICE` in the interface language, with the count of things waiting for you in front.
+- **Keyboard and screen readers.** The first Tab stops on "Skip to main content", which moves focus to the `main` landmark
+  (navigation, main and the session panel are labelled landmarks). The 3D canvas is an image named "3D office" and described by
+  one sentence ("12 characters on 3 floors: 2 working, 1 waiting for you") in a polite live region that changes only when a count
+  does. A screen-reader pass is still not done (ledger A11Y-08).
+- **Forms.** Create task and Propose knowledge (and the login) check required fields themselves: a `*` on the label and an
+  inline message in the interface language instead of the browser's native bubble. The task's version and id sit behind a
+  "Details" fold. The layout editor is labelled experimental and docks at the side so the scene stays visible while you edit.
 
 ## Navigation: the Advanced switch
 
@@ -107,7 +129,8 @@ dragged between 320 and 720 px or folded to a rail. Details and the endpoints ar
 Off by default. With `pnpm hooks install --remote-approvals` and the owner's switch in Settings, a Claude Code permission prompt
 is also shown in the panel as a card (Allow once, Allow for this session when Claude offered a rule, Deny with a reason). Only a
 button press decides; with no answer, offline or on any error Claude asks in its terminal as usual. The trust model, the
-signed answers and the plain-HTTP tradeoff for a phone are in [security](security.md#safety-properties).
+signed answers and the plain-HTTP tradeoff for a phone are in [security](security.md#safety-properties). The Approvals page
+lists the pending requests too; when none waits, its empty text says whether Remote approvals is on.
 
 ## Text in the conversation: wrappers, notices and Markdown
 

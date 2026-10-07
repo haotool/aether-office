@@ -13,6 +13,7 @@ import {
 import { diff, security, tests } from './screen-art-quality.js';
 import { dataTables, kpis, training } from './screen-art-data.js';
 import { architecture, documents, kanban, mindmap } from './screen-art-plan.js';
+import { context2d } from './canvas-2d.js';
 
 /**
  * Role-themed screen art for the holographic workstations. It is decoration that says what kind of work a desk does
@@ -54,7 +55,7 @@ export function screenTexture(role: string, member: string, accent: string): Can
   const canvas = document.createElement('canvas');
   canvas.width = SCREEN_W;
   canvas.height = SCREEN_H;
-  const g = canvas.getContext('2d')!;
+  const g = context2d(canvas);
   const rng = seeded(`${role}:${variant}`);
   draws[variant % draws.length]!(g, rng, accent);
   // A faint scanline overlay keeps it reading as a projection rather than a flat monitor.

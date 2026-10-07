@@ -21,6 +21,7 @@
   --shadow-sm: 0 4px 16px var(--shade);
   --shadow-md: 0 8px 28px var(--shade);
   --shadow-lg: 0 20px 80px var(--shade);
+  --shadow-up: 0 -18px 50px var(--shade); /* a sheet rising from the bottom edge */
   --grid: #2f4a6112;
   /* Type floor: no visible text under --fs-label (uppercase mono tags) or --fs-small (everything readable). */
   --fs-label: 11px;
@@ -43,6 +44,8 @@
   --control-h-lg: 40px; /* a main call to action, the login */
   --bar-h: 56px; /* the top bar, the tab bar, a drawer's header */
   --tabbar-h: var(--bar-h);
+  --peek-h: 72px; /* the phone session sheet's peek (the member bar) */
+  --fab-size: 52px; /* the new-task round button over the phone scene */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -190,5 +193,33 @@
     --control-h-sm: 36px;
     --control-h-md: 40px;
     --control-h-lg: 44px;
+  }
+}
+/* Reduced transparency, or more contrast asked for: the glass over the scene is opaque (the blur is switched off in breakpoints.css). */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  :root {
+    --glass: #0a141c;
+    --glass-soft: #0a141c;
+    --glass-strong: #050f16;
+    --glass-label: #10232e;
+  }
+}
+/* More contrast: visible hairlines, text one step closer to the page's text color, a thicker focus ring. */
+@media (prefers-contrast: more) {
+  :root {
+    --line: #7e97ab;
+    --muted: #cdd9e3;
+    --dim: #b9c8d4;
+    --glass-line: #ffffff80;
+    --glass-line-soft: #a8bcc2c0;
+    --glass-line-strong: #c4d4d9;
+    --glass-edge: #6b93a6;
+    --on-glass-muted: #c4dde5;
+    --focus-ring: 3px solid var(--mint);
+  }
+  :root[data-theme='light'] {
+    --line: #5c7385;
+    --muted: #2c4252;
+    --dim: #314a5a;
   }
 }

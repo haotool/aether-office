@@ -6,6 +6,7 @@ import { nav, pageLink, visibleGroups } from '../nav.js';
 
 const icons = new Map<string, (typeof nav)[number][1]>(nav);
 import { useT } from '../ui.js';
+import { ProjectSelect } from './ProjectSelect.js';
 
 /** Page navigation with live counts, the connection state and sign-out. A drawer on a phone. */
 export function Sidebar({
@@ -41,21 +42,11 @@ export function Sidebar({
 }) {
   const t = useT();
   return (
-    <nav className={`sidebar ${open ? 'open' : ''}`} aria-label={t('project')}>
+    <nav className={`sidebar ${open ? 'open' : ''}`} aria-label={t('navigation')}>
       {/* The top bar's project picker has no room on a phone; it lives here instead. */}
       <label className="drawer-project">
         <span className="nav-title">WORKSPACE</span>
-        <select
-          aria-label={t('project')}
-          value={projectId ?? ''}
-          onChange={(e) => onProject(e.target.value)}
-        >
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+        <ProjectSelect projects={projects} projectId={projectId} onProject={onProject} />
       </label>
       <div className="nav-title desktop-title">WORKSPACE</div>
       {visibleGroups(advanced).map(([group, pages]) => (

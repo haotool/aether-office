@@ -1,0 +1,26 @@
+/** The telemetry words, in English. */
+export const enTelemetry = {
+  executionPolicy: 'Native agent execution',
+  emergencyStop: 'Emergency stop',
+  telemetry: 'Local session overview',
+  sessionCount: 'SESSIONS',
+  liveProcesses: 'LIVE',
+  quotaReset: 'Resets',
+  cpu: 'CPU',
+  memory: 'MEM',
+  disk: 'DISK FREE',
+  fiveHourWindow: '5-hour',
+  sevenDayWindow: '7-day',
+  quotaUpdated: 'Fetched',
+  quotaStale: 'Out of date: Claude Code may not be running',
+  floor: 'Floor',
+  floorName: 'en',
+  emergencyConfirm: 'Stop all execution',
+  executionConsent:
+    'Assigned work may consume the signed-in provider’s paid quota. Disabling cancels queued work and requests running work to stop. Tool permissions still require individual review.',
+  enableLive: 'Allow live agents in this project',
+  maxTurns: 'Maximum turns per run',
+  timeoutSeconds: 'Timeout in seconds',
+  runnerGrantRequired:
+    'The runner also needs local opt-in and repository grants. Saving this policy does not start a model.',
+} as const;

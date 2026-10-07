@@ -3,24 +3,24 @@
     padding: var(--space-32) var(--space-40) 0;
   }
   .scene-shell {
-    min-height: 540px;
+    min-height: 540px; /* token-lint: geometry */
   }
   .sidebar {
-    width: 220px;
+    width: 220px; /* token-lint: geometry */
   }
   .team-chip {
-    min-width: 160px;
+    min-width: 160px; /* token-lint: geometry */
   }
 }
 @media (max-width: 1250px) {
   .sidebar {
-    width: 172px;
+    width: 172px; /* token-lint: geometry */
   }
   .topbar {
     padding: 0 var(--space-16);
   }
   .brand {
-    width: 132px;
+    width: 132px; /* token-lint: geometry */
   }
   .office-page {
     padding: var(--space-20) var(--space-16) 0;
@@ -35,7 +35,7 @@
     max-width: none;
   }
   .scene-shell {
-    min-height: 380px;
+    min-height: 380px; /* token-lint: geometry */
   }
   .page-padding {
     padding: var(--space-24);
@@ -49,14 +49,35 @@
     font-size: var(--fs-wordmark-md);
     letter-spacing: 8px;
   }
+  /* The top bar keeps every control on screen: the stop shows its icon only, the decorative initial goes. */
+  .topbar-right {
+    gap: var(--space-8);
+  }
+  .stop-label,
+  .user-dot {
+    display: none;
+  }
 }
 @media (max-width: 760px) {
+  .link-text,
+  .link-status small {
+    display: none; /* the dot and its title carry the link state; the sidebar has the words */
+  }
+  .emergency-stop {
+    position: absolute;
+    top: 100%;
+    right: var(--space-12);
+    z-index: var(--z-topbar);
+    padding: var(--space-8);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-card);
+    box-shadow: var(--shadow-md);
+  }
   body {
     font-size: var(--fs-meta);
   }
   .topbar {
-    height: 61px;
-    min-height: 61px;
     padding: 0 var(--space-12);
     gap: var(--space-8);
   }
@@ -72,8 +93,8 @@
     letter-spacing: 4px;
   }
   .brand img {
-    width: 28px;
-    height: 28px;
+    width: 28px; /* token-lint: geometry */
+    height: 28px; /* token-lint: geometry */
   }
   .top-divider,
   .project-picker,
@@ -97,12 +118,10 @@
   .sidebar.open {
     display: flex;
     position: absolute;
-    top: 61px;
     bottom: 0;
     left: 0;
-    z-index: var(--z-drawer);
-    width: 220px;
-    box-shadow: 30px 0 60px var(--shade);
+    z-index: var(--z-drawer); /* top and width: phone-drawer.css */
+    box-shadow: 30px 0 60px var(--shade); /* token-lint: shadow */
   }
   .main-content {
     width: 100%;
@@ -136,14 +155,14 @@
     padding: var(--space-16) 0 var(--space-12);
   }
   .scene-shell {
-    min-height: 400px;
-    height: 60vh;
+    min-height: 400px; /* token-lint: geometry */
+    height: 60dvh;
     flex: 0 0 auto;
   }
   .scene-toolbar {
-    left: 10px;
-    right: 10px;
-    top: 10px;
+    left: 10px; /* token-lint: geometry */
+    right: 10px; /* token-lint: geometry */
+    top: 10px; /* token-lint: geometry */
     gap: var(--space-8);
   }
   .segmented button {
@@ -152,11 +171,11 @@
   .scene-footer {
     font-size: var(--fs-label);
     letter-spacing: 0.5px;
-    left: 12px;
-    right: 12px;
+    left: 12px; /* token-lint: geometry */
+    right: 12px; /* token-lint: geometry */
   }
   .team-chip {
-    min-width: 140px;
+    min-width: 140px; /* token-lint: geometry */
   }
   .team-strip {
     padding-top: var(--space-16);
@@ -210,13 +229,13 @@
   }
   .task-row > div {
     flex: 1;
-    min-width: 170px;
+    min-width: 170px; /* token-lint: geometry */
   }
   .task-row .task-priority {
     margin-left: auto;
   }
   .task-row small {
-    max-width: 240px;
+    max-width: 240px; /* token-lint: geometry */
   }
   .task-row .badge {
     margin-left: var(--space-24);
@@ -235,7 +254,7 @@
     display: block;
   }
   .login-art {
-    height: 200px;
+    height: 200px; /* token-lint: geometry */
   }
   .login-wordmark {
     font-size: var(--fs-wordmark-sm);
@@ -257,12 +276,7 @@
     margin-top: var(--space-20);
   }
   .scene-options select {
-    width: 62px;
-  }
-  .icon-button,
-  button.secondary,
-  button.primary {
-    min-height: 36px;
+    width: 62px; /* token-lint: geometry */
   }
   .nav-link {
     padding: var(--space-12) var(--space-12);
@@ -273,9 +287,9 @@
 }
 @media (prefers-reduced-motion: reduce) {
   * {
-    scroll-behavior: auto !important;
-    transition: none !important;
-    animation: none !important;
+    scroll-behavior: auto !important; /* token-lint: preference */
+    transition: none !important; /* token-lint: preference */
+    animation: none !important; /* token-lint: preference */
   }
 }
 
@@ -289,4 +303,70 @@
 }
 :root[data-theme='light'] .primary {
   color: var(--white);
+}
+
+/*
+ * User preferences (the viewport queries above are the layout; these are what the person's system asks for). Each is
+ * checked with Playwright's emulateMedia in e2e/preferences.spec.ts. Colors for them live in tokens.css.
+ */
+/* Reduced transparency or more contrast: no blur behind a surface (the glass tokens are opaque in tokens.css). A person's
+   setting outranks every component rule, hence !important. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  * {
+    -webkit-backdrop-filter: none !important; /* token-lint: preference */
+    backdrop-filter: none !important; /* token-lint: preference */
+  }
+}
+/* Forced colors (Windows high contrast): the system paints colors, so what a border or a fill said must be said by a
+   border or an outline: a button without a border gets one, the cut corner goes, a selected control is outlined, the
+   focus ring is the system highlight. */
+@media (forced-colors: active) {
+  .primary,
+  .secondary,
+  .icon-button,
+  .text-button,
+  .u-btn,
+  .u-chip,
+  .badge,
+  .tab,
+  .round,
+  .fab,
+  .chip-active,
+  .chip-attention,
+  .kpi-cell,
+  .rail-floor,
+  .rail-tool,
+  .sheet-chip {
+    border: 1px solid ButtonText;
+  }
+  .primary {
+    clip-path: none;
+  }
+  .selected,
+  .active,
+  [aria-pressed='true'],
+  [aria-current],
+  [aria-selected='true'] {
+    outline: 2px solid Highlight;
+    outline-offset: calc(-1 * var(--space-2));
+  }
+  .topbar,
+  .sidebar,
+  .tabbar,
+  .panel,
+  .modal,
+  .sheet,
+  .session-sheet,
+  .member-bar,
+  .floor-hud,
+  .building-panel,
+  .floor-plaque,
+  .intro-caption {
+    border: 1px solid CanvasText;
+  }
+  /* last, so a selected control that is also focused still shows the ring */
+  :root :focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: var(--focus-offset);
+  }
 }

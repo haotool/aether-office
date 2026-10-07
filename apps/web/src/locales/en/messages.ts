@@ -1,0 +1,20 @@
+/** The messages words, in English. */
+export const enMessages = {
+  recipients: 'Recipients',
+  messageBody: 'Message',
+  newMessage: 'Compose',
+  noMessages: 'A home for your conversations',
+  noMessagesHint: 'Send questions, decisions and handoffs. Messages are durably stored.',
+  inform: 'Information',
+  request: 'Request a reply',
+  decision: 'Decision',
+  handoff: 'Handoff',
+  kind: 'Kind',
+  you: 'You',
+  persisted: 'Persisted',
+  injected: 'Injected',
+  acknowledged: 'Acknowledged',
+  responded: 'Responded',
+  expired: 'Expired',
+  reply: 'Reply',
+} as const;

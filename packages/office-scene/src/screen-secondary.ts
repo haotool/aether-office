@@ -3,6 +3,7 @@ import type { Secondary, Theme } from './desk-profile.js';
 import { seeded } from './random.js';
 import { PALETTES, type Palette } from './screen-theme.js';
 import { polyline, roundRect, textBars, wander } from './screen-ui.js';
+import { context2d } from './canvas-2d.js';
 
 /**
  * The second monitor of a desk: a reference window (docs, a page, a log, a chat, a dashboard) shown as shapes, never as
@@ -96,7 +97,7 @@ export function acquireSecondary(kind: Secondary, theme: Theme, accent: string) 
     canvas.height = SECONDARY_H;
     const texture = new CanvasTexture(canvas);
     texture.colorSpace = SRGBColorSpace;
-    entry = { texture, g: canvas.getContext('2d')!, refs: 0, lastAt: -Infinity, key };
+    entry = { texture, g: context2d(canvas), refs: 0, lastAt: -Infinity, key };
     shared.set(key, entry);
   }
   entry.refs++;

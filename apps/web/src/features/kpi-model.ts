@@ -16,7 +16,7 @@ export type Range = UsageResponse['range'];
 export const RANGES: readonly Range[] = ['today', '7d', '30d'];
 
 /** The segments of the token breakdown, in the order they are drawn. */
-export const SEGMENTS = ['input', 'output', 'cacheRead', 'cacheWrite', 'reasoning'] as const;
+const SEGMENTS = ['input', 'output', 'cacheRead', 'cacheWrite', 'reasoning'] as const;
 export type Segment = (typeof SEGMENTS)[number];
 
 /** Tokens the headline counts: everything but cache reads, which dominate every session and are not spend. */
@@ -59,7 +59,7 @@ export function sparkPoints(values: readonly number[], width: number, height: nu
     .join(' ');
 }
 
-export type LimitWindow = {
+type LimitWindow = {
   id: string;
   provider: 'claude' | 'codex';
   /** Window length in minutes; null when the file did not say. */
@@ -118,7 +118,7 @@ export function windowName(
   return { text: minutes % 1440 === 0 ? `${minutes / 1440}d` : `${Math.round(minutes / 60)}h` };
 }
 
-export type Tone = 'ok' | 'warn' | 'hot';
+type Tone = 'ok' | 'warn' | 'hot';
 /** Near the limit (the top bar's threshold) is a warning; at it, hot. */
 export const toneOf = (percent: number): Tone =>
   percent >= 100 ? 'hot' : percent >= WARN_AT ? 'warn' : 'ok';
@@ -131,7 +131,7 @@ export const resetsIn = (resetsAt: number | null, now: number, locale: Locale) =
 export const runningSessions = (sessions: readonly Pick<AttributedSession, 'process'>[]) =>
   sessions.filter((s) => s.process === 'running').length;
 
-export type BadgeWords = { tokens: string; merged: string };
+type BadgeWords = { tokens: string; merged: string };
 
 /**
  * Pure. The badge of each floor: its tokens today, its share of the busiest floor, the rate (tokens per active minute)

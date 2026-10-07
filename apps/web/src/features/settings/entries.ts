@@ -253,6 +253,6 @@ export const ENTRIES = [
 }[];
 
 export type EntryId = (typeof ENTRIES)[number]['id'];
-export type Entry = (typeof ENTRIES)[number];
+type Entry = (typeof ENTRIES)[number];
 
 export const entryOf = (id: EntryId): Entry => ENTRIES.find((entry) => entry.id === id)!;

@@ -5,7 +5,7 @@ import type { SquadView } from './feed-squads.js';
  * Which squads the person opened or folded, by supervisor session key, kept in this browser only. A squad with no
  * choice of its own follows its default (folded past three subagents, open while one waits for approval).
  */
-export type SquadOpen = Readonly<Record<string, boolean>>;
+type SquadOpen = Readonly<Record<string, boolean>>;
 const STORAGE_KEY = 'aether.squadOpen';
 const MAX_KEPT = 100;
 

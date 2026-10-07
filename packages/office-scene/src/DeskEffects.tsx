@@ -1,4 +1,4 @@
-import SEATING from './desk-seating.json';
+import { SEATING } from './seating.js';
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import {
@@ -9,14 +9,18 @@ import {
   type Points,
 } from 'three';
 import { seeded } from './random.js';
+import { context2d } from './canvas-2d.js';
 
 const PUFFS = 16;
 const SPARKS = 10;
 
+/** One of a desk's random phases (the index is always inside the array: it is taken modulo its length). */
+const phaseAt = (phase: Float32Array, i: number) => phase[i] ?? 0;
+
 function softDot(): CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = 64;
-  const g = canvas.getContext('2d')!;
+  const g = context2d(canvas);
   const fill = g.createRadialGradient(32, 32, 0, 32, 32, 32);
   fill.addColorStop(0, 'rgba(255,255,255,1)');
   fill.addColorStop(1, 'rgba(255,255,255,0)');
@@ -48,16 +52,18 @@ export function DeskEffects({ intensity, seed }: { intensity: 0 | 1 | 2 | 3; see
     const t = state.clock.elapsedTime;
     const rise = intensity === 3 ? 0.9 : 0.5;
     for (let i = 0; i < PUFFS; i++) {
-      const life = (t * 0.35 + phase[i]!) % 1;
-      base.smoke[i * 3] = (phase[(i + 3) % PUFFS]! - 0.5) * 0.5 + Math.sin(t + i) * 0.04 * life;
+      const life = (t * 0.35 + phaseAt(phase, i)) % 1;
+      base.smoke[i * 3] =
+        (phaseAt(phase, (i + 3) % PUFFS) - 0.5) * 0.5 + Math.sin(t + i) * 0.04 * life;
       base.smoke[i * 3 + 1] = top + life * rise;
       base.smoke[i * 3 + 2] = -0.32 + Math.cos(t * 0.7 + i) * 0.05 * life;
     }
     for (let i = 0; i < SPARKS; i++) {
-      const life = (t * 1.6 + phase[PUFFS + i]!) % 1;
-      base.sparks[i * 3] = (phase[(i + 5) % SPARKS]! - 0.5) * 0.7 + (phase[i]! - 0.5) * life * 0.5;
-      base.sparks[i * 3 + 1] = (SEATING.slab.at[1] ?? 0.6) + 0.05 + Math.sin(life * Math.PI) * 0.35;
-      base.sparks[i * 3 + 2] = -0.1 + (phase[(i + 2) % SPARKS]! - 0.5) * 0.3;
+      const life = (t * 1.6 + phaseAt(phase, PUFFS + i)) % 1;
+      base.sparks[i * 3] =
+        (phaseAt(phase, (i + 5) % SPARKS) - 0.5) * 0.7 + (phaseAt(phase, i) - 0.5) * life * 0.5;
+      base.sparks[i * 3 + 1] = SEATING.slab.at[1] + 0.05 + Math.sin(life * Math.PI) * 0.35;
+      base.sparks[i * 3 + 2] = -0.1 + (phaseAt(phase, (i + 2) % SPARKS) - 0.5) * 0.3;
     }
     for (const points of [smoke.current, sparks.current])
       if (points) (points.geometry.getAttribute('position') as BufferAttribute).needsUpdate = true;

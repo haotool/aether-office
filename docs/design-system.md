@@ -7,7 +7,7 @@ changed pages have been looked at on a phone-sized and a tablet-sized screen.
 
 **Contents.**
 Foundations: [Tokens](#tokens) · [Stylesheet organization](#stylesheet-organization) · [Components](#components) ·
-[Responsive and touch rules](#responsive-and-touch-rules) · [Navigation and phone information architecture](#navigation-and-phone-information-architecture) ·
+[Responsive and touch rules](#responsive-and-touch-rules) (with [Breakpoints](#breakpoints), [Preference queries](#preference-queries) and [the token lint](#the-strict-token-lint-and-its-baseline)) · [Navigation and phone information architecture](#navigation-and-phone-information-architecture) ·
 [Settings](#settings).
 The session panel: [Session panel](#session-panel) · [Squads in the panel](#squads-in-the-panel) ·
 [Conversation rendering](#conversation-rendering) · [Text pipeline](#text-pipeline) · [Name tags](#name-tags) ·
@@ -110,6 +110,80 @@ classes `primary`, `secondary`, `icon-button` and `text-button` (the `u-btn` fam
    the last link and the sign-out button, and a label never wraps letter by letter.
 6. **Plain HTTP.** A phone reaching the server over the LAN has no secure context: no `crypto.randomUUID`,
    `navigator.clipboard` or service worker without a fallback (`browser-compat.ts`).
+
+### Breakpoints
+
+A `@media` query uses px only at four values: **760, 1000 and 1250 for width** and **500 for height** (a `min-width` partner
+is one above, for example 761 or 1251). `760` is the phone, `1000` the tablet, `1250` the compact desktop; the height `500`
+is a phone on its side. A component that must change by the room it has, not by the window, uses a container query
+(`@container`, as the session panel, the settings page, the phone's top row, the task list and the member bar do), which the
+lint does not count. Four thresholds are measured facts about one component and are listed, with their reasons, in
+`MEDIA_EXCEPTIONS` in `scripts/design-token-rules.mjs`:
+
+| px   | Where                                                                                                     |
+| ---- | --------------------------------------------------------------------------------------------------------- |
+| 700h | a short phone (an SE is 667px tall): the floor rail stands on the new-task button instead of the middle    |
+| 880h | the scene shell keeps the control-room wall its minimum height on a roomy window                          |
+| 1500 | the top bar holds the telemetry numbers only above the width where brand, picker, numbers and controls fit |
+| 1800 | an ultra-wide window: a wider sidebar and page padding                                                    |
+
+The top bar keeps every control on screen at 320, 390, 768, 1024, 1440 and 1920px (`e2e/role-variance.spec.ts`, native
+runner): its right side never shrinks, the project picker gives way first, below 1000px the emergency stop shows its icon and
+the decorative initial goes, and below 760px the link state is its dot.
+
+### Preference queries
+
+What the person's system asks for is answered at the end of `breakpoints.css` (and `tokens.css` for the colors), and checked
+with Playwright's media emulation in `e2e/preferences.spec.ts`, which also saves screenshots to `evidence/preferences/`:
+
+- `forced-colors: active`: the system paints the colors, so shape must say what color said. Every button, chip, tab and bar
+  gets a 1px `ButtonText` or `CanvasText` border, the `.primary` cut corner goes, a selected control (`.selected`, `.active`,
+  `aria-pressed`, `aria-current`) is outlined with `Highlight`, and the focus ring is a 3px `Highlight` outline.
+- `prefers-contrast: more`: `--line`, `--muted`, `--dim` and the glass lines are one step closer to the text color in both
+  themes and the focus ring is 3px.
+- `prefers-reduced-transparency: reduce` (and `prefers-contrast: more`): the glass tokens are opaque and `backdrop-filter` is off.
+- `prefers-reduced-motion: reduce`: no transitions, animations or smooth scrolling.
+
+A preference outranks every component rule, so these blocks may use `!important`; each such line carries the escape hatch
+`/* token-lint: preference */`.
+
+### The strict token lint and its baseline
+
+`scripts/check-design-tokens.mjs` (part of `pnpm lint`) has two parts. The first is absolute: a raw color, font size,
+spacing, radius or z-index outside `tokens.css` fails. The second holds the rules of `scripts/design-token-rules.mjs` to
+`scripts/design-token-baseline.json`, which records the count per rule and per file; **a count may only go down**, and the
+gate prints the rule and the file that rose.
+
+| Rule                      | Counted                                                                                        |
+| ------------------------- | ---------------------------------------------------------------------------------------------- |
+| `literal-size`            | a `px` of 2 or more in `width`, `height`, `min-`/`max-` of those, `inset`, `top`, `left`, `right`, `bottom` |
+| `viewport-height`         | a `vh` unit (use `dvh` or `svh`)                                                               |
+| `media-breakpoint`        | an `@media` px value off the scale above and not in `MEDIA_EXCEPTIONS`                         |
+| `custom-property-literal` | a `--x: 12px` outside `tokens.css`                                                             |
+| `literal-duration`        | seconds or milliseconds in `transition` or `animation` (use `--dur-fast`, `--dur`, `--dur-slow`) |
+| `literal-shadow`          | a px value in `box-shadow` or `text-shadow` (use `--shadow-sm/md/lg/up`)                       |
+| `literal-line-height`     | a `line-height` that is not `var(--lh-*)`, `inherit` or `normal`                               |
+| `important`               | `!important`                                                                                   |
+
+`0`, `1px` hairlines, `%`, `auto` and a size from a token pass. **The escape hatch** is a comment on the declaration's own
+line, `/* token-lint: <reason> */`, and exempts that line: `geometry` (the size of a dot, a drawing, a plaque over the 3D
+scene or a panel's measure, never a control or bar height, which come from `--control-h-*`, `--bar-h`, `--target-touch`),
+`glow` and `ring` (a shadow that is a glow or a one-pixel ring), `loop` (an endless animation), `animation` (a one-off
+entrance or timer), `glyph` (a single-line glyph's `line-height: 1`) and `preference`. The reason is for the reader; a new hatch is a
+review decision (`grep -r "token-lint:"` lists them all). `node scripts/check-design-tokens.mjs --list` prints every counted
+violation and `--update` lowers the baseline to today's counts (it refuses to raise it). The quality scorecard
+(`pnpm run quality -- --area ui`) reads the same rules and baseline, and `e2e/role-variance.spec.ts` writes
+`evidence/role-variance.json` for it. The rules are unit-tested with CSS they allow and CSS they reject in
+`tests/aether/design-token-lint.test.ts`.
+
+### One role, one height, and the finger
+
+`e2e/role-variance.spec.ts` measures buttons, icon buttons, inputs, chips, segmented controls, tab bar items and drawer rows on
+the 14 views, the 3D office and the open drawer at desktop, phone and tablet, and nothing is excluded: the scene toolbar, the
+session panel and sheet, the composer, the squad, quick open, the tab bar and the drawer count like any page. A second check holds the
+44px hit area: on a phone and a tablet every button, link, summary and tab drawn smaller than 44px must still receive a touch at
+its 44px edge (the `::before` area of `touch-targets.css` and `compact-desktop.css`). A control with a `clip-path` (the `.primary`
+cut corner) cannot extend a hit area, so it is the 44px itself on touch.
 
 ## The 3D scene on a phone
 
@@ -315,7 +389,7 @@ used by the scene (no `apps/*` import) and the web app alike. Tests: `markdown-b
   toggle is kept in this browser. Rows are memoized (`reuseTurns` keeps unchanged turns identical across polls, `Markdown`
   parses once per text); the transcript holds at most 120 entries (about 950 DOM nodes measured on a 20-turn run), so the turns
   are not windowed.
-- **Adopted from Happy** (`happy-app/sources/components/markdown/*`, `ShimmerText`, `docs/chat-list-scrolling.md`): its own
+- **Adopted from Happy** (`happy-app/sources/components/markdown/*`, `ShimmerText`): its own
   small parser rather than a library (block types text, header, list, numbered list, code, table, rule; unfinished `**` and
   backtick spans degrade to styled text, not markers; links only `http(s)`), the autolink trailing-punctuation trimming, the
   shimmer for "thinking", tool runs folded into one chip, and the idea that the newest message is the one fixed reference of a
@@ -722,7 +796,7 @@ dark tint that gives the fur at least 3:1 contrast, so a portrait reads on both 
   from the agent's activity. The provider mark stays on the name tag, never in the portrait.
 - **Component** `features/Avatar.tsx`: an `<img>` of a cached data-URI SVG (no inline HTML), `aria-hidden` next to a name,
   `role="img"` with a `label` when alone. Sizes are tokens (`--avatar-chip/row/member/peek/card`); the box is fixed, so
-  switching a state never shifts layout. `avatarUrl` is the same drawing for a canvas texture.
+  switching a state never shifts layout. `avatarUrl` (module-private) builds that cached data URI.
 - Every portrait is under 4 KB of SVG. Tests: `tests/aether/avatar.test.ts`.
 
 ## Interactions with the characters

@@ -16,9 +16,9 @@
   position: absolute;
   top: 0;
   left: 0;
-  height: 2px;
+  height: 2px; /* token-lint: geometry */
   background: var(--gold);
-  transition: width 1s linear;
+  transition: width 1s linear; /* token-lint: animation */
 }
 .permission-head {
   display: flex;
@@ -48,7 +48,7 @@
   font-variant-numeric: tabular-nums;
 }
 .permission-preview {
-  max-height: 160px;
+  max-height: 160px; /* token-lint: geometry */
   margin: 0;
   padding: var(--space-8);
   overflow: auto;
@@ -101,7 +101,7 @@
     z-index: var(--z-drawer);
     left: calc(var(--space-8) + var(--safe-left));
     right: calc(var(--space-8) + var(--safe-right));
-    bottom: calc(var(--sheet-bottom) + 72px + var(--space-16));
+    bottom: calc(var(--sheet-bottom) + var(--peek-h) + var(--space-16));
     border: 1px solid var(--gold-border);
     border-radius: var(--r-2xl);
     background: var(--surface);

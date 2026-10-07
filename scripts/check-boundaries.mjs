@@ -53,7 +53,7 @@ async function visit(dir) {
       violations.push(`${file}: unsafe HTML, code evaluation or terminal addon`);
     // Progress and completion must come from persisted state, never from randomness.
     if (/Math\.random\(/.test(source)) violations.push(`${file}: Math.random in product code`);
-    if (/@ts-ignore|@ts-nocheck/.test(source)) violations.push(`${file}: suppressed type safety`);
+    if (/@ts-(?:ignore|nocheck)/.test(source)) violations.push(`${file}: suppressed type safety`);
   }
 }
 for (const dir of ['apps', 'packages', 'scripts', 'tests', 'e2e'])

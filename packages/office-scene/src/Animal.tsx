@@ -1,35 +1,25 @@
-import { useEffect, useEffectEvent, useRef, useState } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
-import {
-  AnimationMixer,
-  LoopOnce,
-  LoopRepeat,
-  MeshStandardMaterial,
-  SkinnedMesh,
-  type AnimationAction,
-  type AnimationClip,
-  Vector3,
-  type Group,
-  type Object3D,
-} from 'three';
+import { useRef, useState } from 'react';
+import type { AnimationAction, AnimationMixer, Group } from 'three';
 import type { Agent } from '@aether/contracts';
-import { acquireAnimal } from './animal-assets.js';
 import { Zzz } from './Zzz.js';
-import { registerAnchors } from './squad/puppet/anchors.js';
-import { animationInterval } from './perf-control.js';
-import { useMicroActions, type BehaviorScene } from './use-micro-actions.js';
+import type { BehaviorScene } from './use-micro-actions.js';
+import {
+  useAnimalModel,
+  useClipPlayer,
+  useMixerUpdates,
+  useOneShots,
+  type EmoteCue,
+  type Model,
+} from './animal-hooks.js';
 import {
   APPARITION_CLIP,
   APPARITION_MODEL,
   BASE_CLIP,
-  greets,
   type Apparition,
-  startPhase,
-  transitionClip,
   type ClipName,
 } from './animal-states.js';
-const FADE_SECONDS = 0.35;
-type Model = { scene: Object3D; clips: AnimationClip[]; url: string };
+
+export type { EmoteCue } from './animal-hooks.js';
 /** The ring on the floor under a character: chosen (cyan), hovered (white) or part of a group selection (gold). */
 export type Ring = 'selected' | 'hover' | 'group';
 const RING_COLOR: Record<Ring, string> = {
@@ -43,8 +33,6 @@ const CALM: BehaviorScene = {
   secondMonitor: false,
   quietMinutes: null,
 };
-/** A reaction the person asked for: the clip plays once over what the member is doing; a new `key` plays it again. */
-export type EmoteCue = { clip: ClipName; key: number };
 
 export function Animal({
   agent,
@@ -81,134 +69,40 @@ export function Animal({
   const species = apparition ? APPARITION_MODEL[apparition] : agent.species;
   const url = `/assets/animals/${species}-lod${lod}.glb`;
   const [model, setModel] = useState<Model | null>(null);
-  const mixer = useRef<AnimationMixer | null>(null);
-  const invalidate = useThree((s) => s.invalidate);
-  const gl = useThree((s) => s.gl);
-  const stage = useThree((s) => s.scene);
-  const camera = useThree((s) => s.camera);
-  const fail = useEffectEvent(onError);
-  // One-shots (a gesture, a cheer, a greeting) play over the base clip of the activity, then hand back to it.
   const [oneShot, setOneShot] = useState<ClipName | null>(null);
+  const mixer = useRef<AnimationMixer | null>(null);
   const current = useRef<AnimationAction | null>(null);
-  const lastActivity = useRef<typeof agent.activity | null>(null);
   const held = apparition ?? override; // something other than the activity decides what the member does
   const clip = apparition
     ? APPARITION_CLIP[apparition]
     : (override ?? oneShot ?? BASE_CLIP[agent.activity]);
-  const greet = useEffectEvent(() => {
-    if (!reducedMotion && !held && greets(agent.activity)) setOneShot('wave');
+  useOneShots({
+    agent,
+    held,
+    reducedMotion,
+    selected,
+    emote,
+    model,
+    oneShot,
+    setOneShot,
+    behavior,
   });
-  useEffect(() => {
-    const mark = transitionClip(lastActivity.current, agent.activity);
-    lastActivity.current = agent.activity;
-    setOneShot(reducedMotion || held ? null : mark);
-  }, [agent.activity, reducedMotion, held]);
-  useEffect(() => {
-    if (selected) greet();
-  }, [selected]);
-  const react = useEffectEvent((cue: EmoteCue) => {
-    if (!reducedMotion && !held && model) setOneShot(cue.clip);
+  useAnimalModel({ agent, url, species, light, setModel, setOneShot, mixer, current, onError });
+  useClipPlayer({
+    model,
+    url,
+    clip,
+    oneShot,
+    apparition,
+    override,
+    reducedMotion,
+    agentId: agent.id,
+    mixer,
+    current,
+    onError,
   });
-  useEffect(() => {
-    if (emote) react(emote);
-  }, [emote?.key]); // eslint-disable-line react-hooks/exhaustive-deps -- one reaction per request, not per render
-  useMicroActions({
-    enabled: model !== null && !reducedMotion && !held,
-    busy: oneShot !== null,
-    activity: agent.activity,
-    seed: agent.id,
-    species: agent.species,
-    scene: behavior,
-    play: setOneShot,
-  });
-  useEffect(() => {
-    const asset = acquireAnimal(url);
-    let disposed = false;
-    let instance: Model | null = null;
-    let forgetAnchors: (() => void) | undefined;
-    void asset
-      .load()
-      .then(async (loaded) => {
-        if (!loaded || disposed) return;
-        // Link the character's shaders in parallel before it appears, so its first frame does not stall on them.
-        await gl.compileAsync(loaded.scene, camera, stage).catch(() => undefined);
-        if (disposed) return;
-        instance = { ...loaded, url };
-        loaded.scene.traverse((node) => {
-          if (node instanceof SkinnedMesh) {
-            node.castShadow = true;
-            node.receiveShadow = true;
-            if (species === 'ghost') ghostly(node);
-            else if (!light) rimLit(node);
-          }
-        });
-        mixer.current = new AnimationMixer(loaded.scene);
-        mixer.current.addEventListener('finished', () => setOneShot(null));
-        forgetAnchors = registerAnchors(agent.id, loaded.scene); // the squad's puppet strings tie to its head and hands
-        setModel(instance);
-        invalidate();
-      })
-      .catch(() => {
-        if (!disposed) fail();
-      });
-    return () => {
-      disposed = true;
-      forgetAnchors?.();
-      mixer.current?.stopAllAction();
-      if (instance) {
-        mixer.current?.uncacheRoot(instance.scene);
-        instance.scene.traverse((node) => {
-          if (node instanceof SkinnedMesh) node.skeleton.dispose();
-        });
-      }
-      mixer.current = null;
-      current.current = null;
-      asset.release();
-    };
-  }, [url, species, light, invalidate, gl, camera, stage]);
-  useEffect(() => {
-    if (!model || model.url !== url || !mixer.current) return;
-    const animation = model.clips.find((action) => action.name === clip);
-    if (!animation) {
-      fail();
-      return;
-    }
-    const player = mixer.current;
-    const next = player.clipAction(animation);
-    const once =
-      oneShot !== null || (!apparition && (override === 'stand_up' || override === 'wave'));
-    const previous = current.current;
-    next.reset().setLoop(once ? LoopOnce : LoopRepeat, once ? 1 : Infinity);
-    next.clampWhenFinished = once && oneShot === null; // a held gesture ends in its last pose, not in the bind pose
-    if (previous && previous !== next && !reducedMotion) {
-      next.fadeIn(FADE_SECONDS).play();
-      previous.fadeOut(FADE_SECONDS);
-    } else {
-      previous?.stop();
-      next.play();
-    }
-    next.time = reducedMotion || once ? 0 : startPhase(agent.id) * animation.duration;
-    player.update(0);
-    current.current = next;
-    invalidate();
-  }, [model, url, clip, oneShot, apparition, override, reducedMotion, agent.id, invalidate]);
-  // Far members are updated at a lower rate (see animationInterval); the time they skipped is applied in one step.
   const root = useRef<Group>(null);
-  const here = useRef(new Vector3());
-  const owed = useRef(0);
-  useFrame(({ camera }, delta) => {
-    if (!mixer.current || reducedMotion || document.hidden) return;
-    owed.current += Math.min(delta, 0.05);
-    const interval =
-      selected || !root.current
-        ? 0
-        : animationInterval(
-            camera.position.distanceTo(root.current.getWorldPosition(here.current)),
-          );
-    if (owed.current < interval) return;
-    mixer.current.update(owed.current * pace);
-    owed.current = 0;
-  });
+  useMixerUpdates(mixer, root, { reducedMotion, selected, pace });
   // Where each apparition stands: a ghost floats just over its seat, a jiangshi stands behind the chair, a sleeping
   // rabbit sits where the member does.
   const offset: [number, number, number] =
@@ -231,40 +125,4 @@ export function Animal({
       )}
     </group>
   );
-}
-
-/** A ghost is see-through and faintly lit from within; everything else about it is its model. */
-function ghostly(mesh: SkinnedMesh): void {
-  for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
-    if (!(material instanceof MeshStandardMaterial)) continue;
-    material.transparent = true;
-    material.opacity = 0.62;
-    material.depthWrite = false;
-    // The glow follows the texture, so the dark hollows of the face stay dark.
-    material.emissive.set('#8fb4ff');
-    material.emissiveMap = material.map;
-    material.emissiveIntensity = 0.7;
-    material.needsUpdate = true;
-  }
-}
-
-/**
- * A soft light along the edge a surface turns away from the eye, in the cool tone of the office, so a character stands
- * out from the dark floor and keeps its shape against the glow behind it. Skipped on a phone (one more term in every
- * pixel's shading) and for the ghost, which glows by itself.
- */
-function rimLit(mesh: SkinnedMesh): void {
-  for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
-    if (!(material instanceof MeshStandardMaterial)) continue;
-    material.onBeforeCompile = (shader) => {
-      shader.fragmentShader = shader.fragmentShader.replace(
-        '#include <emissivemap_fragment>',
-        `#include <emissivemap_fragment>
-        float rim = pow(1.0 - clamp(dot(normalize(vNormal), normalize(vViewPosition)), 0.0, 1.0), 3.0);
-        totalEmissiveRadiance += vec3(0.42, 0.78, 0.9) * rim * 0.28;`,
-      );
-    };
-    material.customProgramCacheKey = () => 'animal-rim';
-    material.needsUpdate = true;
-  }
 }

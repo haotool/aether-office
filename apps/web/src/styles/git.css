@@ -37,11 +37,11 @@
   color: var(--mint);
 }
 .git-health .table-scroll {
-  max-height: 360px;
+  max-height: 360px; /* token-lint: geometry */
   overflow: auto;
 }
 .git-health .suggestions {
-  max-height: 220px;
+  max-height: 220px; /* token-lint: geometry */
   overflow: auto;
   font-family: var(--mono);
   font-size: var(--fs-label);
@@ -53,7 +53,7 @@
   margin-bottom: var(--space-16);
 }
 .graph-scroll {
-  max-height: 420px;
+  max-height: 420px; /* token-lint: geometry */
   overflow: auto;
 }
 .graph {

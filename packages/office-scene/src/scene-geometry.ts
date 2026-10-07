@@ -1,6 +1,13 @@
 import type { Agent, Layout } from '@aether/contracts';
+import { DEPARTMENTS } from '@aether/kernel';
 import { EXPLODED_GAP, FLOOR_HEIGHT } from './building.js';
 import { FLOORS } from './layout.js';
+
+const FIRST_DEPARTMENT = DEPARTMENTS[0];
+if (!FIRST_DEPARTMENT) throw new Error('@aether/kernel has no departments');
+/** The department on a floor; the first one for a floor that has none. */
+export const departmentAt = (floor: number): (typeof DEPARTMENTS)[number] =>
+  DEPARTMENTS[floor] ?? FIRST_DEPARTMENT;
 
 export const floorOfDesk = (layout: Layout, agentId: string) =>
   layout.objects.find((o) => o.agentId === agentId)?.floor ?? 0;

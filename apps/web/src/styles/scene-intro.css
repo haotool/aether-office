@@ -8,13 +8,14 @@
 .intro-caption {
   position: absolute;
   z-index: var(--z-hud-caption);
-  /* Bottom left, above the floor name and clear of the floor panel on the right (the top has the stats and the toolbar). */
+  /* Top left, under the toolbar and clear of the floor panel on the right: the bottom-left corner belongs to the floor
+     readout and the KPI plaque, which stack up to 200px high and would cover Skip and Don't show again. */
   left: var(--space-16);
-  bottom: calc(var(--space-64) + var(--space-48) + var(--space-16));
+  top: calc(var(--space-64) + var(--space-8));
   display: grid;
   justify-items: center;
   gap: var(--space-4);
-  max-width: min(420px, calc(100% - 300px));
+  max-width: min(420px, calc(100% - 300px)); /* token-lint: geometry */
   padding: var(--space-8) var(--space-16);
   border-radius: var(--r-3xl);
   border: 1px solid var(--glass-line);
@@ -32,7 +33,7 @@
 .intro-hint {
   color: var(--on-glass-muted);
   font-size: var(--fs-small);
-  animation: intro-hint-fade 0.6s ease-out 3s forwards;
+  animation: intro-hint-fade 0.6s ease-out 3s forwards; /* token-lint: animation */
 }
 @keyframes intro-hint-fade {
   to {
@@ -81,10 +82,10 @@
 @media (max-width: 760px), (pointer: coarse) and (max-height: 500px) {
   .intro-caption {
     left: var(--hud-inset);
-    right: calc(var(--hud-inset) * 2 + 52px);
+    right: calc(var(--hud-inset) * 2 + var(--fab-size));
     top: auto;
     bottom: calc(
-      var(--hud-inset) + var(--space-6) + 72px + var(--space-8) + var(--target-touch) +
+      var(--hud-inset) + var(--space-6) + var(--peek-h) + var(--space-8) + var(--target-touch) +
         var(--space-8)
     );
     max-width: none;

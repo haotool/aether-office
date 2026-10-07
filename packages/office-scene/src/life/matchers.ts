@@ -32,15 +32,16 @@ const EDITORS = new Set(['vim', 'vi', 'nvim']);
 const QA_HOSTS = ['stackoverflow.com', 'superuser.com', 'stackexchange.com'];
 
 const bash = (s: LifeSignal) => s.kind === 'tool.start' && s.tool === 'Bash' && !!s.target;
+const targetOf = (s: LifeSignal) => s.target ?? '';
 
-export const isTestRun = (s: LifeSignal) => bash(s) && TESTS.has(s.target!);
-export const isInstall = (s: LifeSignal) => bash(s) && INSTALLS.has(s.target!);
-export const isVim = (s: LifeSignal) => bash(s) && EDITORS.has(s.target!);
+export const isTestRun = (s: LifeSignal) => bash(s) && TESTS.has(targetOf(s));
+export const isInstall = (s: LifeSignal) => bash(s) && INSTALLS.has(targetOf(s));
+export const isVim = (s: LifeSignal) => bash(s) && EDITORS.has(targetOf(s));
 export const isQaSite = (s: LifeSignal) =>
   s.kind === 'tool.start' &&
   s.tool === 'WebFetch' &&
   !!s.target &&
-  QA_HOSTS.some((host) => s.target === host || s.target!.endsWith(`.${host}`));
+  QA_HOSTS.some((host) => s.target === host || targetOf(s).endsWith(`.${host}`));
 
 // Since I7 the hook receiver labels a call from a closed vocabulary (`tags`) and the provider's own exit status reaches
 // `ok`. A rule that claims how a command ended reads `ok === true` or `ok === false` here: an unknown outcome (null or
@@ -70,7 +71,7 @@ export const todoSearch = (s: LifeSignal) => started(s, 'search.todo');
 export const prApproved = (s: LifeSignal) => ended(s, true, 'gh.pr.approve');
 
 /** Friday from this hour on is "Friday afternoon". */
-export const FRIDAY_FROM_HOUR = 15;
+const FRIDAY_FROM_HOUR = 15;
 /** The viewer's own clock (the browser's local time zone), taken at the moment of the call. */
 export const fridayAfternoon = (at: number) => {
   const when = new Date(at);

@@ -1,7 +1,8 @@
 import { constants } from 'node:fs';
 import { deleteOldest } from './oldest-entry.js';
 import { open } from 'node:fs/promises';
-import { fresh, newState, parseChunk, type ParseState } from './usage-parse.js';
+import { fresh, newState, type ParseState } from './usage-counters.js';
+import { parseChunk } from './usage-parse.js';
 
 /**
  * What a Claude subagent's transcript says it spent and did, counted incrementally with the KPI parser (`usage-parse.ts`):

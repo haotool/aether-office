@@ -3,7 +3,7 @@
  * the CLI's own marker (the server reports when the transcript last held one) and a large fall in the context in use.
  * Pure: the caller keeps one tracker per session and feeds it every observation.
  */
-export type Observation = {
+type Observation = {
   /** When this was observed (epoch ms). */
   at: number;
   used: number | null;
@@ -30,7 +30,7 @@ const DROP_MIN_TOKENS = 20_000;
 /** A marker already in the transcript when the session first appears counts only if it is this fresh. */
 const FRESH_MARKER_MS = 30_000;
 /** After a detection, a fall belonging to the same compaction (usage lags the marker) is not a second one. */
-export const SETTLE_MS = 90_000;
+const SETTLE_MS = 90_000;
 
 const pct = (o: Observation) =>
   o.used !== null && o.window ? Math.min(100, (o.used / o.window) * 100) : null;

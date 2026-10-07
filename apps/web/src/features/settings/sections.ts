@@ -14,7 +14,7 @@ export const SECTIONS = [
 
 export type SectionId = (typeof SECTIONS)[number]['id'];
 
-export const isSection = (value: string): value is SectionId =>
+const isSection = (value: string): value is SectionId =>
   SECTIONS.some((section) => section.id === value);
 
 /**

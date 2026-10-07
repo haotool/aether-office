@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { id, shortText } from './shared.js';
-import { layoutSchema } from './core.js';
+import { layoutSchema, scheduleTemplateSchema } from './core.js';
 import { projectEnvelope, version } from './command-envelope.js';
 
 /** Message, layout, approval, knowledge, meeting, workflow, room and A2A client commands. */
@@ -114,20 +114,15 @@ export const collabCommands = [
     .object({
       ...projectEnvelope,
       type: z.literal('workflow.start'),
-      data: z
-        .object({
-          template: z.enum([
-            'claude_codex_review',
-            'codex_claude_review',
-            'frontend_backend',
-            'research_design_impl',
-          ]),
-          title: shortText,
-          description: z.string().max(16000).default(''),
-          acceptance: z.string().trim().min(1).max(8000),
-          priority: z.number().int().min(0).max(3).default(1),
-        })
-        .strict(),
+      // The brief a schedule creates, plus which workflow template to start it from.
+      data: scheduleTemplateSchema.extend({
+        template: z.enum([
+          'claude_codex_review',
+          'codex_claude_review',
+          'frontend_backend',
+          'research_design_impl',
+        ]),
+      }),
     })
     .strict(),
   z

@@ -129,6 +129,20 @@ function taskNotice(inner: string): Notice {
 
 type Extraction = { rest: string; notices: Notice[] };
 
+/** The notice a wrapper called `name` carries, or null when it is silent or has nothing to show. */
+function noticeOf(name: string, inner: string): Notice | null {
+  if (name === 'task-notification' || name === 'subagent_notification') return taskNotice(inner);
+  if (name === 'turn_aborted') return { kind: 'interrupted' };
+  const label = CONTEXT[name];
+  const output = name.startsWith('local-command-s');
+  // SILENT wrappers (hidden reasoning, caveats, memory citations) are dropped with their content.
+  if (!label && !output && !name.endsWith('-hook')) return null;
+  const body = cut(plain(label ? facts(inner) : inner), MAX_FIELD);
+  if (!body) return null;
+  if (output) return { kind: 'output', text: body, error: name.endsWith('stderr') };
+  return label ? { kind: 'context', label, text: body } : { kind: 'hook', text: body };
+}
+
 /** The notices of a text and what is left of it, before any HTML is neutralized. */
 function extract(text: string): Extraction {
   if (!text.includes('<') && !text.trimStart().startsWith('[')) return { rest: text, notices: [] };
@@ -144,7 +158,7 @@ function extract(text: string): Extraction {
   let at = 0;
   OPENER.lastIndex = 0;
   for (let m = OPENER.exec(masked); m; m = OPENER.exec(masked)) {
-    const name = m[1]!.toLowerCase();
+    const name = (m[1] ?? '').toLowerCase();
     const from = m.index + m[0].length;
     const close = lowered.indexOf(`</${name}`, from);
     const inner = restore(masked.slice(from, close < 0 ? masked.length : close));
@@ -157,33 +171,32 @@ function extract(text: string): Extraction {
       if (command.slot < 0) command.slot = notices.length;
       command[name === 'command-name' ? 'name' : 'args'] = plain(inner);
       if (command.slot === notices.length) push({ kind: 'command', name: '', args: '' });
-    } else if (name === 'task-notification' || name === 'subagent_notification')
-      push(taskNotice(inner));
-    else if (name === 'turn_aborted') push({ kind: 'interrupted' });
-    else if (name.startsWith('local-command-s')) {
-      const out = cut(plain(inner), MAX_FIELD);
-      if (out) push({ kind: 'output', text: out, error: name.endsWith('stderr') });
-    } else if (CONTEXT[name]) {
-      const body = cut(plain(facts(inner)), MAX_FIELD);
-      if (body) push({ kind: 'context', label: CONTEXT[name]!, text: body });
-    } else if (name.endsWith('-hook')) {
-      const body = cut(plain(inner), MAX_FIELD);
-      if (body) push({ kind: 'hook', text: body });
+    } else {
+      const notice = noticeOf(name, inner);
+      if (notice) push(notice);
     }
-    // SILENT wrappers (hidden reasoning, caveats, memory citations) are dropped with their content.
   }
   parts.push(masked.slice(at));
+  return finish(restore(parts.join('')).trim(), notices, command);
+}
+
+/** The text that is left and the notices, the slash command filled in and a lone interruption marker turned into a notice. */
+function finish(
+  rest: string,
+  notices: Notice[],
+  command: { name: string; args: string; slot: number },
+): Extraction {
   const filled = notices.map((n, i) =>
     n.kind === 'command' && i === command.slot
       ? { ...n, name: command.name, args: command.args }
       : n,
   );
-  const rest = restore(parts.join('')).trim();
+  const interrupted = INTERRUPT.test(rest);
   return {
-    rest: INTERRUPT.test(rest) ? '' : rest,
+    rest: interrupted ? '' : rest,
     notices: [
       ...filled.filter((n) => n.kind !== 'command' || n.name),
-      ...(INTERRUPT.test(rest) ? [{ kind: 'interrupted' } as const] : []),
+      ...(interrupted ? [{ kind: 'interrupted' } as const] : []),
     ],
   };
 }

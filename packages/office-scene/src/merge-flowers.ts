@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { Bloom } from './flower-bloom.js';
 import { genomeOf, type Genome } from './flower-genome.js';
 import { seeded } from './random.js';
-import { PALETTE } from './stalk-layout.js';
+import { paletteAt } from './stalk-layout.js';
 import type { Stalk, StalkNode } from './stalk-types.js';
 
 /** Recent merge commits that bloom a small flower on the braid, newest first. */
@@ -58,7 +58,7 @@ export function mergeStands(stalk: Stalk, first: number): MergeStand[] {
           .add(new THREE.Vector3(0, 0.35, 0))
           .normalize(),
         size: 0.6 + 0.25 * random(),
-        base: flowerColor(PALETTE[node.strand % PALETTE.length]!),
+        base: flowerColor(paletteAt(node.strand)),
       };
       return { bloom, node };
     });

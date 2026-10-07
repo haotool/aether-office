@@ -5,7 +5,7 @@ import { KIND, MeshBuilder, type Style } from './flower-mesh.js';
 import { growTwigs, twigShare } from './flower-tree.js';
 import { flowerColor, mergeStands } from './merge-flowers.js';
 import { seeded } from './random.js';
-import { PALETTE } from './stalk-layout.js';
+import { paletteAt } from './stalk-layout.js';
 import type { Stalk, Tier } from './stalk-types.js';
 
 /** What a flower is, for the hover card. */
@@ -23,7 +23,7 @@ export type BloomInfo = {
   merge?: { subject: string; strand: number };
 };
 
-export type Garden = {
+type Garden = {
   /** Every petal, stem, twig, floret and ring of every flower: one mesh. */
   mesh: THREE.BufferGeometry;
   /** Orbiting pollen and drifting spores: one points object (null on low quality). */
@@ -64,7 +64,7 @@ const bezier = (
 /** The tier's branch colour turned a little further round the colour wheel for each tier, so the crown is a spectrum, not one hue. */
 const tierColor = (t: Tier) => {
   const hsl = { h: 0, s: 0, l: 0 };
-  new THREE.Color(PALETTE[t.strand % PALETTE.length]!).getHSL(hsl);
+  new THREE.Color(paletteAt(t.strand)).getHSL(hsl);
   return new THREE.Color().setHSL((hsl.h + 0.09 * t.index) % 1, hsl.s, hsl.l);
 };
 

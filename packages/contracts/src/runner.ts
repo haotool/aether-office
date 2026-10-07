@@ -158,7 +158,7 @@ const gitStateSchema = z
     status: z.string().max(16000),
   })
   .strict();
-export const verificationSchema = z
+const verificationSchema = z
   .object({
     schemaVersion: z.literal(1),
     id,
@@ -177,7 +177,7 @@ export const verificationSchema = z
     reason: z.string().max(4000).nullable(),
   })
   .strict();
-export const integrationResultSchema = z.discriminatedUnion('status', [
+const integrationResultSchema = z.discriminatedUnion('status', [
   z
     .object({
       status: z.literal('merged'),

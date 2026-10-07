@@ -7,14 +7,14 @@ import { execFileSync } from 'node:child_process';
  * ever signalled while it is still the process that was started (a pid is reused, a pid and its start time are not);
  * and Node reaps its own children, so a zombie under AETHER is a bug to see, not something to paper over.
  */
-export type Stoppable = {
+type Stoppable = {
   pid?: number | undefined;
   exitCode?: number | null;
   signalCode?: NodeJS.Signals | null;
   kill: (signal?: NodeJS.Signals) => unknown;
 };
 
-export const STOP_GRACE_MS = 1000;
+const STOP_GRACE_MS = 1000;
 
 /**
  * Signals a process group. A group already gone is not an error, and neither is EPERM: a group AETHER started is the
@@ -74,7 +74,7 @@ export function groupStopper(
   };
 }
 
-export type Inspected = { ppid: number; stat: string; startedAt: string; command: string };
+type Inspected = { ppid: number; stat: string; startedAt: string; command: string };
 
 /** What `ps` says about one pid right now, or null when there is no such process. */
 export function inspectProcess(pid: number): Inspected | null {
@@ -85,7 +85,9 @@ export function inspectProcess(pid: number): Inspected | null {
       env: { ...process.env, LC_ALL: 'C' },
     }).trimEnd();
     const m = /^(.{24}) +(\d+) +(\S+) +(.*)$/.exec(out.split('\n')[0] ?? '');
-    return m ? { startedAt: m[1]!.trim(), ppid: Number(m[2]), stat: m[3]!, command: m[4]! } : null;
+    if (!m) return null;
+    const [, startedAt = '', ppid, stat = '', command = ''] = m;
+    return { startedAt: startedAt.trim(), ppid: Number(ppid), stat, command };
   } catch {
     return null; // ps exits 1 when the pid does not exist
   }
@@ -102,7 +104,7 @@ export function isOrphan(
   return info.ppid <= 1 || parent === null || ORPHAN_ADOPTER.test(parent.command);
 }
 
-export type Survivor = 'gone' | 'reused' | 'zombie' | 'owned' | 'orphaned';
+type Survivor = 'gone' | 'reused' | 'zombie' | 'owned' | 'orphaned';
 
 /**
  * Pure. What a process recorded as `pid:start` is now. Only 'orphaned' may be signalled: it is the same process (start
@@ -122,7 +124,7 @@ export function judgeSurvivor(
 /** `pid:start` as processIdentity writes it (the start time has colons of its own). */
 export function parseIdentity(identity: string): { pid: number; startedAt: string } | null {
   const m = /^(\d+):(.+)$/.exec(identity);
-  return m ? { pid: Number(m[1]), startedAt: m[2]!.trim() } : null;
+  return m ? { pid: Number(m[1]), startedAt: (m[2] ?? '').trim() } : null;
 }
 
 export type Reaped = {

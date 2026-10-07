@@ -5,7 +5,7 @@ import type { RoleId } from './departments.js';
 // role it points to and how strongly: 2 is a word or a place that nearly only that role uses, 1 one many roles share.
 
 /** A word pattern: [role, strength, pattern]. Latin words are matched whole; Chinese terms as substrings. */
-export type WordRule = readonly [RoleId, 1 | 2, RegExp];
+type WordRule = readonly [RoleId, 1 | 2, RegExp];
 
 export const WORDS: readonly WordRule[] = [
   [
@@ -122,7 +122,7 @@ export const WORDS: readonly WordRule[] = [
 ];
 
 /** What the file a session read or wrote says about it: [role, weight, pattern, label]. The first match per file wins. */
-export type PathRule = readonly [RoleId, number, RegExp, string];
+type PathRule = readonly [RoleId, number, RegExp, string];
 export const PATHS: readonly PathRule[] = [
   [
     'qa',
@@ -191,7 +191,7 @@ export const PATHS: readonly PathRule[] = [
 ];
 
 /** A command a session ran: [role, weight, pattern, label], tried against the whole command text. */
-export type CommandRule = readonly [RoleId, number, RegExp, string];
+type CommandRule = readonly [RoleId, number, RegExp, string];
 export const COMMANDS: readonly CommandRule[] = [
   [
     'release',

@@ -83,12 +83,12 @@ test('real HTTP journey: authenticate, inspect office, create and assign work, p
     page.getByText('UTF-8 🦊 持久訊息 — reload 後仍存在', { exact: true }),
   ).toBeVisible();
   await page.getByRole('link', { name: '辦公室', exact: true }).click();
-  await page.getByRole('button', { name: '編輯配置', exact: true }).click();
+  await page.getByRole('button', { name: '編輯配置（實驗性）', exact: true }).click();
   await page.getByLabel('X (m)', { exact: true }).fill('-20.5');
   await page.getByRole('button', { name: '儲存', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.reload();
-  await page.getByRole('button', { name: '編輯配置', exact: true }).click();
+  await page.getByRole('button', { name: '編輯配置（實驗性）', exact: true }).click();
   await expect(page.getByLabel('X (m)', { exact: true })).toHaveValue('-20.5');
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);

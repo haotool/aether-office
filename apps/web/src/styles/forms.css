@@ -63,8 +63,8 @@ select option {
   min-width: 0;
 }
 .modal {
-  width: min(560px, calc(100% - 28px));
-  max-height: calc(100dvh - 48px);
+  width: min(560px, calc(100% - 28px)); /* token-lint: geometry */
+  max-height: calc(100dvh - 48px); /* token-lint: geometry */
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--line);

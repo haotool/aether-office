@@ -13,7 +13,7 @@ export function fuzzyScore(query: string, text: string): number | null {
   for (const ch of q) {
     const at = s.indexOf(ch, from);
     if (at < 0) return null;
-    const boundary = at === 0 || /[^a-z0-9]/.test(s[at - 1]!);
+    const boundary = at === 0 || /[^a-z0-9]/.test(s.charAt(at - 1));
     score += 1 + (at === previous + 1 ? 4 : 0) + (boundary ? 3 : 0) + (at === 0 ? 4 : 0);
     previous = at;
     from = at + 1;

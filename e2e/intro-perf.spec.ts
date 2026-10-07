@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { signIn } from './support/sign-in.js';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 
 // The intro tour's frame gate (docs/design/office-life-iterations.md, I2): the longest frame of the whole tour, outside the
 // 400 ms dips that hide its cuts, may exceed the same scene without the tour by at most 120 ms on a desktop and 200 ms on a

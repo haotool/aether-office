@@ -15,7 +15,7 @@ export type PlacedObject = {
   /** A squad zone only: seats reserved at least; 0 lets the zone grow and shrink with its squad. */
   seats?: number;
 };
-export const objectSize = {
+const objectSize = {
   desk: [2.2, 1.8],
   plant: [0.9, 0.9],
   sofa: [3.2, 1.2],
@@ -57,16 +57,14 @@ export function validateLayout(objects: readonly PlacedObject[]): void {
     throw new DomainError('LAYOUT_DUPLICATE_AGENT', 400);
   validateSquads(objects);
   const bounds = objects.map((o) => objectBounds(o));
-  for (let i = 0; i < bounds.length; i++) {
-    const a = bounds[i]!;
+  for (const [i, a] of bounds.entries()) {
     if (a.minX < -25 || a.maxX > 25 || a.minZ < -17 || a.maxZ > 17)
       throw new DomainError('LAYOUT_OUT_OF_BOUNDS', 400);
     // Two permanent two-metre circulation spines cross the campus.
     if ((a.minX < 1 && a.maxX > -1) || (a.minZ < 1 && a.maxZ > -1))
       throw new DomainError('LAYOUT_BLOCKS_AISLE', 400);
-    for (let j = 0; j < i; j++) {
-      if ((objects[i]!.floor ?? 0) !== (objects[j]!.floor ?? 0)) continue; // floors do not collide
-      const b = bounds[j]!;
+    for (const [j, b] of bounds.slice(0, i).entries()) {
+      if ((objects[i]?.floor ?? 0) !== (objects[j]?.floor ?? 0)) continue; // floors do not collide
       if (a.minX < b.maxX && a.maxX > b.minX && a.minZ < b.maxZ && a.maxZ > b.minZ)
         throw new DomainError('LAYOUT_OVERLAP', 400);
     }

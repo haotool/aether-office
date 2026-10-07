@@ -142,8 +142,8 @@ node scripts/optimize-animals.mjs    # drops animation keyframes a straight line
 node scripts/validate-assets.mjs     # checks the shipped models and textures against their manifests
 ```
 
-The furniture's dimensions live in one file, `packages/office-scene/src/desk-seating.json`, shared by the scene and the
-audit, so a character is checked against the chair and desk it is really given. Change an animation, a proportion or the
+The furniture's dimensions live in one file, `packages/office-scene/src/desk-seating.json` (the scene reads it typed through
+`seating.ts`), shared by the scene and the audit, so a character is checked against the chair and desk it is really given. Change an animation, a proportion or the
 desk, run the audit (it must report no clipping), rebuild the models and validate them.
 
 ## Contact sheets and GPU perf

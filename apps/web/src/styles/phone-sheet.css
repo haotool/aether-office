@@ -8,13 +8,14 @@
     --sheet-bottom: var(--safe-bottom);
   }
   .member-bar {
+    container: memberbar / inline-size;
     display: flex;
     position: fixed;
     z-index: var(--z-drawer);
     left: calc(var(--space-8) + var(--safe-left));
     right: calc(var(--space-8) + var(--safe-right));
     bottom: calc(var(--sheet-bottom) + var(--space-8));
-    height: 72px;
+    height: var(--peek-h);
     align-items: center;
     gap: var(--space-4);
     padding: 0 var(--space-4) 0 var(--space-8);
@@ -23,7 +24,7 @@
     background: color-mix(in srgb, var(--surface) 94%, transparent);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
-    box-shadow: 0 8px 28px var(--shade);
+    box-shadow: var(--shadow-md);
   }
   .peek-open {
     display: flex;
@@ -80,14 +81,14 @@
     flex: 1;
     gap: var(--space-12);
     min-width: 0;
-    padding: var(--space-4) 0;
+    padding: var(--space-4); /* room inside the scroll box for the chips' 44px hit area */
     overflow-x: auto;
     scrollbar-width: none;
   }
   .sheet-chip {
     flex: none;
-    width: var(--control-touch-sm);
-    height: var(--control-touch-sm);
+    width: var(--control-h-sm);
+    height: var(--control-h-sm);
     padding: 0;
     border-radius: 50%;
   }
@@ -111,7 +112,7 @@
     padding-right: var(--space-12);
     color: var(--muted);
     font-size: var(--fs-small);
-    line-height: 1.4;
+    line-height: var(--lh-snug);
   }
   .peek-line.none {
     color: var(--dim);
@@ -129,13 +130,13 @@
     background: var(--surface);
     border-top: 1px solid var(--line);
     border-radius: var(--r-xl) var(--r-xl) 0 0;
-    box-shadow: 0 -18px 50px var(--shade);
+    box-shadow: var(--shadow-up);
   }
   .session-sheet.half {
     height: 52dvh;
   }
   .session-sheet.full {
-    top: calc(var(--safe-top) + 52px);
+    top: calc(var(--safe-top) + 52px); /* token-lint: geometry */
   }
   .session-sheet .markdown,
   .session-sheet .msg.user p {
@@ -154,7 +155,7 @@
 }
 
 /* A narrow phone gives the name and the reply line the width the state badge would take; a dot on the avatar says it. */
-@media (max-width: 430px) {
+@container memberbar (max-width: 414px) {
   .member-bar .badge {
     position: absolute;
     width: 1px;
@@ -168,7 +169,7 @@
 /* On its side: the peek leaves room for the new-task button, the feed and conversation take a column at the right. */
 @media (pointer: coarse) and (max-height: 500px) {
   .member-bar {
-    right: calc(80px + var(--safe-right));
+    right: calc(80px + var(--safe-right)); /* token-lint: geometry */
   }
   .session-sheet.half,
   .session-sheet.full {
@@ -177,7 +178,7 @@
     right: 0;
     bottom: 0;
     height: auto;
-    width: min(420px, 62vw);
+    width: min(420px, 62vw); /* token-lint: geometry */
     padding-right: var(--safe-right);
     border-radius: var(--r-xl) 0 0 var(--r-xl);
   }

@@ -1,7 +1,7 @@
 // The puppet rig's shared parts: the control cross (a bar of light with three glowing nodes), one geometry for every
 // subagent in the scene, painted in vertex colours so the instanced mesh uses the squad layers' one shader.
 import { BoxGeometry, BufferAttribute, Color, SphereGeometry, type BufferGeometry } from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { merged } from '../squad-art.js';
 
 const paint = (g: BufferGeometry, hex: string): BufferGeometry => {
   const c = new Color(hex);
@@ -15,9 +15,9 @@ const paint = (g: BufferGeometry, hex: string): BufferGeometry => {
 let cross: BufferGeometry | null = null;
 /** A thin bar 0.34 m wide with a node at each end and one in the middle: about 100 triangles. */
 export const crossGeometry = (): BufferGeometry =>
-  (cross ??= mergeGeometries([
+  (cross ??= merged([
     paint(new BoxGeometry(0.34, 0.014, 0.014), '#ffffff'),
     paint(new SphereGeometry(0.03, 8, 6).translate(-0.17, 0, 0), '#ffffff'),
     paint(new SphereGeometry(0.03, 8, 6).translate(0.17, 0, 0), '#ffffff'),
     paint(new SphereGeometry(0.035, 8, 6), '#ffffff'),
-  ])!);
+  ]));

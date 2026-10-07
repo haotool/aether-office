@@ -3,16 +3,16 @@ import { isChunkLoadError, mayReloadForChunk } from './root-boundary.js';
 
 /** The last line of defense: any render error would otherwise leave a blank page. */
 export class RootBoundary extends Component<{ children: ReactNode }, { error: unknown }> {
-  state = { error: null as unknown };
+  override state = { error: null as unknown };
   static getDerivedStateFromError(error: unknown) {
     return { error: error ?? new Error('unknown') };
   }
-  componentDidCatch(error: unknown) {
+  override componentDidCatch(error: unknown) {
     if (isChunkLoadError(error) && mayReloadForChunk(window.sessionStorage, Date.now())) {
       window.location.reload();
     }
   }
-  render() {
+  override render() {
     if (this.state.error === null) return this.props.children;
     return (
       <main role="alert">

@@ -24,7 +24,7 @@ export function ProjectedLabels({
   selected: string | null;
   /** Rectangles drawn over the canvas (the small live views): a tag under one is hidden, not drawn over its picture. */
   avoid?: RefObject<ReadonlyMap<string, Rect>>;
-  /** Rectangles drawn over the canvas this frame by the speech bubbles (see ProjectedSpeech): a tag under one is hidden too. */
+  /** Rectangles drawn over the canvas this frame by the speech bubbles (see ProjectedSpeech): a tag under one is hidden too, except the selected one's. */
   covered?: RefObject<ReadonlyMap<string, Rect>>;
 }) {
   const point = useRef(new Vector3());
@@ -52,7 +52,11 @@ export function ProjectedLabels({
         x + width / 2 < size.width &&
         y > 55 &&
         y < size.height - 30 &&
-        ![...(avoid?.current.values() ?? []), ...(covered?.current.values() ?? [])].some(
+        // The selected member's own tag stays: it names who is chosen and opens the menu, so it outranks a bubble.
+        ![
+          ...(avoid?.current.values() ?? []),
+          ...(label.id === selected ? [] : (covered?.current.values() ?? [])),
+        ].some(
           (r) =>
             x + width / 2 > r.x &&
             x - width / 2 < r.x + r.width &&

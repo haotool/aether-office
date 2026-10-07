@@ -3,7 +3,7 @@ import { APP_VERSION } from '@aether/contracts';
 import { APPROVAL_TAG, HOOK_MARKER, eventsFor } from './claude-hooks.js';
 import { JsonRpcProcess } from './jsonrpc.js';
 
-export type HookState = 'installed' | 'partial' | 'not_installed';
+type HookState = 'installed' | 'partial' | 'not_installed';
 const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
@@ -62,7 +62,7 @@ export async function fileRemoteApprovals(path: string): Promise<boolean> {
   }
 }
 
-export type CodexHookTrust = { event: string; trusted: boolean; enabled: boolean };
+type CodexHookTrust = { event: string; trusted: boolean; enabled: boolean };
 
 /** Asks Codex itself (read-only `hooks/list`) which of our hooks it will run. */
 export async function codexHookTrust(

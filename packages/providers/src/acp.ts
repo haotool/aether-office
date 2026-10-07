@@ -20,7 +20,7 @@ import type { ProviderResult } from './index.js';
 // Generic ACP client adapter. What it can do is decided by the agent's negotiated capabilities, not by
 // the fact that it speaks ACP: nothing is assumed beyond what `initialize` reports.
 
-export type AcpVersions = {
+type AcpVersions = {
   /** ACP wire protocol version the agent selected during initialize. */
   wireProtocolVersion: number;
   /** Wire version this client offered. */
@@ -30,7 +30,7 @@ export type AcpVersions = {
   agent: { name: string; version: string } | null;
 };
 
-export type AcpNegotiation = {
+type AcpNegotiation = {
   versions: AcpVersions;
   /** Only flags the agent actually advertised; unknown means false. */
   capabilities: {
@@ -111,13 +111,22 @@ export function normalizeAcpUpdate(n: SessionNotification, turnId: string): Prov
   }
 }
 
-export type AcpOptions = {
+type AcpOptions = {
   command: string;
   args: string[];
   cwd: string;
   env?: NodeJS.ProcessEnv;
   timeoutMs: number;
 };
+
+const INITIALIZE_REQUEST = {
+  protocolVersion: PROTOCOL_VERSION,
+  clientCapabilities: { fs: { readTextFile: false, writeTextFile: false }, terminal: false },
+  clientInfo: { name: 'aether-office', version: APP_VERSION },
+};
+
+const outcomeOf = (stopReason: string): ProviderResult['outcome'] =>
+  stopReason === 'end_turn' ? 'submitted' : stopReason === 'cancelled' ? 'cancelled' : 'failed';
 
 export class AcpAdapter {
   /** What the agent advertised during the most recent run, for capability display. */
@@ -166,11 +175,7 @@ export class AcpAdapter {
   async negotiate(signal: AbortSignal = new AbortController().signal): Promise<AcpNegotiation> {
     const { connection, close } = this.open(signal);
     try {
-      const init = await connection.initialize({
-        protocolVersion: PROTOCOL_VERSION,
-        clientCapabilities: { fs: { readTextFile: false, writeTextFile: false }, terminal: false },
-        clientInfo: { name: 'aether-office', version: APP_VERSION },
-      });
+      const init = await connection.initialize(INITIALIZE_REQUEST);
       return negotiationFrom(init);
     } finally {
       close();
@@ -179,6 +184,29 @@ export class AcpAdapter {
 
   /** Each run owns and closes its own child process; present so all adapters share one shape. */
   close(): void {}
+
+  /** Approval is always the platform's human decision; with no mapping we select nothing. */
+  private async decidePermission(
+    request: RequestPermissionRequest,
+    turnId: string,
+  ): Promise<RequestPermissionResponse> {
+    const decision = await this.sink.permission({
+      requestId: String(request.toolCall.toolCallId),
+      kind: String(request.toolCall.kind ?? 'other'),
+      toolId: String(request.toolCall.toolCallId),
+      turnId,
+      providerSessionId: String(request.sessionId),
+      parameters: {
+        title: request.toolCall.title ?? '',
+        options: request.options.map((o) => o.kind),
+      },
+    });
+    const wanted = decision === 'approve' ? 'allow_once' : 'reject_once';
+    const option = request.options.find((o) => o.kind === wanted);
+    return option
+      ? { outcome: { outcome: 'selected', optionId: option.optionId } }
+      : { outcome: { outcome: 'cancelled' } };
+  }
 
   async run(prompt: string, signal: AbortSignal): Promise<ProviderResult> {
     const turnId = 'acp-turn-1';
@@ -193,33 +221,11 @@ export class AcpAdapter {
           reply = (reply + u.content.text).slice(0, 32000);
         for (const e of normalizeAcpUpdate(n, turnId)) emit(e);
       },
-      async (request: RequestPermissionRequest): Promise<RequestPermissionResponse> => {
-        // Approval is always the platform's human decision; with no mapping we select nothing.
-        const decision = await this.sink.permission({
-          requestId: String(request.toolCall.toolCallId),
-          kind: String(request.toolCall.kind ?? 'other'),
-          toolId: String(request.toolCall.toolCallId),
-          turnId,
-          providerSessionId: String(request.sessionId),
-          parameters: {
-            title: request.toolCall.title ?? '',
-            options: request.options.map((o) => o.kind),
-          },
-        });
-        const wanted = decision === 'approve' ? 'allow_once' : 'reject_once';
-        const option = request.options.find((o) => o.kind === wanted);
-        return option
-          ? { outcome: { outcome: 'selected', optionId: option.optionId } }
-          : { outcome: { outcome: 'cancelled' } };
-      },
+      (request) => this.decidePermission(request, turnId),
     );
     try {
       await this.sink.processStarted(processIdentity(child));
-      const init = await connection.initialize({
-        protocolVersion: PROTOCOL_VERSION,
-        clientCapabilities: { fs: { readTextFile: false, writeTextFile: false }, terminal: false },
-        clientInfo: { name: 'aether-office', version: APP_VERSION },
-      });
+      const init = await connection.initialize(INITIALIZE_REQUEST);
       this.negotiated = negotiationFrom(init);
       const session = await connection.newSession({ cwd: this.options.cwd, mcpServers: [] });
       emit({ kind: 'session.started', providerSessionId: session.sessionId });
@@ -233,12 +239,7 @@ export class AcpAdapter {
       signal.removeEventListener('abort', abort);
       if (reply)
         emit({ kind: 'assistant.message', messageId: `${turnId}-reply`, turnId, text: reply });
-      const outcome =
-        response.stopReason === 'end_turn'
-          ? 'submitted'
-          : response.stopReason === 'cancelled'
-            ? 'cancelled'
-            : 'failed';
+      const outcome = outcomeOf(response.stopReason);
       emit({
         kind: outcome === 'submitted' ? 'turn.completed' : 'turn.failed',
         turnId,

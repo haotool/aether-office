@@ -3,6 +3,7 @@ import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { gardenOf, type BloomInfo } from './garden-geometry.js';
 import { gardenMaterial, MAX_FLOWERS, pollenMaterial } from './garden-material.js';
 import type { Stalk } from './stalk-types.js';
+import { setUniform } from './uniforms.js';
 
 const BLOOM_SECONDS = 3.2;
 /** How far into a tier's rise (in tiers built) its flower starts to grow, so it never grows from a deck that is not there yet. */
@@ -61,23 +62,25 @@ export function Garden({
       const ready =
         !animate ||
         (waits === null ? built.current > i + START : reach.current >= waits + MERGE_LEAD);
-      opened.current[i] =
-        i >= flowers ? 0 : ready ? Math.min(1, opened.current[i]! + step) : opened.current[i]!;
+      const was = opened.current[i] ?? 0;
+      opened.current[i] = i >= flowers ? 0 : ready ? Math.min(1, was + step) : was;
     }
     const time = animate ? state.clock.elapsedTime : 0;
     for (const material of [skin, dust]) {
-      material.uniforms['time']!.value = time;
-      material.uniforms['open']!.value = opened.current;
+      setUniform(material, 'time', time);
+      setUniform(material, 'open', opened.current);
     }
-    dust.uniforms['scale']!.value = height * 0.5 * state.camera.projectionMatrix.elements[5]!;
+    setUniform(dust, 'scale', height * 0.5 * (state.camera.projectionMatrix.elements[5] ?? 1));
   });
   if (!garden) return null;
   // Pointing at a flower, or tapping it on a touch screen, names it once it is open.
   const name = (event: ThreeEvent<PointerEvent | MouseEvent>) => {
-    const index = garden.mesh.getAttribute('pose').getZ(event.face!.a);
-    if (opened.current[index]! < 0.5) return;
+    if (!event.face) return;
+    const index = garden.mesh.getAttribute('pose').getZ(event.face.a);
+    const bloom = garden.blooms[index];
+    if (!bloom || (opened.current[index] ?? 0) < 0.5) return;
     event.stopPropagation();
-    onBloom(garden.blooms[index]!, event);
+    onBloom(bloom, event);
   };
   return (
     <>

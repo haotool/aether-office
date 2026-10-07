@@ -4,7 +4,7 @@
 
 /** Points on a string (two pinned: the cross and the anchor on the body) and the segments between them. */
 export const POINTS = 6;
-export const SEGMENTS = POINTS - 1;
+const SEGMENTS = POINTS - 1;
 /** The rest length of a segment as a share of the straight distance: taut while it works, slack when it is quiet. */
 const TAUT = 0.98;
 const SLACK = 1.15;

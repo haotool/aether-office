@@ -1,0 +1,36 @@
+/** The reviews words, in English. */
+export const enReviews = {
+  nativeReview: 'Native agent review',
+  nativeReviewHint:
+    'Review a fixed commit in an independent checkout. Starting may use provider credits. Review is not verification or human acceptance.',
+  reviewAgent: 'Review agent',
+  startNativeReview: 'Start agent review',
+  messageAvailable: 'Awaiting read',
+  humanRecipient: 'Human recipient',
+  requestWaits: 'Reply waiting records',
+  waitingReply: 'Waiting for reply',
+  replyDeadline: 'Reply deadline',
+  replyReference: 'Reply message ID',
+  noWaitRecord: 'No durable wait record exists for this message.',
+  version: 'Version',
+  result: 'Submitted result',
+  noReviews: 'No submissions awaiting review',
+  reviewNote:
+    'Submission is not completion. Review, commit-bound tests and human acceptance are separate steps.',
+  approve: 'Approve result',
+  requestChanges: 'Request changes',
+  reviewBody: 'Review comments',
+  verificationRequired: 'Matching commit-bound test evidence is still required',
+  allowTool: 'Allow this operation',
+  denyTool: 'Deny operation',
+  decision_sent: 'Decision sent; awaiting execution evidence',
+  decided: 'Decision persisted',
+  pending: 'Awaiting decision',
+  approvalBinding: 'This decision applies only to the session and parameters below.',
+  noApprovals: 'No pending tool permissions',
+  approvalEmptyHint:
+    'To answer Claude Code permission prompts here: turn on Remote approvals in Settings and run pnpm hooks install --remote-approvals.',
+  approvalNote: 'Only actual provider permission requests appear here.',
+  human_approved: 'Human approved',
+  rejected: 'Rejected',
+} as const;

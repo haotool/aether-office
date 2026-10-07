@@ -152,6 +152,15 @@ feature modules in `src/features`. The 3D scene is a separate package whose publ
 the same activity, message and attention data the 2D pages use, so the two views never disagree. UI rules and the design
 system: [design system](design-system.md).
 
+Inside the scene package, `OfficeScene.tsx` only joins three parts: `use-scene-model.ts` (every hook and derived value of
+one render: the layout with the squads' pod seats, the floor in view, navigation, interaction), `SceneCanvas.tsx` (everything
+drawn inside the WebGL canvas, in draw order) and `SceneOverlay.tsx` (the DOM that moves with the scene: name tags, chips,
+captions, the HUD). Camera control is split by concern: `use-floor-camera.ts` (floor, exploded view, flights),
+`use-director.ts` (the shot director), `use-take-over.ts` (who has the camera), `use-camera-aims.ts` (focus, follow, the
+close-up of a screen) and `SceneCamera.tsx` (the per-frame work, one function per camera mode). A hook whose dependency is
+a value that is new on every render (a position, an edge list) keys it by value (`use-by-value.ts`) instead of silencing the
+lint rule.
+
 ### The office layout
 
 A saved layout is a list of objects on the building's floors (`layoutSchema` in `packages/contracts`, validated by

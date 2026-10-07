@@ -9,11 +9,12 @@
 import { closeSync, openSync, readSync, readdirSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { fresh, newState, parseChunk } from '../apps/control/src/services/usage-parse.js';
+import { fresh, newState } from '../apps/control/src/services/usage-counters.js';
+import { parseChunk } from '../apps/control/src/services/usage-parse.js';
 
 const arg = (name: string, fallback: string) => {
   const at = process.argv.indexOf(`--${name}`);
-  return at > 0 ? process.argv[at + 1]! : fallback;
+  return at > 0 ? (process.argv[at + 1] ?? fallback) : fallback;
 };
 const CLAUDE = arg('claude', join(homedir(), '.claude', 'projects'));
 const CODEX = arg('codex', join(homedir(), '.codex', 'sessions'));

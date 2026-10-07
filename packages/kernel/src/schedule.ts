@@ -4,7 +4,7 @@ export type ScheduleSpec =
   | { kind: 'daily'; time: string }
   | { kind: 'weekly'; days: readonly number[]; time: string }; // 0 = Sunday
 
-export const DEFAULT_TIMEZONE = 'Asia/Taipei';
+const DEFAULT_TIMEZONE = 'Asia/Taipei';
 const TIME = /^([01]\d|2[0-3]):([0-5]\d)$/;
 import { DAY_MS } from './time.js';
 
@@ -44,10 +44,9 @@ function partsOf(utc: number, tz: string): Parts {
     hour: 'numeric',
     minute: 'numeric',
   }).formatToParts(utc);
-  const n = (type: string) => Number(get.find((p) => p.type === type)!.value);
-  const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(
-    get.find((p) => p.type === 'weekday')!.value,
-  );
+  const part = (type: string) => get.find((p) => p.type === type)?.value ?? '';
+  const n = (type: string) => Number(part(type));
+  const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(part('weekday'));
   return {
     year: n('year'),
     month: n('month'),

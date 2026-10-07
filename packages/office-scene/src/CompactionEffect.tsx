@@ -10,6 +10,7 @@ import {
 } from 'three';
 import { COMPACTION_SECONDS, CONTEXT_COLOR, easeOut } from './context.js';
 import { seeded } from './random.js';
+import { context2d } from './canvas-2d.js';
 
 const PAPERS = 40;
 const BURST_END = 0.8; // seconds: the sheets fly out ...
@@ -21,7 +22,7 @@ const RADIUS = 0.62;
 function paperTexture(): CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = 64;
-  const g = canvas.getContext('2d')!;
+  const g = context2d(canvas);
   g.fillStyle = '#fff';
   g.fillRect(14, 6, 36, 52);
   g.fillStyle = 'rgba(0,0,0,0.35)';

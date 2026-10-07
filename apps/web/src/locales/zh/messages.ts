@@ -1,0 +1,20 @@
+/** The messages words, in Traditional Chinese. */
+export const zhMessages = {
+  recipients: '收件成員',
+  messageBody: '訊息內容',
+  newMessage: '撰寫訊息',
+  noMessages: '訊息會留在這裡',
+  noMessagesHint: '給成員一個問題、決策或交接內容；訊息會持久保存。',
+  inform: '一般訊息',
+  request: '需要回覆',
+  decision: '決策',
+  handoff: '交接',
+  kind: '類型',
+  you: '你',
+  persisted: '已保存',
+  injected: '已送入提供者',
+  acknowledged: '已明確確認',
+  responded: '已有回覆',
+  expired: '已到期',
+  reply: '回覆',
+} as const;

@@ -1,11 +1,12 @@
 import { CELLS, type CellId } from '../effects/types.js';
 import { SIGN_ART } from './atlas-art-signs.js';
 import { ATLAS_COLUMNS, CELL_PX, C, blob, label, rounded, soft, type Ctx } from './atlas-draw.js';
+import { context2d } from '../../canvas-2d.js';
 
 export { ATLAS_COLUMNS, CELL_PX } from './atlas-draw.js';
 export const ATLAS_ROWS = Math.ceil(CELLS.length / ATLAS_COLUMNS);
-export const ATLAS_WIDTH = CELL_PX * ATLAS_COLUMNS;
-export const ATLAS_HEIGHT = CELL_PX * ATLAS_ROWS;
+const ATLAS_WIDTH = CELL_PX * ATLAS_COLUMNS;
+const ATLAS_HEIGHT = CELL_PX * ATLAS_ROWS;
 
 const ART: Record<CellId, (g: Ctx) => void> = {
   ...SIGN_ART,
@@ -168,7 +169,7 @@ function key(g: Ctx, letter: string) {
 export function drawAtlas(canvas: HTMLCanvasElement): void {
   canvas.width = ATLAS_WIDTH;
   canvas.height = ATLAS_HEIGHT;
-  const g = canvas.getContext('2d')!;
+  const g = context2d(canvas);
   CELLS.forEach((id, i) => {
     g.save();
     g.translate((i % ATLAS_COLUMNS) * CELL_PX, Math.floor(i / ATLAS_COLUMNS) * CELL_PX);

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { readFile, rename, writeFile } from 'node:fs/promises';
-import type { ParseState } from './usage-parse.js';
+import type { ParseState } from './usage-counters.js';
 
 // What has been read of each transcript so far: the parser's state, how far it got, and the file's modification time
 // and size, so a later look reads only the appended bytes. Numbers only; a file is known by a hash of its path. The

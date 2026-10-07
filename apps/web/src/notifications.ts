@@ -54,7 +54,7 @@ export function useNotificationPermission(enabled: boolean) {
 }
 
 /** Shows an alert as a browser notification (a tap opens its page) or, without permission, as an in-page notice. */
-export function deliver(d: Delivery, sink: AlertSink) {
+function deliver(d: Delivery, sink: AlertSink) {
   if (d.via === 'toast') return sink.toast(`${d.title}: ${d.body}`);
   const n = new Notification(d.title, { body: d.body, tag: d.tag, silent: true });
   n.onclick = () => {

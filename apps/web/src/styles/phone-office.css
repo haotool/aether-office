@@ -3,7 +3,6 @@
  * covers the scene with text. Portrait phones get the tab bar; a phone on its side keeps the drawer.
  */
 :root {
-  --tabbar-h: 56px;
   --hud-inset: var(
     --space-12
   ); /* every control over the scene keeps the same distance from the screen's edge */
@@ -24,7 +23,7 @@
 
 @media (max-width: 760px) and (min-height: 501px) {
   .topbar {
-    min-height: calc(48px + var(--safe-top));
+    min-height: calc(48px + var(--safe-top)); /* token-lint: geometry */
     gap: var(--space-8);
   }
   .mobile-menu,
@@ -34,7 +33,7 @@
   }
   .brand {
     width: auto;
-    min-width: var(--control-touch);
+    min-width: var(--control-h-md);
   }
   .project-picker {
     display: flex;
@@ -46,6 +45,9 @@
   }
   .project-picker select {
     width: 100%;
+    min-height: var(
+      --control-h-md
+    ); /* a field: the picker's own sm height from shell.css would make it the one short select */
     font-size: var(--fs-lead);
     font-weight: 600;
     border-color: transparent;
@@ -76,15 +78,15 @@
     position: relative;
     display: grid;
     place-items: center;
-    width: 52px;
-    height: 28px;
+    width: 52px; /* token-lint: geometry */
+    height: 28px; /* token-lint: geometry */
     border-radius: var(--r-pill);
     transition: background var(--dur-fast) var(--ease);
   }
   .tab-label {
     font-size: var(--fs-label);
     font-weight: 600;
-    line-height: 1.2;
+    line-height: var(--lh-tight);
     letter-spacing: 0.2px;
     white-space: nowrap;
   }
@@ -103,8 +105,8 @@
     position: absolute;
     top: var(--space-4);
     left: calc(50% + var(--space-6));
-    min-width: 16px;
-    height: 16px;
+    min-width: 16px; /* token-lint: geometry */
+    height: 16px; /* token-lint: geometry */
     padding: 0 var(--space-4);
     border-radius: var(--r-pill);
     background: var(--mint);
@@ -115,5 +117,19 @@
   .sidebar.open {
     bottom: 0;
     z-index: var(--z-sidebar);
+  }
+}
+
+/* The KPI chips scroll sideways: the strip fades out at its right edge so a clipped chip reads as "more", and its end padding
+   lets the last chip scroll clear of the fade. The block padding is room inside the scroll box for the chips' 44px hit area. */
+@media (max-width: 760px) {
+  .phone-kpi .kpi-strip {
+    padding: var(--space-4) var(--space-24) var(--space-4) 0;
+    -webkit-mask-image: linear-gradient(
+      90deg,
+      var(--white) calc(100% - var(--space-32)),
+      transparent
+    );
+    mask-image: linear-gradient(90deg, var(--white) calc(100% - var(--space-32)), transparent);
   }
 }

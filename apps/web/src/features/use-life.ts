@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AttributedSession } from '@aether/contracts';
 import type { LifeInput, LifePrefs, LifeSignal } from '@aether/office-scene/model';
 import {
@@ -9,6 +9,7 @@ import {
   type LifeSnapshot,
 } from './life-signals.js';
 import type { OfficeModel } from './office-model.js';
+import { useLatest } from '../use-latest.js';
 import { recordMoment } from './life-moments.js';
 import { previewParams } from './scene-preview.js';
 
@@ -37,16 +38,20 @@ export function useLifeInput(
   const [signals, setSignals] = useState<readonly LifeSignal[]>([]);
   const previous = useRef<LifeSnapshot | null>(null);
   const memory = useRef(emptyLifeMemory);
-  const push = (more: readonly LifeSignal[]) => setSignals((now) => [...now, ...more].slice(-KEEP));
+  const push = useCallback(
+    (more: readonly LifeSignal[]) => setSignals((now) => [...now, ...more].slice(-KEEP)),
+    [],
+  );
+  const agentsNow = useLatest(model.agents);
   const states = model.agents.map((a) => `${a.id}:${a.activity}`).join('|');
 
   useEffect(() => {
-    const snapshot: LifeSnapshot = { at: Date.now(), sessions, agents: model.agents };
+    const snapshot: LifeSnapshot = { at: Date.now(), sessions, agents: agentsNow.current };
     const next = deriveLifeSignals(previous.current, snapshot, memory.current);
     previous.current = snapshot;
     memory.current = next.memory;
     if (next.signals.length) push(next.signals);
-  }, [sessions, states]); // eslint-disable-line react-hooks/exhaustive-deps -- a new scan, or a member's state changed
+  }, [sessions, states, agentsNow, push]); // a new scan, or a member's state changed
 
   useEffect(() => {
     let progress = 0;
@@ -59,7 +64,7 @@ export function useLifeInput(
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  }, [push]);
 
   const names = useMemo(
     () => Object.fromEntries(model.agents.map((a) => [a.id, model.names[a.id]?.title ?? a.name])),

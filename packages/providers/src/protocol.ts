@@ -1,7 +1,7 @@
 import { z } from 'zod';
 export { providerEventSchema, type ProviderEvent } from '@aether/contracts';
 import type { ProviderEvent } from '@aether/contracts';
-export type Permission = {
+type Permission = {
   requestId: string;
   kind: string;
   toolId: string;

@@ -7,11 +7,11 @@ import type { Quality } from './scene-types.js';
  * tried: it is 2 now behind the adaptive floor, and has NOT been validated on a phone (heat, sustained fill rate).
  */
 export const PIXEL_RATIO_CAP_PHONE_HIGH = 2;
-export const PIXEL_RATIO_CAP_PHONE_BALANCED = 1.5;
-export const PIXEL_RATIO_CAP_DESKTOP_HIGH = 2;
-export const PIXEL_RATIO_CAP_DESKTOP_BALANCED = 1.5;
+const PIXEL_RATIO_CAP_PHONE_BALANCED = 1.5;
+const PIXEL_RATIO_CAP_DESKTOP_HIGH = 2;
+const PIXEL_RATIO_CAP_DESKTOP_BALANCED = 1.5;
 /** The low tier renders at the CSS pixel size on every device. */
-export const PIXEL_RATIO_CAP_LOW = 1;
+const PIXEL_RATIO_CAP_LOW = 1;
 
 export const pixelRatioCap = (quality: Quality, compact: boolean): number =>
   quality === 'high'

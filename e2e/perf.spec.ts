@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { signIn } from './support/sign-in.js';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 
 // Measures, never asserts a frame-rate target: the report records what this machine actually did.
 test('the opt-in perf probe reports measured frame times with the renderer that produced them', async ({

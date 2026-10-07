@@ -10,7 +10,7 @@
   height: var(--space-16);
   border-radius: var(--r-md);
   background: linear-gradient(90deg, var(--raised), var(--selected), var(--raised)) 0 0 / 200% 100%;
-  animation: sshimmer 1.4s linear infinite;
+  animation: sshimmer 1.4s linear infinite; /* token-lint: loop */
 }
 .sskel span:last-child {
   width: 60%;
@@ -74,7 +74,7 @@
   gap: var(--space-4) var(--space-12);
 }
 .skeys dt {
-  min-width: 160px;
+  min-width: 160px; /* token-lint: geometry */
 }
 .skeys dd {
   margin: 0;
@@ -119,7 +119,7 @@ kbd {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-12);
-  max-width: 480px;
+  max-width: 480px; /* token-lint: geometry */
   margin: var(--space-16) auto 0 0;
   padding: var(--space-8) var(--space-16);
   border: 1px solid var(--glass-accent-line);

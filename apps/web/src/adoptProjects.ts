@@ -9,9 +9,9 @@ export function unclaimedRepos(
   sessions: readonly AttributedSession[],
 ): { root: string; name: string }[] {
   const found = new Map<string, string>();
-  for (const s of sessions)
-    if (s.worktree && !s.projectId && !SCRATCH.some((p) => s.worktree!.main.startsWith(p)))
-      found.set(s.worktree.main, s.worktree.project);
+  for (const { worktree, projectId } of sessions)
+    if (worktree && !projectId && !SCRATCH.some((p) => worktree.main.startsWith(p)))
+      found.set(worktree.main, worktree.project);
   return [...found].map(([root, name]) => ({ root, name }));
 }
 
@@ -63,9 +63,11 @@ export function useAdoptRepos(
     void Promise.allSettled(
       fresh.map((r) => execute('project.create', { name: r.name.slice(0, 160), root: r.root })),
     ).then((results) => {
-      results.forEach((result, i) =>
-        noteAdoption(tracker.current, fresh[i]!.root, result.status === 'fulfilled', Date.now()),
-      );
+      results.forEach((result, i) => {
+        const repo = fresh[i];
+        if (repo)
+          noteAdoption(tracker.current, repo.root, result.status === 'fulfilled', Date.now());
+      });
       onAdopted();
     });
   }, [sessions, enabled, onAdopted]);

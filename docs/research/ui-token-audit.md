@@ -185,6 +185,24 @@ i18n 溢出：英文 `Open on your phone`、`New project` 等較中文長 2 到 
 | 14 | 面板寬度 320 到 720 與 container query                        | `session-panel.css` container 與 `panel-resize.css` 符合              | 準確 |
 | 15 | 設計 token 檔路徑 `apps/web/src/tokens.css`（lint 檔頭註解）  | 實際 `styles/tokens.css`                                              | 漂移 |
 
+## 修正狀態（Track A 到 F 合併後）
+
+| 第 3 節問題                                  | 狀態 | 說明                                                                                                                                  |
+| -------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| P0 按鈕與 icon 沒有共用高度                  | 已修 | `--control-h-*` 加共用類別；手機 `breakpoints.css` 的 36px 強制已刪，`--control-touch*` 改用 `--control-h-*`；`role-variance` 全頁無排除 |
+| P0 lint 不涵蓋 width/height/@media/自訂屬性  | 已修 | `scripts/design-token-rules.mjs` 八條規則加 `design-token-baseline.json`（只降不升）、逃生註解 `/* token-lint: <原因> */`、單元測試    |
+| P1 標題列、空狀態、標題、開關                | 已修 | Track B/C（`.u-head`、`.u-empty`、`.u-switch`）                                                                                        |
+| P1 本文字級                                  | 已修 | Track A（文件與 token 一致）                                                                                                          |
+| P1 焦點環 4 種變體                           | 已修 | Track A/B/D/E（`--focus-ring` 單一規則）；forced-colors 下為 3px `Highlight`                                                          |
+| P2 forced-colors、prefers-contrast、reduced-transparency | 已修 | `breakpoints.css` 末尾與 `tokens.css`；`e2e/preferences.spec.ts` 用 `emulateMedia` 驗證並存截圖                                       |
+| P2 物理屬性 163 處（RTL）                    | 未做 | 排在最後的 Track G，機械式替換，不在本輪                                                                                              |
+| P2 line-height、radius 角色                  | 已修 | `--lh-*`、`--r-control/card/sheet`；字面 line-height 剩 0（2 條單行字符以逃生註解標 `glyph`）                                         |
+| P2 動態字面秒數、陰影字面                    | 已修 | 短轉場用 `--dur*`，陰影用 `--shadow-sm/md/lg/up`；剩餘的循環動畫、發光與外框以逃生註解標 `loop`/`animation`/`glow`/`ring`/`shadow`    |
+| P3 `vh`、`--tabbar-h`、`kpi.css` 拆檔        | 已修 | `vh` 0；`--tabbar-h` 只在 `tokens.css`；`kpi.css` 與 `kpi-charts.css` 兩檔                                                            |
+| P3 `design-system.md` 漂移                   | 部分 | 新增斷點、偏好查詢、lint 規則與基準線章節；整份自動產生與拆檔未做                                                                      |
+| 斷點 16 種                                   | 已修 | `@media` 只用 760/1000/1250 寬與 500 高；4 個量測出的元件門檻列在 `MEDIA_EXCEPTIONS`，其餘改 container query 或合併                     |
+| `!important` 5 處                            | 已修 | 剩 0 條計入；5 條使用者偏好（reduced-motion、reduced-transparency）以 `token-lint: preference` 標註                                    |
+
 ## 3. 優先序問題清單
 
 | 優先 | 問題                                                    | 證據                                         | 使用者影響                                  | 修法                                                                          |

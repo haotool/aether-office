@@ -39,6 +39,9 @@ it('flags Math.random in product code so progress can never be fabricated', () =
   expect(result.stderr).toContain('Math.random');
 });
 
+/** A file that carries a type-checking pragma, built so this test file carries none itself. */
+const tsPragma = (name: string) => `// @ts-${name}\nexport const a = 1;`;
+
 it('enforces the architecture boundaries: kernel stays pure and web/scene never reach Node or provider SDKs', () => {
   const cases: [string, string][] = [
     ['packages/kernel/src/x.ts', "import { readFileSync } from 'node:fs';"],
@@ -48,14 +51,14 @@ it('enforces the architecture boundaries: kernel stays pure and web/scene never 
     ['apps/web/src/x.ts', "import { spawn } from 'node:child_process';"],
     ['packages/office-scene/src/x.ts', "import { join } from 'node:path';"],
     ['apps/runner/src/x.ts', "import { db } from '../../control/src/db/connection.js';"],
-    ['apps/web/src/x.ts', '// @ts-ignore\nexport const a = 1;'],
+    ['apps/web/src/x.ts', tsPragma('ignore')],
     ['packages/kernel/src/x.ts', "import { readFileSync } from 'fs';"],
     ['packages/kernel/src/x.ts', "import { join } from 'path/posix';"],
     ['apps/runner/src/x.ts', "import Database from 'better-sqlite3';"],
     ['packages/contracts/src/x.ts', "import { join } from 'node:path';"],
     ['packages/contracts/src/x.ts', "import { x } from '@aether/kernel';"],
     ['packages/contracts/src/x.ts', "import _ from 'lodash';"],
-    ['scripts/x.ts', '// @ts-nocheck\nexport const a = 1;'],
+    ['scripts/x.ts', tsPragma('nocheck')],
     ['tests/aether/x.test.ts', "it.only('a', () => {});"],
     ['e2e/x.spec.ts', "test.only('a', async () => {});"],
   ];

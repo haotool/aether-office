@@ -1,8 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { signIn } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
-import { mkdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync } from 'node:fs';
 
 // Every primary page, in both themes, on desktop and phone: accessible, not clipped, not blank.
 const PAGES = [

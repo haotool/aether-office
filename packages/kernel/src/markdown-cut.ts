@@ -27,7 +27,7 @@ const TABLE_RULE = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/;
 function dropOpenTable(text: string): string {
   const lines = text.split('\n');
   let start = lines.length;
-  while (start > 0 && lines[start - 1]!.trimStart().startsWith('|')) start--;
+  while (start > 0 && (lines[start - 1] ?? '').trimStart().startsWith('|')) start--;
   const rule = lines[start + 1];
   if (start === lines.length || (rule !== undefined && TABLE_RULE.test(rule))) return text;
   return lines.slice(0, start).join('\n').trimEnd();

@@ -14,7 +14,7 @@ type Report = {
 async function login(page: Page, path = '/') {
   await signIn(page, path);
 }
-const prefs = (quality: string) => (value: string) => {
+const prefs = (value: string) => {
   window.localStorage.setItem(
     'aether-ui-preferences',
     JSON.stringify({
@@ -62,7 +62,7 @@ test('quality levels change real resource use: low renders cheaper than high on 
   const measure = async (quality: string) => {
     const context = await browser.newContext({ deviceScaleFactor: 2 });
     const page = await context.newPage();
-    await page.addInitScript(prefs(quality), quality);
+    await page.addInitScript(prefs, quality);
     await login(page, '/?perf=1');
     await page.waitForFunction(
       () =>
@@ -87,7 +87,7 @@ test('quality levels change real resource use: low renders cheaper than high on 
 test('entering and leaving the 3D scene repeatedly does not accumulate GPU geometry or textures', async ({
   page,
 }) => {
-  await page.addInitScript(prefs('balanced'), 'balanced');
+  await page.addInitScript(prefs, 'balanced');
   await login(page, '/?perf=1');
   await page.waitForFunction(
     () =>

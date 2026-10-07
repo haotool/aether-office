@@ -23,7 +23,7 @@ export type CommandKind =
   | 'run'
   | 'generic';
 export type Tone = 'text' | 'dim' | 'add' | 'del' | 'warn' | 'accent';
-export type TermLine = { text: string; tone: Tone };
+type TermLine = { text: string; tone: Tone };
 export type TermContext = {
   branch: string | null;
   /** File base names the session really edited, newest last. */
@@ -89,7 +89,7 @@ const MAKERS: Record<CommandKind, (r: Rng, c: TermContext, head: string, n: numb
             ? t(`${bar(i / n, 20)}`, 'accent')
             : t(`· ${word(r)}-${word(r)}.test.ts`, 'dim'),
       ),
-    'git-status': (r, c) => [
+    'git-status': (_r, c) => [
       t(`On branch ${c.branch ?? 'main'}`),
       t(''),
       t('Changes not staged for commit:', 'warn'),

@@ -5,7 +5,7 @@ import type { Feed } from './feed-model.js';
 import { fmt } from './squad-text.js';
 
 /** A burst of subagents starting is one sentence, not thirty: changes are gathered for this long, then announced once. */
-export const ANNOUNCE_EVERY_MS = 4000;
+const ANNOUNCE_EVERY_MS = 4000;
 
 /**
  * A polite live region for the feed: "2 subagents started, 1 subagent finished". It says nothing about what was already

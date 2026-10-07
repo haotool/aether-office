@@ -1,10 +1,17 @@
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { RULE_NAMES, regressions, tally, violationsIn } from './design-token-rules.mjs';
 
 /**
  * The design-token gate: the stylesheets take their colors, type sizes, spacing, radii and layers from
  * apps/web/src/tokens.css and nothing else (AGENTS.md, UI rules). A raw value anywhere else is a violation, so the
  * scale cannot drift back into one-off numbers. 0, 1px hairlines, 50% and unitless values are not scale values.
+ *
+ * The strict rules (literal px sizes, vh, @media px off the scale, px custom properties, literal seconds, shadows and
+ * line heights, !important: scripts/design-token-rules.mjs) are held to scripts/design-token-baseline.json: the count of
+ * each, per rule and per file, may only go down. A line that is genuinely geometry or a user preference says so with
+ * `/* token-lint: geometry *\/` and is not counted. `--update` lowers the baseline to today's counts (and refuses to raise
+ * it); `--list` prints every counted violation.
  */
 const root = 'apps/web/src';
 const TOKENS = 'tokens.css';
@@ -24,7 +31,9 @@ const rules = [
   ],
 ];
 
+const BASELINE = 'scripts/design-token-baseline.json';
 const violations = [];
+const sources = [];
 async function visit(dir) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     const file = path.join(dir, entry.name);
@@ -33,7 +42,9 @@ async function visit(dir) {
       continue;
     }
     if (!file.endsWith('.css') || entry.name === TOKENS) continue;
-    const lines = (await readFile(file, 'utf8')).split('\n');
+    const text = await readFile(file, 'utf8');
+    sources.push({ file: file.split(path.sep).join('/'), text });
+    const lines = text.split('\n');
     lines.forEach((line, i) => {
       const declaration = line.match(/^\s*([a-z-]+):\s*(.*?);?\s*(\/\*.*)?$/);
       if (!declaration || declaration[1].startsWith('--')) return;
@@ -52,4 +63,29 @@ if (violations.length) {
   console.error(violations.join('\n'));
   process.exit(1);
 }
-console.log('design tokens: no raw colors, sizes, spacing, radii or layers outside tokens.css');
+
+const current = tally(sources);
+if (process.argv.includes('--list'))
+  for (const { file, text } of sources)
+    for (const v of violationsIn(text, { tokens: path.basename(file) === TOKENS }))
+      console.log(`${file}:${v.line}: ${v.rule} ${v.text}`);
+let baseline = null;
+try {
+  baseline = JSON.parse(await readFile(BASELINE, 'utf8'));
+} catch {
+  // no baseline yet: --update writes the first one
+}
+const worse = baseline ? regressions(baseline, current) : [];
+if (process.argv.includes('--update') && !worse.length) {
+  await writeFile(BASELINE, JSON.stringify(current, null, 2) + '\n');
+  console.log(`design tokens: baseline written to ${BASELINE}`);
+} else if (worse.length) {
+  console.error(
+    `design tokens: strict rules got worse than ${BASELINE} (counts may only go down; mark a real exception with /* token-lint: <reason> */):\n${worse.join('\n')}`,
+  );
+  process.exit(1);
+}
+const total = RULE_NAMES.reduce((n, r) => n + current.counts[r], 0);
+console.log(
+  `design tokens: no raw colors, sizes, spacing, radii or layers outside tokens.css; ${total} strict violations, none above the baseline`,
+);

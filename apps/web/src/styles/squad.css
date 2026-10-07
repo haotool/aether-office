@@ -26,7 +26,7 @@
 .avatar-icon[data-squad] {
   position: relative;
   border-color: var(--squad);
-  box-shadow: 0 0 0 1px var(--squad);
+  box-shadow: 0 0 0 1px var(--squad); /* token-lint: ring */
 }
 .avatar-tether {
   position: absolute;
@@ -34,8 +34,8 @@
   bottom: 0;
   display: grid;
   place-items: center;
-  width: 12px;
-  height: 12px;
+  width: 12px; /* token-lint: geometry */
+  height: 12px; /* token-lint: geometry */
   border-top-left-radius: var(--r-sm);
   background: var(--squad);
   color: var(--bg);
@@ -45,15 +45,15 @@
 .sub-dot {
   display: inline-block;
   flex: none;
-  width: 8px;
-  height: 8px;
+  width: 8px; /* token-lint: geometry */
+  height: 8px; /* token-lint: geometry */
   margin-top: var(--space-6);
   border-radius: 50%;
   background: var(--dim);
 }
 .sub-dot[data-status='running'] {
   background: var(--mint);
-  animation: panel-pulse 1.4s ease-in-out infinite;
+  animation: panel-pulse 1.4s ease-in-out infinite; /* token-lint: loop */
 }
 .sub-dot[data-status='waiting_permission'] {
   background: var(--gold);
@@ -143,7 +143,7 @@
   top: 0;
   bottom: 0;
   left: var(--space-24);
-  width: 2px;
+  width: 2px; /* token-lint: geometry */
   background: var(--squad);
   opacity: 0.55;
 }
@@ -156,7 +156,7 @@
   top: 50%;
   left: var(--space-24);
   width: var(--space-8);
-  height: 2px;
+  height: 2px; /* token-lint: geometry */
   background: var(--squad);
   opacity: 0.55;
 }

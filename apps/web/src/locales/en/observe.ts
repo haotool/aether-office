@@ -1,0 +1,22 @@
+/** The observe words, in English. */
+export const enObserve = {
+  obNote:
+    'Read only explicitly approved external sessions. Observed text is not completion evidence and cannot dispatch work or grant permissions.',
+  obEmpty: 'No observations received. Check the runner opt-in configuration and logs.',
+  obObserved: 'Visible records observed',
+  obUnchanged: 'No new visible records this poll',
+  obPartial: 'Waiting for a complete record',
+  obMissing: 'Source file missing',
+  obBlocked: 'Source path not granted',
+  obUnsupported: 'Unsupported format or version',
+  obLimit: 'Read limit exceeded',
+  obError: 'Source read failed',
+  obStale: 'No recent new records; liveness unknown',
+  obOffline: 'Observation machine offline or revoked',
+  obLastRead: 'Last read report',
+  obLastNew: 'Last new observation',
+  obHistory: 'Observed records',
+  obSession: 'External session',
+  obLatest: 'Latest',
+  obOlder: 'Older records',
+} as const;

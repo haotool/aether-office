@@ -15,6 +15,7 @@ import { BAR_H, FOOTER_Y, PALETTES, SCREEN_H, SCREEN_W, type ViewCtx } from './s
 import { VIEWS } from './screen-views.js';
 import { drawApproval, drawToast } from './screen-view-overlay.js';
 import type { ToolCall } from './screen-work.js';
+import { context2d } from './canvas-2d.js';
 
 export { BAND };
 
@@ -45,6 +46,24 @@ export type ScreenFacts = {
   /** Whole minutes since anything happened in it. */
   quietMinutes: number | null;
   ports: readonly number[];
+};
+
+const NO_FACTS: ScreenFacts = {
+  provider: 'claude',
+  title: null,
+  repo: '',
+  branch: null,
+  ahead: 0,
+  behind: 0,
+  uncommitted: 0,
+  model: null,
+  contextPercent: null,
+  state: 'unknown',
+  tool: null,
+  toolSince: null,
+  recent: [],
+  quietMinutes: null,
+  ports: [],
 };
 
 /** How a screen is painted: the pace the scene wants for it (nearer ones are painted more often) and the member's speed. */
@@ -82,7 +101,7 @@ export function createFactsScreen(
   const canvas = document.createElement('canvas');
   canvas.width = SCREEN_W;
   canvas.height = SCREEN_H;
-  const g = canvas.getContext('2d')!;
+  const g = context2d(canvas);
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
   texture.anisotropy = 4;
@@ -96,7 +115,7 @@ export function createFactsScreen(
     now: 0,
     elapsed: 0,
     work: currentWork({ state: 'unknown', tool: null, recent: [] }),
-    facts: null as unknown as ScreenFacts,
+    facts: NO_FACTS, // replaced by the first paint, before any view reads it
     role,
     profile,
     speed: 1,
@@ -120,7 +139,7 @@ export function createFactsScreen(
       if (next !== view) {
         if (view !== null && options.moving && options.interval <= FAST_MS) {
           ghost ??= borrowCanvas(SCREEN_W, SCREEN_H);
-          ghost.getContext('2d')!.drawImage(canvas, 0, 0);
+          context2d(ghost).drawImage(canvas, 0, 0);
           ghostAt = now - TRANSITION_MS / 3; // the slide is already under way on its first frame
         }
         ctx.state.scroll = 0;

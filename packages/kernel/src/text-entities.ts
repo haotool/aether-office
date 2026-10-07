@@ -36,18 +36,15 @@ function fromCodePoint(code: number): string {
 }
 
 export function decodeEntities(text: string): string {
-  return text.replace(
-    REFERENCE,
-    (whole, dec?: string, hex?: string, name?: string, at?: number) => {
-      if (name !== undefined) {
-        const value = NAMED[name.toLowerCase()];
-        if (value === undefined) return whole;
-        const rest = text.slice(at! + whole.length);
-        return name.toLowerCase() === 'amp' && LOOKS_LIKE_REFERENCE.test(rest) ? whole : value;
-      }
-      return fromCodePoint(dec !== undefined ? Number(dec) : parseInt(hex!, 16));
-    },
-  );
+  return text.replace(REFERENCE, (whole, dec?: string, hex?: string, name?: string, at = 0) => {
+    if (name !== undefined) {
+      const value = NAMED[name.toLowerCase()];
+      if (value === undefined) return whole;
+      const rest = text.slice(at + whole.length);
+      return name.toLowerCase() === 'amp' && LOOKS_LIKE_REFERENCE.test(rest) ? whole : value;
+    }
+    return fromCodePoint(dec !== undefined ? Number(dec) : parseInt(hex ?? '', 16));
+  });
 }
 
 /** Entities inside code are decoded too (an HTML `<code>` holds `&lt;`), but into the plain character. */

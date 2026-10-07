@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import type { GitKpi } from '@aether/contracts';
 import { defaultBranch, git } from './git-health.js';
 import { mapPool } from './pool.js';
-import type { DayOf } from './usage-parse.js';
+import type { DayOf } from './usage-counters.js';
 
 // Git activity of one repository over the last 30 days, from read-only git commands with timeouts: commits, merge
 // commits, branches that became part of the default branch, branches still open, authors, lines changed. Counts only:

@@ -11,6 +11,7 @@ import {
 import { DITHER_END, DITHER_PARS, DITHERED } from './dither.js';
 import { AIR, hourOf, tintAt, type AirQuality } from './air.js';
 import { seeded } from './random.js';
+import { setUniform } from './uniforms.js';
 
 // The room's air: slow dust motes and a few shafts of light from the rear windows. Each is one draw call, animated by its
 // shader's clock (no per-frame work on the CPU beyond one uniform), tinted by the hour, drawn additively.
@@ -23,6 +24,17 @@ const WINDOW_Z = -18.2;
 const PANELS = [-15, 9, -3, 21, -21] as const;
 
 const tint = () => new Color(...tintAt(hourOf(new Date())));
+
+/** Frees an effect's geometry and material on the GPU when they are replaced or the effect goes. */
+function useDisposed(geometry: BufferGeometry, material: ShaderMaterial) {
+  useEffect(
+    () => () => {
+      geometry.dispose();
+      material.dispose();
+    },
+    [geometry, material],
+  );
+}
 
 const MOTE_VERTEX = `
   attribute vec3 phase;
@@ -80,16 +92,10 @@ export function DustMotes({ quality, animate }: { quality: AirQuality; animate: 
     });
     return { geometry: g, material: m };
   }, [count]);
-  useEffect(
-    () => () => {
-      geometry.dispose();
-      material.dispose();
-    },
-    [geometry, material],
-  );
+  useDisposed(geometry, material);
   useFrame(({ clock, size, gl }) => {
-    material.uniforms['time']!.value = animate ? clock.elapsedTime : 0;
-    material.uniforms['scale']!.value = size.height * gl.getPixelRatio() * 0.9;
+    setUniform(material, 'time', animate ? clock.elapsedTime : 0);
+    setUniform(material, 'scale', size.height * gl.getPixelRatio() * 0.9);
   });
   if (count === 0) return null;
   return <points geometry={geometry} material={material} frustumCulled={false} />;
@@ -129,9 +135,9 @@ export function LightShafts({ quality, animate }: { quality: AirQuality; animate
         [x + drift - 2.4, 0.08, WINDOW_Z + reach, 0, 0],
       ];
       const first = positions.length / 3;
-      for (const [px, py, pz, u, v] of quad) {
-        positions.push(px!, py!, pz!);
-        uvs.push(u!, v!);
+      for (const [px = 0, py = 0, pz = 0, u = 0, v = 0] of quad) {
+        positions.push(px, py, pz);
+        uvs.push(u, v);
       }
       indices.push(first, first + 1, first + 2, first, first + 2, first + 3);
     });
@@ -151,15 +157,9 @@ export function LightShafts({ quality, animate }: { quality: AirQuality; animate
     });
     return { geometry: g, material: m };
   }, [count]);
-  useEffect(
-    () => () => {
-      geometry.dispose();
-      material.dispose();
-    },
-    [geometry, material],
-  );
+  useDisposed(geometry, material);
   useFrame(({ clock }) => {
-    material.uniforms['time']!.value = animate ? clock.elapsedTime : 0;
+    setUniform(material, 'time', animate ? clock.elapsedTime : 0);
   });
   if (count === 0) return null;
   return <mesh geometry={geometry} material={material} frustumCulled={false} renderOrder={2} />;

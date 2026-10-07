@@ -1,8 +1,9 @@
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, type RefObject } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Color, InstancedMesh } from 'three';
 import { floorY } from '../scene-geometry.js';
 import type { DrawSquad } from './squad-draw.js';
+import type { SquadMemberState } from './squad-model.js';
 import { art, squadMaterials, withColors, writeInstances, type Instance } from './squad-art.js';
 import { Glide, type Point2 } from './squad-glide.js';
 import { WAITING_AMBER } from './squad-art.js';
@@ -16,147 +17,219 @@ const GLIDE_TAU = 0.25;
 const UNFOLD_MS = 600;
 const FLOOR_LIFT = 0.035; // over the floor, under the characters' feet
 
-/**
- * The floor of the squads: each zone's dashed outline, a ring for every seat, and for a taken seat the hover stool and
- * its holo pane (or a silhouette past the character budget). Five instanced meshes, written when the frame changes or
- * something glides or unfolds. `podPos` is filled with where each sitter's pod is shown this frame.
- */
-export function SquadZones({
-  squads,
-  frame,
-  exploded,
-  animate,
-  podPos,
-}: {
+type Decal = ReturnType<typeof createZoneDecal>;
+type Members = Readonly<Record<string, SquadMemberState>>;
+type Pod = DrawSquad['pods'][number];
+
+/** The instances of each of the layer's meshes, for one write. */
+type Items = {
+  zones: Instance[];
+  rings: Instance[];
+  stools: Instance[];
+  panes: Instance[];
+  figures: Instance[];
+};
+
+/** What one write of the floor needs: the clock, how things ease, and where to put what each squad worked out. */
+type Write = {
+  glide: Glide;
+  decal: Decal;
+  color: Color;
+  members: Members;
+  podPos: Map<string, Point2>;
+  keep: Set<string>;
+  items: Items;
+  exploded: boolean;
+  animate: boolean;
+  delta: number;
+  now: number;
+};
+
+/** A taken seat: its ring, and the stool and pane that unfold (or a silhouette past the character budget). */
+function placePod(w: Write, s: DrawSquad, pod: Pod, n: number, y: number, yaw: number) {
+  const tau = w.animate ? GLIDE_TAU : 0;
+  const key = `p:${s.supervisor}:${n}`;
+  w.keep.add(key);
+  const at = w.glide.to(key, { x: pod.x, z: pod.z }, w.delta, tau);
+  const waits = !!pod.member && !!w.members[pod.member]?.waiting;
+  w.items.rings.push({
+    at: [at.x, y, at.z],
+    color: waits ? WAITING_AMBER : pod.member ? s.accent : '#4b6a73',
+    scale: pod.member ? [1, 1, 1] : [0.8, 1, 0.8],
+  });
+  if (!pod.member) return;
+  w.podPos.set(pod.member, at);
+  const age = w.animate ? Math.min(1, (w.now - pod.since) / UNFOLD_MS) : 1;
+  const grow = age * age * (3 - 2 * age);
+  const item = {
+    at: [at.x, y, at.z] as const,
+    yaw,
+    scale: [grow, grow, grow] as const,
+    color: waits ? WAITING_AMBER : s.accent,
+  };
+  if (pod.silhouette) w.items.figures.push({ ...item, color: '#7fa6b2' });
+  else {
+    w.items.stools.push({ ...item, color: '#5f8f99' });
+    w.items.panes.push(item);
+  }
+}
+
+/** One squad: its zone outline (eased to its size) and every pod in it. */
+function placeSquad(w: Write, s: DrawSquad, i: number) {
+  const tau = w.animate ? GLIDE_TAU : 0;
+  const y = floorY(s.floor, w.exploded) + FLOOR_LIFT;
+  const zone = w.glide.to(`z:${s.supervisor}`, { x: s.x, z: s.z }, w.delta, tau);
+  const size = w.glide.to(`s:${s.supervisor}`, { x: s.width, z: s.depth }, w.delta, tau);
+  w.keep.add(`z:${s.supervisor}`).add(`s:${s.supervisor}`);
+  w.items.zones.push({ at: [zone.x, y, zone.z], color: s.accent });
+  w.decal.size.setXY(i, size.x, size.z);
+  const tone = w.color.set(s.accent);
+  w.decal.tone.setXYZ(i, tone.r, tone.g, tone.b);
+  w.decal.alpha.setX(i, 0.7);
+  const yaw = (s.deskRotation * Math.PI) / 2;
+  s.pods.forEach((pod, n) => placePod(w, s, pod, n, y, yaw));
+}
+
+type ZoneProps = {
   squads: readonly DrawSquad[];
   frame: SquadFrame;
   exploded: boolean;
   /** Glide and unfold; off, a change is shown at once. */
   animate: boolean;
   podPos: Map<string, Point2>;
-}) {
+};
+
+/** The layer's meshes and what it remembers between frames, made once. */
+type ZoneRig = {
+  decal: Decal;
+  glide: Glide;
+  color: Color;
+  last: { squads: readonly DrawSquad[]; waiting: string };
+  meshes: Record<
+    'decal' | 'rings' | 'stools' | 'panes' | 'figures',
+    RefObject<InstancedMesh | null>
+  >;
+};
+
+function useZoneRig(squads: readonly DrawSquad[]): ZoneRig {
+  const decal = useMemo(() => createZoneDecal(), []);
+  const glide = useMemo(() => new Glide(), []);
+  const color = useMemo(() => new Color(), []);
+  const last = useRef({ squads, waiting: '' }).current;
+  const decalMesh = useRef<InstancedMesh>(null);
+  const rings = useRef<InstancedMesh>(null);
+  const stools = useRef<InstancedMesh>(null);
+  const panes = useRef<InstancedMesh>(null);
+  const figures = useRef<InstancedMesh>(null);
+  return useMemo(
+    () => ({
+      decal,
+      glide,
+      color,
+      last,
+      meshes: { decal: decalMesh, rings, stools, panes, figures },
+    }),
+    [decal, glide, color, last, decalMesh, rings, stools, panes, figures],
+  );
+}
+
+/** One frame of the floor: rewrites every mesh when something changed, glides or unfolds; true while it still moves. */
+function updateFloor(rig: ZoneRig, p: ZoneProps, delta: number): boolean {
+  const { decal, glide, color, last, meshes } = rig;
+  const { squads, exploded, animate, podPos } = p;
+  const { decal: decalMesh, rings, stools, panes, figures } = meshes;
+  if (!decalMesh.current || !rings.current || !stools.current || !panes.current || !figures.current)
+    return false;
+  const now = Date.now();
+  const members = p.frame.state.current.members;
+  const waiting = squads.flatMap((s) =>
+    s.pods.filter((pod) => pod.member && members[pod.member]?.waiting),
+  ).length;
+  const unfolding =
+    animate && squads.some((s) => s.pods.some((pod) => pod.member && now - pod.since < UNFOLD_MS));
+  const fresh = last.waiting === '\0';
+  if (!fresh && !glide.moving && !unfolding && last.waiting === String(waiting)) return false;
+  last.waiting = String(waiting);
+  glide.begin();
+  const items: Items = { zones: [], rings: [], stools: [], panes: [], figures: [] };
+  const keep = new Set<string>();
+  podPos.clear();
+  const w: Write = {
+    glide,
+    decal,
+    color,
+    members,
+    podPos,
+    keep,
+    items,
+    exploded,
+    animate,
+    delta,
+    now,
+  };
+  squads.forEach((s, i) => placeSquad(w, s, i));
+  glide.prune(keep);
+  writeInstances(decalMesh.current, items.zones, false);
+  writeInstances(rings.current, items.rings);
+  writeInstances(stools.current, items.stools);
+  writeInstances(panes.current, items.panes);
+  writeInstances(figures.current, items.figures);
+  decal.size.needsUpdate = decal.tone.needsUpdate = decal.alpha.needsUpdate = true;
+  return glide.moving || unfolding;
+}
+
+/**
+ * The floor of the squads: each zone's dashed outline, a ring for every seat, and for a taken seat the hover stool and
+ * its holo pane (or a silhouette past the character budget). Five instanced meshes, written when the frame changes or
+ * something glides or unfolds. `podPos` is filled with where each sitter's pod is shown this frame.
+ */
+export function SquadZones(props: ZoneProps) {
+  const { squads } = props;
   const invalidate = useThree((s) => s.invalidate);
   const parts = art();
   const { glow } = squadMaterials();
-  const decal = useMemo(() => createZoneDecal(), []);
-  const glide = useMemo(() => new Glide(), []);
-  const refs = {
-    decal: useRef<InstancedMesh>(null),
-    rings: useRef<InstancedMesh>(null),
-    stools: useRef<InstancedMesh>(null),
-    panes: useRef<InstancedMesh>(null),
-    figures: useRef<InstancedMesh>(null),
-  };
-  const last = useRef({ squads, waiting: '' });
-  const color = useMemo(() => new Color(), []);
+  const rig = useZoneRig(squads);
+  const { decal, last, meshes } = rig;
   useLayoutEffect(() => {
-    for (const mesh of [refs.rings, refs.stools, refs.panes, refs.figures])
+    for (const mesh of [meshes.rings, meshes.stools, meshes.panes, meshes.figures])
       withColors(mesh.current);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- the refs are stable
+  }, [meshes]);
   useEffect(() => {
-    last.current.waiting = '\0'; // a new set of squads: write on the next frame
+    last.waiting = '\0'; // a new set of squads: write on the next frame
     invalidate();
-  }, [squads, invalidate]);
-
+  }, [squads, last, invalidate]);
   useFrame((_, delta) => {
-    const { decal: d, rings, stools, panes, figures } = refs;
-    if (!d.current || !rings.current || !stools.current || !panes.current || !figures.current)
-      return;
-    const now = Date.now();
-    const members = frame.state.current.members;
-    const waiting = squads.flatMap((s) =>
-      s.pods.filter((p) => p.member && members[p.member]?.waiting),
-    ).length;
-    const unfolding =
-      animate && squads.some((s) => s.pods.some((p) => p.member && now - p.since < UNFOLD_MS));
-    const fresh = last.current.waiting === '\0';
-    if (!fresh && !glide.moving && !unfolding && last.current.waiting === String(waiting)) return;
-    last.current.waiting = String(waiting);
-    glide.begin();
-    const tau = animate ? GLIDE_TAU : 0;
-    const zones: Instance[] = [];
-    const ringItems: Instance[] = [];
-    const stoolItems: Instance[] = [];
-    const paneItems: Instance[] = [];
-    const figureItems: Instance[] = [];
-    const keep = new Set<string>();
-    podPos.clear();
-    squads.forEach((s, i) => {
-      const y = floorY(s.floor, exploded) + FLOOR_LIFT;
-      const yaw = (s.deskRotation * Math.PI) / 2;
-      const zone = glide.to(`z:${s.supervisor}`, { x: s.x, z: s.z }, delta, tau);
-      const size = glide.to(`s:${s.supervisor}`, { x: s.width, z: s.depth }, delta, tau);
-      keep.add(`z:${s.supervisor}`).add(`s:${s.supervisor}`);
-      zones.push({ at: [zone.x, y, zone.z], color: s.accent });
-      decal.size.setXY(i, size.x, size.z);
-      const tone = color.set(s.accent);
-      decal.tone.setXYZ(i, tone.r, tone.g, tone.b);
-      decal.alpha.setX(i, 0.7);
-      s.pods.forEach((pod, n) => {
-        const key = `p:${s.supervisor}:${n}`;
-        keep.add(key);
-        const at = glide.to(key, { x: pod.x, z: pod.z }, delta, tau);
-        const waits = !!pod.member && !!members[pod.member]?.waiting;
-        ringItems.push({
-          at: [at.x, y, at.z],
-          color: waits ? WAITING_AMBER : pod.member ? s.accent : '#4b6a73',
-          scale: pod.member ? [1, 1, 1] : [0.8, 1, 0.8],
-        });
-        if (!pod.member) return;
-        podPos.set(pod.member, at);
-        const age = animate ? Math.min(1, (now - pod.since) / UNFOLD_MS) : 1;
-        const grow = age * age * (3 - 2 * age);
-        const item = {
-          at: [at.x, y, at.z] as const,
-          yaw,
-          scale: [grow, grow, grow] as const,
-          color: waits ? WAITING_AMBER : s.accent,
-        };
-        if (pod.silhouette) figureItems.push({ ...item, color: '#7fa6b2' });
-        else {
-          stoolItems.push({ ...item, color: '#5f8f99' });
-          paneItems.push(item);
-        }
-      });
-    });
-    glide.prune(keep);
-    writeInstances(d.current, zones, false);
-    writeInstances(rings.current, ringItems);
-    writeInstances(stools.current, stoolItems);
-    writeInstances(panes.current, paneItems);
-    writeInstances(figures.current, figureItems);
-    decal.size.needsUpdate = decal.tone.needsUpdate = decal.alpha.needsUpdate = true;
-    if (glide.moving || unfolding) invalidate();
+    if (updateFloor(rig, props, delta)) invalidate();
   });
 
   return (
     <group>
       <instancedMesh
-        ref={refs.decal}
+        ref={meshes.decal}
         args={[decal.geometry, decal.material, ZONE_CAPACITY]}
         frustumCulled={false}
         renderOrder={1}
       />
       <instancedMesh
-        ref={refs.rings}
+        ref={meshes.rings}
         args={[parts.ring, glow, POD_CAPACITY]}
         frustumCulled={false}
         renderOrder={2}
       />
       <instancedMesh
-        ref={refs.stools}
+        ref={meshes.stools}
         args={[parts.stool, glow, POD_CAPACITY]}
         frustumCulled={false}
         renderOrder={2}
       />
       <instancedMesh
-        ref={refs.panes}
+        ref={meshes.panes}
         args={[parts.pane, glow, POD_CAPACITY]}
         frustumCulled={false}
         renderOrder={2}
       />
       <instancedMesh
-        ref={refs.figures}
+        ref={meshes.figures}
         args={[parts.silhouette, glow, POD_CAPACITY]}
         frustumCulled={false}
         renderOrder={2}

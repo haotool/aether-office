@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react';
  * When each session was last opened, by key, kept in this browser only: "unread" is whatever happened after that. Never
  * sent anywhere, and a browser that refuses storage just starts with everything unread.
  */
-export type Seen = Readonly<Record<string, number>>;
+type Seen = Readonly<Record<string, number>>;
 const STORAGE_KEY = 'aether.sessionSeen';
 const MAX_KEPT = 200;
 
@@ -57,7 +57,7 @@ export function useSeen() {
 }
 
 /** When the session was last opened, read straight from storage. */
-export function readSeen(key: string): number {
+function readSeen(key: string): number {
   return load()[key] ?? 0;
 }
 

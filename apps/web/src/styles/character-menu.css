@@ -21,8 +21,8 @@
 .char-card {
   display: grid;
   gap: var(--space-2);
-  min-width: 140px;
-  max-width: 260px;
+  min-width: 140px; /* token-lint: geometry */
+  max-width: 260px; /* token-lint: geometry */
   margin-top: calc(var(--space-24) * -1); /* above the name tag it is anchored with */
   padding: var(--space-8) var(--space-12);
   border: 1px solid var(--glass-line-strong);
@@ -55,7 +55,7 @@
 .char-menu {
   display: grid;
   gap: var(--space-2);
-  width: 280px;
+  width: 280px; /* token-lint: geometry */
   min-height: 0;
   margin: 0;
   padding: var(--space-6);
@@ -212,8 +212,8 @@
   display: block;
   margin-top: calc(var(--space-24) * -1);
   font-size: var(--fs-hero);
-  line-height: 1;
-  animation: emote-rise 1.8s var(--ease) forwards;
+  line-height: 1; /* token-lint: glyph */
+  animation: emote-rise 1.8s var(--ease) forwards; /* token-lint: animation */
 }
 .char-layer.still .emote-sprite {
   animation-name: emote-fade;

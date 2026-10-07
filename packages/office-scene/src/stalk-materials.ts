@@ -77,16 +77,7 @@ export function stalkTubes(stalk: Stalk, low: boolean): THREE.BufferGeometry | n
   return geometry;
 }
 
-/**
- * The strands' glass, faked without a transmission pass: a body that is nearly clear, a rim that burns at grazing angles
- * (fresnel), a vein of light down the middle that a viewer looks straight through, a faint shift of hue as if refracted, and
- * pulses running up the vein. Additive and depth-free, so entwined strands add up instead of hiding each other. Cut off
- * above `grow` (the growing tip burns white).
- */
-export function stalkMaterial() {
-  return new THREE.ShaderMaterial({
-    uniforms: { time: { value: 0 }, grow: { value: 0 }, energy: { value: 0 } },
-    vertexShader: `
+const STALK_VERTEX = `
       attribute vec3 tint;
       attribute float seed;
       varying vec3 vTint;
@@ -102,8 +93,9 @@ export function stalkMaterial() {
         vTint = tint;
         vSeed = seed;
         gl_Position = projectionMatrix * viewMatrix * world;
-      }`,
-    fragmentShader: `
+      }`;
+
+const STALK_FRAGMENT = `
       ${DITHER_PARS}
       uniform float time;
       uniform float grow;
@@ -129,7 +121,19 @@ export function stalkMaterial() {
         gl_FragColor = vec4(color, 1.0);
         #include <colorspace_fragment>
         ${DITHER_END}
-      }`,
+      }`;
+
+/**
+ * The strands' glass, faked without a transmission pass: a body that is nearly clear, a rim that burns at grazing angles
+ * (fresnel), a vein of light down the middle that a viewer looks straight through, a faint shift of hue as if refracted, and
+ * pulses running up the vein. Additive and depth-free, so entwined strands add up instead of hiding each other. Cut off
+ * above `grow` (the growing tip burns white).
+ */
+export function stalkMaterial() {
+  return new THREE.ShaderMaterial({
+    uniforms: { time: { value: 0 }, grow: { value: 0 }, energy: { value: 0 } },
+    vertexShader: STALK_VERTEX,
+    fragmentShader: STALK_FRAGMENT,
     dithering: true,
     transparent: true,
     depthWrite: false,

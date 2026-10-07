@@ -32,7 +32,7 @@ export type PodSeat = {
  * The quarter turns that make a member in a zone face the supervisor's desk: the zone lies on one side of the desk, and
  * its pods look back at it. (A desk's frame has the chair at +z, looking at -z.)
  */
-export function facingOf(zone: Pick<SquadRect, 'x' | 'z'>, desk: PlacedObject): number {
+function facingOf(zone: Pick<SquadRect, 'x' | 'z'>, desk: PlacedObject): number {
   const b = objectBounds(desk);
   const gapX = Math.abs(zone.x - desk.x) - (b.maxX - b.minX) / 2;
   const gapZ = Math.abs(zone.z - desk.z) - (b.maxZ - b.minZ) / 2;

@@ -20,8 +20,8 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.5px;
 }
-/* The top bar has room for the numbers from 1320px; below that they sit in the sidebar (see compact-desktop.css). */
-@media (max-width: 1320px) {
+/* The top bar has room for the numbers from 1500px; below that they sit in the sidebar (see compact-desktop.css). */
+@media (max-width: 1500px) {
   .telemetry {
     display: none;
   }

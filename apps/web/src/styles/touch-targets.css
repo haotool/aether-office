@@ -63,8 +63,8 @@ body {
   }
   input[type='checkbox'],
   input[type='radio'] {
-    width: 22px;
-    height: 22px;
+    width: 22px; /* token-lint: geometry */
+    height: 22px; /* token-lint: geometry */
     flex: none;
     accent-color: var(--mint);
   }

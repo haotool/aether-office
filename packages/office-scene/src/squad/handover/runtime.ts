@@ -18,9 +18,9 @@ import { deskPlaces, routeHandover, timeline, type HandoverPlan } from './plan.j
 import { stampOf, type HandedResult } from './stamp.js';
 
 /** What the layer that draws the scene says it shows: a hand-over is only walked for a desk that is in view. */
-export type View = { floor: number; exploded: boolean };
+type View = { floor: number; exploded: boolean };
 
-export type HandoverStart = {
+type HandoverStart = {
   id: string;
   type: string;
   supervisor: string;
@@ -38,7 +38,7 @@ export type HandoverStart = {
   relation: boolean;
 };
 
-export const planKey = (id: string, since: number) => `${id}@${since}`;
+const planKey = (id: string, since: number) => `${id}@${since}`;
 
 export function createHandover() {
   let book: Book = emptyBook;

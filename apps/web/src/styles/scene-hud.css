@@ -2,12 +2,12 @@
 /* The HUD plaques are geometry over the canvas: fixed insets and widths so they clear the toolbar (top) and the camera wall (right). */
 .floor-hud {
   position: absolute;
-  left: 18px;
-  bottom: 38px;
+  left: 18px; /* token-lint: geometry */
+  bottom: 38px; /* token-lint: geometry */
   z-index: var(--z-hud);
   display: grid;
   gap: var(--space-2);
-  min-width: 190px;
+  min-width: 190px; /* token-lint: geometry */
   padding: var(--space-8) var(--space-12) var(--space-12);
   background: var(--glass-strong);
   color: var(--on-glass);
@@ -43,10 +43,10 @@
 }
 .building-panel {
   position: absolute;
-  top: 70px;
-  right: 16px;
+  top: 70px; /* token-lint: geometry */
+  right: 16px; /* token-lint: geometry */
   z-index: var(--z-hud);
-  width: 244px;
+  width: 244px; /* token-lint: geometry */
   padding: var(--space-12) var(--space-12) var(--space-12);
   background: var(--glass-strong);
   color: var(--on-glass);
@@ -124,7 +124,7 @@
 }
 .pips u {
   width: 100%;
-  height: 3px;
+  height: 3px; /* token-lint: geometry */
   background: color-mix(in srgb, var(--accent) 22%, transparent);
 }
 .pips u.on {
@@ -142,6 +142,15 @@
   outline: none; /* the slab's own cue: a brighter tint and an underline, since an outline would be cut by its clip-path */
   background: color-mix(in srgb, var(--accent) 38%, var(--glass-base));
   text-decoration: underline;
+}
+/* The panel is glass in both themes: its plain buttons must not take the light theme's white button fill under the light text. */
+.building-panel button:not([class]),
+.building-panel button:not([class]):hover:not(:disabled) {
+  background: transparent;
+  color: inherit;
+}
+.building-panel button:not([class]):hover:not(:disabled) {
+  background: color-mix(in srgb, var(--on-glass) 12%, transparent);
 }
 .building-tools {
   display: flex;
@@ -179,9 +188,9 @@
 @media (max-width: 760px) {
   .building-panel {
     top: auto;
-    bottom: 10px;
-    right: 10px;
-    width: 196px;
+    bottom: 10px; /* token-lint: geometry */
+    right: 10px; /* token-lint: geometry */
+    width: 196px; /* token-lint: geometry */
   }
   .floor-hud {
     display: none;

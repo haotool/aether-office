@@ -9,8 +9,8 @@ const CELL = /<t[hd]\b[^>]*>([\s\S]*?)(?:<\/t[hd]\s*>|(?=<t[hd]\b)|$)/gi;
 export function htmlTable(inner: string, clean: (html: string) => string): string {
   const rows = [...inner.matchAll(ROW)]
     .map((row) =>
-      [...row[1]!.matchAll(CELL)].map((cell) =>
-        clean(cell[1]!)
+      [...(row[1] ?? '').matchAll(CELL)].map((cell) =>
+        clean(cell[1] ?? '')
           .replace(/\s*\n+\s*/g, ' ')
           .replace(/\|/g, '\\|')
           .trim(),

@@ -35,7 +35,7 @@ export function ConnectionStatus({ updatedAt, offline }: { updatedAt: number; of
   return (
     <span className="link-status" role="status" title={age ? `${t('linkLastUpdate')} ${age}` : ''}>
       <i className={`dot ${DOT[status]}`} />
-      {t(LABEL[status])}
+      <span className="link-text">{t(LABEL[status])}</span>
       {age && <small>{age}</small>}
     </span>
   );

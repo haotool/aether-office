@@ -19,7 +19,7 @@ export type SquadMemberInput = {
 };
 export type SquadInput = { supervisor: string; members: readonly SquadMemberInput[] };
 
-export type SquadPhase = 'arriving' | 'seated' | 'leaving';
+type SquadPhase = 'arriving' | 'seated' | 'leaving';
 export type SquadMemberState = {
   id: string;
   supervisor: string;
@@ -51,7 +51,7 @@ export type SquadState = {
   members: Readonly<Record<string, SquadMemberState>>;
   zones: Readonly<Record<string, SquadZoneState>>;
 };
-export type SquadStep = {
+type SquadStep = {
   squads: readonly SquadInput[];
   /** How long a member that starts leaving now takes to be out (its errand), in ms. `fact` is what the page knows of it. */
   leaveMs: (id: string, fact: SquadMemberInput | undefined) => number;
@@ -61,11 +61,11 @@ export const EMPTY_SQUAD: SquadState = { ready: false, members: {}, zones: {} };
 /** The longest an arrival takes: the walk is sped up to fit, then the turn and the sit. */
 export const ARRIVE_MS = 6000;
 /** A subagent that started longer ago than this was there before we looked: it is seated, not walked in. */
-export const FRESH_MS = 30_000;
+const FRESH_MS = 30_000;
 /** The zone shrinks only after this long without a change. */
 export const SHRINK_AFTER_MS = 10_000;
 /** A subagent that has run a tool this recently is working. */
-export const LIVE_MS = 20_000;
+const LIVE_MS = 20_000;
 /** A leaving member gives its pod up this long after it begins to leave (it has stood and waved by then). */
 export const POD_FREE_MS = 3250;
 const MAX_EVENTS = 120;

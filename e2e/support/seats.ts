@@ -1,7 +1,7 @@
 import { expect, type Page } from '@playwright/test';
 import { settled } from './settled.js';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { signIn } from './sign-in.js';
 

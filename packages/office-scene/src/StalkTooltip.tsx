@@ -10,7 +10,7 @@ const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
 ];
 
 /** "3 days ago", "2 hours ago", "just now", in the person's language. */
-export function ago(at: number, now: number, locale: string): string {
+function ago(at: number, now: number, locale: string): string {
   const age = now - at;
   const format = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
   const [unit, ms] = UNITS.find(([, size]) => age >= size) ?? ['minute', 60_000];

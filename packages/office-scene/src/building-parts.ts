@@ -6,7 +6,12 @@ type Spinner = { mesh: THREE.Object3D; axis: 'x' | 'y' | 'z'; speed: number };
 export type FloorModel = {
   group: THREE.Group;
   spinners: Spinner[];
-  pulsers: { material: THREE.Material; base: number; amplitude: number; speed: number }[];
+  pulsers: {
+    material: THREE.MeshStandardMaterial;
+    base: number;
+    amplitude: number;
+    speed: number;
+  }[];
   /** Small lit craft gliding along an ellipse above the floor. */
   orbiters: {
     mesh: THREE.Object3D;

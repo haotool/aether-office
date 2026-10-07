@@ -67,20 +67,14 @@ function useReachable() {
   return { online: online && reachable, lost: () => setReachable(false) };
 }
 
-/**
- * Everything the composer needs to drive a session's terminal: who may write, whose lease it is under, the messages
- * waiting or just sent (kept in the outbox for the transcript to show), and the sends themselves. A message goes in
- * when the network is up, the terminal is not another person's and the session is not working; until then it waits in
- * a bounded queue.
- */
-export function useDrive(sessionKey: string, drive: Drive, working: boolean) {
+/** Who may write, and whether the session's terminal is running and not another person's right now. */
+function useDriveAccess(drive: Drive) {
   const me = useQuery({
     queryKey: ['session'],
     queryFn: () => api<Session>('/api/session'),
     staleTime: Infinity,
   });
   const userId = me.data?.actor.id ?? '';
-  const canWrite = isOperator(me.data?.actor.role);
   const control = useQuery({
     queryKey: ['drive-terminal', drive.terminalId],
     queryFn: () =>
@@ -88,26 +82,25 @@ export function useDrive(sessionKey: string, drive: Drive, working: boolean) {
     refetchInterval: 3000,
     retry: false,
   });
-  const network = useReachable();
-  const pending = usePending(sessionKey);
-  const update = useOutbox((s) => s.update);
+  const running = control.data?.state === 'running';
+  return {
+    userId,
+    canWrite: isOperator(me.data?.actor.role),
+    running,
+    free: !!control.data && running && !heldByOther(control.data, userId, Date.now()),
+  };
+}
+
+/** The writes that never queue: a key, an interrupt, stopping the process; and the error the last write left. */
+function useDirectWrites(
+  drive: Drive,
+  userId: string,
+  working: boolean,
+  network: ReturnType<typeof useReachable>,
+) {
   const [error, setError] = useState('');
-  const [, tick] = useState(0);
-  const hold = useRef(0);
-  const sending = useRef(false);
   const workingNow = useRef(working);
   workingNow.current = working;
-
-  const running = control.data?.state === 'running';
-  const free = !!control.data && running && !heldByOther(control.data, userId, Date.now());
-  const mark = useCallback(
-    (localId: string, change: Partial<Pending>) =>
-      update(sessionKey, (list) =>
-        list.map((p) => (p.localId === localId ? { ...p, ...change } : p)),
-      ),
-    [update, sessionKey],
-  );
-
   const guarded = useCallback(
     async (task: () => Promise<void>) => {
       setError('');
@@ -121,7 +114,48 @@ export function useDrive(sessionKey: string, drive: Drive, working: boolean) {
     },
     [network],
   );
+  /** One key or sequence straight into the terminal (Esc, Ctrl+C): never queued, a key is for now or not at all. */
+  const sendKey = useCallback(
+    (text: string) =>
+      guarded(() =>
+        writeSteps(drive.projectId, drive.terminalId, userId, [{ text, delayMs: 0 }]),
+      ).catch(() => undefined),
+    [drive, userId, guarded],
+  );
+  /** Esc, then Ctrl+C a moment later if it is still working. */
+  const interrupt = useCallback(async () => {
+    await sendKey(ESC);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    if (workingNow.current) await sendKey(CTRL_C);
+  }, [sendKey]);
+  const stopProcess = useCallback(async () => {
+    await guarded(() => stopTerminal(drive.projectId, drive.terminalId)).catch(() => undefined);
+  }, [drive, guarded]);
+  return { error, guarded, sendKey, interrupt, stopProcess };
+}
 
+type Way = { online: boolean; free: boolean; working: boolean; canWrite: boolean; userId: string };
+
+/** Flush: the oldest waiting message, whenever the way is clear. A timer re-looks while one waits (the settle gap). */
+function useFlushQueue(
+  sessionKey: string,
+  drive: Drive,
+  pending: readonly Pending[],
+  way: Way,
+  guarded: (task: () => Promise<void>) => Promise<void>,
+) {
+  const update = useOutbox((s) => s.update);
+  const [, tick] = useState(0);
+  const hold = useRef(0);
+  const sending = useRef(false);
+  const { online, free, working, canWrite, userId } = way;
+  const mark = useCallback(
+    (localId: string, change: Partial<Pending>) =>
+      update(sessionKey, (list) =>
+        list.map((p) => (p.localId === localId ? { ...p, ...change } : p)),
+      ),
+    [update, sessionKey],
+  );
   const deliver = useCallback(
     async (item: Pending) => {
       sending.current = true;
@@ -147,8 +181,6 @@ export function useDrive(sessionKey: string, drive: Drive, working: boolean) {
     },
     [drive, userId, guarded, mark],
   );
-
-  // Flush: the oldest waiting message, whenever the way is clear. A timer re-looks while one waits (the settle gap).
   const waiting = nextQueued(pending);
   useEffect(() => {
     if (!waiting || !canWrite) return;
@@ -157,11 +189,30 @@ export function useDrive(sessionKey: string, drive: Drive, working: boolean) {
   }, [waiting, canWrite]);
   useEffect(() => {
     if (!waiting || sending.current || !canWrite || !userId) return;
-    if (
-      canSend({ online: network.online, free, working, holdUntil: hold.current, now: Date.now() })
-    )
+    if (canSend({ online, free, working, holdUntil: hold.current, now: Date.now() }))
       void deliver(waiting);
   });
+}
+
+/**
+ * Everything the composer needs to drive a session's terminal: who may write, whose lease it is under, the messages
+ * waiting or just sent (kept in the outbox for the transcript to show), and the sends themselves. A message goes in
+ * when the network is up, the terminal is not another person's and the session is not working; until then it waits in
+ * a bounded queue.
+ */
+export function useDrive(sessionKey: string, drive: Drive, working: boolean) {
+  const access = useDriveAccess(drive);
+  const network = useReachable();
+  const pending = usePending(sessionKey);
+  const update = useOutbox((s) => s.update);
+  const writes = useDirectWrites(drive, access.userId, working, network);
+  useFlushQueue(
+    sessionKey,
+    drive,
+    pending,
+    { ...access, online: network.online, working },
+    writes.guarded,
+  );
 
   const send = useCallback(
     (text: string): 'queued' | 'full' | 'empty' => {
@@ -178,36 +229,16 @@ export function useDrive(sessionKey: string, drive: Drive, working: boolean) {
     [update, sessionKey],
   );
 
-  /** One key or sequence straight into the terminal (Esc, Ctrl+C): never queued, a key is for now or not at all. */
-  const sendKey = useCallback(
-    (text: string) =>
-      guarded(() =>
-        writeSteps(drive.projectId, drive.terminalId, userId, [{ text, delayMs: 0 }]),
-      ).catch(() => undefined),
-    [drive, userId, guarded],
-  );
-
-  /** Esc, then Ctrl+C a moment later if it is still working. */
-  const interrupt = useCallback(async () => {
-    await sendKey(ESC);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    if (workingNow.current) await sendKey(CTRL_C);
-  }, [sendKey]);
-
-  const stopProcess = useCallback(async () => {
-    await guarded(() => stopTerminal(drive.projectId, drive.terminalId)).catch(() => undefined);
-  }, [drive, guarded]);
-
   return {
-    canWrite,
-    running,
-    free,
+    canWrite: access.canWrite,
+    running: access.running,
+    free: access.free,
     online: network.online,
     pending,
-    error,
+    error: writes.error,
     send,
-    sendKey,
-    interrupt,
-    stopProcess,
+    sendKey: writes.sendKey,
+    interrupt: writes.interrupt,
+    stopProcess: writes.stopProcess,
   };
 }

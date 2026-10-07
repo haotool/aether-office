@@ -18,7 +18,7 @@ test('the layout editor adds, moves, undoes, redoes and saves, and the saved lay
   };
   const before = (await saved())?.data.objects.length ?? 0;
 
-  await page.getByRole('button', { name: '編輯配置', exact: true }).click();
+  await page.getByRole('button', { name: '編輯配置（實驗性）', exact: true }).click();
   const dialog = page.getByRole('dialog');
   const options = dialog.getByLabel('物件', { exact: true }).locator('option');
   await options.first().waitFor({ state: 'attached' }); // the object list renders after the dialog opens
@@ -69,7 +69,7 @@ test('the layout editor adds a squad zone beside a desk, saves it as layout vers
     return snapshot.layout?.data;
   };
 
-  await page.getByRole('button', { name: '編輯配置', exact: true }).click();
+  await page.getByRole('button', { name: '編輯配置（實驗性）', exact: true }).click();
   const dialog = page.getByRole('dialog');
   const options = dialog.getByLabel('物件', { exact: true }).locator('option');
   await options.first().waitFor({ state: 'attached' });
@@ -91,7 +91,7 @@ test('the layout editor adds a squad zone beside a desk, saves it as layout vers
   expect(layout.objects.find((o) => o.type === 'squad')).toMatchObject({ seats: 2 });
 
   await page.reload();
-  await page.getByRole('button', { name: '編輯配置', exact: true }).click();
+  await page.getByRole('button', { name: '編輯配置（實驗性）', exact: true }).click();
   const editor = page.getByRole('dialog');
   const zone = editor
     .getByLabel('物件', { exact: true })

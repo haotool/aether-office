@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { signIn } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
-import { appendFileSync, readFileSync } from 'node:fs';
+import { appendFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 // The session panel: a feed of sessions, then the chosen session's conversation. The fixture session is the one

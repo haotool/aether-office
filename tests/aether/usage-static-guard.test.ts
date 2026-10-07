@@ -11,6 +11,9 @@ const FORBIDDEN =
 const MODULES = [
   'usage-aggregate',
   'usage-files',
+  'usage-claude',
+  'usage-codex',
+  'usage-counters',
   'usage-parse',
   'usage-stats',
   'usage-store',

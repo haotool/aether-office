@@ -1,6 +1,4 @@
 // The scene package owns three (and its types); a test of a pure module of it reads the same build.
-// @ts-expect-error no declaration file at this path
-import * as three from '../../packages/office-scene/node_modules/three/build/three.module.js';
 import { describe, expect, it } from 'vitest';
 import {
   finishInstances,
@@ -10,6 +8,9 @@ import {
   type Instance,
 } from '../../packages/office-scene/src/squad/squad-art.js';
 
+// A variable specifier: the build file has no declaration of its own, and @types/three describes it.
+const THREE_BUILD = '../../packages/office-scene/node_modules/three/build/three.module.js';
+const three = (await import(THREE_BUILD)) as typeof import('three');
 const { BoxGeometry, Color, InstancedMesh, MeshBasicMaterial } = three;
 
 const mesh = () => {

@@ -24,13 +24,13 @@ export const DESK_GAP_MS = 400;
 /** A carrier waits in its seat at most this long for the desk; past it the hand-over is shown as a pop. */
 export const MAX_QUEUE_MS = 6000;
 /** A folder that has to wait this long for the desk (a pop) is dropped into the tray at the desk's own pace, but no later than this. */
-export const MAX_POP_WAIT_MS = 20_000;
+const MAX_POP_WAIT_MS = 20_000;
 /** A little spread on when each one stands, so two that finish together are not in lockstep. */
 export const JITTER_MS = 300;
 /** The in-tray's folders go after this long without a new one. */
 export const TRAY_CLEAR_MS = 5 * 60_000;
 
-export type Entry = {
+type Entry = {
   id: string;
   supervisor: string;
   floor: number;
@@ -41,8 +41,8 @@ export type Entry = {
   /** 0: nothing yet; 1: placed (read and said); 2: stamped. */
   stage: 0 | 1 | 2;
 };
-export type Tray = { count: number; seal: Seal | null; lastAt: number };
-export type Seal = { kind: StampKind; at: number; seed: number };
+type Tray = { count: number; seal: Seal | null; lastAt: number };
+type Seal = { kind: StampKind; at: number; seed: number };
 export type Book = {
   entries: Readonly<Record<string, Entry>>;
   trays: Readonly<Record<string, Tray>>;

@@ -26,7 +26,7 @@ const TITLE_CHARS = 120;
 const LABEL_WIDTH = 28;
 
 /** Terminal columns of one user-perceived character: 2 for East Asian wide characters and emoji, 0 for marks. */
-export function graphemeWidth(g: string): number {
+function graphemeWidth(g: string): number {
   if (ZERO.test(g)) return 0;
   return WIDE.test(g) || PICTOGRAPH.test(g) ? 2 : 1;
 }
@@ -57,10 +57,11 @@ function cutOn(text: string, max: number, measure: (g: string) => number): strin
   while (limit < gs.length && sum(limit + 1) <= budget) limit++;
   const depth = brackets(gs);
   const floor = Math.floor(sum(limit) * 0.4);
-  const midWord = (i: number) => ASCII_WORD.test(gs[i - 1]!) && ASCII_WORD.test(gs[i] ?? '');
+  const before = (i: number) => gs[i - 1] ?? '';
+  const midWord = (i: number) => ASCII_WORD.test(before(i)) && ASCII_WORD.test(gs[i] ?? '');
   const tiers: ((i: number) => boolean)[] = [
-    (i) => depth[i] === 0 && (CLAUSE_END.test(gs[i - 1]!) || gs[i] === ' '),
-    (i) => CLAUSE_END.test(gs[i - 1]!) || gs[i] === ' ',
+    (i) => depth[i] === 0 && (CLAUSE_END.test(before(i)) || gs[i] === ' '),
+    (i) => CLAUSE_END.test(before(i)) || gs[i] === ' ',
     (i) => depth[i] === 0 && !midWord(i),
     (i) => !midWord(i),
   ];
@@ -96,7 +97,7 @@ export function cleanTitle(raw: string, maxChars = TITLE_CHARS): string {
   return t;
 }
 
-export type LabelOptions = { maxWidth?: number; repo?: string | null };
+type LabelOptions = { maxWidth?: number; repo?: string | null };
 
 /** The short name a tag shows: the title without its id prefix or leading repo name, at most `maxWidth` columns. */
 export function shortLabel(title: string, options: LabelOptions = {}): string {

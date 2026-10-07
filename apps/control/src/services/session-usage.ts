@@ -2,7 +2,8 @@ import { open, stat } from 'node:fs/promises';
 import { withEdge } from './file-edge.js';
 import type { LocalSession } from '@aether/contracts';
 import { compactedAtOf } from './session-context.js';
-import { fresh, newState, parseChunk, type ParseState } from './usage-parse.js';
+import { fresh, newState, type ParseState } from './usage-counters.js';
+import { parseChunk } from './usage-parse.js';
 
 // Model, context size and spend from a provider transcript. Only counters and the model name are read:
 // no message text is parsed out, kept or returned.

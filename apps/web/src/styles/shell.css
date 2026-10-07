@@ -22,14 +22,14 @@
   display: flex;
   align-items: center;
   gap: var(--space-8);
-  width: 158px; /* the brand column: wide enough for the wordmark, the sidebar's edge is 204px */
+  width: 158px; /* the brand column: wide enough for the wordmark, the sidebar's edge is 204px token-lint: geometry */
   flex-shrink: 0;
 }
 .brand > span {
   font-size: var(--fs-heading);
   letter-spacing: 3.5px;
   font-weight: 650;
-  line-height: 1; /* a wordmark, not running text */
+  line-height: 1; /* a wordmark, not running text token-lint: glyph */
 }
 .brand small {
   display: block;
@@ -40,7 +40,7 @@
   color: var(--muted);
 }
 .top-divider {
-  height: 28px; /* a hairline between the brand and the picker, not a control */
+  height: 28px; /* a hairline between the brand and the picker, not a control token-lint: geometry */
   width: 1px;
   background: var(--line);
 }
@@ -54,15 +54,19 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  min-width: 0;
 }
 .project-picker select {
   border: 0;
   background: transparent;
   color: var(--text);
-  min-width: 150px;
+  min-width: min(
+    150px,
+    100%
+  ); /* it gives way to the controls on its right before they leave the screen token-lint: geometry */
   padding: 0 var(--space-20) 0 0;
   font-size: var(--fs-small);
-  max-width: 230px;
+  max-width: 230px; /* token-lint: geometry */
   min-height: var(--control-h-sm);
   overflow: hidden;
   text-overflow: ellipsis; /* a long project name ends in an ellipsis; the select's title carries the whole name */
@@ -73,6 +77,11 @@
   display: flex;
   align-items: center;
   gap: var(--space-16);
+  flex: none; /* the language, theme and stop controls never shrink out of reach: the project picker does */
+}
+.topbar-right .danger {
+  margin-top: 0;
+  white-space: nowrap;
 }
 .user-dot {
   width: var(--control-h-sm);
@@ -91,7 +100,7 @@
   min-height: 0;
 }
 .sidebar {
-  width: 204px; /* the navigation column */
+  width: 204px; /* the navigation column token-lint: geometry */
   flex-shrink: 0;
   background: color-mix(in srgb, var(--surface) 94%, transparent);
   border-right: 1px solid var(--line);
@@ -129,7 +138,7 @@
 .nav-link.active {
   background: color-mix(in srgb, var(--mint) 11%, transparent);
   color: var(--mint);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mint) 38%, transparent); /* not an outline: the focus ring stays the token's */
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mint) 38%, transparent); /* not an outline: the focus ring stays the token's token-lint: ring */
 }
 .nav-link small {
   margin-left: auto;
@@ -159,8 +168,8 @@
   font-size: var(--fs-label);
 }
 .connection > span {
-  width: 5px; /* a status dot */
-  height: 5px;
+  width: 5px; /* a status dot token-lint: geometry */
+  height: 5px; /* token-lint: geometry */
   border-radius: 50%;
   background: var(--mint);
 }
@@ -176,4 +185,9 @@
 }
 .nav-group:first-of-type .nav-group-title {
   margin-top: var(--space-4);
+}
+.emergency-stop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
 }

@@ -1,12 +1,4 @@
 {
-  "apps/web/src/app-hooks.ts": 1,
-  "apps/web/src/error-text.ts": 1,
-  "apps/web/src/features/Login.tsx": 2,
-  "apps/web/src/features/QuickPrefs.tsx": 2,
-  "apps/web/src/features/Topbar.tsx": 1,
-  "apps/web/src/features/live-link.ts": 2,
-  "apps/web/src/features/turn-groups.ts": 4,
-  "apps/web/src/localSessions.ts": 1,
   "packages/office-scene/src/CompactHud.tsx": 8,
   "packages/office-scene/src/OfficeScene.tsx": 1,
   "packages/office-scene/src/PipWall.tsx": 3,

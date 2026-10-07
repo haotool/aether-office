@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { AttributedSession } from '@aether/contracts';
 import { api } from '../api.js';
+import { useLatest } from '../use-latest.js';
 import { sessionsToAgents } from '../localSessions.js';
 import { usePreferences } from '../state.js';
 import { buildFeed, feedItems, type Feed, type Speech } from './feed-model.js';
@@ -53,13 +54,12 @@ export function useSessionFeed(
     return groupFeed(buildFeed({ sessions, agents, speech, seen, now, asking }), now);
   }, [sessions, locale, speech, seen, asking]);
   // First, before the effect below marks it seen: what "last looked" was as this visit began.
+  const seenNow = useLatest(seen); // read at the moment of selection: a later change to `seen` must not move it
   useEffect(() => {
     if (!selectedKey) return;
-    holdBaseline(selectedKey, seen[selectedKey] ?? 0);
+    holdBaseline(selectedKey, seenNow.current[selectedKey] ?? 0);
     return () => void releaseBaseline(selectedKey);
-    // The state at the moment of selection is the point: a later change to `seen` must not move it.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedKey]);
+  }, [selectedKey, seenNow]);
   const openedAt = feedItems(feed).find((i) => i.key === selectedKey)?.at;
   useEffect(() => {
     if (selectedKey && openedAt !== undefined) markSeen(selectedKey, openedAt);

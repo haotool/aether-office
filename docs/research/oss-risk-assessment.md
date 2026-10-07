@@ -42,7 +42,7 @@
   上游 remote 另有約 90 個分支（`office/*` 等），不屬於本專案，不可 `--mirror`。
 - **圖片（逐張以原尺寸檢視：`docs/images/` 14 張、`docs/research/.../evidence/` 2 張）**：全部是 demo 資料，
   專案名稱為 `harbor-web`、`ledger-api`、`data-pipeline` 等虛構名稱，畫面都標示 `DEMO`，沒有真實 prompt、路徑、token、人臉或真人頭像
-  （角色是動物）。`connect-phone-desktop.jpg` 含一個 QR 與位址 `192.168.1.20:4511`：位址是範例值，QR 的一次性碼已過期（5 分鐘、單次有效），風險低，
+  （角色是動物）。`connect-phone-desktop.jpg` 含一個 QR 與位址 `192.0.2.20:4511`：位址是範例值，QR 的一次性碼已過期（5 分鐘、單次有效），風險低，
   但建議重拍時用遮罩。兩張研究報告截圖是繁中的內部選型評估，無個資，但屬於內部決策文件，可考慮不隨公開 repo 出貨。
   手機截圖的「Needs you」標籤有文字重疊（外觀瑕疵）。
 - **大檔與 GLB**：隨附 GLB 最大 2.05 MB（30 個，皆由 `tools/blender/build_animals.py` 程序化產生，出處見 `provenance.md`）；
@@ -73,7 +73,7 @@
 - **SECURITY.md 的真實度**：只指向 GitHub Private Vulnerability Reporting，**沒有備用聯絡信箱**；
   「幾天內回覆」沒有數字、沒有修復時程承諾。對單人維護者來說這其實是誠實的，但若 PVR 沒有在第 0 天啟用，報告者就沒有任何管道。
   `publishing-checklist` 已列入啟用步驟，要真的勾掉。CODE_OF_CONDUCT 的檢舉管道也只有 GitHub 帳號。
-- **其他觀察**：pino 預設日誌包含 `hostname`（例如 `Mac-mini.local`），使用者貼日誌到 issue 時會帶出主機名，建議在日誌設定中關閉或在 bug 範本提醒。
+- **其他觀察**：pino 預設日誌包含 `hostname`（例如 `my-host.local`），使用者貼日誌到 issue 時會帶出主機名，建議在日誌設定中關閉或在 bug 範本提醒。
 
 ## 四、隱私
 

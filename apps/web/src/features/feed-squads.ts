@@ -54,7 +54,7 @@ const rank = (status: Subagent['status']) =>
 const byId = (a: SquadRow, b: SquadRow) => a.id.localeCompare(b.id, 'en', { numeric: true });
 
 /** The order of a squad's rows: waiting first, then running by spawn order, then finished by when they ended. */
-export function compareRows(a: SquadRow, b: SquadRow): number {
+function compareRows(a: SquadRow, b: SquadRow): number {
   const byRank = rank(a.status) - rank(b.status);
   if (byRank) return byRank;
   if (a.status === 'finished') return (b.endedAt ?? 0) - (a.endedAt ?? 0) || byId(a, b);
@@ -133,7 +133,7 @@ export const squadAccentOf = (
       : { tether: false };
 
 /** The subagent's own id (what its hook records call `agentId`), from its member id. */
-export const subIdOf = (memberId: string) => memberId.split(SUBAGENT_INFIX)[1] ?? '';
+const subIdOf = (memberId: string) => memberId.split(SUBAGENT_INFIX)[1] ?? '';
 
 /** The subagent's own recent tool calls, oldest first: the hook marks each with its `agentId`. */
 export const callsOf = (session: AttributedSession, memberId: string) =>
@@ -142,7 +142,7 @@ export const callsOf = (session: AttributedSession, memberId: string) =>
 const BUCKETS: readonly FeedBucket[] = ['needs', 'working', 'finished', 'idle'];
 
 /** Within a group a supervisor with a subagent waiting for approval comes first, then the newest. */
-export const compareItems = (a: FeedItem, b: FeedItem): number =>
+const compareItems = (a: FeedItem, b: FeedItem): number =>
   (b.squad?.waiting ? 1 : 0) - (a.squad?.waiting ? 1 : 0) || b.at - a.at;
 
 /** The feed with each supervisor's squad attached and the groups re-ordered by the squad's urgency. */

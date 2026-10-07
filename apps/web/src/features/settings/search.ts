@@ -25,7 +25,7 @@ export function searchSettings(query: string): ReadonlySet<EntryId> | null {
   );
 }
 
-export type Piece = { text: string; hit: boolean };
+type Piece = { text: string; hit: boolean };
 
 /** Splits `text` into the runs that match a word of the query and the runs between them. */
 export function highlight(text: string, query: string): Piece[] {

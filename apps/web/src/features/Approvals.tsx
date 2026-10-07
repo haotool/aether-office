@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api, execute } from '../api.js';
+import type { RemoteApprovalsState } from '@aether/contracts';
 import { PageHeading, Empty, Badge, useT } from '../ui.js';
+import { PermissionCard } from './PermissionCard.js';
+import { QueryStatus } from './QueryStatus.js';
+import { usePermissionRequests } from './permission-requests.js';
 type Approval = {
   id: string;
   runId: string;
@@ -16,15 +20,18 @@ type Approval = {
   decision: string | null;
   providerAcknowledgedAt: number | null;
 };
-export function Approvals({ projectId }: { projectId: string }) {
-  const t = useT();
+
+const stateOf = (a: Approval, expired: boolean) =>
+  a.providerAcknowledgedAt
+    ? 'acknowledged'
+    : expired && a.state === 'pending'
+      ? 'expired'
+      : a.state;
+
+/** Decides pending approvals one at a time; a failed decision shows its error, and the list is read again either way. */
+function useDecide(projectId: string, refetch: () => Promise<unknown>) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const query = useQuery({
-    queryKey: ['approvals', projectId],
-    queryFn: () => api<Approval[]>(`/api/projects/${projectId}/approvals`),
-    refetchInterval: 1000,
-  });
   async function decide(a: Approval, decision: 'approve' | 'deny') {
     setBusy(a.id);
     setError('');
@@ -35,14 +42,72 @@ export function Approvals({ projectId }: { projectId: string }) {
         projectId,
         a.version,
       );
-      await query.refetch();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'REQUEST_FAILED');
-      await query.refetch();
     } finally {
+      await refetch();
       setBusy(null);
     }
   }
+  return { busy, error, decide };
+}
+
+function ApprovalCard({
+  a,
+  busy,
+  onDecide,
+}: {
+  a: Approval;
+  busy: boolean;
+  onDecide: (decision: 'approve' | 'deny') => void;
+}) {
+  const t = useT();
+  const expired = a.expiresAt <= Date.now();
+  return (
+    <article className="panel approval-card">
+      <h2>{a.kind}</h2>
+      <p>{t('approvalBinding')}</p>
+      <dl>
+        <dt>Session</dt>
+        <dd>{a.sessionId}</dd>
+        <dt>Tool</dt>
+        <dd>{a.toolId}</dd>
+        <dt>SHA-256</dt>
+        <dd>{a.actionHash}</dd>
+      </dl>
+      <pre>{JSON.stringify(JSON.parse(a.parameters), null, 2)}</pre>
+      <Badge state={stateOf(a, expired)} />
+      <p>{new Date(a.expiresAt).toLocaleString()}</p>
+      {a.state === 'pending' && !expired && (
+        <div className="button-row">
+          <button disabled={busy} className="primary" onClick={() => onDecide('approve')}>
+            {t('allowTool')}
+          </button>
+          <button disabled={busy} onClick={() => onDecide('deny')}>
+            {t('denyTool')}
+          </button>
+        </div>
+      )}
+    </article>
+  );
+}
+
+export function Approvals({ projectId, live }: { projectId: string; live: boolean }) {
+  const t = useT();
+  // The prompts of Claude Code sessions waiting for an answer (Remote approvals), the same ones the feed and the conversation show.
+  const prompts = usePermissionRequests().filter((r) => r.state === 'pending');
+  const remote = useQuery({
+    queryKey: ['remote-approvals'],
+    queryFn: () => api<RemoteApprovalsState>('/api/remote-approvals'),
+    enabled: live,
+    retry: false,
+  });
+  const query = useQuery({
+    queryKey: ['approvals', projectId],
+    queryFn: () => api<Approval[]>(`/api/projects/${projectId}/approvals`),
+    refetchInterval: 1000,
+  });
+  const { busy, error, decide } = useDecide(projectId, query.refetch);
   return (
     <>
       <PageHeading title={t('approvals')} subtitle={t('approvalNote')} />
@@ -51,59 +116,32 @@ export function Approvals({ projectId }: { projectId: string }) {
           {error}
         </p>
       )}
-      {query.isPending ? (
-        <p>{t('loading')}</p>
-      ) : query.error ? (
-        <p role="alert" className="error-text">
-          {query.error.message}
-        </p>
-      ) : query.data?.length ? (
+      {prompts.length > 0 && (
         <div className="approval-list">
-          {query.data.map((a) => {
-            const expired = a.expiresAt <= Date.now();
-            return (
-              <article className="panel approval-card" key={a.id}>
-                <h2>{a.kind}</h2>
-                <p>{t('approvalBinding')}</p>
-                <dl>
-                  <dt>Session</dt>
-                  <dd>{a.sessionId}</dd>
-                  <dt>Tool</dt>
-                  <dd>{a.toolId}</dd>
-                  <dt>SHA-256</dt>
-                  <dd>{a.actionHash}</dd>
-                </dl>
-                <pre>{JSON.stringify(JSON.parse(a.parameters), null, 2)}</pre>
-                <Badge
-                  state={
-                    a.providerAcknowledgedAt
-                      ? 'acknowledged'
-                      : expired && a.state === 'pending'
-                        ? 'expired'
-                        : a.state
-                  }
-                />
-                <p>{new Date(a.expiresAt).toLocaleString()}</p>
-                {a.state === 'pending' && !expired && (
-                  <div className="button-row">
-                    <button
-                      disabled={busy !== null}
-                      className="primary"
-                      onClick={() => void decide(a, 'approve')}
-                    >
-                      {t('allowTool')}
-                    </button>
-                    <button disabled={busy !== null} onClick={() => void decide(a, 'deny')}>
-                      {t('denyTool')}
-                    </button>
-                  </div>
-                )}
-              </article>
-            );
-          })}
+          {prompts.map((request) => (
+            <PermissionCard key={request.id} request={request} />
+          ))}
+        </div>
+      )}
+      <QueryStatus query={query} />
+      {query.isPending || query.error ? null : query.data?.length ? (
+        <div className="approval-list">
+          {query.data.map((a) => (
+            <ApprovalCard
+              key={a.id}
+              a={a}
+              busy={busy !== null}
+              onDecide={(d) => void decide(a, d)}
+            />
+          ))}
         </div>
       ) : (
-        <Empty title={t('noApprovals')} hint={t('approvalEmptyHint')} />
+        prompts.length === 0 && (
+          <Empty
+            title={t('noApprovals')}
+            hint={t(remote.data?.enabled ? 'approvalEmptyOn' : 'approvalEmptyHint')}
+          />
+        )
       )}
     </>
   );
