@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
+import { signIn } from './support/sign-in.js';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 // The intro tour's frame gate (docs/design/office-life-iterations.md, I2): the longest frame of the whole tour, outside the
 // 400 ms dips that hide its cuts, may exceed the same scene without the tour by at most 120 ms on a desktop and 200 ms on a
@@ -53,14 +53,7 @@ async function record(page: Page, stopWhen: 'tour-over' | number): Promise<Frame
 }
 
 async function enter(page: Page, query: string) {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page);
   await expect(page.locator('main')).toBeVisible();
   await page.goto(`/office?${query}`);
   await expect(page.locator('canvas')).toBeVisible({ timeout: 30000 });

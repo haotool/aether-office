@@ -11,10 +11,19 @@ beyond the readiness check: pushing and changing GitHub settings stay manual dec
       (shipped assets over 1 MB and documentation host names such as `office.lan` are expected).
 - [ ] Decide the canonical author identity in `.mailmap` (a GitHub noreply address is
       `<id>+haotool@users.noreply.github.com`; the id is the `id` field of `https://api.github.com/users/haotool`).
-- [ ] Update `CHANGELOG.md`: rename `[Unreleased]` to `[0.4.0] - <date>`, and set `version` in `package.json` to `0.4.0`.
+- [ ] `CHANGELOG.md` already has the `[0.4.0] - 2026-10-07` entry above an empty `[Unreleased]`: change the date if the release
+      day differs, and set `version` in `package.json` to `0.4.0` (it is `0.4.0-dev.0` until then).
 - [ ] Run the full checks once: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test`, `pnpm build`,
       `pnpm exec playwright test`, `pnpm verify:clean`.
-- [ ] Produce the software bill of materials that [development](../development.md#releasing) lists as a release gate.
+- [ ] Licence compliance gate (see [docs/legal](../legal/README.md)):
+  - `pnpm run notices:check` passes (notices current, every package under an approved licence, every file in `REUSE.toml`);
+  - `node scripts/oss/overlap-scan.mjs --refs .research --exclude mcp_agent_mail --exclude agents-office` reports no block
+    that is not listed in [provenance](../legal/provenance.md#evidence-that-no-code-was-copied);
+  - the [open items](../legal/inventory.md#open-items) are decided (provider marks, Claude authentication wording) and the
+    decisions recorded;
+  - `pnpm build` and check that `apps/web/dist` contains `LICENSE.txt` and `THIRD_PARTY_NOTICES.txt`.
+- [ ] Produce the software bill of materials:
+      `node scripts/oss/third-party-notices.mjs --sbom aether-office-0.4.0.cdx.json` (CycloneDX 1.5, shipped packages).
 
 ## 2. Clean and verify the history
 
@@ -55,13 +64,14 @@ beyond the readiness check: pushing and changing GitHub settings stay manual dec
 
 ## 6. Legal and trust notes
 
-- [ ] Upstream credit: `LICENSE` keeps the upstream copyright beside yours, `THIRD_PARTY_NOTICES.md` lists what is derived,
-      and the upstream contributors' commits are in the history (strategies B and C) or named in the sync commit (A).
-- [ ] Trademarks: Claude, Anthropic, OpenAI and Codex are marks of their owners. `THIRD_PARTY_NOTICES.md` says no
-      endorsement is implied; add one line to the README saying the project is not affiliated with them. Do not use their
-      names in the repository name, the logo or the release titles, and keep the provider marks in the UI as plain
-      identification.
-- [ ] `@anthropic-ai/claude-agent-sdk` is under Anthropic's own terms, not an open-source license; the notices say so.
+- [ ] Upstream credit: `LICENSE` keeps the upstream copyright beside yours, `NOTICE`, `REUSE.toml` and
+      [provenance](../legal/provenance.md) list what is derived, and the upstream contributors' commits are in the history
+      (strategies B and C) or named in the sync commit (A).
+- [ ] Trademarks: Claude, Anthropic, OpenAI and Codex are marks of their owners. The README, `NOTICE` and Settings, About say
+      the project is not affiliated with them. Do not use their names in the repository name, the logo or the release
+      titles. The provider marks are small indicators only, never the logo ([trademarks](../legal/trademarks.md#provider-marks)).
+- [ ] `@anthropic-ai/claude-agent-sdk` is under Anthropic's own terms, not an open-source license; the notices say so and
+      the project never bundles it. These documents are not legal advice: have the open items reviewed if in doubt.
 - [ ] Search the pushed repository once for your private strings (GitHub code search) before making it public.
 
 ## 7. Go public and check

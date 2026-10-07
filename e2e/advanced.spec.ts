@@ -1,20 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { signIn } from './support/sign-in.js';
 
 // The default a new user gets: the pages for orchestrating several agents are out of the navigation, but still open by address.
 test.use({ storageState: { cookies: [], origins: [] } });
-
-const signIn = async (page: import('@playwright/test').Page) => {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
-};
 
 test('orchestration pages are behind Advanced: out of the sidebar and quick open, open by address, back with the switch', async ({
   page,

@@ -97,6 +97,22 @@ describe('incremental reading', () => {
     expect((await look(s)).building.totals.input).toBe(100);
   });
 
+  it('counts a transcript that appears right after a pass on the very next request, not a gap later', async () => {
+    const first = claudeFile(home, 'sess-a');
+    writeLines(first, [claudeLine('m1', '2026-10-07T01:00:00.000Z', { i: 10, o: 1 })]);
+    touch(first);
+    const s = stats();
+    expect((await look(s)).scan).toMatchObject({ complete: true, files: 1 });
+    const second = claudeFile(home, 'sess-b');
+    writeLines(second, [claudeLine('m2', '2026-10-07T01:01:00.000Z', { i: 5, o: 1 })]);
+    touch(second);
+    clock += 50; // the request comes 50 ms after the pass: a cheap pass does not make it wait for a time gap
+    await s.refresh(400);
+    const answer = await s.snapshot('30d', new Map(), null);
+    expect(answer.scan).toMatchObject({ complete: true, files: 2 });
+    expect(answer.building.totals.input).toBe(15);
+  });
+
   it('forgets a transcript that is gone', async () => {
     const file = claudeFile(home, 'sess-3');
     writeLines(file, [claudeLine('m', '2026-10-07T01:00:00.000Z', { i: 9, o: 1 })]);

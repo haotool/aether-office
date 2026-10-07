@@ -34,6 +34,7 @@ export const PUBLIC_ROUTES: ReadonlySet<string> = new Set([
   'POST /api/login',
   'POST /api/pairings/redeem', // the single-use pairing code is the credential
   'GET /api/session', // answers 401 itself
+  'POST /api/session/csrf', // the session cookie is the credential: it exists for the page that holds no CSRF token
   'POST /api/runner/enroll', // the single-use invitation is the credential
   'POST /api/webhooks/github/:integrationId', // authenticated by HMAC signature
   'GET /.well-known/agent-card.json', // public by the A2A spec

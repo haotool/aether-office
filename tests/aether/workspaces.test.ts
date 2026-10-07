@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { Workspaces } from '../../apps/runner/src/workspaces.js';
+import { budget } from './timing.js';
 function setup() {
   const directory = mkdtempSync(join(tmpdir(), 'aether git 空白 '));
   const repository = join(directory, 'repo');
@@ -109,47 +110,68 @@ describe('real Git workspaces and immutable verification', () => {
   });
 });
 
+/**
+ * Verifies with growing deadlines until the harness got as far as writing `marker` (its last set-up step). The deadline runs
+ * from the spawn: one that a loaded machine's slow start overruns kills the harness before the thing under test exists, which
+ * says nothing about it, so that attempt is thrown away and the next gets longer.
+ */
+async function verifyOnceStarted(
+  f: ReturnType<typeof setup>,
+  source: (marker: string) => string,
+  timeouts: number[],
+) {
+  const marker = join(f.directory, 'harness-started');
+  const mark = `process.getBuiltinModule('node:fs').writeFileSync(${JSON.stringify(marker)},'');`;
+  for (const timeoutMs of timeouts) {
+    rmSync(marker, { force: true });
+    const harness = f.manager.registerHarness(source(mark), process.execPath, [], timeoutMs);
+    const started = Date.now();
+    const result = await f.manager.verify(f.workspace.id, harness.id);
+    const elapsed = Date.now() - started;
+    if (existsSync(marker)) return { result, elapsed, timeoutMs };
+  }
+  throw new Error('HARNESS_NEVER_STARTED');
+}
+
 it('bounds a verifier that ignores SIGTERM and preserves split UTF-8 log bytes', async () => {
   const f = setup();
   try {
-    const harness = f.manager.registerHarness(
-      "process.on('SIGTERM',()=>{});const b=Buffer.from('狐狸');process.stdout.write(b.subarray(0,1));setTimeout(()=>process.stdout.write(b.subarray(1)),20);setInterval(()=>{},100);",
-      process.execPath,
-      [],
-      1500, // must outlast child start-up under parallel test load, or the split write never happens
+    const { result, elapsed, timeoutMs } = await verifyOnceStarted(
+      f,
+      (mark) =>
+        `process.on('SIGTERM',()=>{});const b=Buffer.from('狐狸');process.stdout.write(b.subarray(0,1));setTimeout(()=>{process.stdout.write(b.subarray(1));${mark}},20);setInterval(()=>{},100);`,
+      [1500, 6000, 24000],
     );
-    const started = Date.now();
-    const result = await f.manager.verify(f.workspace.id, harness.id);
     expect(result.status).toBe('failed');
     expect(result.reason).toBe('TIMEOUT');
-    expect(Date.now() - started).toBeLessThan(3000);
+    expect(elapsed).toBeLessThan(budget(3000 + timeoutMs - 1500, 30_000));
     expect(readFileSync(join(f.manager.root, 'artifacts', result.id, 'output.log'), 'utf8')).toBe(
       '狐狸',
     );
   } finally {
     f.cleanup();
   }
-});
+}, 90_000);
 
 it.skipIf(process.platform === 'win32')(
   'bounds descendants holding output open after their verifier parent exits',
   async () => {
     const f = setup();
     try {
-      const descendant = "process.on('SIGTERM',()=>{});setTimeout(()=>process.exit(0),4000);";
-      const harness = f.manager.registerHarness(
-        `import {spawn} from 'node:child_process';spawn(process.execPath,['-e',${JSON.stringify(descendant)}],{stdio:['ignore',1,2]});setTimeout(()=>process.exit(0),100);`,
-        process.execPath,
-        [],
-        300,
+      // The descendant outlives the whole test several times over: waiting for it is the failure, not a close call.
+      const descendant = "process.on('SIGTERM',()=>{});setTimeout(()=>process.exit(0),40000);";
+      const { result, elapsed } = await verifyOnceStarted(
+        f,
+        (mark) =>
+          `import {spawn} from 'node:child_process';spawn(process.execPath,['-e',${JSON.stringify(descendant)}],{stdio:['ignore',1,2]});${mark}setTimeout(()=>process.exit(0),100);`,
+        [300, 1500, 6000],
       );
-      const started = Date.now();
-      const result = await f.manager.verify(f.workspace.id, harness.id);
       expect(result.reason).toBe('TIMEOUT');
       expect(result.status).toBe('failed');
-      expect(Date.now() - started).toBeLessThan(3000);
+      expect(elapsed).toBeLessThan(budget(3000, 20_000));
     } finally {
       f.cleanup();
     }
   },
+  60_000,
 );

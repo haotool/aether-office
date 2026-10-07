@@ -100,6 +100,39 @@ export const settingsEn = {
   stCameraAutomation: 'Off by default under browser automation',
   stBeanstalkDesc:
     'Shows the beanstalk that rises with Git history beside the 3D building. Off by default on a phone.',
+  stLifeCalmLabel: 'Calm mode',
+  stLifeCalmDesc:
+    'Turns off every little decorative moment in the 3D office. Squad effects stay, without motion. On by default when your system asks for reduced motion.',
+  lifeCalmOn: 'Calm mode is on: the kinds below show nothing',
+  stLifeRelationLabel: 'Relation effects',
+  stLifeRelationDesc:
+    'Squads and their subagents: the zone, the beam, the puppet strings and the hand-over.',
+  stStringsLabel: 'Puppet strings',
+  stStringsDesc:
+    'Thin strings of light from a control bar to each working subagent. They tighten on every tool call and go slack when it rests. Off on the low quality tier, still in Calm mode.',
+  stLifeKindsLabel: 'Kinds of moments',
+  stLifeKindsDesc:
+    'Small decorative animations that follow what a session does. They never say whether anything worked.',
+  lifeKindWork: 'Work',
+  lifeKindGit: 'Git',
+  lifeKindTest: 'Tests and builds',
+  lifeKindOps: 'Ops',
+  lifeKindWellbeing: 'Wellbeing',
+  lifeKindSocial: 'Social',
+  lifeKindMeme: 'Memes',
+  lifeKindEaster: 'Easter eggs',
+  stLifeFrequencyLabel: 'Meme frequency',
+  stLifeFrequencyDesc: 'Rare halves how often memes and social moments appear.',
+  lifeRare: 'Rare',
+  lifeNormal: 'Normal',
+  stIntroLabel: 'Intro tour',
+  stIntroDesc:
+    'The camera tour of the building, played once per visit. Replay it below or from the building panel.',
+  introAuto: 'Once per visit',
+  introNever: 'Never',
+  stIntroReplayLabel: 'Replay the intro',
+  stIntroReplayDesc: 'Plays the camera tour of the building again, now, on the office page.',
+  introReplayButton: 'Replay intro',
 
   stSchedulesDesc: 'Create tasks on a timer: once, daily or weekly.',
   stA2aLabel: 'A2A',
@@ -142,7 +175,8 @@ export const settingsEn = {
   stKeyClose: 'Close a dialog or sheet',
   stKeySend: 'Send · new line (desktop composer)',
   stLinksLabel: 'Links and licenses',
-  stLinksDesc: 'Source code, docs, security notes and third-party notices.',
+  stLinksDesc:
+    'Open source under the MIT License. The notices list the third-party software in this build and its licenses. Not affiliated with Anthropic or OpenAI.',
   stLinkRepo: 'Source code (GitHub)',
   stLinkDocs: 'Getting started',
   stLinkSecurity: 'Security',

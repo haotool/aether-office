@@ -10,6 +10,7 @@ import { Avatar } from './Avatar.js';
 import { squadViewOf } from './feed-squads.js';
 import { HookNote, needsHook } from './HookNote.js';
 import { PermissionCards } from './PermissionCard.js';
+import { RecentMoments } from './RecentMoments.js';
 import { requestsFor, usePermissionRequests } from './permission-requests.js';
 import { SessionDetails } from './SessionDetails.js';
 import { SessionFooter } from './SessionFooter.js';
@@ -118,6 +119,7 @@ export function SessionConversation({
             )}
           </div>
         )}
+        <RecentMoments member={agent.id} />
         {percent !== null && (
           <div
             className="ctx-meter"

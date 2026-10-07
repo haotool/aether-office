@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { signIn as signInTo } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
 import { spawn, execFileSync, type ChildProcess } from 'node:child_process';
 import {
@@ -80,9 +81,6 @@ test.afterAll(() => {
 });
 
 async function signIn(page: Page, theme: 'dark' | 'light' = 'dark') {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
   await page.addInitScript(
     (chosen) =>
       window.localStorage.setItem(
@@ -94,11 +92,7 @@ async function signIn(page: Page, theme: 'dark' | 'light' = 'dark') {
       ),
     theme,
   );
-  await page.goto('/office');
-  await page
-    .getByLabel(/^(存取權杖|Access token)$/)
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: /^(進入辦公室|Enter office)$/ }).click();
+  await signInTo(page, '/office');
 }
 
 const RAW = /\*\*|`|\]\(|^#|~~|!\[|^\s*[-*]\s/m;
@@ -109,8 +103,8 @@ test('the feed row, the conversation and the speech endpoint show Markdown as te
   await signIn(page);
   const row = page.locator('.feed-row', { hasText: 'md-repo' }).first();
   await expect(row).toBeVisible({ timeout: 45_000 });
+  await expect(row.locator('.feed-reply')).toContainText('Cleanup done'); // the replies arrive after the rows
   const preview = (await row.locator('.feed-reply').textContent()) ?? '';
-  expect(preview).toContain('Cleanup done');
   expect(preview).not.toMatch(RAW);
 
   // The server cuts a long reply on a safe boundary: no fence, emphasis or link is left open.

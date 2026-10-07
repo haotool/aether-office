@@ -27,6 +27,17 @@ export const introForced = (search: string) => new URLSearchParams(search).get('
 /** On a phone the tour plays once, ever: finishing or leaving it turns the preference off (Replay stays in the controls). */
 export const phoneRemembersIntro = (compact: boolean, force: boolean) => compact && !force;
 
+let replayAsked = false;
+/** Settings → Replay intro: the tour is asked for, and the next office page plays it (the scene lives on another page). */
+export const requestIntroReplay = () => {
+  replayAsked = true;
+};
+export const introReplayRequested = () => replayAsked;
+/** The tour has run (however it ended): the request is met. */
+export const clearIntroReplayRequest = () => {
+  replayAsked = false;
+};
+
 export function introPlayedThisSession(): boolean {
   try {
     return window.sessionStorage.getItem(PLAYED_KEY) !== null;

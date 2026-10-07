@@ -15,6 +15,7 @@ import {
 import type { Agent } from '@aether/contracts';
 import { acquireAnimal } from './animal-assets.js';
 import { Zzz } from './Zzz.js';
+import { registerAnchors } from './squad/puppet/anchors.js';
 import { animationInterval } from './perf-control.js';
 import { useMicroActions, type BehaviorScene } from './use-micro-actions.js';
 import {
@@ -124,6 +125,7 @@ export function Animal({
     const asset = acquireAnimal(url);
     let disposed = false;
     let instance: Model | null = null;
+    let forgetAnchors: (() => void) | undefined;
     void asset
       .load()
       .then(async (loaded) => {
@@ -142,6 +144,7 @@ export function Animal({
         });
         mixer.current = new AnimationMixer(loaded.scene);
         mixer.current.addEventListener('finished', () => setOneShot(null));
+        forgetAnchors = registerAnchors(agent.id, loaded.scene); // the squad's puppet strings tie to its head and hands
         setModel(instance);
         invalidate();
       })
@@ -150,6 +153,7 @@ export function Animal({
       });
     return () => {
       disposed = true;
+      forgetAnchors?.();
       mixer.current?.stopAllAction();
       if (instance) {
         mixer.current?.uncacheRoot(instance.scene);

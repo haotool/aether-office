@@ -1,17 +1,22 @@
 import { test, expect, type Page } from '@playwright/test';
+import { signIn } from './support/sign-in.js';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 // The office-life performance gate (docs/design/office-life.md section 10): a baseline scene against a variant scene, each
 // mounted several times in turn (A, B, A, B, ...) so a loaded machine hits both alike, on a real GPU. Skipped unless
 // PERF_GPU=1, so an ordinary run reports "skipped", never "passed".
 //
-//   PERF_GPU=1 [PERF_VARIANT='talk=1'] [PERF_ROUNDS=5] [PERF_FRAMES=240] pnpm exec playwright test e2e/office-life-perf.spec.ts
+//   PERF_GPU=1 [PERF_BASELINE=''] [PERF_VARIANT='talk=1'] [PERF_ROUNDS=5] [PERF_FRAMES=240] pnpm exec playwright test e2e/office-life-perf.spec.ts
 //
-// PERF_VARIANT is the query added to the variant scene; it defaults to the existing `talk=1` stand-in traffic until the
-// office-life effects exist (then `preview=life&effect=<id>`). The report is evidence/office-life-perf.json.
+// PERF_VARIANT is the query added to the variant scene; it defaults to the existing `talk=1` stand-in traffic. For the
+// office-life effects use `preview=life&effect=a,b,c&t=1500` and, so the camera is the same in both scenes (a preview
+// flies to a member, which culls most of the building), a baseline of the same preview with no effect:
+// PERF_BASELINE='preview=life&effect=off&t=0'. The report is evidence/office-life-perf.json.
 const RUN = process.env['PERF_GPU'] === '1';
 const VARIANT = process.env['PERF_VARIANT'] ?? 'talk=1';
+// PERF_BASELINE is the query of the scene the variant is compared with (default: the plain scene), for a variant that
+// only changes how something already there is drawn (`squad=8&legacy=1` against `squad=8`).
+const BASELINE = process.env['PERF_BASELINE'] ?? '';
 const ROUNDS = Number(process.env['PERF_ROUNDS'] ?? 3);
 const FRAMES = Number(process.env['PERF_FRAMES'] ?? 240);
 
@@ -48,14 +53,7 @@ test.describe('office-life perf harness', () => {
   test.skip(!RUN, 'not run: set PERF_GPU=1 to measure on a real GPU');
 
   async function measure(page: Page, query: string): Promise<Report> {
-    const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-      directory: string;
-    };
-    await page.goto(`/?perf=${FRAMES}${query ? `&${query}` : ''}`);
-    await page
-      .getByLabel('存取權杖', { exact: true })
-      .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-    await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+    await signIn(page, `/?perf=${FRAMES}${query ? `&${query}` : ''}`);
     await page.waitForFunction(() => '__aetherPerf' in window, undefined, { timeout: 60000 });
     return page.evaluate(() => (window as unknown as { __aetherPerf: Report }).__aetherPerf);
   }
@@ -63,11 +61,12 @@ test.describe('office-life perf harness', () => {
   test('the variant scene costs no more than the gate allows over the baseline', async ({
     browser,
   }) => {
+    test.setTimeout(60_000 + ROUNDS * 20_000); // every round mounts the scene twice
     const baseline: Report[] = [];
     const variant: Report[] = [];
     for (let round = 0; round < ROUNDS; round += 1) {
       for (const [query, into] of [
-        ['', baseline],
+        [BASELINE, baseline],
         [VARIANT, variant],
       ] as const) {
         const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -115,6 +114,7 @@ test.describe('office-life perf harness', () => {
           renderer,
           quality: baseline[0]!.quality,
           viewport: baseline[0]!.viewport,
+          baselineQuery: BASELINE,
           variantQuery: VARIANT,
           rounds: ROUNDS,
           framesPerRun: FRAMES,

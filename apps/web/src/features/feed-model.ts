@@ -24,6 +24,8 @@ export type FeedItem = {
   where: string;
   /** The newest thing the agent said, as plain text. */
   reply: string | null;
+  /** Whether the replies have been fetched at all: until then an empty `reply` means "not known yet", not "no reply". */
+  replyLoaded: boolean;
   /** The tool it is running (or last ran) with its target, while it works or waits. */
   tool: string | null;
   /** Why it waits: a permission prompt, or a notification that wants a person. */
@@ -61,7 +63,8 @@ export function buildFeed({
 }: {
   sessions: readonly AttributedSession[];
   agents: readonly Agent[];
-  speech: Readonly<Record<string, Speech>>;
+  /** By session key; undefined while the first answer is still on its way. */
+  speech: Readonly<Record<string, Speech>> | undefined;
   /** When each session was last opened, by key. */
   seen: Readonly<Record<string, number>>;
   now: number;
@@ -74,7 +77,7 @@ export function buildFeed({
     const agent = byId.get(`${LOCAL_PREFIX}${session.key}`);
     const activity = activityOf(session, now);
     if (!agent || activity === 'offline') continue;
-    const said = speech[session.key]?.assistant ?? null;
+    const said = speech?.[session.key]?.assistant ?? null;
     const at = Math.max(session.mtime, session.hook?.at ?? 0, said?.at ?? 0);
     const requested = asking.has(session.key);
     const waiting = requested || sessionWaiting(session, now);
@@ -100,6 +103,7 @@ export function buildFeed({
       label: rowLabelOf(session),
       where: [session.title ? session.repo : null, branch].filter(Boolean).join(' · '),
       reply: said ? toPlainPreview(said.text, { maxChars: REPLY_CHARS }) || null : null,
+      replyLoaded: speech !== undefined,
       tool: tool ? (target ? `${tool} ${target}` : tool) : null,
       reason: !waiting
         ? null
@@ -115,6 +119,10 @@ export function buildFeed({
   feed.idle.length = Math.min(feed.idle.length, MAX_IDLE_ROWS);
   return feed;
 }
+
+/** The locale key for a row with no reply to show: "No reply yet" is only said once the replies are known. */
+export const noReplyKey = (item: Pick<FeedItem, 'session' | 'replyLoaded'>) =>
+  item.replyLoaded && item.session.process === 'running' ? 'feedNoReply' : 'feedReplyNotLoaded';
 
 export const feedItems = (feed: Feed): FeedItem[] => BUCKETS.flatMap((b) => feed[b]);
 /** What the peek shows when nothing is chosen: the row that most wants a look. */

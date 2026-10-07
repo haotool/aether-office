@@ -3,6 +3,15 @@
 Behavioral notes for capabilities that are not obvious from the UI. The authoritative per-capability status is the
 [verification ledger](verification/report.md).
 
+**Contents.** What you see and use: [Navigation](#navigation-the-advanced-switch) · [Settings](#settings) ·
+[Notifications](#notifications) · [Connecting a phone](#connecting-a-phone) · [The session panel and the composer](#the-session-panel-and-the-composer) ·
+[Text in the conversation](#text-in-the-conversation-wrappers-notices-and-markdown) · [Answering permission prompts](#answering-permission-prompts-remote-approvals) ·
+[Clock out](#clock-out) · [KPIs](#token-and-git-kpis) · [Models](#detected-models). The office: [Interacting with the characters](#interacting-with-the-characters) ·
+[The repository in the office](#the-repository-in-the-office) · [Speech bubbles, context and compaction](#speech-bubbles-context-and-compaction) ·
+[Office life](#office-life-little-moments-in-the-3d-office) · [The first-visit tour](#the-first-visit-tour) ·
+[Observed sessions, roles and squads](#observed-sessions-on-the-3d-floor). The orchestration workbench (behind Advanced):
+[Task dependency graph](#task-dependency-graph) · [Project knowledge](#project-knowledge-and-human-review) · [Agent review](#agent-review).
+
 ## Navigation: the Advanced switch
 
 The sidebar, the phone's tab bar and quick open (Ctrl/Cmd+K) show the pages a CLI user needs: office, local sessions,
@@ -16,7 +25,7 @@ they have a runner, API, ledger and test footprint, so they sit behind the same 
 
 Eight groups: General (language, theme with System, motion, quality), Notifications & approvals, Connections (phone pairing,
 install as an app, address and HTTPS), Models & execution (detected models, local sessions, execution policy, terminal commands),
-Office, Advanced (the switch, schedules, A2A, integrations, hosts), Data & privacy (what is stored where, export or reset the
+Office (view, camera, beanstalk, animations), Advanced (the switch, schedules, A2A, integrations, hosts), Data & privacy (what is stored where, export or reset the
 browser's preferences, sign out) and About (version and mode, shortcuts, links). Search with `/`; `/settings/<group>` opens a
 group. See the [design system](design-system.md#settings).
 
@@ -100,6 +109,51 @@ is also shown in the panel as a card (Allow once, Allow for this session when Cl
 button press decides; with no answer, offline or on any error Claude asks in its terminal as usual. The trust model, the
 signed answers and the plain-HTTP tradeoff for a phone are in [security](security.md#safety-properties).
 
+## Text in the conversation: wrappers, notices and Markdown
+
+Agents write Markdown, CLIs wrap text in XML-style tags and sometimes leave HTML. The server cleans it once; the page draws
+it with typed renderers and never as HTML ([design system](design-system.md#text-pipeline), [security](security.md#text-from-agents-is-never-html)).
+
+- **Wrappers are never shown as code.** Any XML-style tag outside code (`<task-notification>`, `<system-reminder>`,
+  `<function_results>`, a stray `</div>`) is removed; `Array<string>` and placeholders such as `<your-key>` stay text.
+- **The ones that carry meaning become chips** (notices): a finished background task with its real exit code (green only for
+  exit code 0), a slash command, command output, "Context added" (one chip that opens into the sanitized text), a hook, "Interrupted
+  by user". Task ids and output paths are never kept.
+- **HTML an agent left in a message** (`<span class="tx">`, `<br>`, tables, `&nbsp;`) becomes Markdown or text; titles are
+  cleaned and shortened on a meaning boundary with balanced brackets.
+- **Reading tools:** day lines, "New since you looked", relative times, copy as Markdown or plain text, code blocks with a wrap
+  switch and line numbers, find (Ctrl or Cmd+F), `j`/`k` and `g g`/`G` between turns, a compact density.
+
+## Token and Git KPIs
+
+A strip over the office shows tokens today (with a week's sparkline), sessions running, commits today and branches merged this
+week. It opens a dashboard (a side panel; a bottom sheet on a phone) for the building and for each floor: tokens by kind (input,
+output, cache read, cache write, reasoning), per day for today, 7 and 30 days, by model, by project, the heaviest sessions,
+Claude's and Codex's rate-limit windows as rings with the reset time, and commits, merges, merged and open branches, authors, lines
+and the oldest open branch. Each floor of the switcher shows its tokens today.
+
+- **Counted locally and incrementally** from the transcripts (appended bytes only, a numbers-only rollup in the data directory,
+  history read in the background); the dashboard says when a scan is still reading history.
+- **Tokens, not money.** No price table exists on the machine, so no cost is shown. The headline number excludes cache reads, which
+  dominate every session; they appear in the breakdown.
+- **Owner and operator only** (`GET /api/usage`, `GET /api/usage/git`); with `AETHER_LOCAL_SESSIONS=off` the dashboard says so and
+  shows zeros. Design notes: [design system](design-system.md#kpi-dashboards).
+
+## Detected models
+
+**Settings → Models & execution** lists the models Claude Code and Codex offer on this machine, with effort levels, where the
+answer came from (a cache file, the CLI or a built-in fallback) and whether it is stale (after 7 days). It reads the CLIs' own
+cache files and never writes under `~/.claude` or `~/.codex`; the aliases `fable`, `opus`, `sonnet` and `haiku` are always
+listed.
+
+## The first-visit tour
+
+On a first visit the camera plays a 46-second tour: a slow orbit of the building, the exploded view, a rise up the spire to the
+flowering crown, then back to the start view. It plays once per browser session (once ever on a phone) and never under browser
+automation. Any input stops it where the camera is, Esc lands on the start view, "Don't show again" turns it off, and with
+reduced motion it is three still views. **Replay** is in the floor panel and the phone's controls (Settings → Office has the
+preference); the room tour is separate and called "Guided tour (rooms)". `?intro=force` plays it regardless.
+
 ## Clock out
 
 Sessions that have sat idle for a day or more can be picked in one dialog and sent home together. The server re-checks each one
@@ -119,6 +173,46 @@ Working members show their latest prompt and reply as two bubbles (up to six at 
 phone). Each desk has a gauge for the share of the model's context window in use, which turns amber from 60% and red above 85%;
 a compaction plays a short effect and a chip. Both come from the local session scan (`GET /api/local-sessions/speech`,
 `usage.contextPct`, `usage.compactedAt`) and nothing is stored.
+
+## Office life: little moments in the 3D office
+
+Small, decorative animations that follow what a session does. They are pictures, not facts. Each wave-1 effect says what a
+command was *started* as or what state a session is in, never whether it passed or was pushed. The wave-2 outcome moments (below the
+table) start only when the provider *stated* how a command ended (Claude's `PostToolUse` or `PostToolUseFailure`, an `is_error`
+in the transcript, a Codex exit code); when the outcome is unknown nothing shows. The hidden live region "Office activity
+(decorative)" announces each one, at most one line per 5 s, in the page language.
+
+| Effect | Fires on (from the hook records and the scan) | Lasts | Cooldown | Kind |
+| --- | --- | --- | --- | --- |
+| Rubber duck | working, no tool running, nothing heard for 45 s | 18 s | 10 min per member | Wellbeing |
+| Test lamp and bug | a test command starts (`pnpm test`, `vitest`, `pytest`, `go test`, `cargo test`, ...); amber only | 14 s | 5 min per member | Tests and builds |
+| Install disc | an install command starts (`pnpm install`, `npm i`, `yarn`, ...) | 20 s | 10 min per member | Tests and builds |
+| Rocket or paper plane | a `git push` command starts | 2.6 s | 10 min per member | Git |
+| Pager bell | a member's state turns to error | 3 s | 5 min per member | Ops |
+| Coffee steam | a session that began 2 h or more ago starts working | 4.5 s | 45 min per member | Wellbeing |
+| Loop ring | the same command ran 4 times in 2 minutes | 8 s | 10 min per member | Memes |
+| Copy and paste keycaps | a fetch of Stack Overflow, Super User or a Stack Exchange site | 2.4 s | 30 min per member | Memes |
+| `:q!` sign | `vim`, `vi` or `nvim` starts | 4 s | 1 day per member | Memes |
+| Pile of boxes | 20 or more uncommitted files for 30 minutes | 45 s | 10 min per member | Work |
+| Stand-up circle | a member idle 5 minutes while 3 or more are idle on the floor | 12 s | 1 h per floor | Social |
+| Confetti | the viewer types the Konami code | 4.5 s | once a day | Easter eggs |
+
+**Wave 2** adds fourteen more, each from a stated outcome or a command label: a green lamp and a squashed bug when a test
+command exited successfully, a red lamp and a scurrying bug when it failed, a CI stack for a watch command's exit status, a red
+squiggle for a failed build or typecheck, a rocket (now only from a push that exited successfully), danger stripes for a force
+push, a tug-of-war for merge conflicts, a launch pad for a deploy (and a Friday sign on a Friday afternoon), a bandaged skull
+gag for `rm -rf`, `sudo` and `curl | sh` chips, "works on my machine", "not a bug, a feature" and an LGTM stamp for a real pull
+request approval. A member's conversation has a closed "Recent moments" fold. `404` and `418` effects are not built (no real
+data to drive them). The labels come from the hook receiver's closed list of 23 command tags
+([provider compatibility](provider-compatibility.md#signals-for-the-office-what-each-provider-gives-what-is-derived-what-is-missing)).
+Without hooks the wave-1 effects that need a command do not fire and the outcome moments never do.
+
+A member shows one at a time, a floor two, and the building at most three starts in any minute; out of view an effect fires at
+half chance, and at the default "rare" frequency memes and social moments at half again. Settings → Office has Calm mode (every
+kind off; on by default when the system asks for reduced motion, and a switch in the phone drawer), a switch per kind, the
+frequency and the intro tour. With reduced motion an effect is a still picture or, for those that are only motion (steam, the
+circle, confetti), nothing; the low quality tier shows none. The design is in [office-life.md](design/office-life.md#53-registry);
+`?preview=life&effect=<id>&t=<ms>` holds one frame for a contact sheet.
 
 ## Observed sessions on the 3D floor
 
@@ -146,3 +240,19 @@ squad strip of chips and a "Subagent activity" card per spawn (with that subagen
 "Spawned by" link back. Their portraits share an accent and a subagent's carries a tether glyph. A Claude session working without
 hooks explains that its subagents need the hook and offers the command. See
 [Squads in the panel](design-system.md#squads-in-the-panel).
+
+In the 3D office a session's subagents sit together in a squad zone beside its desk, one pod each, facing the supervisor. The zone is
+placed automatically (a saved one, see the layout editor, wins) and grows at once but shrinks only after ten quiet seconds; a pod
+is kept for as long as its subagent holds it. A new subagent walks in from the elevator core (when the pod is within 14 m on high
+quality, 10 m on balanced; otherwise it appears in its seat) and sits down; a finished one, or one the session stopped reporting,
+stands, waves and walks back into the core. Past eight subagents on high (six balanced, four low) the rest stand as silhouettes and
+the zone label counts them. A funnel of light runs from the zone into the core and a filament on to a halo over the supervisor; its
+brightness follows the squad's tokens per minute (Claude subagents, read from their transcripts) and otherwise its tool calls per
+minute; the zone label's tooltip says which. The zone label is a button ("Squad of main, 3
+working") and a hidden live region announces who joined and left. Thin strings of light run from a control cross over each working subagent to its head and hands
+(they tighten and jerk on each tool call, go slack when it rests, and are off on the low tier, with the relation effects or with
+their own switch, Settings, Office, "Puppet strings"; still in Calm mode and with reduced motion). When a subagent finishes, it
+walks a folder to its supervisor's desk, puts it in the in-tray and the supervisor reads it and stamps it **RECEIVED**: a receipt that a
+result came back, not an approval. A result the parent's own tool result flags as an error gets a grey **RETURNED** stamp instead
+(never red or green). The log says "Explore handed over its result". A subagent's result summary is not shown in 3D. If the floor has
+no room for a zone the subagents keep desks of their own and the tether between desks still joins them.

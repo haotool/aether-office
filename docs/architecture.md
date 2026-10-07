@@ -5,16 +5,41 @@ AETHER OFFICE is a small set of cooperating processes around one durable control
 
 ```mermaid
 flowchart LR
-  subgraph Browser
-    W[apps/web<br/>React workbench] --- S[packages/office-scene<br/>Three.js office]
+  subgraph Browser["Browser or phone"]
+    W["apps/web<br/>React: panel, KPIs, settings"] --- S["packages/office-scene<br/>Three.js office (lazy)"]
   end
-  subgraph Machine
-    C[apps/control<br/>Fastify + SQLite] <-->|claim · report · heartbeat| R[apps/runner<br/>agents · worktrees · PTY]
-    R --> P[Claude Code / Codex<br/>MCP · ACP]
-    D[(Local sessions<br/>hooks · process table)] --> C
+  subgraph Machine["Your machine"]
+    subgraph Control["apps/control (Fastify + SQLite)"]
+      SC["session scanner<br/>services/session-*.ts"] --> CH["change hub<br/>session-changes.ts"]
+      API["HTTP API<br/>commands, usage, permissions"]
+    end
+    CLI["Claude Code / Codex sessions<br/>transcripts · process table"] -->|read-only| SC
+    HK["hook receiver<br/>spool file"] --> SC
+    R["apps/runner (optional)<br/>agents · worktrees · PTY"] <-->|claim · report · heartbeat| API
+    R --> P["Claude Code / Codex<br/>MCP · ACP"]
   end
-  W <-->|HTTP + event stream| C
+  CH -->|"SSE: key + kinds, no content"| W
+  W <-->|"HTTP (cookie + CSRF)"| API
 ```
+
+## Data flow
+
+1. **Discovery.** While at least one browser is connected, one shared watcher scans every two seconds: session files under
+   `~/.claude` and `~/.codex`, the process table (`ps`, `lsof`), read-only `git status` and the hook spool
+   (`~/.aether/hook-events.jsonl`, appended by the optional hooks). Identity, project, role, liveness and resource use come out
+   of it. Nothing is written to those folders.
+2. **Change events.** The watcher diffs each session against the previous scan and publishes one content-free event per changed
+   session (`{seq, key, kinds}`) on `GET /api/local-sessions/stream`. The page turns an event into a refetch of the
+   redacted, ETag-revalidated endpoints (`/api/local-sessions`, `/speech`, one transcript, `/api/usage`).
+3. **Reading.** Content leaves the server only through those endpoints, after redaction and the text pipeline
+   (`neutralizeHtml`, `structureWrappers`, `cleanTitle`), and only for owner and operator.
+4. **Acting.** A write is a typed command (`POST /api/commands`) with a CSRF token, or one of a few dedicated routes: stop a
+   session, clock out, decide a permission request. A browser can type into a session only when the server finds its process
+   inside an AETHER terminal, through the runner's terminal lease.
+5. **Permission prompts.** With Remote approvals on, a Claude Code hook posts the prompt to the control plane (loopback, its own
+   token); the person decides in the browser; the server signs the answer and the hook prints it, or Claude asks in its terminal.
+6. **The scene.** The 3D office reads the same models as the 2D panel (`office-model.ts`), so the two views never disagree. KPI
+   numbers are counted from transcripts incrementally and kept as a numbers-only rollup in the data directory.
 
 ## Components
 
@@ -56,18 +81,18 @@ Enforced by `pnpm lint` (`scripts/check-boundaries.mjs`):
 ## The HTTP surface
 
 Routes are registered per area in `apps/control/src/routes`; every `/api/` route needs an authenticated actor except
-the few listed in `PUBLIC_ROUTES` (`server.ts`, pinned by `tests/aether/route-auth.test.ts`): login, pairing redemption,
+the few listed in `PUBLIC_ROUTES` (`server.ts`, pinned by `tests/aether/route-auth.test.ts`): login, pairing redemption, CSRF re-issue (the session cookie is its credential),
 runner enrollment, the GitHub webhook, the A2A card and endpoint, and the approval hook, each of which carries its own
 credential.
 
 | Area                    | Routes                                                                                                                                         |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Sign-in                 | `POST /api/login`, `POST /api/logout`, `GET /api/session`, `/api/pairings` (create, status, redeem)                                            |
+| Sign-in                 | `POST /api/login`, `POST /api/logout`, `GET /api/session`, `POST /api/session/csrf` (a new CSRF token for a signed-in page that lost it; cookie only), `/api/pairings` (create, status, redeem) |
 | Commands and project    | `POST /api/commands`; `GET /api/projects`; per project: `snapshot`, `events`, `stream` (the project's event log as server-sent events), `inbox`, `messages/:id`, `knowledge`, `approvals`, `execution` |
 | Work and lists          | `work/:workId/{comments,integrations,post-result,diagnostics,reviews}`, `workspaces`, and the read lists (`terminals`, `reservations`, `schedules`, `skills`, `integrations`, `rooms`, `workflows`, `meetings`, `observations`) |
 | Local sessions          | `GET /api/local-sessions` and `/speech` (last prompt and reply), `GET /api/local-sessions/stream` (change stream), `/:key/transcript`, `/:key/stop`, `/:key/reap-zombies`, `POST /api/local-sessions/clock-out` |
 | Composer                | `GET /api/local-sessions/:key/terminal` (the AETHER terminal the session runs in, if any), `/:key/commands`, `/:key/files`                    |
-| Usage KPIs              | `GET /api/usage?range=today\|7d\|30d` (tokens per day, office, project, model and session, plus Claude's and Codex's limit windows) and `GET /api/usage/git` (commits, merges, merged and open branches per project, office and for the building). Owner and operator only; ETag-revalidated. Transcripts are read incrementally (`services/usage-parse.ts`, `usage-stats.ts`): per file an offset, mtime, size and first-bytes signature, appended bytes only, one shared 1 MiB buffer, a turn of the event loop between chunks, at most 4000 files; a request waits 400 ms at most for a scan still reading history and says `scan.complete: false`. A numbers-only rollup (`usage-rollup.json`, mode 0600, keyed by path hash) lives in the data directory and is ignored when its version or time zone differs. |
+| Usage KPIs              | `GET /api/usage?range=today\|7d\|30d` (tokens per day, office, project, model and session, plus Claude's and Codex's limit windows) and `GET /api/usage/git` (commits, merges, merged and open branches per project, office and for the building). Owner and operator only; ETag-revalidated. Transcripts are read incrementally (`services/usage-parse.ts`, `usage-stats.ts`): per file an offset, mtime, size and first-bytes signature, appended bytes only, one shared 1 MiB buffer, a turn of the event loop between chunks, at most 4000 files; a request waits 400 ms at most for a scan still reading history and says `scan.complete: false`; a scan may start again after a tenth of the time the last one took (at most 3 s), and a request inside that gap waits it out when it is short, so a transcript that just appeared is counted by that request. The page refetches the usage when the session stream reports a moved transcript (at most every 5 s). A numbers-only rollup (`usage-rollup.json`, mode 0600, keyed by path hash) lives in the data directory and is ignored when its version or time zone differs. |
 | Machine and models      | `GET /api/models` (the models each CLI offers), `/api/claude-limits`, `/api/system`, and per project `git-graph` and `git-health` (`/sizes`, `/clean`) |
 | Permission requests     | Hook side (loopback, its own token): `POST /api/hook/permission-requests`, `GET .../:id` (long poll), `POST .../:id/fallback`. Person side (cookie session): `GET /api/permission-requests`, `POST .../:id/decision`, `GET`/`PUT /api/remote-approvals` |
 | Runner                  | `POST /api/machines`, `/api/runner/{enroll,heartbeat,claim,report,session-credential,jobs/*,terminals/*,observations,approvals/*}`             |

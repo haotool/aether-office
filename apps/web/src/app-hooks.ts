@@ -2,7 +2,7 @@ import { useEffect, useMemo, useReducer, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { SetURLSearchParams } from 'react-router-dom';
 import { type LocalSessionsResponse } from '@aether/contracts';
-import { api, forgetCsrf, type Session } from './api.js';
+import { api, ensureCsrf, forgetCsrf, type Session } from './api.js';
 import { activityOf, sessionLink } from './localSessions.js';
 import { isDomainEvent } from './stream-event.js';
 import { useSessionAlerts, type AlertSink } from './notifications.js';
@@ -146,7 +146,11 @@ export function useAuthSession() {
   const [checked, setChecked] = useState(false);
   useEffect(() => {
     api<Session>('/api/session')
-      .then(setSession)
+      // signed in without a CSRF token (the tab was closed): gets one before the page can write
+      .then(async (found) => {
+        await ensureCsrf().catch(() => undefined);
+        setSession(found);
+      })
       .catch(() => setSession(null))
       .finally(() => setChecked(true));
   }, []);

@@ -1,6 +1,7 @@
 import { usePreferences } from '../../state.js';
 import { useT } from '../../ui.js';
 import { Row, Segmented, StatusChip, Switch } from './kit.js';
+import { OfficeAnimationsSettings } from './OfficeAnimationsSettings.js';
 
 /** How the office opens and what is drawn round it. */
 export function OfficeSection() {
@@ -36,6 +37,7 @@ export function OfficeSection() {
           <Switch checked={prefs.beanstalk} onChange={(beanstalk) => prefs.set({ beanstalk })} />
         }
       />
+      <OfficeAnimationsSettings />
     </>
   );
 }

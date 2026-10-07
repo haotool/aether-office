@@ -17,6 +17,7 @@ import type { BehaviorScene } from './use-micro-actions.js';
 import { AttentionRing, ContactShadow, ScreenGlow } from './DeskGlow.js';
 import { Poser } from './Poser.js';
 import type { Engagement } from './interplay.js';
+import type { TurnCue } from './use-pose-cues.js';
 import type { ScreenFacts } from './screen-facts.js';
 import { ACTIVE, AGENT_OFFSET, floorY } from './scene-geometry.js';
 import type { SceneCompaction } from './context.js';
@@ -44,6 +45,7 @@ export function Member({
   selected,
   ring,
   emote,
+  turn,
   reducedMotion,
   quality,
   light,
@@ -77,6 +79,8 @@ export function Member({
   ring: Ring | null;
   /** A reaction the person asked for (see emotes.ts). */
   emote: EmoteCue | undefined;
+  /** A turn of the chair a life effect asked for (see pose-cues.ts). */
+  turn?: TurnCue | undefined;
   reducedMotion: boolean;
   quality: Quality;
   light: boolean;
@@ -208,6 +212,7 @@ export function Member({
             seat={{ x: desk.x, z: desk.z, floor: desk.floor ?? 0, rotation: desk.rotation }}
             seed={agent.id}
             engagements={engagements}
+            turn={turn}
             reducedMotion={reducedMotion}
           >
             <Animal

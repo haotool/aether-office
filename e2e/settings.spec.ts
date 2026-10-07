@@ -1,17 +1,9 @@
 import { test, expect, type Page } from '@playwright/test';
+import { signIn as signInTo } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 async function signIn(page: Page) {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signInTo(page);
   await expect(page.locator('main')).toBeVisible();
 }
 

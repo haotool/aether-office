@@ -10,11 +10,43 @@
 pnpm has built-in `setup` and `doctor` commands that shadow package scripts of the same name; run this project's as
 `pnpm run setup` and `pnpm run doctor`. `pnpm run doctor` reports your OS, Node, pnpm, Git and provider CLI versions.
 
+## First run in five minutes
+
+For someone who already runs `claude` or `codex` in a terminal and wants to see them.
+
+1. **Install and build** (about a minute; `pnpm start` runs the built files, so the build is required):
+
+   ```sh
+   pnpm install --frozen-lockfile
+   pnpm build
+   ```
+
+2. **Start it:**
+
+   ```sh
+   pnpm start
+   ```
+
+   The first start creates `.data/live` with the database and the owner token, and prints the token file's location (never its
+   value). `pnpm run setup` does the same without starting, and is optional.
+
+3. **Open `http://127.0.0.1:4310`** (this exact address) and paste the contents of the token file into the sign-in form
+   (`cat .data/live/owner-token`). Your recent sessions appear as characters within a few seconds; the panel on the right lists them
+   in groups (needs you, working, finished, idle). Click a row to read a conversation.
+4. **Optional, for exact states:** `pnpm hooks install --project /path/to/a/repo` (see [below](#exact-activity-with-hooks-optional)),
+   a Claude Code session that is already running may not pick up new hook settings until it is restarted.
+5. **Optional, for your phone:** `AETHER_HOST=0.0.0.0 pnpm start`, then scan the QR code (see
+   [Connect a phone](#connect-a-phone-by-scanning-a-qr-code)).
+
+Nothing here starts a model or writes under `~/.claude` or `~/.codex`. To stop, press Ctrl+C in the terminal that runs
+`pnpm start`; the sessions you watched are not touched.
+
 ## Try the demo
+
+The demo uses fixture data and needs no sessions of your own. It runs the development servers, so it does not need a build:
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm build
 pnpm demo
 ```
 
@@ -59,6 +91,14 @@ pnpm hooks install --project /path/to/repo   # writes .claude/settings.local.jso
 pnpm hooks status  --project /path/to/repo
 pnpm hooks remove  --project /path/to/repo
 ```
+
+**What `install` changes**, and nothing else: it adds one entry per event to the project's `.claude/settings.local.json` (the
+file Claude Code keeps out of Git; a copy of the previous file is kept beside it as `settings.local.json.aether-backup`). The
+events are `SessionStart`, `SessionEnd`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `SubagentStart`,
+`SubagentStop`, `Stop`, `PermissionRequest` and `Notification`, each running the receiver script from this repository, which only
+appends a short record to the spool file. The entries are tagged, so `pnpm hooks status --project <dir>` can report them and
+`pnpm hooks remove --project <dir>` takes exactly those out again. Nothing is written to your user-level settings unless you
+pass `--scope user`.
 
 Add `--provider codex` for Codex's hooks (`.codex/hooks.json`; Codex asks you to trust them with `/hooks`).
 

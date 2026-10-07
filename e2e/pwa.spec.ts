@@ -1,24 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { signIn as signInTo } from './support/sign-in.js';
 
 // The installable app: manifest, iOS and theme meta tags, safe areas, the install offer, and the service worker
 // (registered only in a secure context, never storing API answers, asking before it updates). 127.0.0.1 is a secure
 // context, like localhost; a phone on http://192.168.x.x is not, which the unit tests cover (tests/aether/pwa.test.ts).
-const token = () =>
-  readFileSync(
-    join(
-      (JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as { directory: string })
-        .directory,
-      'owner-token',
-    ),
-    'utf8',
-  ).trim();
-
 async function signIn(page: Page) {
-  await page.goto('/');
-  await page.getByLabel('存取權杖', { exact: true }).fill(token());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signInTo(page);
   await expect(page.locator('main')).toBeVisible();
 }
 
@@ -165,13 +152,17 @@ test.describe('install offer', () => {
     page,
   }) => {
     await page.addInitScript(() => {
-      // the browser fires this on its own; stand in for it with the same shape
-      setTimeout(() => {
+      // The browser fires this on its own; stand in for it with the same shape, the moment the page starts listening.
+      const listen = window.addEventListener.bind(window);
+      window.addEventListener = ((...args: Parameters<typeof listen>) => {
+        listen(...args);
+        if (args[0] !== 'beforeinstallprompt') return;
         const offer = Object.assign(new Event('beforeinstallprompt', { cancelable: true }), {
           prompt: () => Promise.resolve(),
         });
-        window.dispatchEvent(offer);
-      }, 800);
+        Object.assign(window, { offer });
+        queueMicrotask(() => window.dispatchEvent(offer));
+      }) as typeof window.addEventListener;
     });
     await signIn(page);
     await expect(page.getByText('把 AETHER 安裝到這台裝置。')).toBeVisible();
@@ -179,13 +170,19 @@ test.describe('install offer', () => {
     await page.getByRole('button', { name: '關閉', exact: true }).first().click();
     await expect(page.getByText('把 AETHER 安裝到這台裝置。')).toHaveCount(0);
     await page.reload();
-    await page.waitForTimeout(1500);
+    // The page has taken the new offer (it calls preventDefault) and had its frames to act on it.
+    await page.waitForFunction(
+      () => (window as unknown as { offer?: Event }).offer?.defaultPrevented,
+    );
+    await page.evaluate(
+      () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+    );
     await expect(page.getByText('把 AETHER 安裝到這台裝置。')).toHaveCount(0);
   });
 
   test('Chromium: no offer, no banner', async ({ page }) => {
     await signIn(page);
-    await page.waitForTimeout(1200);
+    await page.waitForTimeout(1200); // nothing is offered, so there is nothing to wait for: this only gives a banner time to wrongly appear
     await expect(page.getByText('把 AETHER 安裝到這台裝置。')).toHaveCount(0);
     await expect(page.getByText(/加入主畫面/)).toHaveCount(0);
   });

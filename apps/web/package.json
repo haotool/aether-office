@@ -2,6 +2,7 @@
   "name": "@aether/web",
   "version": "0.4.0-dev.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "exports": "./src/index.ts",
   "dependencies": {

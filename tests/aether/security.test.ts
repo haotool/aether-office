@@ -93,6 +93,64 @@ describe('server trust boundaries', () => {
     ).toBe(200);
     expect((await f.app.inject({ url: '/api/session', headers })).statusCode).toBe(401);
   });
+  it('a signed-in browser whose page lost its CSRF token gets a new one, and the old one stops working', async () => {
+    const f = setup();
+    const host = { host: '127.0.0.1:4310' };
+    const login = await f.app.inject({
+      method: 'POST',
+      url: '/api/login',
+      headers: host,
+      payload: { token: f.owner.token },
+    });
+    const cookie = login.cookies[0]!;
+    const old = (login.json() as { csrf: string }).csrf;
+    const headers = { ...host, cookie: `${cookie.name}=${cookie.value}` };
+    const rotate = (extra: Record<string, string> = {}) =>
+      f.app.inject({
+        method: 'POST',
+        url: '/api/session/csrf',
+        headers: { ...headers, origin: 'http://127.0.0.1:4310', ...extra },
+        payload: {},
+      });
+    const write = (csrf: string) =>
+      f.app.inject({
+        method: 'POST',
+        url: '/api/commands',
+        headers: { ...headers, 'x-csrf-token': csrf },
+        payload: command('project.create', { name: 'After rotation' }),
+      });
+    // the cookie alone is the credential, and only for a request that says where it came from
+    const noOrigin = await f.app.inject({
+      method: 'POST',
+      url: '/api/session/csrf',
+      headers,
+      payload: {},
+    });
+    expect(noOrigin.statusCode).toBe(403);
+    expect((await rotate({ origin: 'https://evil.example' })).statusCode).toBe(403);
+    expect((await rotate({ authorization: `Bearer ${f.owner.token}` })).statusCode).toBe(403);
+    expect(
+      (
+        await f.app.inject({
+          method: 'POST',
+          url: '/api/session/csrf',
+          headers: { ...host, origin: 'http://127.0.0.1:4310' },
+          payload: {},
+        })
+      ).statusCode,
+    ).toBe(401); // no cookie
+    expect((await write(old)).statusCode).toBe(200); // nothing above changed the token
+    const rotated = await rotate();
+    expect(rotated.statusCode).toBe(200);
+    const { csrf, expiresAt } = rotated.json() as { csrf: string; expiresAt: number };
+    expect(csrf).not.toBe(old);
+    expect(expiresAt).toBeGreaterThan(Date.now());
+    expect(rotated.body).not.toContain(cookie.value);
+    expect((await write(old)).statusCode).toBe(403); // the old token is dead
+    expect((await write(csrf)).statusCode).toBe(200);
+    for (let i = 1; i < 10; i++) expect((await rotate()).statusCode).toBe(200);
+    expect((await rotate()).statusCode).toBe(429); // rate limited like a login
+  });
   it('does not accept sender spoofing, foreign inbox access, cursor scope substitution, or revoked identity', () => {
     const f = setup();
     expect(() =>

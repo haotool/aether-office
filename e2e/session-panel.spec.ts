@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { signIn } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
 import { appendFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -37,14 +38,7 @@ test.beforeAll(() => {
 });
 
 async function login(page: Page) {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page);
   await expect(page.locator('main')).toBeVisible();
   // The fixture repository is adopted as its own project, where its session lives.
   const option = page.locator('.project-picker select option', { hasText: 'fixture-repo' });

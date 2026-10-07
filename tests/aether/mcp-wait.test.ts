@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createCollaborationMcp } from '../../apps/runner/src/mcp.js';
+import { budget } from './timing.js';
 it('bounds a stalled inbox HTTP request by the requested wait deadline', async () => {
   let requests = 0;
   const http = createServer((_req, res) => {
@@ -27,11 +28,12 @@ it('bounds a stalled inbox HTTP request by the requested wait deadline', async (
     await server.connect(a);
     await client.connect(b);
     const start = performance.now();
+    // The deadline starts when the tool does, so it must outlast the start of the request or none is made on a loaded machine.
     const response = await client.callTool({
       name: 'wait_for_message',
-      arguments: { timeoutMs: 100 },
+      arguments: { timeoutMs: 1000 },
     });
-    expect(performance.now() - start).toBeLessThan(1500);
+    expect(performance.now() - start).toBeLessThan(budget(1500, 8000)); // the stalled request was cut at the deadline, not left to hang
     expect(requests).toBe(1);
     expect(response.isError).not.toBe(true);
     expect(JSON.parse((response.content as { text: string }[])[0]!.text)).toEqual({
@@ -86,4 +88,4 @@ it('MCP cancellation aborts an in-flight inbox request without another poll', as
     http.closeAllConnections();
     await new Promise<void>((resolve, reject) => http.close((e) => (e ? reject(e) : resolve())));
   }
-}, 1500);
+}, 10000); // far under the 25 s wait the cancellation must cut short

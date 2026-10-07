@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
+import { signIn } from './support/sign-in.js';
 import { mkdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 // The UI rules (AGENTS.md → "UI rules") as a check, on every page at four widths: nothing sideways, no text under the
 // type floor, and, where the pointer is a finger, every control a finger target.
@@ -32,14 +32,7 @@ const TYPE_FLOOR = 11;
 const TOUCH_TARGET = 36; // the control itself; a finger's 44px comes from a hit area that extends past it (touch-targets.css)
 
 async function login(page: Page) {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page);
   await expect(page.locator('main')).toBeVisible();
   const projects = (await (await page.request.get('/api/projects')).json()) as { id: string }[];
   return projects[0]!.id;

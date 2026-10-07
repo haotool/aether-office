@@ -1,18 +1,10 @@
 import { test, expect, type Page } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { signIn } from './support/sign-in.js';
 
 // `?compact=1` gives every member a stand-in context that fills and is compacted every few seconds: the scene shows the
 // compaction chip over the member and the provider's mark on the name tag, without overflowing its canvas.
 async function login(page: Page, path: string) {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
-  await page.goto(path);
-  await page
-    .getByLabel(/^(存取權杖|Access token)$/)
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: /^(進入辦公室|Enter office)$/ }).click();
+  await signIn(page, path);
 }
 
 const open = async (page: Page, locale: 'zh-TW' | 'en', reducedMotion = false) => {

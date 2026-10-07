@@ -8,8 +8,9 @@ should read [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/development.md](docs/de
 - Do not run a paid model, push, open a remote pull request, merge automatically, edit global configuration or bypass a
   permission prompt without explicit authorization from the maintainer.
 - Protect user data. Demo, fixture, observed, replay and live data stay distinct and labeled. Never log or print secrets.
-- Keep attribution: upstream agent-office is MIT; see `THIRD_PARTY_NOTICES.md`. Do not copy code from projects with
-  incompatible licenses.
+- Keep attribution: upstream agent-office is MIT; see `NOTICE` and `docs/legal/provenance.md`. Do not copy code from
+  projects with incompatible licenses ([licence policy](docs/legal/licence-policy.md)). After changing dependencies run
+  `pnpm run notices` (`THIRD_PARTY_NOTICES.md` is generated).
 - Never claim production readiness from a green build. Implementation and verification are separate fields in
   `docs/verification/features.json`; a check that was not run is not "passed".
 

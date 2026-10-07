@@ -1,20 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { signIn } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
 test('knowledge proposals retain provenance and require explicit human approve or reject', async ({
   page,
 }) => {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page);
   await page.getByRole('link', { name: '知識庫', exact: true }).click();
   for (const [title, button, state] of [
     ['知識核准測試', '批准知識提案', '人類已批准'],

@@ -1,7 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
+import { signIn } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 // The session panel's width: a drag handle on its left edge (mouse and keyboard), double-click to reset or fold to a
 // rail, persistence, the 3D canvas following, and no overflow at the smallest and the largest width.
@@ -10,14 +9,7 @@ const DEFAULT = 380; // a 1440px-wide window
 const MAX = 720;
 
 async function login(page: Page): Promise<string> {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page);
   await expect(page.locator('main')).toBeVisible();
   // The fixture repository is adopted as its own project, where its session lives.
   await expect(

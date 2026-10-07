@@ -30,6 +30,16 @@ from a global location unless stated.
 | `AETHER_E2E_LAN_ADDRESSES`    | e2e only               | Addresses that stand in for the machine's own, so pairing links and the LAN rules can be tested while listening on loopback                                      | unset                                              |
 | `AETHER_WEBKIT`               | e2e only               | Set to `1` to add the WebKit (iPhone) project to the Playwright run                                                                                              | unset                                              |
 
+`CODEX_HOME` is the Codex CLI's own variable; AETHER reads it only as the fallback of `AETHER_CODEX_HOME`. `pnpm run pair`
+reads `AETHER_DATA_DIR` (for the owner token), `AETHER_CONTROL_URL` and `PORT` (to find the server; `--demo` selects the demo data
+directory), so run it with the same values as the server.
+
+**Tests and tooling only** (never needed to run the product): `AETHER_TEST_BUILT` (lets `mcp.test.ts` use the built runner),
+`AETHER_TEST_PROVIDER_TOKEN` (a synthetic secret in `secret-hygiene.test.ts`), `AETHER_RUNNER_TOKEN` (a synthetic value the
+PTY and workspace tests plant to prove it never reaches a child process), `AETHER_SCAN_BUDGET_OUT` and
+`AETHER_SCAN_BUDGET_SUBAGENTS` (`scan-budget.test.ts`), `PERF_GPU`, `PERF_BASELINE`, `PERF_VARIANT`, `PERF_ROUNDS` and `PERF_FRAMES`
+(the GPU perf specs), and `AETHER_ASSET_BUILT` and `AETHER_RENDER_COMPLETE`, which the Blender scripts print as markers.
+
 The control plane stores the owner token in the data directory and prints its location, never its value.
 
 ## Native-execution file

@@ -8,9 +8,10 @@ import { revoke } from '../../apps/control/src/services/identity.js';
 import { resetLocalSessionCache } from '../../apps/control/src/services/local-sessions.js';
 import { diffSessions } from '../../apps/control/src/services/session-changes.js';
 import { fixture } from './fixture.js';
+import { eventually, freePort } from './timing.js';
 
-const PORT = 4367;
-const BASE = `http://127.0.0.1:${PORT}`;
+let PORT = 0;
+let BASE = '';
 const line = (v: unknown) => JSON.stringify(v) + '\n';
 
 const session = (over: Partial<LocalSession> = {}): LocalSession =>
@@ -47,6 +48,9 @@ it('diffs scans into the kinds of change per session, with no events for a first
   expect(hooked.changed[0]!.kinds.sort()).toEqual(['state', 'tool']);
   const gone = diffSessions(first.next, [], {});
   expect(gone.changed).toEqual([{ key: 'claude:a', kinds: ['state'] }]);
+  // A session that appears is read whole: its reply is fetched with it, not left for the slow safety-net poll.
+  const appeared = diffSessions(first.next, [session(), session({ key: 'claude:b' })], {});
+  expect(appeared.changed).toEqual([{ key: 'claude:b', kinds: ['state', 'speech', 'transcript'] }]);
 });
 
 it('names squad and outcome changes by kind alone: ids, statuses, counts and flags, never words', () => {
@@ -127,6 +131,8 @@ it('names squad and outcome changes by kind alone: ids, statuses, counts and fla
 
 type Fixture = Awaited<ReturnType<typeof setup>>;
 async function setup(sessionStream = { scanMs: 40, heartbeatMs: 120, maxClients: 2 }) {
+  PORT = await freePort();
+  BASE = `http://127.0.0.1:${PORT}`;
   const home = await mkdtemp(join(tmpdir(), 'aether-stream-'));
   const dir = join(home, '.claude/projects/-p');
   await mkdir(dir, { recursive: true });
@@ -149,17 +155,26 @@ async function setup(sessionStream = { scanMs: 40, heartbeatMs: 120, maxClients:
     const reader = response.body?.getReader();
     const decoder = new TextDecoder();
     let text = '';
-    /** Reads until `done(text)` holds, or fails after a few seconds. */
+    /** Reads until `done(text)` holds, or fails at a deadline only a hang reaches. */
+    // One read stays pending until it answers: a read that merely lost the race to the timer would still take the next chunk
+    // and drop it, and under load that was the change the test was waiting for.
+    let pending: ReturnType<NonNullable<typeof reader>['read']> | null = null;
     const until = async (done: (text: string) => boolean) => {
-      const deadline = Date.now() + 5000;
+      const deadline = Date.now() + 8000;
       while (!done(text)) {
         if (Date.now() > deadline) throw new Error(`timed out; got: ${text}`);
+        if (!pending) {
+          pending = reader!.read();
+          pending.catch(() => undefined); // an abort while nobody is waiting is not an error
+        }
         const chunk = await Promise.race([
-          reader!.read(),
+          pending,
           new Promise<null>((r) => setTimeout(() => r(null), 200)),
         ]);
-        if (chunk?.done) break;
-        if (chunk?.value) text += decoder.decode(chunk.value);
+        if (!chunk) continue;
+        pending = null;
+        if (chunk.done) break;
+        text += decoder.decode(chunk.value, { stream: true });
       }
       return text;
     };
@@ -189,8 +204,7 @@ it('streams a change when a transcript moves: headers, hello, increasing ids, no
   expect(stream.response.headers.get('content-type')).toContain('text/event-stream');
   expect(stream.response.headers.get('cache-control')).toBe('no-store');
   expect(stream.response.headers.get('x-content-type-options')).toBe('nosniff');
-  await stream.until((t) => t.includes('event: hello'));
-  await new Promise((r) => setTimeout(r, 150)); // the baseline scan
+  await stream.until((t) => t.includes('event: hello')); // said only after the baseline scan
   await appendFile(
     s.file,
     line({ type: 'assistant', message: { role: 'assistant', content: 'SECRETTEXT' } }),
@@ -210,7 +224,6 @@ it('resumes from Last-Event-ID without losing or repeating changes, and resyncs 
   const first = await s.open();
   const hello = await first.until((t) => t.includes('event: hello'));
   const seq = idOf(hello)[0]!;
-  await new Promise((r) => setTimeout(r, 150));
   await appendFile(s.file, line({ type: 'user', message: { role: 'user', content: 'one' } }));
   await first.until((t) => t.includes('event: session'));
   // a second client, connected from the same point, sees the change replayed
@@ -219,9 +232,15 @@ it('resumes from Last-Event-ID without losing or repeating changes, and resyncs 
   expect(replay).not.toContain('event: resync');
   expect(replay).toContain('"key":"claude:sess-1"');
   first.abort.abort();
-  await new Promise((r) => setTimeout(r, 200));
-  // an id from before the hub's memory is told to refetch
-  const stale = await s.open({ 'last-event-id': '1' });
+  // an id from before the hub's memory is told to refetch (once the closed stream has freed its slot)
+  const stale = await eventually(
+    async () => {
+      const attempt = await s.open({ 'last-event-id': '1' });
+      return attempt.response.status === 200 && attempt;
+    },
+    10_000,
+    'a free stream slot',
+  );
   expect(await stale.until((t) => t.includes('event: resync'))).toContain('event: resync');
   for (const c of [first, resumed, stale]) c.abort.abort();
 });
@@ -262,9 +281,14 @@ it('caps the number of open streams and frees a slot when one closes', async () 
   const refused = await s.open();
   expect(refused.response.status).toBe(429);
   a.abort.abort();
-  await new Promise((r) => setTimeout(r, 200));
-  const again = await s.open();
-  expect(again.response.status).toBe(200);
+  const again = await eventually(
+    async () => {
+      const attempt = await s.open();
+      return attempt.response.status === 200 && attempt;
+    },
+    10_000,
+    'a free stream slot',
+  );
   for (const c of [b, again]) c.abort.abort();
 });
 

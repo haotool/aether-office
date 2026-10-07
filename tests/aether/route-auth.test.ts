@@ -60,6 +60,26 @@ it("every non-public route refuses unauthenticated callers, and project routes r
           crossProject.push(`${method} ${url} -> ${foreign.statusCode}`);
       }
     }
+    // Public because its credential is the session cookie, which the generic hook would demand a CSRF token beside.
+    expect(PUBLIC_ROUTES.has('POST /api/session/csrf')).toBe(true);
+    const anonRotation = await app.inject({
+      method: 'POST',
+      url: '/api/session/csrf',
+      headers: { ...host, origin: 'http://127.0.0.1:4499' },
+      payload: {},
+    });
+    expect(anonRotation.statusCode).toBe(401);
+    const bearerRotation = await app.inject({
+      method: 'POST',
+      url: '/api/session/csrf',
+      headers: {
+        ...host,
+        origin: 'http://127.0.0.1:4499',
+        authorization: `Bearer ${stranger.token}`,
+      },
+      payload: {},
+    });
+    expect(bearerRotation.statusCode).toBe(403);
     expect(unauthenticated).toEqual([]);
     expect(crossProject).toEqual([]);
     expect(SEGMENTS['projectId']).toBeTruthy();

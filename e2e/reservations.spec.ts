@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { signIn } from './support/sign-in.js';
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -26,9 +27,7 @@ test('file reservations are listed with their advisory boundary stated', async (
   });
   expect(reserve.ok()).toBe(true);
 
-  await page.goto('/');
-  await page.getByLabel('存取權杖', { exact: true }).fill(token);
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page);
   await page.getByRole('link', { name: '工作區', exact: true }).click();
   await expect(page.getByRole('heading', { name: '檔案預約' })).toBeVisible();
   await expect(

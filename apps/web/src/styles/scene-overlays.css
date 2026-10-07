@@ -92,10 +92,10 @@
   color: var(--provider-claude);
 }
 .provider-mark[data-provider='codex'] {
-  color: var(--provider-codex);
+  color: var(--muted);
 }
 .scene-label .provider-mark[data-provider='codex'] {
-  color: var(--on-glass);
+  color: var(--on-glass-muted);
 }
 /* The share of the context window in use, on a hovered or selected tag: calm, warm, hot (the scene's own gauge steps). */
 .label-ctx {

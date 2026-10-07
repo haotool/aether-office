@@ -9,7 +9,9 @@ import {
 } from '@aether/office-scene/model';
 import { LOCAL_PREFIX, mergeLayout } from '../localSessions.js';
 import {
+  clearIntroReplayRequest,
   introForced,
+  introReplayRequested,
   introPlayedThisSession,
   markIntroPlayed,
   phoneRemembersIntro,
@@ -30,6 +32,15 @@ import { useGitGraph } from './GitGraph.js';
 import type { OfficeModel } from './office-model.js';
 import { useCompactions } from './use-compactions.js';
 import { standInFacts, standInRole, useCompactPreview, useTalkPreview } from './scene-preview.js';
+import { useLifeInput } from './use-life.js';
+import {
+  squadLegacy,
+  squadLook,
+  squadHandover,
+  squadRelation,
+  squadStrings,
+  useSquadPreview,
+} from './squad-preview.js';
 import { useSpeechBySession } from './use-session-feed.js';
 
 const OfficeScene = lazy(() =>
@@ -79,7 +90,7 @@ function useSpeech(model: OfficeModel, enabled: boolean): Record<string, SceneSp
   const speech = useSpeechBySession(enabled && model.observed.length > 0);
   if (speechPreview) return Object.fromEntries(model.agents.map((a) => [a.id, STAND_IN_SPEECH]));
   return Object.fromEntries(
-    Object.entries(speech).map(([key, value]) => [`${LOCAL_PREFIX}${key}`, value]),
+    Object.entries(speech ?? {}).map(([key, value]) => [`${LOCAL_PREFIX}${key}`, value]),
   );
 }
 
@@ -137,13 +148,21 @@ export function SceneView({
         pref: prefs.intro,
         playedThisSession: introPlayedThisSession(),
         automated: navigator.webdriver,
-        force: introForce,
+        force: introForce || introReplayRequested(),
       }),
     onDone: () => {
+      clearIntroReplayRequest();
       markIntroPlayed();
       if (phoneRemembersIntro(compact, introForce)) prefs.set({ intro: 'never' });
     },
     onNever: () => prefs.set({ intro: 'never' }),
+  };
+  // The office-life settings own the Calm switch and the relation toggle; the squad URL preview can only turn relations off.
+  const squadPrefs = {
+    calm: prefs.life.calm,
+    relation: prefs.life.relation && squadRelation,
+    strings: prefs.strings && squadStrings,
+    handover: squadHandover,
   };
   const speech = useSpeech(model, prefs.view === '3d');
   const leaving =
@@ -164,10 +183,24 @@ export function SceneView({
         }
       : null;
   const realCompactions = useCompactions(model.contexts);
+  // Office life: decorative moments from real signals. Compaction is one of them (the "work" kind), so Calm mode and its switch apply.
+  const life = useLifeInput(sessions, model, prefs.life);
+  const compactionsShown = !prefs.life.calm && prefs.life.categories.work;
   const standIn = useCompactPreview(model.agents, compactPreview);
   const talk = useTalkPreview(model.agents, talkPreview);
+  const squadStandIn = useSquadPreview(model.agents);
+  const agents = squadStandIn ? [...model.agents, ...squadStandIn.agents] : model.agents;
   const shown =
-    preview ?? mergeLayout(data.layout?.data ?? null, data.agents, model.observed, model.floorOf);
+    preview ??
+    mergeLayout(
+      data.layout?.data ?? null,
+      data.agents,
+      [...model.observed, ...(squadStandIn?.agents ?? [])],
+      model.floorOf,
+      {
+        squads: !squadLegacy, // subagents sit in their supervisor's squad zone, not at desks of their own
+      },
+    );
   const seat = useSeatMove({
     projectId: data.project.id,
     saved: data.layout?.data ?? null,
@@ -207,6 +240,8 @@ export function SceneView({
         compact={compact}
         paused={covered}
         intro={intro}
+        squads={squadLegacy ? undefined : (squadStandIn?.squads ?? model.squads)}
+        squadPrefs={squadPrefs}
         {...(floorKpi ? { floorKpi } : {})}
         {...(onOpenFloorKpi ? { onOpenFloorKpi } : {})}
         pulses={talk?.pulses ?? model.pulses}
@@ -215,12 +250,13 @@ export function SceneView({
         names={model.names}
         speech={speech}
         screens={standIn?.screens ?? rush?.screens ?? model.screens}
-        compactions={standIn?.compactions ?? realCompactions}
+        compactions={standIn?.compactions ?? (compactionsShown ? realCompactions : {})}
+        life={life}
         intensity={rush ? rush.intensity : model.intensity}
         attention={talk?.attention ?? model.attention}
         autoCamera={prefs.autoCamera}
         onToggleAuto={() => prefs.set({ autoCamera: !prefs.autoCamera })}
-        agents={model.agents}
+        agents={agents}
         roleOf={rush ? (a) => rush.roles[a.id] ?? 'generalist' : model.roleOf}
         apparitions={model.apparitions}
         zombies={model.zombies}
@@ -252,7 +288,10 @@ export function SceneView({
         quality={prefs.quality}
         reducedMotion={prefs.reducedMotion}
         locale={prefs.locale}
-        focus={focus}
+        focus={
+          (life.preview?.loop ? undefined : life.preview?.members[0]) ??
+          (squadLook && squadStandIn ? squadStandIn.look : focus)
+        }
         messages={sceneMessages}
         {...(perfRequested
           ? { onPerfReport: publishPerf, ...(perfFrames ? { perfFrames } : {}) }

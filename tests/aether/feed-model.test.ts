@@ -6,6 +6,7 @@ import {
   buildFeed,
   feedItems,
   mostUrgent,
+  noReplyKey,
   type Speech,
 } from '../../apps/web/src/features/feed-model.js';
 import { toPlainPreview } from '../../packages/kernel/src/index.js';
@@ -121,6 +122,15 @@ it('shows the newest reply as plain text and the title and place of each session
   expect(item!.label).toBe('Fix login');
   expect(item!.where).toBe('aether · main');
   expect(toPlainPreview('see [the docs](https://x.y) now')).toBe('see the docs now');
+});
+
+it('says "No reply yet" only once the replies are known, and only for a running session', () => {
+  const s = session('claude:r', { hook: hook('working', 'PreToolUse') });
+  const row = (speech: Record<string, Speech> | undefined) =>
+    feedItems(buildFeed({ sessions: [s], agents: [agentFor(s)], speech, seen: {}, now: NOW }))[0]!;
+  expect(noReplyKey(row(undefined))).toBe('feedReplyNotLoaded');
+  expect(noReplyKey(row({}))).toBe('feedNoReply');
+  expect(noReplyKey({ ...row({}), session: { ...s, process: 'none' } })).toBe('feedReplyNotLoaded');
 });
 
 it('says how long ago in both languages', () => {

@@ -8,6 +8,7 @@ import type { useSceneNavigation } from './scene-navigation.js';
 import { labelsOf } from './scene-markers.js';
 import type { SceneBridge } from './SceneBridge.js';
 import { useEmotes, type EmoteResult } from './use-emotes.js';
+import type { PoseApi } from './use-pose-cues.js';
 import { useAnnouncer, useCharacterMarks, useHoverCard } from './use-interaction.js';
 import { useMarquee } from './use-marquee.js';
 import { useSeatDrag, type SeatMove } from './use-seat-drag.js';
@@ -66,6 +67,8 @@ type Params = {
   canArrange: boolean;
   onMoveSeat: ((move: SeatMove) => void) | undefined;
   hasGroupBar: boolean;
+  /** The pose registry the emotes ask (see use-pose-cues.ts). */
+  pose: PoseApi['request'];
 };
 
 /**
@@ -104,7 +107,7 @@ export function useSceneInteraction(p: Params) {
     stage,
   });
   const bridge = useRef<SceneBridge | null>(null);
-  const emotes = useEmotes();
+  const emotes = useEmotes(p.pose);
   const hoverId = useHoverCard(p.hovered);
   const seatDrag = useSeatDrag({
     layout: p.layout,

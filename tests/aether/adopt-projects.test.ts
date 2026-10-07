@@ -1,6 +1,11 @@
 import { expect, it } from 'vitest';
 import type { AttributedSession } from '../../packages/contracts/src/index.js';
-import { unclaimedRepos } from '../../apps/web/src/adoptProjects.js';
+import {
+  dueRepos,
+  noteAdoption,
+  unclaimedRepos,
+  type AdoptTracker,
+} from '../../apps/web/src/adoptProjects.js';
 
 const session = (main: string | null, projectId: string | null): AttributedSession =>
   ({
@@ -41,4 +46,21 @@ it('proposes each unowned repository once and skips owned, non-git and scratch d
     session('/private/tmp/scratch', null),
   ]);
   expect(found).toEqual([{ root: '/Users/a/Tools/one', name: 'one' }]);
+});
+
+it('retries a failed adoption with a growing wait, a bounded number of times, and never one that worked', () => {
+  const repos = [{ root: '/a/one', name: 'one' }];
+  const tracker: AdoptTracker = new Map();
+  expect(dueRepos(repos, tracker, 0)).toEqual(repos);
+  noteAdoption(tracker, '/a/one', false, 0);
+  expect(dueRepos(repos, tracker, 1999)).toEqual([]); // 2 s
+  expect(dueRepos(repos, tracker, 2000)).toEqual(repos);
+  noteAdoption(tracker, '/a/one', false, 2000);
+  expect(dueRepos(repos, tracker, 5999)).toEqual([]); // then 4 s
+  expect(dueRepos(repos, tracker, 6000)).toEqual(repos);
+  noteAdoption(tracker, '/a/one', false, 6000);
+  noteAdoption(tracker, '/a/one', false, 20000);
+  expect(dueRepos(repos, tracker, 1e9)).toEqual([]); // gives up after ADOPT_TRIES
+  noteAdoption(tracker, '/a/two', true, 0);
+  expect(dueRepos([{ root: '/a/two', name: 'two' }], tracker, 1e9)).toEqual([]);
 });

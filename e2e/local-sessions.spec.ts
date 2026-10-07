@@ -1,18 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { signIn } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
 test('local sessions are auto-discovered and shown as observe-only 3D agents', async ({ page }) => {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page);
   // The repository is adopted as its own project; its sessions appear there and not in other projects.
   const picker = page.locator('.project-picker select');
   await expect(picker.locator('option', { hasText: 'fixture-repo' })).toBeAttached({
@@ -45,14 +37,7 @@ test('local sessions are auto-discovered and shown as observe-only 3D agents', a
 test('"show in office" opens the member\'s project and brings its desk into view', async ({
   page,
 }) => {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page);
   await expect(
     page.locator('.project-picker select option', { hasText: 'fixture-repo' }),
   ).toBeAttached({

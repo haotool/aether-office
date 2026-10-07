@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { DEFAULT_LIFE_PREFS, type LifePrefs } from '@aether/office-scene/model';
 import type { Locale } from './i18n.js';
+import { migratePreferences, normalizeLife, PREFS_VERSION } from './prefs-migrate.js';
 import { resolveTheme, useSystemDark, type Theme, type ThemePreference } from './theme.js';
 type Preferences = {
   locale: Locale;
@@ -17,6 +19,10 @@ type Preferences = {
   autoCamera: boolean;
   /** The first-visit camera tour: `auto` plays it once per browser session, `never` is "don't show again" (Replay still works). */
   intro: 'auto' | 'never';
+  /** Office life: the little decorative moments, Calm mode, and which kinds are shown (see the office-life design). */
+  life: LifePrefs;
+  /** Puppet strings: light strings from a control cross to each subagent in a squad. They also need the relation effects. */
+  strings: boolean;
   /** The Git beanstalk rising past the 3D building. On for a desktop, off on a phone, where it would crowd the scene. */
   beanstalk: boolean;
   /** The session panel's width in px; null is the default for the window (features/panel-width.ts). */
@@ -38,6 +44,12 @@ export const usePreferences = create<Preferences>()(
       // that waits for a target to hold still before it taps it.
       autoCamera: !navigator.webdriver,
       intro: 'auto',
+      // Calm mode starts on for a person whose system asks for reduced motion.
+      life: {
+        ...DEFAULT_LIFE_PREFS,
+        calm: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      },
+      strings: true,
       beanstalk: !window.matchMedia('(max-width: 760px)').matches,
       panelWidth: null,
       panelCollapsed: false,
@@ -46,6 +58,13 @@ export const usePreferences = create<Preferences>()(
     }),
     {
       name: 'aether-ui-preferences',
+      version: PREFS_VERSION,
+      migrate: (stored, version) => migratePreferences(stored, version) as unknown as Preferences,
+      // A stored `life` is checked on every load, so a hand-edited or half-written one cannot break the scene.
+      merge: (stored, current) => {
+        const saved = (stored ?? {}) as Partial<Preferences>;
+        return { ...current, ...saved, life: normalizeLife(saved.life, current.life.calm) };
+      },
       partialize: (state) => ({
         locale: state.locale,
         theme: state.theme,
@@ -56,6 +75,8 @@ export const usePreferences = create<Preferences>()(
         view: state.view,
         autoCamera: state.autoCamera,
         intro: state.intro,
+        life: state.life,
+        strings: state.strings,
         beanstalk: state.beanstalk,
         panelWidth: state.panelWidth,
         panelCollapsed: state.panelCollapsed,

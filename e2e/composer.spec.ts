@@ -1,22 +1,13 @@
 import { test, expect, type Page } from '@playwright/test';
+import { NATIVE_SESSION, nativeOrigin, signIn } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 // The composer, against a FAKE interactive CLI (fixtures/processes/claude-tui.mjs, started by
 // scripts/e2e-native-server.ts) and never a model. The server has one terminal-started session to resume; everything
 // after "Continue in AETHER" is the fake CLI running in an AETHER terminal.
-const BASE = 'http://127.0.0.1:4330';
 
 async function login(page: Page) {
-  const runtime = JSON.parse(readFileSync('.data/e2e-native-session.json', 'utf8')) as {
-    directory: string;
-  };
-  await page.goto(BASE);
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page, nativeOrigin(), { session: NATIVE_SESSION });
   // Signed in means the navigation is there: the login page has a `main` too, and a page change while the sign-in is still
   // answering would lose its CSRF token (the next send would be refused).
   await expect(page.getByRole('link', { name: '辦公室', exact: true }).first()).toBeVisible();
@@ -24,6 +15,15 @@ async function login(page: Page) {
 
 /** The panel, composer included, passes axe (contrast too) in the dark theme and the light one. */
 async function expectAccessible(page: Page) {
+  // A menu that is still fading in has a blended colour: axe would measure the contrast of that, not of the finished page.
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+        .map((a) => a.finished),
+    ),
+  );
   for (const theme of ['dark', 'light'] as const) {
     await page.evaluate((t) => (document.documentElement.dataset['theme'] = t), theme);
     const { violations } = await new AxeBuilder({ page })
@@ -36,12 +36,12 @@ async function expectAccessible(page: Page) {
 }
 
 async function openObserved(page: Page) {
-  const projects = (await (await page.request.get(`${BASE}/api/projects`)).json()) as {
+  const projects = (await (await page.request.get(`${nativeOrigin()}/api/projects`)).json()) as {
     id: string;
     name: string;
   }[];
   const project = projects.find((p) => p.name.startsWith('Synthetic browser fixture'))!;
-  await page.goto(`${BASE}/office?project=${project.id}`);
+  await page.goto(`${nativeOrigin()}/office?project=${project.id}`);
   const panel = page.locator('.session-panel');
   const row = panel.locator('.feed-row').first();
   await expect(row).toBeVisible({ timeout: 20000 });
@@ -169,12 +169,12 @@ test('phone: Enter is a new line, Send is a button, quick replies are one tap', 
   });
   const page = await context.newPage();
   await login(page);
-  const projects = (await (await page.request.get(`${BASE}/api/projects`)).json()) as {
+  const projects = (await (await page.request.get(`${nativeOrigin()}/api/projects`)).json()) as {
     id: string;
     name: string;
   }[];
   const project = projects.find((p) => p.name.startsWith('Synthetic browser fixture'))!;
-  await page.goto(`${BASE}/office?project=${project.id}`);
+  await page.goto(`${nativeOrigin()}/office?project=${project.id}`);
   await page.getByRole('button', { name: '開啟 session 列表' }).tap();
   await page.locator('.session-sheet.half .feed-row').first().tap();
   const full = page.locator('.session-sheet.full');

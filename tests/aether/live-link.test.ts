@@ -33,7 +33,12 @@ it('maps changes to the queries they make stale, once each', () => {
   ]);
   expect(
     queriesFor([change('claude:a', 'transcript', 'tool'), change('claude:b', 'transcript')]),
-  ).toEqual([['local-sessions'], ['transcript', 'claude:a'], ['transcript', 'claude:b']]);
+  ).toEqual([
+    ['local-sessions'],
+    ['transcript', 'claude:a'],
+    ['usage'],
+    ['transcript', 'claude:b'],
+  ]);
   expect(queriesFor([])).toEqual([]);
 });
 

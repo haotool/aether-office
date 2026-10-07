@@ -4,7 +4,7 @@ import { usePreferences } from '../state.js';
 import { useT } from '../ui.js';
 import { Avatar } from './Avatar.js';
 import { FEED_AVATAR_STATE } from './feed-avatar.js';
-import { ago, type FeedItem } from './feed-model.js';
+import { ago, noReplyKey, type FeedItem } from './feed-model.js';
 
 /** What a session's row says: who, the newest thing it said, what it is doing, how long ago. `extra` goes under the meta line. */
 export function FeedRowBody({ item, extra }: { item: FeedItem; extra?: ReactNode }) {
@@ -48,8 +48,7 @@ export function FeedRowBody({ item, extra }: { item: FeedItem; extra?: ReactNode
         </span>
         {extra}
         <span className={`feed-reply ${item.reply ? '' : 'none'}`}>
-          {item.reply ??
-            t(item.session.process === 'running' ? 'feedNoReply' : 'feedReplyNotLoaded')}
+          {item.reply ?? t(noReplyKey(item))}
         </span>
         {context !== null && (
           <span

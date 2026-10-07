@@ -84,6 +84,12 @@ expected. For a feature, describe the problem first; a design discussion before 
 
 ## Licensing
 
-By contributing you agree that your contribution is licensed under the [MIT License](LICENSE). Do not paste code from
-projects with incompatible licenses (GPL, AGPL, source-available terms); take the idea, write the code, and credit the
-source in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) where it adapts something.
+By contributing you agree that your contribution is licensed under the [MIT License](LICENSE). Please sign off your commits
+(`git commit -s`) to certify the [Developer Certificate of Origin](https://developercertificate.org/): that you wrote the change
+or otherwise have the right to submit it under that license.
+
+Do not paste code from projects with incompatible licenses (GPL, AGPL, source-available or non-commercial terms), and do not
+commit code an AI assistant reproduced from such a project; take the idea and write the code. Where you adapt code under a
+compatible license, keep its notice and record it as the [licence policy](docs/legal/licence-policy.md#code-from-other-projects)
+describes. A new dependency must have an approved license: run `pnpm run notices` and commit the regenerated
+`THIRD_PARTY_NOTICES.md` (CI checks it).

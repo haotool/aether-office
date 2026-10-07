@@ -12,6 +12,27 @@ describe('previewParams', () => {
     expect(previewParams('preview=life&effect=rubber-duck&t=1500')).toEqual(want);
   });
 
+  it('takes several effects joined by commas, up to six', () => {
+    expect(previewParams('?preview=life&effect=rubber-duck,ci-lamp&t=100')).toEqual({
+      effect: 'rubber-duck,ci-lamp',
+      t: 100,
+    });
+    expect(previewParams('?preview=life&effect=a,b,c,d,e,f')).not.toBeNull();
+    expect(previewParams('?preview=life&effect=a,b,c,d,e,f,g')).toBeNull();
+    expect(previewParams('?preview=life&effect=a,,b')).toBeNull();
+    expect(previewParams('?preview=life&effect=a,')).toBeNull();
+  });
+
+  it('takes a value after a colon, for the effects that read one', () => {
+    expect(previewParams('?preview=life&effect=ci-stack:0,tech-debt:60&t=100')).toEqual({
+      effect: 'ci-stack:0,tech-debt:60',
+      t: 100,
+    });
+    expect(previewParams('?preview=life&effect=ci-stack:')).toBeNull();
+    expect(previewParams('?preview=life&effect=ci-stack:x')).toBeNull();
+    expect(previewParams('?preview=life&effect=ci-stack:1:2')).toBeNull();
+  });
+
   it('defaults the time to 0', () => {
     expect(previewParams('?preview=life&effect=r8')).toEqual({ effect: 'r8', t: 0 });
   });

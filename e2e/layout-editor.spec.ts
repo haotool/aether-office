@@ -1,18 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { signIn } from './support/sign-in.js';
 
 test('the layout editor adds, moves, undoes, redoes and saves, and the saved layout survives a reload', async ({
   page,
 }) => {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page);
   const projectId = (
     (await (await page.request.get('/api/projects')).json()) as { id: string }[]
   )[0]!.id;
@@ -59,14 +51,7 @@ test('the layout editor adds, moves, undoes, redoes and saves, and the saved lay
 test('the layout editor adds a squad zone beside a desk, saves it as layout version 2 and reloads it', async ({
   page,
 }) => {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page);
   const projectId = (
     (await (await page.request.get('/api/projects')).json()) as { id: string }[]
   )[0]!.id;
