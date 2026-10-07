@@ -123,7 +123,9 @@ export function aggregate(input: {
   const providers = { claude: new Scope(WINDOW_DAYS), codex: new Scope(WINDOW_DAYS) };
   const rows = new Map<string, Row>();
   for (const { transcript, entry } of input.tracked) {
-    const at = input.attributions.get(transcript.sessionKey) ?? {
+    // A Codex subagent's rollout belongs to the session that spawned it, as a Claude subagent's file does.
+    const session = entry.parent ? `codex:${entry.parent}` : transcript.sessionKey;
+    const at = input.attributions.get(session) ?? {
       department: null,
       repo: entry.repo ?? 'unknown',
     };
@@ -134,7 +136,6 @@ export function aggregate(input: {
       const i = index.get(day);
       if (i === undefined) continue;
       const inRange = i >= from;
-      const session = transcript.sessionKey;
       for (const scope of [building, office, project, providers[transcript.provider]])
         scope.take(i, b, session, inRange);
       if (!inRange) continue;

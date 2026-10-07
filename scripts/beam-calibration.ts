@@ -83,8 +83,13 @@ const active = (minutes: Iterable<{ tokens: number; tools: number }>) =>
 const squads = new Map<string, Minutes>();
 const perAgent: { tokens: number[]; tools: number[] } = { tokens: [], tools: [] };
 let agentFiles = 0;
+// Files over the size cap are left out, so the distribution leans to small sessions: how many are left out is printed.
+let skippedClaude = 0;
 for (const file of walk(CLAUDE, (p) => /\/subagents\/agent-[^/]*\.jsonl$/.test(p))) {
-  if (statSync(file).size > MAX_FILE_BYTES) continue;
+  if (statSync(file).size > MAX_FILE_BYTES) {
+    skippedClaude += 1;
+    continue;
+  }
   agentFiles += 1;
   const minutes = minutesOf(file, 'claude');
   for (const m of active(minutes.values())) {
@@ -102,10 +107,9 @@ for (const file of walk(CLAUDE, (p) => /\/subagents\/agent-[^/]*\.jsonl$/.test(p
 const squadMinutes = [...squads.values()].flatMap((s) => active(s.values()));
 
 // Codex rollouts: the newest ones that fit the budget (their tool calls are the beam's rate for Codex squads).
-const rollouts = [...walk(CODEX, (p) => /rollout-[^/]*\.jsonl$/.test(p))]
-  .filter((p) => statSync(p).size <= MAX_FILE_BYTES)
-  .sort()
-  .slice(-CODEX_FILES);
+const allRollouts = [...walk(CODEX, (p) => /rollout-[^/]*\.jsonl$/.test(p))].sort();
+const fitting = allRollouts.filter((p) => statSync(p).size <= MAX_FILE_BYTES);
+const rollouts = fitting.slice(-CODEX_FILES);
 const codexMinutes = rollouts.flatMap((f) => active(minutesOf(f, 'codex').values()));
 
 console.log(
@@ -114,6 +118,11 @@ console.log(
       claudeSubagentFiles: agentFiles,
       claudeSquads: squads.size,
       codexRollouts: rollouts.length,
+      skipped: {
+        claudeOverSizeCap: skippedClaude,
+        codexOverSizeCap: allRollouts.length - fitting.length,
+        codexOlderThanNewest: fitting.length - rollouts.length,
+      },
       tokensPerMinute: {
         subagent: summary(perAgent.tokens.filter((n) => n > 0)),
         squad: summary(squadMinutes.map((m) => m.tokens).filter((n) => n > 0)),

@@ -10,6 +10,7 @@ import {
   ShaderMaterial,
   Uint16BufferAttribute,
 } from 'three';
+import { DITHER_END, DITHER_PARS, DITHERED } from '../dither.js';
 
 const SEGMENTS = 48;
 const SIDES = 16;
@@ -52,6 +53,7 @@ const vertexShader = /* glsl */ `
   }`;
 
 const fragmentShader = /* glsl */ `
+  ${DITHER_PARS}
   uniform float uPulse;   // the amber breathing, 0..1 (a constant when motion is reduced)
   varying float vT;
   varying vec3 vNormal;
@@ -68,6 +70,7 @@ const fragmentShader = /* glsl */ `
     vec3 tone = mix(vTone, vec3(1.0), level * 0.5);
     tone = mix(tone, vec3(1.0, 0.78, 0.36), vMeta.z * uPulse);
     gl_FragColor = vec4(tone, alpha);
+    ${DITHER_END}
   }`;
 
 /** The tube (uv.x round it, uv.y along it) with an instanced start, end, meta and tone per squad, and its material. */
@@ -102,6 +105,7 @@ export function createBeam() {
     vertexShader,
     fragmentShader,
     uniforms: { uPulse: { value: 1 } },
+    ...DITHERED,
     transparent: true,
     depthWrite: false,
     blending: AdditiveBlending,

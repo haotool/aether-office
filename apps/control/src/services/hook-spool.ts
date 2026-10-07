@@ -202,10 +202,8 @@ export function deriveHookState(
   return states;
 }
 
-export async function readHookState(
-  file: string,
-  now = Date.now(),
-): Promise<Map<string, HookState>> {
+// The last TAIL_BYTES of a spool file; null when there is none.
+async function tail(file: string): Promise<string | null> {
   try {
     const { size } = await stat(file);
     const handle = await open(file, 'r');
@@ -213,11 +211,21 @@ export async function readHookState(
       const length = Math.min(size, TAIL_BYTES);
       const buffer = Buffer.alloc(length);
       await handle.read(buffer, 0, length, size - length);
-      return deriveHookState(parseSpool(buffer.toString('utf8')), now);
+      return buffer.toString('utf8');
     } finally {
       await handle.close();
     }
   } catch {
-    return new Map(); // no spool: hooks not installed
+    return null;
   }
+}
+
+// The receiver moves a full spool to `<file>.1` and starts a new one, so the newest records may sit at the end of the
+// rotated file: read its tail first, then the current file's, or every session's state would vanish at each rotation.
+export async function readHookState(
+  file: string,
+  now = Date.now(),
+): Promise<Map<string, HookState>> {
+  const parts = [await tail(`${file}.1`), await tail(file)].filter((p) => p !== null);
+  return deriveHookState(parseSpool(parts.join('\n')), now); // no spool: hooks not installed
 }

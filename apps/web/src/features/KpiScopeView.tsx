@@ -2,6 +2,7 @@ import type { AttributedSession, GitKpiResponse, UsageResponse } from '@aether/c
 import { DEPARTMENTS } from '@aether/kernel';
 import { usePreferences } from '../state.js';
 import { useT } from '../ui.js';
+import { emptyScope } from '../usage-compat.js';
 import { CountUp } from './CountUp.js';
 import { DailyBars, ShareRow, StackedBar } from './kpi-charts.js';
 import { KpiGit } from './KpiGit.js';
@@ -12,9 +13,17 @@ const hours = (minutes: number) =>
   minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes}m`;
 const SHOWN_DAYS = { today: 7, '7d': 7, '30d': 30 } as const;
 
-function Headline({ label, children }: { label: string; children: React.ReactNode }) {
+function Headline({
+  label,
+  title,
+  children,
+}: {
+  label: string;
+  title?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="kpi-tile">
+    <div className="kpi-tile" title={title}>
       <dt>{label}</dt>
       <dd>{children}</dd>
     </div>
@@ -45,10 +54,11 @@ export function KpiScopeView({
   const t = useT();
   const locale = usePreferences((s) => s.locale);
   const department = office === null ? null : DEPARTMENTS[office]!;
+  // An office that is not in the answer is an empty one: never the building's numbers under the office's name.
   const scope =
     office === null
       ? usage.building
-      : (usage.offices.find((o) => o.floor === office)?.scope ?? usage.building);
+      : (usage.offices.find((o) => o.floor === office)?.scope ?? emptyScope(usage.days.length));
   const kpi = office === null ? git?.building : git?.offices.find((o) => o.floor === office)?.kpi;
   const totals = scope.totals;
   const shown = SHOWN_DAYS[range];
@@ -56,8 +66,24 @@ export function KpiScopeView({
   const top = usage.sessions.filter((s) => department === null || s.department === department.id);
   const titles = new Map(sessions.map((s) => [s.key, s.title]));
   const empty = tokensOf(totals) === 0 && totals.cacheRead === 0;
+  const unplaced = tokensOf(usage.unplaced.totals);
+  const { scan } = usage;
   return (
     <div className="kpi-scope">
+      {(scan.truncated || scan.failedFiles > 0 || scan.skippedLines > 0) && (
+        <p className="kpi-warn" role="status">
+          {scan.truncated && (
+            <>
+              {t('kpiTruncated')}: {scan.files} / {scan.found}.{' '}
+            </>
+          )}
+          {(scan.failedFiles > 0 || scan.skippedLines > 0) && (
+            <>
+              {t('kpiScanIssues')}: {scan.failedFiles} · {scan.skippedLines}.
+            </>
+          )}
+        </p>
+      )}
       <section className="kpi-section">
         <dl className="kpi-tiles kpi-headline">
           <Headline label={t('kpiTokens')}>
@@ -69,12 +95,19 @@ export function KpiScopeView({
           <Headline label={t('kpiSessions')}>
             <CountUp value={totals.sessions} />
           </Headline>
-          <Headline label={t('kpiActive')}>{hours(totals.activeMinutes)}</Headline>
+          <Headline label={t('kpiActive')} title={t('kpiActiveNote')}>
+            {hours(totals.activeMinutes)}
+          </Headline>
           <Headline label={t('kpiTools')}>
             <CountUp value={totals.toolCalls} />
           </Headline>
         </dl>
         {empty && <p className="kpi-empty">{t('kpiNoTokens')}</p>}
+        {unplaced > 0 && (
+          <p className="kpi-note">
+            <b>{t('kpiUnplaced')}</b>: {compact(unplaced, locale)} · {t('kpiUnplacedNote')}
+          </p>
+        )}
       </section>
       {!empty && (
         <>
@@ -95,7 +128,7 @@ export function KpiScopeView({
                 {modelShares(scope).map((m) => (
                   <ShareRow
                     key={m.model}
-                    label={m.model}
+                    label={m.model === 'unknown' ? t('kpiModelUnknown') : m.model}
                     value={compact(m.tokens, locale)}
                     share={m.share}
                     note={`${Math.round(m.share * 100)}%`}
@@ -140,8 +173,12 @@ export function KpiScopeView({
           )}
         </>
       )}
-      <KpiLimits limits={usage.limits} now={now} />
-      <KpiGit kpi={kpi} loading={gitLoading} />
+      <KpiLimits limits={usage.limits} now={now} timeZone={usage.timezone} />
+      <KpiGit
+        kpi={kpi}
+        loading={gitLoading}
+        omitted={office === null ? (git?.omittedRepos ?? 0) : 0}
+      />
     </div>
   );
 }

@@ -82,9 +82,17 @@
 .scene-label[data-state='waiting_permission'] {
   --state: var(--scene-gold);
   border-color: color-mix(in srgb, var(--scene-gold) 75%, transparent);
-  animation:
-    tag-in var(--dur) var(--ease) both,
-    tag-attention 1.8s ease-in-out infinite;
+}
+/* The amber breath is a glow on a pseudo-element that only fades (opacity runs on the compositor; animating box-shadow repaints) */
+.scene-label[data-state='waiting_permission']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--scene-gold) 70%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  animation: tag-attention 1.8s ease-in-out infinite;
 }
 .scene-label[data-state='error'] {
   --state: var(--scene-red);
@@ -107,13 +115,24 @@
   border-radius: inherit;
   background: linear-gradient(
     100deg,
-    transparent 30%,
-    color-mix(in srgb, var(--scene-mint) 28%, transparent) 50%,
-    transparent 70%
+    transparent,
+    color-mix(in srgb, var(--scene-mint) 28%, transparent),
+    transparent
   );
-  background-size: 250% 100%;
   pointer-events: none;
-  animation: tag-shimmer 2.8s linear infinite;
+  animation: tag-sheen 2.8s linear infinite;
+}
+/* The band slides by `translate` (compositor, no repaint), so the chip clips it; a finger's 44px area hangs outside the chip and
+   would be clipped too, so on touch the band breathes in place instead */
+@media (pointer: fine) {
+  .scene-label[data-state='working'] {
+    overflow: clip;
+  }
+}
+@media (pointer: coarse) {
+  .scene-label[data-state='working']::before {
+    animation: tag-sheen-still 1.4s ease-in-out infinite alternate;
+  }
 }
 
 /* Density by distance: far, only the mark and the dot (a hovered or selected tag always opens) */
@@ -123,7 +142,9 @@
 .scene-label[data-density='far']:not(.selected):not(.hovered) :is(.tag-name, .tag-unread) {
   display: none;
 }
-.scene-label[data-density='far']:not(.selected):not(.hovered)::before {
+.scene-label[data-density='far']:not(.selected):not(.hovered):not(
+    [data-state='waiting_permission']
+  )::before {
   display: none;
 }
 
@@ -179,19 +200,25 @@
     translate: 0 calc(-1 * var(--space-2));
   }
 }
-@keyframes tag-shimmer {
+@keyframes tag-sheen {
   from {
-    background-position: 150% 0;
+    translate: -100% 0;
   }
   to {
-    background-position: -100% 0;
+    translate: 100% 0;
+  }
+}
+@keyframes tag-sheen-still {
+  from {
+    opacity: 0.2;
+  }
+  to {
+    opacity: 1;
   }
 }
 @keyframes tag-attention {
   50% {
-    box-shadow:
-      0 0 16px color-mix(in srgb, var(--scene-gold) 70%, transparent),
-      0 3px 10px var(--shade-soft);
+    opacity: 1;
   }
 }
 @media (prefers-reduced-motion: reduce) {

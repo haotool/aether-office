@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Plus, BookOpen } from 'lucide-react';
 import type { Work } from '@aether/contracts';
 import { api, execute } from '../api.js';
-import { Modal, Field, Fold, PageHeading, Empty, Badge, useT } from '../ui.js';
+import { Modal, Field, Fold, PageHeading, Empty, Badge, useT, whyNot } from '../ui.js';
 type Entry = {
   id: string;
   title: string;
@@ -55,6 +55,7 @@ export function Knowledge({
               setAdding(true);
             }}
             disabled={!canWrite}
+            {...whyNot(canWrite, t('needOperator'))}
           >
             <Plus size={16} />
             {t('proposeKnowledge')}

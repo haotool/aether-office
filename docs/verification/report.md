@@ -2,12 +2,12 @@
 
 Generated from `docs/verification/features.json` (docs/verification/features.json). Do not edit by hand: run `pnpm verification:report`.
 
-Features: **174**. Implementation: 144 implemented, 30 partial, 0 not started.
+Features: **175**. Implementation: 145 implemented, 30 partial, 0 not started.
 
 | Verification | Count | Meaning |
 |---|---|---|
 | passed | 92 | Verified by the listed tests at the scope stated in the ledger. |
-| partial | 82 | Some behaviour is verified; the blockers column names what is not. |
+| partial | 83 | Some behaviour is verified; the blockers column names what is not. |
 | blocked | 0 | Cannot be verified in this environment (for example, it needs paid or authenticated provider sessions). |
 | failed | 0 | A check ran and failed. |
 | not_run | 0 | No check has been run. |
@@ -23,7 +23,7 @@ A passing build or test run is not a claim of production readiness. This file li
 | ENV-02 | implemented | 依賴有 registry metadata、peer／engine 相容查證與例外紀錄。 | The registry audit itself is run by hand and writes local evidence; the policy test enforces exact pins and no stale exceptions in CI |
 | ENV-03 | implemented | 乾淨目錄可以 frozen-lockfile 安裝，不依賴開發者 global packages。 | Verified from a fresh clone on macOS arm64 with a warm pnpm store; a cold-cache or other-OS install was not run |
 | ENV-04 | implemented | setup／migration／seed 重跑不破壞既有資料或重複 demo。 | — |
-| ENV-05 | implemented | build、typecheck、lint 在同一鎖定環境成功。 | Run on macOS arm64 with Node 24.21.0 and pnpm 12.8.1 only |
+| ENV-05 | implemented | build、typecheck、lint 在同一鎖定環境成功。 | Run on macOS arm64 with Node 24.21.0 and pnpm 12.8.1; CI runs typecheck, lint and build on Ubuntu with the Node of .node-version; Windows was not run. |
 | ENV-06 | implemented | 既有 git dirty changes 不被覆寫／reset／刪除。 | Covered for managed workspaces and integration; the platform never operates on the user's main working tree |
 | ENV-07 | implemented | doctor 能區分 missing CLI、auth required、native module failure、healthy。 | — |
 | ENV-08 | implemented | README 命令在真正乾淨環境重現，無未宣告步驟。 | Install, build, run setup --demo and the built control were reproduced from a fresh clone; found and fixed that pnpm's built-in setup and doctor shadow the scripts. The pnpm demo watcher is not part of the script |
@@ -34,13 +34,13 @@ A passing build or test run is not a claim of production readiness. This file li
 | ARC-07 | implemented | DEMO／LIVE／OBSERVE／REPLAY 全程有可辨識來源。 | Replay is a read-only event list up to a chosen seq; it does not rebuild historical entity snapshots |
 | ARC-08 | implemented | 進度與完成度不來自隨機資料或虛構百分比。 | Lint bans Math.random and shows no percentage; it cannot prove every future display is state-derived |
 | CLA-06 | implemented | 忙碌時的訊息投遞遵守已驗證的 injection capability。 | No adapter supports mid-turn or turn-boundary injection (capability none): messages stay in the durable inbox |
-| CLA-08 | implemented | 真實 Claude smoke 有 evidence，或精確標記 live blocked。 | 一次 whoami 與一次訊息互傳；未測真實程式修改與批准指令 |
+| CLA-08 | implemented | 真實 Claude smoke 有 evidence，或精確標記 live blocked。 | The live evidence is one whoami and one message exchange with Claude; a real code change and an approved command were not tested. |
 | CDX-01 | implemented | schema 從對應 binary／官方版本生成並有版本紀錄。 | — |
-| CDX-02 | implemented | initialize／initialized 與 request correlation 正確。 | 未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑 |
-| CDX-04 | implemented | item／tool／message streaming 去重且能容忍延遲。 | 未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑 |
-| CDX-05 | implemented | interrupt 對正確 active turn 執行，無誤殺另一工作。 | 未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑 |
-| CDX-07 | implemented | approval 回覆對應正確 request、session 與參數。 | 未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑 |
-| CDX-08 | implemented | 真實 Codex smoke 有 evidence，或精確標記 live blocked。 | 一次 whoami 與一次訊息互傳；未測真實程式修改與批准指令 |
+| CDX-02 | implemented | initialize／initialized 與 request correlation 正確。 | Initialize and request correlation are verified with a scripted app-server; no real Codex turn ran (no live model is authorized). |
+| CDX-04 | implemented | item／tool／message streaming 去重且能容忍延遲。 | Streaming de-duplication and tolerance of late items are verified with a scripted app-server; no real Codex turn ran. |
+| CDX-05 | implemented | interrupt 對正確 active turn 執行，無誤殺另一工作。 | Interrupt targeting is verified with a scripted app-server; no real Codex turn ran. |
+| CDX-07 | implemented | approval 回覆對應正確 request、session 與參數。 | Approval reply matching is verified with a scripted app-server; no real Codex turn ran. |
+| CDX-08 | implemented | 真實 Codex smoke 有 evidence，或精確標記 live blocked。 | The live evidence is one whoami and one message exchange with Codex; a real code change and an approved command were not tested. |
 | EVT-01 | implemented | state＋event＋outbox 在同一 transaction 提交。 | — |
 | EVT-02 | implemented | 同 command idempotency key 不產生重複結果。 | — |
 | EVT-03 | implemented | duplicate provider event 不重複改 projection／usage。 | 僅 synthetic/本機測試，非 live 模型。 |
@@ -62,10 +62,10 @@ A passing build or test run is not a claim of production readiness. This file li
 | TSK-07 | implemented | 重試上限／停滯診斷／人類 escalation 有實際效果。 | Provider rate-limit evidence is reported as null: it is never inferred |
 | TSK-08 | implemented | cancel propagation 不把取消中的結果錯標新成功工作。 | — |
 | GIT-01 | implemented | writer 使用專屬 worktree，不直接改使用者 main 目錄。 | — |
-| GIT-02 | implemented | 路徑空白／Unicode／非法 ref／symlink 都有測試。 | 僅在 macOS 驗證；Windows 路徑語意（大小寫、保留名稱）未測 |
+| GIT-02 | implemented | 路徑空白／Unicode／非法 ref／symlink 都有測試。 | Verified on macOS only; Windows path semantics (case, reserved names) are untested. |
 | GIT-03 | implemented | file reservation 的 advisory 屬性與衝突清楚呈現。 | Advisory only: conflict check is conservative on directory scope; not yet enforced at scheduler or merge gates |
 | GIT-04 | implemented | dirty worktree cleanup 不刪使用者未提交內容。 | — |
-| GIT-05 | implemented | diff 支援 untracked／binary／large file 安全降級。 | 僅在 macOS 驗證；Windows 路徑語意（大小寫、保留名稱）未測 |
+| GIT-05 | implemented | diff 支援 untracked／binary／large file 安全降級。 | Large, binary and untracked diff degradation is verified on macOS only; Windows path handling is untested. |
 | GIT-07 | implemented | test evidence 綁 head SHA，base 漂移會重新驗證。 | — |
 | SEC-01 | implemented | owner／operator／reviewer／viewer／agent 實際 server grants 生效。 | — |
 | SEC-02 | implemented | 每個 query、WS subscription、MCP tool 做 scope 檢查。 | Every HTTP route is swept for authentication and cross-project access; the stream is SSE (no WebSocket exists) and is covered by the revocation test |
@@ -78,8 +78,8 @@ A passing build or test run is not a claim of production readiness. This file li
 | REM-04 | implemented | 撤銷身份立即阻止新命令與敏感 stream。 | — |
 | REM-05 | implemented | local spool 重連後按序去重，不丟已承諾資料。 | The spool is a 8 MB JSON file; a longer outage fails closed with RUNNER_SPOOL_FULL rather than dropping events |
 | REM-06 | implemented | 斷線時依 policy 停新派工，恢復不重複執行。 | While control is unreachable a runner cannot claim, so no new dispatch starts; an in-flight run keeps going and is reported when the link returns |
-| STD-01 | implemented | MCP 工具實際呼叫 kernel，不是回固定成功文字。 | Workflow 啟動刻意不提供給 agent（僅人類可啟動）；未以真實 provider CLI 連接此 MCP server |
-| STD-02 | implemented | MCP identity／resource／message scope 可測且隔離。 | Workflow 啟動刻意不提供給 agent（僅人類可啟動）；未以真實 provider CLI 連接此 MCP server |
+| STD-01 | implemented | MCP 工具實際呼叫 kernel，不是回固定成功文字。 | The tools are tested against the kernel; no real provider CLI was connected to this MCP server. |
+| STD-02 | implemented | MCP identity／resource／message scope 可測且隔離。 | Scope isolation is tested with synthetic identities; starting a workflow is deliberately not offered to agents (humans only), and no real provider CLI was connected. |
 | STD-04 | implemented | ACP wire／SDK／schema 版本分開記錄。 | — |
 | STD-05 | implemented | A2A gateway 的 AgentCard 宣告能力有對應實作。 | The card declares no streaming or push because neither is implemented |
 | STD-06 | implemented | A2A task／message／cancel／artifact 路徑有 contract test。 | Verified with the official @a2a-js/sdk client over real HTTP; no interop run against a third-party A2A server |
@@ -112,28 +112,28 @@ A passing build or test run is not a claim of production readiness. This file li
 | OBS-CONTEXT-01 | implemented | 每個 session 回報 context 視窗用量與壓縮時間（不解析逐字稿文字）；辦公室以量表、名牌與壓縮效果呈現，並顯示最新提問與回覆的氣泡（有界、已遮蔽、不儲存）。 | — |
 | OBS-NAV-01 | implemented | 預設導覽只顯示 CLI 使用者需要的頁面，進階頁面在設定開啟；通知預設開啟、只含專案名稱；手機可由頂端列掃 QR 配對。 | — |
 
-## partial (82)
+## partial (83)
 
 | ID | Implementation | Requirement | Blockers |
 |---|---|---|---|
-| ARC-03 | partial | 所有公開 command／event 有 schema 與版本。 | PTY/observe/ACP 等尚未完成的公開契約仍待實作。 |
-| ARC-04 | partial | Agent identity、session、run、thread、turn、task ID 不混用。 | PTY/observe/ACP 等尚未完成的公開契約仍待實作。 |
-| CLA-01 | partial | 實作並驗證安裝版本適用的 CLI／SDK 啟動參數。 | synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。 |
-| CLA-02 | partial | structured stream 的 partial／complete／error 正常解析。 | synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。 |
-| CLA-03 | implemented | session resume 綁定原 project 與對應 provider session。 | 合成Codex resume與UI已測；真Codex/Claude resume尚未實測。 |
+| ARC-03 | partial | 所有公開 command／event 有 schema 與版本。 | Schemas and versions exist for the commands and events that ship; the PTY, observe and ACP contracts are not complete public contracts yet (RUN-03 to RUN-08). |
+| ARC-04 | partial | Agent identity、session、run、thread、turn、task ID 不混用。 | ID separation is checked for the contracts that exist; the identifiers of the unfinished PTY, observe and ACP contracts are not covered yet. |
+| CLA-01 | partial | 實作並驗證安裝版本適用的 CLI／SDK 啟動參數。 | Launch arguments are verified against a synthetic app-server and the Claude normalizer; no live model run is authorized. |
+| CLA-02 | partial | structured stream 的 partial／complete／error 正常解析。 | Partial, complete and error parsing is verified on synthetic app-server and Claude normalizer input only; no live model run is authorized. |
+| CLA-03 | implemented | session resume 綁定原 project 與對應 provider session。 | Resume is tested with a synthetic Codex and the UI; a real Claude resume has not been run. |
 | CLA-04 | implemented | hook 安裝／更新／移除保留既有使用者設定。 | Codex reported all 9 installed hooks as trusted and enabled through its own hooks/list, and the installed commands ran under a minimal environment, but no Codex session has fired them yet; Claude hooks are installed only for this repository (project scope); Codex payloads for spawned threads (session_id vs thread id) were not observed |
-| CLA-05 | partial | 工具事件與 session／parent 的對應可驗證。 | synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。 |
-| CLA-07 | partial | permission／auth／rate-limit 問題不偽裝成正常工作。 | synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。 |
-| CDX-03 | implemented | thread／turn 的 start／resume 流程正確。 | 合成Codex resume與UI已測；真Codex/Claude resume尚未實測。 |
+| CLA-05 | partial | 工具事件與 session／parent 的對應可驗證。 | The mapping of tool events to session and parent is verified on synthetic input only; no live model run is authorized. |
+| CLA-07 | partial | permission／auth／rate-limit 問題不偽裝成正常工作。 | Permission, auth and rate-limit states are verified on synthetic input only; the resume and steer authorization flow in the UI is still to be done. |
+| CDX-03 | implemented | thread／turn 的 start／resume 流程正確。 | Thread start and resume are tested with a synthetic Codex and the UI; a real Codex resume has not been run. |
 | CDX-06 | implemented | steer 僅在支援時開啟，接受不等於 semantic ack。 | steer 對所有 provider 皆未開放（messageInjection=none），僅驗證未開放時被拒；支援時的 semantic ack 待 live 驗證 |
-| RUN-01 | partial | 關掉 browser 不會自動殺死受管理的工作。 | macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。 |
-| RUN-02 | partial | process journal／PID identity 可區分重啟與 PID reuse。 | macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。 |
-| RUN-03 | partial | UTF-8、ANSI、resize、exit code 與 bounded scrollback 正常。 | macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。 |
-| RUN-04 | partial | terminal read／write 分權限，同時只能有合法 takeover owner。 | macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。 |
-| RUN-05 | partial | existing session discovery 需要核准路徑且預設唯讀。 | 已核准fixture的讀取、持久上報、readonly UI及fault tests完成；實際provider檔案相容性未驗證，讀取上限與GUI授權仍有限制。 |
-| RUN-06 | partial | partial line／rotation／未知 transcript schema 有安全處理。 | 已核准fixture的讀取、持久上報、readonly UI及fault tests完成；實際provider檔案相容性未驗證，讀取上限與GUI授權仍有限制。 |
-| RUN-07 | partial | stale／offline／unknown 不被顯示成 idle／success。 | 已核准fixture的讀取、持久上報、readonly UI及fault tests完成；實際provider檔案相容性未驗證，讀取上限與GUI授權仍有限制。 |
-| RUN-08 | partial | structured log session 不顯示不存在的可互動 PTY。 | macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。 |
+| RUN-01 | partial | 關掉 browser 不會自動殺死受管理的工作。 | Verified on macOS with a real PTY and browser; Linux and WSL2 were not run and native Windows is refused. |
+| RUN-02 | partial | process journal／PID identity 可區分重啟與 PID reuse。 | Restart versus PID reuse is verified on macOS; Linux and WSL2 were not run, native Windows is refused, and closing an unknown run by hand is not implemented. |
+| RUN-03 | partial | UTF-8、ANSI、resize、exit code 與 bounded scrollback 正常。 | Verified with a real PTY on macOS; after scrollback truncation a gap notice is shown but the screen is not rebuilt from a serialized ANSI state; Linux and WSL2 were not run. |
+| RUN-04 | partial | terminal read／write 分權限，同時只能有合法 takeover owner。 | Read and write permissions and the single takeover owner are verified on macOS only; Linux and WSL2 were not run and native Windows is refused. |
+| RUN-05 | partial | existing session discovery 需要核准路徑且預設唯讀。 | Approved-path and read-only behaviour is tested on fixtures; real provider files were not used and the GUI authorization is limited. |
+| RUN-06 | partial | partial line／rotation／未知 transcript schema 有安全處理。 | Partial lines, rotation and unknown schemas are tested on fixtures; compatibility with real provider files is unverified and the read limits cap very large files. |
+| RUN-07 | partial | stale／offline／unknown 不被顯示成 idle／success。 | Stale, offline and unknown states are covered by fault tests; the behaviour with real provider files is unverified. |
+| RUN-08 | partial | structured log session 不顯示不存在的可互動 PTY。 | Verified on macOS in the browser; Linux and WSL2 were not run and native Windows is refused. |
 | MSG-05 | implemented | request／reply 有 correlation、timeout 與持久等待狀態。 | Verified with synthetic agents; a real provider answering a durable request is not run |
 | MSG-07 | implemented | thread／spawn／context budget 能停止無限 Agent 對話。 | Thread round limit (32) and per-sender rate limit (60/min) stop ping-pong and a human can open a new thread; spawn depth does not apply because subagents are disabled, and there is no token-based conversation budget |
 | TSK-04 | implemented | Claude→Codex review→fix→test 的 workflow 可完成。 | The template pins Claude engineer and Codex reviewer and the loop is exercised with synthetic providers; a real Claude to Codex run needs paid, authenticated sessions that are not authorised |
@@ -141,37 +141,37 @@ A passing build or test run is not a claim of production readiness. This file li
 | GIT-06 | implemented | review comment 綁 commit／hunk，更新後能辨識過期。 | Comment create/list verified at control level with seeded diff jobs; browser only checks the empty-hunk state, not a full comment round trip; Line anchors are stored but not re-mapped across heads |
 | GIT-08 | implemented | merge conflict 停止交付，不自動覆蓋或無批准 push。 | Candidate branch is not re-verified automatically before delivery; No PR handoff; push is intentionally never performed; Only owner may integrate; base moves are reported, not auto-rebased |
 | SEC-04 | partial | approval 綁 action hash、session、expiry 與真實 provider ack。 | 批准/撤銷回歸已跑；完整 export/PTY/connector trust boundaries 與 live provider ack 待驗。 |
-| SEC-06 | implemented | Markdown／URL／terminal clipboard／SSRF 有回歸測試。 | No Markdown renderer exists yet (all text is shown as text); A2A artifact fetching will reuse safe-fetch when built |
+| SEC-06 | implemented | Markdown／URL／terminal clipboard／SSRF 有回歸測試。 | Markdown is parsed by the kernel into a typed block tree and rendered by the web app as React elements, never as HTML (the lint rule and the text-sink tests enforce it); A2A artifact fetching is not built, so its use of safe-fetch is untested. |
 | REM-01 | implemented | 遠端 runner 以認證 outbound channel 連接 control。 | Control serves plain HTTP on loopback; TLS for remote use must be terminated by a reverse proxy, and no real TLS handshake was tested |
 | REM-07 | implemented | 不同 machine 使用獨立 clone，不共享 SQLite／.git。 | Enforced as: runner state may not live inside an allowed repository; that each machine really uses its own clone is by construction (machine-bound workspaces) and not verified across two real hosts |
 | REM-08 | implemented | 兩個獨立 runner process 的故障／恢復整合測試通過。 | Two real runner processes with the demo provider on one host: revocation, project scope, single-use enrollment and control outage covered; Not covered: SIGKILL of a runner mid-run, journal replay after a runner crash, native Git workspaces across two clones, and any real WAN, HA or Kubernetes setup |
 | STD-03 | implemented | 通用 ACP adapter 真的協商能力、開始 session 並處理事件。 | A real prompt turn was not run against claude-agent-acp or codex-acp (needs paid, authenticated sessions); the real adapter was only negotiated; ACP agents cannot be used for read-only review and cannot resume by default |
 | STD-07 | implemented | 第三方 token／artifact fetch 不繞過 audience／SSRF 邊界。 | The gateway never fetches remote artifact URLs at all (URL parts are refused); an outbound artifact fetcher would reuse safe-fetch and does not exist yet |
 | UIX-01 | implemented | onboarding 從 Demo／Live 選擇到第一工作完整可走。 | Demo sign-in through to a first task is covered; live onboarding (execution policy, runner, provider sign-in) has no guided flow; A live-like run (fresh data dir, setup, start, synthetic sessions) showed what a CLI user meets: setup creates no runner credential, so terminals, Continue in AETHER, the composer and managed agents need `pnpm runner:enroll` plus a native file; the UI now says so, but there is no guided flow for it |
-| UIX-03 | implemented | 所有主要操作按鈕可用或清楚說明不能使用的原因。 | Many disabled controls do not state why they are disabled |
+| UIX-03 | implemented | 所有主要操作按鈕可用或清楚說明不能使用的原因。 | Write actions a viewer cannot use now say why (a title, covered by e2e/accessibility.spec.ts); controls disabled while busy or for missing input still do not |
 | UIX-04 | implemented | 所有主要畫面具有 loading／empty／error／offline／no-permission。 | Loading, empty and offline states are covered; no-permission (viewer) states are not browser-tested; Raw error codes were shown for most failures; the ones a CLI user can reach now have words in both languages, the rest of the roughly 200 codes still show as a code (DAG_CYCLE, INTEGRATION_TOKEN_MISSING and others on the orchestration pages) |
-| VIS-01 | partial | 辦公室是可旋轉／近看的真實 3D，非一張背景圖。 | 24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
-| VIS-02 | partial | 九個空間有辨識度、正確尺度與連續動線。 | 24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
-| VIS-03 | partial | 桌椅／螢幕／建築具有合理厚度、結構與必要細節。 | 24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
-| VIS-04 | partial | 角色有可維護 pivot／骨架與至少指定的主要 animation states。 | 24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
-| VIS-05 | partial | 動畫只映射真實狀態，不製造假的工作或訊息。 | 24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
+| VIS-01 | partial | 辦公室是可旋轉／近看的真實 3D，非一張背景圖。 | The 24 GLB models pass rig, UV, PBR, 24-clip and checksum validation; the performance and VRAM gate is not complete. |
+| VIS-02 | partial | 九個空間有辨識度、正確尺度與連續動線。 | The campus and Earth scale gate is not complete. |
+| VIS-03 | partial | 桌椅／螢幕／建築具有合理厚度、結構與必要細節。 | The physical-contact gate for desks, chairs and screens is not complete. |
+| VIS-04 | partial | 角色有可維護 pivot／骨架與至少指定的主要 animation states。 | Rig and the 24 clips pass validation; the performance and VRAM gate with every animal loaded is not complete. |
+| VIS-05 | partial | 動畫只映射真實狀態，不製造假的工作或訊息。 | The full performance gate (frame time and VRAM) is not complete. |
 | VIS-06 | implemented | messageId 去重，動畫抵達不被當成真正 ACK。 | Dedupe and planning are unit-tested; the moving envelope was not exercised in a browser with an agent-to-agent message; Arrival is decoration and never changes delivery state |
-| VIS-08 | partial | 原創資產／外部依賴都有清楚來源與授權。 | 24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
-| CAM-01 | partial | overview／desk focus／follow／reset 正常且不鑽模。 | 24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。 |
+| VIS-08 | partial | 原創資產／外部依賴都有清楚來源與授權。 | The 24 models are verified by checksum; the full campus and Earth asset gate is not complete. |
+| CAM-01 | partial | overview／desk focus／follow／reset 正常且不鑽模。 | The physical-contact gate (no clipping through models) is not complete, and the guided-tour gate is not complete. |
 | CAM-08 | implemented | 效能報告來自實機量測，未達目標不寫成達標。 | One measurement: headless Chrome on Apple M4 (Metal), 904x548 viewport, vsync-capped near 60 fps, so headroom is unknown; No low-end GPU, mobile or other-browser measurement |
 | A11Y-01 | implemented | 核心派工／訊息／approval／review 可只用鍵盤完成。 | Task creation is verified by keyboard alone; messaging, approval and review flows are not |
 | A11Y-08 | implemented | axe／瀏覽器人工檢視的問題有 evidence 與修正。 | axe sweeps run on every page (and found and fixed unfocusable scroll regions); there has been no screen-reader pass |
 | INT-01 | implemented | GitHub Issue→WorkItem→受批准的結果／PR 流程有實作。 | Live GitHub verification blocked: no credentials; behavior is checked against a local fake that follows the documented REST shapes; Pull request creation is not implemented (it needs a pushed branch, and push is never automatic); Result write-back is an owner-only API call with no UI button yet |
 | INT-02 | implemented | Linear 匯入／狀態同步有實作、衝突規則與測試。 | Live Linear verification blocked: no credentials; GraphQL shapes and the RATELIMITED error code come from public docs and are untested against the real service; Import and comment only: Linear issue state is not written back |
 | INT-04 | partial | knowledge 有 provenance、version、ACL 與繁中搜尋。 | Provenance/version/ACL/繁中搜尋/人類批准與駁回已實作及測試；內容修訂、撤回、大庫索引與測試證實分類仍未完成。 |
-| INT-07 | partial | budget 遵守並行／turn／時間限制，未知成本不顯示零。 | 已有用量去重、回合/時間/並行限制與知識提案；pricing、全域預算與知識批准/version 操作待補。 |
-| INT-08 | partial | usage 累積值／delta／resume 重播不重複統計。 | 已有用量去重、回合/時間/並行限制與知識提案；pricing、全域預算與知識批准/version 操作待補。 |
-| QA-01 | partial | unit／contract／integration／E2E 都有真正執行紀錄。 | 完整產品尚未完成；不能把局部測試當最終 gate。 |
+| INT-07 | partial | budget 遵守並行／turn／時間限制，未知成本不顯示零。 | Turn, time and concurrency limits exist; pricing and a global budget do not. |
+| INT-08 | partial | usage 累積值／delta／resume 重播不重複統計。 | Usage de-duplication is implemented; pricing is not. |
+| QA-01 | partial | unit／contract／integration／E2E 都有真正執行紀錄。 | Unit, contract, integration and browser suites run in CI (the unit suite also on macOS); the live provider smoke and the GPU gates are outside the default run and recorded as not run. |
 | QA-02 | implemented | fault injection 覆蓋 commit／delivery／ack 關鍵 crash window。 | Control-side commit, outbox, delivery and ack windows are injected and proven atomic; runner journal crash windows and the outbox dispatcher lease are not injected |
-| QA-03 | partial | LIVE／DEMO／synthetic／captured 的證據不混淆。 | 完整產品尚未完成；不能把局部測試當最終 gate。 |
-| QA-04 | partial | 真實頁面截圖覆蓋 overview／desk／review／approval／mobile。 | 完整產品尚未完成；不能把局部測試當最終 gate。 |
-| QA-05 | partial | 每個需求的 code path／test ID／evidence 可查驗。 | 完整產品尚未完成；不能把局部測試當最終 gate。 |
-| QA-06 | partial | 所有文件與命令對照最新程式，沒有假 endpoint／假腳本。 | 完整產品尚未完成；不能把局部測試當最終 gate。 |
+| QA-03 | partial | LIVE／DEMO／synthetic／captured 的證據不混淆。 | Labels are checked where they were implemented; live evidence is limited to the smoke runs in CLA-08 and CDX-08. |
+| QA-04 | partial | 真實頁面截圖覆蓋 overview／desk／review／approval／mobile。 | The README screenshots come from a synthetic demo stack (docs/images/README.md); screenshots of real data for each listed page are not part of the evidence. |
+| QA-05 | partial | 每個需求的 code path／test ID／evidence 可查驗。 | verification:check proves that every listed path exists; whether a test proves the requirement is the reviewer's judgement, which the partial rows record. |
+| QA-06 | partial | 所有文件與命令對照最新程式，沒有假 endpoint／假腳本。 | Documentation is compared with the code by audits (docs/research/design-review.md) and a link check; no automated check compares documented values with the code. |
 | OBS-LOCAL-01 | implemented | 自動載入本機 Claude／Codex session；以 Git common dir 歸屬 worktree，以 hook 事件歸屬子代理；observe-only 3D 顯示。 | Activity is a file-mtime heuristic until hooks are trusted and fire; without a running process it is shown idle; Process-to-session matching is by --resume id, else by provider and directory in recency order; a Claude session that changed directory shows no process; Sessions in no git repository and outside a project scratch directory (for example a Codex Desktop thread in a plugin workspace) cannot be attributed and are not shown; Spawned Codex subagents are shown only while their rollout changed in the last 2 minutes; Hooks are proven only for this repository session so far; Only the 60 most recent sessions are scanned |
 | OBS-STREAM-01 | implemented | 本機 session 變更以有界的 server-sent event 串流推送（只含 session key 與變更種類，不含內容），並支援續傳、登出或撤銷即中斷；重資料讀取支援 ETag／304。 | Reconnect backoff and tab-visibility handling are covered by pure tests, not by a run on an unreliable network |
 | OBS-COMPOSER-01 | implemented | 在 AETHER 終端機中執行的 session 可由面板輸入框輸入（安全的輸入序列、佇列、停止、斜線指令與 @ 檔案補全）；其他終端機啟動的 session 維持唯讀並提供在 AETHER 繼續或分支。 | Verified against synthetic terminals; typing into a live Claude Code or Codex prompt was not run (it would use a paid session); In one full-suite run on a loaded machine the four composer specs failed (the Continue button stayed disabled because the runner had not reported its terminal profile within 45 s); each passes when run alone |
@@ -198,3 +198,4 @@ A passing build or test run is not a claim of production readiness. This file li
 | OFFICE-LIFE-F1-01 | implemented | 角色姿勢統一由一個註冊表決定：使用者的表情動作 > 交付時的點頭 > 生活動畫的手勢；播放中的姿勢只會被更高優先權取代，同級或較低者被丟棄（不排隊）；生活動畫對同一成員的同一動作 30 秒內不重複、任何生活姿勢 8 秒內只一次；減少動態時全部丟棄。已接上橡皮鴨轉身（R8）、測試通過點頭（R10）、測試失敗／建置失敗／週五部署聳肩（R11、R13、R23）、站會伸展（R53）與 Konami 慶祝（R56）。另新增 R21（hard reset 的時光機漩渦，僅高階畫質，只說「開始」）與 R43（搜尋 TODO 的便利貼）。 | Decorative: a pose is a gesture, never a claim; R21 says the reset was started, never that it worked; The poses were checked by unit tests of the rules and looked at in screenshots, not frame by frame; whether a nod reads as a nod at the default camera distance is the maintainer's call; The fixed 2.5 s hold of a clip is an estimate (the models do not report clip lengths): a long clip may be cut by a higher request a little early; Micro-actions are not registry requests: they stay out of the way by Animal's own busy flag, which is also why they are the lowest priority; R20 and R45 are not built (see OFFICE-LIFE-I8-01); the sprite atlas is full at 32 cells |
 | OFFICE-LIFE-F1-02 | implemented | 小隊與生活動畫圖層在真實 GPU 上量測：高階與平衡畫質、1440x900 與 1920x1080（dpr 2）、手機設定（390x844、dpr 3、4 倍 CPU 節流、精簡模式、無尖塔），忙碌的樓層（20 位成員、8 位 subagent 的小隊含提線與交付、六個動畫循環播放）；每個圖層的 CPU 耗時以 CPU profile 歸因；圖層只在內容改變時才寫入並上傳 instance 緩衝區、無每幀配置；小隊的 shader 於暖機時連結，首次出現不再卡頓。 | Measured on one machine (Apple M4, ANGLE Metal, Chrome headless), which was loaded by other work (load average 27 to 37); cases are interleaved and medians of 3 to 5 rounds, but the frame time is capped by 60 Hz in every case, so the evidence is the CPU time per frame and a CDP profile, not a frame time; The 4x CPU throttle is an emulation of a phone, not a phone; no real phone, no Safari and no other GPU was measured; The squad layer links 6 to 7 shader programs against the spec's budget of 4 (all at warm-up, so a one-time cost); On the phone profile the first appearance of the subagent characters still links 9 programs (110 to 125 ms of render calls at 4x throttle, the same with the legacy desk seating): the characters' own warm-up is an open follow-up, not the squad's; The busy building uses stand-ins (?squad, ?intensity, ?preview=life&loop=1) and a synthetic commit history, not real sessions; The official gate e2e/office-life-perf.spec.ts was run on the real GPU (balanced, 806x552, 5 rounds): 8 subagents in a squad against at desks: median and p95 frame equal, -23 draws, +6 programs (over its limit of 4, recorded as not within), +0.5 GPU MB, jsMs -0.4; six looping effects against the same camera without them: +1 draw, 0 programs, 0 jsMs, all within |
 | OFFICE-LIFE-F1-03 | implemented | 小隊能量束的參考速率由本機真實 transcript 量測而得（不再是挑選的數字）：以 767 個 Claude subagent 檔與 300 個 Codex rollout，唯讀、有上限、只輸出數字，算出每個活躍分鐘的 token 與工具呼叫速率分布（p25 至 p99），參考速率設為每分鐘 24 次工具呼叫與 8,000,000 tokens，方法與數字記錄在規格 4.4，並以測試將常數釘在文件數字上。 | The distribution is one person's machine (30 parent sessions, 767 subagent files, the newest 300 Codex rollouts, files over 100 MB skipped); another way of working would change the numbers, and the script is there to re-run; Tokens cannot reach both goals with a logarithmic curve (a median of 0.5-0.7 and a p99 of 0.95): the reference puts the median at 0.70 and the p99 at 0.84. The curve was kept, as asked; an offset in log space would spread it; The calibration counts per calendar minute while the beam's live rate is measured over a rolling window of 10 to 70 seconds: the same unit, a slightly different smoothing |
+| SCENE-PERF-P1 | implemented | 3D 場景的手機與低階畫質：柔和的加法漸層抖色（預乘後加雜訊）、手機與低階的行星紋理 1024x512、AdaptiveRatio 以手機自己的 50 ms 閒置節奏判斷（不再掉到 0.75）、手機「高」畫質的像素比上限 2（每個分級一個具名常數）、?msaa=1/0 的 MSAA A/B 開關，以及 WebGL context 遺失時顯示一鍵重新載入場景的卡片（不再默默切到列表）。 | No real phone, no Safari and no other GPU was measured (Apple M4, ANGLE Metal, 4x CPU throttle emulates a phone and is capped at 60 Hz, so the evidence is CPU time per frame, draws, programs and the GPU estimate); the phone high tier at pixel ratio 2 (PIXEL_RATIO_CAP_PHONE_HIGH) must be validated on an iPhone and an Android phone for five minutes (heat, sustained frame time) before it is trusted; Dithering is verified objectively only on a synthetic additive strip (row-mean error 0.291 to 0.025 LSB with premultiplied dithering, 0.278 with three's flag alone, which is scaled away by the alpha); in the real scene the changed surfaces are a small part of the picture and a crude banding metric did not move; the nebula sprites, planet halo, desk glow and sprite atlas were not dithered (three's SpriteMaterial has no dithering chunk and each built-in variant adds a program); The context-loss card was tested with WEBGL_lose_context in Chrome only; whether iOS Safari fires webglcontextlost for a backgrounded page was not observed, and the card replaces the scene (a context the browser would restore later is not waited for); R4 (transparent objects): attributed but nothing changed, because making them opaque did not change the render time; the cost is per draw call (per-member materials), and merging them is a larger refactor |

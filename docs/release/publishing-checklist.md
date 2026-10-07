@@ -11,13 +11,21 @@ beyond the readiness check: pushing and changing GitHub settings stay manual dec
       (shipped assets over 1 MB and documentation host names such as `office.lan` are expected).
 - [ ] Decide the canonical author identity in `.mailmap` (a GitHub noreply address is
       `<id>+haotool@users.noreply.github.com`; the id is the `id` field of `https://api.github.com/users/haotool`).
+      This is the maintainer's decision: the file lists the identity that exists today, and nothing in the tooling changes it.
+- [ ] Confirm `.github/CODEOWNERS` (`* @haotool`): also a maintainer decision. The branch ruleset in step 4 requires Code
+      Owner review, so add a second owner here before a second maintainer joins, or the single owner cannot approve their
+      own pull requests.
 - [ ] `CHANGELOG.md` already has the `[0.4.0] - 2026-10-07` entry above an empty `[Unreleased]`: change the date if the release
-      day differs, and set `version` in `package.json` to `0.4.0` (it is `0.4.0-dev.0` until then).
+      day differs, and set `version` to `0.4.0` in the root `package.json` and the seven workspace `package.json` files (it is
+      `0.4.0-dev.0` until then; `tests/aether/version.test.ts` fails if they differ). Runtime code reads the version from
+      the root file (`APP_VERSION` in `@aether/contracts`), so nothing else changes except the `v0.4 DEV` badge in
+      `apps/web/src/features/Sidebar.tsx` and the version in `SECURITY.md`; afterwards the search for the old version
+      string must find only the history in `CHANGELOG.md`.
 - [ ] Run the full checks once: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test`, `pnpm build`,
       `pnpm exec playwright test`, `pnpm verify:clean`.
 - [ ] Licence compliance gate (see [docs/legal](../legal/README.md)):
   - `pnpm run notices:check` passes (notices current, every package under an approved licence, every file in `REUSE.toml`);
-  - `node scripts/oss/overlap-scan.mjs --refs .research --exclude mcp_agent_mail --exclude agents-office` reports no block
+  - `node scripts/oss/overlap-scan.mjs --refs <folder with the reference clones> --exclude mcp_agent_mail --exclude agents-office` reports no block
     that is not listed in [provenance](../legal/provenance.md#evidence-that-no-code-was-copied);
   - the [open items](../legal/inventory.md#open-items) are decided (provider marks, Claude authentication wording) and the
     decisions recorded;

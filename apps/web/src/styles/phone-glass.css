@@ -1,0 +1,34 @@
+/*
+ * Glass over the live 3D canvas, on a phone: no blur. A backdrop blur re-blurs the canvas behind it every time the canvas
+ * changes (the scene runs about 20 fps even when idle), which a phone's GPU pays for on every frame and Safari is said to
+ * pay most (measured on desktop Chrome only: docs/research/mobile-gradient-perf.md R6). A near-opaque tint of the glass
+ * base keeps the surface readable without it. Desktop keeps the blurred glass. Last in the cascade, `:root` to outweigh the
+ * component rules above.
+ */
+@media (max-width: 760px), (pointer: coarse) and (max-height: 500px) {
+  :root
+    :is(
+      .chip-active,
+      .round,
+      .scene-rail,
+      .auto-pill,
+      .shot-caption,
+      .stalk-tip,
+      .intro-caption,
+      .chip-attention,
+      .phone-kpi .kpi-cell,
+      .phone-kpi .kpi-open,
+      .group-bar,
+      .undo-toast,
+      .char-menu
+    ) {
+    background-color: color-mix(in srgb, var(--glass-base) 94%, transparent);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .fab,
+  .member-bar {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

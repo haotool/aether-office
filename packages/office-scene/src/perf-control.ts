@@ -1,4 +1,49 @@
 // Pure rules the scene's performance controllers follow; the components in PerfControllers.tsx feed them real timings.
+import type { Quality } from './scene-types.js';
+/**
+ * The most the scene may render at (device pixels per CSS pixel), by tier. `AdaptiveRatio` lowers it while frames run slow
+ * (never under `PIXEL_RATIO_FLOOR`) and the screen's own ratio caps it, so these are ceilings, not promises. One constant per
+ * tier so each is a one-line revert. The phone's `high` was 1.5 (the same as its `balanced`) until a real device could be
+ * tried: it is 2 now behind the adaptive floor, and has NOT been validated on a phone (heat, sustained fill rate).
+ */
+export const PIXEL_RATIO_CAP_PHONE_HIGH = 2;
+export const PIXEL_RATIO_CAP_PHONE_BALANCED = 1.5;
+export const PIXEL_RATIO_CAP_DESKTOP_HIGH = 2;
+export const PIXEL_RATIO_CAP_DESKTOP_BALANCED = 1.5;
+/** The low tier renders at the CSS pixel size on every device. */
+export const PIXEL_RATIO_CAP_LOW = 1;
+
+export const pixelRatioCap = (quality: Quality, compact: boolean): number =>
+  quality === 'high'
+    ? compact
+      ? PIXEL_RATIO_CAP_PHONE_HIGH
+      : PIXEL_RATIO_CAP_DESKTOP_HIGH
+    : quality === 'balanced'
+      ? compact
+        ? PIXEL_RATIO_CAP_PHONE_BALANCED
+        : PIXEL_RATIO_CAP_DESKTOP_BALANCED
+      : PIXEL_RATIO_CAP_LOW;
+
+/**
+ * Whether the canvas is created with MSAA. The tiers decide (not on a phone, not on low); `?msaa=1` or `?msaa=0` overrides
+ * them for a measurement, so the maintainer can A/B it on a real phone (the protocol is in docs/design-system.md).
+ * The context is made once, so the page has to be loaded again to change it.
+ */
+export function antialiasFor(search: string, compact: boolean, quality: Quality): boolean {
+  const asked = new URLSearchParams(search).get('msaa');
+  if (asked === '1') return true;
+  if (asked === '0') return false;
+  return !compact && quality !== 'low';
+}
+
+/** The planet's texture size: a phone (or the low tier) shows a corner of it, so it takes a quarter of the memory. */
+export const earthTextureSize = (small: boolean) =>
+  small ? { width: 1024, height: 512 } : { width: 2048, height: 1024 };
+
+/** The pause between ambient redraws (drones, scan sweeps, shimmer); the camera invalidates on its own and keeps the full rate. */
+export const AMBIENT_FRAME_MS = 24;
+/** On a phone the ambient scene settles at about 20 frames a second: the battery, not the eye, is the limit. */
+export const AMBIENT_FRAME_MS_PHONE = 50;
 
 /** How often the shadow map is redrawn: its casters (people at their desks) move slowly, and it does not depend on the camera. */
 export const SHADOW_INTERVAL_MS = { high: 50, balanced: 83, low: 0 } as const;
@@ -95,3 +140,12 @@ export function stepRatio(
     };
   return { ...next, calm };
 }
+
+/**
+ * The frame time a mode is expected to hold on a 60 Hz screen: a continuous camera move, or the ambient pace. The ambient
+ * scene is redrawn on a timer (24 ms; 50 ms on a phone, see `AnimationClock`), so frames arrive that far apart however fast
+ * they render: the phone's target is that pace plus one 60 Hz frame. Against 30 Hz (33 ms, slow from 47 ms) every phone frame
+ * counted as slow and the ratio fell to its floor within seconds.
+ */
+export const frameTargetMs = (smooth: boolean, compact: boolean) =>
+  smooth ? 1000 / 60 : compact ? AMBIENT_FRAME_MS_PHONE + 1000 / 60 : 1000 / 30;

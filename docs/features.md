@@ -134,6 +134,12 @@ and the oldest open branch. Each floor of the switcher shows its tokens today.
 
 - **Counted locally and incrementally** from the transcripts (appended bytes only, a numbers-only rollup in the data directory,
   history read in the background); the dashboard says when a scan is still reading history.
+- **What the numbers do not cover is said on the page.** Offices hold running sessions and the newest 60 only: what no office
+  holds is shown as "Not placed in an office" (offices plus that line are the building total). A warning shows when the file cap
+  cut the history short (how many transcripts are counted of how many exist), when files could not be read or lines could not be
+  placed, and when the Git figures hit their commit cap or leave out projects. "Session time" is the minutes of every session
+  added up, so side-by-side sessions overlap and it can exceed the clock. Each rate-limit ring shows the age of its reading and
+  turns "out of date" after 15 minutes. A transcript the CLI deletes drops out of the numbers of its days.
 - **Tokens, not money.** No price table exists on the machine, so no cost is shown. The headline number excludes cache reads, which
   dominate every session; they appear in the breakdown.
 - **Owner and operator only** (`GET /api/usage`, `GET /api/usage/git`); with `AETHER_LOCAL_SESSIONS=off` the dashboard says so and
@@ -171,7 +177,10 @@ commit or the tier. It is on for a desktop and off on a phone by default. See th
 
 Working members show their latest prompt and reply as two bubbles (up to six at once; only the selected or filmed member on a
 phone). Each desk has a gauge for the share of the model's context window in use, which turns amber from 60% and red above 85%;
-a compaction plays a short effect and a chip. Both come from the local session scan (`GET /api/local-sessions/speech`,
+a compaction plays a short effect and a chip. Claude's transcript does not record the window, so it is a 200k window assumed (a
+`[1m]` model id or a model catalog entry says otherwise) and, once the context is past 200k, inferred to be 1M: the gauge's
+tooltip says which, because the percentage falls where the window changes. A turn the CLI wrote for an API error (`<synthetic>`,
+no tokens) is skipped, so the gauge shows the last real turn, or nothing, never 0%. Both come from the local session scan (`GET /api/local-sessions/speech`,
 `usage.contextPct`, `usage.compactedAt`) and nothing is stored.
 
 ## Office life: little moments in the 3D office

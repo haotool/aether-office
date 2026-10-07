@@ -206,11 +206,11 @@ test('a real test run is shown as the provider stated it: an unknown outcome say
   spool('PreToolUse', { tool: 'Edit', target: 'app.test.ts' });
   bash('u1', 'make check', ['test']);
   spool('PostToolUse', { tool: 'Bash', toolUseId: 'u1' });
-  await page.waitForTimeout(6000);
+  await page.waitForTimeout(6000); // a negative wait: nothing is claimed, so there is nothing to wait for
   await expect(heardLines(page, claimed)).toHaveCount(0);
 
   // The same pass, now with its real exit status: the sign flips from BUG to FEATURE (said, never claimed as a fix).
-  await page.waitForTimeout(4000); // a failure's own moment, if it was drawn, is over: one effect per member at a time
+  await page.waitForTimeout(4000); // a negative wait (no event marks the end of a moment): a failure's own moment, if it was drawn, is over: one effect per member at a time
   bash('p1', 'make check', ['test']);
   spool('PostToolUse', { tool: 'Bash', toolUseId: 'p1', ok: true });
   await expect(heardLines(page, /The tests were changed, then passed/)).toHaveCount(1, {
@@ -233,7 +233,7 @@ test('a push is "pushed" only once it exited successfully', async ({ page }) => 
   await open(page, '/office', { life: { calm: false } });
   await watchFixtureRepo(page);
   bash('g1', 'git push', ['git.push']);
-  await page.waitForTimeout(5000);
+  await page.waitForTimeout(5000); // a negative wait: a push that has not exited has nothing to announce
   await expect(heardLines(page, /pushed/)).toHaveCount(0); // started: nothing to say about the end
   spool('PostToolUse', { tool: 'Bash', toolUseId: 'g1', ok: true });
   await expect(heardLines(page, /pushed/)).toHaveCount(1, { timeout: 30_000 });

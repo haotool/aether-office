@@ -105,7 +105,7 @@ AETHER 現行 Codex adapter 明確關閉 multi_agent，Claude 禁用 Agent／Tas
 
 ## 2026-10-04 補充：27 個 repo 已全部本機化，原始碼調研與可複製架構
 
-27 個 repo 皆 `--depth 1` 拉到 `.research/`（不進版控），固定 SHA 與逐檔核對的授權寫在 `matrix.json` 的 `localSha`、`licenseVerified`、`reuse`。**複製規則**：`code-with-notice` 可保留版權聲明後重用；`ideas-only`（AGPL-3.0 的 agent-teams-ai、claude-squad，以及沒有 LICENSE 檔的 multiagents）只能參考想法，不得複製程式碼；`excluded`（mcp_agent_mail 的 OpenAI／Anthropic rider、agents-office 的 PolyForm Noncommercial 與禁止嵌入條款）不碰。目前 AETHER 沒有複製任何第三方程式碼。
+27 個 repo 皆 `--depth 1` 拉到維護者本機的未追蹤資料夾（不進版控，新 clone 不含；各 repo 的 URL 與 SHA 見 `matrix.json`），固定 SHA 與逐檔核對的授權寫在 `matrix.json` 的 `localSha`、`licenseVerified`、`reuse`。**複製規則**：`code-with-notice` 可保留版權聲明後重用；`ideas-only`（AGPL-3.0 的 agent-teams-ai、claude-squad，以及沒有 LICENSE 檔的 multiagents）只能參考想法，不得複製程式碼；`excluded`（mcp_agent_mail 的 OpenAI／Anthropic rider、agents-office 的 PolyForm Noncommercial 與禁止嵌入條款）不碰。目前 AETHER 沒有複製任何第三方程式碼。
 
 **實際讀過原始碼的 9 個**（其餘 18 個仍是 README／授權層級，本輪沒有讀程式，不能算調研完成）：
 

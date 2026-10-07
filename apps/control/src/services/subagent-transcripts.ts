@@ -1,7 +1,6 @@
-import type { Subagent } from '@aether/contracts';
+import { SESSION_ACTIVE_MS, type Subagent } from '@aether/contracts';
 import { withEdge } from './file-edge.js';
 import { FINISHED_GRACE_MS } from './hook-spool.js';
-import { ACTIVE_CHILD_MS } from './session-discovery.js';
 import { linesWithFromEnd } from './session-usage.js';
 import {
   listSubagentFiles,
@@ -21,7 +20,7 @@ import type { Outcomes } from './tool-outcomes.js';
 /**
  * Claude subagents known from their own transcript files (`<session>/subagents/agent-<id>.jsonl`), so they are visible
  * without hooks and, with hooks, gain what hooks cannot say: label, token usage and the last words. A file quiet for
- * ACTIVE_CHILD_MS is taken as finished (the same rule as a Codex child rollout) and stays for the grace period. Tail reads are
+ * SESSION_ACTIVE_MS is taken as finished (the same rule as a Codex child rollout) and stays for the grace period. Tail reads are
  * bounded and cached by mtime and size; every text goes through `plainSummary` (redaction before any cut).
  */
 const TAIL_BYTES = 128 * 1024;
@@ -111,7 +110,7 @@ async function describe(f: SubagentFile, now: number, ctx: SubagentContext): Pro
     readSubagentUsage(f.file, f.size, now, ctx.budget),
     readTail(f),
   ]);
-  const finished = now - f.mtime >= ACTIVE_CHILD_MS || ctx.finished.has(f.id);
+  const finished = now - f.mtime >= SESSION_ACTIVE_MS || ctx.finished.has(f.id);
   // The parent's own result for the call that spawned it: a failure is a failure, a success only counts for a call the
   // parent waited for (a background launch "succeeds" at once, whatever the subagent goes on to do).
   const outcome =
@@ -145,7 +144,7 @@ export async function readSubagentTranscripts(
   now: number,
   ctx: SubagentContext,
 ): Promise<Subagent[]> {
-  const files = await listSubagentFiles(sessionFile, now, ACTIVE_CHILD_MS + FINISHED_GRACE_MS);
+  const files = await listSubagentFiles(sessionFile, now, SESSION_ACTIVE_MS + FINISHED_GRACE_MS);
   const out: Subagent[] = [];
   for (const f of files) out.push(await describe(f, now, ctx));
   return out;

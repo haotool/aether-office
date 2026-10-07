@@ -1,6 +1,6 @@
 import { readdir, stat } from 'node:fs/promises';
 import { basename, isAbsolute, join } from 'node:path';
-import type { Subagent } from '@aether/contracts';
+import { SESSION_ACTIVE_MS, type Subagent } from '@aether/contracts';
 import { FINISHED_GRACE_MS } from './hook-spool.js';
 import type { AgentProcess } from './agent-processes.js';
 import { readEdge } from './file-edge.js';
@@ -16,7 +16,6 @@ const MAX_SCAN_ENTRIES = 8 * 1024;
 // is chosen later (local-sessions.ts), after it is known which sessions have a process.
 const MAX_CANDIDATES = 2000;
 const RECENT_MS = 7 * 24 * 3600 * 1000;
-export const ACTIVE_CHILD_MS = 2 * 60 * 1000;
 const NICKNAME_CHARS = 40;
 export const UUID_SUFFIX = /[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 
@@ -200,12 +199,12 @@ export async function discoverRaw(home: string, now = Date.now()): Promise<Raw[]
   const ids = new Set(found.map((r) => r.sessionId));
   const parents = new Map(found.map((r) => [r.sessionId, r]));
   const roots = found.filter((r) => !(r.spawn && ids.has(r.spawn.parent)));
-  // A rollout that has not been written for ACTIVE_CHILD_MS is finished; it stays for the grace period, then goes.
+  // A rollout that has not been written for SESSION_ACTIVE_MS is finished; it stays for the grace period, then goes.
   for (const r of found) {
     if (!r.spawn || !ids.has(r.spawn.parent)) continue;
     const quiet = now - r.mtime;
-    if (quiet >= ACTIVE_CHILD_MS + FINISHED_GRACE_MS) continue;
-    const finished = quiet >= ACTIVE_CHILD_MS;
+    if (quiet >= SESSION_ACTIVE_MS + FINISHED_GRACE_MS) continue;
+    const finished = quiet >= SESSION_ACTIVE_MS;
     (parents.get(r.spawn.parent)!.children ??= []).push({
       id: r.sessionId,
       type: r.spawn.type,

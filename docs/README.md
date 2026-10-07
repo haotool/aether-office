@@ -42,6 +42,7 @@ differ from the pages above, the pages above win.
 | [Architecture decisions](adr)                           | Why the project is built the way it is                                             |
 | [Research](research/README.md)                          | The projects studied and what was taken from them                                  |
 | [Orca view feasibility](research/orca-view-feasibility.md) | A read-only office view over Orca: sources, risks, phases (zh-TW)                  |
+| [Mobile gradient and frame performance](research/mobile-gradient-perf.md) | Banding, dithering, tiers and phone budgets: sources, audit, measurements, ranked changes (zh-TW) |
 
 ## Release and verification
 

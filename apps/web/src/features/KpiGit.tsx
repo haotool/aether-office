@@ -31,7 +31,16 @@ function Tile({
 }
 
 /** Commits, merges, merged and open branches, authors, lines and the oldest open branch of a scope's repositories. */
-export function KpiGit({ kpi, loading }: { kpi: GitKpi | null | undefined; loading: boolean }) {
+export function KpiGit({
+  kpi,
+  loading,
+  omitted = 0,
+}: {
+  kpi: GitKpi | null | undefined;
+  loading: boolean;
+  /** Repositories left out of the building's figures (only the most recently active are read). */
+  omitted?: number;
+}) {
   const t = useT();
   const locale = usePreferences((s) => s.locale);
   return (
@@ -77,6 +86,12 @@ export function KpiGit({ kpi, loading }: { kpi: GitKpi | null | undefined; loadi
             sub="30d"
           />
         </dl>
+      )}
+      {(kpi?.truncated || omitted > 0) && (
+        <p className="kpi-warn" role="status">
+          {kpi?.truncated ? `${t('kpiGitTruncated')} ` : ''}
+          {omitted > 0 ? `${omitted} ${t('kpiGitOmitted')}` : ''}
+        </p>
       )}
     </section>
   );

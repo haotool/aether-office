@@ -1,11 +1,11 @@
 import { createHash } from 'node:crypto';
-import { open } from 'node:fs/promises';
+import { open, type FileHandle } from 'node:fs/promises';
 import { setTimeout as sleep } from 'node:timers/promises';
 import type { CodexLimits, UsageResponse } from '@aether/contracts';
 import { readCodexLimits } from './codex-limits.js';
 import { aggregate, WINDOW_DAYS, type Attribution, type Tracked } from './usage-aggregate.js';
-import { listTranscripts, repoOf, type Transcript } from './usage-files.js';
-import { dayKeyOf, newState, parseChunk } from './usage-parse.js';
+import { listTranscripts, parentOf, repoOf, type Transcript } from './usage-files.js';
+import { ClaimBook, dayKeyOf, newState, parseChunk } from './usage-parse.js';
 import { MAX_TRACKED_FILES, keyOf, loadRollup, saveRollup, type Entry } from './usage-store.js';
 
 // Token usage of every local session, per day, kept current by reading only what each transcript gained since the last
@@ -14,6 +14,7 @@ import { MAX_TRACKED_FILES, keyOf, loadRollup, saveRollup, type Entry } from './
 
 const CHUNK = 1024 * 1024; // about 30 ms of parsing: the longest the event loop is held at a time
 const SIG_BYTES = 256;
+const sha = (data: Buffer) => createHash('sha1').update(data).digest('hex').slice(0, 12);
 /** A pass may take about a tenth of the time (the listing of a big history is the cost), never leaving a gap above this. */
 const PASS_DUTY = 10;
 const MAX_PASS_GAP_MS = 3000;
@@ -54,6 +55,18 @@ export function createUsageStats(options: UsageOptions) {
   let limitsMemo: { stamp: string; value: CodexLimits | null } | null = null;
   const memo = new Map<string, UsageResponse>();
   const metrics = { bytesRead: 0, filesRead: 0, passes: 0 };
+  /** Which Claude messages some file already counted: a copy of one in another file adds nothing. */
+  const claims = new ClaimBook();
+  let found = 0;
+  let truncated = false;
+  let failedFiles = 0;
+
+  /** The hash of the bytes just before `offset` (the whole file's start when there are fewer). */
+  async function tailOf(handle: FileHandle, offset: number): Promise<string> {
+    const from = Math.max(0, offset - SIG_BYTES);
+    const { bytesRead } = await handle.read(buffer, 0, offset - from, from);
+    return sha(buffer.subarray(0, bytesRead));
+  }
 
   /** Reads what `t` gained since the last look into its entry; a rewritten or shortened file is read again from the start. */
   async function read(t: Transcript, entries: Map<string, Entry>) {
@@ -61,22 +74,25 @@ export function createUsageStats(options: UsageOptions) {
     const handle = await open(t.file, 'r');
     try {
       const { bytesRead: headBytes } = await handle.read(buffer, 0, SIG_BYTES, 0);
-      const sig = createHash('sha1')
-        .update(buffer.subarray(0, headBytes))
-        .digest('hex')
-        .slice(0, 12);
+      const sig = sha(buffer.subarray(0, headBytes));
       const known = entries.get(key);
-      const entry: Entry =
-        known && known.sig === sig && known.offset <= t.size
-          ? known
-          : {
-              state: newState(t.provider),
-              offset: 0,
-              mtime: 0,
-              size: 0,
-              sig,
-              repo: known?.repo ?? null,
-            };
+      const appended =
+        known !== undefined &&
+        known.sig === sig &&
+        known.offset <= t.size &&
+        (await tailOf(handle, known.offset)) === known.tail;
+      if (known && !appended) claims.release(new Set([key])); // its messages are counted again from the start
+      const entry: Entry = appended
+        ? known
+        : {
+            state: newState(t.provider),
+            offset: 0,
+            mtime: 0,
+            size: 0,
+            sig,
+            tail: '',
+            repo: known?.repo ?? null,
+          };
       let offset = entry.offset;
       while (offset < t.size) {
         const { bytesRead } = await handle.read(
@@ -93,7 +109,7 @@ export function createUsageStats(options: UsageOptions) {
           offset += bytesRead; // one line longer than a chunk: step over it
           continue;
         }
-        parseChunk(entry.state, buffer.subarray(0, end), dayOf);
+        parseChunk(entry.state, buffer.subarray(0, end), dayOf, { book: claims, owner: key });
         offset += end + 1;
         await tick();
       }
@@ -102,7 +118,9 @@ export function createUsageStats(options: UsageOptions) {
         offset,
         mtime: t.mtime,
         size: t.size,
+        tail: await tailOf(handle, offset),
         repo: entry.repo ?? (await repoOf(t)),
+        parent: entry.parent ?? (await parentOf(t)),
       });
       metrics.filesRead++;
     } finally {
@@ -114,29 +132,37 @@ export function createUsageStats(options: UsageOptions) {
     const entries = (store ??= options.cacheFile
       ? await loadRollup(options.cacheFile, timeZone)
       : new Map());
-    listing = await listTranscripts(options.home, clock(), FILE_WINDOW_MS, maxFiles);
-    const stale = listing.filter((t) => {
-      const e = entries.get(keyOf(t.file));
-      return !e || e.mtime !== t.mtime || e.size !== t.size;
-    });
+    const listed = await listTranscripts(options.home, clock(), FILE_WINDOW_MS, maxFiles);
+    listing = listed.transcripts;
+    found = listed.found;
+    truncated = listed.truncated;
+    // Oldest first: of a session and its copy (a resume), the original is read first and owns the shared messages.
+    const stale = listing
+      .filter((t) => {
+        const e = entries.get(keyOf(t.file));
+        return !e || e.mtime !== t.mtime || e.size !== t.size;
+      })
+      .sort((a, b) => a.mtime - b.mtime);
     pending = stale.length;
+    failedFiles = 0;
     for (const t of stale) {
       try {
         await read(t, entries);
         dirty = true;
         changedAt = clock();
       } catch {
-        /* vanished or unreadable: skipped, never fatal */
+        failedFiles++; // vanished or unreadable: skipped, never fatal, but counted
       }
       pending--;
     }
-    const listed = new Set(listing.map((t) => keyOf(t.file)));
-    for (const key of entries.keys())
-      if (!listed.has(key)) {
-        entries.delete(key);
-        dirty = true;
-        changedAt = clock();
-      }
+    const keys = new Set(listing.map((t) => keyOf(t.file)));
+    const gone = new Set([...entries.keys()].filter((key) => !keys.has(key)));
+    if (gone.size) {
+      claims.release(gone);
+      for (const key of gone) entries.delete(key);
+      dirty = true;
+      changedAt = clock();
+    }
     changedAt ||= clock();
     metrics.passes++;
     if (dirty && clock() - lastSaved >= SAVE_GAP_MS) await flush();
@@ -209,6 +235,10 @@ export function createUsageStats(options: UsageOptions) {
       complete: !running && pending === 0 && store !== null,
       files: listing.length,
       pending,
+      found,
+      truncated,
+      failedFiles,
+      skippedLines: [...(store?.values() ?? [])].reduce((n, e) => n + e.state.skipped, 0),
     };
     const limits = { claude, codex: blank ? null : await codexLimits() };
     // The answer depends on what was read, the day, who the sessions are and the limits: when none changed, it is reused.

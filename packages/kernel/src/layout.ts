@@ -1,4 +1,4 @@
-import { DomainError } from './index.js';
+import { DomainError } from './errors.js';
 export type PlacedObject = {
   id: string;
   type: 'desk' | 'plant' | 'sofa' | 'rack' | 'table' | 'squad';

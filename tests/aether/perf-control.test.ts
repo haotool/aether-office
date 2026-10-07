@@ -1,7 +1,13 @@
 import { expect, it } from 'vitest';
 import {
+  AMBIENT_FRAME_MS_PHONE,
+  PIXEL_RATIO_CAP_PHONE_HIGH,
   PIXEL_RATIO_FLOOR,
   animationInterval,
+  antialiasFor,
+  earthTextureSize,
+  pixelRatioCap,
+  frameTargetMs,
   shadowDue,
   startRatio,
   stepRatio,
@@ -72,4 +78,42 @@ it('never rises above the ceiling the quality tier allows', () => {
   const at = { now: 10_000 };
   const s = run(startRatio(1, at.now), 500, 8, at, 1);
   expect(s.ratio).toBe(1);
+});
+
+it('gives a phone and the low tier the small planet texture, and every other tier the full one', () => {
+  expect(earthTextureSize(true)).toEqual({ width: 1024, height: 512 });
+  expect(earthTextureSize(false)).toEqual({ width: 2048, height: 1024 });
+});
+
+it('holds a phone to its own ambient pace, so an idle phone is not read as slow', () => {
+  const at = { now: 10_000 };
+  const target = frameTargetMs(false, true);
+  expect(target).toBeGreaterThan(AMBIENT_FRAME_MS_PHONE);
+  let s = startRatio(1.5, at.now);
+  for (let i = 0; i < 300; i++) {
+    at.now += AMBIENT_FRAME_MS_PHONE + 4; // a timer tick and a few ms of drawing
+    s = stepRatio(s, AMBIENT_FRAME_MS_PHONE + 4, at.now, target, 1.5);
+  }
+  expect(s.ratio).toBe(1.5);
+  expect(frameTargetMs(true, true)).toBe(1000 / 60);
+  expect(frameTargetMs(false, false)).toBe(1000 / 30);
+});
+
+it('caps the pixel ratio by tier: the phone high tier is above its balanced tier, nothing else moved', () => {
+  expect(pixelRatioCap('high', true)).toBe(PIXEL_RATIO_CAP_PHONE_HIGH);
+  expect(pixelRatioCap('high', true)).toBe(2);
+  expect(pixelRatioCap('high', true)).toBeGreaterThan(pixelRatioCap('balanced', true));
+  expect(pixelRatioCap('balanced', true)).toBe(1.5);
+  expect([pixelRatioCap('high', false), pixelRatioCap('balanced', false)]).toEqual([2, 1.5]);
+  expect([pixelRatioCap('low', true), pixelRatioCap('low', false)]).toEqual([1, 1]);
+  expect(pixelRatioCap('high', true)).toBeGreaterThan(PIXEL_RATIO_FLOOR);
+});
+
+it('keeps MSAA to the tiers unless ?msaa says otherwise, so a phone can be measured with and without it', () => {
+  expect(antialiasFor('', false, 'balanced')).toBe(true);
+  expect(antialiasFor('', true, 'high')).toBe(false);
+  expect(antialiasFor('', false, 'low')).toBe(false);
+  expect(antialiasFor('?msaa=1', true, 'balanced')).toBe(true);
+  expect(antialiasFor('?perf=240&msaa=0', false, 'high')).toBe(false);
+  expect(antialiasFor('?msaa=yes', true, 'high')).toBe(false); // anything else is not an override
 });

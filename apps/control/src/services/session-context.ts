@@ -18,27 +18,39 @@ export function windowsOf(catalogs: readonly ModelCatalog[]): ReadonlyMap<string
   return out;
 }
 
+/** Where a context window came from: the CLI's own figure, a model catalog, the model id, or a guess about Claude. */
+export type WindowBasis = NonNullable<Usage['contextWindowBasis']>;
+
 /**
- * Pure. The window the context in use is measured against. Codex records it with every turn; Claude's transcript does
- * not, so it is the catalog's figure for the model, a million for a `[1m]` model, else 200k. Claude Code does not write
- * the long-context choice into the assistant message, so a session that already holds more than 200k can only be a
- * 1M session. Unknown model and nothing observed → null.
+ * Pure. The window the context in use is measured against, and how it is known. Codex records it with every turn
+ * (`observed`); Claude's transcript does not, so it is the catalog's figure for the model (`catalog`), a million for a
+ * `[1m]` model (`model`), else 200k, which is an `assumed` window. Claude Code does not write the long-context choice into
+ * the assistant message, so a session that already holds more than 200k can only be a 1M session, and its window is
+ * `inferred` as 1M: the percentage then falls when the context crosses 200k, and the basis says why. Unknown model and
+ * nothing observed → null.
  */
-export function resolveContextWindow(
+export function resolveContextWindowBasis(
   provider: Provider,
   model: string | null,
   observed: number | null,
   tokens: number | null,
   windows: ReadonlyMap<string, number>,
-): number | null {
-  if (observed && observed > 0) return observed;
+): { window: number; basis: WindowBasis } | null {
+  if (observed && observed > 0) return { window: observed, basis: 'observed' };
   const listed = model ? windows.get(`${provider}:${model}`) : undefined;
-  if (listed) return listed;
+  if (listed) return { window: listed, basis: 'catalog' };
   if (provider === 'codex') return null;
-  if (model && /\[1m\]$/i.test(model)) return CLAUDE_WINDOW_LONG;
+  if (model && /\[1m\]$/i.test(model)) return { window: CLAUDE_WINDOW_LONG, basis: 'model' };
   if (!model && tokens === null) return null;
-  return tokens !== null && tokens > CLAUDE_WINDOW ? CLAUDE_WINDOW_LONG : CLAUDE_WINDOW;
+  return tokens !== null && tokens > CLAUDE_WINDOW
+    ? { window: CLAUDE_WINDOW_LONG, basis: 'inferred' }
+    : { window: CLAUDE_WINDOW, basis: 'assumed' };
 }
+
+/** Pure. The window alone (see `resolveContextWindowBasis`). */
+export const resolveContextWindow = (
+  ...args: Parameters<typeof resolveContextWindowBasis>
+): number | null => resolveContextWindowBasis(...args)?.window ?? null;
 
 /** Pure. Share of the window in use, 0 to 100 with one decimal; null while either side is unknown. */
 export function contextPct(tokens: number | null, window: number | null): number | null {
@@ -52,14 +64,20 @@ export function withContext(
   usage: Usage,
   windows: ReadonlyMap<string, number>,
 ): Usage {
-  const contextWindow = resolveContextWindow(
+  const resolved = resolveContextWindowBasis(
     provider,
     usage.model,
     usage.contextWindow,
     usage.contextTokens,
     windows,
   );
-  return { ...usage, contextWindow, contextPct: contextPct(usage.contextTokens, contextWindow) };
+  const contextWindow = resolved?.window ?? null;
+  return {
+    ...usage,
+    contextWindow,
+    contextWindowBasis: resolved?.basis ?? null,
+    contextPct: contextPct(usage.contextTokens, contextWindow),
+  };
 }
 
 // What each CLI writes when it compacts: Claude a `system` entry with subtype `compact_boundary`, Codex an item of type

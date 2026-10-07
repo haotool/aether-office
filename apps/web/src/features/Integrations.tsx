@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { IntegrationConnection } from '@aether/contracts';
 import { api, execute } from '../api.js';
-import { Field, useT } from '../ui.js';
+import { Field, useT, whyNot } from '../ui.js';
 
 export function Integrations({ projectId, canManage }: { projectId: string; canManage: boolean }) {
   const t = useT();
@@ -62,6 +62,7 @@ export function Integrations({ projectId, canManage }: { projectId: string; canM
             </button>{' '}
             <button
               disabled={!canManage}
+              {...whyNot(canManage, t('needOwner'))}
               onClick={() =>
                 run(() =>
                   execute(

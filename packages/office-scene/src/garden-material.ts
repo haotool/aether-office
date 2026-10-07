@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { DITHER_END, DITHER_PARS } from './dither.js';
 
 /** Flowers the shader can open independently: a tier's each (up to 12), the great bloom's and a merge's each (up to 16). */
 export const MAX_FLOWERS = 32;
@@ -66,6 +67,7 @@ export function gardenMaterial() {
         gl_Position = projectionMatrix * viewMatrix * world;
       }`,
     fragmentShader: `
+      ${DITHER_PARS}
       uniform float time;
       varying vec4 vTintA;
       varying vec3 vTintB;
@@ -114,7 +116,9 @@ export function gardenMaterial() {
         }
         gl_FragColor = vec4(alpha > 0.0 ? min(color, vec3(1.0)) : 1.0 - exp(-color * 2.2), alpha);
         #include <colorspace_fragment>
+        ${DITHER_END}
       }`,
+    dithering: true,
     transparent: true,
     depthWrite: false,
     // Premultiplied: a petal (alpha above 0) hides what is behind it, light (alpha 0) simply adds.
@@ -158,6 +162,7 @@ export function pollenMaterial() {
         gl_Position = projectionMatrix * view;
       }`,
     fragmentShader: `
+      ${DITHER_PARS}
       varying vec3 vTint;
       varying float vFade;
       void main() {
@@ -165,7 +170,9 @@ export function pollenMaterial() {
         float a = smoothstep(1.0, 0.0, d);
         gl_FragColor = vec4(vTint * a * a * vFade * 1.6, 1.0);
         #include <colorspace_fragment>
+        ${DITHER_END}
       }`,
+    dithering: true,
     transparent: true,
     depthWrite: false,
     blending: THREE.AdditiveBlending,

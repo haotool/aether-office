@@ -1,5 +1,6 @@
 import type { Agent, LocalSessionsResponse, Snapshot, Subagent } from '@aether/contracts';
 import { shortLabel } from '@aether/kernel';
+import { translate, type Locale } from '../i18n.js';
 import type { Pulse, ScreenFacts } from '@aether/office-scene/model';
 import { intensityOf, type Intensity } from './activity-rate.js';
 import type { ContextReading } from './compaction.js';
@@ -118,12 +119,12 @@ function tethersOf(sessions: Sessions): { parent: string; child: string }[] {
 }
 
 /** What each observed member is doing right now, in a word: the tool its last hook named, or the state it waits in. */
-function doingOf(sessions: Sessions, zh: boolean): Record<string, string> {
+function doingOf(sessions: Sessions, locale: Locale): Record<string, string> {
   const out: Record<string, string> = {};
   for (const s of sessions) {
     const id = `${LOCAL_PREFIX}${s.key}`;
     if (s.hook?.activity === 'waiting_permission')
-      out[id] = zh ? '等待授權' : 'waiting for approval';
+      out[id] = translate(locale, 'waitingForApproval');
     else if (s.hook?.tool) out[id] = s.hook.tool;
     for (const c of s.subagents.filter(isWorking)) out[`${id}${SUBAGENT_INFIX}${c.id}`] = c.type;
   }
@@ -241,7 +242,7 @@ export function officeModel(
     names: namesOf(all),
     contexts: contextsOf(all),
     intensity: intensitiesOf(all, beats, Date.now()),
-    doing: doingOf(all, locale === 'zh-TW'),
+    doing: doingOf(all, locale),
     attention: attentionOf(all, locale),
     liveSquads: liveSquadsOf(all),
     squads: squadsOf(all),

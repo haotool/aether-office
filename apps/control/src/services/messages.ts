@@ -13,7 +13,7 @@ import { messages } from '../db/schema.js';
 import { identityActor } from './identity.js';
 import { agent, project, emit, type Context } from './context.js';
 import { roomRecipients } from './rooms.js';
-import { assertMeetingOpen } from './meetings.js';
+import { assertMeetingOpen } from './meeting-gate.js';
 
 function participant(ctx: Context, projectId: string, id: string, persist = true): void {
   let kind: 'agent' | 'user' = 'agent';
@@ -260,6 +260,12 @@ export function inbox(ctx: Context, actor: Actor, projectId: string, input: unkn
 
 // The persisted deadline survives restarts; a bounded sweep also runs without an open browser.
 export function refreshMessageWaits(ctx: Context, projectId?: string) {
+  // The server's once-a-second pass takes the write lock only when a wait is open.
+  if (
+    !projectId &&
+    !ctx.sqlite.prepare("SELECT 1 FROM message_waits WHERE state='pending' LIMIT 1").get()
+  )
+    return 0;
   return ctx.sqlite
     .transaction(() => {
       const rows = ctx.sqlite

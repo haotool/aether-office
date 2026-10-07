@@ -1,20 +1,27 @@
-import type { Agent, AttributedSession, LocalSession } from '@aether/contracts';
+import {
+  SESSION_ACTIVE_MS,
+  SESSION_GONE_MS,
+  type Agent,
+  type AttributedSession,
+  type LocalSession,
+} from '@aether/contracts';
+import { translate } from './i18n.js';
 import { SUBAGENT_INFIX } from './subagent-id.js';
 import { apparitionOf, type Apparition } from '@aether/office-scene/model';
 import {
   DEPARTMENTS,
   ROLE_LABELS,
   classifySession,
+  formatSpan,
   roleOfSubagent,
   shortLabel,
   type Classification,
 } from '@aether/kernel';
 
 const SPECIES = ['fox', 'cat', 'rabbit', 'bear', 'otter', 'raccoon', 'panda', 'dog'] as const;
-const WORKING_MS = 2 * 60 * 1000;
-const GONE_MS = 10 * 60 * 1000;
 export const LOCAL_PREFIX = 'local:';
 export { SUBAGENT_INFIX } from './subagent-id.js';
+export { formatSpan };
 export { mergeLayout, type MergeOptions } from './layout-merge.js';
 
 const basename = (path: string) => path.split('/').filter(Boolean).pop() ?? '';
@@ -51,13 +58,13 @@ export function activityOf(session: LocalSession, now: number): Agent['activity'
   // Hook events are authoritative when installed; otherwise the process table, then a file-mtime heuristic.
   if (session.hook?.activity === 'ended') return 'offline';
   // A hook state is only as fresh as its last event: with no process behind it, a long-silent one is stale.
-  if (session.hook && session.process === 'none' && now - session.hook.at > GONE_MS)
+  if (session.hook && session.process === 'none' && now - session.hook.at > SESSION_GONE_MS)
     return 'offline';
   if (session.hook?.activity === 'waiting_permission') return 'waiting_permission';
   if (session.hook) return session.hook.activity === 'working' ? 'working' : 'idle';
   // No process: a recently written file is a finished session, not work, and a long-quiet one is gone.
-  if (session.process === 'none') return now - session.mtime < GONE_MS ? 'idle' : 'offline';
-  return now - session.mtime < WORKING_MS ? 'working' : 'idle';
+  if (session.process === 'none') return now - session.mtime < SESSION_GONE_MS ? 'idle' : 'offline';
+  return now - session.mtime < SESSION_ACTIVE_MS ? 'working' : 'idle';
 }
 
 function observed(
@@ -99,7 +106,7 @@ const noteOf = (s: Pick<LocalSession, 'liveness'>, locale: 'zh-TW' | 'en') => {
   const state =
     s.liveness.state in NOTE ? ` · ${NOTE[s.liveness.state as keyof typeof NOTE][locale]}` : '';
   const zombies = s.liveness.zombies.length
-    ? ` · ${locale === 'zh-TW' ? '殭屍' : 'zombies'} ×${s.liveness.zombies.length}`
+    ? ` · ${translate(locale, 'zombiesWord')} ×${s.liveness.zombies.length}`
     : '';
   return state + zombies;
 };
@@ -223,18 +230,6 @@ export function tokensByDepartment(
     .sort((a, b) => b.tokens - a.tokens);
 }
 
-/** A span of time as a person reads it: "3 分鐘", "14 小時", "2 天". Rounded down, never zero. */
-export function formatSpan(ms: number, locale: 'zh-TW' | 'en' = 'zh-TW'): string {
-  const minutes = Math.max(1, Math.floor(ms / 60_000));
-  const [n, zh, en] =
-    minutes < 60
-      ? [minutes, '分鐘', 'min']
-      : minutes < 48 * 60
-        ? [Math.floor(minutes / 60), '小時', 'h']
-        : [Math.floor(minutes / 1440), '天', 'd'];
-  return locale === 'zh-TW' ? `${n} ${zh}` : `${n} ${en}`;
-}
-
 /** Sessions worth a person's attention for how they are alive: forgotten, ownerless, or with zombies under them. */
 export const needsAttention = (s: Pick<LocalSession, 'liveness'>) =>
   ['dormant', 'orphaned'].includes(s.liveness.state) || s.liveness.zombies.length > 0;
@@ -270,7 +265,6 @@ export function attentionReason(
   s: Pick<LocalSession, 'liveness'>,
   locale: 'zh-TW' | 'en' = 'zh-TW',
 ): string | null {
-  const zh = locale === 'zh-TW';
   const parts: string[] = [];
   const { state, quietMs, zombies } = s.liveness;
   if (state === 'dormant' || state === 'orphaned') {
@@ -280,7 +274,7 @@ export function attentionReason(
   if (zombies.length) {
     const programs = [...new Set(zombies.map((z) => z.program).filter(Boolean))].slice(0, 3);
     parts.push(
-      `${zh ? '殭屍' : 'zombies'} ×${zombies.length}${programs.length ? ` (${programs.join(', ')})` : ''}`,
+      `${translate(locale, 'zombiesWord')} ×${zombies.length}${programs.length ? ` (${programs.join(', ')})` : ''}`,
     );
   }
   return parts.length ? parts.join(' · ') : null;

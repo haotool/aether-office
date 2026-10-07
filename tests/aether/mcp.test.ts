@@ -12,9 +12,11 @@ import {
   sessionCredential,
 } from '../../apps/control/src/services/runners.js';
 import { command } from './fixture.js';
+import { freePort } from './timing.js';
 it('MCP stdio uses durable scoped inbox/replies, stable retries and expiring run credentials', async () => {
   const control = new Control(':memory:', { mode: 'live' });
-  const app = createServer(control, { origin: 'http://127.0.0.1:4329' });
+  const port = await freePort();
+  const app = createServer(control, { origin: `http://127.0.0.1:${port}` });
   const owner = control.createIdentity(undefined, {
     name: 'MCP test owner',
     role: 'owner',
@@ -70,7 +72,7 @@ it('MCP stdio uses durable scoped inbox/replies, stable retries and expiring run
         : ['--import', import.meta.resolve('tsx'), resolve('apps/runner/src/mcp-main.ts')],
     env: {
       PATH: process.env['PATH'] ?? '',
-      AETHER_MCP_URL: 'http://127.0.0.1:4329',
+      AETHER_MCP_URL: `http://127.0.0.1:${port}`,
       AETHER_MCP_TOKEN: credential.token,
       AETHER_MCP_PROJECT: projectId,
       AETHER_MCP_AGENT: agentId,
@@ -93,7 +95,7 @@ it('MCP stdio uses durable scoped inbox/replies, stable retries and expiring run
     stderr += String(bytes);
   });
   try {
-    await app.listen({ host: '127.0.0.1', port: 4329 });
+    await app.listen({ host: '127.0.0.1', port });
     await client.connect(transport);
     const list = await client.listTools();
     expect(list.tools.map((t) => t.name)).toEqual(

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Skill } from '@aether/contracts';
 import { api, execute } from '../api.js';
-import { Field, useT } from '../ui.js';
+import { Field, useT, whyNot } from '../ui.js';
 
 export function Skills({ projectId, canManage }: { projectId: string; canManage: boolean }) {
   const t = useT();
@@ -44,6 +44,7 @@ export function Skills({ projectId, canManage }: { projectId: string; canManage:
             </details>
             <button
               disabled={!canManage}
+              {...whyNot(canManage, t('needOwner'))}
               onClick={() =>
                 run(() =>
                   execute(

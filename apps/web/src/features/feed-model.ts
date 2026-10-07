@@ -1,6 +1,6 @@
 import type { Agent, AttributedSession } from '@aether/contracts';
 import { toPlainPreview } from '@aether/kernel';
-import { LOCAL_PREFIX, activityOf, formatSpan, rowLabelOf } from '../localSessions.js';
+import { LOCAL_PREFIX, activityOf, rowLabelOf } from '../localSessions.js';
 import type { SquadView } from './feed-squads.js';
 import { sessionWaiting } from './needs-you.js';
 
@@ -46,12 +46,6 @@ export const STALE_MS = 2 * 60 * 60 * 1000;
 export const MAX_IDLE_ROWS = 30;
 /** A reply is previewed in a line or two: this many characters is more than any row shows. */
 const REPLY_CHARS = 200;
-
-/** "3 分鐘前", "2 min ago", "剛剛": when something last happened. */
-export function ago(ms: number, locale: 'zh-TW' | 'en'): string {
-  if (ms < 60_000) return locale === 'zh-TW' ? '剛剛' : 'now';
-  return locale === 'zh-TW' ? `${formatSpan(ms, locale)}前` : `${formatSpan(ms, locale)} ago`;
-}
 
 export function buildFeed({
   sessions,

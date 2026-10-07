@@ -41,6 +41,7 @@ docs/             This documentation, ADRs and the verification ledger
 | `pnpm verification:report` / `verification:check` | Regenerate / check the verification report from the ledger           |
 | `node scripts/audit-dependencies.mjs [package...]` | Reads the registry metadata of the dev dependencies (network) for the dependency ledger entry |
 | `pnpm audit:deps`             | `pnpm audit` for high-severity advisories                                                |
+| `node scripts/check-bundle-size.mjs` | After `pnpm build`: gzip size of the web JavaScript against its budget (CI runs it)      |
 | `pnpm verify:clean`           | Clean-room install, build and test of the committed tree                                 |
 | `node --import tsx scripts/docs-screenshots.mjs --port 4511` | Retakes the README screenshots from a synthetic demo stack (see [images](images/README.md)) |
 | `pnpm backup`                 | Create or restore a backup of the control plane's data                                   |
@@ -60,7 +61,7 @@ docs/             This documentation, ADRs and the verification ledger
   verification ledger are checked here too. Playwright in `e2e/` (about 50 specs): real control plane and runner on ports 4320 and
   4330 with a **fixture home** (`playwright.config.ts` points `AETHER_LOCAL_SESSIONS_HOME`, `AETHER_HOOK_SPOOL` and
   `AETHER_CLAUDE_USAGE_FILE` at a temporary directory, so no test reads your real `~/.claude` or `~/.codex`). The e2e specs drive
-  Chrome (`channel: 'chrome'`); WebKit is opt-in with `AETHER_WEBKIT=1`. GPU measurements (`PERF_GPU=1`) and `pnpm smoke:live`
+  Chrome (`channel: 'chrome'`; in CI, where `CI` is set, Playwright's own Chromium); WebKit is opt-in with `AETHER_WEBKIT=1`. GPU measurements (`PERF_GPU=1`) and `pnpm smoke:live`
   are never part of the default run: a skipped check is "not run", never "passed".
 - **Keeping tests stable.** Use fixture data with fixed timestamps rather than "now" where you can; synthetic processes
   (`fixtures/processes`, `sleep` named `claude`) instead of real CLIs; wait on a visible state (`expect(...).toBeVisible()`,
@@ -94,7 +95,8 @@ at how long it takes.
   `afterAll`, in that order: hooks run in reverse), and remove with `rmSync(dir, { recursive: true, force: true, maxRetries: 5 })`.
 - **Wall-clock budgets are for performance runs.** A bound on how fast something is (`scan-budget`, a verifier that must be
   killed within a time) is asserted only with `AETHER_TIMING_TESTS=1` (`budget(tight, loose)` in `tests/aether/timing.ts`).
-  The default run asserts the behavior with a loose bound that a hang or a missing yield still breaks.
+  The default run asserts the behavior with a loose bound that a hang or a missing yield still breaks. Scan cost is also
+  guarded by counting, which needs no stopwatch: `scan-work-bound.test.ts` counts the files a scan stats and opens.
 - **Prove it under load.** Run the file ten times next to a CPU burner (`yes > /dev/null` four to twenty times, killed by its
   own PID afterwards) before calling a timing fix done, and compare with the same run on the old test.
 
@@ -107,7 +109,8 @@ The original acceptance statements are in Traditional Chinese. A green build is 
 
 ## Database changes
 
-Add a numbered SQL file to `apps/control/src/db/migrations` (never edit an applied one; checksums are recorded). Update the
+Add a numbered SQL file to `apps/control/src/db/migrations` (never edit an applied one; checksums are recorded, and an edited one stops the server at start with a message that says so; a
+copy of the database, `control.sqlite.pre-migration-*.sqlite`, is made first and the newest three are kept). Update the
 Zod schemas in `packages/contracts` and add a test that exercises the migration through the service.
 
 ## Adding a capability

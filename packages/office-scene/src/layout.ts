@@ -76,21 +76,69 @@ const clampFloor = (floor: number) => Math.min(FLOORS - 1, Math.max(0, floor));
 export const floorsFrom = (floor: number) =>
   Array.from({ length: FLOORS }, (_, k) => (clampFloor(floor) + k) % FLOORS);
 
+/** A desk by floor and slot (the index `seatAt` maps to a place). */
+export type Seat = readonly [floor: number, slot: number];
+
+/**
+ * Who sits where. An agent already in `previous` keeps its seat for as long as it is among `agents`, whatever order they
+ * come in; every other agent takes the first free slot on its floor (the next floor with room when that one is full), in
+ * the order given. A departed agent's seat is simply free again; nobody else moves. An entry of `previous` that is not a
+ * valid, unshared seat is ignored. Pure: returns a new map holding only the agents present.
+ */
+export function assignSeats(
+  previous: ReadonlyMap<string, Seat>,
+  agents: readonly Agent[],
+  floorOf: (agent: Agent) => number = () => 0,
+): Map<string, Seat> {
+  const taken = Array.from({ length: FLOORS }, () => new Set<number>());
+  const out = new Map<string, Seat>();
+  const fresh: Agent[] = [];
+  for (const agent of agents) {
+    const [floor, slot] = previous.get(agent.id) ?? [-1, -1];
+    const ok =
+      Number.isInteger(floor) &&
+      Number.isInteger(slot) &&
+      floor >= 0 &&
+      floor < FLOORS &&
+      slot >= 0 &&
+      slot < FLOOR_CAPACITY &&
+      !taken[floor]!.has(slot);
+    if (ok) {
+      taken[floor]!.add(slot);
+      out.set(agent.id, [floor, slot]);
+    } else fresh.push(agent);
+  }
+  for (const agent of fresh)
+    for (const floor of floorsFrom(floorOf(agent))) {
+      let slot = 0;
+      while (taken[floor]!.has(slot)) slot++;
+      if (slot >= FLOOR_CAPACITY) continue;
+      taken[floor]!.add(slot);
+      out.set(agent.id, [floor, slot]);
+      break;
+    }
+  return out;
+}
+
 const MIN_DESKS = [12, 8, 8, 8, 8]; // a populated look even on a quiet floor; the ground floor keeps its original twelve
 /**
  * One layout for the whole building. `floorOf` says which floor an agent works on (default: the ground floor); the
- * ground-floor ids stay `desk-<n>` so layouts saved before floors existed keep meaning the same thing.
+ * ground-floor ids stay `desk-<n>` so layouts saved before floors existed keep meaning the same thing. `seats` (see
+ * `assignSeats`) holds the desks agents already have, so a desk can stay empty between two members.
  */
 export function defaultLayout(
   agents: readonly Agent[],
   floorOf: (agent: Agent) => number = () => 0,
+  seats: ReadonlyMap<string, Seat> = new Map(),
 ): Layout {
   const objects: Layout['objects'] = [];
-  // A floor holds FLOOR_CAPACITY desks; the members beyond it take the next floor with a free desk.
+  // A floor holds FLOOR_CAPACITY desks; the members beyond it take the next floor with a free desk. `onFloor[f]` is
+  // indexed by slot and has holes where a desk is free.
   const onFloor: Agent[][] = Array.from({ length: FLOORS }, () => []);
+  const placed = assignSeats(seats, agents, floorOf);
   for (const agent of agents) {
-    const floor = floorsFrom(floorOf(agent)).find((f) => onFloor[f]!.length < FLOOR_CAPACITY);
-    if (floor !== undefined) onFloor[floor]!.push(agent);
+    const seat = placed.get(agent.id);
+    if (seat) onFloor[seat[0]]![seat[1]] = agent;
   }
   for (let floor = 0; floor < FLOORS; floor++) {
     const here = onFloor[floor]!;

@@ -27,6 +27,13 @@ export type OfficeSceneProps = {
   locale: 'zh-TW' | 'en';
   focus: string;
   onFailure: () => void;
+  /**
+   * The GPU took the WebGL context away (iOS does it when a page sits in the background). Given, the page decides what to
+   * show (and may remount the scene to get a new context); without it a lost context is a plain `onFailure`.
+   */
+  onContextLost?: () => void;
+  /** The browser gave the context back by itself: the scene redraws, and the page can drop what it showed for the loss. */
+  onContextRestored?: () => void;
   messages?: readonly SceneMessage[];
   onMessageUnreachable?: (messageId: string, recipientId: string) => void;
   /** Fired when the user drags, zooms or pans the camera, so automation like a tour can yield. */

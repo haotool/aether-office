@@ -115,4 +115,3 @@ export function createSpritePool() {
     },
   };
 }
-export type SpritePool = ReturnType<typeof createSpritePool>;

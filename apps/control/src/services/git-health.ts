@@ -11,11 +11,17 @@ import { mapPool } from './pool.js';
 const run = promisify(execFile);
 // Worktrees inspected at once: each is a few short git processes, mostly waiting on the disk.
 const WIDTH = Math.min(12, availableParallelism());
-export const git = async (cwd: string, args: string[], timeout = 8000) =>
+/** The one way AETHER runs git: read-only, no fsmonitor hook (a repository's own config must not run code), no optional locks. */
+export const git = async (
+  cwd: string,
+  args: string[],
+  timeout = 8000,
+  maxBuffer = 8 * 1024 * 1024,
+) =>
   (
     await run('git', ['-C', cwd, '-c', 'core.fsmonitor=false', ...args], {
       timeout,
-      maxBuffer: 8 * 1024 * 1024,
+      maxBuffer,
       env: {
         PATH: process.env['PATH'] ?? '',
         HOME: process.env['HOME'] ?? '',

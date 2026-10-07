@@ -48,7 +48,7 @@ maintainer.
 - **Ideas are free; expression is not.** Reading a project to understand an approach and then writing your own code is
   fine whatever its licence. Do not keep the other project open beside your editor while writing the equivalent code, and
   do not reproduce its structure, names and comments line by line.
-- Projects under AGPL, GPL, source-available, non-commercial or rider licences (in `.research/`: agent-teams-ai and
+- Projects under AGPL, GPL, source-available, non-commercial or rider licences (among the studied projects: agent-teams-ai and
   claude-squad are AGPL-3.0; agents-office is PolyForm Noncommercial; mcp_agent_mail is MIT with a rider that excludes
   OpenAI and Anthropic) are **ideas only**; the two with restrictive riders are not to be opened at all.
 - Before a release, `node scripts/oss/overlap-scan.mjs --refs <clones>` reports long verbatim overlaps with the reference

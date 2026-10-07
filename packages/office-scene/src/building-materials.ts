@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { DITHER_END, DITHER_PARS, DITHERED } from './dither.js';
 
 /** Materials of a floor: the department-tinted hull, glass and glow, and the holographic surfaces. */
 export type Materials = ReturnType<typeof createMaterials>;
@@ -51,6 +52,7 @@ function hologram(color: string, strength = 1) {
         gl_Position = projectionMatrix * viewMatrix * world;
       }`,
     fragmentShader: `
+      ${DITHER_PARS}
       uniform float time;
       uniform vec3 color;
       uniform float strength;
@@ -64,7 +66,9 @@ function hologram(color: string, strength = 1) {
         float flicker = 0.92 + 0.08 * sin(time * 17.0 + vWorld.x * 3.0);
         float alpha = (0.18 + 0.55 * fresnel) * scan * flicker + band * 0.25;
         gl_FragColor = vec4(color * (0.7 + fresnel), alpha * strength);
+        ${DITHER_END}
       }`,
+    ...DITHERED,
     transparent: true,
     depthWrite: false,
     blending: THREE.AdditiveBlending,

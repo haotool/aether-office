@@ -1,3 +1,4 @@
+import { SESSION_ACTIVE_MS } from '@aether/contracts';
 import type { AgentProcess, Zombie } from './agent-processes.js';
 
 /**
@@ -20,7 +21,6 @@ export type Liveness = {
   zombies: Zombie[];
 };
 
-export const ACTIVE_MS = 2 * 60 * 1000;
 export const DORMANT_MS = 6 * 60 * 60 * 1000;
 const BUSY_CPU_SECONDS = 0.5; // CPU used between two looks that counts as doing something
 
@@ -43,7 +43,7 @@ export function classifyLiveness(input: {
   const quietMs = Math.max(0, now - lastSign);
   const state: LivenessState = process.orphaned
     ? 'orphaned'
-    : quietMs < ACTIVE_MS
+    : quietMs < SESSION_ACTIVE_MS
       ? 'active'
       : quietMs < DORMANT_MS
         ? 'idle'

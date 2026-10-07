@@ -12,6 +12,7 @@ import { Runner } from '../../apps/runner/src/runner.js';
 import { NativeExecutor } from '../../apps/runner/src/native.js';
 import { Journal } from '../../apps/runner/src/journal.js';
 import { command } from './fixture.js';
+import { freePort } from './timing.js';
 it('runs a synthetic app-server through real HTTP, isolated Git, durable approval and tool/usage projections', async () => {
   const directory = mkdtempSync(join(tmpdir(), 'aether-native-wire-'));
   const repository = join(directory, 'repo');
@@ -36,7 +37,8 @@ it('runs a synthetic app-server through real HTTP, isolated Git, durable approva
     { mode: 0o700 },
   );
   const control = new Control(join(directory, 'control.sqlite'), { mode: 'live' });
-  const app = createServer(control, { origin: 'http://127.0.0.1:4328' });
+  const port = await freePort();
+  const app = createServer(control, { origin: `http://127.0.0.1:${port}` });
   const owner = control.createIdentity(undefined, {
     name: 'Test owner',
     role: 'owner',
@@ -104,13 +106,13 @@ it('runs a synthetic app-server through real HTTP, isolated Git, durable approva
     binaries: { codex: binary },
   });
   const runner = new Runner(
-    'http://127.0.0.1:4328',
+    `http://127.0.0.1:${port}`,
     machine.token,
     new Journal(join(directory, 'journal.json')),
     native,
   );
   try {
-    await app.listen({ host: '127.0.0.1', port: 4328 });
+    await app.listen({ host: '127.0.0.1', port });
     control.execute(owner.actor, command('work.assign', { workId, agentId }, projectId, 1));
     runner.start();
     let approval: { id: string; actionHash: string } | undefined;

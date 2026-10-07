@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { DITHER_END, DITHER_PARS } from './dither.js';
 import type { Stalk, Strand } from './stalk-types.js';
 
 const TAPER = 3; // metres over which a strand swells from its end to full thickness
@@ -103,6 +104,7 @@ export function stalkMaterial() {
         gl_Position = projectionMatrix * viewMatrix * world;
       }`,
     fragmentShader: `
+      ${DITHER_PARS}
       uniform float time;
       uniform float grow;
       uniform float energy;
@@ -126,7 +128,9 @@ export function stalkMaterial() {
           + vec3(1.0) * (pulse * vein * 0.5 + tip);
         gl_FragColor = vec4(color, 1.0);
         #include <colorspace_fragment>
+        ${DITHER_END}
       }`,
+    dithering: true,
     transparent: true,
     depthWrite: false,
     blending: THREE.AdditiveBlending,

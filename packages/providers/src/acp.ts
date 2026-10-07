@@ -10,10 +10,12 @@ import {
   type RequestPermissionResponse,
   type SessionNotification,
 } from '@agentclientprotocol/sdk';
+import { APP_VERSION } from '@aether/contracts';
 import type { ProviderEvent } from './protocol.js';
 import { text, type NativeSink } from './protocol.js';
 import { groupStopper } from './process-control.js';
-import { processIdentity, type ProviderResult } from './index.js';
+import { processIdentity } from './process-identity.js';
+import type { ProviderResult } from './index.js';
 
 // Generic ACP client adapter. What it can do is decided by the agent's negotiated capabilities, not by
 // the fact that it speaks ACP: nothing is assumed beyond what `initialize` reports.
@@ -167,7 +169,7 @@ export class AcpAdapter {
       const init = await connection.initialize({
         protocolVersion: PROTOCOL_VERSION,
         clientCapabilities: { fs: { readTextFile: false, writeTextFile: false }, terminal: false },
-        clientInfo: { name: 'aether-office', version: '0.4.0-dev.0' },
+        clientInfo: { name: 'aether-office', version: APP_VERSION },
       });
       return negotiationFrom(init);
     } finally {
@@ -216,7 +218,7 @@ export class AcpAdapter {
       const init = await connection.initialize({
         protocolVersion: PROTOCOL_VERSION,
         clientCapabilities: { fs: { readTextFile: false, writeTextFile: false }, terminal: false },
-        clientInfo: { name: 'aether-office', version: '0.4.0-dev.0' },
+        clientInfo: { name: 'aether-office', version: APP_VERSION },
       });
       this.negotiated = negotiationFrom(init);
       const session = await connection.newSession({ cwd: this.options.cwd, mcpServers: [] });

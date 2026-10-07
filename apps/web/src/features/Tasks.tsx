@@ -5,7 +5,7 @@ import { execute } from '../api.js';
 import { useCapabilities } from './CapabilityMatrix.js';
 import { WorkflowStart } from './WorkflowStart.js';
 import { BOARD } from './board.js';
-import { Modal, Field, Empty, Badge, PageHeading, Fold, Clamp, useT } from '../ui.js';
+import { Modal, Field, Empty, Badge, PageHeading, Fold, Clamp, useT, whyNot } from '../ui.js';
 import { Integration } from './Integration.js';
 import { TaskDiagnostics } from './TaskDiagnostics.js';
 const TaskDag = lazy(() => import('./TaskDag.js').then((m) => ({ default: m.TaskDag })));
@@ -56,7 +56,12 @@ export function Tasks({
         action={
           <>
             {canWrite && <WorkflowStart projectId={snapshot.project.id} onSaved={onSaved} />}
-            <button className="primary" onClick={onNew} disabled={!canWrite}>
+            <button
+              className="primary"
+              onClick={onNew}
+              disabled={!canWrite}
+              {...whyNot(canWrite, t('needOperator'))}
+            >
               <Plus size={16} />
               {t('newWork')}
             </button>

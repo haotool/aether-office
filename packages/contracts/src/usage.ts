@@ -15,7 +15,7 @@ export const usageTotalsSchema = z.object({
   /** Model requests: an assistant message (Claude) or a token_count that moved (Codex). */
   requests: count,
   toolCalls: count,
-  /** Session-minutes: gaps of at most five minutes between a transcript's events, summed over sessions. */
+  /** Session-minutes: gaps of at most five minutes between a transcript's events, summed over sessions: parallel sessions overlap, so this can exceed the wall clock. */
   activeMinutes: count,
   sessions: count,
 });
@@ -51,12 +51,25 @@ export const usageResponseSchema = z.object({
   /** Local calendar days (YYYY-MM-DD), oldest first; the last is today. */
   days: z.array(z.string()).max(31),
   generatedAt: z.number(),
-  /** The first scan reads history in slices: until it is complete the numbers are a lower bound. */
-  scan: z.object({ complete: z.boolean(), files: count, pending: count }),
+  /**
+   * The first scan reads history in slices: until it is complete the numbers are a lower bound. `truncated` says the
+   * file cap or the directory budget cut the listing short (`found` is how many transcripts a complete look had seen,
+   * `files` how many are tracked), `failedFiles` the files the last pass could not read, `skippedLines` the usage
+   * lines that could not be placed in time. Any of them above zero means the numbers can be too low.
+   */
+  scan: z.object({
+    complete: z.boolean(),
+    files: count,
+    pending: count,
+    found: count,
+    truncated: z.boolean(),
+    failedFiles: count,
+    skippedLines: count,
+  }),
   building: usageScopeSchema,
   /** One per department, by floor; a department with no usage is still listed. */
   offices: z.array(z.object({ floor: count, department: z.string(), scope: usageScopeSchema })),
-  /** Usage of sessions that no department was assigned to (older than the session list's window). */
+  /** Usage of sessions that no department was assigned to (older than the session list's window): offices + this = the building. */
   unplaced: usageScopeSchema,
   projects: z.array(z.object({ repo: z.string().max(120), scope: usageScopeSchema })).max(12),
   providers: z.array(
@@ -109,6 +122,8 @@ export const gitKpiSchema = z.object({
   longestOpenDays: z.number().nullable(),
   /** Commits per day of `UsageResponse.days`. */
   daily: z.array(count).max(31),
+  /** The commit list or the line count hit its cap: commits, authors and lines are then a lower bound. */
+  truncated: z.boolean(),
 });
 export type GitKpi = z.infer<typeof gitKpiSchema>;
 
@@ -116,6 +131,8 @@ export const gitKpiResponseSchema = z.object({
   enabled: z.boolean(),
   days: z.array(z.string()).max(31),
   generatedAt: z.number(),
+  /** Projects with a repository that were left out of every figure here (only the most recently active are read). */
+  omittedRepos: count,
   building: gitKpiSchema.nullable(),
   offices: z.array(z.object({ floor: count, kpi: gitKpiSchema.nullable() })),
   projects: z.array(

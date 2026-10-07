@@ -7,6 +7,7 @@ import {
   PlaneGeometry,
   ShaderMaterial,
 } from 'three';
+import { DITHER_END, DITHER_PARS, DITHERED } from '../dither.js';
 
 const vertexShader = /* glsl */ `
   attribute vec2 aSize;
@@ -26,6 +27,7 @@ const vertexShader = /* glsl */ `
   }`;
 
 const fragmentShader = /* glsl */ `
+  ${DITHER_PARS}
   varying vec2 vLocal;
   varying vec2 vSize;
   varying vec3 vTone;
@@ -41,6 +43,7 @@ const fragmentShader = /* glsl */ `
     float fill = (1.0 - smoothstep(-0.7, 0.0, d)) * step(d, 0.0);
     float alpha = (line * mix(0.35, 0.85, dash) + fill * 0.1) * vAlpha;
     gl_FragColor = vec4(vTone, alpha);
+    ${DITHER_END}
   }`;
 
 export const ZONE_CAPACITY = 16;
@@ -57,6 +60,7 @@ export function createZoneDecal() {
   const material = new ShaderMaterial({
     vertexShader,
     fragmentShader,
+    ...DITHERED,
     transparent: true,
     depthWrite: false,
     blending: AdditiveBlending,

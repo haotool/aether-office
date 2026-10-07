@@ -16,7 +16,7 @@ import type { Layout, Snapshot } from '@aether/contracts';
 import type { Session } from '../api.js';
 import { usePreferences } from '../state.js';
 import type { TourAction, TourState } from '../tour.js';
-import { useT } from '../ui.js';
+import { useT, whyNot } from '../ui.js';
 import { avatarState } from '../avatar/state.js';
 import { Avatar } from './Avatar.js';
 import { squadAccentOf } from './feed-squads.js';
@@ -91,7 +91,12 @@ export function OfficePage({
               <PanelRightClose size={17} />
             </button>
             {prefs.advanced && (
-              <button className="primary" disabled={!canWrite} onClick={onNewTask}>
+              <button
+                className="primary"
+                disabled={!canWrite}
+                onClick={onNewTask}
+                {...whyNot(canWrite, t('needOperator'))}
+              >
                 <Plus size={16} />
                 {t('newWork')}
               </button>

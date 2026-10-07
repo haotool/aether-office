@@ -35,7 +35,12 @@ import { ProjectedSpeech, SpeechLayer } from './Speech.js';
 import { MessageCarriers } from './MessageCarriers.js';
 import { PerfProbe } from './PerfProbe.js';
 import { AdaptiveRatio, ShadowThrottle, Warmup } from './PerfControllers.js';
-import { PIXEL_RATIO_FLOOR, SHADOW_INTERVAL_MS } from './perf-control.js';
+import {
+  PIXEL_RATIO_FLOOR,
+  SHADOW_INTERVAL_MS,
+  antialiasFor,
+  pixelRatioCap,
+} from './perf-control.js';
 import { usePoseCues } from './use-pose-cues.js';
 import { SceneCamera } from './SceneCamera.js';
 import { StalkTooltip } from './StalkTooltip.js';
@@ -192,8 +197,7 @@ export function OfficeScene(props: OfficeSceneProps) {
     props.quality === 'low' ? [] : sceneAgents.filter((a) => props.compactions?.[a.id]);
 
   // The most the scene may render at, by quality; AdaptiveRatio lowers it (to 0.75 at the least) while frames run slow.
-  const maxRatio =
-    props.quality === 'high' ? (compact ? 1.5 : 2) : props.quality === 'balanced' ? 1.5 : 1;
+  const maxRatio = pixelRatioCap(props.quality, compact);
   const shadowsOn = !compact && props.quality !== 'low';
   const animate = !props.reducedMotion && props.quality !== 'low';
   const active =
@@ -232,7 +236,7 @@ export function OfficeScene(props: OfficeSceneProps) {
           frameloop={warm && !props.paused ? 'demand' : 'never'}
           dpr={[PIXEL_RATIO_FLOOR, maxRatio]}
           gl={{
-            antialias: !compact && props.quality !== 'low',
+            antialias: antialiasFor(window.location.search, compact, props.quality),
             powerPreference: 'high-performance',
             alpha: false,
           }}
@@ -362,10 +366,13 @@ export function OfficeScene(props: OfficeSceneProps) {
             say={ariaLog.say}
             pose={pose.request}
           />
-          <Runtime onFailure={props.onFailure} />
+          <Runtime
+            onLost={props.onContextLost ?? props.onFailure}
+            onRestored={props.onContextRestored}
+          />
           {props.squads !== undefined && <SquadWarm quality={props.quality} zh={zh} />}
           <Warmup onReady={ready} />
-          <AdaptiveRatio ceiling={maxRatio} smooth={filming} />
+          <AdaptiveRatio ceiling={maxRatio} smooth={filming} compact={compact} />
           {shadowsOn && <ShadowThrottle intervalMs={SHADOW_INTERVAL_MS[props.quality]} />}
           {props.onPerfReport && (
             <PerfProbe

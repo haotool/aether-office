@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { Command } from '@aether/contracts';
 import { assertVersion, DomainError } from '@aether/kernel';
 import { task, agent, type Context } from './context.js';
-import { stepConstraint } from './workflows.js';
+import { stepConstraint } from './step-constraint.js';
 export function requestReview(ctx: Context, c: Extract<Command, { type: 'work.request_review' }>) {
   const work = task(ctx, c.projectId, c.data.workId);
   assertVersion(work.version, c.expectedVersion);

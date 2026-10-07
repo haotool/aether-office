@@ -49,6 +49,15 @@ it('enforces the architecture boundaries: kernel stays pure and web/scene never 
     ['packages/office-scene/src/x.ts', "import { join } from 'node:path';"],
     ['apps/runner/src/x.ts', "import { db } from '../../control/src/db/connection.js';"],
     ['apps/web/src/x.ts', '// @ts-ignore\nexport const a = 1;'],
+    ['packages/kernel/src/x.ts', "import { readFileSync } from 'fs';"],
+    ['packages/kernel/src/x.ts', "import { join } from 'path/posix';"],
+    ['apps/runner/src/x.ts', "import Database from 'better-sqlite3';"],
+    ['packages/contracts/src/x.ts', "import { join } from 'node:path';"],
+    ['packages/contracts/src/x.ts', "import { x } from '@aether/kernel';"],
+    ['packages/contracts/src/x.ts', "import _ from 'lodash';"],
+    ['scripts/x.ts', '// @ts-nocheck\nexport const a = 1;'],
+    ['tests/aether/x.test.ts', "it.only('a', () => {});"],
+    ['e2e/x.spec.ts', "test.only('a', async () => {});"],
   ];
   for (const [file, source] of cases) {
     const cwd = mkdtempSync(join(tmpdir(), 'aether-lint-'));
@@ -59,4 +68,17 @@ it('enforces the architecture boundaries: kernel stays pure and web/scene never 
     writeFileSync(join(cwd, file), source);
     expect(lint(cwd).status, `${file}: ${source}`).toBe(1);
   }
+});
+
+it('lets contracts import zod and their own files, and checks the scripts, tests and e2e folders', () => {
+  const cwd = mkdtempSync(join(tmpdir(), 'aether-lint-'));
+  for (const folder of ['packages/contracts/src', 'scripts', 'tests/aether', 'e2e'])
+    mkdirSync(join(cwd, folder), { recursive: true });
+  mkdirSync(join(cwd, 'apps'), { recursive: true });
+  writeFileSync(
+    join(cwd, 'packages/contracts/src/x.ts'),
+    "import { z } from 'zod';\nimport { y } from './y.js';",
+  );
+  writeFileSync(join(cwd, 'tests/aether/x.test.ts'), 'const source = "import fs from \'fs\'";');
+  expect(lint(cwd).status).toBe(0);
 });

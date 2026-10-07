@@ -2,6 +2,7 @@ import { open, stat } from 'node:fs/promises';
 import { withEdge } from './file-edge.js';
 import type { LocalSession } from '@aether/contracts';
 import { compactedAtOf } from './session-context.js';
+import { fresh, newState, parseChunk, type ParseState } from './usage-parse.js';
 
 // Model, context size and spend from a provider transcript. Only counters and the model name are read:
 // no message text is parsed out, kept or returned.
@@ -83,7 +84,11 @@ export function parseUsage(provider: 'claude' | 'codex', tail: Buffer): SessionU
     } else {
       const message = obj(entry['message']);
       const u = obj(message['usage']);
-      if (usage.contextTokens === null && Object.keys(u).length) {
+      // A placeholder the CLI writes for an API error (`<synthetic>`, all zeros) says nothing of the context: look further back.
+      const placeholder =
+        entry['isApiErrorMessage'] === true ||
+        (typeof message['model'] === 'string' && message['model'].startsWith('<'));
+      if (usage.contextTokens === null && Object.keys(u).length && !placeholder) {
         const parts = [
           'input_tokens',
           'cache_creation_input_tokens',
@@ -130,45 +135,15 @@ export async function readUsage(provider: 'claude' | 'codex', file: string): Pro
   }
 }
 
-// Cache reads are not counted (see LocalSession.usage.freshTokens): new input, input written to the cache, and output.
-const USAGE_KEYS = ['input_tokens', 'cache_creation_input_tokens', 'output_tokens'] as const;
-const USAGE_COUNTERS = USAGE_KEYS.map((key) => new RegExp(`"${key}":(\\d+)`));
-
-/**
- * Pure. Claude Code keeps no running total, so a session's spend is the sum of every assistant message's new input,
- * cache-written input and output; the same measure as Codex's total_token_usage minus its cached input. `data` is whole lines. One message is written as
- * several lines repeating its usage, so a message counts once, by id; `lastId` carries that across chunks.
- *
- * Most of a transcript is tool output and thinking, and a line can be tens of KB, so nothing is decoded but the few
- * hundred bytes holding a message's id and counters (JSON.parse of every line is what filled memory). Lines whose
- * usage is not a message's own (a sub-agent's result, say) carry no message id and are skipped.
- */
-export function sumClaudeTokens(data: Buffer, lastId: string | null) {
-  let tokens = 0;
-  let from = 0;
-  while (from < data.length) {
-    const hit = data.indexOf('"usage":{', from);
-    if (hit < 0) break;
-    const start = data.lastIndexOf(10, hit) + 1; // -1 + 1: the first line
-    const stop = data.indexOf(10, hit);
-    const lineEnd = stop < 0 ? data.length : stop;
-    from = lineEnd + 1;
-    const head = data.toString('utf8', start, Math.min(start + 900, lineEnd));
-    const id = /"message":\{[^{}]{0,300}?"id":"([^"]+)"/.exec(head)?.[1];
-    if (id === undefined || id === lastId) continue;
-    lastId = id;
-    // The message's own counters come first; the per-iteration copies that follow are not added again.
-    const counters = data.toString('utf8', hit + 9, Math.min(hit + 9 + 400, lineEnd));
-    for (const counter of USAGE_COUNTERS) tokens += Number(counter.exec(counters)?.[1] ?? 0);
-  }
-  return { tokens, lastId };
-}
+// A Claude session's spend is summed by the same parser as the KPI dashboard (usage-parse.ts), over the whole file in one
+// bucket: the two can never disagree. Cache reads are not counted (see LocalSession.usage.freshTokens).
+const WHOLE_FILE = () => 'all';
 
 const CHUNK = 4 * 1024 * 1024;
 // One buffer for every file, so files are summed one at a time: a buffer per file kept hundreds of MB resident.
 const chunk = Buffer.allocUnsafe(CHUNK);
 let sums: Promise<unknown> = Promise.resolve();
-type Total = { offset: number; tokens: number; lastId: string | null };
+type Total = { offset: number; state: ParseState };
 const totals = new Map<string, Total>();
 /** A Claude transcript's running total, reading only what was appended since the last call. */
 function claudeTotal(file: string, size: number): Promise<number> {
@@ -179,7 +154,7 @@ function claudeTotal(file: string, size: number): Promise<number> {
 
 async function sumFile(file: string, size: number): Promise<number> {
   let state: Total | undefined = totals.get(file);
-  if (!state || size < state.offset) state = { offset: 0, tokens: 0, lastId: null };
+  if (!state || size < state.offset) state = { offset: 0, state: newState('claude') };
   const handle = await open(file, 'r');
   try {
     const buffer = chunk;
@@ -197,17 +172,13 @@ async function sumFile(file: string, size: number): Promise<number> {
         state = { ...state, offset: state.offset + bytesRead }; // one line longer than a chunk: step over it
         continue;
       }
-      const sum = sumClaudeTokens(buffer.subarray(0, end), state.lastId);
-      state = {
-        offset: state.offset + end + 1,
-        tokens: state.tokens + sum.tokens,
-        lastId: sum.lastId,
-      };
+      parseChunk(state.state, buffer.subarray(0, end), WHOLE_FILE);
+      state = { ...state, offset: state.offset + end + 1 };
     }
   } finally {
     await handle.close();
   }
   if (totals.size > 512) totals.clear();
   totals.set(file, state);
-  return state.tokens;
+  return Object.values(state.state.days).reduce((n, b) => n + fresh(b), 0);
 }

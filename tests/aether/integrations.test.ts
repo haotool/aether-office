@@ -356,6 +356,27 @@ it('verifies webhook signatures on the raw body, deduplicates deliveries, and on
   }
 });
 
+it('answers an unknown webhook id like a bad signature and limits how often one address may call it', async () => {
+  const t = setup();
+  try {
+    const { id } = t.github();
+    const send = (target: string) =>
+      t.app.inject({
+        method: 'POST',
+        url: `/api/webhooks/github/${target}`,
+        payload: '{}',
+        headers: { 'content-type': 'application/json', host: '127.0.0.1:4493' },
+      });
+    expect((await send('nope')).statusCode).toBe(401); // not 404: no oracle for which integrations exist
+    expect((await send(id)).statusCode).toBe(401);
+    for (let i = 0; i < 118; i++) await send(id);
+    expect((await send(id)).statusCode).toBe(429);
+  } finally {
+    await t.app.close();
+    t.f.control.close();
+  }
+});
+
 it('imports from Linear over GraphQL, surfaces its rate limit, and comments on accepted work', async () => {
   const t = setup();
   try {

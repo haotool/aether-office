@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
+import { SESSION_ACTIVE_MS as ACTIVE_MS } from '../../packages/contracts/src/index.js';
 import type { AgentProcess } from '../../apps/control/src/services/agent-processes.js';
 import {
-  ACTIVE_MS,
   CpuWatch,
   DORMANT_MS,
   classifyLiveness,

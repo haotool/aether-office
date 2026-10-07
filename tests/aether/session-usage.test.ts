@@ -1,5 +1,14 @@
 import { expect, it } from 'vitest';
-import { parseUsage, sumClaudeTokens } from '../../apps/control/src/services/session-usage.js';
+import { mkdtemp, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { parseUsage, readUsage } from '../../apps/control/src/services/session-usage.js';
+import {
+  dayKeyOf,
+  fresh,
+  newState,
+  parseChunk,
+} from '../../apps/control/src/services/usage-parse.js';
 
 const line = (value: unknown) => JSON.stringify(value);
 
@@ -110,50 +119,78 @@ it('reports unknown as null, never zero, for empty, malformed or counter-less ta
   ).toBeNull();
 });
 
-it('sums every Claude assistant message once, though one message spans several lines', () => {
-  const line = (id: string, usage: object) =>
-    JSON.stringify({ type: 'assistant', message: { model: 'claude-x', id, usage } });
-  const u = {
-    input_tokens: 2,
-    cache_creation_input_tokens: 10,
-    cache_read_input_tokens: 100,
-    output_tokens: 5,
-  };
-  const data = (...lines: string[]) => Buffer.from(lines.join('\n'));
-  const text = data(line('a', u), line('a', u), '{"type":"user"}', line('b', u), 'cut {"usage"');
-  expect(sumClaudeTokens(text, null)).toEqual({ tokens: 34, lastId: 'b' }); // cache reads (100) are not counted
-  expect(sumClaudeTokens(data(line('b', u)), 'b').tokens).toBe(0); // continues a message from the previous chunk
-  // The counters after the message's own (one copy per iteration) are not added again.
-  const iterated = line('c', { ...u, iterations: [{ ...u }, { ...u }] });
-  expect(sumClaudeTokens(data(iterated), null).tokens).toBe(17);
-  // A sub-agent's result carries usage but is no message of this session: it has no message id.
-  const subagent = JSON.stringify({
-    type: 'user',
-    toolUseResult: { usage: u },
-    message: { role: 'user' },
-  });
-  expect(sumClaudeTokens(data(subagent, line('d', u)), null).tokens).toBe(17);
+const AT = '2026-10-07T01:00:00.000Z';
+const assistant = (id: string, usage: object, model = 'claude-x', extra: object = {}) =>
+  line({ type: 'assistant', timestamp: AT, message: { model, id, usage }, ...extra });
+const U = {
+  input_tokens: 2,
+  cache_creation_input_tokens: 10,
+  cache_read_input_tokens: 100,
+  output_tokens: 5,
+};
+
+it('skips a synthetic or API-error row when reading the context, and says nothing rather than zero', () => {
+  const real = assistant('real', { ...U, cache_read_input_tokens: 40_000 }, 'claude-real');
+  const synthetic = assistant(
+    'syn',
+    {
+      input_tokens: 0,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 0,
+      output_tokens: 0,
+    },
+    '<synthetic>',
+    { isApiErrorMessage: true },
+  );
+  const read = parseUsage('claude', Buffer.from([real, synthetic].join('\n')));
+  expect(read).toMatchObject({ contextTokens: 40_012, model: 'claude-real' });
+  const only = parseUsage('claude', Buffer.from(synthetic));
+  expect(only).toMatchObject({ contextTokens: null, model: null });
 });
 
-it('totals a real file the same as summing its text, across chunk boundaries', async () => {
-  const { mkdtemp, writeFile } = await import('node:fs/promises');
-  const { tmpdir } = await import('node:os');
-  const { join } = await import('node:path');
+it('sums every Claude assistant message once, though one message spans several lines', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'aether-usage-'));
+  const total = async (name: string, ...lines: string[]) => {
+    const file = join(dir, name);
+    await writeFile(file, `${lines.join('\n')}\n`);
+    return (await readUsage('claude', file)).freshTokens;
+  };
+  // Cache reads (100) are not counted; the message written twice counts once.
+  expect(
+    await total(
+      'a.jsonl',
+      assistant('a', U),
+      assistant('a', U),
+      '{"type":"user"}',
+      assistant('b', U),
+    ),
+  ).toBe(34);
+  // The counters after the message's own (one copy per iteration) are not added again.
+  expect(await total('b.jsonl', assistant('c', { ...U, iterations: [{ ...U }, { ...U }] }))).toBe(
+    17,
+  );
+  // A sub-agent's result carries usage but is no message of this session: it has no message id.
+  const subagent = line({ type: 'user', toolUseResult: { usage: U }, message: { role: 'user' } });
+  expect(await total('c.jsonl', subagent, assistant('d', U))).toBe(17);
+});
+
+it('lists a session spend equal to what the KPI parser counts on the same file, across chunk boundaries', async () => {
   const usage = {
     input_tokens: 3,
     cache_creation_input_tokens: 7,
     cache_read_input_tokens: 90,
     output_tokens: 5,
   };
-  const line = (id: string) => JSON.stringify({ type: 'assistant', message: { id, usage } });
-  const filler = JSON.stringify({ type: 'user', message: { content: 'x'.repeat(2000) } });
+  const filler = line({ type: 'user', message: { content: 'x'.repeat(2000) } });
   const lines: string[] = [];
-  for (let n = 0; n < 4000; n++) lines.push(filler, line(`m${n}`), line(`m${n}`)); // each message written twice
+  for (let n = 0; n < 4000; n++)
+    lines.push(filler, assistant(`m${n}`, usage), assistant(`m${n}`, usage)); // each message written twice
   const text = `${lines.join('\n')}\n`;
   const file = join(await mkdtemp(join(tmpdir(), 'aether-usage-')), 'claude.jsonl');
   await writeFile(file, text); // about 8 MB: more than one chunk
-  const { readUsage } = await import('../../apps/control/src/services/session-usage.js');
   const read = await readUsage('claude', file);
-  expect(read.freshTokens).toBe(sumClaudeTokens(Buffer.from(text), null).tokens);
+  const state = newState('claude');
+  parseChunk(state, Buffer.from(text), dayKeyOf('UTC'));
+  expect(read.freshTokens).toBe(Object.values(state.days).reduce((n, b) => n + fresh(b), 0));
   expect(read.freshTokens).toBe(4000 * 15); // input 3 + cache written 7 + output 5, never the 90 read from the cache
 });

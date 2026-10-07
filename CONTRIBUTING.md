@@ -31,8 +31,13 @@ pnpm lint            # module boundaries and design tokens
 pnpm format:check    # pnpm format fixes it
 pnpm test
 pnpm build
+pnpm verification:check   # the verification ledger is consistent
+node scripts/check-bundle-size.mjs   # after the build
+pnpm run oss:check   # notices, licences, readiness (after the build)
 pnpm exec playwright test
 ```
+
+CI also runs the unit tests on macOS and `pnpm audit:deps` (the audit needs the network, so it only reports).
 
 A change is ready when:
 

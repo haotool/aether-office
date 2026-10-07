@@ -35,9 +35,3 @@ const NONE: readonly LifeMoment[] = [];
 /** The moments of one member, newest first. */
 export const useMoments = (member: string): readonly LifeMoment[] =>
   useSyncExternalStore(subscribe, () => byMember.get(member) ?? NONE);
-
-/** Forgets everything (a test's switch). */
-export function clearMoments(): void {
-  byMember = new Map();
-  for (const listener of listeners) listener();
-}

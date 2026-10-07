@@ -43,9 +43,9 @@ export function breakdown(totals: UsageTotals): { key: Segment; value: number; s
 /** Today is the last day of the window. */
 export const lastDay = (scope: UsageScope): UsageTotals => scope.daily[scope.daily.length - 1]!;
 
-/** The share of each model in a scope's tokens, largest first. */
+/** The share of each model in the scope's tokens (its total, not just the models listed), largest first. */
 export function modelShares(scope: UsageScope): { model: string; tokens: number; share: number }[] {
-  const sum = scope.models.reduce((n, m) => n + m.tokens, 0);
+  const sum = tokensOf(scope.totals) || scope.models.reduce((n, m) => n + m.tokens, 0);
   return scope.models.map((m) => ({ ...m, share: sum ? m.tokens / sum : 0 }));
 }
 
@@ -66,18 +66,45 @@ export type LimitWindow = {
   minutes: number | null;
   usedPercent: number;
   resetsAt: number | null;
+  /** When the reading was taken (epoch ms). */
+  updatedAt: number;
+  /** Claude's own flag (its source says it is not being refreshed); Codex's is worked out from the age. */
+  stale: boolean | null;
 };
+
+/** A rate-limit reading older than this is shown as out of date (the same threshold the Claude reader uses). */
+export const LIMIT_STALE_MS = 15 * 60 * 1000;
 
 /** Pure. Claude's 5-hour and 7-day windows and Codex's windows, those that are known, shortest first per provider. */
 export function limitWindows(limits: UsageResponse['limits']): LimitWindow[] {
   const claude = limits.claude;
   const out: LimitWindow[] = [];
   if (claude?.fiveHour)
-    out.push({ id: 'claude-5h', provider: 'claude', minutes: 300, ...claude.fiveHour });
+    out.push({
+      id: 'claude-5h',
+      provider: 'claude',
+      minutes: 300,
+      ...claude.fiveHour,
+      updatedAt: claude.updatedAt,
+      stale: claude.stale,
+    });
   if (claude?.sevenDay)
-    out.push({ id: 'claude-7d', provider: 'claude', minutes: 10080, ...claude.sevenDay });
+    out.push({
+      id: 'claude-7d',
+      provider: 'claude',
+      minutes: 10080,
+      ...claude.sevenDay,
+      updatedAt: claude.updatedAt,
+      stale: claude.stale,
+    });
   for (const w of limits.codex?.windows ?? [])
-    out.push({ id: `codex-${w.minutes ?? 'x'}`, provider: 'codex', ...w });
+    out.push({
+      id: `codex-${w.minutes ?? 'x'}`,
+      provider: 'codex',
+      ...w,
+      updatedAt: limits.codex!.updatedAt,
+      stale: null,
+    });
   return out;
 }
 

@@ -87,7 +87,7 @@
     ],
     "evidencePaths": [],
     "blockers": [
-      "Run on macOS arm64 with Node 24.21.0 and pnpm 12.8.1 only"
+      "Run on macOS arm64 with Node 24.21.0 and pnpm 12.8.1; CI runs typecheck, lint and build on Ubuntu with the Node of .node-version; Windows was not run."
     ]
   },
   {
@@ -194,7 +194,7 @@
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "PTY/observe/ACP 等尚未完成的公開契約仍待實作。"
+      "Schemas and versions exist for the commands and events that ship; the PTY, observe and ACP contracts are not complete public contracts yet (RUN-03 to RUN-08)."
     ]
   },
   {
@@ -214,7 +214,7 @@
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "PTY/observe/ACP 等尚未完成的公開契約仍待實作。"
+      "ID separation is checked for the contracts that exist; the identifiers of the unfinished PTY, observe and ACP contracts are not covered yet."
     ]
   },
   {
@@ -315,7 +315,7 @@
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。"
+      "Launch arguments are verified against a synthetic app-server and the Claude normalizer; no live model run is authorized."
     ]
   },
   {
@@ -337,7 +337,7 @@
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。"
+      "Partial, complete and error parsing is verified on synthetic app-server and Claude normalizer input only; no live model run is authorized."
     ]
   },
   {
@@ -357,7 +357,7 @@
       "evidence/e2e-resume.log"
     ],
     "blockers": [
-      "合成Codex resume與UI已測；真Codex/Claude resume尚未實測。"
+      "Resume is tested with a synthetic Codex and the UI; a real Claude resume has not been run."
     ]
   },
   {
@@ -405,7 +405,7 @@
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。"
+      "The mapping of tool events to session and parent is verified on synthetic input only; no live model run is authorized."
     ]
   },
   {
@@ -444,7 +444,7 @@
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "synthetic app-server 與 Claude normalizer 驗證；未授權 live 模型；resume/steer UI 授權流程待補。"
+      "Permission, auth and rate-limit states are verified on synthetic input only; the resume and steer authorization flow in the UI is still to be done."
     ]
   },
   {
@@ -466,7 +466,7 @@
       "evidence/live-smoke-exchange.json"
     ],
     "blockers": [
-      "一次 whoami 與一次訊息互傳；未測真實程式修改與批准指令"
+      "The live evidence is one whoami and one message exchange with Claude; a real code change and an approved command were not tested."
     ]
   },
   {
@@ -506,7 +506,7 @@
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑"
+      "Initialize and request correlation are verified with a scripted app-server; no real Codex turn ran (no live model is authorized)."
     ]
   },
   {
@@ -533,7 +533,7 @@
       "evidence/e2e-resume.log"
     ],
     "blockers": [
-      "合成Codex resume與UI已測；真Codex/Claude resume尚未實測。"
+      "Thread start and resume are tested with a synthetic Codex and the UI; a real Codex resume has not been run."
     ]
   },
   {
@@ -554,7 +554,7 @@
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑"
+      "Streaming de-duplication and tolerance of late items are verified with a scripted app-server; no real Codex turn ran."
     ]
   },
   {
@@ -575,7 +575,7 @@
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑"
+      "Interrupt targeting is verified with a scripted app-server; no real Codex turn ran."
     ]
   },
   {
@@ -617,7 +617,7 @@
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "未授權 live 模型：以腳本化 app-server 驗證協定行為，真實 Codex 回合未跑"
+      "Approval reply matching is verified with a scripted app-server; no real Codex turn ran."
     ]
   },
   {
@@ -639,7 +639,7 @@
       "evidence/live-smoke-exchange.json"
     ],
     "blockers": [
-      "一次 whoami 與一次訊息互傳；未測真實程式修改與批准指令"
+      "The live evidence is one whoami and one message exchange with Codex; a real code change and an approved command were not tested."
     ]
   },
   {
@@ -672,7 +672,7 @@
       "evidence/e2e-terminal-diagnostics-final.log"
     ],
     "blockers": [
-      "macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。"
+      "Verified on macOS with a real PTY and browser; Linux and WSL2 were not run and native Windows is refused."
     ]
   },
   {
@@ -705,7 +705,7 @@
       "evidence/e2e-terminal-diagnostics-final.log"
     ],
     "blockers": [
-      "macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。"
+      "Restart versus PID reuse is verified on macOS; Linux and WSL2 were not run, native Windows is refused, and closing an unknown run by hand is not implemented."
     ]
   },
   {
@@ -731,7 +731,7 @@
       "evidence/e2e-terminal-diagnostics-final.log"
     ],
     "blockers": [
-      "macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。"
+      "Verified with a real PTY on macOS; after scrollback truncation a gap notice is shown but the screen is not rebuilt from a serialized ANSI state; Linux and WSL2 were not run."
     ]
   },
   {
@@ -757,7 +757,7 @@
       "evidence/e2e-terminal-diagnostics-final.log"
     ],
     "blockers": [
-      "macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。"
+      "Read and write permissions and the single takeover owner are verified on macOS only; Linux and WSL2 were not run and native Windows is refused."
     ]
   },
   {
@@ -783,7 +783,7 @@
       "evidence/e2e-observe-final.log"
     ],
     "blockers": [
-      "已核准fixture的讀取、持久上報、readonly UI及fault tests完成；實際provider檔案相容性未驗證，讀取上限與GUI授權仍有限制。"
+      "Approved-path and read-only behaviour is tested on fixtures; real provider files were not used and the GUI authorization is limited."
     ]
   },
   {
@@ -809,7 +809,7 @@
       "evidence/e2e-observe-final.log"
     ],
     "blockers": [
-      "已核准fixture的讀取、持久上報、readonly UI及fault tests完成；實際provider檔案相容性未驗證，讀取上限與GUI授權仍有限制。"
+      "Partial lines, rotation and unknown schemas are tested on fixtures; compatibility with real provider files is unverified and the read limits cap very large files."
     ]
   },
   {
@@ -842,7 +842,7 @@
       "evidence/e2e-observe-final.log"
     ],
     "blockers": [
-      "已核准fixture的讀取、持久上報、readonly UI及fault tests完成；實際provider檔案相容性未驗證，讀取上限與GUI授權仍有限制。"
+      "Stale, offline and unknown states are covered by fault tests; the behaviour with real provider files is unverified."
     ]
   },
   {
@@ -868,7 +868,7 @@
       "evidence/e2e-terminal-diagnostics-final.log"
     ],
     "blockers": [
-      "macOS真PTY與瀏覽器已測；Linux/WSL2未測、native Windows拒絕。截斷後有gap提示但沒有完整ANSI畫面序列化；unknown人工結案待實作。"
+      "Verified on macOS in the browser; Linux and WSL2 were not run and native Windows is refused."
     ]
   },
   {
@@ -1434,7 +1434,7 @@
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "僅在 macOS 驗證；Windows 路徑語意（大小寫、保留名稱）未測"
+      "Verified on macOS only; Windows path semantics (case, reserved names) are untested."
     ]
   },
   {
@@ -1498,7 +1498,7 @@
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "僅在 macOS 驗證；Windows 路徑語意（大小寫、保留名稱）未測"
+      "Large, binary and untracked diff degradation is verified on macOS only; Windows path handling is untested."
     ]
   },
   {
@@ -1692,7 +1692,7 @@
     ],
     "evidencePaths": [],
     "blockers": [
-      "No Markdown renderer exists yet (all text is shown as text); A2A artifact fetching will reuse safe-fetch when built"
+      "Markdown is parsed by the kernel into a typed block tree and rendered by the web app as React elements, never as HTML (the lint rule and the text-sink tests enforce it); A2A artifact fetching is not built, so its use of safe-fetch is untested."
     ]
   },
   {
@@ -1923,7 +1923,7 @@
       "evidence/mcp-built-stdio-test.log"
     ],
     "blockers": [
-      "Workflow 啟動刻意不提供給 agent（僅人類可啟動）；未以真實 provider CLI 連接此 MCP server"
+      "The tools are tested against the kernel; no real provider CLI was connected to this MCP server."
     ]
   },
   {
@@ -1944,7 +1944,7 @@
       "evidence/mcp-built-stdio-test.log"
     ],
     "blockers": [
-      "Workflow 啟動刻意不提供給 agent（僅人類可啟動）；未以真實 provider CLI 連接此 MCP server"
+      "Scope isolation is tested with synthetic identities; starting a workflow is deliberately not offered to agents (humans only), and no real provider CLI was connected."
     ]
   },
   {
@@ -2120,7 +2120,7 @@
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "Many disabled controls do not state why they are disabled"
+      "Write actions a viewer cannot use now say why (a title, covered by e2e/accessibility.spec.ts); controls disabled while busy or for missing input still do not"
     ]
   },
   {
@@ -2246,7 +2246,7 @@
       "evidence/renders/fox-3840x2160.json"
     ],
     "blockers": [
-      "24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+      "The 24 GLB models pass rig, UV, PBR, 24-clip and checksum validation; the performance and VRAM gate is not complete."
     ]
   },
   {
@@ -2271,7 +2271,7 @@
       "evidence/renders/fox-3840x2160.json"
     ],
     "blockers": [
-      "24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+      "The campus and Earth scale gate is not complete."
     ]
   },
   {
@@ -2296,7 +2296,7 @@
       "evidence/renders/fox-3840x2160.json"
     ],
     "blockers": [
-      "24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+      "The physical-contact gate for desks, chairs and screens is not complete."
     ]
   },
   {
@@ -2321,7 +2321,7 @@
       "evidence/renders/fox-3840x2160.json"
     ],
     "blockers": [
-      "24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+      "Rig and the 24 clips pass validation; the performance and VRAM gate with every animal loaded is not complete."
     ]
   },
   {
@@ -2346,7 +2346,7 @@
       "evidence/renders/fox-3840x2160.json"
     ],
     "blockers": [
-      "24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+      "The full performance gate (frame time and VRAM) is not complete."
     ]
   },
   {
@@ -2411,7 +2411,7 @@
       "evidence/renders/fox-3840x2160.json"
     ],
     "blockers": [
-      "24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+      "The 24 models are verified by checksum; the full campus and Earth asset gate is not complete."
     ]
   },
   {
@@ -2436,7 +2436,7 @@
       "evidence/renders/fox-3840x2160.json"
     ],
     "blockers": [
-      "24 GLB rig/UV/PBR/24 clips 與 checksum 通過；完整 campus/Earth/physical contacts/tour/performance/VRAM gate 尚未完成。"
+      "The physical-contact gate (no clipping through models) is not complete, and the guided-tour gate is not complete."
     ]
   },
   {
@@ -2901,7 +2901,7 @@
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "已有用量去重、回合/時間/並行限制與知識提案；pricing、全域預算與知識批准/version 操作待補。"
+      "Turn, time and concurrency limits exist; pricing and a global budget do not."
     ]
   },
   {
@@ -2923,7 +2923,7 @@
       "evidence/workflow-all-tests.log"
     ],
     "blockers": [
-      "已有用量去重、回合/時間/並行限制與知識提案；pricing、全域預算與知識批准/version 操作待補。"
+      "Usage de-duplication is implemented; pricing is not."
     ]
   },
   {
@@ -2945,7 +2945,7 @@
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "完整產品尚未完成；不能把局部測試當最終 gate。"
+      "Unit, contract, integration and browser suites run in CI (the unit suite also on macOS); the live provider smoke and the GPU gates are outside the default run and recorded as not run."
     ]
   },
   {
@@ -2984,7 +2984,7 @@
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "完整產品尚未完成；不能把局部測試當最終 gate。"
+      "Labels are checked where they were implemented; live evidence is limited to the smoke runs in CLA-08 and CDX-08."
     ]
   },
   {
@@ -3006,7 +3006,7 @@
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "完整產品尚未完成；不能把局部測試當最終 gate。"
+      "The README screenshots come from a synthetic demo stack (docs/images/README.md); screenshots of real data for each listed page are not part of the evidence."
     ]
   },
   {
@@ -3028,7 +3028,7 @@
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "完整產品尚未完成；不能把局部測試當最終 gate。"
+      "verification:check proves that every listed path exists; whether a test proves the requirement is the reviewer's judgement, which the partial rows record."
     ]
   },
   {
@@ -3050,7 +3050,7 @@
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "完整產品尚未完成；不能把局部測試當最終 gate。"
+      "Documentation is compared with the code by audits (docs/research/design-review.md) and a link check; no automated check compares documented values with the code."
     ]
   },
   {
@@ -3328,6 +3328,7 @@
     "testIds": [
       "tests/aether/session-usage.test.ts",
       "tests/aether/session-context.test.ts",
+      "tests/aether/context-label.test.ts",
       "tests/aether/session-speech.test.ts",
       "tests/aether/compaction.test.ts"
     ],
@@ -3895,6 +3896,32 @@
       "The distribution is one person's machine (30 parent sessions, 767 subagent files, the newest 300 Codex rollouts, files over 100 MB skipped); another way of working would change the numbers, and the script is there to re-run",
       "Tokens cannot reach both goals with a logarithmic curve (a median of 0.5-0.7 and a p99 of 0.95): the reference puts the median at 0.70 and the p99 at 0.84. The curve was kept, as asked; an offset in log space would spread it",
       "The calibration counts per calendar minute while the beam's live rate is measured over a rolling window of 10 to 70 seconds: the same unit, a slightly different smoothing"
+    ]
+  },
+  {
+    "id": "SCENE-PERF-P1",
+    "requirement": "3D 場景的手機與低階畫質：柔和的加法漸層抖色（預乘後加雜訊）、手機與低階的行星紋理 1024x512、AdaptiveRatio 以手機自己的 50 ms 閒置節奏判斷（不再掉到 0.75）、手機「高」畫質的像素比上限 2（每個分級一個具名常數）、?msaa=1/0 的 MSAA A/B 開關，以及 WebGL context 遺失時顯示一鍵重新載入場景的卡片（不再默默切到列表）。",
+    "scope": "AETHER target; research in docs/research/mobile-gradient-perf.md",
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "packages/office-scene/src/dither.ts",
+      "packages/office-scene/src/perf-control.ts",
+      "packages/office-scene/src/PerfControllers.tsx",
+      "packages/office-scene/src/OrbitalBackdrop.tsx",
+      "packages/office-scene/src/SceneRuntime.tsx",
+      "apps/web/src/features/SceneView.tsx"
+    ],
+    "testIds": [
+      "tests/aether/dither.test.ts",
+      "tests/aether/perf-control.test.ts",
+      "e2e/scene-context.spec.ts"
+    ],
+    "blockers": [
+      "No real phone, no Safari and no other GPU was measured (Apple M4, ANGLE Metal, 4x CPU throttle emulates a phone and is capped at 60 Hz, so the evidence is CPU time per frame, draws, programs and the GPU estimate); the phone high tier at pixel ratio 2 (PIXEL_RATIO_CAP_PHONE_HIGH) must be validated on an iPhone and an Android phone for five minutes (heat, sustained frame time) before it is trusted",
+      "Dithering is verified objectively only on a synthetic additive strip (row-mean error 0.291 to 0.025 LSB with premultiplied dithering, 0.278 with three's flag alone, which is scaled away by the alpha); in the real scene the changed surfaces are a small part of the picture and a crude banding metric did not move; the nebula sprites, planet halo, desk glow and sprite atlas were not dithered (three's SpriteMaterial has no dithering chunk and each built-in variant adds a program)",
+      "The context-loss card was tested with WEBGL_lose_context in Chrome only; whether iOS Safari fires webglcontextlost for a backgrounded page was not observed, and the card replaces the scene (a context the browser would restore later is not waited for)",
+      "R4 (transparent objects): attributed but nothing changed, because making them opaque did not change the render time; the cost is per draw call (per-member materials), and merging them is a larger refactor"
     ]
   }
 ]

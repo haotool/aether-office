@@ -71,14 +71,3 @@ export function listWorkflows(ctx: Context, projectId: string): Workflow[] {
       .all(projectId) as { id: string }[]
   ).map((w) => readWorkflow(ctx, w.id));
 }
-
-/** The provider a step requires of its engineer or reviewer, if the step belongs to a workflow that fixes one. */
-export function stepConstraint(
-  ctx: Context,
-  workId: string,
-): { engineerProvider: string | null; reviewerProvider: string | null } | undefined {
-  return ctx.sqlite
-    .prepare('SELECT engineerProvider,reviewerProvider FROM workflow_steps WHERE workId=?')
-    .get(workId) as
-    { engineerProvider: string | null; reviewerProvider: string | null } | undefined;
-}

@@ -4,14 +4,15 @@ import { api } from '../api.js';
 import { useT } from '../ui.js';
 import { quotaNearLimit, quotaText } from './quota.js';
 
-export const when = (ms: number) =>
+/** A moment as day, month and time in `timeZone` (the top bar, which knows no usage answer, reads Taipei). */
+export const when = (ms: number, timeZone = 'Asia/Taipei') =>
   new Intl.DateTimeFormat('en-GB', {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
-    timeZone: 'Asia/Taipei',
+    timeZone,
   }).format(ms);
 
 /** Claude's subscription windows in the top bar: 5-hour · 7-day usage, with the resets, plan and age on hover. */

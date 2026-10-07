@@ -76,6 +76,11 @@ export const subagentSchema = z.object({
 });
 export type Subagent = z.infer<typeof subagentSchema>;
 
+// How long after its last sign of life a session still counts as at work, and how long a session with no process
+// behind it is kept before it is gone. Server (liveness, child rollouts) and client (activityOf) share these.
+export const SESSION_ACTIVE_MS = 2 * 60 * 1000;
+export const SESSION_GONE_MS = 10 * 60 * 1000;
+
 export const localSessionSchema = z.object({
   key: z.string(),
   provider: z.enum(['claude', 'codex']),
@@ -141,6 +146,13 @@ export const localSessionSchema = z.object({
     // The window the context is measured against: Codex's own figure, else the catalog's, else Claude's 200k (1M for a
     // `[1m]` model or a context already past 200k). Null while unknown.
     contextWindow: z.number().nullable(),
+    // How the window is known: the CLI's own figure (`observed`), a model catalog (`catalog`), a `[1m]` model id
+    // (`model`), Claude's 200k default (`assumed`: the transcript does not say), or 1M because the context already passed
+    // 200k (`inferred`). Null while the window is unknown; absent from an older control plane.
+    contextWindowBasis: z
+      .enum(['observed', 'catalog', 'model', 'assumed', 'inferred'])
+      .nullable()
+      .optional(),
     // Share of the window in use, 0 to 100, bounded; null while either side is unknown, never invented.
     contextPct: z.number().min(0).max(100).nullable(),
     // When the CLI itself last wrote a compaction marker in the transcript tail (epoch ms); null when it has not.

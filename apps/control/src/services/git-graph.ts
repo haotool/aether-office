@@ -1,8 +1,6 @@
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import { git } from './git-health.js';
 import { redactSecrets } from './redaction.js';
 
-const run = promisify(execFile);
 const SEP = '\x1f';
 
 type GraphCommit = {
@@ -73,22 +71,16 @@ export function parseLog(text: string): Omit<GraphCommit, 'lane' | 'edges'>[] {
 }
 
 export async function gitGraph(root: string, limit = 150) {
-  const { stdout } = await run(
-    'git',
+  const stdout = await git(
+    root,
     [
-      '-C',
-      root,
       'log',
       '--all',
       '--date-order',
       `-n${Math.min(400, Math.max(10, limit))}`,
       `--format=%H${SEP}%P${SEP}%D${SEP}%s${SEP}%ct${SEP}%an`,
     ],
-    {
-      timeout: 10000,
-      maxBuffer: 8 * 1024 * 1024,
-      env: { PATH: process.env['PATH'] ?? '', HOME: process.env['HOME'] ?? '' },
-    },
+    10000,
   );
   return layoutGraph(parseLog(stdout));
 }

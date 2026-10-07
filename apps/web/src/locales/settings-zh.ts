@@ -39,7 +39,8 @@ export const settingsZh = {
   stSystem: '跟隨系統',
   stSystemNow: '系統目前為',
   stThemeDesc: '跟隨系統，或固定為深色或淺色。',
-  stMotionDesc: '減少場景與介面的動態。預設跟隨作業系統的設定。',
+  stMotionDesc:
+    '減少場景與介面的動態，開啟時自動鏡頭也會停用。第一次使用時取自作業系統的設定，之後以這個開關為準，不會再跟著系統變動；裝飾性小動畫另由「平靜模式」控制。',
   stOsReduced: '作業系統要求減少動態',
   stQualityDesc: '3D 場景的畫質：低最省電、沒有陰影；高最細緻，也最耗電。',
 
