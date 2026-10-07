@@ -6,7 +6,7 @@ import { expect, it } from 'vitest';
 import { createServer } from '../../apps/control/src/server.js';
 import { resetLocalSessionCache } from '../../apps/control/src/services/local-sessions.js';
 import { command, fixture } from './fixture.js';
-import { alive, sleep, until } from './process-fixtures.js';
+import { alive, until, untilAsync } from './process-fixtures.js';
 
 /** A process named claude in `cwd` whose parent has already gone, so init has it. */
 async function orphanClaude(bin: string, cwd: string): Promise<number> {
@@ -64,8 +64,6 @@ it('stops an orphaned session for its owner only, by the process the person saw,
     f.control.execute(f.owner.actor, command('project.create', { name: root, root }));
   const app = createServer(f.control, { origin: 'http://127.0.0.1:4503' });
   try {
-    await sleep(600);
-    resetLocalSessionCache();
     const call = (method: 'GET' | 'POST', url: string, token: string, body?: unknown) =>
       app.inject({
         method,
@@ -77,13 +75,26 @@ it('stops an orphaned session for its owner only, by the process the person saw,
         },
         ...(body === undefined ? {} : { payload: JSON.stringify(body) }),
       });
-    const listed = (await call('GET', '/api/local-sessions', f.owner.token)).json() as {
-      sessions: {
-        key: string;
-        projectId: string | null;
-        liveness: { state: string; startedAt: number };
-      }[];
+    const list = async () => {
+      resetLocalSessionCache();
+      return (await call('GET', '/api/local-sessions', f.owner.token)).json() as {
+        sessions: {
+          key: string;
+          projectId: string | null;
+          liveness: { state: string; startedAt: number };
+        }[];
+      };
     };
+    // Both processes are found by the scan once `ps` lists them with their directories: wait for that, not for a fixed time.
+    expect(
+      await untilAsync(async () => {
+        const { sessions } = await list();
+        return ['claude:orphaned-one', 'claude:busy-one'].every((key) =>
+          sessions.some((s) => s.key === key && s.liveness.startedAt),
+        );
+      }),
+    ).toBe(true);
+    const listed = await list();
     const orphaned = listed.sessions.find((s) => s.key === 'claude:orphaned-one')!;
     const used = listed.sessions.find((s) => s.key === 'claude:busy-one')!;
     expect(orphaned.liveness.state).toBe('orphaned');

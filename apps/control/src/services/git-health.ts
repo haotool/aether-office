@@ -30,7 +30,7 @@ export const git = async (
     })
   ).stdout;
 
-export type Worktree = {
+type Worktree = {
   path: string;
   branch: string | null;
   head: string;
@@ -99,68 +99,85 @@ const list = (text: string) =>
     .map((l) => l.trim())
     .filter(Boolean);
 
-export async function gitHealth(root: string) {
-  const base = await defaultBranch(root);
-  const worktrees = parseWorktrees(await git(root, ['worktree', 'list', '--porcelain']));
-  const baseHead = (await git(root, ['rev-parse', base])).trim();
-  // On the default branch's tip a branch is either fast-forward merged or not worked on yet; git calls both merged.
-  // Its reflog tells them apart: a branch that never moved after it was created has no work of its own.
-  const movedSinceCreated = async (branch: string) =>
-    list(
-      await git(root, ['reflog', 'show', '--format=%H', `refs/heads/${branch}`]).catch(
-        () => 'x\ny',
-      ),
-    ).length > 1;
-  const merged = new Set(
-    list(await git(root, ['branch', '--merged', base, '--format=%(refname:short)'])),
-  );
-  let remoteMerged: string[] = [];
+/** On the default branch's tip a branch is either fast-forward merged or not worked on yet; git calls both merged.
+ * Its reflog tells them apart: a branch that never moved after it was created has no work of its own. */
+const movedSinceCreated = async (root: string, branch: string) =>
+  list(
+    await git(root, ['reflog', 'show', '--format=%H', `refs/heads/${branch}`]).catch(() => 'x\ny'),
+  ).length > 1;
+
+/** Remote branches already part of the default branch; none when there is no remote. */
+async function remoteMergedBranches(root: string, base: string): Promise<string[]> {
   try {
-    remoteMerged = list(
+    return list(
       await git(root, ['branch', '-r', '--merged', `origin/${base}`, '--format=%(refname:short)']),
     ).filter((b) => b !== `origin/${base}` && b !== 'origin/HEAD' && b !== 'origin');
   } catch {
-    /* no remote */
+    return []; // no remote
   }
-  // Each branch's last commit, for every worktree on a branch in one call instead of one `git log` each.
-  const tips = new Map(
-    list(
-      await git(root, [
-        'for-each-ref',
-        '--format=%(refname:short)%09%(committerdate:unix)',
-        'refs/heads',
-      ]),
-    ).flatMap((line) => {
+}
+
+/** Each branch's last commit, for every worktree on a branch in one call instead of one `git log` each. */
+async function branchTips(root: string) {
+  const text = await git(root, [
+    'for-each-ref',
+    '--format=%(refname:short)%09%(committerdate:unix)',
+    'refs/heads',
+  ]);
+  return new Map(
+    list(text).flatMap((line) => {
       const [name, at] = line.split('\t');
       return name && Number(at) ? [[name, Number(at) * 1000] as const] : [];
     }),
   );
-  const inspect = async (w: Worktree) => {
-    if (w.prunable) return { ...w, merged: false, dirty: null, lastCommitAt: null };
-    const isMerged =
-      !w.main &&
-      !!w.branch &&
-      w.branch !== base &&
-      merged.has(w.branch) &&
-      (w.head !== baseHead || (await movedSinceCreated(w.branch)));
-    // Whether a worktree has uncommitted changes is only asked of the ones that could be removed: it is what decides
-    // that, and `git status` over hundreds of worktrees is most of the cost of the report.
-    const [status, last] = await Promise.all([
-      isMerged
-        ? git(w.path, ['status', '--porcelain=v1', '--untracked-files=normal']).catch(() => null)
-        : Promise.resolve(null),
-      w.branch && tips.has(w.branch)
-        ? Promise.resolve('')
-        : git(w.path, ['log', '-1', '--format=%ct']).catch(() => ''), // a detached checkout has no branch tip
-    ]);
-    return {
-      ...w,
-      merged: isMerged,
-      dirty: status === null ? null : list(status).length,
-      lastCommitAt: (w.branch && tips.get(w.branch)) || Number(last.trim()) * 1000 || null,
-    };
+}
+
+type Survey = {
+  root: string;
+  base: string;
+  baseHead: string;
+  merged: Set<string>;
+  tips: Map<string, number>;
+};
+
+async function inspectWorktree(survey: Survey, w: Worktree) {
+  const { root, base, baseHead, merged, tips } = survey;
+  if (w.prunable) return { ...w, merged: false, dirty: null, lastCommitAt: null };
+  const isMerged =
+    !w.main &&
+    !!w.branch &&
+    w.branch !== base &&
+    merged.has(w.branch) &&
+    (w.head !== baseHead || (await movedSinceCreated(root, w.branch)));
+  // Whether a worktree has uncommitted changes is only asked of the ones that could be removed: it is what decides
+  // that, and `git status` over hundreds of worktrees is most of the cost of the report.
+  const [status, last] = await Promise.all([
+    isMerged
+      ? git(w.path, ['status', '--porcelain=v1', '--untracked-files=normal']).catch(() => null)
+      : Promise.resolve(null),
+    w.branch && tips.has(w.branch)
+      ? Promise.resolve('')
+      : git(w.path, ['log', '-1', '--format=%ct']).catch(() => ''), // a detached checkout has no branch tip
+  ]);
+  return {
+    ...w,
+    merged: isMerged,
+    dirty: status === null ? null : list(status).length,
+    lastCommitAt: (w.branch && tips.get(w.branch)) || Number(last.trim()) * 1000 || null,
   };
-  const rows = await mapPool(worktrees, WIDTH, inspect);
+}
+
+export async function gitHealth(root: string) {
+  const base = await defaultBranch(root);
+  const worktrees = parseWorktrees(await git(root, ['worktree', 'list', '--porcelain']));
+  const baseHead = (await git(root, ['rev-parse', base])).trim();
+  const merged = new Set(
+    list(await git(root, ['branch', '--merged', base, '--format=%(refname:short)'])),
+  );
+  const remoteMerged = await remoteMergedBranches(root, base);
+  const tips = await branchTips(root);
+  const survey = { root, base, baseHead, merged, tips };
+  const rows = await mapPool(worktrees, WIDTH, (w) => inspectWorktree(survey, w));
   const removable = rows.filter((w) => w.merged && w.dirty === 0 && !w.locked);
   const inWorktree = new Set(rows.flatMap((w) => (w.branch ? [w.branch] : [])));
   const staleBranches = [...merged].filter((b) => b !== base && !inWorktree.has(b));
@@ -244,7 +261,7 @@ export async function cleanMergedWorktrees(
       results.push({
         path,
         outcome: 'skipped',
-        reason: message.trim().split('\n')[0]!.slice(0, 200),
+        reason: (message.trim().split('\n')[0] ?? '').slice(0, 200),
       });
     }
   }

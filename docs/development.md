@@ -37,11 +37,12 @@ docs/             This documentation, ADRs and the verification ledger
 | `pnpm run setup`              | Creates the data directory and the owner token (`--demo` for the demo's)                   |
 | `pnpm hooks <install\|remove\|status>` | Installs, removes or reports the Claude Code or Codex hooks (see [getting started](getting-started.md#exact-activity-with-hooks-optional)) |
 | `pnpm run pair` / `pnpm runner:enroll` | Prints a phone-pairing QR code / enrolls a runner with a one-time invitation                |
-| `pnpm run doctor`             | Reports OS, Node, pnpm, Git and provider CLI versions and what is missing                |
+| `pnpm run doctor`             | Reports OS, Node, pnpm, Git and provider CLI versions; `--strict` fails on warnings too   |
 | `pnpm verification:report` / `verification:check` | Regenerate / check the verification report from the ledger           |
 | `node scripts/audit-dependencies.mjs [package...]` | Reads the registry metadata of the dev dependencies (network) for the dependency ledger entry |
 | `pnpm audit:deps`             | `pnpm audit` for high-severity advisories                                                |
 | `node scripts/check-bundle-size.mjs` | After `pnpm build`: gzip size of the web JavaScript against its budget (CI runs it)      |
+| `pnpm run quality` / `quality:report` / `quality:check` | Objective scorecard per area (`--json`, `--area <name>`, `--target 95`); regenerate it and raise the floors / fail on a stale scorecard or an area below its floor; see [quality](quality/README.md) |
 | `pnpm verify:clean`           | Clean-room install, build and test of the committed tree                                 |
 | `node --import tsx scripts/docs-screenshots.mjs --port 4511` | Retakes the README screenshots from a synthetic demo stack (see [images](images/README.md)) |
 | `pnpm backup`                 | Create or restore a backup of the control plane's data                                   |

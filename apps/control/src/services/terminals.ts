@@ -5,119 +5,153 @@ import { identityActor } from './identity.js';
 import { project, emit, type Context } from './context.js';
 import { session, type Session } from './terminal-session.js';
 
-export function terminalCommand(
+type TerminalCommand = Extract<Command, { type: `terminal.${string}` }>;
+type Project = ReturnType<typeof project>;
+const LEASE_MS = 30000;
+
+/** The profile the machine grants for this project's root; the machine must be live, in the project and under its capacity. */
+function grantedProfile(
+  ctx: Context,
+  p: Project,
+  data: { machineId: string; profile: string },
+  now: number,
+) {
+  const machine = ctx.sqlite
+    .prepare(
+      'SELECT projectIds,terminalProfiles FROM machines WHERE id=? AND revokedAt IS NULL AND lastSeen>=?',
+    )
+    .get(data.machineId, now - 45000) as
+    { projectIds: string; terminalProfiles: string } | undefined;
+  if (!machine || !(JSON.parse(machine.projectIds) as string[]).includes(p.id))
+    throw new DomainError('TERMINAL_MACHINE_UNAVAILABLE');
+  const profile = (
+    JSON.parse(machine.terminalProfiles) as { name: string; hash: string; root: string }[]
+  ).find((v) => v.name === data.profile && v.root === p.root);
+  if (!profile) throw new DomainError('TERMINAL_PROFILE_NOT_GRANTED', 403);
+  const count = ctx.sqlite
+    .prepare(
+      "SELECT COUNT(*) AS n FROM terminal_sessions WHERE machineId=? AND state IN ('queued','running','stopping','indeterminate')",
+    )
+    .get(data.machineId) as { n: number };
+  if (count.n >= 4) throw new DomainError('TERMINAL_CAPACITY');
+  return profile;
+}
+
+/** terminal.start: records the new session and returns its id. */
+function createSession(
   ctx: Context,
   actor: Actor,
-  c: Extract<Command, { type: `terminal.${string}` }>,
-) {
+  c: Extract<Command, { type: 'terminal.start' }>,
+  now: number,
+): string {
+  const p = project(ctx, actor, c.projectId);
+  if (
+    p.mode !== 'live' ||
+    !ctx.sqlite
+      .prepare('SELECT 1 FROM project_policies WHERE projectId=? AND liveEnabled=1')
+      .get(p.id)
+  )
+    throw new DomainError('LIVE_EXECUTION_NOT_ENABLED', 403);
+  const profile = grantedProfile(ctx, p, c.data, now);
+  const terminalId = randomUUID();
+  ctx.sqlite
+    .prepare(
+      'INSERT INTO terminal_sessions(id,projectId,machineId,profile,profileHash,cols,rows,createdAt,updatedAt) VALUES (?,?,?,?,?,?,?,?,?)',
+    )
+    .run(
+      terminalId,
+      p.id,
+      c.data.machineId,
+      profile.name,
+      profile.hash,
+      c.data.cols,
+      c.data.rows,
+      now,
+      now,
+    );
+  return terminalId;
+}
+
+function takeOver(ctx: Context, actor: Actor, row: Session, now: number) {
+  if (row.state !== 'running') throw new DomainError('TERMINAL_NOT_RUNNING');
+  if (row.controlOwner && row.controlOwner !== actor.id && (row.leaseUntil ?? 0) > now)
+    throw new DomainError('TERMINAL_ALREADY_CONTROLLED');
+  ctx.sqlite
+    .prepare(
+      'UPDATE terminal_sessions SET controlOwner=?,controlEpoch=controlEpoch+1,leaseUntil=?,updatedAt=? WHERE id=?',
+    )
+    .run(actor.id, now + LEASE_MS, now, row.id);
+  return {
+    id: row.id,
+    controlEpoch: row.controlEpoch + 1,
+    controlOwner: actor.id,
+    leaseUntil: now + LEASE_MS,
+  };
+}
+
+/** terminal.stop: drops what is queued; an unstarted session exits at once, a running one is asked to stop. */
+function requestStop(ctx: Context, row: Session, now: number) {
+  if (row.state === 'stopping') return { id: row.id, state: 'stopping' };
+  ctx.sqlite
+    .prepare(
+      "UPDATE terminal_commands SET state='failed',payload='{}',result='TERMINAL_STOP_REQUESTED' WHERE terminalId=? AND state='queued'",
+    )
+    .run(row.id);
+  const dispatched = ctx.sqlite
+    .prepare(
+      "SELECT 1 FROM terminal_commands WHERE terminalId=? AND kind='start' AND state='dispatched'",
+    )
+    .get(row.id);
+  const state = row.state === 'queued' && !dispatched ? 'exited' : 'stopping';
+  ctx.sqlite
+    .prepare(
+      'UPDATE terminal_sessions SET state=?,controlOwner=NULL,controlEpoch=controlEpoch+1,leaseUntil=NULL,updatedAt=? WHERE id=?',
+    )
+    .run(state, now, row.id);
+  return state === 'exited' ? { id: row.id, state: 'exited' } : undefined;
+}
+
+function releaseControl(ctx: Context, row: Session, now: number) {
+  ctx.sqlite
+    .prepare(
+      'UPDATE terminal_sessions SET controlOwner=NULL,controlEpoch=controlEpoch+1,leaseUntil=NULL,updatedAt=? WHERE id=?',
+    )
+    .run(now, row.id);
+  return { id: row.id, controlEpoch: row.controlEpoch + 1, controlOwner: null };
+}
+
+/**
+ * Input, resize and release need the caller's live control lease; input and resize also renew it.
+ * Returns the final answer when the command completes here (takeover, release, a stop that ends the session).
+ */
+function applyToSession(ctx: Context, actor: Actor, c: TerminalCommand, row: Session, now: number) {
+  if (c.type === 'terminal.takeover') return takeOver(ctx, actor, row, now);
+  if (c.type === 'terminal.stop') return requestStop(ctx, row, now);
+  if (row.controlOwner !== actor.id || (row.leaseUntil ?? 0) <= now)
+    throw new DomainError('TERMINAL_CONTROL_REQUIRED', 403);
+  if (c.type === 'terminal.release') return releaseControl(ctx, row, now);
+  if (row.state !== 'running') throw new DomainError('TERMINAL_NOT_RUNNING');
+  ctx.sqlite
+    .prepare('UPDATE terminal_sessions SET leaseUntil=?,updatedAt=? WHERE id=?')
+    .run(now + LEASE_MS, now, row.id);
+  return undefined;
+}
+
+export function terminalCommand(ctx: Context, actor: Actor, c: TerminalCommand) {
   authorize(actor, c.type, c.projectId);
   const now = ctx.now();
   let terminalId: string,
     epoch = 0;
   if (c.type === 'terminal.start') {
-    const p = project(ctx, actor, c.projectId);
-    if (
-      p.mode !== 'live' ||
-      !ctx.sqlite
-        .prepare('SELECT 1 FROM project_policies WHERE projectId=? AND liveEnabled=1')
-        .get(p.id)
-    )
-      throw new DomainError('LIVE_EXECUTION_NOT_ENABLED', 403);
-    const machine = ctx.sqlite
-      .prepare(
-        'SELECT projectIds,terminalProfiles FROM machines WHERE id=? AND revokedAt IS NULL AND lastSeen>=?',
-      )
-      .get(c.data.machineId, now - 45000) as
-      { projectIds: string; terminalProfiles: string } | undefined;
-    if (!machine || !(JSON.parse(machine.projectIds) as string[]).includes(p.id))
-      throw new DomainError('TERMINAL_MACHINE_UNAVAILABLE');
-    const profile = (
-      JSON.parse(machine.terminalProfiles) as { name: string; hash: string; root: string }[]
-    ).find((v) => v.name === c.data.profile && v.root === p.root);
-    if (!profile) throw new DomainError('TERMINAL_PROFILE_NOT_GRANTED', 403);
-    const count = ctx.sqlite
-      .prepare(
-        "SELECT COUNT(*) AS n FROM terminal_sessions WHERE machineId=? AND state IN ('queued','running','stopping','indeterminate')",
-      )
-      .get(c.data.machineId) as { n: number };
-    if (count.n >= 4) throw new DomainError('TERMINAL_CAPACITY');
-    terminalId = randomUUID();
-    ctx.sqlite
-      .prepare(
-        'INSERT INTO terminal_sessions(id,projectId,machineId,profile,profileHash,cols,rows,createdAt,updatedAt) VALUES (?,?,?,?,?,?,?,?,?)',
-      )
-      .run(
-        terminalId,
-        p.id,
-        c.data.machineId,
-        profile.name,
-        profile.hash,
-        c.data.cols,
-        c.data.rows,
-        now,
-        now,
-      );
+    terminalId = createSession(ctx, actor, c, now);
   } else {
     const row = session(ctx, c.projectId, c.data.terminalId);
     terminalId = row.id;
     epoch = row.controlEpoch;
     if (row.state === 'exited') throw new DomainError('TERMINAL_EXITED');
     if (c.data.epoch !== epoch) throw new DomainError('TERMINAL_EPOCH_MISMATCH');
-    if (c.type === 'terminal.takeover') {
-      if (row.state !== 'running') throw new DomainError('TERMINAL_NOT_RUNNING');
-      if (row.controlOwner && row.controlOwner !== actor.id && (row.leaseUntil ?? 0) > now)
-        throw new DomainError('TERMINAL_ALREADY_CONTROLLED');
-      ctx.sqlite
-        .prepare(
-          'UPDATE terminal_sessions SET controlOwner=?,controlEpoch=controlEpoch+1,leaseUntil=?,updatedAt=? WHERE id=?',
-        )
-        .run(actor.id, now + 30000, now, row.id);
-      return {
-        id: row.id,
-        controlEpoch: epoch + 1,
-        controlOwner: actor.id,
-        leaseUntil: now + 30000,
-      };
-    }
-    if (c.type === 'terminal.stop') {
-      if (row.state === 'stopping') return { id: row.id, state: 'stopping' };
-      ctx.sqlite
-        .prepare(
-          "UPDATE terminal_commands SET state='failed',payload='{}',result='TERMINAL_STOP_REQUESTED' WHERE terminalId=? AND state='queued'",
-        )
-        .run(row.id);
-      const dispatched = ctx.sqlite
-        .prepare(
-          "SELECT 1 FROM terminal_commands WHERE terminalId=? AND kind='start' AND state='dispatched'",
-        )
-        .get(row.id);
-      const state = row.state === 'queued' && !dispatched ? 'exited' : 'stopping';
-      ctx.sqlite
-        .prepare(
-          'UPDATE terminal_sessions SET state=?,controlOwner=NULL,controlEpoch=controlEpoch+1,leaseUntil=NULL,updatedAt=? WHERE id=?',
-        )
-        .run(state, now, row.id);
-      if (state === 'exited') return { id: row.id, state: 'exited' };
-    }
-    if (
-      c.type !== 'terminal.stop' &&
-      (row.controlOwner !== actor.id || (row.leaseUntil ?? 0) <= now)
-    )
-      throw new DomainError('TERMINAL_CONTROL_REQUIRED', 403);
-    if (c.type === 'terminal.release') {
-      ctx.sqlite
-        .prepare(
-          'UPDATE terminal_sessions SET controlOwner=NULL,controlEpoch=controlEpoch+1,leaseUntil=NULL,updatedAt=? WHERE id=?',
-        )
-        .run(now, row.id);
-      return { id: row.id, controlEpoch: epoch + 1, controlOwner: null };
-    }
-    if (c.type !== 'terminal.stop' && row.state !== 'running')
-      throw new DomainError('TERMINAL_NOT_RUNNING');
-    if (c.type !== 'terminal.stop')
-      ctx.sqlite
-        .prepare('UPDATE terminal_sessions SET leaseUntil=?,updatedAt=? WHERE id=?')
-        .run(now + 30000, now, row.id);
+    const done = applyToSession(ctx, actor, c, row, now);
+    if (done) return done;
   }
   if (
     (

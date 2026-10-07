@@ -1,4 +1,5 @@
 import { stat } from 'node:fs/promises';
+import { deleteOldest } from './oldest-entry.js';
 import { withEdge } from './file-edge.js';
 
 /**
@@ -58,7 +59,8 @@ export function parseOutcomes(provider: 'claude' | 'codex', tail: Buffer): Map<s
   const next = needles.map(() => -2); // each needle's next hit, searched again only once it is behind `from`
   while (from < tail.length) {
     next.forEach((at, i) => {
-      if (at !== -1 && at < from) next[i] = tail.indexOf(needles[i]!, from);
+      const needle = needles[i];
+      if (needle !== undefined && at !== -1 && at < from) next[i] = tail.indexOf(needle, from);
     });
     const hits = next.filter((i) => i >= 0);
     if (!hits.length) break;
@@ -92,7 +94,7 @@ export function parseOutcomes(provider: 'claude' | 'codex', tail: Buffer): Map<s
       /* a line cut in half, or not JSON */
     }
   }
-  while (found.size > MAX_OUTCOMES) found.delete(found.keys().next().value!);
+  while (found.size > MAX_OUTCOMES) deleteOldest(found);
   return found;
 }
 
@@ -108,7 +110,7 @@ export async function readOutcomes(provider: 'claude' | 'codex', file: string): 
     const outcomes = await withEdge(file, 'tail', TAIL_BYTES, (data) =>
       parseOutcomes(provider, data),
     );
-    if (cache.size >= MAX_CACHED_FILES) cache.delete(cache.keys().next().value!);
+    if (cache.size >= MAX_CACHED_FILES) deleteOldest(cache);
     cache.set(file, { mtime: mtimeMs, size, outcomes });
     return outcomes;
   } catch {

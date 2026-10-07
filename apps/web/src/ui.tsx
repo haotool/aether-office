@@ -180,7 +180,7 @@ export function Empty({
   action?: ReactNode;
 }) {
   return (
-    <div className="empty-state">
+    <div className="u-empty">
       <div className="empty-orbit">
         <span />
       </div>
@@ -210,12 +210,12 @@ export function PageHeading({
   action?: ReactNode;
 }) {
   return (
-    <div className="page-heading">
+    <div className="u-head page-heading">
       <div>
         <h1>{title}</h1>
         {subtitle && <Hint>{subtitle}</Hint>}
       </div>
-      {action}
+      {action && <div className="u-head__actions">{action}</div>}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 /* ── Scene HUD: floor readout and the deck selector, drawn as instruments rather than cards ─────────────────── */
+/* The HUD plaques are geometry over the canvas: fixed insets and widths so they clear the toolbar (top) and the camera wall (right). */
 .floor-hud {
   position: absolute;
   left: 18px;
@@ -97,7 +98,7 @@
   text-align: left;
   background: color-mix(in srgb, var(--accent) 7%, var(--glass-base));
   clip-path: polygon(11px 0, 100% 0, calc(100% - 11px) 100%, 0 100%);
-  transition: background 0.15s;
+  transition: background var(--dur-fast);
 }
 .slab b {
   grid-area: floor;
@@ -138,7 +139,7 @@
   background: color-mix(in srgb, var(--accent) 30%, var(--glass-base));
 }
 .slab:focus-visible {
-  outline: none;
+  outline: none; /* the slab's own cue: a brighter tint and an underline, since an outline would be cut by its clip-path */
   background: color-mix(in srgb, var(--accent) 38%, var(--glass-base));
   text-decoration: underline;
 }

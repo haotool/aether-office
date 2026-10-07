@@ -22,27 +22,13 @@ body {
   summary,
   .nav-link,
   input:not([type='checkbox']):not([type='radio']) {
-    min-height: var(--control-touch);
+    min-height: var(--control-h-md);
   }
   .project-picker .tiny-label {
     display: none; /* the 44px select fills the 60px top bar; its label would be cut off above it */
   }
-  .icon-button {
-    min-width: var(--control-touch-sm);
-    min-height: var(--control-touch-sm);
-    justify-content: center;
-  }
   .text-button {
-    min-height: var(--control-touch-sm);
     padding-inline: var(--space-6);
-  }
-  .segmented button,
-  .scene-options > button {
-    min-width: var(--control-touch-sm);
-    min-height: var(--control-touch-sm);
-  }
-  .scene-options select {
-    min-height: var(--control-touch-sm);
   }
   /* A control may be drawn at 36 or 40px; a finger still gets 44px: an invisible area reaches past the edges. */
   .icon-button,
@@ -87,7 +73,7 @@ body {
     display: inline-flex;
     align-items: center;
     gap: var(--space-8);
-    min-height: var(--control-touch);
+    min-height: var(--control-h-md);
   }
 }
 

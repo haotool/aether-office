@@ -12,6 +12,7 @@ import {
 import { APP_VERSION, type Command } from '@aether/contracts';
 import { DomainError } from '@aether/kernel';
 import type { Control } from '../control.js';
+import type { Context } from './context.js';
 import { identityActor } from './identity.js';
 import type { A2AClient } from './a2a-clients.js';
 import { createWork } from './work.js';
@@ -53,17 +54,17 @@ const iso = (ms: number) => new Date(ms).toISOString();
 
 function buildTask(taskId: string, contextId: string, work: WorkRow): A2ATask {
   const state = taskStateOf(work.state);
-  const done = state === TaskState.TASK_STATE_COMPLETED && work.result;
+  const result = state === TaskState.TASK_STATE_COMPLETED ? work.result : null;
   return Task.fromJSON({
     id: taskId,
     contextId,
     status: { state: TaskState[state], timestamp: iso(work.updatedAt) },
-    artifacts: done
+    artifacts: result
       ? [
           {
             artifactId: `${taskId}-result`,
             name: 'result',
-            parts: [{ text: work.result!.slice(0, MAX_TEXT) }],
+            parts: [{ text: result.slice(0, MAX_TEXT) }],
           },
         ]
       : [],
@@ -82,6 +83,85 @@ function textOf(message: Message): string {
     })
     .join('\n')
     .trim();
+}
+
+type Sql = Context['sqlite'];
+type StoredTask = WorkRow & { taskId: string; contextId: string };
+
+/** The client the call is authenticated as, if it has not been revoked. */
+function activeClient(sql: Sql, request: RequestContext): Client {
+  const client = sql
+    .prepare(
+      'SELECT id,projectId,maxOpen,createdBy FROM a2a_clients WHERE id=? AND revokedAt IS NULL',
+    )
+    .get(request.context.user?.userName ?? '') as Client | undefined;
+  if (!client) throw new DomainError('AUTH_REQUIRED', 401);
+  return client;
+}
+
+function openTaskCount(sql: Sql, clientId: string): number {
+  return (
+    sql
+      .prepare(
+        `SELECT COUNT(*) AS n FROM a2a_tasks t JOIN work_items w ON w.id=t.workId WHERE t.clientId=? AND w.state NOT IN (${TERMINAL.map(() => '?').join(',')})`,
+      )
+      .get(clientId, ...TERMINAL) as { n: number }
+  ).n;
+}
+
+/** The task for a limit that is reached: refused, nothing created. */
+const rejectedTask = (request: RequestContext, now: number) =>
+  Task.fromJSON({
+    id: request.taskId,
+    contextId: request.contextId,
+    status: {
+      state: 'TASK_STATE_REJECTED',
+      timestamp: iso(now),
+      message: {
+        messageId: randomUUID(),
+        role: 'ROLE_AGENT',
+        parts: [{ text: 'Open task limit reached.' }],
+      },
+    },
+    artifacts: [],
+    history: [],
+  });
+
+/** Creates the unassigned work item for a request and records the task and message that map to it. */
+function openWork(
+  ctx: Context,
+  client: Client,
+  request: RequestContext,
+  message: Message,
+  text: string,
+): WorkRow {
+  const now = ctx.now();
+  return ctx.sqlite.transaction(() => {
+    const created = createWork(ctx, {
+      schemaVersion: 1,
+      type: 'work.create',
+      projectId: client.projectId,
+      idempotencyKey: `a2a:${client.id}:${message.messageId}`,
+      correlationId: request.taskId,
+      data: {
+        title: (text.split('\n')[0] || 'A2A request').slice(0, 160),
+        description:
+          `${text}\n\nSource: A2A client "${client.id}". Untrusted remote request.`.slice(0, 16000),
+        acceptance: 'A human must confirm the acceptance criteria before assignment.',
+        dependencies: [],
+        priority: 1,
+      },
+    } as Extract<Command, { type: 'work.create' }>);
+    ctx.sqlite
+      .prepare(
+        'INSERT INTO a2a_tasks(taskId,clientId,workId,contextId,createdAt) VALUES (?,?,?,?,?)',
+      )
+      .run(request.taskId, client.id, created.id, request.contextId, now);
+    ctx.sqlite
+      .prepare('INSERT INTO a2a_messages(clientId,messageId,taskId) VALUES (?,?,?)')
+      .run(client.id, message.messageId, request.taskId);
+    return { id: created.id, state: created.state, result: null, updatedAt: now } satisfies WorkRow;
+  })();
 }
 
 export class A2AGateway {
@@ -213,99 +293,35 @@ export class A2AGateway {
   }
 
   private executor(): AgentExecutor {
-    const sql = this.control.ctx.sqlite;
+    const ctx = this.control.ctx;
+    const sql = ctx.sqlite;
     return {
       execute: async (request: RequestContext, bus: ExecutionEventBus) => {
-        const client = sql
-          .prepare(
-            'SELECT id,projectId,maxOpen,createdBy FROM a2a_clients WHERE id=? AND revokedAt IS NULL',
-          )
-          .get(request.context.user?.userName ?? '') as Client | undefined;
-        if (!client) throw new DomainError('AUTH_REQUIRED', 401);
+        const client = activeClient(sql, request);
         if (request.task) throw new DomainError('A2A_FOLLOW_UP_UNSUPPORTED', 400); // one request, one work item
         const message = request.userMessage;
-        const dedupe = sql
-          .prepare('SELECT taskId FROM a2a_messages WHERE clientId=? AND messageId=?')
-          .get(client.id, message.messageId) as { taskId: string } | undefined;
         const finish = (taskId: string, contextId: string, work: WorkRow) => {
           bus.publish({ kind: 'task', data: buildTask(taskId, contextId, work) });
           bus.finished();
         };
+        const dedupe = sql
+          .prepare('SELECT taskId FROM a2a_messages WHERE clientId=? AND messageId=?')
+          .get(client.id, message.messageId) as { taskId: string } | undefined;
         if (dedupe) {
           const existing = sql
             .prepare(
               'SELECT t.taskId,t.contextId,w.id,w.state,w.result,w.updatedAt FROM a2a_tasks t JOIN work_items w ON w.id=t.workId WHERE t.taskId=?',
             )
-            .get(dedupe.taskId) as WorkRow & { taskId: string; contextId: string };
+            .get(dedupe.taskId) as StoredTask;
           return finish(existing.taskId, existing.contextId, existing);
         }
         const text = textOf(message).slice(0, MAX_TEXT);
-        const open = (
-          sql
-            .prepare(
-              `SELECT COUNT(*) AS n FROM a2a_tasks t JOIN work_items w ON w.id=t.workId WHERE t.clientId=? AND w.state NOT IN (${TERMINAL.map(() => '?').join(',')})`,
-            )
-            .get(client.id, ...TERMINAL) as { n: number }
-        ).n;
-        if (open >= client.maxOpen) {
-          // Over quota: refuse without creating anything.
-          bus.publish({
-            kind: 'task',
-            data: Task.fromJSON({
-              id: request.taskId,
-              contextId: request.contextId,
-              status: {
-                state: 'TASK_STATE_REJECTED',
-                timestamp: iso(this.control.ctx.now()),
-                message: {
-                  messageId: randomUUID(),
-                  role: 'ROLE_AGENT',
-                  parts: [{ text: 'Open task limit reached.' }],
-                },
-              },
-              artifacts: [],
-              history: [],
-            }),
-          });
+        if (openTaskCount(sql, client.id) >= client.maxOpen) {
+          bus.publish({ kind: 'task', data: rejectedTask(request, ctx.now()) });
           return bus.finished();
         }
-        identityActor(this.control.ctx, client.createdBy); // a revoked or expired creator cannot open work
-        const now = this.control.ctx.now();
-        const work = this.control.ctx.sqlite.transaction(() => {
-          const created = createWork(this.control.ctx, {
-            schemaVersion: 1,
-            type: 'work.create',
-            projectId: client.projectId,
-            idempotencyKey: `a2a:${client.id}:${message.messageId}`,
-            correlationId: request.taskId,
-            data: {
-              title: (text.split('\n')[0] || 'A2A request').slice(0, 160),
-              description:
-                `${text}\n\nSource: A2A client "${client.id}". Untrusted remote request.`.slice(
-                  0,
-                  16000,
-                ),
-              acceptance: 'A human must confirm the acceptance criteria before assignment.',
-              dependencies: [],
-              priority: 1,
-            },
-          } as Extract<Command, { type: 'work.create' }>);
-          sql
-            .prepare(
-              'INSERT INTO a2a_tasks(taskId,clientId,workId,contextId,createdAt) VALUES (?,?,?,?,?)',
-            )
-            .run(request.taskId, client.id, created.id, request.contextId, now);
-          sql
-            .prepare('INSERT INTO a2a_messages(clientId,messageId,taskId) VALUES (?,?,?)')
-            .run(client.id, message.messageId, request.taskId);
-          return {
-            id: created.id,
-            state: created.state,
-            result: null,
-            updatedAt: now,
-          } satisfies WorkRow;
-        })();
-        finish(request.taskId, request.contextId, work);
+        identityActor(ctx, client.createdBy); // a revoked or expired creator cannot open work
+        finish(request.taskId, request.contextId, openWork(ctx, client, request, message, text));
       },
       cancelTask: async (taskId: string, bus: ExecutionEventBus) => {
         const { contextId, after } = this.cancelWork(taskId);

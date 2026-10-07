@@ -73,7 +73,7 @@ export function buildKpi(raw: Raw, days: readonly string[], dayOf: DayOf, now: n
   const daily = days.map(() => 0);
   for (const c of raw.commits) {
     const i = slot(c.at);
-    if (i >= 0) daily[i]!++;
+    if (i >= 0) daily[i] = (daily[i] ?? 0) + 1;
   }
   const tips = new Set(raw.baseMerges.map((m) => m.tip));
   const baseTip = raw.branches.find((b) => b.name === raw.base)?.sha;
@@ -105,14 +105,8 @@ export function buildKpi(raw: Raw, days: readonly string[], dayOf: DayOf, now: n
   };
 }
 
-async function collect(
-  root: string,
-  branchesText: string,
-  base: string,
-  sinceIso: string,
-): Promise<Raw> {
-  const branches = parseBranches(branchesText);
-  const since = `--since=${sinceIso}`;
+/** The four read-only log commands of a window, each empty (or null for the line count) when git failed. */
+async function readLogs(root: string, base: string, since: string) {
   const [merged, log, merges, stat] = await Promise.all([
     git(root, ['branch', '--merged', base, '--format=%(refname:short)'], GIT_TIMEOUT_MS).catch(
       () => '',
@@ -154,38 +148,60 @@ async function collect(
       () => null,
     ),
   ]);
-  const mergedSet = new Set(lines(merged));
+  return { merged, log, merges, stat };
+}
+
+/** Merged branches sitting on the default branch's tip whose reflog shows they moved (fast-forwarded work). */
+async function workedBranches(root: string, branches: Branch[], base: string, merged: Set<string>) {
   const baseTip = branches.find((b) => b.name === base)?.sha;
   const atTip = branches
-    .filter((b) => b.name !== base && mergedSet.has(b.name) && b.sha === baseTip)
+    .filter((b) => b.name !== base && merged.has(b.name) && b.sha === baseTip)
     .slice(0, MAX_OPEN_AGES);
-  const worked = new Set(
-    (
-      await mapPool(atTip, AGE_WIDTH, async (b) => {
-        const out = await git(
-          root,
-          ['reflog', 'show', '--format=%H', `refs/heads/${b.name}`],
-          GIT_TIMEOUT_MS,
-        ).catch(() => '');
-        return lines(out).length > 1 ? b.name : null;
-      })
-    ).filter((name): name is string => name !== null),
-  );
+  const names = await mapPool(atTip, AGE_WIDTH, async (b) => {
+    const out = await git(
+      root,
+      ['reflog', 'show', '--format=%H', `refs/heads/${b.name}`],
+      GIT_TIMEOUT_MS,
+    ).catch(() => '');
+    return lines(out).length > 1 ? b.name : null;
+  });
+  return new Set(names.filter((name): name is string => name !== null));
+}
+
+/** The first-commit time of each of the newest open branches. */
+async function openBranchStarts(
+  root: string,
+  branches: Branch[],
+  base: string,
+  merged: Set<string>,
+) {
   const open = branches
-    .filter((b) => b.name !== base && !mergedSet.has(b.name))
+    .filter((b) => b.name !== base && !merged.has(b.name))
     .sort((a, b) => b.at - a.at)
     .slice(0, MAX_OPEN_AGES);
-  const openSince = (
-    await mapPool(open, AGE_WIDTH, async (b) => {
-      const out = await git(
-        root,
-        ['log', `${base}..${b.name}`, '-n', String(AGE_COMMITS), '--format=%ct'],
-        GIT_TIMEOUT_MS,
-      ).catch(() => '');
-      const oldest = lines(out).at(-1);
-      return oldest ? Number(oldest) * 1000 : null;
-    })
-  ).filter((at): at is number => at !== null);
+  const starts = await mapPool(open, AGE_WIDTH, async (b) => {
+    const out = await git(
+      root,
+      ['log', `${base}..${b.name}`, '-n', String(AGE_COMMITS), '--format=%ct'],
+      GIT_TIMEOUT_MS,
+    ).catch(() => '');
+    const oldest = lines(out).at(-1);
+    return oldest ? Number(oldest) * 1000 : null;
+  });
+  return starts.filter((at): at is number => at !== null);
+}
+
+async function collect(
+  root: string,
+  branchesText: string,
+  base: string,
+  sinceIso: string,
+): Promise<Raw> {
+  const branches = parseBranches(branchesText);
+  const { merged, log, merges, stat } = await readLogs(root, base, `--since=${sinceIso}`);
+  const mergedSet = new Set(lines(merged));
+  const worked = await workedBranches(root, branches, base, mergedSet);
+  const openSince = await openBranchStarts(root, branches, base, mergedSet);
   return {
     base,
     branches,
@@ -222,7 +238,8 @@ export async function gitKpi(
   dayOf: DayOf,
   now = Date.now(),
 ): Promise<GitKpi | null> {
-  const today = days.at(-1)!;
+  const today = days.at(-1);
+  if (!today) return null;
   const hit = cache.get(root);
   if (hit && hit.day === today && now - hit.at < KPI_TTL_MS) return hit.kpi;
   try {
@@ -265,7 +282,8 @@ const sumLines = (list: readonly (number | null)[]) =>
 
 /** Pure. Several repositories' KPIs as one (an office, the building). Authors are counted once per repository. */
 export function sumKpis(list: readonly GitKpi[]): GitKpi | null {
-  if (!list.length) return null;
+  const [first] = list;
+  if (!first) return null;
   const ages = list.flatMap((k) => (k.longestOpenDays === null ? [] : [k.longestOpenDays]));
   return {
     commits: sumWindowed(list.map((k) => k.commits)),
@@ -276,7 +294,7 @@ export function sumKpis(list: readonly GitKpi[]): GitKpi | null {
     added30: sumLines(list.map((k) => k.added30)),
     removed30: sumLines(list.map((k) => k.removed30)),
     longestOpenDays: ages.length ? Math.max(...ages) : null,
-    daily: list[0]!.daily.map((_, i) => list.reduce((n, k) => n + (k.daily[i] ?? 0), 0)),
+    daily: first.daily.map((_, i) => list.reduce((n, k) => n + (k.daily[i] ?? 0), 0)),
     truncated: list.some((k) => k.truncated),
   };
 }

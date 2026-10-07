@@ -40,7 +40,7 @@ export type HookState = {
   recent: HookCall[];
   subagents: Subagent[];
 };
-export type HookCall = {
+type HookCall = {
   tool: string;
   target: string | null;
   at: number;
@@ -53,8 +53,8 @@ export type HookCall = {
 type Child = Omit<Subagent, 'source' | 'status' | 'nickname' | 'label' | 'tokens' | 'result'> & {
   waiting: boolean;
 };
-const newChild = (r: HookRecord, startedAt: number | null): Child => ({
-  id: r.agentId!,
+const newChild = (id: string, r: HookRecord, startedAt: number | null): Child => ({
+  id,
   type: r.agentType ?? 'subagent',
   lastSeen: r.at,
   startedAt,
@@ -64,10 +64,9 @@ const newChild = (r: HookRecord, startedAt: number | null): Child => ({
 });
 
 // Folds one record of a subagent into its facts. After a stop only a new start brings it back.
-function foldChild(children: Map<string, Child>, r: HookRecord) {
-  const id = r.agentId!;
-  if (r.event === 'SubagentStart') return void children.set(id, newChild(r, r.at));
-  const child = children.get(id) ?? newChild(r, r.event === 'SubagentStop' ? null : r.at);
+function foldChild(children: Map<string, Child>, r: HookRecord, id: string) {
+  if (r.event === 'SubagentStart') return void children.set(id, newChild(id, r, r.at));
+  const child = children.get(id) ?? newChild(id, r, r.event === 'SubagentStop' ? null : r.at);
   children.set(id, child);
   if (child.endedAt !== null) return;
   child.lastSeen = r.at;
@@ -127,12 +126,53 @@ const callOf = (r: HookRecord): HookCall | null =>
     : null;
 
 // The outcome the provider reported for a call already in the list, matched by its id (never by time or order).
-const settled = (recent: HookCall[], r: HookRecord): HookCall[] =>
-  r.toolUseId &&
-  r.ok !== undefined &&
-  (r.event === 'PostToolUse' || r.event === 'PostToolUseFailure')
-    ? recent.map((c) => (c.toolUseId === r.toolUseId ? { ...c, ok: r.ok! } : c))
-    : recent;
+const settled = (recent: HookCall[], r: HookRecord): HookCall[] => {
+  const { ok, toolUseId } = r;
+  if (!toolUseId || ok === undefined) return recent;
+  if (r.event !== 'PostToolUse' && r.event !== 'PostToolUseFailure') return recent;
+  return recent.map((c) => (c.toolUseId === toolUseId ? { ...c, ok } : c));
+};
+
+/** The state after one record of the session itself; subagent traffic only proves the parent is alive (see below). */
+function stateAfter(before: HookState | undefined, r: HookRecord, recent: HookCall[]): HookState {
+  if (r.agentId) {
+    // Subagent traffic never changes the parent's activity; it only proves the parent is alive.
+    return before
+      ? { ...before, recent }
+      : { activity: 'working', lastEvent: r.event, at: r.at, tool: null, recent, subagents: [] };
+  }
+  const activity = asksPermission(r)
+    ? 'waiting_permission'
+    : r.event === 'SessionEnd'
+      ? 'ended'
+      : WORKING_EVENTS.has(r.event)
+        ? 'working'
+        : 'idle';
+  return {
+    activity,
+    lastEvent: r.event,
+    at: r.at,
+    tool: r.event === 'PreToolUse' ? (r.tool ?? null) : null,
+    recent,
+    subagents: [],
+  };
+}
+
+/** The subagents of a session that are still worth showing; none once the session has ended. */
+function visibleSubagents(state: HookState, running: Map<string, Child> | undefined, now: number) {
+  if (state.activity === 'ended') return [];
+  return [...(running ?? []).values()]
+    .filter((c) => isVisible(c, now))
+    .map(({ waiting, ...c }): Subagent => ({
+      ...c,
+      source: 'hook',
+      status: statusOf({ ...c, waiting }),
+      nickname: null,
+      label: null,
+      tokens: null,
+      result: null,
+    }));
+}
 
 // Pure: records are chronological. A session/subagent is only ever "active" from observed events.
 export function deriveHookState(
@@ -145,60 +185,16 @@ export function deriveHookState(
     const key = `${r.provider}:${r.sessionId}`;
     const children = running.get(key) ?? new Map<string, Child>();
     running.set(key, children);
-    if (r.agentId) foldChild(children, r);
+    if (r.agentId) foldChild(children, r, r.agentId);
     const call = callOf(r);
     const before = states.get(key);
     const recent = call
       ? [...(before?.recent ?? []), call].slice(-RECENT_TOOLS)
       : settled(before?.recent ?? [], r);
-    if (r.agentId) {
-      // Subagent traffic never changes the parent's activity; it only proves the parent is alive.
-      states.set(
-        key,
-        before
-          ? { ...before, recent }
-          : {
-              activity: 'working',
-              lastEvent: r.event,
-              at: r.at,
-              tool: null,
-              recent,
-              subagents: [],
-            },
-      );
-      continue;
-    }
-    const activity = asksPermission(r)
-      ? 'waiting_permission'
-      : r.event === 'SessionEnd'
-        ? 'ended'
-        : WORKING_EVENTS.has(r.event)
-          ? 'working'
-          : 'idle';
-    states.set(key, {
-      activity,
-      lastEvent: r.event,
-      at: r.at,
-      tool: r.event === 'PreToolUse' ? (r.tool ?? null) : null,
-      recent,
-      subagents: [],
-    });
+    states.set(key, stateAfter(before, r, recent));
   }
-  for (const [key, state] of states) {
-    const children = [...(running.get(key) ?? []).values()].filter((c) => isVisible(c, now));
-    state.subagents =
-      state.activity === 'ended'
-        ? []
-        : children.map(({ waiting, ...c }) => ({
-            ...c,
-            source: 'hook',
-            status: statusOf({ ...c, waiting }),
-            nickname: null,
-            label: null,
-            tokens: null,
-            result: null,
-          }));
-  }
+  for (const [key, state] of states)
+    state.subagents = visibleSubagents(state, running.get(key), now);
   return states;
 }
 

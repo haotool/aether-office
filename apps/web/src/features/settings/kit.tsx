@@ -105,7 +105,7 @@ export function Switch({
 }) {
   const ids = useContext(RowIds);
   return (
-    <label className="switch">
+    <label className="switch u-switch">
       <input
         type="checkbox"
         role="switch"
@@ -143,7 +143,7 @@ export function Segmented<T extends string>({
   return (
     <div
       ref={group}
-      className="sseg"
+      className="sseg u-segmented"
       role="radiogroup"
       aria-labelledby={ids.label}
       aria-describedby={ids.desc}

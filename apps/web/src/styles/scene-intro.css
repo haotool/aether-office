@@ -2,7 +2,7 @@
 
 /* The tour's cuts dip for 400 ms instead of the director's 150 ms. */
 .cut-dip[data-intro] {
-  animation-duration: 0.4s;
+  animation-duration: var(--dur-slow);
 }
 
 .intro-caption {

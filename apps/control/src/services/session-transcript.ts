@@ -202,7 +202,7 @@ export function parseTranscript(provider: 'claude' | 'codex', tail: string) {
       for (const key of ['file_path', 'path', 'notebook_path'])
         if (typeof input[key] === 'string') files.add(String(input[key]));
       for (const match of e.text.matchAll(/\*\*\* (?:Update|Add|Delete) File: ([^\n\\"]+)/g))
-        files.add(match[1]!.trim());
+        files.add((match[1] ?? '').trim());
     }
   }
   const analysis: TranscriptAnalysis = {

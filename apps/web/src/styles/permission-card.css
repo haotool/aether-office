@@ -76,7 +76,7 @@
 }
 .permission-actions button {
   flex: 1 1 auto;
-  min-height: var(--target-touch);
+  min-height: var(--control-h-lg);
 }
 .permission-actions button:disabled {
   opacity: 0.5;
@@ -105,7 +105,7 @@
     border: 1px solid var(--gold-border);
     border-radius: var(--r-2xl);
     background: var(--surface);
-    box-shadow: 0 8px 28px var(--shade);
+    box-shadow: var(--shadow-md);
     overflow: hidden;
   }
   .permission-peek .permission-card {

@@ -1,7 +1,6 @@
 import { createFileOnce } from './atomic.js';
-import { StringDecoder } from 'node:string_decoder';
-import { execFileSync, spawn } from 'node:child_process';
-import { groupStopper } from '@aether/providers';
+import { execFileSync } from 'node:child_process';
+import { runHarnessProcess } from './harness-run.js';
 import { createHash, randomUUID } from 'node:crypto';
 import {
   mkdirSync,
@@ -33,7 +32,7 @@ export type Harness = {
   hash: string;
   timeoutMs: number;
 };
-export type Verification = {
+type Verification = {
   schemaVersion: 1;
   id: string;
   workspaceId: string;
@@ -75,6 +74,30 @@ export function environment(): NodeJS.ProcessEnv {
     GIT_CONFIG_NOSYSTEM: '1',
     GIT_CONFIG_GLOBAL: '/dev/null',
   };
+}
+/** The outcome of a verification run: cancelled, invalidated by a change, passed, or failed (with why, when known). */
+function verdictOf(r: {
+  aborted: boolean;
+  changed: boolean;
+  exitCode: number | null;
+  capped: boolean;
+  timedOut: boolean;
+}): { status: Verification['status']; reason: string | null } {
+  const status = r.aborted
+    ? 'cancelled'
+    : r.changed
+      ? 'invalidated'
+      : r.exitCode === 0 && !r.capped && !r.timedOut
+        ? 'passed'
+        : 'failed';
+  const reason = r.changed
+    ? 'GIT_OR_HARNESS_CHANGED'
+    : r.timedOut
+      ? 'TIMEOUT'
+      : r.capped
+        ? 'OUTPUT_LIMIT'
+        : null;
+  return { status, reason };
 }
 export class Workspaces {
   readonly root: string;
@@ -259,8 +282,8 @@ export class Workspaces {
     createFileOnce(join(this.root, 'harnesses', id + '.json'), JSON.stringify(harness), 0o400);
     return harness;
   }
-  async verify(id: string, harnessId: string, signal?: AbortSignal): Promise<Verification> {
-    const workspace = this.load(id);
+  /** The registered harness, checked against its recorded hash and its source file. */
+  private loadHarness(harnessId: string): Harness {
     const harness = JSON.parse(
       readFileSync(join(this.root, 'harnesses', identifier(harnessId) + '.json'), 'utf8'),
     ) as Harness;
@@ -271,55 +294,30 @@ export class Workspaces {
       digest(readFileSync(harness.sourceFile)) !== harness.sourceHash
     )
       throw new Error('HARNESS_CHANGED');
+    return harness;
+  }
+  private writeArtifacts(verificationId: string, output: string, result: Verification) {
+    const artifacts = join(this.root, 'artifacts', verificationId);
+    mkdirSync(artifacts, { mode: 0o700 });
+    writeFileSync(join(artifacts, 'output.log'), output, { mode: 0o600 });
+    writeFileSync(join(artifacts, 'verification.json'), JSON.stringify(result, null, 2), {
+      mode: 0o600,
+    });
+  }
+  async verify(id: string, harnessId: string, signal?: AbortSignal): Promise<Verification> {
+    const workspace = this.load(id);
+    const harness = this.loadHarness(harnessId);
     const before = this.state(workspace.path);
     if (before.status) throw new Error('WORKSPACE_DIRTY_BEFORE_TEST');
     const baseBefore = sha(this.git(workspace.repository, ['rev-parse', 'HEAD']));
     if (baseBefore !== workspace.baseSha) throw new Error('BASE_DRIFT');
-    const startedAt = Date.now();
-    const verificationId = randomUUID();
-    let output = '';
-    let outputBytes = 0;
-    const decoder = new StringDecoder('utf8');
-    let capped = false;
-    let timedOut = false;
-    const child = spawn(harness.executable, harness.args, {
-      cwd: workspace.path,
-      env: environment(),
-      stdio: ['ignore', 'pipe', 'pipe'],
-      detached: process.platform !== 'win32',
-    });
-    const stopper = groupStopper(child); // the group can outlive its leader while descendants retain pipes
-    const stop = stopper.stop;
-    const collect = (chunk: Buffer) => {
-      outputBytes += chunk.length;
-      if (outputBytes > 1024 * 1024) {
-        capped = true;
-        stop();
-        return;
-      }
-      output += decoder.write(chunk);
-    };
-    child.stdout.on('data', collect);
-    child.stderr.on('data', collect);
-    signal?.addEventListener('abort', stop, { once: true });
-    const timer = setTimeout(() => {
-      timedOut = true;
-      stop();
-    }, harness.timeoutMs);
-    timer.unref();
-    if (signal?.aborted) stop();
-    let exitCode: number | null;
-    try {
-      exitCode = await new Promise<number | null>((resolve, reject) => {
-        child.once('close', resolve);
-        child.once('error', reject);
-      });
-    } finally {
-      clearTimeout(timer);
-      stopper.cancel();
-      signal?.removeEventListener('abort', stop);
-      output += decoder.end();
-    }
+    const [startedAt, verificationId] = [Date.now(), randomUUID()];
+    const { output, exitCode, capped, timedOut } = await runHarnessProcess(
+      harness,
+      workspace.path,
+      environment(),
+      signal,
+    );
     const after = this.state(workspace.path);
     const baseAfter = sha(this.git(workspace.repository, ['rev-parse', 'HEAD']));
     const changed =
@@ -329,13 +327,13 @@ export class Workspaces {
       !!after.status ||
       baseBefore !== baseAfter ||
       digest(readFileSync(harness.sourceFile)) !== harness.sourceHash;
-    const status = signal?.aborted
-      ? 'cancelled'
-      : changed
-        ? 'invalidated'
-        : exitCode === 0 && !capped && !timedOut
-          ? 'passed'
-          : 'failed';
+    const { status, reason } = verdictOf({
+      aborted: !!signal?.aborted,
+      changed,
+      exitCode,
+      capped,
+      timedOut,
+    });
     const result: Verification = {
       schemaVersion: 1,
       id: verificationId,
@@ -351,20 +349,9 @@ export class Workspaces {
       startedAt,
       finishedAt: Date.now(),
       logHash: digest(output),
-      reason: changed
-        ? 'GIT_OR_HARNESS_CHANGED'
-        : timedOut
-          ? 'TIMEOUT'
-          : capped
-            ? 'OUTPUT_LIMIT'
-            : null,
+      reason,
     };
-    const artifacts = join(this.root, 'artifacts', verificationId);
-    mkdirSync(artifacts, { mode: 0o700 });
-    writeFileSync(join(artifacts, 'output.log'), output, { mode: 0o600 });
-    writeFileSync(join(artifacts, 'verification.json'), JSON.stringify(result, null, 2), {
-      mode: 0o600,
-    });
+    this.writeArtifacts(verificationId, output, result);
     return result;
   }
   remove(id: string): void {

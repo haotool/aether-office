@@ -8,6 +8,7 @@ import { secret } from './services/identity.js';
 import { lanOrigins, pairingText } from './services/pairing.js';
 import { reconcileTerminals } from './services/terminals.js';
 import { reconcileOffline, reconcileStalled } from './services/runners.js';
+import { print } from './stdio.js';
 const mode = process.env['AETHER_MODE'] === 'demo' ? 'demo' : 'live';
 const directory = resolve(process.env['AETHER_DATA_DIR'] ?? `.data/${mode}`);
 mkdirSync(directory, { recursive: true, mode: 0o700 });
@@ -58,12 +59,12 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const)
     void app.close().finally(() => control.close());
   });
 await app.listen({ host, port });
-console.log(
+print(
   `AETHER ${mode.toUpperCase()}: ${origin}\nOwner access token is stored in ${tokenFile}. It is never embedded in the web bundle.`,
 );
 if (lan) {
   const addresses = lanOrigins(String(port));
-  console.log(
+  print(
     `LAN access is ON: open ${addresses.join(' or ') || '(no private-network address found)'} on a device on this network.\n` +
       'Plain HTTP: the access token crosses the network unencrypted, so use it only on a network you trust.',
   );
@@ -82,13 +83,13 @@ if (lan) {
         ttlSeconds: number;
         links: { origin: string; url: string }[];
       };
-      console.log(pairingText(made.links, made.ttlSeconds));
+      print(pairingText(made.links, made.ttlSeconds));
     } catch {
-      console.log('Run `pnpm run pair` for a QR code that signs a phone in.');
+      print('Run `pnpm run pair` for a QR code that signs a phone in.');
     }
   }
 } else {
-  console.log(
+  print(
     'Only this computer can connect. To use it from a phone on your network: AETHER_HOST=0.0.0.0 pnpm start (a QR code is then shown here).',
   );
 }

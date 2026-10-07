@@ -11,7 +11,13 @@ import { CAPABILITIES, authorize } from '@aether/kernel';
 import type { RouteContext } from './context.js';
 
 /** Read-only lists a project page shows: terminals, reservations, schedules, skills, rooms, workflows, meetings, observations. */
-export function projectListRoutes({ app, control, actor }: RouteContext) {
+export function projectListRoutes(context: RouteContext) {
+  terminalAndReservationRoutes(context);
+  setupListRoutes(context);
+  activityListRoutes(context);
+}
+
+function terminalAndReservationRoutes({ app, control, actor }: RouteContext) {
   app.get<{ Params: { projectId: string } }>(
     '/api/projects/:projectId/terminals',
     async (request) => listTerminals(control.ctx, actor(request), request.params.projectId),
@@ -39,6 +45,10 @@ export function projectListRoutes({ app, control, actor }: RouteContext) {
     authorize(actor(request), 'read');
     return { providers: CAPABILITIES };
   });
+}
+
+/** Schedules, skills, integrations and rooms. */
+function setupListRoutes({ app, control, actor }: RouteContext) {
   app.get<{ Params: { projectId: string } }>(
     '/api/projects/:projectId/schedules',
     async (request) => {
@@ -63,10 +73,13 @@ export function projectListRoutes({ app, control, actor }: RouteContext) {
     authorize(who, 'read', request.params.projectId);
     // Agents see only the rooms they belong to.
     const rooms = listRooms(control.ctx, request.params.projectId);
-    return {
-      rooms: who.agentId ? rooms.filter((r) => r.members.includes(who.agentId!)) : rooms,
-    };
+    const { agentId } = who;
+    return { rooms: agentId ? rooms.filter((r) => r.members.includes(agentId)) : rooms };
   });
+}
+
+/** Workflows, meetings and observations. */
+function activityListRoutes({ app, control, actor }: RouteContext) {
   app.get<{ Params: { projectId: string } }>(
     '/api/projects/:projectId/workflows',
     async (request) => {

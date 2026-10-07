@@ -1,4 +1,5 @@
 import { SESSION_ACTIVE_MS, type Subagent } from '@aether/contracts';
+import { deleteOldest } from './oldest-entry.js';
 import { withEdge } from './file-edge.js';
 import { FINISHED_GRACE_MS } from './hook-spool.js';
 import { linesWithFromEnd } from './session-usage.js';
@@ -44,7 +45,7 @@ const at = (stamp: string | undefined) => {
 };
 
 /** Pure. The last assistant text and the last tool call in a transcript tail. */
-export function parseTail(data: Buffer): Tail {
+function parseTail(data: Buffer): Tail {
   let text: string | null = null;
   for (const line of linesWithFromEnd(data, ['"type":"text"'])) {
     if (line.length > MAX_TEXT_LINE_BYTES) continue;
@@ -83,12 +84,12 @@ async function readTail(f: SubagentFile): Promise<Tail> {
     text: null,
     tool: null,
   }));
-  if (tails.size >= MAX_TAILS) tails.delete(tails.keys().next().value!);
+  if (tails.size >= MAX_TAILS) deleteOldest(tails);
   tails.set(f.file, { mtime: f.mtime, size: f.size, tail });
   return tail;
 }
 
-export type SubagentContext = {
+type SubagentContext = {
   /** The parent transcript's tool outcomes (read on demand), for the `error` flag of a result. */
   outcomes: () => Promise<Outcomes>;
   /** Ids a hook already reported as stopped: their result is shown at once, not after the quiet period. */

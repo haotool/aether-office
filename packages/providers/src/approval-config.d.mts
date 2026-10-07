@@ -2,6 +2,7 @@ export const DEFAULT_WAIT_MS: number;
 export const MAX_RULES: number;
 export const MAX_RULE_CHARS: number;
 export const NONCE_PATTERN: RegExp;
+export function aetherDir(env?: Record<string, string | undefined>): string;
 export function approvalConfigPath(env?: Record<string, string | undefined>): string;
 export function readApprovalConfig(
   file?: string,

@@ -1,12 +1,22 @@
 .page-padding {
   padding: var(--space-32);
 }
+/* A heading row: the title on one side, its actions (any number, wrapping) on the other. */
+.u-head,
 .page-heading {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-20);
+  gap: var(--space-12) var(--space-20);
   margin-bottom: var(--space-24);
+}
+.u-head__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+  margin-inline-start: auto;
 }
 .page-heading p {
   font-size: var(--fs-small);
@@ -24,7 +34,7 @@
   padding: var(--space-20);
   text-align: left;
   background: var(--surface);
-  transition: border-color 0.2s;
+  transition: border-color var(--dur);
 }
 @media (hover: hover) {
   .agent-card:hover {
@@ -56,7 +66,7 @@
   letter-spacing: 1px;
   color: var(--dim);
 }
-.empty-state {
+.u-empty {
   min-height: 280px;
   display: flex;
   align-items: center;
@@ -65,12 +75,12 @@
   text-align: center;
   padding: var(--space-32);
 }
-.empty-state h3 {
+.u-empty h3 {
   font-size: var(--fs-title);
   margin: var(--space-16) 0 var(--space-6);
   font-weight: 500;
 }
-.empty-state p {
+.u-empty p {
   font-size: var(--fs-small);
   max-width: 390px;
 }
@@ -118,8 +128,13 @@
 .pair-codes {
   display: flex;
   flex-wrap: wrap;
+  align-items: start;
   gap: var(--space-16);
   margin: var(--space-12) 0;
+}
+.pair-codes > .field,
+.pair-codes > p {
+  margin: 0;
 }
 .pair-codes figure {
   margin: 0;

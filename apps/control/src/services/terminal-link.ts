@@ -28,9 +28,10 @@ export function terminalOfProcess(
   });
   let row = byPid.get(pid);
   for (let hops = 0; row && hops < MAX_ANCESTORS; hops++) {
-    const found = owned.find((t) => t.pid === row!.pid && t.startedAt === row!.startedAt);
+    const here: ProcessRow = row;
+    const found = owned.find((t) => t.pid === here.pid && t.startedAt === here.startedAt);
     if (found) return found.id;
-    row = byPid.get(row.ppid);
+    row = byPid.get(here.ppid);
   }
   return null;
 }

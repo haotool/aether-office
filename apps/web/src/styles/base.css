@@ -17,7 +17,7 @@ body {
     'Noto Sans TC',
     sans-serif;
   font-size: var(--fs-meta);
-  line-height: 1.6;
+  line-height: var(--lh-body);
 }
 button,
 input,
@@ -25,19 +25,10 @@ textarea,
 select {
   font: inherit;
 }
-button,
-a,
-input,
-textarea,
-select {
-  outline-offset: 4px;
-}
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible {
-  outline: 2px solid var(--mint);
+/* The one focus look. A rule that must differ (a handle, an inset row) sets its own offset and keeps this ring. */
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 button {
   cursor: pointer;

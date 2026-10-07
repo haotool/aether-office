@@ -67,7 +67,7 @@
   background: var(--glass-strong);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
-  box-shadow: 0 12px 34px var(--shade);
+  box-shadow: var(--shadow-md);
   color: var(--on-glass);
 }
 .char-menu-title {
@@ -124,8 +124,10 @@
 .char-react button:focus-visible,
 .char-replies button:focus-visible,
 .group-bar button:focus-visible {
-  outline: 2px solid var(--mint);
-  outline-offset: -2px;
+  outline: var(--focus-ring);
+  outline-offset: calc(
+    -1 * var(--focus-offset)
+  ); /* inside: the menu scrolls and clips an outer ring */
 }
 @media (hover: hover) {
   .char-item:not([aria-disabled='true']):hover,

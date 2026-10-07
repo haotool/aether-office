@@ -108,17 +108,69 @@ function markActivity(ctx: Context, run: RunRow, e: Report<'activity'>) {
   return 'agent.activity.changed';
 }
 
+/** A late success never overwrites a cancellation, and a run whose outcome is unknown stays unknown. */
+function settledOutcome(run: RunRow, e: Report<'result'>) {
+  if (run.state === 'cancel_requested')
+    return e.outcome === 'cancelled' ? 'cancelled' : 'indeterminate';
+  return run.state === 'indeterminate' ? 'indeterminate' : e.outcome;
+}
+
+/** A submitted review: bound to the commit and version it was asked about; returns true when the work moved on meanwhile. */
+function recordReview(ctx: Context, run: RunRow, e: Report<'result'>): boolean {
+  const work = ctx.sqlite
+    .prepare('SELECT state,headSha,version,assignee,reviewBy FROM work_items WHERE id=?')
+    .get(run.workId) as {
+    state: string;
+    headSha: string;
+    version: number;
+    assignee: string;
+    reviewBy: string | null;
+  };
+  const review = e.review;
+  if (
+    !review ||
+    !run.workspaceId ||
+    review.headSha !== run.reviewHead ||
+    e.headSha !== run.reviewHead
+  )
+    throw new DomainError('REVIEW_RESULT_BINDING_MISMATCH');
+  if (
+    work.state !== 'reviewing' ||
+    work.headSha !== run.reviewHead ||
+    work.version !== run.reviewVersion ||
+    work.assignee === run.agentId ||
+    work.reviewBy
+  )
+    return true;
+  ctx.sqlite
+    .prepare('INSERT INTO reviews VALUES (?,?,?,?,?,?,?,?)')
+    .run(
+      randomUUID(),
+      run.workId,
+      run.projectId,
+      run.agentId,
+      review.decision,
+      review.body,
+      run.reviewHead,
+      ctx.now(),
+    );
+  ctx.sqlite
+    .prepare(
+      'UPDATE work_items SET reviewBy=?,state=?,verifiedSha=NULL,version=version+1,updatedAt=? WHERE id=?',
+    )
+    .run(
+      review.decision === 'approve' ? run.agentId : null,
+      review.decision === 'approve' ? 'reviewing' : 'changes_requested',
+      ctx.now(),
+      run.workId,
+    );
+  return false;
+}
+
 /** The run ended: record its outcome (a late success never overwrites a cancellation), and apply it to the work, a review, the member. */
 function finishRun(ctx: Context, run: RunRow, e: Report<'result'>) {
   let stale = false;
-  const outcome =
-    run.state === 'cancel_requested'
-      ? e.outcome === 'cancelled'
-        ? 'cancelled'
-        : 'indeterminate'
-      : run.state === 'indeterminate'
-        ? 'indeterminate'
-        : e.outcome;
+  const outcome = settledOutcome(run, e);
   const state = outcome === 'submitted' ? 'reviewing' : outcome;
   ctx.sqlite.prepare('UPDATE runs SET state=?,result=? WHERE id=?').run(outcome, e.summary, run.id);
   ctx.sqlite
@@ -134,55 +186,7 @@ function finishRun(ctx: Context, run: RunRow, e: Report<'result'>) {
         'UPDATE work_items SET state=?,result=?,submittedBy=?,headSha=?,version=version+1,updatedAt=? WHERE id=?',
       )
       .run(state, e.summary, run.agentId, e.headSha ?? null, ctx.now(), run.workId);
-  else if (outcome === 'submitted') {
-    const work = ctx.sqlite
-      .prepare('SELECT state,headSha,version,assignee,reviewBy FROM work_items WHERE id=?')
-      .get(run.workId) as {
-      state: string;
-      headSha: string;
-      version: number;
-      assignee: string;
-      reviewBy: string | null;
-    };
-    const review = e.review;
-    if (
-      !review ||
-      !run.workspaceId ||
-      review.headSha !== run.reviewHead ||
-      e.headSha !== run.reviewHead
-    )
-      throw new DomainError('REVIEW_RESULT_BINDING_MISMATCH');
-    if (
-      work.state === 'reviewing' &&
-      work.headSha === run.reviewHead &&
-      work.version === run.reviewVersion &&
-      work.assignee !== run.agentId &&
-      !work.reviewBy
-    ) {
-      ctx.sqlite
-        .prepare('INSERT INTO reviews VALUES (?,?,?,?,?,?,?,?)')
-        .run(
-          randomUUID(),
-          run.workId,
-          run.projectId,
-          run.agentId,
-          review.decision,
-          review.body,
-          run.reviewHead,
-          ctx.now(),
-        );
-      ctx.sqlite
-        .prepare(
-          'UPDATE work_items SET reviewBy=?,state=?,verifiedSha=NULL,version=version+1,updatedAt=? WHERE id=?',
-        )
-        .run(
-          review.decision === 'approve' ? run.agentId : null,
-          review.decision === 'approve' ? 'reviewing' : 'changes_requested',
-          ctx.now(),
-          run.workId,
-        );
-    } else stale = true;
-  }
+  else if (outcome === 'submitted') stale = recordReview(ctx, run, e);
   if (run.purpose === 'review' && ['cancelled', 'indeterminate'].includes(outcome))
     ctx.sqlite
       .prepare(

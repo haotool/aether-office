@@ -62,7 +62,7 @@ const PS_FORMAT = 'lstart=,pid=,ppid=,stat=,time=,%cpu=,rss=,tty=,command=';
 export function parseStartTime(text: string): number | null {
   const m = LSTART.exec(text.trim());
   if (!m) return null;
-  const month = MONTHS.indexOf(m[1]!);
+  const month = MONTHS.indexOf(m[1] ?? '');
   if (month < 0) return null;
   return new Date(
     Number(m[6]),
@@ -76,8 +76,8 @@ export function parseStartTime(text: string): number | null {
 
 /** Pure. CPU time as `ps` prints it (`[dd-][hh:]mm:ss[.cc]`) → seconds. */
 export function parseCpuTime(text: string): number {
-  const [days, clock] = text.includes('-') ? text.split('-') : ['0', text];
-  const parts = clock!.split(':').map(Number);
+  const [days = '0', clock = text] = text.includes('-') ? text.split('-') : ['0', text];
+  const parts = clock.split(':').map(Number);
   if (parts.some((n) => !Number.isFinite(n))) return 0;
   return parts.reduce((total, n) => total * 60 + n, 0) + Number(days) * 86400;
 }
@@ -90,17 +90,17 @@ export function parseProcessTable(text: string): ProcessRow[] {
       line.slice(24),
     );
     if (startedAt === null || !m) return [];
-    const [, pid, ppid, stat, time, cpu, rss, tty, command] = m as unknown as string[] as [
-      string,
-      string,
-      string,
-      string,
-      string,
-      string,
-      string,
-      string,
-      string,
-    ];
+    const [
+      ,
+      pid = '',
+      ppid = '',
+      stat = '',
+      time = '',
+      cpu = '',
+      rss = '',
+      tty = '',
+      command = '',
+    ] = m;
     return [
       {
         pid: Number(pid),
@@ -122,7 +122,7 @@ export function parseProcessList(
   rows: readonly ProcessRow[],
 ): Omit<AgentProcess, 'cwd' | 'ports' | 'orphaned' | 'zombies'>[] {
   return rows.flatMap((row) => {
-    const program = basename(row.command.split(/\s+-/)[0]!.trim().split(' ')[0] ?? '');
+    const program = basename((row.command.split(/\s+-/)[0] ?? '').trim().split(' ')[0] ?? '');
     const provider = program === 'claude' ? 'claude' : program === 'codex' ? 'codex' : null;
     if (!provider || NOT_A_SESSION.test(row.command)) return [];
     return [
@@ -213,8 +213,7 @@ export function descendants(
   const owner = new Map<number, number>(); // pid → the root it descends from
   for (const root of roots) {
     const queue = [root];
-    while (queue.length) {
-      const pid = queue.pop()!;
+    for (let pid = queue.pop(); pid !== undefined; pid = queue.pop()) {
       if (owner.has(pid)) continue;
       owner.set(pid, root);
       queue.push(...(children.get(pid) ?? []));
@@ -282,7 +281,8 @@ async function listeningPorts(
     ).catch((error: { stdout?: string }) => ({ stdout: error.stdout ?? '' }));
     const byRoot = new Map<number, number[]>();
     for (const [pid, list] of parseListening(out.stdout)) {
-      const root = tree.get(pid)!;
+      const root = tree.get(pid);
+      if (root === undefined) continue;
       byRoot.set(
         root,
         [...new Set([...(byRoot.get(root) ?? []), ...list])].sort((a, b) => a - b),

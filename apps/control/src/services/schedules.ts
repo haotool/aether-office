@@ -98,6 +98,44 @@ export function scheduleCommand(
   return view(ctx.sqlite.prepare('SELECT * FROM schedules WHERE id=?').get(row.id) as Row);
 }
 
+/** Creates the work item for one claimed occurrence; a revoked creator or a template gone invalid stops the schedule. */
+function dispatchOccurrence(ctx: Context, row: Row, occurrence: number): boolean {
+  try {
+    const actor = identityActor(ctx, row.createdBy);
+    const template = JSON.parse(row.template) as Schedule['template'];
+    const key = `schedule:${row.id}:${occurrence}`;
+    const work = createWork(ctx, {
+      schemaVersion: 1,
+      type: 'work.create',
+      projectId: row.projectId,
+      idempotencyKey: key,
+      correlationId: key,
+      data: { ...template, dependencies: [] },
+    } as Extract<Command, { type: 'work.create' }>);
+    ctx.sqlite
+      .prepare('UPDATE schedule_runs SET workId=? WHERE scheduleId=? AND occurrence=?')
+      .run(work.id, row.id, occurrence);
+    emit(
+      ctx,
+      actor,
+      row.projectId,
+      'schedule.dispatched',
+      { scheduleId: row.id, occurrence, workId: work.id },
+      key,
+      key,
+      'command',
+    );
+    return true;
+  } catch {
+    // The creator was revoked or the template became invalid: record it and stop the schedule.
+    ctx.sqlite
+      .prepare("UPDATE schedule_runs SET outcome='failed' WHERE scheduleId=? AND occurrence=?")
+      .run(row.id, occurrence);
+    ctx.sqlite.prepare('UPDATE schedules SET enabled=0 WHERE id=?').run(row.id);
+    return false;
+  }
+}
+
 /**
  * Dispatches due schedules. An occurrence is claimed by inserting into schedule_runs first, so a
  * restart, a retry or a second ticker cannot create the same work twice. Dispatch only creates a
@@ -112,52 +150,19 @@ export function tickSchedules(ctx: Context): number {
     .all(now, BATCH) as Row[];
   let dispatched = 0;
   for (const row of due) {
+    const dueAt = row.nextRunAt;
+    if (dueAt === null) continue;
     ctx.sqlite
       .transaction(() => {
         const spec = JSON.parse(row.spec) as ScheduleSpec;
-        const decision = dueDecision(spec, row.timezone, row.nextRunAt!, now, row.missed);
+        const decision = dueDecision(spec, row.timezone, dueAt, now, row.missed);
         const claimed = ctx.sqlite
           .prepare(
             'INSERT OR IGNORE INTO schedule_runs(scheduleId,occurrence,outcome,createdAt) VALUES (?,?,?,?)',
           )
           .run(row.id, decision.occurrence, decision.dispatch ? 'dispatched' : 'skipped', now);
-        if (claimed.changes === 1 && decision.dispatch) {
-          try {
-            const actor = identityActor(ctx, row.createdBy);
-            const template = JSON.parse(row.template) as Schedule['template'];
-            const key = `schedule:${row.id}:${decision.occurrence}`;
-            const work = createWork(ctx, {
-              schemaVersion: 1,
-              type: 'work.create',
-              projectId: row.projectId,
-              idempotencyKey: key,
-              correlationId: key,
-              data: { ...template, dependencies: [] },
-            } as Extract<Command, { type: 'work.create' }>);
-            ctx.sqlite
-              .prepare('UPDATE schedule_runs SET workId=? WHERE scheduleId=? AND occurrence=?')
-              .run(work.id, row.id, decision.occurrence);
-            emit(
-              ctx,
-              actor,
-              row.projectId,
-              'schedule.dispatched',
-              { scheduleId: row.id, occurrence: decision.occurrence, workId: work.id },
-              key,
-              key,
-              'command',
-            );
-            dispatched += 1;
-          } catch {
-            // The creator was revoked or the template became invalid: record it and stop the schedule.
-            ctx.sqlite
-              .prepare(
-                "UPDATE schedule_runs SET outcome='failed' WHERE scheduleId=? AND occurrence=?",
-              )
-              .run(row.id, decision.occurrence);
-            ctx.sqlite.prepare('UPDATE schedules SET enabled=0 WHERE id=?').run(row.id);
-          }
-        }
+        if (claimed.changes === 1 && decision.dispatch)
+          if (dispatchOccurrence(ctx, row, decision.occurrence)) dispatched += 1;
         ctx.sqlite
           .prepare('UPDATE schedules SET nextRunAt=?,lastOccurrence=?,version=version+1 WHERE id=?')
           .run(decision.nextAt, decision.occurrence, row.id);

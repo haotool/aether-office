@@ -48,7 +48,7 @@ export function ModelPicker({
                   <li key={model.id}>
                     <button
                       type="button"
-                      className={selected ? 'model-chip selected' : 'model-chip'}
+                      className={selected ? 'model-chip u-chip selected' : 'model-chip u-chip'}
                       aria-pressed={onChange ? selected : undefined}
                       disabled={!onChange}
                       title={model.isAlias ? t('modelsAlias') : model.id}

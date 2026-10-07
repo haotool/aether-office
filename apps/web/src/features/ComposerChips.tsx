@@ -37,7 +37,7 @@ export function ModelChip({
     <div className="composer-model">
       <button
         type="button"
-        className="model-chip"
+        className="model-chip u-chip"
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
@@ -85,7 +85,7 @@ export function QuickReplies({
         <button
           key={reply.id}
           type="button"
-          className="secondary"
+          className="u-chip"
           // Keep the focus where it is, or the on-screen keyboard closes on every tap.
           onPointerDown={(e) => e.preventDefault()}
           onClick={() => (reply.send ? onReply(reply.send) : onEsc())}

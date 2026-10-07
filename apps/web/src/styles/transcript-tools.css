@@ -28,7 +28,7 @@
   border-radius: var(--r-sm);
   color: var(--muted);
   font-size: var(--fs-label);
-  outline-offset: -2px;
+  outline-offset: calc(var(--focus-offset) * -1);
 }
 @media (hover: hover) {
   .code-copy:hover {
@@ -38,7 +38,7 @@
 }
 @media (pointer: coarse) {
   .code-copy {
-    min-height: var(--control-touch-sm);
+    min-height: var(--control-h-sm);
   }
 }
 .code-block pre {
@@ -125,7 +125,7 @@
   color: var(--muted);
   font-size: var(--fs-small);
   text-align: left;
-  outline-offset: -2px;
+  outline-offset: calc(var(--focus-offset) * -1);
 }
 @media (hover: hover) {
   .tool-summary:hover {
@@ -225,7 +225,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-4);
-  min-height: var(--control-touch-sm);
+  min-height: var(--control-h-sm);
   padding: var(--space-6) var(--space-12);
   border-radius: var(--r-pill);
   background: var(--mint);

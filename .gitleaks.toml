@@ -25,3 +25,13 @@ paths = [
   '''(^|/)test-results/''',
   '''(^|/)evidence/''',
 ]
+
+[[allowlists]]
+description = "Synthetic GitHub-style tokens that the redaction tests feed on purpose (test files only)"
+condition = "AND"
+paths = [
+  '''(^|/)tests/aether/[^/]+\.test\.ts$''',
+]
+regexes = [
+  '''ghp_[A-Za-z0-9_]{20,}''',
+]

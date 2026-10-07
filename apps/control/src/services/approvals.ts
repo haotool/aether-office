@@ -3,7 +3,7 @@ import { DomainError, authorize, assertVersion, type Actor } from '@aether/kerne
 import { z } from 'zod';
 import { emit, type Context } from './context.js';
 import { identityActor } from './identity.js';
-export function canonical(value: unknown): string {
+function canonical(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
   if (value && typeof value === 'object')
     return `{${Object.entries(value)
@@ -69,6 +69,57 @@ function ownedRun(ctx: Context, actor: Actor, runId: string, epoch?: number) {
   authorize(actor, 'runner.report', run.projectId);
   return run;
 }
+type RequestData = z.infer<typeof requestSchema>;
+/** Records a pending approval for the run, marks its agent as waiting and announces the request. */
+function storeRequest(
+  ctx: Context,
+  actor: Actor,
+  run: ReturnType<typeof ownedRun>,
+  data: RequestData,
+  actionHash: string,
+) {
+  const id = randomUUID(),
+    expiresAt = ctx.now() + 120000;
+  ctx.sqlite
+    .prepare(
+      'INSERT INTO approval_decisions(id,projectId,runId,providerRequestId,actionHash,parameters,expiresAt,sessionId,toolId,kind,state) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+    )
+    .run(
+      id,
+      run.projectId,
+      run.id,
+      data.requestId,
+      actionHash,
+      JSON.stringify(redact(data.parameters)),
+      expiresAt,
+      run.sessionId,
+      data.toolId,
+      data.kind,
+      'pending',
+    );
+  ctx.sqlite
+    .prepare("UPDATE agents SET activity='waiting_permission',version=version+1 WHERE id=?")
+    .run(run.agentId);
+  emit(
+    ctx,
+    actor,
+    run.projectId,
+    'approval.requested',
+    {
+      id,
+      runId: run.id,
+      sessionId: run.sessionId,
+      kind: data.kind,
+      actionHash,
+      parameters: redact(data.parameters),
+      expiresAt,
+    },
+    data.requestId,
+    run.id,
+    'native',
+  );
+  return { id, actionHash, expiresAt };
+}
 export function requestApproval(ctx: Context, actor: Actor, input: unknown) {
   const data = requestSchema.parse(input);
   const run = ownedRun(ctx, actor, data.runId, data.epoch);
@@ -90,47 +141,7 @@ export function requestApproval(ctx: Context, actor: Actor, input: unknown) {
         if (prior.actionHash !== actionHash) throw new DomainError('APPROVAL_PARAMETERS_CHANGED');
         return prior;
       }
-      const id = randomUUID(),
-        expiresAt = ctx.now() + 120000;
-      ctx.sqlite
-        .prepare(
-          'INSERT INTO approval_decisions(id,projectId,runId,providerRequestId,actionHash,parameters,expiresAt,sessionId,toolId,kind,state) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
-        )
-        .run(
-          id,
-          run.projectId,
-          run.id,
-          data.requestId,
-          actionHash,
-          JSON.stringify(redact(data.parameters)),
-          expiresAt,
-          run.sessionId,
-          data.toolId,
-          data.kind,
-          'pending',
-        );
-      ctx.sqlite
-        .prepare("UPDATE agents SET activity='waiting_permission',version=version+1 WHERE id=?")
-        .run(run.agentId);
-      emit(
-        ctx,
-        actor,
-        run.projectId,
-        'approval.requested',
-        {
-          id,
-          runId: run.id,
-          sessionId: run.sessionId,
-          kind: data.kind,
-          actionHash,
-          parameters: redact(data.parameters),
-          expiresAt,
-        },
-        data.requestId,
-        run.id,
-        'native',
-      );
-      return { id, actionHash, expiresAt };
+      return storeRequest(ctx, actor, run, data, actionHash);
     })
     .immediate();
 }

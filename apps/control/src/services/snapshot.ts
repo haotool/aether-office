@@ -20,30 +20,57 @@ export function highWatermark(ctx: Context, projectId: string): string {
   ).seq;
 }
 
+/** The last 100 messages the actor can read (an agent: its own and those delivered to it), with their deliveries. */
+function recentMessages(ctx: Context, actor: Actor, projectId: string) {
+  const visible = selectAll(ctx.sqlite, messages, { projectId }).filter(
+    (m) =>
+      actor.role !== 'agent' ||
+      m.senderId === actor.agentId ||
+      !!ctx.sqlite
+        .prepare('SELECT 1 FROM recipient_deliveries WHERE messageId=? AND recipientId=?')
+        .get(m.id, actor.agentId),
+  );
+  return visible.slice(-100).map((m) => ({
+    ...messageSchema.parse(m),
+    deliveries: (
+      ctx.sqlite
+        .prepare(
+          'SELECT CAST(sequence AS TEXT) AS sequence,messageId,recipientId,state,acknowledgedAt FROM recipient_deliveries WHERE messageId=?',
+        )
+        .all(m.id) as unknown[]
+    ).map((d) => deliverySchema.parse(d)),
+  }));
+}
+
+/** The machines granted this project; one not heard from for 15 seconds is offline. */
+function runnersOf(ctx: Context, projectId: string) {
+  return (
+    ctx.sqlite
+      .prepare('SELECT id,name,lastSeen,state,projectIds FROM machines WHERE revokedAt IS NULL')
+      .all() as {
+      id: string;
+      name: string;
+      lastSeen: number;
+      state: string;
+      projectIds: string;
+    }[]
+  )
+    .filter((m) => (JSON.parse(m.projectIds) as string[]).includes(projectId))
+    .map((m) => ({
+      id: m.id,
+      name: m.name,
+      lastSeen: m.lastSeen,
+      state: ctx.now() - m.lastSeen > 15000 ? 'offline' : m.state,
+    }));
+}
+
 /** The project as one actor may see it now: agents, work, the last messages it can read, the layout and the runners. */
 export function buildSnapshot(ctx: Context, actor: Actor, projectId: string): Snapshot {
   return ctx.sqlite
     .transaction(() => {
       const p = project(ctx, actor, projectId);
       const seq = highWatermark(ctx, projectId);
-      const visible = selectAll(ctx.sqlite, messages, { projectId }).filter(
-        (m) =>
-          actor.role !== 'agent' ||
-          m.senderId === actor.agentId ||
-          !!ctx.sqlite
-            .prepare('SELECT 1 FROM recipient_deliveries WHERE messageId=? AND recipientId=?')
-            .get(m.id, actor.agentId),
-      );
-      const rows = visible.slice(-100).map((m) => ({
-        ...messageSchema.parse(m),
-        deliveries: (
-          ctx.sqlite
-            .prepare(
-              'SELECT CAST(sequence AS TEXT) AS sequence,messageId,recipientId,state,acknowledgedAt FROM recipient_deliveries WHERE messageId=?',
-            )
-            .all(m.id) as unknown[]
-        ).map((d) => deliverySchema.parse(d)),
-      }));
+      const rows = recentMessages(ctx, actor, projectId);
       const layout = ctx.sqlite
         .prepare('SELECT version,data FROM layouts WHERE projectId=?')
         .get(projectId) as { version: number; data: string } | undefined;
@@ -58,26 +85,7 @@ export function buildSnapshot(ctx: Context, actor: Actor, projectId: string): Sn
         layout: layout
           ? { version: layout.version, data: layoutSchema.parse(JSON.parse(layout.data)) }
           : null,
-        runner: (
-          ctx.sqlite
-            .prepare(
-              'SELECT id,name,lastSeen,state,projectIds FROM machines WHERE revokedAt IS NULL',
-            )
-            .all() as {
-            id: string;
-            name: string;
-            lastSeen: number;
-            state: string;
-            projectIds: string;
-          }[]
-        )
-          .filter((m) => (JSON.parse(m.projectIds) as string[]).includes(projectId))
-          .map((m) => ({
-            id: m.id,
-            name: m.name,
-            lastSeen: m.lastSeen,
-            state: ctx.now() - m.lastSeen > 15000 ? 'offline' : m.state,
-          })),
+        runner: runnersOf(ctx, projectId),
       };
     })
     .deferred();

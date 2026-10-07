@@ -32,7 +32,8 @@ export function isPublicAddress(ip: string): boolean {
   if (kind !== 6) return false;
   const lower = ip.toLowerCase();
   const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(lower);
-  if (mapped) return !privateV4(mapped[1]!);
+  const mappedV4 = mapped?.[1];
+  if (mappedV4) return !privateV4(mappedV4);
   const first = parseInt(lower.split(':')[0] || '0', 16);
   return !(
     lower === '::' ||
@@ -81,9 +82,47 @@ export async function assertSafeUrl(
   const allowed = policy.isAllowed ?? isPublicAddress;
   const addresses = isIP(host) ? [host] : await (policy.resolver ?? systemResolver)(host);
   // Every resolved address must be public: a mixed answer is a rebinding trick.
-  if (!addresses.length || !addresses.every(allowed))
-    throw new DomainError('URL_ADDRESS_FORBIDDEN', 403);
-  return { url, address: addresses[0]! };
+  const [address] = addresses;
+  if (!address || !addresses.every(allowed)) throw new DomainError('URL_ADDRESS_FORBIDDEN', 403);
+  return { url, address };
+}
+
+type Response = {
+  status: number;
+  location?: string;
+  body: Buffer;
+  headers: http.IncomingHttpHeaders;
+};
+
+/** Collects a response body up to `maxBytes`; a larger one rejects and destroys the request. */
+function collectBody(
+  req: http.ClientRequest,
+  maxBytes: number,
+  resolve: (response: Response) => void,
+  reject: (error: Error) => void,
+) {
+  return (res: http.IncomingMessage) => {
+    const chunks: Buffer[] = [];
+    let size = 0;
+    res.on('data', (chunk: Buffer) => {
+      size += chunk.length;
+      if (size > maxBytes) {
+        reject(new DomainError('URL_RESPONSE_TOO_LARGE', 413));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    res.on('end', () => {
+      const location = res.headers.location;
+      resolve({
+        status: res.statusCode ?? 0,
+        ...(location ? { location } : {}),
+        body: Buffer.concat(chunks),
+        headers: res.headers,
+      });
+    });
+  };
 }
 
 function request(
@@ -91,16 +130,11 @@ function request(
   address: string,
   policy: FetchPolicy,
   init: FetchInit,
-): Promise<{
-  status: number;
-  location?: string;
-  body: Buffer;
-  headers: http.IncomingHttpHeaders;
-}> {
+): Promise<Response> {
   const maxBytes = policy.maxBytes ?? 1_048_576;
   const client = url.protocol === 'https:' ? https : http;
   return new Promise((resolve, reject) => {
-    const req = client.request(
+    const req: http.ClientRequest = client.request(
       url,
       {
         method: init.method ?? 'GET',
@@ -116,28 +150,7 @@ function request(
         // Pin the socket to the validated address; the hostname is still used for SNI and Host.
         lookup: (_host, _options, callback) => callback(null, address, isIP(address)),
       },
-      (res) => {
-        const chunks: Buffer[] = [];
-        let size = 0;
-        res.on('data', (chunk: Buffer) => {
-          size += chunk.length;
-          if (size > maxBytes) {
-            reject(new DomainError('URL_RESPONSE_TOO_LARGE', 413));
-            req.destroy();
-            return;
-          }
-          chunks.push(chunk);
-        });
-        res.on('end', () => {
-          const location = res.headers.location;
-          resolve({
-            status: res.statusCode ?? 0,
-            ...(location ? { location } : {}),
-            body: Buffer.concat(chunks),
-            headers: res.headers,
-          });
-        });
-      },
+      (res) => collectBody(req, maxBytes, resolve, reject)(res),
     );
     req.on('timeout', () => {
       reject(new DomainError('URL_TIMEOUT', 504));

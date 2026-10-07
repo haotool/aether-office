@@ -58,7 +58,7 @@ export function RelationChip({
   onOpen: () => void;
 }) {
   return (
-    <button type="button" className="relation-chip" data-squad={hue} onClick={onOpen}>
+    <button type="button" className="relation-chip u-chip" data-squad={hue} onClick={onOpen}>
       <CornerUpLeft size={12} aria-hidden="true" />
       {text}
     </button>

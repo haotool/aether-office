@@ -84,13 +84,16 @@ export async function clockOutSessions({
   const results: ClockOutItem[] = new Array(asked.length);
   let next = 0;
   const worker = async () => {
-    for (let i = next++; i < asked.length; i = next++)
+    for (let i = next++; i < asked.length; i = next++) {
+      const one = asked[i];
+      if (!one) continue;
       results[i] = await clockOutOne(
-        asked[i]!,
-        byKey.get(asked[i]!.key),
+        one,
+        byKey.get(one.key),
         { minIdleMs: request.minIdleMs, pidOf, mayStop },
         tuning,
       );
+    }
   };
   await Promise.all(Array.from({ length: Math.min(AT_ONCE, asked.length) }, worker));
   return results;

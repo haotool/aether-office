@@ -30,9 +30,6 @@
   position: relative;
 }
 .composer-model .model-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-4);
   max-width: 100%;
 }
 .model-chip-label {
@@ -65,10 +62,9 @@
   gap: var(--space-6);
   width: max-content;
 }
-.composer-quick button {
-  min-height: var(--control-touch-sm);
-  padding: var(--space-4) var(--space-12);
-  border-radius: var(--r-pill);
+.composer-quick .u-chip {
+  background: var(--surface);
+  color: var(--text);
 }
 .composer-box {
   position: relative;
@@ -79,25 +75,25 @@
 .composer-box textarea {
   flex: 1;
   min-width: 0;
-  min-height: var(--target-fine);
-  max-height: calc(8 * 1.4em + var(--space-16)); /* eight lines, then it scrolls */
+  min-height: var(--control-h-md);
+  max-height: calc(8 * var(--lh-snug) * 1em + var(--space-16)); /* eight lines, then it scrolls */
   overflow-y: auto;
   resize: none;
   font-size: var(--fs-lead);
-  line-height: 1.4;
+  line-height: var(--lh-snug);
 }
 .composer-send {
   display: inline-flex;
   align-items: center;
   gap: var(--space-4);
-  min-height: var(--target-fine);
+  min-height: var(--control-h-md);
   white-space: nowrap;
 }
 .composer-note {
   margin: 0;
   color: var(--dim);
   font-size: var(--fs-small);
-  line-height: 1.45;
+  line-height: var(--lh-snug);
 }
 .composer-stop-more {
   display: flex;
@@ -147,7 +143,7 @@
   flex-wrap: wrap;
   align-items: baseline;
   gap: var(--space-2) var(--space-8);
-  min-height: var(--target-fine);
+  min-height: var(--control-h-sm);
   padding: var(--space-6) var(--space-8);
   border-radius: var(--r-md);
   cursor: pointer;
@@ -216,9 +212,6 @@
   }
 }
 @media (pointer: coarse) {
-  .composer-send {
-    min-height: var(--control-touch);
-  }
   .composer-menu li {
     min-height: var(--target-touch);
   }

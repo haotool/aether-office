@@ -83,7 +83,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-8);
-  min-height: var(--control-touch-sm);
+  min-height: var(--control-h-sm);
   padding: var(--space-6) var(--space-12);
   border-radius: var(--r-lg);
   color: var(--muted);
@@ -202,7 +202,7 @@
   display: inline-flex;
   align-items: center;
   flex: none;
-  min-height: var(--control-touch);
+  min-height: var(--control-h-md);
   padding-right: var(--space-8);
   color: var(--mint);
   font-size: var(--fs-small);

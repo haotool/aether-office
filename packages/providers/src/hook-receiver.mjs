@@ -78,7 +78,10 @@ export function outcomeOf(provider, payload) {
 }
 
 export function spoolPath(env = process.env) {
-  return env.AETHER_HOOK_SPOOL ?? join(homedir(), '.aether', 'hook-events.jsonl');
+  return (
+    env.AETHER_HOOK_SPOOL ??
+    join(env.AETHER_HOME ?? join(homedir(), '.aether'), 'hook-events.jsonl')
+  );
 }
 
 function labelsOf(payload) {

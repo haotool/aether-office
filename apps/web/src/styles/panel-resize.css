@@ -59,6 +59,11 @@
 .app-body[data-resizing] .panel-resizer::after {
   background: var(--mint);
 }
+/* The grip is the focus affordance: the handle is a 16px strip over the panel edge, a full-height ring would be a box. */
+.panel-resizer:focus-visible::after {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
 
 /* Collapsed: a 48px rail with the way back in and what wants a look */
 .panel-rail {

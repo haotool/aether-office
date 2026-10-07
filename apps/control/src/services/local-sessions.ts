@@ -3,7 +3,8 @@ import { homedir } from 'node:os';
 import { stat } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import { assignProcesses, listAgentProcesses } from './agent-processes.js';
-import { classifyLiveness, CpuWatch } from './session-liveness.js';
+import { CpuWatch } from './session-liveness.js';
+import { assembleSession, type SessionReads } from './session-assemble.js';
 import { git as readGit } from './git-health.js';
 import { readHookState } from './hook-spool.js';
 import { readClaudeTitle, readCodexTitles } from './session-title.js';
@@ -15,7 +16,7 @@ import {
   sessionsOfProcesses,
   type Raw,
 } from './session-discovery.js';
-import { readTopic, topicTitle } from './session-topic.js';
+import { readTopic } from './session-topic.js';
 import { windowsOf, withContext } from './session-context.js';
 import { readUsage } from './session-usage.js';
 import { readSessionSignals } from './session-signals.js';
@@ -23,7 +24,7 @@ import { resetSubagentTranscripts } from './subagent-transcripts.js';
 import { resetOutcomeCache } from './tool-outcomes.js';
 import type { ReadBudget } from './subagent-usage.js';
 import { readActions } from './session-work.js';
-import { resetRoles, roleOf } from './session-role.js';
+import { resetRoles } from './session-role.js';
 import { detectModels } from '@aether/providers/models';
 import type { AttributedSession, LocalSession } from '@aether/contracts';
 
@@ -116,7 +117,8 @@ async function repoInfo(cwd: string, now: number): Promise<RepoInfo> {
 }
 
 const hookSpoolFile = () =>
-  process.env['AETHER_HOOK_SPOOL'] ?? join(homedir(), '.aether', 'hook-events.jsonl');
+  process.env['AETHER_HOOK_SPOOL'] ??
+  join(process.env['AETHER_HOME'] ?? join(homedir(), '.aether'), 'hook-events.jsonl');
 
 // What the latest scan found, for the home and spool it read; a scan still running is shared by whoever asks meanwhile.
 let cache: { key: string; at: number; value: LocalSession[] } | null = null;
@@ -143,12 +145,8 @@ export async function scanLocalSessions(
   return scan;
 }
 
-async function scanOnce(
-  home: string,
-  now: number,
-  spoolFile: string,
-  key: string,
-): Promise<LocalSession[]> {
+/** Every session with a process is shown, however old; of the rest, the newest few. Also the process found behind each. */
+async function selectSessions(home: string, now: number) {
   // Processes first: they decide which sessions are shown. A no-ps host says 'unknown', never 'none'.
   const [found, live] = await Promise.all([
     discoverRaw(home, now),
@@ -171,129 +169,23 @@ async function scanOnce(
       running = assignProcesses(sessions, live.processes, live.desktopCodex);
     }
   }
-  // Every session with a process is shown, however old; of the rest, the newest few.
   const alive = (r: Raw) => running?.get(`${r.provider}:${r.sessionId}`)?.state === 'running';
   const raw = [
     ...sessions.filter(alive),
     ...sessions.filter((r) => !alive(r)).slice(0, MAX_SESSIONS),
   ].sort((a, b) => b.mtime - a.mtime);
-  const repos = [...new Set(raw.map((r) => r.cwd))].slice(0, MAX_REPOS);
-  const infos = await mapPool(repos, GIT_BATCH, async (c) => [c, await repoInfo(c, now)] as const);
-  const hooks = await readHookState(spoolFile, now);
-  // Each transcript is read through a buffer of a few hundred KB to a few MB: a few at a time, not all sixty.
-  // The model catalogs say how big each model's window is (remembered for a short time, never fatal when missing).
-  const windows = windowsOf(await detectModels().catch(() => []));
-  const usages = new Map(
-    await mapPool(
-      raw,
-      READ_WIDTH,
-      async (r) =>
-        [r.file, withContext(r.provider, await readUsage(r.provider, r.file), windows)] as const,
-    ),
-  );
-  const codexTitles = await readCodexTitles(home);
-  const titles = new Map(
-    await mapPool(
-      raw,
-      READ_WIDTH,
-      async (r) =>
-        [
-          r.file,
-          r.provider === 'claude'
-            ? await readClaudeTitle(r.file)
-            : (codexTitles.get(r.sessionId) ?? null),
-        ] as const,
-    ),
-  );
-  const topics = new Map(
-    await mapPool(
-      raw,
-      READ_WIDTH,
-      async (r) => [r.file, await readTopic(r.provider, r.file)] as const,
-    ),
-  );
-  const works = new Map(
-    await mapPool(
-      raw,
-      READ_WIDTH,
-      async (r) => [r.file, await readActions(r.provider, r.file)] as const,
-    ),
-  );
-  const budget: ReadBudget = { bytes: SUBAGENT_BYTES_PER_SCAN };
-  const signals = new Map(
-    await mapPool(
-      raw,
-      READ_WIDTH,
-      async (r) =>
-        [
-          r.file,
-          await readSessionSignals(r, hooks.get(`${r.provider}:${r.sessionId}`), now, budget),
-        ] as const,
-    ),
-  );
-  const states = new Map(infos);
-  const value = raw.map((r): LocalSession => {
-    const key = `${r.provider}:${r.sessionId}`;
-    const info = states.get(r.cwd);
-    const hook = hooks.get(key);
-    const signal = signals.get(r.file)!;
-    return {
-      key,
-      provider: r.provider,
-      sessionId: r.sessionId,
-      cwd: r.cwd,
-      repo: info?.worktree?.project ?? basename(r.cwd),
-      mtime: Math.round(r.mtime),
-      git: info?.git ?? null,
-      worktree: info?.worktree ?? null,
-      hook: hook
-        ? {
-            activity: hook.activity,
-            lastEvent: hook.lastEvent,
-            tool: hook.tool,
-            at: hook.at,
-            recent: signal.recent,
-          }
-        : null,
-      subagents: signal.subagents,
-      // A `codex exec` run has no thread name; its task's opening words name it. A Claude prompt is never sent.
-      title:
-        titles.get(r.file) ??
-        (r.provider === 'codex' ? topicTitle(topics.get(r.file) ?? null) : null),
-      classification: roleOf(
-        key,
-        {
-          title: titles.get(r.file) ?? null,
-          prompt: topics.get(r.file) ?? null,
-          branch: info?.git?.branch ?? null,
-          repo: info?.worktree?.project ?? basename(r.cwd),
-          subagents: signal.subagents.map((c) => c.type),
-          transcript: works.get(r.file) ?? [],
-          hook: (hook?.recent ?? [])
-            .filter((c) => !c.agentId) // the session's own calls: its helpers' work says what they do, not what it does
-            .map(({ tool, target }) => ({ tool, target })),
-        },
-        now,
-      ),
-      usage: usages.get(r.file)!,
-      process: running?.get(key)?.state ?? 'unknown',
-      liveness: classifyLiveness({
-        process: running?.get(key)?.process ?? null,
-        state: running?.get(key)?.state ?? 'unknown',
-        mtime: r.mtime,
-        hookAt: hook?.at ?? null,
-        busyAt: running?.get(key)?.process ? cpuWatch.busyAt(running.get(key)!.process!) : null,
-        now,
-      }),
-      ports: running?.get(key)?.process?.ports ?? [],
-      resources: running?.get(key)?.process
-        ? {
-            cpuPercent: running.get(key)!.process!.cpuPercent,
-            rssBytes: running.get(key)!.process!.rssBytes,
-          }
-        : null,
-    };
-  });
+  return { raw, running };
+}
+
+/** What each transcript is read for, a few at a time, keyed by file: a buffer of a few hundred KB to a few MB each. */
+const readEach = async <T>(raw: readonly Raw[], read: (r: Raw) => Promise<T>) =>
+  new Map(await mapPool(raw, READ_WIDTH, async (r) => [r.file, await read(r)] as const));
+
+/** What the latest scan found, for the lookups that must never trust a client: the transcript and the process of each key. */
+function rememberLookups(
+  raw: readonly Raw[],
+  running: Awaited<ReturnType<typeof selectSessions>>['running'],
+) {
   files = new Map(
     raw.map((r) => [`${r.provider}:${r.sessionId}`, { provider: r.provider, file: r.file }]),
   );
@@ -303,6 +195,56 @@ async function scanOnce(
       return pid ? [[`${r.provider}:${r.sessionId}`, pid] as const] : [];
     }),
   );
+}
+
+// The model catalogs say how big each model's window is (remembered for a short time, never fatal when missing).
+async function scanOnce(
+  home: string,
+  now: number,
+  spoolFile: string,
+  key: string,
+): Promise<LocalSession[]> {
+  const { raw, running } = await selectSessions(home, now);
+  const repos = [...new Set(raw.map((r) => r.cwd))].slice(0, MAX_REPOS);
+  const infos = new Map(
+    await mapPool(repos, GIT_BATCH, async (c) => [c, await repoInfo(c, now)] as const),
+  );
+  const hooks = await readHookState(spoolFile, now);
+  const windows = windowsOf(await detectModels().catch(() => []));
+  const usages = await readEach(raw, async (r) =>
+    withContext(r.provider, await readUsage(r.provider, r.file), windows),
+  );
+  const codexTitles = await readCodexTitles(home);
+  const titles = await readEach(raw, async (r) =>
+    r.provider === 'claude'
+      ? await readClaudeTitle(r.file)
+      : (codexTitles.get(r.sessionId) ?? null),
+  );
+  const topics = await readEach(raw, (r) => readTopic(r.provider, r.file));
+  const works = await readEach(raw, (r) => readActions(r.provider, r.file));
+  const budget: ReadBudget = { bytes: SUBAGENT_BYTES_PER_SCAN };
+  const signals = await readEach(raw, (r) =>
+    readSessionSignals(r, hooks.get(`${r.provider}:${r.sessionId}`), now, budget),
+  );
+  const value = raw.flatMap((r) => {
+    const sessionKey = `${r.provider}:${r.sessionId}`;
+    const signal = signals.get(r.file);
+    const usage = usages.get(r.file);
+    if (!signal || !usage) return []; // read for every transcript above: never missing
+    const reads: SessionReads = {
+      info: infos.get(r.cwd),
+      hook: hooks.get(sessionKey),
+      signal,
+      usage,
+      title: titles.get(r.file) ?? null,
+      topic: topics.get(r.file) ?? null,
+      actions: works.get(r.file) ?? [],
+      run: running?.get(sessionKey),
+      busyAt: (process) => cpuWatch.busyAt(process),
+    };
+    return [assembleSession(r, reads, now)];
+  });
+  rememberLookups(raw, running);
   cache = { key, at: now, value };
   return value;
 }

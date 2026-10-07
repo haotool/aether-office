@@ -9,8 +9,8 @@
   min-width: 0;
 }
 .turn:focus-visible {
-  outline: 1px solid var(--glass-accent-line);
-  outline-offset: var(--space-4);
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
   border-radius: var(--r-lg);
 }
 
@@ -31,7 +31,7 @@
   font-size: var(--fs-small);
 }
 .sys-notice.enter {
-  animation: msg-in 0.16s var(--ease) both;
+  animation: msg-in var(--dur-fast) var(--ease) both;
 }
 .notice-head {
   display: flex;
@@ -44,7 +44,7 @@
   color: inherit;
   font: inherit;
   text-align: left;
-  outline-offset: -2px;
+  outline-offset: calc(var(--focus-offset) * -1);
 }
 button.notice-head > svg:last-child {
   flex: none;
@@ -110,7 +110,7 @@ button.notice-head[aria-expanded='true'] > svg:last-child {
   color: var(--muted);
   font-family: var(--mono);
   font-size: var(--fs-label);
-  line-height: 1.5;
+  line-height: var(--lh-snug);
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
@@ -163,7 +163,7 @@ button.notice-head[aria-expanded='true'] > svg:last-child {
 .find-bar input {
   flex: 1;
   min-width: 0;
-  min-height: var(--target-fine);
+  min-height: var(--control-h-sm);
   padding: 0 var(--space-8);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
@@ -269,7 +269,7 @@ button.notice-head[aria-expanded='true'] > svg:last-child {
 }
 .conv-body[data-density='compact'] .markdown,
 .conv-body[data-density='compact'] .msg.user p {
-  line-height: 1.4;
+  line-height: var(--lh-snug);
 }
 .conv-body[data-density='compact'] .markdown p,
 .conv-body[data-density='compact'] .markdown ul,

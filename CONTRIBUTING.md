@@ -34,6 +34,7 @@ pnpm build
 pnpm verification:check   # the verification ledger is consistent
 node scripts/check-bundle-size.mjs   # after the build
 pnpm run oss:check   # notices, licences, readiness (after the build)
+pnpm run quality:check   # the quality scorecard is current and no area is below its floor (after the build)
 pnpm exec playwright test
 ```
 
@@ -52,6 +53,15 @@ A change is ready when:
    [`docs/verification/features.json`](docs/verification/features.json): implementation and verification are separate
    fields, and a check that was not run is not marked passed.
 6. **It does not weaken a safety property** (see [security](docs/security.md)) without an explicit discussion first.
+
+### Raising the floor
+
+`pnpm run quality` scores ten areas from measurable rules ([rubric](docs/quality/README.md)). Each area has a floor in
+`docs/quality/floors.json` that only goes up. After a change that improves a score (fewer long functions, a fixed doc link, a
+token instead of a literal), run `pnpm run quality:report`, which rewrites `docs/quality/scorecard.{md,json}` and raises the
+floors, and commit those files with the change. `pnpm run quality -- --target 95` lists what still stops each area from
+reaching 95, with the exact files and lines. A change that makes a score worse fails `quality:check` until it is fixed; do not
+lower a floor to get a pull request through. If a rule is wrong, change the rule, its test and the rubric in the same pull request.
 
 ## Commit messages and pull requests
 

@@ -8,7 +8,7 @@
 }
 .clock-out button,
 .clock-out select {
-  min-height: var(--target-touch);
+  min-height: var(--control-h-lg);
 }
 .clock-out-threshold {
   display: flex;
@@ -38,7 +38,7 @@ li.clock-out-row:not(:last-child) {
   display: flex;
   align-items: center;
   gap: var(--space-12);
-  min-height: var(--target-touch);
+  min-height: var(--control-h-lg);
   padding: var(--space-8) var(--space-12);
   cursor: pointer;
 }
@@ -89,5 +89,5 @@ li.clock-out-row {
 }
 .clock-out-offer .clock-out-go {
   justify-content: center;
-  min-height: var(--target-touch);
+  min-height: var(--control-h-lg);
 }

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { createServer } from '../../apps/control/src/server.js';
 import { createRequire } from 'node:module';
+import { stripVTControlCharacters } from 'node:util';
 import {
   PAIRING_TTL_MS,
   createPairingStore,
@@ -76,8 +77,7 @@ describe('the QR code in the terminal', () => {
     const url = 'http://192.168.1.20:4310/#pair=AAAAAAAAAAAAAAAAAAAAAA';
     const { size, data } = QRCode.create(url, { errorCorrectionLevel: 'M' }).modules;
     const lines = terminalQr(url).split('\n');
-    // eslint-disable-next-line no-control-regex
-    const rows = lines.map((line) => line.replace(/\u001b\[[0-9;]*m/g, ''));
+    const rows = lines.map((line) => stripVTControlCharacters(line));
     const side = size + 8;
     expect(rows.length).toBe(Math.ceil(side / 2));
     for (const row of rows) expect([...row]).toHaveLength(side); // every row as wide as the rest

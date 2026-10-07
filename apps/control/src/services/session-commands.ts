@@ -11,10 +11,10 @@ const DESCRIPTION_CHARS = 140;
 const NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 
 /** Pure. The one-line description of a command or skill file: its `description:` field, else its first line of prose. */
-export function describe(head: string): string {
+function describe(head: string): string {
   const text = head.replace(/^﻿/, '');
   const front = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text);
-  const field = front && /^description:\s*(.+)$/m.exec(front[1]!);
+  const field = front && /^description:\s*(.+)$/m.exec(front[1] ?? '');
   const prose = text
     .slice(front ? front[0].length : 0)
     .split('\n')

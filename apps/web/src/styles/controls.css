@@ -42,19 +42,26 @@
 .state-failed {
   color: var(--red);
 }
+/*
+ * The shared controls. A height comes from the control scale in tokens.css (--control-h-sm/md/lg, which the touch block
+ * there enlarges for a finger), never from a literal. .u-btn and its modifiers are the shared names; the older
+ * classes stay as aliases through the grouped selectors.
+ */
 .primary,
 .secondary,
+.u-btn,
 button:not([class]) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-8);
-  padding: var(--space-8) var(--space-12);
+  padding: var(--space-6) var(--space-12);
   font-size: var(--fs-small);
   border-radius: var(--r-xs);
-  min-height: 35px;
+  min-height: var(--control-h-md);
 }
-.primary {
+.primary,
+.u-btn--primary {
   background: var(--mint);
   color: var(--on-accent);
   font-weight: 650;
@@ -67,6 +74,7 @@ button:not([class]) {
   }
 }
 .secondary,
+.u-btn,
 button:not([class]) {
   border: 1px solid var(--line);
   background: var(--surface);
@@ -74,20 +82,41 @@ button:not([class]) {
 }
 @media (hover: hover) {
   .secondary:hover,
+  .u-btn:hover:not(:disabled),
   button:not([class]):hover:not(:disabled) {
     background: var(--raised);
   }
 }
-.icon-button {
+.u-btn--primary {
+  background: var(--mint);
+  color: var(--on-accent);
+  border-color: transparent;
+  font-weight: 650;
+}
+.u-btn--ghost {
+  background: none;
+  border-color: transparent;
+  color: var(--muted);
+}
+.icon-button,
+.u-btn--icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-width: var(--control-h-sm);
+  min-height: var(--control-h-sm);
   padding: var(--space-6);
   color: var(--muted);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control);
+}
+.u-btn--icon {
+  padding: 0;
+  border-color: transparent;
+  background: none;
 }
 @media (hover: hover) {
-  .icon-button:hover {
+  .icon-button:hover,
+  .u-btn--icon:hover {
     background: var(--raised);
     color: var(--text);
   }
@@ -99,6 +128,60 @@ button:not([class]) {
   font-size: var(--fs-label);
   color: var(--mint);
   padding: var(--space-2) 0;
+  min-height: var(--control-h-sm);
+}
+.u-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--control-h-sm);
+  padding: 0 var(--space-12);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-small);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.u-card {
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: var(--space-16);
+  background: var(--surface);
+}
+.u-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-height: var(--control-h-md);
+}
+/* A segmented control (view switch, range, mode): one height, the selected segment filled. */
+.u-segmented {
+  display: inline-flex;
+  gap: var(--space-4);
+}
+.u-segmented button,
+.view-switch button {
+  min-height: var(--control-h-sm);
+}
+.u-segmented button {
+  padding: var(--space-4) var(--space-12);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
+  font-size: var(--fs-small);
+  color: var(--muted);
+}
+.u-segmented .selected,
+.u-segmented [aria-pressed='true'] {
+  background: var(--selected);
+  color: var(--mint);
+  border-color: var(--mint);
+}
+/* A label that holds a switch: the label and the track share the control height. */
+.u-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: var(--control-h-sm);
 }
 .full-width {
   width: 100%;

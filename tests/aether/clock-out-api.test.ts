@@ -6,7 +6,7 @@ import { expect, it } from 'vitest';
 import { createServer } from '../../apps/control/src/server.js';
 import { resetLocalSessionCache } from '../../apps/control/src/services/local-sessions.js';
 import { command, fixture } from './fixture.js';
-import { alive, sleep } from './process-fixtures.js';
+import { alive, untilAsync } from './process-fixtures.js';
 
 const DAY = 24 * 3_600_000;
 
@@ -34,8 +34,6 @@ it('clocks out for an owner only, with an idempotency key, and never touches a s
   f.control.execute(f.owner.actor, command('project.create', { name: busy, root: busy }));
   const app = createServer(f.control, { origin: 'http://127.0.0.1:4504' });
   try {
-    await sleep(600);
-    resetLocalSessionCache();
     const post = (token: string, body: unknown, key?: string) =>
       app.inject({
         method: 'POST',
@@ -48,14 +46,23 @@ it('clocks out for an owner only, with an idempotency key, and never touches a s
         },
         payload: JSON.stringify(body),
       });
-    const listed = (
-      await app.inject({
-        method: 'GET',
-        url: '/api/local-sessions',
-        headers: { host: '127.0.0.1:4504', authorization: `Bearer ${f.owner.token}` },
-      })
-    ).json() as { sessions: { key: string; liveness: { startedAt: number } }[] };
-    const used = listed.sessions.find((s) => s.key === 'claude:busy-one')!;
+    const list = async () => {
+      resetLocalSessionCache();
+      return (
+        await app.inject({
+          method: 'GET',
+          url: '/api/local-sessions',
+          headers: { host: '127.0.0.1:4504', authorization: `Bearer ${f.owner.token}` },
+        })
+      ).json() as { sessions: { key: string; liveness: { startedAt: number } }[] };
+    };
+    // The process is found by the scan once `ps` lists it with its directory: wait for that, not for a fixed time.
+    expect(
+      await untilAsync(async () =>
+        (await list()).sessions.some((s) => s.key === 'claude:busy-one' && s.liveness.startedAt),
+      ),
+    ).toBe(true);
+    const used = (await list()).sessions.find((s) => s.key === 'claude:busy-one')!;
     const body = {
       minIdleMs: DAY,
       sessions: [{ key: used.key, startedAt: used.liveness.startedAt }],

@@ -16,6 +16,8 @@ const WORDS: Record<string, Key> = {
   LOCAL_SESSIONS_OFF: 'errLocalSessionsOff',
   PAIRING_INVALID: 'errPairingInvalid',
   VERSION_CONFLICT: 'errVersionConflict',
+  PROJECT_ROOT_NOT_FOUND: 'errProjectRootNotFound',
+  PROJECT_ROOT_INVALID: 'errProjectRootInvalid',
 };
 
 export const errorText = (code: string, locale: Locale): string => {

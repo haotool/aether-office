@@ -4,13 +4,14 @@ import { Runner } from './runner.js';
 import { Journal } from './journal.js';
 import { NativeExecutor } from './native.js';
 import { assertIndependentStorage } from './storage.js';
+import { warn } from './stdio.js';
 const mode = process.env['AETHER_MODE'] === 'demo' ? 'demo' : 'live';
 const directory = resolve(process.env['AETHER_DATA_DIR'] ?? `.data/${mode}`);
 const token = (() => {
   try {
     return readFileSync(resolve(directory, 'runner-token'), 'utf8').trim();
   } catch {
-    console.error(
+    warn(
       `No runner credential in ${directory}. Enroll this machine first: pnpm runner:enroll (see docs/getting-started.md).`,
     );
     return process.exit(1);
@@ -34,7 +35,7 @@ const runner = new Runner(
 for (const signal of ['SIGINT', 'SIGTERM'] as const)
   process.once(signal, () => {
     void runner.shutdown().catch(() => {
-      console.error('Runner stopped with unacknowledged reports; journal retained.');
+      warn('Runner stopped with unacknowledged reports; journal retained.');
       process.exitCode = 1;
     });
   });

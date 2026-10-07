@@ -23,14 +23,13 @@ export function nudgeTargets(
     if (parent.pid !== root && !owner.has(parent.pid)) continue;
     held.set(parent.pid, (held.get(parent.pid) ?? 0) + 1);
   }
-  return [...held].map(([pid, zombies]) => ({
-    pid,
-    startedAt: byPid.get(pid)!.startedAt,
-    zombies,
-  }));
+  return [...held].flatMap(([pid, zombies]) => {
+    const parent = byPid.get(pid);
+    return parent ? [{ pid, startedAt: parent.startedAt, zombies }] : [];
+  });
 }
 
-export type Reaped = { nudged: number; before: number; after: number };
+type Reaped = { nudged: number; before: number; after: number };
 
 /**
  * Reminds the parents of a session's zombies to collect them, then looks again. The session's process is named by pid

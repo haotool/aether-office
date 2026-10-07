@@ -1,11 +1,7 @@
 import { realpathSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
-import {
-  CodexObserver,
-  discoverObservationFiles,
-  observeClaudeFile,
-  type ObservationRead,
-} from './observer.js';
+import { CodexObserver, observeClaudeFile, type ObservationRead } from './observer.js';
+import { discoverObservationFiles } from './observer-source.js';
 import { digest } from './workspaces.js';
 import type { Journal, ObserverJournal } from './journal.js';
 import type { NativeExecutor, ObservationProfile } from './native.js';
@@ -81,24 +77,110 @@ export class ObserverRunner {
       this.journal.save();
     }
   }
+  /** Looks for new files at most every five seconds; a failure is returned so the tick can still read what is known. */
+  private discover(): unknown {
+    if (this.now() < this.nextDiscovery) return undefined;
+    this.nextDiscovery = this.now() + 5000;
+    try {
+      this.refresh();
+      return undefined;
+    } catch (error) {
+      return error;
+    }
+  }
+  /** One look at one source: its status and the records that are new since `prior`. */
+  private async readSource(source: Source, prior: ObserverJournal) {
+    let checkpoint = prior.checkpoint,
+      fingerprint = prior.fingerprint;
+    try {
+      if (
+        realpathSync(source.profile.approvedRoot) !== source.profile.approvedRoot ||
+        realpathSync(source.profile.projectRoot) !== source.profile.projectRoot
+      )
+        throw new Error('OBSERVATION_PATH_CHANGED');
+      const { approvedRoot, projectRoot, provider } = source.profile;
+      if (provider === 'codex') {
+        const read = new CodexObserver(approvedRoot, source.file, projectRoot).read(
+          prior.checkpoint,
+        );
+        return {
+          status: read.status,
+          records: read.records,
+          checkpoint: read.checkpoint,
+          fingerprint,
+        };
+      }
+      const read = await observeClaudeFile(approvedRoot, source.file, projectRoot);
+      return {
+        status: read.status,
+        records: read.fingerprint === prior.fingerprint ? [] : read.records,
+        checkpoint,
+        fingerprint: read.fingerprint,
+      };
+    } catch (error) {
+      const status: ObservationRead['status'] =
+        (error as NodeJS.ErrnoException).code === 'ENOENT'
+          ? 'missing'
+          : error instanceof Error && error.message === 'OBSERVATION_PATH_CHANGED'
+            ? 'blocked_path'
+            : 'read_error';
+      return { status, records: [], checkpoint, fingerprint };
+    }
+  }
+  /** Splits records into reports of at most four records and 100 kB each, so none exceeds the HTTP envelope. */
+  private batches(records: ObservationRead['records']) {
+    const batches: ObservationRead['records'][] = [[]];
+    let bytes = 0;
+    for (const record of records) {
+      const length = Buffer.byteLength(JSON.stringify(record));
+      let batch = batches.at(-1) ?? [];
+      if (batch.length === 4 || bytes + length > 100000) {
+        batch = [];
+        batches.push(batch);
+        bytes = 0;
+      }
+      batch.push(record);
+      bytes += length;
+    }
+    return batches;
+  }
+  /** Queues the reports for this look when there is something new, the status changed or the last report is old. */
+  private queueReports(
+    source: Source,
+    prior: ObserverJournal,
+    next: ObserverJournal,
+    status: ObservationRead['status'],
+    records: ObservationRead['records'],
+  ) {
+    if (!records.length && status === prior.status && this.now() - prior.lastReportedAt < 15000)
+      return;
+    for (const batch of this.batches(records)) {
+      const report: ObservationReport = {
+        reportId: randomUUID(),
+        projectId: source.profile.projectId,
+        agentId: source.profile.agentId,
+        projectRoot: source.profile.projectRoot,
+        provider: source.profile.provider,
+        sourceKey: source.key,
+        label: `${source.name} · ${source.file}`.slice(0, 160),
+        revision: ++next.revision,
+        status,
+        records: batch,
+      };
+      next.pending.push(report);
+    }
+    next.lastReportedAt = this.now();
+  }
   async tick() {
     if (this.stopped || this.now() < this.nextPoll) return;
     this.nextPoll = this.now() + 1000;
-    let discoveryError: unknown;
-    if (this.now() >= this.nextDiscovery) {
-      this.nextDiscovery = this.now() + 5000;
-      try {
-        this.refresh();
-      } catch (error) {
-        discoveryError = error;
-      }
-    }
+    const discoveryError = this.discover();
     const sources = [...this.sources.values()];
-    if (!sources.length) {
+    const source = sources.length ? sources[this.index++ % sources.length] : undefined;
+    if (!source) {
       if (discoveryError) throw discoveryError;
       return;
     }
-    const source = sources[this.index++ % sources.length]!;
     await this.flush(source);
     if (this.stopped) return;
     const current = this.journal.state.observers[source.key];
@@ -114,82 +196,17 @@ export class ObserverRunner {
       seen: [],
       pending: [],
     };
-    let status: ObservationRead['status'],
-      records: ObservationRead['records'],
-      checkpoint = prior.checkpoint,
-      fingerprint = prior.fingerprint;
-    try {
-      if (
-        realpathSync(source.profile.approvedRoot) !== source.profile.approvedRoot ||
-        realpathSync(source.profile.projectRoot) !== source.profile.projectRoot
-      )
-        throw new Error('OBSERVATION_PATH_CHANGED');
-      if (source.profile.provider === 'codex') {
-        const read = new CodexObserver(
-          source.profile.approvedRoot,
-          source.file,
-          source.profile.projectRoot,
-        ).read(prior.checkpoint);
-        status = read.status;
-        records = read.records;
-        checkpoint = read.checkpoint;
-      } else {
-        const read = await observeClaudeFile(
-          source.profile.approvedRoot,
-          source.file,
-          source.profile.projectRoot,
-        );
-        status = read.status;
-        records = read.fingerprint === prior.fingerprint ? [] : read.records;
-        fingerprint = read.fingerprint;
-      }
-    } catch (error) {
-      status =
-        (error as NodeJS.ErrnoException).code === 'ENOENT'
-          ? 'missing'
-          : error instanceof Error && error.message === 'OBSERVATION_PATH_CHANGED'
-            ? 'blocked_path'
-            : 'read_error';
-      records = [];
-    }
-    records = records.filter((r) => !prior.seen.includes(r.sourceId));
+    const read = await this.readSource(source, prior);
+    const records = read.records.filter((r) => !prior.seen.includes(r.sourceId));
     const next: ObserverJournal = {
       ...prior,
-      checkpoint,
-      fingerprint,
-      status,
+      checkpoint: read.checkpoint,
+      fingerprint: read.fingerprint,
+      status: read.status,
       seen: [...prior.seen, ...records.map((r) => r.sourceId)].slice(-256),
       pending: [],
     };
-    if (records.length || status !== prior.status || this.now() - prior.lastReportedAt >= 15000) {
-      const batches: (typeof records)[] = [[]];
-      let bytes = 0;
-      for (const record of records) {
-        const length = Buffer.byteLength(JSON.stringify(record));
-        if (batches.at(-1)!.length === 4 || bytes + length > 100000) {
-          batches.push([]);
-          bytes = 0;
-        }
-        batches.at(-1)!.push(record);
-        bytes += length;
-      }
-      for (const records of batches) {
-        const report: ObservationReport = {
-          reportId: randomUUID(),
-          projectId: source.profile.projectId,
-          agentId: source.profile.agentId,
-          projectRoot: source.profile.projectRoot,
-          provider: source.profile.provider,
-          sourceKey: source.key,
-          label: `${source.name} · ${source.file}`.slice(0, 160),
-          revision: ++next.revision,
-          status,
-          records,
-        };
-        next.pending.push(report);
-      }
-      next.lastReportedAt = this.now();
-    }
+    this.queueReports(source, prior, next, read.status, records);
     // Cursor and every unsent record are committed together; a failed save rolls back both in memory.
     this.save(source.key, next);
     await this.flush(source);

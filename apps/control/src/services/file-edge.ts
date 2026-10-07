@@ -7,7 +7,7 @@ const spare: Buffer[] = [];
 
 function borrow(size: number): Buffer {
   const i = spare.findIndex((b) => b.length >= size);
-  return i >= 0 ? spare.splice(i, 1)[0]! : Buffer.allocUnsafe(size);
+  return (i >= 0 ? spare.splice(i, 1)[0] : undefined) ?? Buffer.allocUnsafe(size);
 }
 
 function giveBack(buffer: Buffer): void {

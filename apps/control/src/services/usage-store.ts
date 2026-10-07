@@ -7,7 +7,7 @@ import type { ParseState } from './usage-parse.js';
 // store is bounded, and a small copy of it lives in the data directory so a restart need not read history again.
 
 /** Bump when the parser or the shape of the state changes: an older rollup is then ignored and rebuilt. */
-export const ROLLUP_VERSION = 4;
+const ROLLUP_VERSION = 5;
 export const MAX_TRACKED_FILES = 8192;
 
 export type Entry = {

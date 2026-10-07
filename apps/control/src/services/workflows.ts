@@ -30,7 +30,7 @@ export function startWorkflow(ctx: Context, actor: Actor, c: Start): Workflow {
             0,
             8000,
           ),
-        dependencies: step.dependsOn.map((i) => ids[i]!),
+        dependencies: step.dependsOn.flatMap((i) => ids[i] ?? []),
         priority: c.data.priority,
       },
     } as Extract<Command, { type: 'work.create' }>);

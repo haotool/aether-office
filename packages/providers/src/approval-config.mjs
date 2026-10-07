@@ -21,8 +21,10 @@ export const MAX_RULE_CHARS = 120;
 /** The random value the hook sends with a request; the server's proof is bound to it, so an answer cannot be replayed. */
 export const NONCE_PATTERN = /^[A-Za-z0-9_-]{16,64}$/;
 const LOOPBACK = new Set(['127.0.0.1', 'localhost', '[::1]']);
+/** AETHER's private directory: `AETHER_HOME`, else `~/.aether`. */
+export const aetherDir = (env = process.env) => env.AETHER_HOME ?? join(homedir(), '.aether');
 export function approvalConfigPath(env = process.env) {
-  return env.AETHER_APPROVALS_CONFIG ?? join(homedir(), '.aether', 'approvals.json');
+  return env.AETHER_APPROVALS_CONFIG ?? join(aetherDir(env), 'approvals.json');
 }
 
 /** {url, token, verifyKey} from the file the control plane wrote when Remote approvals was switched on; null when unusable. */

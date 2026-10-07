@@ -15,7 +15,7 @@ export type SessionSignals = {
  * Pure join of what is known about a session's tool calls: the hook's call list (with the outcome the hook reported)
  * gets the transcript's outcome for the calls the hook could not settle, matched by the provider's tool id only.
  */
-export function withOutcomes(
+function withOutcomes(
   calls: HookState['recent'],
   outcomes: Outcomes,
 ): NonNullable<LocalSession['hook']>['recent'] {

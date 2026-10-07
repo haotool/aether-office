@@ -7,7 +7,7 @@ import { withEdge } from './file-edge.js';
 const TAIL_BYTES = 256 * 1024;
 const NEEDLE = Buffer.from('"rate_limits":{');
 /** Newest rollouts looked into: a quiet one has no reading, an idle machine's newest may be days old. */
-export const LIMIT_FILES = 4;
+const LIMIT_FILES = 4;
 
 const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : null);
 const obj = (v: unknown): Record<string, unknown> =>

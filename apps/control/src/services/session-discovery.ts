@@ -88,7 +88,7 @@ const cwdOf = (text: string) => {
   }
 };
 
-export type Head = {
+type Head = {
   cwd: string;
   sessionId: string;
   meta: ReturnType<typeof codexMeta> | null;
@@ -201,11 +201,12 @@ export async function discoverRaw(home: string, now = Date.now()): Promise<Raw[]
   const roots = found.filter((r) => !(r.spawn && ids.has(r.spawn.parent)));
   // A rollout that has not been written for SESSION_ACTIVE_MS is finished; it stays for the grace period, then goes.
   for (const r of found) {
-    if (!r.spawn || !ids.has(r.spawn.parent)) continue;
+    const parent = r.spawn ? parents.get(r.spawn.parent) : undefined;
+    if (!r.spawn || !parent) continue;
     const quiet = now - r.mtime;
     if (quiet >= SESSION_ACTIVE_MS + FINISHED_GRACE_MS) continue;
     const finished = quiet >= SESSION_ACTIVE_MS;
-    (parents.get(r.spawn.parent)!.children ??= []).push({
+    (parent.children ??= []).push({
       id: r.sessionId,
       type: r.spawn.type,
       lastSeen: Math.round(r.mtime),
@@ -223,17 +224,8 @@ export async function discoverRaw(home: string, now = Date.now()): Promise<Raw[]
   return roots.sort((a, b) => b.mtime - a.mtime).map(({ spawn: _s, ...r }) => r);
 }
 
-/**
- * Sessions older than the recent window (or lost to a read error) that a live process still owns. A process alive for
- * days in a quiet transcript is exactly the one worth finding, and its file is looked up from the process itself:
- * a Claude process by its resume id, or the newest files of its directory's own project folder; a Codex process by
- * the id in its rollout's name.
- */
-export async function sessionsOfProcesses(
-  home: string,
-  lost: readonly AgentProcess[],
-  have: ReadonlySet<string>,
-): Promise<Raw[]> {
+/** Collects the sessions found for processes, each file once: `add` reads a candidate and keeps it if it is a session. */
+function finder(have: ReadonlySet<string>) {
   const found: Raw[] = [];
   const taken = new Set(have);
   const add = async (provider: Raw['provider'], file: string) => {
@@ -249,20 +241,23 @@ export async function sessionsOfProcesses(
       /* gone */
     }
   };
-  const projects = join(home, '.claude/projects');
-  const claude = lost.filter((p) => p.provider === 'claude');
-  // Named by --resume: the file is `<id>.jsonl` in whichever project folder it began in.
-  const named = claude.filter((p) => p.resume);
-  if (named.length) {
-    const folders = await readdir(projects).catch(() => [] as string[]);
-    for (const p of named)
-      for (const folder of folders)
-        await add('claude', join(projects, folder, `${p.resume}.jsonl`));
-  }
-  // Not named: the N processes of a directory own the N newest files of that directory's project folder.
+  return { found, taken, add };
+}
+type Finder = ReturnType<typeof finder>;
+
+/** Named by --resume: the file is `<id>.jsonl` in whichever project folder it began in. */
+async function findNamedClaude(f: Finder, projects: string, named: readonly AgentProcess[]) {
+  if (!named.length) return;
+  const folders = await readdir(projects).catch(() => [] as string[]);
+  for (const p of named)
+    for (const folder of folders)
+      await f.add('claude', join(projects, folder, `${p.resume}.jsonl`));
+}
+
+/** Not named: the N processes of a directory own the N newest files of that directory's project folder. */
+async function findUnnamedClaude(f: Finder, projects: string, unnamed: readonly AgentProcess[]) {
   const byDirectory = new Map<string, number>();
-  for (const p of claude.filter((p) => !p.resume))
-    byDirectory.set(p.cwd, (byDirectory.get(p.cwd) ?? 0) + 1);
+  for (const p of unnamed) byDirectory.set(p.cwd, (byDirectory.get(p.cwd) ?? 0) + 1);
   for (const [cwd, count] of byDirectory) {
     const folder = join(projects, encodeRoot(cwd));
     const names = (await readdir(folder).catch(() => [] as string[])).filter((n) =>
@@ -275,25 +270,55 @@ export async function sessionsOfProcesses(
     let wanted = count; // as many more files as there are processes without one
     for (const { file } of dated.sort((a, b) => b.mtime - a.mtime)) {
       if (wanted <= 0) break;
-      if (taken.has(file)) continue;
-      const before = found.length;
-      await add('claude', file);
-      if (found.length > before) wanted--;
+      if (f.taken.has(file)) continue;
+      const before = f.found.length;
+      await f.add('claude', file);
+      if (f.found.length > before) wanted--;
     }
   }
+}
+
+/** A Codex process by the id in its rollout's name. */
+async function findCodex(f: Finder, home: string, ids: ReadonlySet<string>) {
+  if (!ids.size) return;
+  const walk = async (dir: string, depth: number): Promise<void> => {
+    for (const e of await readdir(dir, { withFileTypes: true }).catch(() => [])) {
+      const p = join(dir, e.name);
+      if (e.isDirectory() && depth < 4) await walk(p, depth + 1);
+      else if (e.isFile() && [...ids].some((id) => e.name.endsWith(`${id}.jsonl`)))
+        await f.add('codex', p);
+    }
+  };
+  await walk(join(home, '.codex/sessions'), 0);
+}
+
+/**
+ * Sessions older than the recent window (or lost to a read error) that a live process still owns. A process alive for
+ * days in a quiet transcript is exactly the one worth finding, and its file is looked up from the process itself:
+ * a Claude process by its resume id, or the newest files of its directory's own project folder; a Codex process by
+ * the id in its rollout's name.
+ */
+export async function sessionsOfProcesses(
+  home: string,
+  lost: readonly AgentProcess[],
+  have: ReadonlySet<string>,
+): Promise<Raw[]> {
+  const f = finder(have);
+  const projects = join(home, '.claude/projects');
+  const claude = lost.filter((p) => p.provider === 'claude');
+  await findNamedClaude(
+    f,
+    projects,
+    claude.filter((p) => p.resume),
+  );
+  await findUnnamedClaude(
+    f,
+    projects,
+    claude.filter((p) => !p.resume),
+  );
   const codexIds = new Set(
     lost.flatMap((p) => (p.provider === 'codex' && p.resume ? [p.resume] : [])),
   );
-  if (codexIds.size) {
-    const walk = async (dir: string, depth: number): Promise<void> => {
-      for (const e of await readdir(dir, { withFileTypes: true }).catch(() => [])) {
-        const p = join(dir, e.name);
-        if (e.isDirectory() && depth < 4) await walk(p, depth + 1);
-        else if (e.isFile() && [...codexIds].some((id) => e.name.endsWith(`${id}.jsonl`)))
-          await add('codex', p);
-      }
-    };
-    await walk(join(home, '.codex/sessions'), 0);
-  }
-  return found;
+  await findCodex(f, home, codexIds);
+  return f.found;
 }

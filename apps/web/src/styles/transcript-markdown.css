@@ -5,7 +5,7 @@
  */
 .markdown .md-heading {
   margin: var(--space-12) 0 var(--space-4);
-  line-height: 1.35;
+  line-height: var(--lh-tight);
 }
 .markdown .md-heading:first-child {
   margin-top: 0;
@@ -119,7 +119,7 @@
 .msg.enter,
 .tool-group.enter,
 .sys-notice.enter {
-  animation: msg-in 0.16s var(--ease) both;
+  animation: msg-in var(--dur-fast) var(--ease) both;
 }
 @keyframes msg-in {
   from {
@@ -157,7 +157,7 @@
 }
 @media (pointer: coarse) {
   .long-toggle {
-    min-height: var(--control-touch-sm);
+    min-height: var(--control-h-sm);
   }
 }
 
