@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { signIn } from './support/sign-in.js';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -35,9 +36,7 @@ test('request waiting records remain visible after reload and show a correlated 
     body: '持久等待瀏覽器測試',
     kind: 'request',
   });
-  await page.goto('/');
-  await page.getByLabel('存取權杖', { exact: true }).fill(token);
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page);
   await page.getByRole('link', { name: /^訊息(?: \d+)?$/ }).click();
   const card = page
     .locator('article.message')

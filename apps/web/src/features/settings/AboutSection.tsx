@@ -4,12 +4,14 @@ import { useT } from '../../ui.js';
 import { Row, Skeleton, StatusChip } from './kit.js';
 
 const REPO = 'https://github.com/haotool/aether-office';
+// The production build carries its own licence and notices (scripts/build.mjs); the dev server does not have them.
+const SHIPPED = import.meta.env.DEV ? `${REPO}/blob/main` : '';
 const LINKS = [
   ['stLinkRepo', REPO],
   ['stLinkDocs', `${REPO}/blob/main/docs/getting-started.md`],
   ['stLinkSecurity', `${REPO}/blob/main/docs/security.md`],
-  ['stLinkNotices', `${REPO}/blob/main/THIRD_PARTY_NOTICES.md`],
-  ['stLinkLicense', `${REPO}/blob/main/LICENSE`],
+  ['stLinkNotices', SHIPPED ? `${SHIPPED}/THIRD_PARTY_NOTICES.md` : '/THIRD_PARTY_NOTICES.txt'],
+  ['stLinkLicense', SHIPPED ? `${SHIPPED}/LICENSE` : '/LICENSE.txt'],
 ] as const;
 
 /** The shortcuts the app really has: each is bound in the code named beside it. */

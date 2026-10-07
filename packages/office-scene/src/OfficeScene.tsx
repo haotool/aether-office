@@ -36,6 +36,7 @@ import { MessageCarriers } from './MessageCarriers.js';
 import { PerfProbe } from './PerfProbe.js';
 import { AdaptiveRatio, ShadowThrottle, Warmup } from './PerfControllers.js';
 import { PIXEL_RATIO_FLOOR, SHADOW_INTERVAL_MS } from './perf-control.js';
+import { usePoseCues } from './use-pose-cues.js';
 import { SceneCamera } from './SceneCamera.js';
 import { StalkTooltip } from './StalkTooltip.js';
 import { CompactHud } from './CompactHud.js';
@@ -46,16 +47,23 @@ import { ACTIVE, OVERVIEW, ZONE_OFFSET, floorOfDesk, floorY } from './scene-geom
 import { beaconsOf, beamsOf, labelsOf } from './scene-markers.js';
 import { useSceneNavigation } from './scene-navigation.js';
 import { IntroCaption, IntroDip, useIntroTour } from './intro/index.js';
+import { LifeLayer, useAriaLog } from './life/index.js';
+import { SquadDom, SquadLayer, SquadWarm, isPodSeat, useSquad } from './squad/index.js';
 
 export type { OfficeSceneProps } from './scene-props.js';
 export type { CharacterMenuContext, GroupBarContext, SceneActions };
 
 export function OfficeScene(props: OfficeSceneProps) {
-  const layout = useMemo(
+  const placed = useMemo(
     () => props.layout ?? defaultLayout(props.agents),
     [props.layout, props.agents],
   );
+  // Subagents sit in their supervisor's squad zone: every seat lookup below reads the layout with their pod seats in it.
   const zh = props.locale === 'zh-TW';
+  const ariaLog = useAriaLog(zh); // one log for the whole office: the life effects and the squads speak through it
+  const pose = usePoseCues(props.reducedMotion); // the emotes, the hand-over's nods and the life effects' gestures
+  const squad = useSquad(placed, props, ariaLog.say, pose.request);
+  const layout = squad.layout;
   const elements = useRef(new Map<string, HTMLElement>());
   const speechElements = useRef(new Map<string, HTMLElement>());
   const chipElements = useRef(new Map<string, HTMLElement>());
@@ -165,6 +173,7 @@ export function OfficeScene(props: OfficeSceneProps) {
     canArrange: props.canArrange ?? false,
     onMoveSeat: props.onMoveSeat,
     hasGroupBar: !!props.groupBar,
+    pose: pose.request,
   });
   const { marks, wall, seatDrag, words } = ix;
   const roleName = (agent: Agent) => roleLabel(props.roleOf?.(agent) ?? 'generalist', zh);
@@ -196,6 +205,19 @@ export function OfficeScene(props: OfficeSceneProps) {
   );
   const department = DEPARTMENTS[floor]!;
   const filming = nav.directed !== null || intro.active; // the camera runs itself: full-rate frames
+  const squadScene = {
+    props,
+    floor,
+    exploded,
+    compact,
+    zh,
+    hover: { id: hovered, start: hoverStart, end: hoverEnd },
+    ix,
+    pose,
+    fly: nav.fly,
+    engagements,
+    elements: elements.current,
+  };
 
   return (
     <SceneBoundary onFailure={props.onFailure}>
@@ -225,7 +247,7 @@ export function OfficeScene(props: OfficeSceneProps) {
           {visibleFloors.map((index) => (
             <Floor
               key={index}
-              layout={layout}
+              layout={placed}
               floor={index}
               y={floorY(index, exploded)}
               animate={animate && (exploded || index === floor)}
@@ -234,7 +256,7 @@ export function OfficeScene(props: OfficeSceneProps) {
           ))}
           {sceneAgents.map((agent) => {
             const desk = layout.objects.find((o) => o.agentId === agent.id);
-            if (!desk) return null;
+            if (!desk || isPodSeat(desk)) return null;
             return (
               <Member
                 key={agent.id}
@@ -264,7 +286,8 @@ export function OfficeScene(props: OfficeSceneProps) {
                         ? 'hover'
                         : null
                 }
-                emote={ix.emotes.cues[agent.id]}
+                emote={pose.cues[agent.id]}
+                turn={pose.turns[agent.id]}
                 reducedMotion={props.reducedMotion}
                 quality={props.quality}
                 light={compact}
@@ -281,6 +304,7 @@ export function OfficeScene(props: OfficeSceneProps) {
               />
             );
           })}
+          <SquadLayer squad={squad} scene={squadScene} />
           <group position={[0, y, 0]}>
             <MessageCarriers
               layout={floorLayout}
@@ -327,7 +351,19 @@ export function OfficeScene(props: OfficeSceneProps) {
             visible={(f) => exploded || f <= floor}
           />
           <RelationLines edges={edges} animate={!props.reducedMotion} />
+          <LifeLayer
+            input={props.life}
+            seats={nav.seats}
+            floor={floor}
+            exploded={exploded}
+            quality={props.quality}
+            reducedMotion={props.reducedMotion}
+            zh={zh}
+            say={ariaLog.say}
+            pose={pose.request}
+          />
           <Runtime onFailure={props.onFailure} />
+          {props.squads !== undefined && <SquadWarm quality={props.quality} zh={zh} />}
           <Warmup onReady={ready} />
           <AdaptiveRatio ceiling={maxRatio} smooth={filming} />
           {shadowsOn && <ShadowThrottle intervalMs={SHADOW_INTERVAL_MS[props.quality]} />}
@@ -430,6 +466,8 @@ export function OfficeScene(props: OfficeSceneProps) {
               {compactionLabel(props.compactions![agent.id]!, zh)}
             </span>
           ))}
+          <div ref={ariaLog.host} />
+          <SquadDom squad={squad} scene={squadScene} />
           {(!compact || namesOn) &&
             !exploded &&
             floorZones(floor)

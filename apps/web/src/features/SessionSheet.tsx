@@ -2,7 +2,14 @@ import { ChevronDown, ChevronUp, Focus, X } from 'lucide-react';
 import { Badge, useT } from '../ui.js';
 import { Avatar } from './Avatar.js';
 import { FEED_AVATAR_STATE } from './feed-avatar.js';
-import { attentionCount, feedItems, mostUrgent, type Feed, type FeedItem } from './feed-model.js';
+import {
+  attentionCount,
+  feedItems,
+  mostUrgent,
+  noReplyKey,
+  type Feed,
+  type FeedItem,
+} from './feed-model.js';
 import { PermissionPeek } from './PermissionCard.js';
 import { PanelBody, type PanelProps } from './SessionPanel.js';
 
@@ -101,10 +108,7 @@ function FeedPeek({
         </button>
       </div>
       <p className={`peek-line ${top?.reply ? '' : 'none'}`}>
-        {top
-          ? (top.reply ??
-            t(top.session.process === 'running' ? 'feedNoReply' : 'feedReplyNotLoaded'))
-          : t('feedEmptyTitle')}
+        {top ? (top.reply ?? t(noReplyKey(top))) : t('feedEmptyTitle')}
       </p>
     </div>
   );

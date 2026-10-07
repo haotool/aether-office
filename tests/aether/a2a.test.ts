@@ -4,9 +4,7 @@ import { Role, TaskState } from '@a2a-js/sdk';
 import { ClientFactory, ClientFactoryOptions, JsonRpcTransportFactory } from '@a2a-js/sdk/client';
 import { createServer } from '../../apps/control/src/server.js';
 import { command, fixture, seedWork } from './fixture.js';
-
-// A fresh port per test: a pooled keep-alive socket to a closed server would otherwise be reused.
-let nextPort = 4497;
+import { freePort } from './timing.js';
 
 const text = (value: string) => ({
   content: { $case: 'text' as const, value },
@@ -33,7 +31,8 @@ const request = (message: ReturnType<typeof userMessage>) => ({
 });
 
 async function setup(options: { a2a: boolean } = { a2a: true }) {
-  const PORT = nextPort++;
+  // A fresh port per test: a pooled keep-alive socket to a closed server would otherwise be reused.
+  const PORT = await freePort();
   const ORIGIN = `http://127.0.0.1:${PORT}`;
   const f = fixture();
   const app = createServer(f.control, { origin: ORIGIN, a2a: options.a2a });

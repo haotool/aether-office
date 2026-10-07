@@ -1,7 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
+import { signIn } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 // Squads of every shape in the panel. The session list is the real server's, with the fixture session's subagents (and,
 // for one test, its hook) replaced in the response: a synthetic squad, never a real session.
@@ -44,14 +43,7 @@ async function mockSquad(page: Page, shape: { subagents: (now: number) => Sub[];
 }
 
 async function login(page: Page) {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page);
   await expect(page.locator('main')).toBeVisible();
   const option = page.locator('.project-picker select option', { hasText: 'fixture-repo' });
   await expect(option).toBeAttached({ timeout: 15000 });

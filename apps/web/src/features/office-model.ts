@@ -40,6 +40,12 @@ export type SquadMemberFacts = {
   lastSeen: number;
   toolCount: number;
   lastTool: string | null;
+  /** Tokens per minute from the subagent's transcript (Claude); null when no file gave a sample. The beam's rate. */
+  tokensPerMinute: number | null;
+  /** When it last started a tool; the scene's puppet strings jerk when it changes. */
+  toolAt: number | null;
+  /** What it handed back (only the error flag): the hand-over stamp reads it. Null while it runs or when unknown. */
+  result: { error: boolean | null } | null;
 };
 /** A supervisor (its member id) and its subagents, finished ones included until the server drops them. */
 export type Squad = { supervisor: string; members: SquadMemberFacts[] };
@@ -60,6 +66,9 @@ export function squadsOf(sessions: Sessions): Squad[] {
         lastSeen: c.lastSeen,
         toolCount: c.tools?.count ?? 0,
         lastTool: c.tools?.last ?? null,
+        tokensPerMinute: c.tokens?.perMinute ?? null,
+        toolAt: c.tools?.lastAt ?? null,
+        result: c.result ? { error: c.result.error } : null,
       })),
     }));
 }
@@ -235,6 +244,7 @@ export function officeModel(
     doing: doingOf(all, locale === 'zh-TW'),
     attention: attentionOf(all, locale),
     liveSquads: liveSquadsOf(all),
+    squads: squadsOf(all),
   };
 }
 export type OfficeModel = ReturnType<typeof officeModel>;

@@ -5,6 +5,21 @@ The web UI is built in three layers: **tokens → components → features**. The
 on its side) and `e2e/ui-sweep.spec.ts` (axe accessibility, both themes). A UI change is done when those pass and the
 changed pages have been looked at on a phone-sized and a tablet-sized screen.
 
+**Contents.**
+Foundations: [Tokens](#tokens) · [Stylesheet organization](#stylesheet-organization) · [Components](#components) ·
+[Responsive and touch rules](#responsive-and-touch-rules) · [Navigation and phone information architecture](#navigation-and-phone-information-architecture) ·
+[Settings](#settings).
+The session panel: [Session panel](#session-panel) · [Squads in the panel](#squads-in-the-panel) ·
+[Conversation rendering](#conversation-rendering) · [Text pipeline](#text-pipeline) · [Name tags](#name-tags) ·
+[Clock out](#clock-out) · [Avatars](#avatars) · [KPI dashboards](#kpi-dashboards).
+The 3D office: [The 3D scene on a phone](#the-3d-scene-on-a-phone) · [The camera runs itself](#the-camera-runs-itself) ·
+[The beanstalk](#the-beanstalk) · [Many busy members at once](#many-busy-members-at-once) ·
+[Desk screens and behavior](#desk-screens-and-behavior) · [Context window, compaction and provider marks](#context-window-compaction-and-provider-marks) ·
+[Interactions with the characters](#interactions-with-the-characters) · [Alive and futuristic, cheaply](#alive-and-futuristic-cheaply) ·
+[Squads in the scene](#squads-in-the-scene).
+Delivery: [Loading performance](#loading-performance) · [Installable app (PWA)](#installable-app-pwa) ·
+[Performance and quality tiers](#performance-and-quality-tiers) · [Verifying a UI change](#verifying-a-ui-change).
+
 ## Tokens
 
 `apps/web/src/styles/tokens.css` is the **only** file allowed to hold a raw color, type size, space, radius or z-index.
@@ -95,7 +110,8 @@ member is a conversation, not an identity card. Code: `features/SessionPanel.tsx
   composer: one line says so, offers **Continue in AETHER** and **Fork in AETHER** (a new AETHER terminal that runs
   `claude --resume <id>` / `codex resume <id>`, or the fork variant, through the same start path as the Terminals page; the
   original is not touched, and Continue is off while the original still runs) and keeps the provider's own commands (copy
-  resume, copy fork). Waiting sessions say that approval happens in the terminal. When the server finds the session's
+  resume, copy fork). A waiting session says that approval happens in the terminal, unless Remote approvals is on and the hook
+  reported the prompt: then the feed row carries the approval card instead (see [security](security.md#safety-properties)). When the server finds the session's
   process inside an AETHER terminal (`GET /api/local-sessions/:key/terminal`), the foot is the composer instead.
   `SessionFooter` still takes a `composer` node, which replaces both.
 - **Composer** (`Composer.tsx`, `composer-model.ts`, `use-drive.ts`, `terminal-driver.ts`; styles `composer.css`). A
@@ -617,11 +633,15 @@ text. A made-up line may look like code or a build log; it never says how anythi
   2.5 s, `CompactionEffect`), the gauge's fill shrinks, and a chip under the name tag says "compacted −N%" / "已壓縮 −N%".
   Reduced motion keeps only the chip and the gauge's tween; low quality draws none of it (the gauge still moves).
   `?compact=1` previews it on stand-in members every 8 seconds.
-- **Provider marks** (`provider-marks.tsx`) are small inline SVGs on a 24 by 24 grid, drawn from a few strokes (Claude: a
-  starburst of eight rays in `--provider-claude`; Codex: a knot of three interlaced loops in `--provider-codex`), and the
-  same strokes are drawn on the desk screen's header canvas. They are simplified, not copies; they identify the provider
-  only (see THIRD_PARTY_NOTICES.md). They show on a name tag only when the camera is within 30 m of it or the tag is
-  selected or hovered, and always in the feed row and the conversation header.
+- **Provider marks** (`provider-marks.tsx`) are small decorative provider indicators: inline SVGs on a 24 by 24 grid, drawn
+  from a few strokes (Claude: a starburst of eight rays in its own color, `--provider-claude`; Codex: a knot of three
+  interlaced loops tinted to the muted text color, not a brand color), and the same strokes are drawn on the desk screen's
+  header canvas. They are simplified, not copies, and belong to their owners (Anthropic, OpenAI): they only say which
+  provider a session runs on, imply no endorsement and are never the app's own logo or branding. The SVG is `aria-hidden`; the
+  provider's name is its tooltip and a visually hidden text, so the name, not the mark, carries the meaning. This follows the
+  practice of the Happy project (slopus/happy, MIT), which shows a vendor mark only as a small provider indicator. They show
+  on a name tag only when the camera is within 30 m of it or the tag is selected or hovered, and always in the feed row and
+  the conversation header.
 
 ## Avatars
 
@@ -687,7 +707,10 @@ member (managed agent, observed session, subagent), the signed-in role, whether 
 to one of `wave`, `nod`, `celebrate`, `cheer`, `stretch`, there being no thumbs-up clip, a nod stands in) plays once over
 what the member is doing, and an icon rises over its head for 1.8 s. One per character per 2.5 s (a second is refused with an
 announcement, not queued), at most four icons at once, not for a sleeping rabbit, a ghost or a member leaving. Reduced motion
-plays no clip and the icon only fades. Nothing is sent to the session.
+plays no clip and the icon only fades. Nothing is sent to the session. The clip is asked of the scene's one pose registry
+(`use-pose-cues.ts`, see [office life 5.6](design/office-life.md#56-poses-one-registry-for-what-a-member-does-pose-cuests-use-pose-cuests-lifeposests)):
+the person outranks a hand-over's nod, which outranks a life effect's gesture, and a lower request never interrupts a higher one still
+playing.
 
 **Carrying a desk** (desktop, owner or operator): Alt + drag shows a ghost of the desk's footprint on the floor, snapped to
 the layout editor's 0.5 m grid, green where the layout rules allow it and red where not (the message says whether it is out of
@@ -821,13 +844,100 @@ shadow throttle are aimed at them, and are unproven there.
   of light and only the subagent looks at its parent. Links fade with distance from the camera (full under 30 m, gone at 110 m).
 - **Threads and tethers.** With a member hovered or selected, a thin cyan line joins it to the members of the same repository (else
   the same branch) on the floor, nearest six; a violet tether joins every session to its live subagents (brighter for the member in
-  hand). One fat-line draw call, drawn only for the focused floor and faded with distance. Subagents keep their own desks: they are
-  not moved next to the parent.
+  hand). One fat-line draw call, drawn only for the focused floor and faded with distance. Subagents sit in their parent's squad
+  zone (see Squads below); only when a floor has no room for a zone do they keep desks of their own, and then the tether is what
+  joins them.
 - `?talk=1` previews all of it with stand-in traffic (see `scene-preview.ts`).
+
+## Squads in the scene
+
+`packages/office-scene/src/squad/` draws a supervisor's subagents and the squad's beam; the scene mounts `SquadLayer` (in the
+canvas) and `SquadDom` (the label buttons and the log, in the label layer) and reads every seat through the layout `useSquad`
+returns, in which each pod is a desk-like seat that carries the subagent's id (so the camera, the name tags, the director and the
+selection find a subagent as they find a member). The floor is not rebuilt: the zone, the supervisor's dressing and the beam are
+overlays.
+
+- **State.** `stepSquad` (pure) keeps who sits where: the lowest free seat, never reassigned while held, the zone's size (grows at once,
+  shrinks after 10 s with no walk in flight) and the tool starts of the last minute. Poses are functions of `now - since`, so a
+  frame never depends on how many frames ran.
+- **Draws.** The zone decal (one shader, a dashed outline and a soft fill), the seat rings, the hover stools, the holo panes, the
+  silhouettes, the desk dressing, the beam funnel, the filament, the halos and the points are one instanced mesh each: 10 draw calls
+  (9 while no one stands as a silhouette) for any number of squads, 4 shader programs (decal, beam, points, one instanced basic;
+  6 to 7 with the glow and opaque materials, the strings and the seal, see office life 4.9). Every layer writes an instance's matrix
+  and colour only when it differs from what the mesh holds, so a still squad uploads nothing, and `SquadWarm` links all of these
+  programs while the scene loads (one hidden copy of each, from the layers' own factories), so a squad's first appearance links none. The
+  puppet strings add 2 draw calls (all strings, all crosses) and the hand-over 1 (all folders and stamps) plus one for each stamp word
+  on show, so at most 13 (typically 12, 14 with silhouettes and both words on show); the strings add the fat-line program the relation lines
+  already use. Parts share one vertex-coloured material per kind and are built once.
+- **Beam.** An instanced tube whose centre line is a Bezier evaluated in the vertex shader (squad, then the core, then a thin
+  filament to the supervisor's halo). Edge glow, bands that flow into the core, a fade at both ends and near the camera;
+  brightness follows the squad's tokens per minute (tool calls per minute when there are none) through
+  `tanh(1.5 ln(1 + rate) / ln(1 + reference))` with a 0.6 s lag, an amber pulse while a subagent waits for a permission. The
+  reference rates (24 tool calls, 8 million tokens a minute) are calibrated on real transcripts and pinned to the numbers
+  documented in [office life 4.4](design/office-life.md) by `tests/aether/beam-calibration.test.ts`.
+- **Tiers.** Zone, pods and dressing on every tier. High: bands, filament, halo, 48 points. Balanced: the same with 24 points. Low,
+  Calm mode and reduced motion: the funnel stands still (brightness only), with no filament, halo or points; reduced motion also
+  has subagents appear in their seats. Walks are 14 m (high), 10 m (balanced) or none (low).
+- **Puppet strings** (`squad/puppet/`). A control cross of light floats 1.25 m over each subagent that works; thin strings run from it
+  to the head and the two hands, and a master thread to the supervisor's halo. The strings are decoration that follows the
+  subagent and never pulls it: light (1.4 px, additive, 25% brightness at the body end), no face or neck strings, and they fade away
+  after they went slack. They are tied to the character's own `head_socket` and `hand_socket_L/R` (read from the model's world
+  matrices through `registerAnchors`/`anchorsOf`, so the hand strings follow the typing clip) and to fixed offsets when a model has no
+  sockets. `verlet.ts` is the simulation: six points per string in one pooled `Float32Array`, fixed 30 Hz (20 on balanced, 10 past
+  45 m, held past 90 m), 3 relaxation passes, damping 0.965, a sixth of gravity, a 0.25 Hz sway. It cannot blow up: `dt` is clamped
+  and capped at four steps, a pin that moves more than 2.5 m lays the string straight again, and a non-numeric pin or point resets
+  it. `string-motion.ts` is what a subagent does to them: taut while it works, a 4 cm dip of the cross and a 6 cm lift of the hand
+  strings (critically damped, about 250 ms) when its PreToolUse time (`tools.lastAt`) changes (never on the first look), slack over
+  1 s when it rests and then gone, frozen with an amber cross while it waits for a permission. All strings are one `LineSegments2`
+  and all crosses one instanced mesh (2 draw calls). **Off** on the low tier, with the relation effects, and by their own switch
+  (Settings, Office, Animations, "Puppet strings", pref `strings`; `&strings=0` in a preview); **still** (straight lines, no
+  simulation, redrawn at most every 0.2 s) in Calm mode and with reduced motion.
+- **Hand-over** (`squad/handover/`). When a subagent finishes (running to finished, with its supervisor's desk in the zone) it stands,
+  walks a folder (floating at its chest) to the end of the supervisor's desk that is nearest the zone, turns to the in-tray and glides the
+  folder in (0.6 s). The supervisor reads (`reading`, 1.5 s, an existing clip played as a one-shot) and then nods; the stamp goes over the
+  tray, presses (250 ms) and a seal blooms on the folder; the subagent waves and walks into the core. The stamp says **RECEIVED**
+  (已收到): a receipt that a result came back, never "approved", and it never says passed or failed. When the parent's own tool
+  result for the call is flagged as an error (`result.error === true`, or `ok === false`) it is a neutral grey **RETURNED** (已退回)
+  and the supervisor scratches its head instead of nodding; no red and no green are used. `plan.ts` is the pure timeline (stand,
+  walk of at most 8 s, turn, glide, read, press, leave: the press within 14 s), `book.ts` the throttle and the state machine,
+  `items.ts` what is drawn at a moment, `Handover.tsx` the meshes (one instanced mesh of unit boxes for every folder, tab and stamp, and
+  one small mesh for each seal word: three draw calls at most), `Handing.tsx` moves the carrier. The in-tray stack shows the folders
+  delivered (at most 5) and clears after 5 minutes without a new one. The log says "{type} handed over its result" (or "..., marked
+  as an error") once, when the folder is in the tray.
+  - **Throttle.** One hand-over per member, at most two carriers walking per floor (the next ones are shown as a pop: the subagent
+    leaves as usual and the folder pops into the tray), one stamp at a time per desk (a carrier waits in its seat for at most 6 s),
+    and a seeded spread of up to 0.3 s so two finishing together are not in lockstep. The mode steps down and never out, so a
+    receipt is always shown: **walk** (high and balanced, desk in view), **pop** (low tier, desk not in view, floor busy) and **tray**
+    (Calm and reduced motion: the folder and the seal just appear, no press, no cues).
+  - **An interrupted hand-over** is cut short without a stamp when its supervisor leaves, or when the carrier vanished with the
+    folder still in its hands; one whose folder was already in the tray finishes.
+  - **Clips.** Everything is procedural over the existing `stand_up`, `walk`, `idle`, `wave`, `reading`, `nod` and `scratch_head`; no
+    Blender clip was added. The `carry` and `conduct` clips of the spec (§4.8) are not built: the floating folder reads well in the
+    contact sheet, so they wait for the maintainer's review.
+- **Accessibility.** The zone label is a real button over the zone's front edge; joins, leaves and hand-overs are said through the scene's one visually hidden `role="log"` ("Office activity").
+- **Preview.** `?squad=N` gives the first member a squad of N stand-in subagents (`&arrive=MS` one joins every MS, `&leave=MS` each
+  finishes MS after it joined (and hands its result over), `&tools=MS` tool starts (the strings jerk), `&result=error` the finished ones come back
+  flagged as an error, `&look=1` the camera goes to the middle of the squad (`&look=desk` to the supervisor's desk), `&relation=0` no dressing or
+  beam, `&strings=0` no strings, `&handover=0` no hand-over, `&legacy=1` desks as before, `&after=MS` the squad first shows MS after the
+  page opened). `?preview=life&effect=a,b&t=MS&loop=1` plays life effects on from `t`, over and over, instead of holding a frame (and leaves
+  the camera where it is); `scripts/perf-matrix.mjs` measures them on the real GPU. Measured on an Apple M4 (ANGLE Metal) against the same scene with desks: median frame time 16.7
+  ms both, 26 fewer draw calls, 4 more shader programs, no GPU memory change.
+- **Puppet strings and hand-over, measured** on the same machine (Apple M4, ANGLE Metal, balanced tier, an 806 x 540 viewport, 8
+  subagents in a zone, 9 interleaved rounds of 240 frames, medians, a machine that was busy). Median frame time is 16.7 ms in every
+  pair. The strings alone (`&strings=0` against the scene): +2 draw calls, +1 shader program (the fat-line material), +0.1 GPU MB,
+  +0.1 ms JS per frame; the layer's own frame callback was timed at about 0.04 ms a frame (instrumented once, then removed). The
+  hand-over (`&handover=0` against the scene, 8 subagents finishing at once, 2 walking and 6 popping): +0 draw calls, programs, GPU MB and
+  JS per frame. The beam and the dressing (the relation effects with the strings and hand-over off, against `&relation=0`): +6 draws, +3
+  programs, +1.4 GPU MB, +0.1 ms. All the relation effects together: +8 draws, +4 programs, +1.5 GPU MB, +0.3 ms JS, inside the generic
+  gate of the spec (19 draws, 4 programs, 4 MB, 0.4 ms) but over the I4 squad budget of 0.15 ms JS. The 0.1 ms timer resolution of the
+  browser makes the JS figures coarse. A squad of 12 (which does not fit the default floor) was not measured. The high tier, both sizes
+  and the phone profile (4x CPU throttle) were measured since, with a busy building, the effects looping and the first appearance
+  (office life 4.9).
 
 ## KPI dashboards
 
-How the vendors' own dashboards present token use (from their public documentation and the local data shapes; the pages
+Token and Git numbers for the building and for each office, shown as a strip over the office and a dashboard it opens. The
+design started from how the vendors' own dashboards present token use (from their public documentation and the local data shapes; the pages
 were not re-fetched when this was written, so check the names below before relying on a detail):
 
 - **Claude Code `/usage` and `/cost`**: `/usage` shows the subscription's limit windows (current 5-hour session and the

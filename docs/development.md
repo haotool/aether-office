@@ -42,6 +42,7 @@ docs/             This documentation, ADRs and the verification ledger
 | `node scripts/audit-dependencies.mjs [package...]` | Reads the registry metadata of the dev dependencies (network) for the dependency ledger entry |
 | `pnpm audit:deps`             | `pnpm audit` for high-severity advisories                                                |
 | `pnpm verify:clean`           | Clean-room install, build and test of the committed tree                                 |
+| `node --import tsx scripts/docs-screenshots.mjs --port 4511` | Retakes the README screenshots from a synthetic demo stack (see [images](images/README.md)) |
 | `pnpm backup`                 | Create or restore a backup of the control plane's data                                   |
 | `pnpm run oss:check`          | Publishing-readiness scan of the tree (`--history` adds the history); see [release](release/history-cleanup.md) |
 | `pnpm smoke:live`             | Real Claude/Codex smoke test; consumes subscription quota, needs `--confirm-subscription-quota` |
@@ -52,11 +53,50 @@ docs/             This documentation, ADRs and the verification ledger
   Providers are replaced by clearly labeled synthetic processes (`fixtures/processes`), and a synthetic provider is never
   reported as live evidence.
 - **Test first.** New behavior starts with a failing test; a bug fix starts with a regression test.
-- **Timing-sensitive suites** (PTY, Git, MCP) run with bounded parallelism (`maxWorkers: 4`). If one times out on a heavily
-  loaded machine, re-run it alone before suspecting a bug.
+- **Timing-sensitive suites** (PTY, Git, MCP) run with bounded parallelism (`maxWorkers: 4`, a 10 s test timeout). If one times
+  out on a heavily loaded machine, re-run it alone (`pnpm exec vitest run tests/aether/<file>.test.ts`) before suspecting a bug.
+- **Layers.** Static: `pnpm typecheck` and `pnpm lint` (module boundaries, design tokens). Vitest in `tests/aether` (more than 200
+  files): kernel rules, services against real SQLite, HTTP routes, the security matrix and the text pipeline; text sinks and the
+  verification ledger are checked here too. Playwright in `e2e/` (about 50 specs): real control plane and runner on ports 4320 and
+  4330 with a **fixture home** (`playwright.config.ts` points `AETHER_LOCAL_SESSIONS_HOME`, `AETHER_HOOK_SPOOL` and
+  `AETHER_CLAUDE_USAGE_FILE` at a temporary directory, so no test reads your real `~/.claude` or `~/.codex`). The e2e specs drive
+  Chrome (`channel: 'chrome'`); WebKit is opt-in with `AETHER_WEBKIT=1`. GPU measurements (`PERF_GPU=1`) and `pnpm smoke:live`
+  are never part of the default run: a skipped check is "not run", never "passed".
+- **Keeping tests stable.** Use fixture data with fixed timestamps rather than "now" where you can; synthetic processes
+  (`fixtures/processes`, `sleep` named `claude`) instead of real CLIs; wait on a visible state (`expect(...).toBeVisible()`,
+  an element that proves the data arrived) instead of a fixed sleep; never depend on the camera director in a spec (it is off under
+  automation); give a spec its own repository and session files so specs do not share state; and keep a test that needs a GPU
+  behind its flag.
+- **Screenshots** for the README are made by `scripts/docs-screenshots.mjs` ([images](images/README.md)); run it after a visual
+  change and look at every image.
+- **Stable under load.** See [Writing stable tests](#writing-stable-tests).
 - **End to end.** `e2e/` starts real control and runner processes with an isolated data directory. It covers the full
   journey (sign in, create and assign work, review, verify, accept), accessibility (axe), responsive layout at six sizes,
   touch flows and the 3D scene.
+
+## Writing stable tests
+
+A test passes on a quiet machine and on one at load 30 alike, or it is not finished. Wait for the thing, never for a guess
+at how long it takes.
+
+- **No fixed sleeps before an assertion.** Wait for the event or state (`expect(...).toBeVisible()`, `expect.poll`,
+  `locator.waitFor`; in Vitest `eventually` from `tests/aether/timing.ts`) with a deadline that only a hang can reach. A wait
+  for something to *not* happen (a banner that must not appear) has to be time-based: keep it short, say so in a comment, and
+  never let it stand in for a positive wait. `e2e/support/settled.ts` counts animation frames instead of milliseconds for a
+  camera flight (`settled`) or a stretch of scene time (`frames`).
+- **Ephemeral ports.** A test that listens takes `freePort()` (`tests/aether/timing.ts`), not a number in the 4000s that
+  another suite, another worktree or a running `pnpm dev` may hold. The e2e servers' ports are the launcher's: read them
+  from `.data/e2e-session.json` and `nativeOrigin()`, never repeat them in a spec.
+- **Signing in is one helper.** `signIn(page, path?)` in `e2e/support/sign-in.ts` fills the token, presses the button and
+  returns only once the token field is gone, that is, once the login has answered and the page holds its CSRF token. A
+  `page.goto` or reload made before that loses the session's writes.
+- **Cleanups tolerate stragglers.** Stop the child processes and wait for them before removing their directory (one
+  `afterAll`, in that order: hooks run in reverse), and remove with `rmSync(dir, { recursive: true, force: true, maxRetries: 5 })`.
+- **Wall-clock budgets are for performance runs.** A bound on how fast something is (`scan-budget`, a verifier that must be
+  killed within a time) is asserted only with `AETHER_TIMING_TESTS=1` (`budget(tight, loose)` in `tests/aether/timing.ts`).
+  The default run asserts the behavior with a loose bound that a hang or a missing yield still breaks.
+- **Prove it under load.** Run the file ten times next to a CPU burner (`yes > /dev/null` four to twenty times, killed by its
+  own PID afterwards) before calling a timing fix done, and compare with the same run on the old test.
 
 ## Verification ledger
 
@@ -107,13 +147,21 @@ desk, run the audit (it must report no clipping), rebuild the models and validat
 Both gates look at a running build (`pnpm build`, then the e2e server or `pnpm demo`), never at a mock.
 
 ```sh
-# One labelled PNG per category (scene, life) from real browser screenshots; --gpu uses Chrome on the real GPU (ANGLE Metal)
+# One labelled PNG per category (scene, life, squad) from real browser screenshots; --gpu uses Chrome on the real GPU (ANGLE Metal)
 node scripts/contact-sheet.mjs --url http://127.0.0.1:4320 --out evidence/contact-sheets --gpu
 node scripts/contact-sheet.mjs --category life --effects rubber-duck,ci-lamp --times 0,1000,2000   # via ?preview=life&effect=<id>&t=<ms>
+# One sheet per kind, each effect at times of its own (id@t1/t2/t3), the scene cropped to the member the camera is on, at 2x
+node scripts/contact-sheet.mjs --category life --effects 'rubber-duck@3000/8000/14000,coffee-refill@800/2000/3600' \
+  --sheet wellbeing --size 1600x1000 --dpr 2 --gpu
 
 # Baseline vs variant scene through the perf probe, interleaved and repeated, on the real GPU
-PERF_GPU=1 PERF_VARIANT='preview=life&effect=rubber-duck' pnpm exec playwright test e2e/office-life-perf.spec.ts
+PERF_GPU=1 PERF_BASELINE='preview=life&effect=off&t=0' PERF_VARIANT='preview=life&effect=rubber-duck,ci-lamp,ship-it&t=1500' pnpm exec playwright test e2e/office-life-perf.spec.ts   # three live effects
+node scripts/contact-sheet.mjs --category squad --gpu   # the squad storyboard on stand-in subagents (?squad=N&arrive=MS&leave=MS&look=1)
+PERF_GPU=1 PERF_BASELINE='squad=8&legacy=1' PERF_VARIANT='squad=8' pnpm exec playwright test --timeout=300000 e2e/office-life-perf.spec.ts   # 8 subagents in a squad zone against at desks
 ```
+
+An effect that reads a value takes it after a colon (`ci-stack:0` is the red CI stack, `tech-debt:60` a bigger pile), and
+`?squad=3&tokens=12000` gives the stand-in subagents a token rate so the beam and its label follow tokens.
 
 The sheets are for a human to review (a pixel diff belongs on the real-GPU runner only). The perf spec writes
 `evidence/office-life-perf.json` with the deltas of [the office-life gates](design/office-life.md#10-tests-and-gates) (median and
@@ -125,5 +173,6 @@ loaded machine (`PERF_ROUNDS`).
 ## Releasing
 
 There is no release process yet; the project is pre-release. Before one: run `pnpm verify:clean`, review the verification
-ledger, produce a software bill of materials and re-check [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). The steps
+ledger, run `pnpm run notices:check` and produce the software bill of materials
+(`node scripts/oss/third-party-notices.mjs --sbom aether-office-<version>.cdx.json`; see [legal](legal/README.md)). The steps
 to publish, including cleaning the history, are in the [publishing checklist](release/publishing-checklist.md).

@@ -1,8 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
+import { signIn } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { mockGitGraph } from './support/git-graph.js';
+import { frames } from './support/settled.js';
 
 // The first-visit camera tour. Browser automation never starts it by itself, so every test asks for it with
 // `?intro=force`; `?perf=1` leaves the scene's camera on `window.__aetherPerfRig` so the tests can see where it is.
@@ -17,14 +17,7 @@ async function open(page: Page, theme: 'dark' | 'light' = 'dark') {
       JSON.stringify({ state: { theme: value, locale: 'zh-TW', view: '3d' }, version: 0 }),
     );
   }, theme);
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page);
   await expect(page.locator('main')).toBeVisible();
   await page.goto('/office?intro=force&perf=1');
 }
@@ -48,6 +41,16 @@ const camera = (page: Page) =>
   });
 /** The factor a portrait screen stands the camera farther back by. */
 const portrait = (aspect: number) => Math.min(2.4, Math.max(1, 1.25 / aspect));
+const LAST = /五層樓，一棟建築|個提交|Five decks|commits/; // the caption of the tour's last still
+/** Looks at the camera over and over until `begun()` says the next still has: every look before that must be `still`. */
+async function holds(page: Page, still: Look, begun: () => Promise<boolean>) {
+  for (;;) {
+    const seen = await camera(page);
+    if (await begun()) return;
+    expect(seen).toEqual(still);
+    await frames(page, 6);
+  }
+}
 const caption = (page: Page) => page.locator('.intro-caption');
 const explode = (page: Page) => page.getByRole('button', { name: '分層展開', exact: true });
 
@@ -57,12 +60,13 @@ test('the tour orbits the building at its radius and height, and Esc lands on th
   await open(page);
   await expect(caption(page).getByRole('status')).toHaveText(CAPTION, { timeout: 40000 });
   const a = await camera(page);
-  await page.waitForTimeout(1500);
+  await expect // the orbit is moving
+    .poll(async () => Math.abs((await camera(page)).bearing - a.bearing))
+    .toBeGreaterThan(0.01);
   const b = await camera(page);
   const k = portrait(b.aspect);
   expect(b.radius).toBeCloseTo(ORBIT_RADIUS * k, 0);
   expect(b.y).toBeCloseTo(38, 1); // a level orbit: the height never changes
-  expect(Math.abs(b.bearing - a.bearing)).toBeGreaterThan(0.01); // and it is moving
   await expect(explode(page)).toHaveAttribute('aria-pressed', 'false');
 
   await page.keyboard.press('Escape');
@@ -78,12 +82,15 @@ test('any input interrupts the tour and leaves the camera exactly where it is', 
 }) => {
   await open(page);
   await expect(caption(page)).toBeVisible({ timeout: 40000 });
-  await page.waitForTimeout(1200);
+  const start = await camera(page);
+  await expect // the orbit is under way
+    .poll(async () => Math.abs((await camera(page)).bearing - start.bearing))
+    .toBeGreaterThan(0.01);
   const box = (await page.locator('canvas').boundingBox())!;
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   await expect(caption(page)).toHaveCount(0);
   const stopped = await camera(page);
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(900); // awaits nothing: gives a camera that wrongly kept moving time to show it
   const later = await camera(page);
   for (const key of ['radius', 'y', 'bearing'] as const)
     expect(later[key]).toBeCloseTo(stopped[key], 6); // the controls' own rounding is all that may differ
@@ -114,17 +121,18 @@ test('with reduced motion the tour is three stills, the building spread apart fo
   await open(page);
   await expect(caption(page).getByRole('status')).toHaveText(CAPTION, { timeout: 40000 });
   const first = await camera(page);
-  await page.waitForTimeout(1200);
-  expect(await camera(page)).toEqual(first); // a still does not move
-  await expect(explode(page)).toHaveAttribute('aria-pressed', 'true', { timeout: 6000 });
+  // A still does not move: every look at the camera, until the next still has begun, is the same look.
+  await holds(
+    page,
+    first,
+    async () => (await explode(page).getAttribute('aria-pressed')) === 'true',
+  );
   const second = await camera(page);
   expect(second.y).not.toBeCloseTo(first.y, 0);
-  await page.waitForTimeout(1200);
-  expect(await camera(page)).toEqual(second);
-  await expect(caption(page).getByRole('status')).toHaveText(
-    /五層樓，一棟建築|個提交|Five decks|commits/,
-    { timeout: 6000 },
+  await holds(page, second, async () =>
+    LAST.test((await caption(page).allTextContents()).join('')),
   );
+  await expect(caption(page).getByRole('status')).toHaveText(LAST, { timeout: 6000 });
   const third = await camera(page);
   expect(third.y).not.toBeCloseTo(second.y, 0);
   await expect(caption(page)).toHaveCount(0, { timeout: 8000 });

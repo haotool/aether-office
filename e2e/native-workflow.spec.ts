@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { NATIVE_SESSION, nativeOrigin, signIn } from './support/sign-in.js';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
@@ -23,11 +24,7 @@ test('synthetic provider browser flow: permission, diff, review, commit-bound ve
     )
       errors.push(message.text());
   });
-  await page.goto('http://127.0.0.1:4330');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page, nativeOrigin(), { session: NATIVE_SESSION });
   authenticated = true;
   await page.getByRole('link', { name: '外部觀察', exact: true }).click();
   await expect(

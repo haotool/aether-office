@@ -1,6 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { signIn } from './support/sign-in.js';
 
 type Report = {
   drawCalls: number;
@@ -13,14 +12,7 @@ type Report = {
 };
 
 async function login(page: Page, path = '/') {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
-  await page.goto(path);
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page, path);
 }
 const prefs = (quality: string) => (value: string) => {
   window.localStorage.setItem(

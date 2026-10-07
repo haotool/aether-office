@@ -16,9 +16,9 @@ const SPEECH_POLL_MS = 6000;
 /**
  * The last prompt and reply of every running session, by session key. One query shared by the speech bubbles in the
  * scene and the feed in the panel. While the change stream is live it refetches when a session speaks; otherwise it is
- * polled, only while the page is visible and there is someone to show.
+ * polled, only while the page is visible and there is someone to show. Undefined until the first answer.
  */
-export function useSpeechBySession(enabled: boolean): Record<string, Speech> {
+export function useSpeechBySession(enabled: boolean): Record<string, Speech> | undefined {
   const live = useLinkLive();
   const query = useQuery({
     queryKey: ['speech'],
@@ -29,7 +29,7 @@ export function useSpeechBySession(enabled: boolean): Record<string, Speech> {
     refetchIntervalInBackground: false,
     retry: false,
   });
-  return query.data ?? {};
+  return query.data;
 }
 
 /**

@@ -10,6 +10,9 @@ function run(args, cwd = process.cwd()) {
 }
 run(['node_modules/typescript/bin/tsc', '--noEmit']);
 run(['node_modules/vite/bin/vite.js', 'build'], 'apps/web');
+// The web build inlines third-party code, so its licence and notices travel with it (Settings, About links to them).
+await copyFile('LICENSE', 'apps/web/dist/LICENSE.txt');
+await copyFile('THIRD_PARTY_NOTICES.md', 'apps/web/dist/THIRD_PARTY_NOTICES.txt');
 // The service worker, with the page and its hashed files to keep (see apps/web/src/sw). Written before the files are
 // pre-compressed so that it gets a .br and a .gz like the rest.
 const shell = precacheUrls(await readdir('apps/web/dist', { recursive: true }));

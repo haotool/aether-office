@@ -21,6 +21,8 @@ export function parseChange(data: string): SessionChange | null {
 
 const LOCAL_SESSIONS_KEY: QueryKey = ['local-sessions'];
 const SPEECH_KEY: QueryKey = ['speech'];
+/** Token KPIs, every range: a transcript that moved or appeared changes them. */
+export const USAGE_KEY: QueryKey = ['usage'];
 const transcriptKey = (key: string): QueryKey => ['transcript', key];
 
 /** Every query a set of changes makes stale (deduplicated; a query nobody is looking at is only marked, not fetched). */
@@ -31,12 +33,18 @@ export function queriesFor(changes: readonly SessionChange[]): QueryKey[] {
     if (kinds.some((k) => k !== 'speech')) add(LOCAL_SESSIONS_KEY);
     if (kinds.includes('speech')) add(SPEECH_KEY);
     if (kinds.includes('speech') || kinds.includes('transcript')) add(transcriptKey(key));
+    if (kinds.includes('transcript')) add(USAGE_KEY);
   }
   return [...out.values()];
 }
 
 /** Everything the link feeds, for when changes may have been missed (reconnect after a gap, waking, back online). */
-export const allQueries = (): QueryKey[] => [LOCAL_SESSIONS_KEY, SPEECH_KEY, ['transcript']];
+export const allQueries = (): QueryKey[] => [
+  LOCAL_SESSIONS_KEY,
+  SPEECH_KEY,
+  ['transcript'],
+  USAGE_KEY,
+];
 
 const BACKOFF_BASE_MS = 1000;
 const BACKOFF_MAX_MS = 30_000;

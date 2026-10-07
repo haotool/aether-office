@@ -10,12 +10,15 @@ import {
   queriesFor,
   type LinkAction,
   type LinkState,
+  USAGE_KEY,
   type SessionChange,
 } from './live-link.js';
 
 const STREAM_URL = '/api/local-sessions/stream';
 /** Changes that arrive together become one refresh. */
 const BATCH_MS = 120;
+/** A growing transcript changes every second, the token KPIs are refetched at most this often (the server rescans on each). */
+const USAGE_GAP_MS = 5_000;
 
 /** A random number in [0, 1) that spreads reconnects apart (not a secret). */
 const jitter = () => crypto.getRandomValues(new Uint32Array(1))[0]! / 2 ** 32;
@@ -43,10 +46,23 @@ export function useSessionStream(enabled: boolean) {
     let batch: ReturnType<typeof setTimeout> | undefined;
     let pending: SessionChange[] = [];
     let attempt = 0;
+    let usageTimer: ReturnType<typeof setTimeout> | undefined;
+    let usageAt = 0;
     let last: number | null = null;
     const refresh = (keys = queriesFor(pending)) => {
       pending = [];
-      for (const queryKey of keys) void client.invalidateQueries({ queryKey });
+      for (const queryKey of keys) {
+        if (queryKey !== USAGE_KEY) void client.invalidateQueries({ queryKey });
+        else if (!usageTimer)
+          usageTimer = setTimeout(
+            () => {
+              usageTimer = undefined;
+              usageAt = Date.now();
+              void client.invalidateQueries({ queryKey });
+            },
+            Math.max(0, usageAt + USAGE_GAP_MS - Date.now()),
+          );
+      }
     };
     const stop = () => {
       source?.close();
@@ -115,6 +131,7 @@ export function useSessionStream(enabled: boolean) {
     return () => {
       stop();
       clearTimeout(batch);
+      clearTimeout(usageTimer);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('offline', onOffline);
       window.removeEventListener('online', resume);

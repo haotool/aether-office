@@ -1,4 +1,4 @@
-import { Globe2, Moon, Sprout, Sun } from 'lucide-react';
+import { Globe2, Moon, Sprout, Sun, Wind } from 'lucide-react';
 import { usePreferences, useTheme } from '../state.js';
 import { useT } from '../ui.js';
 import { PairPhoneButton } from './ConnectPhone.js';
@@ -33,6 +33,14 @@ export function QuickPrefs({ canPair }: { canPair: boolean }) {
       >
         <Sprout size={18} />
         {t('beanstalk')}
+      </button>
+      <button
+        className="secondary"
+        aria-pressed={prefs.life.calm}
+        onClick={() => prefs.set({ life: { ...prefs.life, calm: !prefs.life.calm } })}
+      >
+        <Wind size={18} />
+        {t('stLifeCalmLabel')}
       </button>
       {canPair && <PairPhoneButton variant="text" />}
       <label>

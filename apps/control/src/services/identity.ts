@@ -114,6 +114,23 @@ export function sessionActor(ctx: Context, session: string, csrf?: string): Acto
   }
   return identityActor(ctx, row.identityId);
 }
+/**
+ * A new CSRF token for a signed-in browser whose page no longer holds one (a closed tab, a reload in a new tab). The session
+ * cookie is the credential: the old token stops working in the same statement, so there is no moment with two.
+ */
+export function rotateCsrf(ctx: Context, session: string): { csrf: string; expiresAt: number } {
+  const who = sessionActor(ctx, session);
+  if (who.role === 'runner' || who.role === 'agent')
+    throw new DomainError('BROWSER_ROLE_REQUIRED', 403);
+  const csrf = secret();
+  const row = ctx.sqlite
+    .prepare(
+      'UPDATE browser_sessions SET csrfHash=? WHERE tokenHash=? AND expiresAt>? RETURNING expiresAt',
+    )
+    .get(hash(csrf), hash(session), ctx.now()) as { expiresAt: number } | undefined;
+  if (!row) throw new DomainError('AUTH_REQUIRED', 401);
+  return { csrf, expiresAt: row.expiresAt };
+}
 export function revoke(ctx: Context, by: Actor, id: string): void {
   authorize(by, 'identity.manage');
   const target = identityActor(ctx, id);

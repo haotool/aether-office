@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { settled } from './support/settled.js';
 import AxeBuilder from '@axe-core/playwright';
 import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
 import { mkdirSync, realpathSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
@@ -86,7 +87,7 @@ for (const theme of ['dark', 'light'] as const) {
     await rows.filter({ hasText: '的有效設定除了 decision' }).click();
     const tag = page.locator('button.scene-label.selected');
     await expect(tag).toBeVisible({ timeout: 15000 });
-    await page.waitForTimeout(2500); // the camera's flight ends
+    await settled(tag); // the camera's flight ends
 
     // The name tag: a short label, brackets balanced, no id prefix; the full title and the id are elsewhere.
     const name = (await tag.locator('.tag-name').textContent()) ?? '';

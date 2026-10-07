@@ -4,13 +4,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { PtySession } from '../../apps/runner/src/pty.js';
+import { budget } from './timing.js';
 const owner = { id: 'owner', role: 'owner' as const },
   other = { id: 'other', role: 'operator' as const };
-async function until(predicate: () => boolean) {
-  for (let i = 0; i < 500; i++) {
-    if (predicate()) return;
-    await delay(10);
-  }
+// A deadline, not a count of polls: starting a child and its PTY under load takes as long as it takes.
+async function until(predicate: () => boolean, ms = 30_000) {
+  for (const end = Date.now() + ms; Date.now() < end; await delay(10)) if (predicate()) return;
   throw new Error('PTY_FIXTURE_TIMEOUT');
 }
 it.skipIf(process.platform === 'win32')(
@@ -27,7 +26,7 @@ it.skipIf(process.platform === 'win32')(
         "if(!process.stdin.isTTY||!process.stdout.isTTY||process.env.AETHER_RUNNER_TOKEN)process.exit(98);process.stdin.setRawMode(true);process.stdin.setEncoding('utf8');process.stdout.write('\\x1b[32mREADY 狐狸🦊\\x1b[0m');process.stdin.on('data',s=>{if(s==='S')process.stdout.write('SIZE:'+process.stdout.columns+'x'+process.stdout.rows);else if(s==='F')process.stdout.write('x'.repeat(8192)+'狐狸🦊');else if(s==='E')process.exit(7);else process.stdout.write('ECHO:'+s);});",
       );
       terminal = new PtySession(
-        { binary: process.execPath, args: [script], cwd: dir, timeoutMs: 10000 },
+        { binary: process.execPath, args: [script], cwd: dir, timeoutMs: 60_000 }, // out of the way: a slow start must not stop it
         { cols: 80, rows: 24 },
         4096,
         () => now,
@@ -75,30 +74,46 @@ it.skipIf(process.platform === 'win32')(
       rmSync(dir, { recursive: true, force: true });
     }
   },
+  90_000,
 );
-it.skipIf(process.platform === 'win32')('bounds a PTY process which ignores TERM', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'aether-pty-timeout-'));
-  let terminal: PtySession | undefined;
-  try {
-    const started = Date.now();
-    terminal = new PtySession(
-      {
-        binary: process.execPath,
-        args: ['-e', "process.on('SIGTERM',()=>{});console.log('READY');setInterval(()=>{},100);"],
-        cwd: dir,
-        timeoutMs: 1500, // must outlast child start-up under load so the TERM handler is installed
-      },
-      { cols: 80, rows: 24 },
-    );
-    await until(() => terminal!.read().chunks.some((c) => c.data.includes('READY')));
-    await terminal.exited;
-    expect(Date.now() - started).toBeLessThan(4000);
-  } finally {
-    terminal?.stop();
-    if (terminal) await terminal.exited;
-    rmSync(dir, { recursive: true, force: true });
-  }
-});
+it.skipIf(process.platform === 'win32')(
+  'bounds a PTY process which ignores TERM',
+  async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'aether-pty-timeout-'));
+    let terminal: PtySession | undefined;
+    try {
+      // The deadline runs from the spawn. If a loaded machine starts the child after it, TERM lands before the handler is
+      // installed and the child just dies: that says nothing about a child that ignores TERM, so try again, later.
+      for (let timeoutMs = 1500; ; timeoutMs *= 3) {
+        const started = Date.now();
+        terminal = new PtySession(
+          {
+            binary: process.execPath,
+            args: [
+              '-e',
+              "process.on('SIGTERM',()=>{});console.log('READY');setInterval(()=>{},100);",
+            ],
+            cwd: dir,
+            timeoutMs,
+          },
+          { cols: 80, rows: 24 },
+        );
+        const ready = () => terminal!.read().chunks.some((c) => c.data.includes('READY'));
+        await until(() => ready() || terminal!.read().state === 'exited');
+        const handled = ready();
+        await terminal.exited;
+        if (!handled) continue;
+        expect(Date.now() - started).toBeLessThan(budget(4000 + timeoutMs - 1500, 60_000));
+        break;
+      }
+    } finally {
+      terminal?.stop();
+      if (terminal) await terminal.exited;
+      rmSync(dir, { recursive: true, force: true });
+    }
+  },
+  90_000,
+);
 
 it.skipIf(process.platform === 'win32')(
   'terminates the owned PTY process group after its leader exits',

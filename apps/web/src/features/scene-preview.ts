@@ -144,14 +144,18 @@ const nameHash = (name: string) => [...name].reduce((h, c) => (h * 31 + c.charCo
 /** A stand-in screen for the opt-in previews (`?intensity=`, `?compact=`): invented on purpose, never shown otherwise. It varies by member so the desks differ. */
 
 /** What a deterministic effect preview asks for: draw this effect as it looks `t` ms after it started. */
-export type PreviewParams = { effect: string; t: number };
+export type PreviewParams = { effect: string; t: number; loop?: true };
 
-const EFFECT_ID = /^[a-z][a-z0-9-]{0,39}$/;
+/** An effect id, with an optional `:value` for the ones that read one (`ci-stack:0` is the red CI stack, `tech-debt:60` a bigger pile). */
+const ONE_EFFECT = '[a-z][a-z0-9-]{0,39}(?::\\d{1,6})?';
+/** One effect id, or up to six joined by a comma (`rubber-duck,ci-lamp`) to put several on show at once. */
+const EFFECT_ID = new RegExp(`^${ONE_EFFECT}(,${ONE_EFFECT}){0,5}$`);
 
 /**
- * `?preview=life&effect=<id>&t=<ms>`: the address of one frame of one office-life effect, so a contact sheet can render
- * every effect at fixed times. Null when the address is not a preview or names no valid effect. `t` defaults to 0 and
+ * `?preview=life&effect=<id>&t=<ms>`: the address of one frame of one office-life effect (or of several, joined by commas),
+ * so a contact sheet can render every effect at fixed times. Null when the address is not a preview or names no valid effect. `t` defaults to 0 and
  * must be a whole number of milliseconds (anything else is rejected, not rounded, so a sheet never shows a wrong frame).
+ * `loop=1` plays the effects on from `t`, over and over, instead of holding the frame (to measure what motion costs).
  * Accepts a full URL, a path with a query, or just a query string.
  */
 export function previewParams(url: string): PreviewParams | null {
@@ -160,8 +164,12 @@ export function previewParams(url: string): PreviewParams | null {
   const effect = params.get('effect');
   if (params.get('preview') !== 'life' || effect === null || !EFFECT_ID.test(effect)) return null;
   const raw = params.get('t');
-  if (raw === null) return { effect, t: 0 };
-  return /^\d{1,7}$/.test(raw) ? { effect, t: Number(raw) } : null;
+  if (raw !== null && !/^\d{1,7}$/.test(raw)) return null;
+  return {
+    effect,
+    t: raw === null ? 0 : Number(raw),
+    ...(params.get('loop') === '1' ? { loop: true as const } : {}),
+  };
 }
 
 /** A stand-in screen for the opt-in previews (`?intensity=`, `?compact=`): invented on purpose, never shown otherwise. */

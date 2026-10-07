@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { signIn } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -92,9 +93,6 @@ async function open(
   page: Page,
   options: { theme?: 'dark' | 'light'; reducedMotion?: boolean } = {},
 ) {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
   await page.addInitScript(
     ([theme, reduced]) =>
       window.localStorage.setItem(
@@ -113,11 +111,7 @@ async function open(
       ),
     [options.theme ?? 'dark', options.reducedMotion ?? true] as const,
   );
-  await page.goto('/office');
-  await page
-    .getByLabel('Access token', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: 'Enter office', exact: true }).click();
+  await signIn(page, '/office');
 }
 
 // 1200+300+800 (a) + 100+400 (b, counted once) + Codex 2000 new input + 400 output + 200 reasoning = 5400 tokens today.
@@ -243,3 +237,21 @@ for (const theme of ['dark', 'light'] as const)
     ).toBeVisible();
     expect((await scan()).violations).toEqual([]);
   });
+
+test('a session that starts while the office is open is counted in seconds, not at the 30 s safety net', async ({
+  page,
+}) => {
+  await open(page);
+  const tokens = page.getByRole('group', { name: 'KPI dashboard' }).locator('.kpi-cell').first();
+  await expect(tokens).toContainText(TOKENS_TODAY, { timeout: 30_000 });
+  const late = join(home, '.claude/projects/p/kpi-late.jsonl');
+  try {
+    writeLines(late, [
+      JSON.stringify({ type: 'user', cwd: repo }),
+      claudeLine('msg_late', new Date().toISOString(), { i: 1000 }, { cwd: repo }),
+    ]);
+    await expect(tokens).toContainText('6.4K', { timeout: 15_000 });
+  } finally {
+    rmSync(late, { force: true });
+  }
+});

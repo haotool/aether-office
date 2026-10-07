@@ -1,26 +1,18 @@
 import { test, expect } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { signIn } from './support/sign-in.js';
 
 // The camera runs itself: it names what it is on, hands over at a touch, and takes the camera back after a quiet spell.
 test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 
 test('the director frames a shot, yields to a touch and comes back', async ({ page }) => {
   test.setTimeout(120000);
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
   await page.addInitScript(() =>
     window.localStorage.setItem(
       'aether-ui-preferences',
       JSON.stringify({ state: { autoCamera: true, view: '3d', locale: 'zh-TW' }, version: 0 }),
     ),
   );
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).tap();
+  await signIn(page, '/', { tap: true });
   await expect(page.locator('canvas')).toBeVisible({ timeout: 20000 });
   const caption = page.locator('.shot-caption');
   await expect(caption).toBeVisible({ timeout: 20000 }); // a sweep of the floor when nothing is going on
@@ -29,7 +21,10 @@ test('the director frames a shot, yields to a touch and comes back', async ({ pa
     'true',
   );
   // A touch of the camera hands it to the person; the caption goes with the shot.
-  const box = (await page.locator('canvas').boundingBox())!;
+  // (a canvas that has not been laid out yet is the browser's 300 x 150 default: a touch in its middle lands on the KPI strip)
+  const canvas = page.locator('canvas');
+  await expect.poll(async () => (await canvas.boundingBox())?.height ?? 0).toBeGreaterThan(400);
+  const box = (await canvas.boundingBox())!;
   await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.move(box.x + 100, box.y + 300);
   await page.mouse.down();

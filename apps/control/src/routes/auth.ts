@@ -4,6 +4,8 @@ import {
   identityActor,
   login,
   openSession,
+  rotateCsrf,
+  sessionActor,
 } from '../services/identity.js';
 import { MAX_ATTEMPTS, pruneAttempts } from '../services/attempts.js';
 import { PAIRING_TTL_MS, lanOrigins, pairingLinks } from '../services/pairing.js';
@@ -103,6 +105,20 @@ export function authRoutes({
     };
   });
   app.get('/api/session', async (request) => ({ actor: actor(request), mode: control.ctx.mode }));
+  // A page that is signed in but lost its CSRF token (a closed tab, an iOS-discarded tab) asks for a new one. The session
+  // cookie is the credential (HttpOnly, SameSite=Strict, the Host and Origin checks of every request), so a bearer token
+  // never counts, and the request must name its Origin: a cross-site page cannot send the cookie nor read the answer.
+  app.post('/api/session/csrf', async (request) => {
+    if (request.headers['authorization']) throw new DomainError('COOKIE_SESSION_REQUIRED', 403);
+    if (!request.headers.origin) throw new DomainError('ORIGIN_FORBIDDEN', 403);
+    const session = request.cookies['aether_session'];
+    if (!session) throw new DomainError('AUTH_REQUIRED', 401);
+    sessionActor(control.ctx, session); // an unknown or expired session is a 401 and is not counted below
+    limited(`csrf:${request.ip}`);
+    const rotated = rotateCsrf(control.ctx, session);
+    request.log.info({ event: 'session.csrf.rotated' }, 'a browser session got a new CSRF token');
+    return rotated;
+  });
   app.post('/api/logout', async (request, reply) => {
     actor(request);
     const token = request.cookies['aether_session'];

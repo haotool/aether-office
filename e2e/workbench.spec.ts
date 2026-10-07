@@ -1,15 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { signIn } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
 
 test('real HTTP journey: authenticate, inspect office, create and assign work, persist message and layout', async ({
   page,
   context,
 }) => {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
   let authenticated = false;
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
@@ -24,11 +20,7 @@ test('real HTTP journey: authenticate, inspect office, create and assign work, p
     )
       errors.push(message.text());
   });
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page);
   authenticated = true;
   await expect(page.getByRole('heading', { name: '軌道辦公室', exact: true })).toBeVisible();
   // Trace starts after credential input; no secret-bearing login request is recorded.
@@ -119,15 +111,8 @@ test('real HTTP journey: authenticate, inspect office, create and assign work, p
 test('a phone gets the 3D office by default, with the 2D list one tap away, and a keyboard-operable modal', async ({
   page,
 }) => {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page);
   await expect(page.locator('.phone-office')).toBeVisible(); // the phone office has no heading: the scene is the page
   await expect(page.locator('canvas')).toBeVisible();
   await page.getByRole('button', { name: '2D', exact: true }).click();

@@ -5,6 +5,8 @@ import { driftParams, leanAt, yawAt } from './behavior.js';
 import type { Seat } from './director.js';
 import { engagement, nodPitch, turnToward, type Engagement } from './interplay.js';
 import { animationInterval } from './perf-control.js';
+import { turnWeight } from './pose-cues.js';
+import type { TurnCue } from './use-pose-cues.js';
 
 /** How quickly a member's turn follows its target, per second (an exponential approach, so it never snaps). */
 const FOLLOW = 7;
@@ -23,6 +25,7 @@ export function Poser({
   seat,
   seed,
   engagements,
+  turn: asked,
   reducedMotion,
   children,
 }: {
@@ -30,6 +33,8 @@ export function Poser({
   /** The member's id: its sway is its own. */
   seed: string;
   engagements: readonly Engagement[] | undefined;
+  /** A turn of the chair a life effect asked for; a message to a neighbour takes precedence. */
+  turn?: TurnCue | undefined;
   reducedMotion: boolean;
   children: ReactNode;
 }) {
@@ -43,7 +48,9 @@ export function Poser({
     if (!target) return;
     const latest = reducedMotion ? undefined : engagements?.[0];
     const age = latest ? Date.now() - latest.at : Infinity;
-    const wanted = latest ? turnToward(seat, latest.partner) * engagement(age) : 0;
+    const posed =
+      asked && !reducedMotion ? asked.yaw * turnWeight(Date.now() - asked.at, asked.holdMs) : 0;
+    const wanted = latest ? turnToward(seat, latest.partner) * engagement(age) : posed;
     const pitch = latest?.receives ? nodPitch(age) : 0;
     const calm = wanted === 0 && turn.current === 0 && pitch === 0;
     if (calm && reducedMotion) return;

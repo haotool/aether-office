@@ -6,11 +6,14 @@ import type { SceneCompaction } from './context.js';
 import type { Pulse } from './director.js';
 import type { FloorKpiBadge } from './FloorKpi.js';
 import type { IntroProps } from './intro/use-intro-tour.js';
+import type { LifeInput } from './life/signals.js';
 import type { PerfReport } from './perf.js';
 import type { BranchInfo, Quality } from './scene-types.js';
 import type { ScreenFacts } from './screen-facts.js';
 import type { StalkCommit } from './stalk-layout.js';
 import type { SceneSpeech } from './Speech.js';
+import type { SquadInput } from './squad/squad-model.js';
+import type { SquadPrefs } from './squad/SquadLayer.js';
 import type { SeatMove } from './use-seat-drag.js';
 import type { CharacterMenuContext, GroupBarContext } from './use-scene-interaction.js';
 
@@ -87,4 +90,10 @@ export type OfficeSceneProps = {
   onOpenFloorKpi?: (floor: number) => void;
   /** The first-visit camera tour (an orbit, the exploded view, the rise to the crown). Without it there is no tour and no Replay. */
   intro?: IntroProps;
+  /** Office life: the signals the page derived from real sessions, the person's settings and, for a contact sheet, a preview. Decorative. */
+  life?: LifeInput;
+  /** Each supervisor with its subagents: they sit in a squad zone beside the supervisor's desk. Without it subagents are ordinary members. */
+  squads?: readonly SquadInput[];
+  /** Squad effects the person turned down: Calm mode and the relation effects (the office-life settings). */
+  squadPrefs?: SquadPrefs;
 };

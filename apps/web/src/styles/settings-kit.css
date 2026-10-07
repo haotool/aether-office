@@ -94,6 +94,27 @@
   }
 }
 
+/* The kinds of office-life moment: a name and its switch per line, in columns when the group is wide. */
+.skinds {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: var(--space-8) var(--space-16);
+  margin: var(--space-12) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.skinds li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  min-width: 0;
+}
+.skinds span {
+  overflow-wrap: anywhere;
+  font-size: var(--fs-body);
+}
+
 mark {
   background: color-mix(in srgb, var(--gold) 30%, transparent);
   color: inherit;

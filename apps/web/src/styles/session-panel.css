@@ -178,6 +178,44 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* The office's recent little moments for this member: a closed fold, every line marked decorative */
+.conv-moments {
+  font-size: var(--fs-label);
+}
+.conv-moments summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  min-height: var(--target-fine);
+  color: var(--muted);
+  cursor: pointer;
+}
+.moments-count {
+  font-variant-numeric: tabular-nums;
+}
+.moments-badge {
+  padding: 0 var(--space-6);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  color: var(--dim);
+}
+.conv-moments ul {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0 0 var(--space-6);
+  list-style: none;
+  color: var(--muted);
+}
+.conv-moments li {
+  display: flex;
+  gap: var(--space-8);
+}
+.conv-moments time {
+  flex: none;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
 /* The context window: a thin gradient bar, the unused part covered */
 .ctx-meter {
   position: absolute;

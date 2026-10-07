@@ -1,6 +1,6 @@
 import { devices, expect, test } from '@playwright/test';
+import { signIn } from './support/sign-in.js';
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 const runtime = () =>
   JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as { directory: string };
@@ -20,11 +20,7 @@ test('a phone scans the link, ends up signed in without a token, and the link wo
   page,
   browser,
 }) => {
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime().directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: /進入辦公室/ }).click();
+  await signIn(page);
   // "Open on your phone" is in the top bar of every page: no digging through Settings.
   const made = page.waitForResponse(
     (r) => r.url().endsWith('/api/pairings') && r.request().method() === 'POST',

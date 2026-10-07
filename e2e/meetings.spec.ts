@@ -1,19 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { signIn } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
 
 test('a bounded meeting is started, shows its budget, and concludes into a pending knowledge proposal', async ({
   page,
 }) => {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page);
   await page.getByRole('link', { name: /^訊息/ }).click();
   await page.getByLabel('主題', { exact: true }).fill('選擇佇列');
   await page.getByLabel('要成員回答的問題', { exact: true }).fill('Redis 還是 SQS？');

@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { signIn } from './support/sign-in.js';
 
 // What a person does from a phone, with taps and not clicks: sign in, write a prompt as a task, hand it to a member,
 // send a message, look at a member, go to another page through the drawer, sign out. Runs in Chrome with a phone's
@@ -11,16 +10,9 @@ test('from a phone: sign in, give a member a task, message a member, and sign ou
   page,
 }) => {
   test.setTimeout(120000);
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
   const tab = async (name: RegExp) => page.locator('.tabbar').getByRole('link', { name }).tap();
   const drawer = async () => page.getByRole('button', { name: '更多', exact: true }).tap();
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).tap();
+  await signIn(page, '/', { tap: true });
   await expect(page.locator('.phone-office')).toBeVisible(); // the phone office has no heading: the scene is the page
 
   const title = `手機派工 ${Date.now()}`;

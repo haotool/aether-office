@@ -1,5 +1,8 @@
 # Office Life: work plan
 
+> **Design record.** The work plan the iterations were run from (briefs for engineers and agents). It is history, not a to-do
+> list; the result is described in [features](../features.md).
+
 Companion to [office-life.md](office-life.md), the spec. Section references (§) point there. Each brief below is
 self-contained: it can be handed to one engineer or agent working in its own worktree from `aether/product`.
 
@@ -198,6 +201,16 @@ Size: S ≈ 1–2 days, M ≈ 3–5 days, L ≈ 1–2 weeks.
 | **Dependencies / merge** | **After the Settings redesign** (`SettingsPage.tsx`) and after I2 (both add `state.ts` keys; bump the persisted-store version once). No dependency on I1. Must not touch `MemberScreen`/`screen-*` (the kernel panic is our own quad). |
 | **Parallel** | With I1, I3, I5 and I7. |
 | **DoD** | Checks green; contact sheets reviewed; ledger entry with "decorative" noted. |
+
+**Status.** Wave 1 shipped with 12 rows (R8, R9, R14, R17, R27, R32, R36, R38, R41, R44, R53, R56), the registry, the
+scheduler with its arbiter, one shared sprite pool, the aria log, the settings and Calm mode, and the persisted-store version 1
+(`life`). Which rows differ from the table and which are pending is listed under the registry table in
+[office-life.md](office-life.md#53-registry). The scheduler and the log are `life/schedule.ts` and `life/aria-log.ts` (plain DOM,
+mounted by `LifeLayer`, so there is no `LifeLog.tsx`). Left for later: the "recent moments" chip in the conversation header, the
+Quick Open hook (R57) and the Ctrl+C hook (R55). The settings have no Replay button: the building panel has one. The character
+poses (the duck turn, `nod`, `shrug`, `stretch`, `celebrate`) were added afterwards through one pose registry (spec 5.6), R21 and
+R43 with them, the squad layers were measured on the high and phone tiers and made cheaper (spec 4.9), and the beam's reference rates
+were calibrated on real transcripts (spec 4.4).
 
 ### I7. Signal enrichment, server side (M)
 

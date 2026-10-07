@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { settled } from './support/settled.js';
 import AxeBuilder from '@axe-core/playwright';
 import {
   NAME,
@@ -80,13 +81,16 @@ test('the 3D model answers like its tag: a pointer cursor and a card on hover, a
   // The model stands below its tag: look for it with the pointer, as a person would.
   const over = async (x: number, y: number) => {
     await page.mouse.move(x, y);
-    await page.waitForTimeout(450);
-    return (
-      (await page
-        .getByRole('tooltip')
-        .filter({ hasText: NAME(1) })
-        .count()) > 0
-    );
+    // The scene sets the cursor as the pointer enters a model; its card follows after a moment.
+    if ((await page.evaluate(() => document.body.style.cursor)) !== 'pointer') return false;
+    return page
+      .getByRole('tooltip')
+      .filter({ hasText: NAME(1) })
+      .waitFor({ timeout: 5000 })
+      .then(
+        () => true,
+        () => false,
+      );
   };
   let hit: [number, number] | null = null;
   for (const dy of [100, 130, 160, 190]) {
@@ -301,7 +305,7 @@ test.describe('on a phone', () => {
     );
     const tag = page.locator('button.scene-label.selected');
     await expect(tag).toBeVisible({ timeout: 15000 });
-    await page.waitForTimeout(2500);
+    await settled(tag); // the flight ends
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await tag.tap();
     const sheet = page.getByRole('dialog', { name: new RegExp(NAME(1)) });
@@ -325,7 +329,6 @@ test.describe('on a phone', () => {
       bubbles: true,
     };
     await tag.dispatchEvent('pointerdown', at);
-    await page.waitForTimeout(800); // held
     await expect(sheet).toBeVisible();
     await tag.dispatchEvent('pointerup', at);
     // The hold's own click is not another tap: the menu is still there, once.

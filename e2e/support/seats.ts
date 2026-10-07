@@ -1,7 +1,9 @@
 import { expect, type Page } from '@playwright/test';
+import { settled } from './settled.js';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { signIn } from './sign-in.js';
 
 // Shared by the specs that drive the characters of the 3D office: three synthetic Claude transcripts in the fixture home
 // (no process, no model) for a repository of their own, and the steps that bring the page to them.
@@ -58,9 +60,6 @@ export async function enter(
   project = 'fixture-seats',
   theme: 'dark' | 'light' = 'dark',
 ) {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
   await page.addInitScript(
     ([l, th]) => {
       window.localStorage.setItem(
@@ -81,13 +80,7 @@ export async function enter(
     },
     [locale, theme] as const,
   );
-  await page.goto('/');
-  await page
-    .getByLabel(locale === 'en' ? 'Access token' : '存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page
-    .getByRole('button', { name: locale === 'en' ? 'Enter office' : '進入辦公室', exact: true })
-    .click();
+  await signIn(page);
   const picker = page.locator('.project-picker select');
   await expect(picker.locator('option', { hasText: project })).toBeAttached({
     timeout: 20000,
@@ -103,7 +96,7 @@ export async function bringIntoView(page: Page, n: number) {
     .click();
   const tag = page.locator('button.scene-label.selected');
   await expect(tag).toBeVisible({ timeout: 15000 });
-  await page.waitForTimeout(2500); // the flight ends
+  await settled(tag); // the flight ends
   return tag;
 }
 /** Tells the page what each session's process is doing (a response edit; no process exists and none is touched). */

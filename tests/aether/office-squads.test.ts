@@ -41,7 +41,14 @@ it('groups subagents under their supervisor with status, times and tool facts; s
   const squads = squadsOf([
     session('claude:a', [
       child({ id: 'x1', startedAt: 10, tools: { count: 4, last: 'Read', lastAt: 12 } }),
-      child({ id: 'x2', type: 'Plan', status: 'finished', startedAt: 11, endedAt: 20 }),
+      child({
+        id: 'x2',
+        type: 'Plan',
+        status: 'finished',
+        startedAt: 11,
+        endedAt: 20,
+        result: { summary: 'Found 3 call sites', error: true, chars: 18 },
+      }),
     ]),
     session('claude:b', []),
   ]);
@@ -57,6 +64,8 @@ it('groups subagents under their supervisor with status, times and tool facts; s
           endedAt: null,
           toolCount: 4,
           lastTool: 'Read',
+          toolAt: 12,
+          result: null,
         }),
         expect.objectContaining({
           id: 'local:claude:a:sub:x2',
@@ -65,6 +74,8 @@ it('groups subagents under their supervisor with status, times and tool facts; s
           endedAt: 20,
           toolCount: 0,
           lastTool: null,
+          toolAt: null,
+          result: { error: true }, // only the flag crosses into the scene, never the summary
         }),
       ],
     },

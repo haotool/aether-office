@@ -1,19 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { signIn } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
 
 test('starting a frontend/backend workflow creates parallel tasks and a dependent integration step', async ({
   page,
 }) => {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
-  await page.goto('/');
-  await page
-    .getByLabel('存取權杖', { exact: true })
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: '進入辦公室', exact: true }).click();
+  await signIn(page);
   await page.getByRole('link', { name: /^任務/ }).click();
   await page.getByRole('button', { name: '從模板啟動工作流程', exact: true }).click();
   const dialog = page.getByRole('dialog');

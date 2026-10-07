@@ -37,6 +37,15 @@ export {
   type ContextLevel,
   type SceneCompaction,
 } from './context.js';
+export {
+  DEFAULT_LIFE_PREFS,
+  LIFE_CATEGORIES,
+  type LifeInput,
+  type LifeMoment,
+  type LifePrefs,
+  type LifeSignal,
+  type MemeCategory,
+} from './life/signals.js';
 export { ProviderMark, type MarkProvider } from './provider-marks.js';
 export { EMOTES, type Emote, type EmoteId } from './emotes.js';
 export type { SeatMove } from './use-seat-drag.js';

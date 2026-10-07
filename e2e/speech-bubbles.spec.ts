@@ -1,15 +1,11 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
+import { signIn } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 // `?speech=1` gives every member a stand-in prompt and a Markdown reply (bold, code, bullets, a heading, Chinese text), to
 // look at the bubbles without real sessions. The bubble must show them as styling, never as raw Markdown, and a reply taller
 // than the bubble scrolls by itself until the pointer holds it.
 async function open(page: Page, reducedMotion: boolean) {
-  const runtime = JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as {
-    directory: string;
-  };
   await page.emulateMedia({ reducedMotion: reducedMotion ? 'reduce' : 'no-preference' });
   await page.addInitScript(
     (reduced) =>
@@ -29,11 +25,7 @@ async function open(page: Page, reducedMotion: boolean) {
       ),
     reducedMotion,
   );
-  await page.goto('/office?speech=1');
-  await page
-    .getByLabel(/^(存取權杖|Access token)$/)
-    .fill(readFileSync(join(runtime.directory, 'owner-token'), 'utf8').trim());
-  await page.getByRole('button', { name: /^(進入辦公室|Enter office)$/ }).click();
+  await signIn(page, '/office?speech=1');
   // The selected member speaks first; the demo has nobody working to speak unasked.
   await page.locator('.team-chip', { hasText: 'Atlas' }).click();
 }

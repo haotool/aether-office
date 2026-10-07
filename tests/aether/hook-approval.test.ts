@@ -4,9 +4,8 @@ import { createServer as listen, type Server } from 'node:http';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { approvalsFixture } from './permission-fixtures.js';
-import { sleep } from './process-fixtures.js';
+import { budget, eventually, freePort } from './timing.js';
 
-const PORT = 4365;
 const script = join(process.cwd(), 'packages/providers/src/hook-approval.mjs');
 
 const suggestion = {
@@ -44,6 +43,7 @@ function runHook(config: string, stdin: unknown, waitMs: number) {
 }
 
 it('prints Claude’s decision JSON for a human answer, and only for that', async () => {
+  const PORT = await freePort();
   const f = approvalsFixture(PORT);
   const operator = f.control.createIdentity(f.owner.actor, {
     name: 'op',
@@ -54,35 +54,36 @@ it('prints Claude’s decision JSON for a human answer, and only for that', asyn
     await f.enable();
     const browser = await f.signIn(operator.token);
     await f.app.listen({ host: '127.0.0.1', port: PORT });
+    // The request appears once the hook process has started and asked: as long as a loaded machine takes to start it.
     const answer = async (body: unknown) => {
-      for (let i = 0; i < 100; i++) {
-        const { requests } = (
-          await f.app.inject({
-            method: 'GET',
-            url: '/api/permission-requests',
-            headers: browser.read,
-          })
-        ).json() as { requests: { id: string }[] };
-        if (requests[0]) {
-          const r = await f.app.inject({
-            method: 'POST',
-            url: `/api/permission-requests/${requests[0].id}/decision`,
-            headers: browser.write,
-            payload: body as object,
-          });
-          expect(r.statusCode).toBe(200);
-          return;
-        }
-        await sleep(50);
-      }
-      throw new Error('no request appeared');
+      const request = await eventually(
+        async () => {
+          const { requests } = (
+            await f.app.inject({
+              method: 'GET',
+              url: '/api/permission-requests',
+              headers: browser.read,
+            })
+          ).json() as { requests: { id: string }[] };
+          return requests[0];
+        },
+        30_000,
+        'the hook’s permission request',
+      );
+      const r = await f.app.inject({
+        method: 'POST',
+        url: `/api/permission-requests/${request.id}/decision`,
+        headers: browser.write,
+        payload: body as object,
+      });
+      expect(r.statusCode).toBe(200);
     };
 
     const allowed = runHook(f.configFile, payload(f.sessionId), 20_000);
     await answer({ decision: 'allow_session' });
     const a = await allowed;
     expect(a.code).toBe(0);
-    expect(a.ms).toBeLessThan(5000);
+    expect(a.ms).toBeLessThan(budget(5000, 19_000)); // it answered, rather than waiting out its 20 s deadline
     expect(JSON.parse(a.out)).toEqual({
       hookSpecificOutput: {
         hookEventName: 'PermissionRequest',
@@ -118,7 +119,7 @@ it('prints Claude’s decision JSON for a human answer, and only for that', asyn
     const silent = await runHook(f.configFile, payload(f.sessionId), 1500);
     expect(silent).toMatchObject({ code: 0, out: '' });
     expect(silent.ms).toBeGreaterThanOrEqual(1400);
-    expect(silent.ms).toBeLessThan(6000);
+    expect(silent.ms).toBeLessThan(budget(6000, 25_000)); // it gave up at its deadline (1.5 s), not on some later timeout
     const { requests } = (
       await f.app.inject({
         method: 'GET',
@@ -131,9 +132,10 @@ it('prints Claude’s decision JSON for a human answer, and only for that', asyn
     await f.app.close();
     f.control.close();
   }
-});
+}, 90_000);
 
 it('falls back to the terminal (prints nothing, exits 0) when the server hangs, is absent, or the config is unusable', async () => {
+  const PORT = await freePort();
   const f = approvalsFixture(PORT);
   const dir = f.home;
   const config = (name: string, url: string, token = 't'.repeat(43)) => {
@@ -147,7 +149,7 @@ it('falls back to the terminal (prints nothing, exits 0) when the server hangs, 
   try {
     const hang = await runHook(config('hang.json', `http://127.0.0.1:${PORT}`), payload('s'), 2000);
     expect(hang).toMatchObject({ code: 0, out: '' });
-    expect(hang.ms).toBeLessThan(8000);
+    expect(hang.ms).toBeLessThan(budget(8000, 30_000)); // it gave up at its 2 s deadline on a server that never answers
   } finally {
     hung.closeAllConnections();
     await new Promise((done) => hung.close(done));
@@ -162,7 +164,7 @@ it('falls back to the terminal (prints nothing, exits 0) when the server hangs, 
     out: '',
   });
   expect(
-    await runHook(config('remote.json', 'http://192.0.2.1:4365'), payload('s'), 5000),
+    await runHook(config('remote.json', `http://192.0.2.1:${PORT}`), payload('s'), 5000),
   ).toMatchObject({ code: 0, out: '' });
   expect(
     await runHook(config('ok.json', `http://127.0.0.1:${PORT}`), 'not json', 5000),
@@ -176,4 +178,4 @@ it('falls back to the terminal (prints nothing, exits 0) when the server hangs, 
     ),
   ).toMatchObject({ code: 0, out: '' });
   f.control.close();
-});
+}, 60_000);

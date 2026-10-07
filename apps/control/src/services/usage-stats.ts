@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { open } from 'node:fs/promises';
+import { setTimeout as sleep } from 'node:timers/promises';
 import type { CodexLimits, UsageResponse } from '@aether/contracts';
 import { readCodexLimits } from './codex-limits.js';
 import { aggregate, WINDOW_DAYS, type Attribution, type Tracked } from './usage-aggregate.js';
@@ -13,7 +14,9 @@ import { MAX_TRACKED_FILES, keyOf, loadRollup, saveRollup, type Entry } from './
 
 const CHUNK = 1024 * 1024; // about 30 ms of parsing: the longest the event loop is held at a time
 const SIG_BYTES = 256;
-const MIN_PASS_GAP_MS = 3000;
+/** A pass may take about a tenth of the time (the listing of a big history is the cost), never leaving a gap above this. */
+const PASS_DUTY = 10;
+const MAX_PASS_GAP_MS = 3000;
 const SAVE_GAP_MS = 30_000;
 const MEMO_ANSWERS = 6; // a few ranges and attribution sets at once
 /** Files modified within this many days can hold a day of the window (one more than the window, for the zone's edge). */
@@ -42,6 +45,8 @@ export function createUsageStats(options: UsageOptions) {
   let pending = 0;
   let running: Promise<void> | null = null;
   let lastPassEnd = 0;
+  /** How long after the last pass the next may start: proportional to what that pass cost, so a small history is always fresh. */
+  let passGap = 0;
   let lastSaved = 0;
   let dirty = false;
   /** When the numbers last changed: the answer is stamped with it, so an unchanged answer is byte for byte the same (ETag). */
@@ -148,19 +153,24 @@ export function createUsageStats(options: UsageOptions) {
   }
 
   /**
-   * Starts a scan unless one is running or one just ended, and waits at most `waitMs` for it: the caller gets what is
-   * known by then (`scan.complete` says whether that is everything).
+   * Starts a scan unless one is running, and waits at most `waitMs` for it: the caller gets what is known by then
+   * (`scan.complete` says whether that is everything). A scan that just ended is waited out when its gap is short, so a
+   * file that appeared since is counted by this very request; after a costly one the caller gets what is known.
    */
   async function refresh(waitMs: number): Promise<void> {
-    if (!running && clock() - lastPassEnd >= MIN_PASS_GAP_MS) {
-      running = pass()
+    const start = clock();
+    if (!running) {
+      const idle = lastPassEnd + passGap - start;
+      if (idle > waitMs) return;
+      if (idle > 0) await sleep(idle);
+      running ??= pass()
         .catch(() => undefined)
         .finally(() => {
           running = null;
           lastPassEnd = clock();
+          passGap = Math.min(MAX_PASS_GAP_MS, (lastPassEnd - start) * PASS_DUTY);
         });
     }
-    if (!running) return;
     let timer: NodeJS.Timeout | undefined;
     await Promise.race([
       running,

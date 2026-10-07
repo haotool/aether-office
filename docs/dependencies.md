@@ -2,7 +2,10 @@
 
 Direct runtime and development dependencies are pinned in each package manifest and in `pnpm-lock.yaml`. `pnpm-workspace.yaml` sets supply-chain controls: a release younger than a day is not installed, a package whose publish
 evidence is weaker than an earlier version's is refused, and dependencies may not come from git or tarball URLs.
-Licenses and attributions are in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md); no dependency in the lockfile is GPL or AGPL.
+Licenses and attributions are in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md), generated from the lockfile by
+`pnpm run notices`; the audited inventory and the licence policy (which licences are allowed, and how to add a dependency) are in
+[docs/legal](legal/README.md). `pnpm run notices:check` (CI) fails when a dependency has an unknown or denied licence or the
+notices are stale. No dependency in the lockfile is GPL, LGPL or AGPL.
 
 Run `pnpm audit:deps` for high-severity advisories and `pnpm run doctor` for the installed toolchain.
 
@@ -26,5 +29,6 @@ Run `pnpm audit:deps` for high-severity advisories and `pnpm run doctor` for the
 
 ## Release gates still open
 
-A distributable software bill of materials, a platform matrix and a final vulnerability and license review are release gates. This
-document does not assert that they have passed.
+A CycloneDX software bill of materials is generated on demand (`node scripts/oss/third-party-notices.mjs --sbom <file>`) and is
+attached to a release rather than committed. A platform matrix, a final vulnerability review and the open licensing items of
+the [inventory](legal/inventory.md#open-items) are release gates. This document does not assert that they have passed.

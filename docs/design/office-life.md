@@ -1,6 +1,10 @@
 # Office Life: squads, signals and the first visit
 
-Status: design (not implemented). Owner: the 3D office (`packages/office-scene`) with server work in `apps/control`.
+> **Design record.** This is the specification the office-life work was built from, kept for the reasoning and the budgets. It
+> was written before the code and some details moved while building; for how the features behave today read
+> [features](../features.md) and the [design system](../design-system.md), and for what is verified the ledger.
+
+Status: design; what is built is tracked per iteration in the verification ledger (`OFFICE-LIFE-*` in `docs/verification/features.json`). Squads in the scene (§2, §4.1 to §4.4, §4.6, §4.10), the puppet strings (§4.5) and the hand-over with its stamp (§4.6 to §4.8) are built (I4, I5); the registry and the signals are tracked per iteration. Owner: the 3D office (`packages/office-scene`) with server work in `apps/control`.
 Work plan: [office-life-iterations.md](office-life-iterations.md).
 
 This spec covers three things that each make the office easier to read:
@@ -118,7 +122,7 @@ at y = 4.6 to the halo at the supervisor's head + 1.0.
 | **Work** | 4 | The strings stay taut while the subagent works. Each tool start jerks the cross (a 4 cm dip, a critically damped spring, 250 ms) and the matching hand string. Between tools the strings sway gently (0.25 Hz). The beam's brightness and band speed follow the squad's real rate, and the halo glows with a 0.6 s lag. | `tools.count` increments; rate from §7 |
 | | 4b | A subagent waiting for permission freezes its strings, the cross turns amber and its pod shows the existing amber attention ring. | subagent `status: waiting_permission` |
 | **Hand-over** | 5 | The strings go slack (rest length ×1.15 over 1 s) and the cross dims. The subagent plays `stand_up` (1.25 s). A **folder** appears floating at chest height and it walks to the supervisor's desk side (`walk`, at most 8 s, 1.2 m/s on the nav grid). | `status: finished` (SubagentStop, or the Codex child ended) |
-| | 6 | Presentation. The subagent turns to the supervisor, and the folder glides into the in-tray (0.6 s). The supervisor plays `reading` (1.5 s) then `nod`. The desk stamp presses down (0.25 s) and a **received seal** decal blooms on the folder (an inbox arrow glyph, never "approved"). With a real `result.error === true` the folder has a red tab and the supervisor plays `scratch_head` instead of `nod`. | `result` (§7) |
+| | 6 | Presentation. The subagent turns to the supervisor, and the folder glides into the in-tray (0.6 s). The supervisor plays `reading` (1.5 s) then `nod`. The desk stamp presses down (0.25 s) and a **received seal** decal blooms on the folder (an inbox arrow glyph, never "approved"). With a real `result.error === true` (or `ok === false`) the stamp is a neutral grey RETURNED and the folder has a grey tab (never red: no colour that reads as a verdict), and the supervisor plays `scratch_head` instead of `nod`. | `result` (§7) |
 | **Return** | 7 | When the same subagent id becomes active again (a resumed Codex child, a re-run agent id), it walks back to its pod and sits. Otherwise frame 8 follows. | `status` back to `running` |
 | **Dismiss** | 8 | `wave`, then a walk into the core and the existing sink (`departure.ts` timings). The pod folds 1.5 s after the subagent leaves it. The zone shrinks only after **10 s** with no change (hysteresis), and never while a walk is in flight. The beam dims to idle when no subagent remains, and the halo fades after 20 s. | removed or stale |
 
@@ -236,10 +240,51 @@ slots, we read them instead (§9).
 - Inputs: `intensity ∈ [0, 1]` drives the alpha (0.12 to 0.55) and the band speed (0.2 to 1.4).
   `tint = mix(accent, white, intensity·0.5)`. When any squad member waits, an amber pulse mixes in at 0.8 Hz (the
   attention-ring rate).
-  - Rate source in v1: tool events per minute per squad (derivable, §7), with
-    `intensity = log1p(rate) / log1p(30)`.
-  - Rate source in v2: tokens per minute, with `log1p(tpm) / log1p(20000)`.
-  - The caption and aria text say which rate is shown.
+  - Rate source (`squad/beam-rate.ts`): the squad's **tokens per minute** when its working members have a measured,
+    non-zero `subagents[].tokens.perMinute` (Claude's transcript files; summed over the members that have a sample),
+    else its **tool calls per minute** (tool starts in the last 60 s). A token rate of 0 falls back too, because it is also
+    what "no second sample yet" looks like. Codex and hook-only squads have no tokens, so they stay on tool calls.
+  - Curve: `intensity = tanh(1.5 · ln(1 + rate) / ln(1 + ref))`, with a `ref` per source (calibrated below). A log first (1 and
+    12 calls, 1k and 12k tokens all read), then a smooth saturation: 0 for no work, about 0.9 at the reference, approaching 1
+    without ever clipping, monotonic and with no kink. (Wave 1's `min(1, log1p(rate)/log1p(30))` hit a flat 1 at 30 calls.)
+  - **Calibration (measured, not chosen).** The first reference rates (20,000 tokens, 30 tool calls a minute) were guesses. They
+    are now set from this machine's real transcripts by `scripts/beam-calibration.ts` (read-only, bounded, numbers only: it
+    reads 767 Claude subagent files of 30 parent sessions and the newest 300 Codex rollouts once through the KPI parser's own
+    counters, buckets them by minute and never prints or keeps a line of text). Tokens are fresh tokens (input, output and
+    cache writes, never cache reads), as everywhere else in the app. An active minute is one with any tokens or any tool calls;
+    the squad rate is what the beam shows: the subagents of one parent session summed per minute.
+
+    | Per active minute | active minutes | p25 | p50 | p75 | p90 | p95 | p99 |
+    | --- | --- | --- | --- | --- | --- | --- | --- |
+    | Squad, tokens | 5,741 | 4,133 | 10,662 | 30,149 | 92,604 | 167,582 | 427,167 |
+    | Squad, tool calls | 5,418 | 2 | 5 | 9 | 17 | 24 | 39 |
+    | One subagent, tokens | 8,970 | 3,542 | 8,201 | 17,314 | 58,630 | 96,058 | 263,685 |
+    | One subagent, tool calls | 8,405 | 2 | 4 | 7 | 10 | 12 | 18 |
+    | One Codex session, tokens | 2,032 | 6,079 | 12,796 | 31,764 | 47,837 | 58,137 | 83,432 |
+    | One Codex session, tool calls | 1,824 | 2 | 3 | 4 | 5 | 6 | 7 |
+
+    Reference rates (pinned by `tests/aether/beam-calibration.test.ts`): 8,000,000 tokens/min and 24 tool calls/min.
+
+    | Squad, intensity at | p25 | p50 | p75 | p90 | p95 | p99 |
+    | --- | --- | --- | --- | --- | --- | --- |
+    | Tool calls, ref 24 (was 30) | 0.47 | 0.68 | 0.79 | 0.87 | 0.91 | 0.94 |
+    | Tokens, ref 8,000,000 (was 20,000) | 0.66 | 0.70 | 0.75 | 0.79 | 0.81 | 0.84 |
+    | Tokens at the old ref 20,000 | 0.85 | 0.89 | 0.92 | 0.94 | 0.95 | 0.96 |
+
+    Tool calls meet the goal (typical working 0.5-0.7, p99 about 0.95; the old 30 gave 0.65 and 0.92, close already). Tokens
+    cannot meet both, whatever the reference: the curve is logarithmic, token rates are heavy-tailed but only 1.4 times apart
+    between the median and the p99 *in log space* (ln 10,663 = 9.3, ln 427,168 = 13.0), and a curve through zero that puts the
+    median at 0.6-0.7 puts the p99 at 0.75-0.85; a p99 of 0.95 would make the median 0.86. The reference therefore anchors the
+    median at 0.70 (the top of the typical band) and the p99 reads 0.84, which is why the token reference is far above any rate
+    ever seen: it places the median, it is not a "busy" rate. With the old 20,000 every active minute, even the p25, read 0.85
+    or more and the beam was a constant glow. A curve with an offset (a floor that is subtracted first) could spread the tokens,
+    but the brief was to keep the curve. Codex squads have no tokens and read tool calls; their sessions run 3 calls a minute at
+    the median and 7 at the p99 (0.57 to 0.75), so a Codex squad glows less than a Claude one, which is what it is doing.
+    Re-run the script and change `BEAM_REFERENCE` (the test names the constants) if the way people work changes.
+  - The caption says which rate is shown: the zone label button's tooltip and accessible name read "~12K tokens/min (based
+    on tokens)" or "~8 tool calls/min (based on tool calls)" (`Intl.NumberFormat` compact: "1.2萬" in zh-TW), and nothing
+    while the squad is idle. A tool-call rate is never worded as tokens. `?squad=N&tokens=12000` makes the stand-in
+    subagents report a token rate, to look at it.
 - **Return filament and "absorption"**: one shared `LineSegments2` (the `RelationLines` technique) from the core at
   y = 4.6 to the halo. Up to 48 particles flow core→halo in one shared `Points` (count ∝ intensity). The halo's emissive
   value follows intensity with a 0.6 s exponential lag.
@@ -271,6 +316,14 @@ slots, we read them instead (§9).
   with vertex colours: the department accent at the cross fading to 25% at the body (the "light-string" look). The
   positions buffer is rewritten only on simulation ticks (`needsUpdate` at 30 Hz). The crosses are one `InstancedMesh`
   (about 80 triangles each).
+- **As built (I5).** `squad/puppet/`. Anchors: the character's own `head_socket` and `hand_socket_L/R` (the rig exports them in every
+  LOD; `Animal.tsx` registers them with `registerAnchors`, two lines) read from their world matrices as of the previous frame, with
+  the fixed offsets as the fallback for a model without them; the cross stays at a fixed 1.25 m over the chair. The head string ties
+  8 cm over the head socket. The simulation (`verlet.ts`) is as above, plus a clamp on `dt` and on the steps per frame, a straighten
+  on a pin that jumped more than 2.5 m and a reset on a non-finite point; it is paced by the layer (frames between two steps cost
+  nothing). The jerk and the slack are `string-motion.ts` (pure). Strings are none on the low tier (not static lines); Calm and
+  reduced motion draw them straight and still, redrawn at most every 0.2 s. The pref is `strings` (a top-level preference, not
+  `life.strings`, because `life/` belongs to the registry).
 - **Not creepy.** The strings are light, thin, and fade towards the body. Nothing pulls the character: the strings follow
   it, never the reverse. There are no face or neck strings, no dangling limbs and no dark colours. When no subagent
   works, the strings fade to 0 after the slack.
@@ -298,9 +351,30 @@ export function errandAt(plan: ErrandPlan, elapsedMs: number, reduced: boolean):
 - With no path, the walk is a straight line. It is only a picture, exactly as `planDeparture` does.
 - Concurrency: at most 2 deliveries walking per squad at once. Others queue in their seats with the folder already
   shown, the "waiting in line" look.
+- **As built (I4).** Arrive and leave run in the seat's own frame (the chair is the origin, the member sits looking along -z),
+  so a pod that faces any of four ways uses the same plan; a leave is a `departureAt` plan from the pod. An arrival is sped up
+  so that the walk, the turn (0.4 s) and the sit (1.0 s) fit in 6 s whatever the distance. The walk limit is 14 m on high and
+  10 m on balanced; beyond it, on low and with reduced motion the subagent appears in its seat. A leaver gives its pod up 3.25 s
+  in (once it has stood and waved), and the zone shrinks only when no walk is in flight. The first look at a page seats everyone
+  where they are, with no walk and no announcement.
 
-### 4.7 Hand-over props (`squad/Handover.tsx`)
+- **As built (I5).** The carrier's walk is its own timeline (`handover/plan.ts`: stand 1.25 s, walk of at most 8 s, turn 0.4 s, glide
+  0.6 s, read 1.5 s, then the usual wave, walk into the core and sink), not an `Errand` of kind `deliver`/`return`: it ends in the
+  core, so a leave is part of it, and the `return` leg (a subagent that becomes active again) is not built. The carrier stands at
+  the end of the supervisor's desk nearest the zone (the dressing is mirrored to that end); a floor allows two carriers at once,
+  a desk one stamp at a time, and the rest are shown as a pop (see below). The mode steps down and never out: **walk**, **pop** (the
+  subagent leaves as usual and the folder pops into the tray: low tier, a desk not in view, a busy floor) and **tray** (Calm and
+  reduced motion: the folder and the seal appear, no press and no cues).
 
+### 4.7 Hand-over props (`squad/handover/`)
+
+- **As built (I5).** Everything solid is one unit box (12 triangles) in one `InstancedMesh`: a folder is two boxes (body and tab, 24
+  triangles) and the stamp two more, so folders, stamps and the in-tray stack are one draw call. The in-tray's stack shows up to 5
+  folders and clears after 5 minutes without a new one. The stamp's word is drawn on a small canvas texture (RECEIVED, RETURNED, 已收到,
+  已退回: one material per word, an extra draw call only while that word is on show), tinted slate blue or grey. The stamp has
+  its own instances (the dressing no longer holds it): it moves over the tray, presses for 250 ms (100 down, 80 hold, 70 up) and
+  returns. No "approved" glyph or word exists; a test greps the sources for it. The seal is placed on the top folder from the moment
+  the stamp touches it, with a 150 ms pop; the ink-ring flash of the first draft is not built.
 - **Folder**: a merged box plus tab, 24 triangles, one `InstancedMesh` for every folder in the scene. Per-instance colour:
   manila, or with a red tab when `error`. It floats 0.35 m in front of the chest at y = 1.0 with a ±1.5 cm bob at
   1.6 Hz. It is not attached to the hands in v1 (§4.8).
@@ -333,7 +407,9 @@ Blender pipeline cost per new clip:
 4. `optimize-animals.mjs`, then `validate-assets.mjs`.
 
 The download grows a little for every species × 3 LODs; measure it with `validate-assets` before and after, never
-estimate. **Recommendation:** ship v1 procedural. After the I5 contact-sheet review, decide on `conduct` and `carry`
+estimate. **Decision (I5): shipped procedural; no clip was added and the Blender pipeline was not run.** The contact sheet
+(`scripts/contact-sheet.mjs --category squad`, the `handover-*` frames) shows the floating folder at chest height reading as a
+carry, so `carry` waits for a maintainer review that says otherwise; `conduct` and `hand_over` likewise. **Recommendation:** ship v1 procedural. After the I5 contact-sheet review, decide on `conduct` and `carry`
 only (a batch of two clips costs one pipeline run).
 
 Procedural pose alternative, before any clip: an **additive layer** on the same mixer. Build a synthetic clip at runtime
@@ -358,6 +434,79 @@ on `Animal` (`layers?: AdditiveLayer[]`), merged after the behavior branch (§9)
 The shader-program budget is ≤ 4 new programs (beam, zone decal, sprite billboard, life particles). Everything else
 reuses `MeshBasicMaterial`, `LineMaterial` and the hologram material. GPU memory is ≤ 4 MB: one 1024² sprite atlas plus
 small buffers.
+
+**Measured on the real GPU (follow-up to I4, I5 and I8).** Renderer for every number below: `ANGLE (Apple, ANGLE Metal Renderer:
+Apple M4)`, Chrome, headless, built production bundle, on a machine that was loaded by other work (load average 27 to 37), so the
+cases are interleaved (round after round, in turn) and each figure is the median of 3 to 5 rounds. A frame time is capped by the
+display's 60 Hz (16.7 ms) on this GPU for every case, so the cost shows in the **CPU time per frame (`jsMs`)** and in the profile,
+not in the frame time. Tool: `scripts/perf-matrix.mjs` (cases, device profiles, CPU throttle, motion and first-appearance
+modes, see the file's header); `?perf=N` and `window.__aetherPerfRig.sample(n)` are the probe.
+
+The busy building: the demo's 12 members all at intensity 2 (stand-in screens, so the control-room wall and the busy desks are
+on), a squad of 8 subagents with strings, the beam on tokens and tool starts, the hand-over of all 8 results at 9 s, a 150-commit
+synthetic beanstalk with its crown, and (`busy`) six life effects looping (`?preview=life&effect=a,b,c,d,e,f&loop=1`).
+`base` is the same building without squad or effects. Medians, first sample (a still scene's first 300 frames) / motion sample
+(300 frames starting 1.5 s later, the hand-overs running):
+
+| Profile | Case | median / p95 frame | `jsMs` (before to after) | draws | triangles | programs |
+| --- | --- | --- | --- | --- | --- | --- |
+| high, 1440x900, dpr 2 | base | 16.6 / 18.3 ms | 3.5 to 3.7 | 225 | 368k | 30 |
+| | squad | 16.6 / 18.5 ms | 4.3 to 4.6 (motion) | 261 | 535k | 36 |
+| | busy | 16.6 / 18.5 ms | 4.4 to 4.6 (motion) | 262 | 535k | 36 |
+| high, 1920x1080, dpr 2 | base | 16.7 / 18.2 ms | 3.3 to 3.6 | 225 | 368k | 30 |
+| | squad | 16.6 / 18.5 ms | 4.9 to 4.5 (motion) | 261 | 535k | 36 |
+| | busy | 16.6 / 18.5 ms | 5.0 to 4.4 (motion) | 262 | 535k | 36 |
+| balanced, 1440x900, dpr 2 | base | 16.6 / 18.3 ms | 3.4 to 3.5 | 225 | 368k | 30 |
+| | squad | 16.7 / 18.5 ms | 4.2 to 4.3 (motion) | 258 | 496k | 36 |
+| | busy | 16.6 / 18.4 ms | 4.3 to 5.0 (motion) | 259 | 496k | 36 |
+| balanced, 1920x1080, dpr 2 | base | 16.7 / 18.1 ms | 3.4 to 3.3 | 225 | 368k | 30 |
+| | squad | 16.6 / 18.5 ms | 4.5 to 4.2 (motion) | 258 | 496k | 36 |
+| | busy | 16.6 / 18.5 ms | 4.4 to 4.5 (motion) | 259 | 496k | 36 |
+| phone: 390x844, dpr 3, 4x CPU throttle, compact, beanstalk off, balanced | base | 16.7 / 18.3 ms | 5.8 to 5.2 | 183 | 86k | 19 |
+| | squad (static) | 16.7 / 18.4 ms | 6.5 | 208 | 104k | 25 |
+| | busy | 16.7 / 30.5 ms (see below) | 7.0 to 6.5 | 209 | 104k | 25 |
+
+Reading the table: the `jsMs` of `squad` over `base` includes the 8 subagent *characters* (their animation mixers), which the
+legacy desk seating draws too. The squad layer itself is the difference to `legacy=1` (the same 8 characters at desks of their own):
+the squad is cheaper there, 261 against 281 draws, 535k against 553k triangles, and on the phone profile 208 against 223 draws
+and 6.5 against 7.2 ms of `jsMs` at 4x throttle. The `jsMs` differences between before and after are within the noise of a loaded
+machine (a few tenths of a millisecond, either way); what the numbers support is that no case misses 60 Hz on the real GPU, on
+desktop at either size and tier, and that the phone profile at 4x CPU throttle holds 16.7 ms with the squad on, steady.
+The phone's p95 of 30 ms in the `busy` rows is the preview harness, not the layers: `&tools=700` makes the preview re-render the whole
+page every 500 ms, which at 4x throttle costs one slow frame each; the same preview with the squad as desks (`legacy=1`) shows the
+same p95 (28 to 29 ms), and the same squad without the tick (static) shows 18.4 ms.
+
+**Where the CPU goes (CDP profile, 3 rounds of 8.6 s, unminified bundle, the busy building, 200 µs samples, inclusive time in
+the layer's components).** Before: Handover 14.9 ms, LifeLayer (six looping effects) 12.4, SquadZones 10.4, SquadBeam 9.3, Handing
+5.3, PuppetStrings 4.4, SquadMember 3.0, SupervisorDesk 0.8 (the squad layers together 48.7 ms over 480 frames, about 0.10 ms a
+frame, under the 0.15 ms budget; the earlier +0.3 ms read was the whole-scene `jsMs`, which carries the characters). After: Handover
+15.2 (the eight hand-overs themselves; at rest the layer now skips its writes), SquadZones 8.5, SquadBeam 5.4 (-42%), Handing 3.7,
+PuppetStrings 3.6, SquadMember 1.7, LifeLayer 13.8 (unchanged), the squad layers together 39.5 ms, about 0.08 ms a frame (-19%).
+Six life effects looping cost about 0.03 ms a frame; the puppet strings about 0.008; a hand-over of all 8 at once about 0.03.
+What changed: the layers write their instance matrices and colours only when they differ from what the mesh holds (one comparison
+of 16 floats against an upload every frame), a shared scratch replaces the per-instance `Vector3`, `Quaternion` and `Color`
+allocations (the beam allocated about a dozen objects per squad per frame), colours are parsed once, and an idle hand-over layer
+looks again once a second instead of building its lists every frame.
+
+**First appearance.** With the squad showing 7 s after the scene opened: before, five programs (of the beam, the zone decal, the two
+instanced materials, the strings, the points and the seal) linked inside the first frames of the squad, 17.6 ms of render calls on
+desktop and a worst frame of 33 ms (16.8 ms for the same scene without a squad); `SquadWarm` now builds one hidden copy of each from
+the layer's own factories, so the warm-up that already runs behind the loading cover links them (the strings and points only above
+the low tier), and the first appearance links none (0 ms of linking, worst frame 16.8 ms on desktop; `e2e/office-life-follow-up.spec.ts` fails
+without it). The life layer needed nothing: its sprite pool is mounted from the start, so its one program is linked at warm-up, and
+looping effects start without a linking render. On the phone profile (4x CPU throttle) the worst frame on first appearance is
+still 100 to 117 ms, and it is not the squad's: the legacy seating of the same 8 characters shows 133 ms, and the 9 programs that
+still link on that first appearance are the same 9 in both. They belong to the characters' models (loaded on demand, 8 species
+variants), they cost about 110 to 125 ms of render calls at 4x throttle (about 30 ms unthrottled), and they are an open follow-up
+(see the characters' own warm-up in `Animal.tsx`), not a squad or life layer.
+
+Against the budgets above: squad CPU 0.08 ms a frame (0.15), life 0.03 (0.2), draws at most 14 by construction (zone 4 or 5, desk
+1, hand-over 1 to 3, beam 3 or 4, strings 2) and 8 more than the same scene without relation effects (261 against 253),
+triangles +2k for the relation effects, GPU memory +1.5 MB (4). **Over budget: shader programs.** The squad layer links 6 to 7
+programs where this section budgets 4: the extra ones are the two instanced `MeshBasicMaterial` variants (glow and opaque), the fat-line
+program of the strings, the points and the seal's textured basic material; each is a distinct program, and they are linked at
+warm-up now, behind the loading cover, so the cost is a one-time compile and no longer a hitch. The low tier links neither the
+strings nor the points.
 
 Character budget: at most 8 animated subagent characters per squad and 16 per floor. Beyond that come the holo
 silhouettes (§4.3). Far squads use the existing `animationInterval` rates, and the string simulation drops to 10 Hz past
@@ -416,7 +565,7 @@ session.
 - **Per member:** at most one meme effect at a time, and relation effects (§4) always win. A member that is on a director
   shot gets effects at full chance, and off-screen members get half chance, so effects land where people look.
 - **Per floor:** at most 2 meme effects at once.
-- **Building:** a token bucket of 3 meme effects per minute, refilling one every 20 s.
+- **Building:** at most 3 meme effects start in any sliding 60 s (a sliding window, so "3 per minute" holds for every minute, not on average).
 - **Chance:** `seeded(`${member}:${rule}:${n}`)() < chance`, with `n` the eligible-trigger count. This is deterministic
   (tests and replays), and two members with the same trigger do not both react.
 - **Variety:** effects with variants (the duck's colour, the rocket or the squirrel) pick by the same seed.
@@ -444,25 +593,25 @@ Legend:
 | R4 | Subagent finished | `subagents[].status = finished` | ✅ (I1) | transition to finished | Hand-over + stamp (§2.4 5–6) | 8–14 | — (per id) | relation | B | tray icon | "{type} returned its result to {supervisor}" |
 | R5 | Subagent returned an error | `subagents[].result.error` | ✅ (I7), `error` is mostly `null`: only the parent's own tool result says | `error === true` | Red-tab folder, supervisor `scratch_head` | with R4 | — | relation | B | red icon | "{type} returned with an error" |
 | R6 | Subagent left / stale | id gone or `lastSeen` > 10 min | ✅ | removal | Dismiss (§2.4 8) | 4–8 | — | relation | L | disappear | "{type} left the squad" |
-| R7 | Squad activity rate | Σ `tools.count` Δ/min; later `tokens.perMinute` | ✅ (I7 `tokens.perMinute`; tool calls/min from I1) | continuous EMA 60 s | Beam brightness and band speed, halo glow | cont. | — | relation | L | static level | in the squad label: "3 working · 12 tool calls/min" |
+| R7 | Squad activity rate | Σ `tokens.perMinute` (Claude), else `tools.count` Δ/min | ✅ (I7 `tokens.perMinute`; tool calls/min from I1) · beam built on tokens in I8 | continuous EMA 60 s | Beam brightness and band speed, halo glow | cont. | — | relation | L | static level | in the squad label: "3 working, ~12K tokens/min (based on tokens)" |
 | R8 | Long thinking | parent `working`, no `hook.recent` entry for ≥ 45 s, `hook.tool` null | ✅ | condition holds 45 s | **Rubber duck** pops onto the desk; the character turns to it (Poser engagement towards the duck point, `thinking`) | while (≥ 8) | 10 min | wellbeing | B | duck icon | "{name} is thinking it through with the rubber duck" |
-| R9 | Test command running | `recent[].tags ∋ test` (today: target `pnpm test`/`npm test`/`vitest`/`pytest`/`go test`/`cargo test`) | ✅ (I7 `tags`) | PreToolUse with test tag | Desk **CI lamp** amber blink; a **bug sprite** scurries on the desk | while | 90 | test | B | amber static | "{name} is running tests" |
-| R10 | Tests passed | test-tagged call `ok === true` | ✅ §7.3 (I7) | outcome known and ok | Lamp green; character squashes the bug (`nod` + flatten sprite) | 2.5 | 5 min | test | B | green static | "The test command exited successfully" |
-| R11 | Tests failed | test-tagged call `ok === false` | ✅ §7.3 (I7) | outcome known and not ok | Lamp red; bug escapes off the desk; `scratch_head` | 3 | 5 min | test | B | red static | "The test command failed" |
-| R12 | CI watched | `tags ∋ ci.watch` (`gh run watch`, `gh pr checks`) + ok | ✅ §7.3 (I7) | outcome | The lamp turns into a 3-light CI stack, green or red | 3 | 10 min | test | B | static | "CI checks finished: {passed\|failed}" |
-| R13 | Build / typecheck error | `tags ∋ build\|typecheck` and `ok === false` | ✅ §7.3 (I7) | outcome | Red squiggle sprite under the pane, `shrug` | 2.5 | 5 min | build | B | icon | "The build command failed" |
-| R14 | Package install | `tags ∋ install` (target `pnpm install`/`npm i`/`yarn`/`pip install`/`cargo fetch`) | ✅ target | PreToolUse | **node_modules black hole**: a swirling disc on the desk pulling particles | while (≤ 60) | 10 min | build | B | icon | "{name} is installing dependencies" |
-| R15 | Heavy install | same call still running after 45 s | ✅ (`hook.tool` + `at`) | duration > 45 s | The black hole grows ×1.6; the desk mug drifts towards it and back | while | with R14 | build | H | none | "The install is taking a while" |
+| R9 | Test command running | `recent[].tags ∋ test` (today: target `pnpm test`/`npm test`/`vitest`/`pytest`/`go test`/`cargo test`) | ✅ (I7 `tags`) | PreToolUse with test tag | Desk **CI lamp** amber blink; a **bug sprite** scurries on the desk | while | 300 | test | B | amber static | "{name} is running tests" |
+| R10 | Tests passed | test-tagged call `ok === true` | ✅ §7.3 (I7) · built in I8 | outcome known and ok | Lamp green; character squashes the bug (`nod` + flatten sprite) | 2.5 | 5 min | test | B | green static | "The test command exited successfully" |
+| R11 | Tests failed | test-tagged call `ok === false` | ✅ §7.3 (I7) · built in I8 | outcome known and not ok | Lamp red; bug escapes off the desk; `scratch_head` | 3 | 5 min | test | B | red static | "The test command failed" |
+| R12 | CI watched | `tags ∋ ci.watch` (`gh run watch`, `gh pr checks`) + ok | ✅ §7.3 (I7) · built in I8 | outcome | The lamp turns into a 3-light CI stack, green or red | 3 | 10 min | test | B | static | "CI checks finished: {passed\|failed}" |
+| R13 | Build / typecheck error | `tags ∋ build\|typecheck` and `ok === false` | ✅ (I7) · built in I8 | outcome | Red squiggle sprite under the pane, `shrug` | 2.5 | 5 min | test | B | icon | "The build command failed" |
+| R14 | Package install | `tags ∋ install` (target `pnpm install`/`npm i`/`yarn`/`pip install`/`cargo fetch`) | ✅ target | PreToolUse | **node_modules black hole**: a swirling disc on the desk pulling particles | while (≤ 60) | 10 min | test | B | icon | "{name} is installing dependencies" |
+| R15 | Heavy install | same call still running after 45 s | ✅ (`hook.tool` + `at`) | duration > 45 s | The black hole grows ×1.6; the desk mug drifts towards it and back | while | with R14 | test | H | none | "The install is taking a while" |
 | R16 | Commit | `B` new HEAD commit, or `tags ∋ git.commit` with ok | ✅ (B) | new sha at the member's repo HEAD | A burst of 5 packets along the member's branch beam into the core, plus a bead ping on the stalk | 1.5 | 30 | git | L | bead flash | "New commit on {branch}" |
-| R17 | Push | `tags ∋ git.push`, `ok === true` (today: target `git push`, outcome unknown) | ✅ (I7 `git.push` + `ok`) | PostToolUse ok | **Ship it**: a squirrel (variant: rocket) rides up the branch beam into the core | 2.5 | 10 min | git | B | icon | "{name} pushed {branch}" |
-| R18 | Force push | `tags ∋ git.push.force` | ✅ §7.3 (I7) (args are not stored today) | PreToolUse | **Danger stripes**: a yellow-black hazard ring decal around the desk and a rotating amber beacon | 4 | 30 min | git | B | static stripes | "A force push was started" |
-| R19 | Merge conflict | `git.conflicts > 0` | ✅ (I7 `git.conflicts`) | rises from 0 | **Tug-of-war**: two glyph blocks `<<<<<<<` and `>>>>>>>` pull a light rope over the desk | while (≥ 6) | 10 min | git | B | static glyphs | "{repo} has {n} conflicted files" |
+| R17 | Push | `tags ∋ git.push`, `ok === true` (today: target `git push`, outcome unknown) | ✅ (I7 `git.push` + `ok`) · built in I8 | PostToolUse ok | **Ship it**: a squirrel (variant: rocket) rides up the branch beam into the core | 2.5 | 10 min | git | B | icon | "{name} pushed {branch}" |
+| R18 | Force push | `tags ∋ git.push.force` | ✅ §7.3 (I7) (args are not stored today) · built in I8 | PreToolUse | **Danger stripes**: a yellow-black hazard ring decal around the desk and a rotating amber beacon | 4 | 30 min | git | B | static stripes | "A force push was started" |
+| R19 | Merge conflict | `git.conflicts > 0` | ✅ (I7 `git.conflicts`) · built in I8 | rises from 0 | **Tug-of-war**: two glyph blocks `<<<<<<<` and `>>>>>>>` pull a light rope over the desk | while (≥ 6) | 10 min | git | B | static glyphs | "{repo} has {n} conflicted files" |
 | R20 | Conflict resolved / merge commit | `B` commit with 2 parents; conflicts → 0 | ✅ (B) / ✅ (I7 `git.conflicts`) | merge sha appears | The rope snaps into a heart-free knot of light; the merge flower on the stalk blooms (existing); `celebrate` | 3 | 10 min | git | B | icon | "A merge commit landed" |
 | R21 | Hard reset | `tags ∋ git.reset.hard` | ✅ §7.3 (I7) | PreToolUse | A small "time machine" swirl on the pane (no danger tone) | 2 | 30 min | git | H | none | "{name} reset the working tree" |
-| R22 | Deploy words | `tags ∋ deploy\|publish\|release` | ✅ §7.3 (I7) | PreToolUse | **Launch pad**: a 3-2-1 countdown sprite, then a rocket lifts up the core | 4 | 15 min | ops | B | icon | "{name} started a deploy" |
-| R23 | Friday deploy | R22, and the viewer's local day is Friday after 15:00 (from `currentDate`/the clock, computed) | ✅ | R22 ∧ day/time | **Friday deploy** sign: a calendar sprite with ⚠ and a sweating `shrug` | 3 | 1 day | meme | B | icon | "Deploying on a Friday afternoon" |
+| R22 | Deploy words | `tags ∋ deploy\|publish\|release` | ✅ §7.3 (I7) · built in I8 | PreToolUse | **Launch pad**: a 3-2-1 countdown sprite, then a rocket lifts up the core | 4 | 15 min | ops | B | icon | "{name} started a deploy" |
+| R23 | Friday deploy | R22, and the viewer's local day is Friday after 15:00 (from `currentDate`/the clock, computed) | ✅ · built in I8 | R22 ∧ day/time | **Friday deploy** sign: a calendar sprite with ⚠ and a sweating `shrug` | 3 | 1 day | meme | B | icon | "Deploying on a Friday afternoon" |
 | R24 | Docker | `tags ∋ docker` (target `docker`, `docker compose`) | ✅ target | PreToolUse | A whale-container stack builds up beside the desk (3 instanced crates) | while (≤ 30) | 10 min | ops | B | icon | "{name} is working with containers" |
-| R25 | Destructive command (joke) | `tags ∋ fs.rm.recursive` (`rm -rf` on `/`, `~`, `*` or `..`) | ✅ §7.3 (I7) | PreToolUse | A cartoon **skull-with-bandage** "nope" balloon. It is **only a picture**: nothing is executed or blocked, and the permission flow is the CLI's. | 2 | 30 min | meme | B | icon | "A recursive delete command was started" |
+| R25 | Destructive command (joke) | `tags ∋ fs.rm.recursive` (`rm -rf` on `/`, `~`, `*` or `..`) | ✅ §7.3 (I7) · built in I8 | PreToolUse | A cartoon **skull-with-bandage** "nope" balloon. It is **only a picture**: nothing is executed or blocked, and the permission flow is the CLI's. | 2 | 30 min | meme | B | icon | "A recursive delete command was started" |
 | R26 | Permission asked | parent `activity = waiting_permission` | ✅ | transition | Existing amber ring, plus a desk **bell** rings once | 1.5 | 2 min | ops | L | ring only | (existing) "{name} is waiting for approval" |
 | R27 | Error state | `activity = error` | ✅ | transition | **Pager / on-call bell** shakes over the desk | 2 | 5 min | ops | B | icon | "{name} hit an error" |
 | R28 | Crash | `liveness` turns `orphaned` while it was `working`, or the process vanished | ✅ | transition | **Kernel-panic** overlay quad in front of the pane (our own art: a blue panel with ":(" and a fake progress bar), then the existing ghost | 3 | 30 min | ops | B | icon | "{name}'s process ended unexpectedly" |
@@ -483,9 +632,9 @@ Legend:
 | R43 | TODO notes | Grep with `tags ∋ search.todo` (the pattern is never stored, only the tag) | ✅ §7.3 (I7) | PreToolUse | Sticky notes (max 3) appear on the pane's edge | 3 | 30 min | work | B | none | "{name} is looking for TODOs" |
 | R44 | Tech-debt pile | `git.uncommitted ≥ 20` sustained 30 min | ✅ | threshold | A pile of boxes beside the chair, height ∝ log(uncommitted), capped | cont. | — | work | B | static | "{n} uncommitted files" |
 | R45 | Hot-fix | branch `^(hotfix\|fix)/` and R17 push | ✅ + R17 | both | **Firefighter** helmet sprite and an extinguisher puff | 3 | 30 min | git | B | icon | "A fix was pushed on {branch}" |
-| R46 | Works on my machine | test-tagged call `ok === false` while another session of the same repo had the same tag `ok === true` within 30 min | ✅ §7.3 (I7) | pair rule | "Works on my machine" sticker on the laptop pane | 3 | 1 day | meme | B | icon | "Tests pass in one session and fail in another" |
-| R47 | Not a bug, a feature | R11, then an edit to a `*.test.*`/`*.spec.*` file, then R10 within 20 min | ◐ | sequence | A sign flips from "BUG" to "FEATURE" | 3 | 1 day | meme | H | none | "The tests were changed, then passed" |
-| R48 | LGTM | `tags ∋ gh.pr.approve` (a real approve command) | ✅ §7.3 (I7) | PreToolUse ok | **LGTM stamp** thumps on the pane | 2 | 10 min | social | B | icon | "{name} approved a pull request" |
+| R46 | Works on my machine | test-tagged call `ok === false` while another session of the same repo had the same tag `ok === true` within 30 min | ✅ §7.3 (I7) · built in I8 | pair rule | "Works on my machine" sticker on the laptop pane | 3 | 1 day | meme | B | icon | "Tests pass in one session and fail in another" |
+| R47 | Not a bug, a feature | R11, then an edit to a `*.test.*`/`*.spec.*` file, then R10 within 20 min | ✅ (I7) · built in I8 | sequence | A sign flips from "BUG" to "FEATURE" | 3 | 1 day | meme | H | none | "The tests were changed, then passed" |
+| R48 | LGTM | `tags ∋ gh.pr.approve` (a real approve command) | ✅ §7.3 (I7) · built in I8 | PreToolUse ok | **LGTM stamp** thumps on the pane | 2 | 10 min | social | B | icon | "{name} approved a pull request" |
 | R49 | Rubber-stamp approvals | the viewer approves ≥ 3 permission prompts within 2 min, each answered < 3 s (`U`, this browser's remote approvals) | ✅ (U) | pattern | A rubber stamp thumps three times on the viewer's side of the scene (no member) | 2 | 30 min | social | B | none | "Approving quickly" |
 | R50 | Code-review ping-pong | `P` messages alternating between the same two members ≥ 4 times in 5 min | ✅ | pattern | A ping-pong ball arcs along the existing CommLinks curve | 3 | 10 min | social | B | none | "{a} and {b} are going back and forth" |
 | R51 | Pair programming | two sessions with the same `worktree.root`, both working | ✅ | condition | A ghost second chair at the later one's desk; `Poser` glance to the partner | cont. | — | social | B | static | "{a} and {b} work in the same worktree" |
@@ -496,10 +645,69 @@ Legend:
 | R56 | Konami code | `U` keydown sequence ↑↑↓↓←→←→BA while the scene has focus | ✅ (U) | sequence | Everyone on screen plays `celebrate`, with confetti from the particle pool | 4 | once per page load | easter | B | none | "Konami code!" |
 | R57 | `sudo make me a sandwich` | `U` exact text typed into Quick Open (Ctrl/Cmd+K), never sent anywhere | ✅ (U) | exact match | A sandwich arrives on the selected member's desk; caption "okay." (a nod to xkcd 149; our own art) | 3 | once per session | easter | B | none | "Okay." |
 | R58 | Dark-mode flashbang | `U` theme switched dark → light | ✅ (U) | event | A soft "sunrise" glow on the scene, 600 ms, brightness change ≤ 20%, never a flash | 0.6 | 10 min | easter | B | none | — |
+| R59 | `sudo` | `recent[].tags ∋ sudo` | ✅ (I7) · built in I8 | PreToolUse | A "root?" prompt chip hovers by the screen and pulses once; only a picture, it says the command started | 2.8 | 20 min | meme | B | icon | "{name} started a command with sudo" |
+| R60 | `curl \| sh` | `recent[].tags ∋ curl.pipe` | ✅ (I7) · built in I8 | PreToolUse | A "curl \| sh" chip with an amber warning ring that pulses twice; a joke, not a verdict on the command | 3 | 30 min | meme | B | icon | "{name} started a command that pipes a download into a shell" |
 
-There are 58 rows. I7 shipped the server side of every ◐ row except R39 and R40 (the Data column says where). The rules themselves
-are enabled by I6 and I8. ✕ rows were left out on purpose: an "API overloaded" effect needs transcript API-error parsing, and
-nothing parses that today. It can be added after §7.3 if wanted.
+**Implemented in I6 (wave 1, the rows whose data is ✅ today)**: R8, R9, R14, R17, R27, R32, R36, R38, R41, R44, R53, R56.
+
+**Implemented in I8 (wave 2, the rows whose outcome or label data is real since I7)**: R10, R11, R12, R13, R17 (now on a real `ok`), R18, R19, R22, R23, R25, R46, R47, R48, R59, R60.
+
+**Implemented in I8 follow-up (rows whose tag data was already real)**: R21, R43.
+
+R29 is the existing compaction effect: it is not a registry rule, but the Work switch and Calm mode now govern it. `LIFE_RULES` in
+`packages/office-scene/src/life/registry.ts` is the source; `tests/aether/life-registry.test.ts` checks that these ids and
+the categories of this table match it. The category `build` of the table is the settings group "Tests and builds" (`test`).
+How each shipped row differs from its table line, because the data is what the hook receiver keeps today (the first word of a
+command, plus a plain subcommand):
+
+| Row | As shipped |
+| --- | ---------- |
+| R9 | Amber blink only, while a test command is the target (`pnpm test`, `vitest`, `pytest`, `go test`, `cargo test`, ...); no green or red, because no exit status reaches the scene. It lasts a fixed 14 s, and its cooldown is 5 min (90 s was too busy in the simulated day of `life-distribution.test.ts`). |
+| R14 | The black hole lasts a fixed 20 s; the heavy-install growth (R15) is a slow 25% swell, not a read of the real duration. |
+| R17 | A paper plane replaces the squirrel as the seeded variant. In wave 1 it meant "a push command started" ("started a git push"); since I8 it starts only from a `tool.end` with `tags ∋ git.push` and `ok === true` (a force push is R18's), and says "pushed". A push whose outcome is unknown (null) shows nothing. |
+| R27 | Only for members whose own state is `error` (managed agents); an observed session never has that state today. |
+| R32 | Uses the process start time (`liveness.startedAt`) of a working session, 2 h or more, since there is no activity history. |
+| R36 | Counts the same Bash target (`pnpm test`, `git status`, ...) in the last 8 own calls within 2 min. |
+| R44 | Shows for 45 s at a time, again at most every 10 min while the files stay uncommitted, not continuously. |
+| R53 | The circle is centred on the idle members of the floor (not on a zone pad). Each member of the circle plays `stretch` 1.5 s in, through the pose registry (§5.6). |
+| R56 | Confetti on every desk in view (at most 40 desks), and the members at the desks in view (at most 24, the same as the confetti dresses) play `celebrate` 0.4 s in, through the pose registry (§5.6). |
+
+How the I8 rows differ from their table lines. An outcome row starts from a `tool.end` signal, which the web makes the first
+time a call's `ok` is known (`apps/web/src/features/life-outcomes.ts`); a call whose `ok` stays null makes nothing, so no
+outcome effect can start from a guess, and the scheduler drops such a signal for any rule marked `claimsOutcome` as a second
+guard. A start rule reads the `tags` the hook receiver put on the call, never its arguments. Every effect is a joke or a mark
+on the desk; none of them stops, blocks or reports anything.
+
+| Row | As shipped |
+| --- | ---------- |
+| R10 | `ok === true` on a call tagged `test`: a green lamp with a tick, and the bug running over the desk is squashed (a puff, then a flat decal that fades). 3.2 s, cooldown 10 min, chance 0.5 (5 min with a chance of 0.6 made the stress day of `life-distribution.test.ts` too busy: the lamp, the pass and the fail together). Words: "{name}'s test command exited successfully". The member nods 0.6 s in (pose registry, §5.6). |
+| R11 | `ok === false` on a `test` call: a red lamp with a cross and a red bug that scurries off the desk's edge. 3.6 s, cooldown 8 min, chance 0.7. The member plays `shrug` 0.7 s in (the spec said `scratch_head`; the shrug is the clip the activity change to `error` already uses, so a red test reads the same as a red session). |
+| R12 | `ok` known on a `ci.watch` call: a three-light post beside the screen, green or red. The words are the command's own exit status ("exited successfully" or "exited with an error"), never "CI passed": `gh run watch` exits 0 without `--exit-status`, whatever the run did. |
+| R13 | `ok === false` on a `build` or `typecheck` call: a red squiggle under the screen with a cross. 3 s, cooldown 10 min. The member shrugs 0.7 s in. |
+| R17 | See the wave 1 line above: `ok === true` on `git.push` (not a force push). |
+| R18 | `tags ∋ git.push.force` on a start: a yellow and black ring on the floor round the desk and two amber beacons circling at about 0.6 turns a second (no strobe). 4 s, cooldown 30 min. Says "started a force push", never that it went through. |
+| R19 | Starts from `git.conflicts` going from 0 to some (the web's scan diff) or from a start tagged `git.conflict.marker` (a search for conflict markers; the words say "searching", not "has conflicts"). Two `<<<<<<<` blocks pull a rope of light; the seed picks who pulls first. 9 s, cooldown 10 min. The "resolved" snap (R20) is not built. |
+| R22 | A start tagged `deploy`, `publish` or `release`: three lights count down, turn green, and a rocket climbs. 5.2 s, cooldown 15 min. Says "started a deploy", not that it worked. |
+| R23 | R22's call on a Friday from 15:00 in the viewer's local time zone (`Date#getDay` and `getHours` of the call's own timestamp): a calendar with a warning triangle and sweat drops. It is listed before R22, so on a Friday afternoon it takes the call and R22 shows only when this one is held back by its cooldown or draw. Cooldown 1 day. The member shrugs 1.2 s in. |
+| R21 | A start tagged `git.reset.hard`: a blue time-machine swirl turns backwards over the screen. 2 s, cooldown 30 min, chance 0.8, high tier only, nothing in reduced motion. It says "started a hard reset", never that it worked, and it has no danger tone. |
+| R43 | A start tagged `search.todo` (a Grep or a command whose pattern held a TODO word; the pattern itself is never stored): three sticky notes pop onto the screen's edge one after another. 3 s, cooldown 30 min, chance 0.8, nothing in reduced motion. |
+| R25 | `fs.rm.recursive` on a start: a bandaged cartoon skull with a small "!" balloon wobbles over the head. 2.6 s, cooldown 30 min. It is only a picture: nothing is executed, blocked or judged by it, and the words say "started a recursive delete command". |
+| R46 | The web derives `tests.machine` from two real test outcomes of the same repo in two sessions within 30 minutes, one failed and one passed; the sticker goes on the failing member. Cooldown 1 day. (The spec's trigger, not "a pass right after a failure" in one session: that is R47's ground.) |
+| R47 | The web derives `tests.edited` from a failed `test` call, then an Edit, Write or MultiEdit whose target base name matches `*.test.*` or `*.spec.*`, then a passed `test` call within 20 minutes of the failure. A BUG sign flips into a FEATURE sign. Cooldown 1 day. |
+| R48 | `ok === true` on a `gh.pr.approve` call (a real `gh pr review --approve`): an LGTM stamp thumps onto the screen and a ring spreads. No review is invented: the viewer's own approvals (R49) are not in this wave. |
+| R59 | New in I8: `tags ∋ sudo` on a start: a "root?" chip by the screen. 2.8 s, cooldown 20 min, chance 0.6. |
+| R60 | New in I8: `tags ∋ curl.pipe` on a start: a `curl \| sh` chip with an amber ring that pulses twice. 3 s, cooldown 30 min. A joke, not a verdict on the command. |
+
+Pending, with the reason: R39 and R40 stay unbuilt (no WebFetch error text exists on real files, so there is no `http.404` or
+`http.418` label; an effect that says "404" would be a guess). R2, R3 and R5 are relation rows that belong to the puppet strings
+and the hand-over (I5). R20 and R45 have their data (✅) but are pending: R20 needs a commit signal from the beanstalk's graph (the life layer reads
+sessions, not the graph) and R45 needs the member's branch on the signal and a helmet picture, which would grow the sprite atlas
+by a fifth row (it is full at 32 cells since R21 and R43). The rows that need more plumbing than a signal stay as they were: R16 (commit beads), R26, R28, R30, R31,
+R33-R35, R37, R42, R49-R52, R54, R55, R57, R58.
+
+There are 60 rows (R59 and R60 were added in I8). I7 shipped the server side of every ◐ row except R39 and R40 (the Data column says
+where). ✕ rows were left out on purpose: an "API overloaded" effect needs transcript API-error parsing, and nothing parses that
+today. It can be added after §7.3 if wanted.
 
 Cultural safety review: the skull is cartoonish and bandaged, an "oops", with no gore. There is no religious or national
 iconography, no alcohol (the "beer" variant of the coffee break is rejected) and no gendered jokes. The "flashbang" is a
@@ -510,7 +718,7 @@ soft glow, which keeps it safe for photosensitive viewers. Text on sprites is co
 
 | Pool | What | Draws | Notes |
 | --- | --- | --- | --- |
-| Sprite atlas | one 1024² `CanvasTexture` drawn at startup from vector paths (no image assets, no licence questions); 64 cells of 128² | 1 `InstancedMesh` of camera-facing quads, ≤ 64 live | per-instance cell, colour, alpha, scale; a vertex-shader billboard (program #3) |
+| Sprite atlas (as shipped: 1024 × 512 with 30 of 32 cells drawn, about 2.8 MB with its mip chain, one `InstancedMesh` of up to 128 live quads, flat decals included; there are no separate prop meshes yet) | one 1024² `CanvasTexture` drawn at startup from vector paths (no image assets, no licence questions); 64 cells of 128² | 1 `InstancedMesh` of camera-facing quads, ≤ 64 live | per-instance cell, colour, alpha, scale; a vertex-shader billboard (program #3) |
 | Desk props | duck, CI lamp, bell, black-hole disc, crates, stamp | 1 `InstancedMesh` per prop geometry family, merged into ≤ 2 by vertex colours | low-poly, ≤ 200 triangles each |
 | Particles | confetti, steam, sparks, black-hole swirl | 1 `Points` with a time-based shader (program #4), 512 slots in a ring buffer | spawned with seeded params; the CPU writes only at spawn |
 | Decals | hazard ring, cobweb, seal | in the sprite pool, flat on the floor or desk (billboarding off) | |
@@ -522,10 +730,47 @@ member's desk frame through `toWorld(seat, local)` (`shot-camera.ts`), so they f
 ### 5.5 Text equivalent
 
 - One visually hidden `role="log"` `aria-live="polite"` region, "Office activity (decorative)", in the scene's DOM
-  overlay. It announces at most one line per 5 s and keeps the last 5.
+  overlay. It announces at most one line per 5 s and keeps the last 5. It is the office's only log: the squad layer's
+  joins and leaves (R1, R6) speak through the same region and queue (`useAriaLog`), not a second one.
 - The same lines appear, with a "decorative" badge, in the member's conversation header as a tiny "recent moments"
   chip, closed by default.
 - Calm mode silences the log except for relation rows R1, R3, R4, R5 and R6.
+
+### 5.6 Poses: one registry for what a member does (`pose-cues.ts`, `use-pose-cues.ts`, `life/poses.ts`)
+
+Three things used to ask a member for a clip, each its own way: the person's emote (`useEmotes`), the supervisor's `reading` and
+`nod` at a hand-over (`SquadFrame.cues`), and, not yet, the life effects. The scene merged the first two with
+`ix.emotes.cues[id] ?? squad.cues[id]`, which hid a hand-over's nod for good from a supervisor the person had once made wave. They now
+all ask one registry, `usePoseCues(reducedMotion)`, which answers with the two cue maps the members already read:
+
+- `cues[id]`: `{ clip, key }`, the existing `emote` prop of `Animal` (a clip played once over what the member is doing; a new `key`
+  plays it again). `Animal` is unchanged.
+- `turns[id]`: `{ yaw, holdMs, at }`, a new optional `turn` prop of `Poser` (a rigid turn of the chair, within a glance, eased in over
+  0.5 s, held, eased out over 0.7 s; a message to a neighbour, the `engagements`, takes precedence). The only change to `Member` and
+  `Poser` is passing it down (4 lines).
+
+`admitPose` (pure) decides, per member: **priority** emote (the person) > hand-over > life effect; a pose still playing (a clip is
+assumed to hold 2.5 s, a turn as long as it asks) is only taken over by a higher source, a lower or equal one is dropped (never
+queued); a **life** pose is also held back by two cooldowns, the same clip on the same member within 30 s and any life pose on the
+same member within 8 s (so a crowd of effects cannot make one member gesticulate); **reduced motion** drops every request. Micro-actions
+(`behavior.ts`, `use-micro-actions.ts`) are not requests: they only start while nothing else plays (`Animal`'s `busy`) and any cue
+replaces them, which makes them the floor of the ranking without being in the registry.
+
+A rule declares its gesture with `pose` (`{ clip, atMs }` or `{ turn, holdMs, atMs }`), asked `atMs` into the effect for the member of
+a desk effect, the members of a group effect or the members at the desks in view (at most 24) of a building effect.
+`LifeLayer` asks when the scheduler starts a cue (never in a contact sheet's frozen preview); the registry may still refuse. As built:
+
+| Row | Pose |
+| --- | --- |
+| R8 duck | turns toward the duck (the desk's right, -0.45 rad) 1.2 s in and holds 7 s |
+| R10 test passed | `nod` 0.6 s in |
+| R11 test failed | `shrug` 0.7 s in (the spec said `scratch_head`; `shrug` is the clip the move to `error` already uses) |
+| R13 build or typecheck failed, R23 Friday deploy | `shrug` 0.7 s and 1.2 s in |
+| R53 stand-up | each member of the circle `stretch` 1.5 s in |
+| R56 Konami | the members at the desks in view `celebrate` 0.4 s in |
+
+Tests: `tests/aether/pose-cues.test.ts` (priorities, no spam, reduced motion, the turn envelope), `tests/aether/life-poses.test.ts`
+(which rule asks what of whom). R20 (a merge's `celebrate`) is still pending (see 5.3).
 
 ---
 
@@ -856,6 +1101,7 @@ Edits outside the new folders, and who else is touching those areas:
 | E2E | intro: plays once, skip by key, tap and Esc, don't-show-again persists, Replay works, reduced motion = stills. Squad: the demo fixture spawns 3 subagents, then the zone, pods and aria log lines show; finish leads to the hand-over aria line | `e2e/intro.spec.ts`, `e2e/squad.spec.ts` (synthetic fixture providers, labelled) |
 | Visual regression | **contact sheets**: a deterministic preview route `?preview=life&effect=<id>&t=<ms>` (the `scene-preview.ts` pattern) renders each effect at 3 times. Playwright assembles a sheet per category; review is human; a pixel diff runs only on the real-GPU runner | `e2e/office-life.spec.ts` + `scripts/contact-sheet.mjs` |
 | Perf gates | `PerfProbe` on a real GPU (not SwiftShader). Baseline scene vs the same scene with 1 squad × 8, 3 live memes and strings: Δ median frame ≤ 1.0 ms, Δ p95 ≤ 2.0 ms, Δ draw calls ≤ 19, Δ programs ≤ 4, Δ GPU MB ≤ 4, Δ jsMs median ≤ 0.4. Phone emulation tier: Δ median ≤ 2 ms | `e2e/office-life-perf.spec.ts`, run on demand (`PERF_GPU=1`); results recorded in the verification ledger as *measured*, never assumed |
+| Perf matrix | one scene variant per case through the same probe on a device profile (desktop sizes and tiers, the phone at 4x CPU throttle), interleaved and repeated, medians; motion cost (`&loop=1` effects, strings, hand-overs running) and the first appearance (`&after=MS`: the render calls that link a program) | `scripts/perf-matrix.mjs` (results in section 4.9); `e2e/office-life-follow-up.spec.ts` pins that a late squad links no program |
 
 ---
 
@@ -888,16 +1134,16 @@ prioritized UX backlog and the 2D design for the panel (squad groups, nested sub
    core → halo, as drawn here), or straight squad → supervisor? *Default: squad → core → halo.* It ties the work to the
    building's heart (the beanstalk axis) without crossing desks.
 2. **Squad placement.** Auto-place next to the supervisor and let the user pin, or require the user to place squads?
-   *Default: auto, with pinning.*
+   *Decided: auto, with pinning.*
 3. **New Blender clips.** Allow `conduct` and `carry` after the procedural review (one pipeline run, measured download
    growth)? *Default: decide after I5's contact sheet; budget one batch.*
 4. **Intro length.** 45.8 s (orbit 26 s, rise 15 s, hold 4 s) is calm but long. Accept, or shorten the orbit to 20 s
    (peak 21°/s)? *Default: keep 26 s, with skip on any input.*
 5. **Return summaries in 3D and 2D.** Show the redacted 160-char result summary (2D panel, folder tooltip)?
-   *Default: yes in 2D, off in 3D (the folder only says "received").*
+   *Decided: yes in 2D, never in 3D (the folder only says "received").*
 6. **Meme defaults.** Which categories are on for new users? *Default: relation, work, git, test, build and ops on;
    meme and social "rare" (half chance); easter on; everything off in Calm mode.*
 7. **Subagent desk fallback.** On a full floor, keep giving subagents full desks (today's behaviour), or stack them as
-   silhouettes in a minimal squad? *Default: keep desks as the fallback.*
+   silhouettes in a minimal squad? *Decided: keep desks as the fallback.*
 8. **Zone tour.** Keep the 8-stop zone tour beside the intro, or retire it once the intro ships? *Default: keep it,
    renamed "Guided tour (rooms)".*

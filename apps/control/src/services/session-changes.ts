@@ -37,10 +37,13 @@ export function diffSessions(
   const changed = [...new Set([...prev.keys(), ...next.keys()])].flatMap((key) => {
     const before = prev.get(key);
     const after = next.get(key);
+    // A session that appeared brings its words too (the feed shows its reply at once); one that vanished is only a state.
     const kinds: ChangeKind[] =
       before && after
         ? (Object.keys(after) as ChangeKind[]).filter((k) => before[k] !== after[k])
-        : ['state']; // appeared or vanished
+        : after
+          ? ['state', 'speech', 'transcript']
+          : ['state'];
     return kinds.length ? [{ key, kinds }] : [];
   });
   return { next, changed };

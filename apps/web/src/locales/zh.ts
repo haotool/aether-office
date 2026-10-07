@@ -717,6 +717,8 @@ export const zh = {
   mdTodo: '待辦',
   convFailed: '失敗',
   convContext: '上下文',
+  momentsTitle: '近期小動態',
+  momentsDecorative: '裝飾',
   convTrimmed: '只顯示對話的最新部分',
   noticeTaskDone: '背景工作已完成',
   noticeTaskFailed: '背景工作失敗',

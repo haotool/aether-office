@@ -5,12 +5,16 @@ it('keeps input order, never exceeds the width, and lets a slow item not stall t
   let running = 0;
   let peak = 0;
   const finished: number[] = [];
-  const out = await mapPool([30, 1, 1, 1, 1, 1], 2, async (ms, i) => {
+  // The first item holds on until the five others are done: no timer, so no load can reorder them.
+  let release!: () => void;
+  const others = new Promise<void>((resolve) => (release = resolve));
+  const out = await mapPool([0, 1, 2, 3, 4, 5], 2, async (_, i) => {
     running++;
     peak = Math.max(peak, running);
-    await new Promise((resolve) => setTimeout(resolve, ms));
+    await (i === 0 ? others : Promise.resolve());
     running--;
     finished.push(i);
+    if (finished.length === 5) release();
     return i * 10;
   });
   expect(out).toEqual([0, 10, 20, 30, 40, 50]);

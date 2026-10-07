@@ -9,12 +9,14 @@ import { revoke } from '../../apps/control/src/services/identity.js';
 import { enrollRunner } from '../../apps/runner/src/enroll.js';
 import { assertSecureControlUrl } from '../../apps/runner/src/transport.js';
 import { command, fixture } from './fixture.js';
+import { freePort } from './timing.js';
 
-const PORT = 4496;
-const URL_BASE = `http://127.0.0.1:${PORT}`;
+let PORT = 0;
+let URL_BASE = '';
 const children: ChildProcess[] = [];
 
-async function until<T>(read: () => T | undefined | false, ms = 20000): Promise<T> {
+// A deadline for a runner process to start (tsx compiles on the way) and answer: only a hang reaches it.
+async function until<T>(read: () => T | undefined | false, ms = 60000): Promise<T> {
   for (const end = Date.now() + ms; Date.now() < end; await delay(100)) {
     const value = read();
     if (value) return value;
@@ -36,15 +38,27 @@ const launch = (directory: string): ChildProcess => {
   return child;
 };
 
-afterAll(() => {
-  for (const child of children) if (child.exitCode === null) child.kill('SIGKILL');
-});
-
 let directory: string;
-beforeAll(() => {
+beforeAll(async () => {
+  PORT = await freePort();
+  URL_BASE = `http://127.0.0.1:${PORT}`;
   directory = mkdtempSync(join(tmpdir(), 'aether-remote-'));
 });
-afterAll(() => rmSync(directory, { recursive: true, force: true }));
+// One hook, in this order (hooks run in reverse): the runners are gone before their directory is, or they write into it
+// while it is being removed (ENOTEMPTY).
+afterAll(async () => {
+  await Promise.all(
+    children.map(
+      (child) =>
+        new Promise<void>((done) => {
+          if (child.exitCode !== null || child.signalCode !== null) return done();
+          child.once('exit', () => done());
+          child.kill('SIGKILL');
+        }),
+    ),
+  );
+  rmSync(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+});
 
 it('enrolls two independent runner processes by single-use invitation and keeps their scopes apart', async () => {
   const f = fixture(join(directory, 'control.sqlite'));

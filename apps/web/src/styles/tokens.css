@@ -112,9 +112,8 @@
   --scene-gold: #ffc65c;
   --scene-red: #ff7a85;
   --white: #fff;
-  /* Provider marks (identification only): Claude's orange, and Codex's near-white (graphite on a light page) */
+  /* Provider marks (small indicators only): Claude's own color; Codex's mark takes the muted text color */
   --provider-claude: #d97757;
-  --provider-codex: #e8f2f8;
   /* Shadows and scrims */
   --scrim: #0008;
   --shade: #0006;
@@ -161,5 +160,4 @@
   --shadow: 0 10px 30px #1b3a5a1f;
   --grid: #1f4a7a14;
   --provider-claude: #c4572f;
-  --provider-codex: #2a3744;
 }

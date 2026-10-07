@@ -1,0 +1,26 @@
+AETHER OFFICE
+Copyright (c) 2026 haotool and the AETHER OFFICE contributors
+Licensed under the MIT License (see LICENSE).
+
+This project started from agent-office (https://github.com/AgentSystemLabs/agent-office),
+Copyright (c) 2026 AgentSystemLabs, MIT License. Parts of it remain in tools/blender and
+packages/office-scene/src/geometry.ts.
+
+apps/control/src/services/redaction.ts adapts secret patterns from Orca
+(https://github.com/stablyai/orca), Copyright (c) 2026 Lovecast Inc., MIT License.
+
+packages/providers/generated contains protocol bindings generated, unmodified, by the OpenAI
+Codex CLI (https://github.com/openai/codex), licensed under the Apache License, Version 2.0
+(see LICENSES/Apache-2.0.txt). The NOTICE of that project reads:
+
+    OpenAI Codex
+    Copyright 2025 OpenAI
+
+    This project includes code derived from [Ratatui](https://github.com/ratatui/ratatui), licensed under the MIT license.
+    Copyright (c) 2016-2022 Florian Dehau
+    Copyright (c) 2023-2025 The Ratatui Developers
+
+Third-party packages and their licences: THIRD_PARTY_NOTICES.md.
+
+Claude and Claude Code are trademarks of Anthropic, PBC. OpenAI and Codex are trademarks of
+OpenAI. This project is not affiliated with, endorsed by or sponsored by either company.
