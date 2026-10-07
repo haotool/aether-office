@@ -6,7 +6,12 @@ import { DomainError, authorize } from '@aether/kernel';
 import type { RouteContext } from './context.js';
 
 /** What belongs to one piece of work: review comments, integrations and post-back, diagnostics, reviews, workspaces. */
-export function workRoutes({ app, control, actor, options }: RouteContext) {
+export function workRoutes(context: RouteContext) {
+  workCommentRoutes(context);
+  workInspectionRoutes(context);
+}
+
+function workCommentRoutes({ app, control, actor, options }: RouteContext) {
   app.get<{ Params: { projectId: string; workId: string } }>(
     '/api/projects/:projectId/work/:workId/comments',
     async (request) =>
@@ -41,6 +46,10 @@ export function workRoutes({ app, control, actor, options }: RouteContext) {
       );
     },
   );
+}
+
+/** Diagnostics, review history and the workspaces of a work item. */
+function workInspectionRoutes({ app, control, actor }: RouteContext) {
   app.get<{ Params: { projectId: string; workId: string } }>(
     '/api/projects/:projectId/work/:workId/diagnostics',
     async (request) =>

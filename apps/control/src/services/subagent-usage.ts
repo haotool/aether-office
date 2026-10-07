@@ -1,4 +1,5 @@
 import { constants } from 'node:fs';
+import { deleteOldest } from './oldest-entry.js';
 import { open } from 'node:fs/promises';
 import { fresh, newState, parseChunk, type ParseState } from './usage-parse.js';
 
@@ -77,8 +78,7 @@ export function readSubagentUsage(
     let entry = entries.get(file);
     if (!entry || size < entry.offset)
       entry = { state: newState('claude'), offset: 0, samples: [] };
-    if (entries.size >= MAX_FILES && !entries.has(file))
-      entries.delete(entries.keys().next().value!); // the oldest only: the rest keep their offsets
+    if (entries.size >= MAX_FILES && !entries.has(file)) deleteOldest(entries); // the oldest only: the rest keep their offsets
     entries.set(file, entry);
     try {
       if (!(await advance(file, size, entry, budget))) return null;
@@ -88,7 +88,8 @@ export function readSubagentUsage(
     }
     const total = totalOf(entry.state);
     const rate = rateOf(entry.samples, total, now);
-    if (!entry.samples.length || now - entry.samples.at(-1)!.at >= SAMPLE_GAP_MS)
+    const lastSample = entry.samples.at(-1);
+    if (!lastSample || now - lastSample.at >= SAMPLE_GAP_MS)
       entry.samples = [...entry.samples, { at: now, total }].slice(-MAX_SAMPLES);
     return { total, tools: toolsOf(entry.state), perMinute: rate };
   });

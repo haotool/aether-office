@@ -36,6 +36,8 @@ export type ParseState = {
   lastAt: number | null;
   /** Lines that held usage the parser could not place (no usable timestamp, a cut counter line): counted, never silent. */
   skipped: number;
+  /** Claude lines the byte fast path missed that a bounded JSON.parse read instead (work counter, for tests). */
+  fallbacks: number;
 };
 export type DayOf = (ms: number) => string;
 
@@ -52,6 +54,7 @@ export const newState = (provider: ParseState['provider']): ParseState => ({
   model: null,
   lastAt: null,
   skipped: 0,
+  fallbacks: 0,
 });
 
 /**
@@ -120,7 +123,10 @@ function timestampOf(data: Buffer, near: number, start: number, end: number): nu
 }
 
 // ---- Claude: message.usage on assistant lines -------------------------------------------------------------------
-const USAGE = Buffer.from('"usage":{');
+const USAGE = Buffer.from('"usage"');
+const ASSISTANT = Buffer.from('"assistant"');
+/** A line longer than this that the fast path missed is counted as skipped rather than parsed. */
+const MAX_FALLBACK_LINE = 1 << 20;
 const TOOL_USE = Buffer.from('"type":"tool_use"');
 const MESSAGE_ID = /"message":\{[^{}]{0,300}?"id":"([^"]+)"/;
 const MESSAGE_MODEL = /"message":\{[^{}]{0,300}?"model":"([^"]+)"/;
@@ -154,6 +160,52 @@ const maxOf = (a: Counters, b: Counters): Counters => ({
   r: 0,
 });
 
+type Msg = { id: string; model: string | undefined; counters: Counters; at: number; tools: number };
+
+/** The byte fast path: compact JSON with the message id near the front. Null when the line is not of that shape. */
+function fastMsg(data: Buffer, hit: number, start: number, end: number): Msg | null {
+  if (data[hit + USAGE.length] !== 0x3a || data[hit + USAGE.length + 1] !== 0x7b) return null; // `:{`
+  const head = data.toString('utf8', start, Math.min(start + 900, end));
+  const id = MESSAGE_ID.exec(head)?.[1];
+  const at = timestampOf(data, hit, start, end);
+  if (id === undefined || at === null) return null;
+  const counters = claudeCounters(
+    data.toString('utf8', hit + USAGE.length, Math.min(hit + 700, end)),
+  );
+  return {
+    id,
+    model: MESSAGE_MODEL.exec(head)?.[1],
+    counters,
+    at,
+    tools: countOf(data, TOOL_USE, start, hit),
+  };
+}
+
+/** The tolerant path for one assistant line the fast path missed: any key order or spacing. Null when it has no usage. */
+function slowMsg(text: string): Msg | null {
+  let line: Record<string, unknown>;
+  try {
+    line = obj(JSON.parse(text));
+  } catch {
+    return null;
+  }
+  const message = obj(line['message']);
+  const usage = obj(message['usage']);
+  const at = typeof line['timestamp'] === 'string' ? Date.parse(line['timestamp']) : NaN;
+  const id = message['id'];
+  if (typeof id !== 'string' || !Number.isFinite(at) || !Object.keys(usage).length) return null;
+  const counters = { ...ZERO };
+  for (const [key, slot] of Object.entries(CLAUDE_KEYS)) counters[slot] = num(usage[key]);
+  const content = Array.isArray(message['content']) ? (message['content'] as unknown[]) : [];
+  return {
+    id,
+    model: typeof message['model'] === 'string' ? message['model'] : undefined,
+    counters,
+    at,
+    tools: content.filter((c) => obj(c)['type'] === 'tool_use').length,
+  };
+}
+
 function parseClaude(state: ParseState, data: Buffer, dayOf: DayOf, claims?: Claims) {
   let from = 0;
   while (from < data.length) {
@@ -163,20 +215,22 @@ function parseClaude(state: ParseState, data: Buffer, dayOf: DayOf, claims?: Cla
     const stop = data.indexOf(10, hit);
     const end = stop < 0 ? data.length : stop;
     from = end + 1;
-    const head = data.toString('utf8', start, Math.min(start + 900, end));
-    const id = MESSAGE_ID.exec(head)?.[1];
-    const at = timestampOf(data, hit, start, end);
-    // A usage that is not a message's own (a sub-agent's result, say) has no message id: it was counted where it ran.
-    if (id === undefined) continue;
-    if (at === null) {
-      state.skipped++;
-      continue;
+    let msg = fastMsg(data, hit, start, end);
+    if (msg === null) {
+      // A usage that is not an assistant message's own (a sub-agent's result, say) was counted where it ran.
+      if (!data.subarray(start, end).includes(ASSISTANT)) continue;
+      if (end - start <= MAX_FALLBACK_LINE) {
+        state.fallbacks++;
+        msg = slowMsg(data.toString('utf8', start, end));
+      }
+      if (msg === null) {
+        state.skipped++; // an assistant line with usage that neither path could place: counted, never silent
+        continue;
+      }
     }
+    const { id, counters, at } = msg;
     const day = dayOf(at);
-    const counters = claudeCounters(
-      data.toString('utf8', hit + USAGE.length, Math.min(hit + 700, end)),
-    );
-    const model = MESSAGE_MODEL.exec(head)?.[1];
+    const model = msg.model;
     // A placeholder the CLI writes for an error (`<synthetic>`) is no request to a model and spent nothing.
     const synthetic = model?.startsWith('<') ?? false;
     const named = model && !synthetic ? model : null;
@@ -200,7 +254,7 @@ function parseClaude(state: ParseState, data: Buffer, dayOf: DayOf, claims?: Cla
       claims?.book.set(id, claims.owner, state.lastUsage);
     const bucket = bucketOf(state, day);
     if (known === undefined && !synthetic) bucket.req++;
-    bucket.tools += countOf(data, TOOL_USE, start, hit);
+    bucket.tools += msg.tools;
     touch(state, at, day);
   }
 }

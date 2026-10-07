@@ -4,7 +4,7 @@ import { readProcessTable } from './agent-processes.js';
 
 /** Only a session nobody is working in may be stopped from here: one forgotten for hours, or left without an owner. */
 const STOPPABLE = ['dormant', 'orphaned'] as const;
-export type Stopped = 'stopped' | 'still_running' | 'changed' | 'zombie';
+type Stopped = 'stopped' | 'still_running' | 'changed' | 'zombie';
 
 const KILL_WAIT_MS = 2000;
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));

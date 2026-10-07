@@ -5,7 +5,7 @@ import type { Database } from 'better-sqlite3';
  * equality. Everything else is written as SQL where it is used. Table and column names come from `schema.ts`, never
  * from input, and are checked again here; values are always bound.
  */
-export type Table<R> = {
+type Table<R> = {
   readonly name: string;
   readonly columns: readonly (keyof R & string)[];
   readonly json: readonly (keyof R & string)[]; // columns holding JSON text
@@ -16,7 +16,7 @@ export const table = <R>(
   json: readonly (keyof R & string)[] = [],
 ): Table<R> => ({ name, columns, json });
 
-export type Where<R> = { [K in keyof R]?: R[K] };
+type Where<R> = { [K in keyof R]?: R[K] };
 
 const IDENTIFIER = /^[A-Za-z][A-Za-z0-9_]*$/;
 const known = <R>(t: Table<R>, column: string) => {

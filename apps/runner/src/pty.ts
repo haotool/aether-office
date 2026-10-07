@@ -66,23 +66,7 @@ export class PtySession {
       this.child.kill('SIGKILL');
       throw error;
     }
-    this.child.onData((data) => {
-      const seq = ++this.seq;
-      let chunk = Buffer.from(data);
-      if (chunk.length > this.byteLimit) {
-        let start = chunk.length - this.byteLimit;
-        while (start < chunk.length && (chunk[start]! & 0xc0) === 0x80) start++;
-        chunk = chunk.subarray(start);
-        this.droppedThrough = seq;
-      }
-      this.chunks.push({ seq, data: chunk.toString('utf8') });
-      this.bytes += chunk.length;
-      while (this.bytes > this.byteLimit || this.chunks.length > 256) {
-        const dropped = this.chunks.shift()!;
-        this.bytes -= Buffer.byteLength(dropped.data);
-        this.droppedThrough = Math.max(this.droppedThrough, dropped.seq);
-      }
-    });
+    this.child.onData((data) => this.record(data));
     this.exited = new Promise((resolve) =>
       this.child.onExit((event) => {
         this.exit = { exitCode: event.exitCode, signal: event.signal ?? null };
@@ -94,6 +78,25 @@ export class PtySession {
     );
     this.deadline = setTimeout(() => this.stop(), p.timeoutMs);
     this.deadline.unref();
+  }
+  /** Keeps the output in a bounded buffer: oldest chunks go first, and a gap is noted when something was dropped. */
+  private record(data: string) {
+    const seq = ++this.seq;
+    let chunk = Buffer.from(data);
+    if (chunk.length > this.byteLimit) {
+      let start = chunk.length - this.byteLimit;
+      while (start < chunk.length && ((chunk[start] ?? 0) & 0xc0) === 0x80) start++;
+      chunk = chunk.subarray(start);
+      this.droppedThrough = seq;
+    }
+    this.chunks.push({ seq, data: chunk.toString('utf8') });
+    this.bytes += chunk.length;
+    while (this.bytes > this.byteLimit || this.chunks.length > 256) {
+      const dropped = this.chunks.shift();
+      if (!dropped) break;
+      this.bytes -= Buffer.byteLength(dropped.data);
+      this.droppedThrough = Math.max(this.droppedThrough, dropped.seq);
+    }
   }
   read(after = 0) {
     if (!Number.isSafeInteger(after) || after < 0 || after > this.seq)

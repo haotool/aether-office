@@ -14,7 +14,7 @@ const TAIL_BYTES = 128 * 1024;
 const MAX_TEXT = 400;
 const MAX_SPEECH_SESSIONS = 40;
 
-export type Utterance = { text: string; at: number | null };
+type Utterance = { text: string; at: number | null };
 export type Speech = { user: Utterance | null; assistant: Utterance | null };
 
 // Redaction has already happened (the transcript parser); the cut then keeps whole characters and closes any fence,

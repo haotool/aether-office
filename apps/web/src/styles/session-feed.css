@@ -40,7 +40,7 @@
   letter-spacing: 1.2px;
   list-style: none;
   text-transform: uppercase;
-  outline-offset: -2px;
+  outline-offset: calc(var(--focus-offset) * -1);
 }
 .feed-group > summary::-webkit-details-marker {
   display: none;
@@ -75,7 +75,7 @@
   padding: var(--space-12) var(--space-12) var(--space-12) var(--space-16);
   border-bottom: 1px solid var(--line);
   text-align: left;
-  outline-offset: -2px;
+  outline-offset: calc(var(--focus-offset) * -1);
 }
 /* The status rail on the left edge: amber needs you, teal pulsing working, blue finished, dim idle */
 .feed-row::before {
@@ -191,7 +191,7 @@
   color: var(--muted);
   overflow-wrap: anywhere;
   font-size: var(--fs-small);
-  line-height: 1.45;
+  line-height: var(--lh-snug);
 }
 .feed-reply.none {
   color: var(--dim);
@@ -271,7 +271,7 @@
   padding-left: var(--space-20);
   color: var(--muted);
   font-size: var(--fs-small);
-  line-height: 1.6;
+  line-height: var(--lh-body);
 }
 
 /* A wide panel: the row becomes two columns (who and where on the left, the newest reply on the right) */
@@ -312,6 +312,6 @@
 }
 @media (pointer: coarse) {
   .feed-group > summary {
-    min-height: var(--control-touch-sm);
+    min-height: var(--control-h-sm);
   }
 }

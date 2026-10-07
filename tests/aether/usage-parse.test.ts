@@ -287,3 +287,79 @@ it('keeps at most a handful of models per day, the rest under "other"', () => {
   expect(models.length).toBeLessThanOrEqual(9);
   expect(models).toContain('other');
 });
+
+describe('Claude lines the byte fast path does not match', () => {
+  const at = '2026-10-07T01:00:00.000Z';
+  const usage = {
+    input_tokens: 5,
+    output_tokens: 7,
+    cache_read_input_tokens: 100,
+    cache_creation_input_tokens: 3,
+  };
+  const message = (id: string, content: unknown[] = []) => ({
+    id,
+    model: 'claude-opus-5-5',
+    role: 'assistant',
+    content,
+    usage,
+  });
+  const read = (...lines: string[]) => {
+    const state = newState('claude');
+    parseChunk(state, buffer(...lines), utc);
+    return state;
+  };
+  const want = { i: 5, o: 7, cr: 100, cw: 3, req: 1 };
+
+  it('reads reordered keys (timestamp first, id after the usage, far from the message start)', () => {
+    const line = JSON.stringify({
+      timestamp: at,
+      type: 'assistant',
+      message: {
+        content: [{ type: 'text', text: 'x'.repeat(500) }],
+        usage,
+        model: 'm',
+        id: 'late',
+        role: 'assistant',
+      },
+    });
+    const state = read(line);
+    expect(totals(state)).toMatchObject(want);
+    expect(state.fallbacks).toBe(1);
+    expect(state.skipped).toBe(0);
+  });
+
+  it('reads whitespace-pretty JSON on one line, and counts tool_use blocks', () => {
+    const pretty = JSON.stringify(
+      {
+        type: 'assistant',
+        timestamp: at,
+        message: message('p', [{ type: 'tool_use' }, { type: 'text' }]),
+      },
+      null,
+      1,
+    ).replace(/\n\s*/g, ' ');
+    const state = read(pretty);
+    expect(totals(state)).toMatchObject({ ...want, tools: 1 });
+    expect(state.fallbacks).toBe(1);
+  });
+
+  it('counts an assistant line with usage that cannot be read as skipped, a stray usage as nothing', () => {
+    const noStamp = JSON.stringify({ type: 'assistant', message: message('b') });
+    const cut = '{"type":"assistant", "usage" : {"input_tokens": 1} cut';
+    const stray = '{"type":"user", "toolUseResult": {"usage": {"input_tokens": 9}}}';
+    const state = read(noStamp, cut, stray);
+    expect(state.skipped).toBe(2);
+    expect(totals(state).req).toBe(0);
+  });
+
+  it('keeps compact ordered lines on the fast path: zero fallbacks however many lines', () => {
+    const lines = Array.from({ length: 500 }, (_, k) =>
+      claudeLine(`m${k}`, at, { i: 1, o: 1 }, { tools: 1 }),
+    );
+    const state = read(...lines);
+    expect(state.fallbacks).toBe(0);
+    expect(totals(state).req).toBe(500);
+    parseChunk(state, buffer(claudeLine('next', at, { i: 1, o: 1 })), utc); // warm: only new lines are read
+    expect(state.fallbacks).toBe(0);
+  });
+});

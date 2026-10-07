@@ -75,7 +75,7 @@ local user's file permissions. Strong sandboxing of agents is outside the intend
   `verifyKey`, and writes both to `~/.aether/approvals.json` (`AETHER_APPROVALS_CONFIG` overrides). The file is written
   atomically under a fresh name, mode 0600, in a `~/.aether` that is chmod 0700 even if it existed; a symlinked file or
   directory is refused. Switching off deletes the file (token and key with it); switching on again rotates both.
-  - _The hook._ `pnpm hooks install --remote-approvals` copies the hook and its one helper into `~/.aether/hooks/` (directory
+  - _The hook._ `pnpm hooks install --remote-approvals` copies the hook and its one helper into `~/.aether/hooks/` (`$AETHER_HOME/hooks/` when `AETHER_HOME` is set; the command lists the files and where it writes them before writing, and `--dry-run` only lists them) (directory
     0700, files 0500, written atomically) and points Claude's settings at that copy, because a worktree is writable by the
     very agent the hook gates. `pnpm hooks status` compares the copy with the repository's source by SHA-256 and reports
     `modified` when they differ; installing again restores it. This stops an agent from editing the hook with its tool

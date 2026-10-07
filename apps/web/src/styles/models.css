@@ -16,13 +16,10 @@
   margin: 0;
 }
 .model-chip {
-  min-height: var(--control-touch-sm);
-  padding: var(--space-4) var(--space-12);
-  border: 1px solid var(--line);
-  border-radius: var(--r-pill);
   background: var(--surface);
-  font-size: var(--fs-small);
+  color: var(--text);
   overflow-wrap: anywhere;
+  white-space: normal; /* a long model id wraps inside the chip */
 }
 .model-chip.selected {
   border-color: var(--mint);

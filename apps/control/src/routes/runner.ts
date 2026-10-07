@@ -14,7 +14,15 @@ import { z } from 'zod';
 import type { RouteContext } from './context.js';
 
 /** Everything a runner calls: enrolment, heartbeat, claiming and reporting work, jobs, terminals, approvals. */
-export function runnerRoutes({ app, control, actor, attempts }: RouteContext) {
+export function runnerRoutes(context: RouteContext) {
+  machineRoutes(context);
+  enrollRoute(context);
+  runnerWorkRoutes(context);
+  runnerApprovalRoutes(context);
+}
+
+/** Enrolling a machine and its heartbeat. */
+function machineRoutes({ app, control, actor }: RouteContext) {
   app.post('/api/machines', async (request) => {
     const body = z
       .object({
@@ -43,7 +51,10 @@ export function runnerRoutes({ app, control, actor, attempts }: RouteContext) {
       .parse(request.body);
     return heartbeat(control.ctx, actor(request), body.verifiers, body.terminalProfiles);
   });
-  // Unauthenticated by design: the single-use invitation token is the credential. Rate limited by IP.
+}
+
+// Unauthenticated by design: the single-use invitation token is the credential. Rate limited by IP.
+function enrollRoute({ app, control, attempts }: RouteContext) {
   app.post('/api/runner/enroll', async (request) => {
     const key = `enroll:${request.ip}`;
     const now = control.ctx.now();
@@ -64,6 +75,10 @@ export function runnerRoutes({ app, control, actor, attempts }: RouteContext) {
       throw error;
     }
   });
+}
+
+/** Claiming and reporting runs, jobs, terminals and observations. */
+function runnerWorkRoutes({ app, control, actor }: RouteContext) {
   app.post('/api/runner/observations', async (request) =>
     reportObservation(control.ctx, actor(request), request.body),
   );
@@ -104,6 +119,10 @@ export function runnerRoutes({ app, control, actor, attempts }: RouteContext) {
   app.post('/api/runner/report', async (request) =>
     report(control.ctx, actor(request), request.body),
   );
+}
+
+/** Permission prompts a run raises for a person. */
+function runnerApprovalRoutes({ app, control, actor }: RouteContext) {
   app.post('/api/runner/approvals/request', async (request) =>
     requestApproval(control.ctx, actor(request), request.body),
   );

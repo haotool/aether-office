@@ -55,6 +55,7 @@ export function Topbar({
         <span className="tiny-label">WORKSPACE</span>
         <select
           aria-label={t('project')}
+          title={projects.find((p) => p.id === projectId)?.name}
           value={projectId ?? ''}
           onChange={(e) => onProject(e.target.value)}
         >

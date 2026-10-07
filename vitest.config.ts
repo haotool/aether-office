@@ -6,5 +6,6 @@ export default defineConfig({
     testTimeout: 10000,
     hookTimeout: 20000,
     maxWorkers: 4,
+    setupFiles: ['tests/aether/setup-aether-home.ts'],
   },
 });

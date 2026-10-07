@@ -83,7 +83,7 @@
   border-radius: var(--r-xs);
   border: 1px solid color-mix(in srgb, var(--mint) 28%, var(--line));
   box-shadow: inset 0 0 80px var(--vignette);
-  min-height: 380px;
+  min-height: 380px; /* geometry: the shortest stage the camera framing and the HUD fit in */
   height: calc(100dvh - 300px);
   flex: 1;
   max-height: 880px;
@@ -100,9 +100,9 @@
 }
 .scene-toolbar {
   position: absolute;
-  top: 15px;
-  left: 15px;
-  right: 15px;
+  top: var(--space-16);
+  left: var(--space-16);
+  right: var(--space-16);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -122,7 +122,10 @@
   color: var(--on-glass-muted);
   box-shadow: 0 3px 12px var(--shade-soft);
 }
+/* The HUD stays compact: a segment is --control-h-sm (32 desktop, 36 touch), never the 36/40 of a page control. */
 .segmented button {
+  min-width: var(--control-h-sm);
+  min-height: var(--control-h-sm);
   padding: var(--space-6) var(--space-12);
   border-radius: var(--r-xs);
 }
@@ -139,6 +142,12 @@
   color: var(--on-glass);
   padding: var(--space-2);
 }
+/* .scene-toolbar in front: controls.css (later in the cascade) gives a class-less button the page's --control-h-md. */
+.scene-toolbar .scene-options > button,
+.scene-toolbar .scene-options select {
+  min-width: var(--control-h-sm);
+  min-height: var(--control-h-sm);
+}
 .scene-options > button {
   padding: var(--space-6) var(--space-8);
   display: flex;
@@ -154,6 +163,7 @@
 }
 .scene-footer {
   position: absolute;
+  /* geometry: the footer line sits under the floor card (scene-hud.css, left 18 / bottom 38) and the camera wall (scene-pips.css) */
   left: 18px;
   right: 18px;
   bottom: 14px;

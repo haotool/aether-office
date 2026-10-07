@@ -1,9 +1,74 @@
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import { DomainError, authorize } from '@aether/kernel';
 import { z } from 'zod';
 import type { RouteContext } from './context.js';
 
+function startEventStream(reply: FastifyReply) {
+  reply.hijack();
+  reply.raw.writeHead(200, {
+    'content-type': 'text/event-stream',
+    'cache-control': 'no-store',
+    connection: 'keep-alive',
+    'x-accel-buffering': 'no',
+  });
+}
+
+/** Server-sent events of a project: what happened after `after`, a heartbeat when nothing did, a fault if access is lost. */
+function streamEvents(
+  { control, actor, streams }: RouteContext,
+  request: FastifyRequest<{ Params: { projectId: string }; Querystring: { after?: string } }>,
+  reply: FastifyReply,
+) {
+  const who = actor(request);
+  let cursor = request.query.after ?? '0';
+  control.events(who, request.params.projectId, cursor, 1);
+  startEventStream(reply);
+  let closed = false;
+  const close = () => {
+    if (closed) return;
+    closed = true;
+    streams.delete(close);
+    clearInterval(timer);
+    reply.raw.end();
+  };
+  const tick = () => {
+    if (closed) return;
+    try {
+      // Reauthenticate the exact browser/API credential, not just the original identity.
+      const fresh = actor(request);
+      const events = control.events(fresh, request.params.projectId, cursor);
+      for (const event of events) {
+        if (
+          !reply.raw.write(`id: ${event.seq}\nevent: domain\ndata: ${JSON.stringify(event)}\n\n`)
+        ) {
+          close();
+          return;
+        }
+        cursor = event.seq;
+      }
+      if (!events.length && !reply.raw.write(': heartbeat\n\n')) close();
+    } catch (error) {
+      const code = error instanceof DomainError ? error.code : 'STREAM_ERROR';
+      reply.raw.write(`event: fault\ndata: ${JSON.stringify({ code })}\n\n`);
+      close();
+    }
+  };
+  const timer = setInterval(tick, 1000);
+  timer.unref();
+  streams.add(close);
+  request.raw.on('close', close);
+  reply.raw.on('close', close);
+  tick();
+}
+
 /** A project's own state: its policy, command intake, snapshot, event log and live stream, inbox, knowledge, approvals. */
-export function projectRoutes({ app, control, actor, streams }: RouteContext) {
+export function projectRoutes(context: RouteContext) {
+  projectStateRoutes(context);
+  projectRecordRoutes(context);
+}
+
+function projectStateRoutes(context: RouteContext) {
+  const { app, control, actor } = context;
   app.get('/api/projects', async (request) => control.listProjects(actor(request)));
   app.get<{ Params: { projectId: string } }>(
     '/api/projects/:projectId/execution',
@@ -34,56 +99,13 @@ export function projectRoutes({ app, control, actor, streams }: RouteContext) {
   app.get<{ Params: { projectId: string }; Querystring: { after?: string } }>(
     '/api/projects/:projectId/stream',
     async (request, reply) => {
-      const who = actor(request);
-      let cursor = request.query.after ?? '0';
-      control.events(who, request.params.projectId, cursor, 1);
-      reply.hijack();
-      reply.raw.writeHead(200, {
-        'content-type': 'text/event-stream',
-        'cache-control': 'no-store',
-        connection: 'keep-alive',
-        'x-accel-buffering': 'no',
-      });
-      let closed = false;
-      const close = () => {
-        if (closed) return;
-        closed = true;
-        streams.delete(close);
-        clearInterval(timer);
-        reply.raw.end();
-      };
-      const tick = () => {
-        if (closed) return;
-        try {
-          // Reauthenticate the exact browser/API credential, not just the original identity.
-          const fresh = actor(request);
-          const events = control.events(fresh, request.params.projectId, cursor);
-          for (const event of events) {
-            if (
-              !reply.raw.write(
-                `id: ${event.seq}\nevent: domain\ndata: ${JSON.stringify(event)}\n\n`,
-              )
-            ) {
-              close();
-              return;
-            }
-            cursor = event.seq;
-          }
-          if (!events.length && !reply.raw.write(': heartbeat\n\n')) close();
-        } catch (error) {
-          const code = error instanceof DomainError ? error.code : 'STREAM_ERROR';
-          reply.raw.write(`event: fault\ndata: ${JSON.stringify({ code })}\n\n`);
-          close();
-        }
-      };
-      const timer = setInterval(tick, 1000);
-      timer.unref();
-      streams.add(close);
-      request.raw.on('close', close);
-      reply.raw.on('close', close);
-      tick();
+      streamEvents(context, request, reply);
     },
   );
+}
+
+/** A project's messages, knowledge and approvals. */
+function projectRecordRoutes({ app, control, actor }: RouteContext) {
   app.get<{ Params: { projectId: string } }>('/api/projects/:projectId/inbox', async (request) =>
     control.inbox(actor(request), request.params.projectId, request.query),
   );

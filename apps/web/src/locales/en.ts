@@ -693,7 +693,7 @@ export const en: Record<Key, string> = {
   quotaStale: 'Out of date: Claude Code may not be running',
   modelsDetected: 'Detected models',
   modelsNote:
-    'Read from the Claude Code and Codex caches on this machine. Nothing is written and no model is run.',
+    'Read from the Claude Code and Codex caches on this machine. When the Codex cache is out of date, `codex debug models` is run to list its models (no model session is started). Nothing is written.',
   modelsEffort: 'Effort',
   modelsEffortDefault: 'Default',
   modelsRefresh: 'Refresh',
@@ -941,6 +941,9 @@ export const en: Record<Key, string> = {
   errLocalSessionsOff: 'Local session discovery is off (AETHER_LOCAL_SESSIONS=off).',
   errPairingInvalid: 'This pairing code is wrong, used or expired. Create a new one.',
   errVersionConflict: 'Someone changed this first. Reload and try again.',
+  errProjectRootNotFound:
+    'That folder does not exist on this machine. Check the path and try again.',
+  errProjectRootInvalid: 'That path is not a folder this app can read. Choose a readable folder.',
   ...settingsEn,
   ...squadEn,
 };

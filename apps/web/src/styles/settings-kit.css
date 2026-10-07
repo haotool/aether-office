@@ -131,7 +131,7 @@ mark {
   border-radius: var(--r-pill);
   background: color-mix(in srgb, currentColor 8%, transparent);
   font-size: var(--fs-label);
-  line-height: 1.5;
+  line-height: var(--lh-snug);
   color: var(--muted);
   overflow-wrap: anywhere;
 }
@@ -151,10 +151,8 @@ mark {
 /* Switch: the native checkbox is the control (keyboard, forms, assistive technology), the track is drawn over it. */
 .switch {
   position: relative;
-  display: inline-block;
   flex: none;
-  width: 52px;
-  height: var(--control-touch-sm);
+  width: 52px; /* the track, thumb and travel below are the switch's own geometry */
 }
 .switch::after {
   content: '';
@@ -210,8 +208,8 @@ mark {
   background: var(--mint);
 }
 .switch > input:focus-visible + .switch-track {
-  outline: 2px solid var(--mint);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 .switch > input:disabled {
   cursor: not-allowed;
@@ -228,6 +226,7 @@ mark {
 /* Segmented: a few exclusive choices, one tab stop, arrow keys inside. */
 .sseg {
   display: flex;
+  gap: 0;
   width: 100%;
   max-width: 100%;
   padding: var(--space-2);
@@ -237,11 +236,9 @@ mark {
 }
 .sseg button {
   flex: 1 1 auto;
-  min-height: var(--control-touch-sm);
   padding: 0 var(--space-12);
+  border: 0;
   border-radius: var(--r-lg);
-  font-size: var(--fs-small);
-  color: var(--muted);
   white-space: nowrap;
   transition:
     background var(--dur-fast) var(--ease),
@@ -283,8 +280,8 @@ mark {
   font-size: var(--fs-small);
 }
 .copycmd code:focus-visible {
-  outline: 2px solid var(--mint);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 .shelp summary {

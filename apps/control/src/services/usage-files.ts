@@ -1,4 +1,4 @@
-import type { Stats } from 'node:fs';
+import type { Dirent, Stats } from 'node:fs';
 import { readdir, stat } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import { UUID_SUFFIX, headOf } from './session-discovery.js';
@@ -38,6 +38,24 @@ function olderThanWindow(parts: readonly string[], cutoff: number): boolean {
 type Found = { file: string; mtime: number; size: number };
 type Budget = { entries: number; spent: boolean };
 
+/** Sorts `entries` newest first in place; Claude's folders by modification time (returning the stats it took), Codex's by name. */
+async function orderNewestFirst(dir: string, entries: Dirent[], codex: boolean) {
+  const stats = new Map<string, Stats>();
+  if (codex)
+    entries.sort((a, b) => (a.name < b.name ? 1 : -1)); // newest shard first: a spent budget drops the oldest
+  else {
+    await mapPool(entries, STAT_WIDTH, async (e) => {
+      if (!e.isSymbolicLink())
+        await stat(join(dir, e.name))
+          .then((s) => stats.set(e.name, s))
+          .catch(() => undefined); // vanished
+    });
+    const at = (name: string) => stats.get(name)?.mtimeMs ?? 0;
+    entries.sort((a, b) => at(b.name) - at(a.name));
+  }
+  return stats;
+}
+
 /**
  * Collects the transcripts under `dir`. Claude's folders have no date in their names, so a spent budget could drop the
  * newest project: its entries are visited newest first by modification time. Codex's day shards sort by name.
@@ -57,19 +75,7 @@ async function walk(
   } catch {
     return;
   }
-  const stats = new Map<string, Stats>();
-  if (codex)
-    entries.sort((a, b) => (a.name < b.name ? 1 : -1)); // newest shard first: a spent budget drops the oldest
-  else {
-    await mapPool(entries, STAT_WIDTH, async (e) => {
-      if (!e.isSymbolicLink())
-        await stat(join(dir, e.name))
-          .then((s) => stats.set(e.name, s))
-          .catch(() => undefined); // vanished
-    });
-    const at = (name: string) => stats.get(name)?.mtimeMs ?? 0;
-    entries.sort((a, b) => at(b.name) - at(a.name));
-  }
+  const stats = await orderNewestFirst(dir, entries, codex);
   const files: string[] = [];
   for (const e of entries) {
     if (budget.entries-- <= 0) {
@@ -94,7 +100,7 @@ async function walk(
   });
 }
 
-export type Listing = {
+type Listing = {
   transcripts: Transcript[];
   /** How many transcripts changed within the window, before the cap: what a complete look would have tracked. */
   found: number;
@@ -138,7 +144,7 @@ export async function listTranscripts(
 }
 
 /** The repository folder a working directory belongs to, by name: a linked worktree is named after its repository. */
-export function repoOfCwd(cwd: string): string {
+function repoOfCwd(cwd: string): string {
   const linked = /^(.*?)\/\.(?:claude\/)?worktrees\//.exec(cwd);
   return basename(linked?.[1] ?? cwd) || 'unknown';
 }

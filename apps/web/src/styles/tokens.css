@@ -17,6 +17,10 @@
   --red: #ff7a85;
   --glow: #43e6df47;
   --shadow: 0 10px 34px #00000066;
+  /* Elevation, smallest first: a raised chip or toast, a card or menu, a dialog. The colors are the scrims below. */
+  --shadow-sm: 0 4px 16px var(--shade);
+  --shadow-md: 0 8px 28px var(--shade);
+  --shadow-lg: 0 20px 80px var(--shade);
   --grid: #2f4a6112;
   /* Type floor: no visible text under --fs-label (uppercase mono tags) or --fs-small (everything readable). */
   --fs-label: 11px;
@@ -32,6 +36,13 @@
   --avatar-card: 44px;
   --control-touch-sm: 36px; /* an icon button, a segment, a chip */
   --target-fine: 32px;
+  /* The control scale: every button, field, icon button, chip and segment takes one of these heights, never a literal.
+     These are the mouse sizes; the touch block at the end of this file switches them in one place. */
+  --control-h-sm: 32px; /* an icon button, a chip, a segment, a text button */
+  --control-h-md: 36px; /* a button, a field, a select */
+  --control-h-lg: 40px; /* a main call to action, the login */
+  --bar-h: 56px; /* the top bar, the tab bar, a drawer's header */
+  --tabbar-h: var(--bar-h);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -67,6 +78,10 @@
   --r-2xl: 16px;
   --r-3xl: 24px;
   --r-pill: 999px;
+  /* The same radii by role, so a card and a control can change together */
+  --r-control: var(--r-sm);
+  --r-card: var(--r-lg);
+  --r-sheet: var(--r-2xl);
   /* Layers, lowest first. Overlays on the 3D scene (labels to the top row) sit below the page chrome; sheets sit on top. */
   --z-base: 1;
   --z-label-hover: 2;
@@ -126,7 +141,7 @@
   --art-ring: #8fddd32b;
   --art-glow: #6ed4cf08;
   --terminal-bg: #101923;
-  /* Motion */
+  /* Motion and rhythm */
   /* The kinds of tokens in the KPI charts: one color per kind, the same in the bar, the legend and the day bars. */
   --kpi-input: var(--mint);
   --kpi-output: var(--blue);
@@ -137,6 +152,14 @@
   --ease: cubic-bezier(0.2, 0, 0, 1);
   --dur-fast: 0.15s;
   --dur: 0.2s;
+  --dur-slow: 0.4s;
+  /* Line height: a title or single line, text in a card, long reading text */
+  --lh-tight: 1.25;
+  --lh-snug: 1.45;
+  --lh-body: 1.6;
+  /* One focus look for every control (base.css): a 2px ring, 2px clear of the edge. */
+  --focus-ring: 2px solid var(--mint);
+  --focus-offset: 2px;
   --mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Noto Sans Mono', monospace;
 }
 :root[data-theme='light'] {
@@ -147,7 +170,7 @@
   --selected: #d3e6f6;
   --text: #0d2234;
   --muted: #46606f;
-  --dim: #46606f;
+  --dim: #4f6978; /* a step lighter than --muted (it was the same color), still 4.5:1 on every surface */
   --line: #cdd9e5;
   --mint: #00707a;
   --blue: #1f5fc4;
@@ -160,4 +183,12 @@
   --shadow: 0 10px 30px #1b3a5a1f;
   --grid: #1f4a7a14;
   --provider-claude: #c4572f;
+}
+/* Fingers and phones: the same names, larger sizes (a finger needs 36 to 40px drawn and 44px hit; touch-targets.css extends the hit area). */
+@media (pointer: coarse), (max-width: 760px) {
+  :root {
+    --control-h-sm: 36px;
+    --control-h-md: 40px;
+    --control-h-lg: 44px;
+  }
 }

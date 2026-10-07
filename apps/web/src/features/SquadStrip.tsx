@@ -34,7 +34,7 @@ export function SquadStrip({
           <button
             key={row.id}
             type="button"
-            className="squad-chip-button"
+            className="squad-chip-button u-chip"
             data-status={row.status}
             data-fading={row.fading || undefined}
             aria-pressed={picked === row.id}

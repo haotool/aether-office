@@ -25,11 +25,10 @@ const obj = (v: unknown): Record<string, unknown> =>
 
 /** Pure. Claude Code records the latest prompt as a `last-prompt` entry. */
 export function claudeTopic(tail: string): string | null {
-  const lines = tail.split('\n');
-  for (let i = lines.length - 1; i >= 0; i--) {
-    if (!lines[i]!.includes('"last-prompt"')) continue;
+  for (const line of tail.split('\n').reverse()) {
+    if (!line.includes('"last-prompt"')) continue;
     try {
-      const entry = obj(JSON.parse(lines[i]!));
+      const entry = obj(JSON.parse(line));
       if (entry['type'] === 'last-prompt') return clip(entry['lastPrompt']);
     } catch {
       /* cut line */

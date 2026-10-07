@@ -5,9 +5,11 @@ import {
   type RunnerEvent,
   type RunnerJob,
 } from '@aether/contracts';
-import { reapSurvivor, runFixture, type Reaped } from '@aether/providers';
+import { reapSurvivor, runFixture, type ProviderResult, type Reaped } from '@aether/providers';
 import { ObserverRunner } from './observers.js';
-import { integrate } from './merge.js';
+import { settleInterruptedWork } from './runner-recovery.js';
+import { warn } from './stdio.js';
+import { runWorkspaceJob } from './workspace-jobs.js';
 import { assertSecureControlUrl } from './transport.js';
 import { TerminalRunner } from './terminals.js';
 import { Journal } from './journal.js';
@@ -58,8 +60,11 @@ export class Runner {
   async flush(): Promise<void> {
     if (this.flushing) return this.flushing;
     this.flushing = (async () => {
-      while (this.journal.state.pending.length) {
-        const event = this.journal.state.pending[0]!;
+      for (
+        let event = this.journal.state.pending[0];
+        event;
+        event = this.journal.state.pending[0]
+      ) {
         await this.api('/api/runner/report', event);
         this.journal.acknowledge(event.sourceEventId);
       }
@@ -74,61 +79,7 @@ export class Runner {
     this.journal.enqueue(event);
   }
   private async executeJob(job: RunnerJob, abort: AbortController): Promise<void> {
-    let result: unknown;
-    try {
-      if (!this.native) throw new Error('NATIVE_EXECUTION_NOT_GRANTED');
-      const manager = this.native.workspaces,
-        workspace = manager.load(job.workspaceId);
-      if (
-        workspace.projectId !== job.projectId ||
-        workspace.workId !== job.workId ||
-        manager.state(workspace.path).head !== job.expectedHead
-      )
-        throw new Error('WORKSPACE_HEAD_CHANGED');
-      if (job.kind === 'diff') {
-        const diff = manager.diff(workspace.id);
-        result = {
-          jobId: job.id,
-          status: 'succeeded',
-          diff: {
-            ...diff,
-            text: diff.text.slice(0, 60000),
-            untracked: diff.untracked.slice(0, 1000),
-            truncated: diff.text.length > 60000 || diff.untracked.length > 1000,
-          },
-        };
-      } else if (job.kind === 'integrate') {
-        const spec = job.payload.integrate;
-        if (!spec) throw new Error('INTEGRATION_SPEC_REQUIRED');
-        const integration = await integrate({
-          repository: workspace.repository,
-          baseBranch: spec.baseBranch,
-          expectedBase: spec.expectedBase,
-          headSha: job.expectedHead,
-          candidate: spec.candidate,
-          scratchDir: manager.scratch('integrations'),
-          hooksDir: manager.hooks,
-          author: { name: 'AETHER integration', email: 'aether@localhost' },
-        });
-        result = { jobId: job.id, status: 'succeeded', integration };
-      } else {
-        const requested = job.payload.verifier,
-          harness = requested ? this.native.verifiers.get(requested.name) : undefined;
-        if (!harness || harness.sourceHash !== requested?.sourceHash)
-          throw new Error('VERIFIER_CHANGED');
-        const verification = await manager.verify(workspace.id, harness.id, abort.signal);
-        result = { jobId: job.id, status: 'succeeded', verification };
-      }
-    } catch (error) {
-      result = {
-        jobId: job.id,
-        status: 'failed',
-        error:
-          error instanceof Error && /^[A-Z_]+$/.test(error.message)
-            ? error.message
-            : 'WORKSPACE_JOB_FAILED',
-      };
-    }
+    const result = await runWorkspaceJob(this.native, job, abort.signal);
     this.journal.state.jobs[job.id] = { job, state: 'finished', result };
     this.journal.save();
     this.activeJob = undefined;
@@ -142,102 +93,105 @@ export class Runner {
         this.journal.save();
       }
   }
+  /** The journal entry `journal.accept` made for this run before it was started. */
+  private acceptedRun(runId: string) {
+    const run = this.journal.state.runs[runId];
+    if (!run) throw new Error('RUN_NOT_JOURNALED');
+    return run;
+  }
+  private markStarted(command: RunCommand, providerSessionId: string, processIdentity: string) {
+    this.journal.state.runs[command.runId] = { command, state: 'running', processIdentity };
+    this.enqueue({
+      runId: command.runId,
+      epoch: command.epoch,
+      type: 'started',
+      sourceEventId: randomUUID(),
+      providerSessionId,
+      processIdentity,
+    });
+  }
+  /** What a native provider reports while it runs: its process, its events and the permission prompts for a person. */
+  private nativeSink(command: RunCommand, abort: AbortController): NativeSink {
+    const base = { runId: command.runId, epoch: command.epoch };
+    let processIdentity: string | undefined;
+    return {
+      processStarted: async (identity) => {
+        processIdentity = identity;
+        this.acceptedRun(command.runId).processIdentity = identity;
+        this.journal.save();
+      },
+      event: async (event) => {
+        if (event.kind !== 'session.started')
+          return this.enqueue({ ...base, type: 'provider', sourceEventId: randomUUID(), event });
+        if (!processIdentity) throw new Error('PROCESS_OWNERSHIP_REQUIRED');
+        this.markStarted(command, event.providerSessionId, processIdentity);
+      },
+      permission: async (permission) => {
+        await this.flush();
+        const request = await this.api<{ id: string; expiresAt: number }>(
+          '/api/runner/approvals/request',
+          { ...base, ...permission },
+        );
+        while (!abort.signal.aborted && Date.now() < request.expiresAt) {
+          const answer = await this.api<{ decision: 'approve' | 'deny' | null }>(
+            '/api/runner/approvals/poll',
+            { runId: command.runId, approvalId: request.id },
+          );
+          if (answer.decision) return answer.decision;
+          await delay(500, undefined, { signal: abort.signal });
+        }
+        return 'deny';
+      },
+      permissionSent: async (requestId) => {
+        await this.api('/api/runner/approvals/sent', { runId: command.runId, requestId });
+      },
+    };
+  }
+  /** Runs the demo fixture or, with a native executor, the real provider; returns what to report. */
+  private async runProvider(command: RunCommand, abort: AbortController): Promise<ProviderResult> {
+    const base = { runId: command.runId, epoch: command.epoch };
+    if (command.provider === 'demo')
+      return runFixture(
+        command,
+        {
+          started: async (providerSessionId, processIdentity) =>
+            this.markStarted(command, providerSessionId, processIdentity),
+          activity: async (activity, summary) => {
+            this.enqueue({
+              ...base,
+              type: 'activity',
+              sourceEventId: randomUUID(),
+              activity,
+              summary,
+            });
+          },
+        },
+        abort.signal,
+      );
+    if (!this.native) throw new Error('NATIVE_EXECUTION_NOT_GRANTED');
+    const credential = await this.api<{ token: string }>('/api/runner/session-credential', base);
+    return this.native.run(
+      command,
+      this.nativeSink(command, abort),
+      async (workspace) => {
+        this.enqueue({ ...base, type: 'workspace', sourceEventId: randomUUID(), workspace });
+        await this.flush();
+      },
+      abort.signal,
+      {
+        url: this.url,
+        token: credential.token,
+        projectId: command.projectId,
+        agentId: command.agentId,
+        workId: command.workId,
+        runId: command.runId,
+      },
+    );
+  }
   private async execute(command: RunCommand, abort: AbortController): Promise<void> {
     const base = { runId: command.runId, epoch: command.epoch };
     try {
-      const started = async (providerSessionId: string, processIdentity: string) => {
-        this.journal.state.runs[command.runId] = { command, state: 'running', processIdentity };
-        this.enqueue({
-          ...base,
-          type: 'started',
-          sourceEventId: randomUUID(),
-          providerSessionId,
-          processIdentity,
-        });
-      };
-      let processIdentity: string | undefined;
-      const nativeSink: NativeSink = {
-        processStarted: async (identity) => {
-          processIdentity = identity;
-          this.journal.state.runs[command.runId]!.processIdentity = identity;
-          this.journal.save();
-        },
-        event: async (event) => {
-          if (event.kind === 'session.started') {
-            if (!processIdentity) throw new Error('PROCESS_OWNERSHIP_REQUIRED');
-            await started(event.providerSessionId, processIdentity);
-          } else this.enqueue({ ...base, type: 'provider', sourceEventId: randomUUID(), event });
-        },
-        permission: async (permission) => {
-          await this.flush();
-          const request = await this.api<{ id: string; expiresAt: number }>(
-            '/api/runner/approvals/request',
-            { ...base, ...permission },
-          );
-          while (!abort.signal.aborted && Date.now() < request.expiresAt) {
-            const answer = await this.api<{ decision: 'approve' | 'deny' | null }>(
-              '/api/runner/approvals/poll',
-              { runId: command.runId, approvalId: request.id },
-            );
-            if (answer.decision) return answer.decision;
-            await delay(500, undefined, { signal: abort.signal });
-          }
-          return 'deny';
-        },
-        permissionSent: async (requestId) => {
-          await this.api('/api/runner/approvals/sent', { runId: command.runId, requestId });
-        },
-      };
-      if (command.provider !== 'demo' && !this.native)
-        throw new Error('NATIVE_EXECUTION_NOT_GRANTED');
-      const credential =
-        command.provider !== 'demo'
-          ? await this.api<{ token: string }>('/api/runner/session-credential', base)
-          : undefined;
-      const result =
-        command.provider !== 'demo'
-          ? await this.native!.run(
-              command,
-              nativeSink,
-              async (workspace) => {
-                this.enqueue({
-                  ...base,
-                  type: 'workspace',
-                  sourceEventId: randomUUID(),
-                  workspace,
-                });
-                await this.flush();
-              },
-              abort.signal,
-              credential
-                ? {
-                    url: this.url,
-                    token: credential.token,
-                    projectId: command.projectId,
-                    agentId: command.agentId,
-                    workId: command.workId,
-                    runId: command.runId,
-                  }
-                : undefined,
-            )
-          : await runFixture(
-              command,
-              {
-                started: async (providerSessionId, processIdentity) => {
-                  await started(providerSessionId, processIdentity);
-                },
-                activity: async (activity, summary) => {
-                  this.enqueue({
-                    ...base,
-                    type: 'activity',
-                    sourceEventId: randomUUID(),
-                    activity,
-                    summary,
-                  });
-                },
-              },
-              abort.signal,
-            );
+      const result = await this.runProvider(command, abort);
       this.enqueue({ ...base, type: 'result', sourceEventId: randomUUID(), ...result });
     } catch (error) {
       this.enqueue({
@@ -248,80 +202,89 @@ export class Runner {
         summary: error instanceof Error ? error.message : 'PROVIDER_ERROR',
       });
     } finally {
-      this.journal.state.runs[command.runId]!.state = 'finished';
+      this.acceptedRun(command.runId).state = 'finished';
       this.journal.save();
       this.active.delete(command.runId);
     }
+  }
+  /** Tells control what this runner can do and learns what it must stop. */
+  private async heartbeat() {
+    const heartbeat = await this.api<{
+      cancelRunIds: string[];
+      cancelJobIds: string[];
+      cancelTerminalIds: string[];
+    }>('/api/runner/heartbeat', {
+      terminalProfiles: [...(this.native?.terminalProfiles ?? [])].map(([name, p]) => ({
+        name,
+        hash: p.hash,
+        root: p.root,
+      })),
+      verifiers: [...(this.native?.verifiers ?? [])].map(([name, harness]) => ({
+        name,
+        sourceHash: harness.sourceHash,
+      })),
+    });
+    this.terminals?.stop(heartbeat.cancelTerminalIds ?? []);
+    if (this.activeJobId && heartbeat.cancelJobIds.includes(this.activeJobId))
+      this.activeJob?.abort();
+    for (const id of heartbeat.cancelRunIds) this.active.get(id)?.abort();
+  }
+  /** Looks at the observed transcripts in the background; a failure is reported once per code, never stops the tick. */
+  private startObserving() {
+    if (!this.observers || this.observing) return;
+    this.observing = this.observers
+      .tick()
+      .then(() => {
+        this.observerError = null;
+      })
+      .catch((error) => {
+        const code =
+          error instanceof Error && /^[A-Z_0-9]+$/.test(error.message)
+            ? error.message
+            : 'OBSERVATION_UNAVAILABLE';
+        if (code !== this.observerError) warn(code);
+        this.observerError = code;
+      })
+      .finally(() => {
+        this.observing = undefined;
+      });
+  }
+  private async claimJob() {
+    const response = await this.api<{ job: RunnerJob | null }>('/api/runner/jobs/claim', {});
+    if (!response.job) return;
+    const job = runnerJobSchema.parse(response.job);
+    this.journal.state.jobs[job.id] = { job, state: 'running' };
+    this.journal.save();
+    this.activeJob = new AbortController();
+    this.activeJobId = job.id;
+    void this.executeJob(job, this.activeJob).catch(() => {
+      this.stop();
+      warn('WORKSPACE_JOB_JOURNAL_FAILURE');
+    });
+  }
+  private async claimRun() {
+    const { command } = await this.api<{ command: RunCommand | null }>('/api/runner/claim', {
+      providers: ['demo', ...(this.native?.providers ?? [])],
+    });
+    if (!command || !this.journal.accept(command)) return;
+    const abort = new AbortController();
+    this.active.set(command.runId, abort);
+    void this.execute(command, abort).catch(() => {
+      this.stopped = true;
+      warn('RUNNER_JOURNAL_FAILURE: dispatch stopped to preserve evidence');
+    });
   }
   async tick(): Promise<void> {
     if (this.stopped || this.ticking) return;
     this.ticking = true;
     try {
-      const heartbeat = await this.api<{
-        cancelRunIds: string[];
-        cancelJobIds: string[];
-        cancelTerminalIds: string[];
-      }>('/api/runner/heartbeat', {
-        terminalProfiles: [...(this.native?.terminalProfiles ?? [])].map(([name, p]) => ({
-          name,
-          hash: p.hash,
-          root: p.root,
-        })),
-        verifiers: [...(this.native?.verifiers ?? [])].map(([name, harness]) => ({
-          name,
-          sourceHash: harness.sourceHash,
-        })),
-      });
-      this.terminals?.stop(heartbeat.cancelTerminalIds ?? []);
-      if (this.activeJobId && heartbeat.cancelJobIds.includes(this.activeJobId))
-        this.activeJob?.abort();
-      for (const id of heartbeat.cancelRunIds) this.active.get(id)?.abort();
+      await this.heartbeat();
       await this.flush();
       await this.flushJobs();
       await this.terminals?.tick();
-      if (this.observers && !this.observing)
-        this.observing = this.observers
-          .tick()
-          .then(() => {
-            this.observerError = null;
-          })
-          .catch((error) => {
-            const code =
-              error instanceof Error && /^[A-Z_0-9]+$/.test(error.message)
-                ? error.message
-                : 'OBSERVATION_UNAVAILABLE';
-            if (code !== this.observerError) console.error(code);
-            this.observerError = code;
-          })
-          .finally(() => {
-            this.observing = undefined;
-          });
-      if (this.native && !this.activeJob) {
-        const response = await this.api<{ job: RunnerJob | null }>('/api/runner/jobs/claim', {});
-        if (response.job) {
-          const job = runnerJobSchema.parse(response.job);
-          this.journal.state.jobs[job.id] = { job, state: 'running' };
-          this.journal.save();
-          this.activeJob = new AbortController();
-          this.activeJobId = job.id;
-          void this.executeJob(job, this.activeJob).catch(() => {
-            this.stop();
-            console.error('WORKSPACE_JOB_JOURNAL_FAILURE');
-          });
-        }
-      }
-      if (this.active.size >= 2) return;
-      const { command } = await this.api<{ command: RunCommand | null }>('/api/runner/claim', {
-        providers: ['demo', ...(this.native?.providers ?? [])],
-      });
-      if (command && this.journal.accept(command)) {
-        const abort = new AbortController();
-        this.active.set(command.runId, abort);
-        void this.execute(command, abort).catch(() => {
-          this.stopped = true;
-          console.error('RUNNER_JOURNAL_FAILURE: dispatch stopped to preserve evidence');
-        });
-      }
+      this.startObserving();
+      if (this.native && !this.activeJob) await this.claimJob();
+      if (this.active.size < 2) await this.claimRun();
     } finally {
       this.ticking = false;
     }
@@ -333,9 +296,11 @@ export class Runner {
    */
   async reapSurvivors(): Promise<Reaped[]> {
     const targets = [
-      ...Object.values(this.journal.state.runs)
-        .filter((run) => run.state !== 'finished' && run.processIdentity)
-        .map((run) => ({ key: run.command.runId, identity: run.processIdentity! })),
+      ...Object.values(this.journal.state.runs).flatMap((run) =>
+        run.state !== 'finished' && run.processIdentity
+          ? [{ key: run.command.runId, identity: run.processIdentity }]
+          : [],
+      ),
       ...Object.values(this.journal.state.terminals)
         .filter((t) => t.snapshot.state !== 'exited' && t.snapshot.processIdentity)
         .map((t) => ({ key: t.snapshot.terminalId, identity: t.snapshot.processIdentity })),
@@ -345,7 +310,7 @@ export class Runner {
         const reaped = await reapSurvivor(identity);
         this.survivors.set(key, reaped);
         if (reaped.action !== 'none')
-          console.error(
+          warn(
             `Left running by the previous runner: ${identity} was ${reaped.verdict}; ${reaped.action}.`,
           );
         return reaped;
@@ -354,40 +319,12 @@ export class Runner {
   }
   start(): void {
     this.terminals?.recover();
-    for (const entry of Object.values(this.journal.state.jobs))
-      if (entry.state === 'running') {
-        entry.state = 'finished';
-        entry.result = {
-          jobId: entry.job.id,
-          status: 'failed',
-          error: 'RUNNER_RESTARTED_RESULT_UNKNOWN',
-        };
-        this.journal.save();
-      }
-    for (const run of Object.values(this.journal.state.runs)) {
-      if (run.state === 'finished') continue;
-      // A persisted PID is never signalled here: reapSurvivors has already judged it by pid and start time.
-      const survivor = this.survivors.get(run.command.runId);
-      this.enqueue({
-        type: 'result',
-        sourceEventId: randomUUID(),
-        runId: run.command.runId,
-        epoch: run.command.epoch,
-        outcome: 'indeterminate',
-        summary: `Runner restarted during execution. ${
-          survivor && survivor.action !== 'none'
-            ? `Its process was left running and has been stopped (${survivor.action});`
-            : 'Process ownership must be reconciled;'
-        } no automatic retry.`,
-      });
-      run.state = 'finished';
-      this.journal.save();
-    }
+    settleInterruptedWork(this.journal, this.survivors);
     const loop = async () => {
       try {
         await this.tick();
       } catch (error) {
-        console.error(error instanceof Error ? error.message : 'RUNNER_OFFLINE');
+        warn(error instanceof Error ? error.message : 'RUNNER_OFFLINE');
       }
       if (!this.stopped)
         this.timer = setTimeout(() => void loop(), this.terminals?.active ? 100 : 1000);

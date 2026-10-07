@@ -55,6 +55,9 @@
     "smoke:live": "tsx scripts/live-smoke.ts",
     "notices": "node scripts/oss/third-party-notices.mjs",
     "notices:check": "node scripts/oss/third-party-notices.mjs --check && node scripts/oss/reuse-check.mjs",
+    "quality": "node scripts/quality/score.mjs",
+    "quality:report": "node scripts/quality/score.mjs --report",
+    "quality:check": "node scripts/quality/score.mjs --check",
     "oss:check": "node scripts/oss/third-party-notices.mjs --check && node scripts/oss/reuse-check.mjs && node scripts/oss/readiness-check.mjs"
   },
   "devDependencies": {

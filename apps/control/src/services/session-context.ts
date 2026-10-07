@@ -19,7 +19,7 @@ export function windowsOf(catalogs: readonly ModelCatalog[]): ReadonlyMap<string
 }
 
 /** Where a context window came from: the CLI's own figure, a model catalog, the model id, or a guess about Claude. */
-export type WindowBasis = NonNullable<Usage['contextWindowBasis']>;
+type WindowBasis = NonNullable<Usage['contextWindowBasis']>;
 
 /**
  * Pure. The window the context in use is measured against, and how it is known. Codex records it with every turn

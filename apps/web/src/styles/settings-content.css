@@ -103,7 +103,7 @@ kbd {
 .slinklist a {
   display: inline-flex;
   align-items: center;
-  min-height: var(--control-touch-sm);
+  min-height: var(--control-h-sm);
   color: var(--mint);
   font-size: var(--fs-small);
   text-decoration: underline;
@@ -125,7 +125,7 @@ kbd {
   border: 1px solid var(--glass-accent-line);
   border-radius: var(--r-xl);
   background: var(--raised);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
   font-size: var(--fs-small);
   animation: stoast-in var(--dur) var(--ease);
 }

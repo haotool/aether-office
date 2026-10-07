@@ -17,7 +17,7 @@ import type {
   TerminalSnapshot,
   ObservationReport,
 } from '@aether/contracts';
-import type { ObserverCheckpoint } from './observer.js';
+import type { ObserverCheckpoint } from './observer-codex-lines.js';
 export type ObserverJournal = {
   scope: string;
   file: string;

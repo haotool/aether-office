@@ -6,7 +6,7 @@ import type { Speech } from './session-speech.js';
  * names a session and what kind of thing changed (state, tool, speech, transcript, squad, outcome), never the content; the browser then asks the usual endpoints, which
  * are the only place the (redacted) content is returned.
  */
-export type ChangeKind = 'state' | 'tool' | 'speech' | 'transcript' | 'squad' | 'outcome';
+type ChangeKind = 'state' | 'tool' | 'speech' | 'transcript' | 'squad' | 'outcome';
 export type SessionChange = { seq: number; key: string; kinds: ChangeKind[] };
 type Print = Record<ChangeKind, string>;
 type Prints = ReadonlyMap<string, Print>;
@@ -67,70 +67,79 @@ const REMEMBERED = 256;
  * events a second however fast its transcript grows. Sequence numbers start at the clock so they keep rising across a
  * restart; a client that fell behind the remembered window is told to refetch instead.
  */
-export function createSessionHub(options: {
-  intervalMs: number;
-  scan: () => Promise<{ sessions: LocalSession[]; speech: Record<string, Speech> }>;
-}) {
-  const listeners = new Set<(change: SessionChange) => void>();
-  let ring: SessionChange[] = [];
-  let seq = Date.now();
-  let forgotten = seq; // the newest sequence number the hub cannot replay: all before it started, then what fell out of `ring`
-  let prints: Prints | null = null;
-  let timer: ReturnType<typeof setInterval> | undefined;
-  let busy = false;
-  let baseline: Promise<void> = Promise.resolve();
+class SessionHub {
+  private readonly listeners = new Set<(change: SessionChange) => void>();
+  private ring: SessionChange[] = [];
+  private seq = Date.now();
+  private forgotten = this.seq; // the newest sequence number the hub cannot replay: all before it started, then what fell out of `ring`
+  private prints: Prints | null = null;
+  private timer: ReturnType<typeof setInterval> | undefined;
+  private busy = false;
+  private baseline: Promise<void> = Promise.resolve();
 
-  async function tick() {
-    if (busy) return;
-    busy = true;
-    try {
-      const { sessions, speech } = await options.scan();
-      const { next, changed } = diffSessions(prints, sessions, speech);
-      prints = next;
-      for (const { key, kinds } of changed) {
-        const change = { seq: ++seq, key, kinds };
-        ring.push(change);
-        for (const listener of listeners) listener(change);
-      }
-      if (ring.length > REMEMBERED) {
-        forgotten = ring[ring.length - REMEMBERED - 1]!.seq;
-        ring = ring.slice(-REMEMBERED);
-      }
-    } catch {
-      /* a failed scan changes nothing; the next tick tries again */
-    } finally {
-      busy = false;
+  constructor(
+    private readonly options: {
+      intervalMs: number;
+      scan: () => Promise<{ sessions: LocalSession[]; speech: Record<string, Speech> }>;
+    },
+  ) {}
+
+  /** Remembers the change for replay and tells every listener; what falls out of the window can no longer be replayed. */
+  private publish(change: SessionChange) {
+    this.ring.push(change);
+    for (const listener of this.listeners) listener(change);
+    if (this.ring.length > REMEMBERED) {
+      this.forgotten = this.ring[this.ring.length - REMEMBERED - 1]?.seq ?? this.forgotten;
+      this.ring = this.ring.slice(-REMEMBERED);
     }
   }
 
-  return {
-    subscribe(after: number | null, listener: (change: SessionChange) => void): Subscription {
-      listeners.add(listener);
-      if (!timer) {
-        baseline = tick(); // the baseline, so the first real change is seen
-        timer = setInterval(() => void tick(), options.intervalMs);
-        timer.unref();
-      }
-      const resync = after !== null && (after < forgotten || after > seq);
-      return {
-        seq,
-        resync,
-        ready: baseline,
-        replay: after === null || resync ? [] : ring.filter((c) => c.seq > after),
-        unsubscribe() {
-          listeners.delete(listener);
-          if (!listeners.size && timer) {
-            clearInterval(timer);
-            timer = undefined;
-            prints = null;
-            forgotten = seq; // changes while nobody watched are not replayed: a returning client resyncs
-          }
-        },
-      };
-    },
-    tick,
-    get clients() {
-      return listeners.size;
-    },
+  readonly tick = async () => {
+    if (this.busy) return;
+    this.busy = true;
+    try {
+      const { sessions, speech } = await this.options.scan();
+      const { next, changed } = diffSessions(this.prints, sessions, speech);
+      this.prints = next;
+      for (const { key, kinds } of changed) this.publish({ seq: ++this.seq, key, kinds });
+    } catch {
+      /* a failed scan changes nothing; the next tick tries again */
+    } finally {
+      this.busy = false;
+    }
   };
+
+  private stopWatching() {
+    clearInterval(this.timer);
+    this.timer = undefined;
+    this.prints = null;
+    this.forgotten = this.seq; // changes while nobody watched are not replayed: a returning client resyncs
+  }
+
+  subscribe(after: number | null, listener: (change: SessionChange) => void): Subscription {
+    this.listeners.add(listener);
+    if (!this.timer) {
+      this.baseline = this.tick(); // the baseline, so the first real change is seen
+      this.timer = setInterval(() => void this.tick(), this.options.intervalMs);
+      this.timer.unref();
+    }
+    const resync = after !== null && (after < this.forgotten || after > this.seq);
+    return {
+      seq: this.seq,
+      resync,
+      ready: this.baseline,
+      replay: after === null || resync ? [] : this.ring.filter((c) => c.seq > after),
+      unsubscribe: () => {
+        this.listeners.delete(listener);
+        if (!this.listeners.size && this.timer) this.stopWatching();
+      },
+    };
+  }
+
+  get clients() {
+    return this.listeners.size;
+  }
 }
+
+export const createSessionHub = (options: ConstructorParameters<typeof SessionHub>[0]) =>
+  new SessionHub(options);

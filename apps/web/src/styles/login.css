@@ -16,7 +16,7 @@
   position: absolute;
   border: 1px solid var(--art-ring);
   border-radius: 50%;
-  width: 580px;
+  width: 580px; /* the login art's rings are geometry, not controls */
   height: 580px;
 }
 .r1 {
@@ -70,13 +70,13 @@
 }
 .login-panel p {
   font-size: var(--fs-small);
-  line-height: 1.9;
+  line-height: var(--lh-body);
 }
 .login-panel small {
   display: block;
   font-size: var(--fs-label);
   color: var(--dim);
-  line-height: 1.9;
+  line-height: var(--lh-body);
   margin: var(--space-20) 0;
 }
 .login-panel form {
@@ -88,4 +88,7 @@
   margin: var(--space-8) 0;
   color: var(--muted);
   font-size: var(--fs-small);
+}
+.login-panel .primary {
+  min-height: var(--control-h-lg); /* the login is the one main call to action */
 }

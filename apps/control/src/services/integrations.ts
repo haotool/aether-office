@@ -1,4 +1,4 @@
-import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { integrationSchema, type Command, type IntegrationConnection } from '@aether/contracts';
 import { assertVersion, DomainError, type Actor } from '@aether/kernel';
 import { emit, type Context } from './context.js';
@@ -15,7 +15,7 @@ import {
 } from './connectors.js';
 import { identityActor } from './identity.js';
 import type { FetchPolicy } from './safe-fetch.js';
-import { createWork } from './work.js';
+import { importIssue } from './integration-import.js';
 
 const DEFAULT_BASE = {
   github: 'https://api.github.com',
@@ -23,16 +23,11 @@ const DEFAULT_BASE = {
 } as const;
 const MARKER = (workId: string) => `<!-- aether:work:${workId} -->`;
 
-type Config = {
-  provider: 'github' | 'linear';
-  tokenEnv: string;
-  webhookSecretEnv?: string;
-  baseUrl: string;
-  owner?: string;
-  repo?: string;
-  teamKey?: string;
-};
-type Row = {
+/** What is stored for a connection: the token's variable NAME, never the token. */
+type Config =
+  | (GitHubConfig & { provider: 'github'; tokenEnv: string; webhookSecretEnv?: string })
+  | (LinearConfig & { provider: 'linear'; tokenEnv: string });
+export type Row = {
   id: string;
   projectId: string;
   provider: 'github' | 'linear';
@@ -47,10 +42,7 @@ type Row = {
 };
 
 export type SyncOptions = { policy?: FetchPolicy; env?: Record<string, string | undefined> };
-type SyncResult = { imported: number; updated: number; conflicts: number };
-
-const hashOf = (issue: Pick<ExternalIssue, 'title' | 'body'>) =>
-  createHash('sha256').update(`${issue.title}\0${issue.body}`).digest('hex');
+export type SyncResult = { imported: number; updated: number; conflicts: number };
 
 function validBase(url: string): string {
   const parsed = new URL(url);
@@ -79,7 +71,7 @@ const view = (ctx: Context, row: Row): IntegrationConnection => {
   return integrationSchema.parse({
     id: row.id,
     provider: row.provider,
-    target: row.provider === 'github' ? `${config.owner}/${config.repo}` : String(config.teamKey),
+    target: config.provider === 'github' ? `${config.owner}/${config.repo}` : config.teamKey,
     tokenEnv: config.tokenEnv, // the variable NAME; the secret itself is never stored or returned
     enabled: row.enabled === 1,
     lastSyncAt: row.lastSyncAt,
@@ -133,6 +125,45 @@ export function integrationCommand(
   return view(ctx, connection(ctx, c.projectId, id));
 }
 
+/** Records a failed sync on the connection and in the event log, then throws the matching error. */
+function failSync(
+  ctx: Context,
+  row: Row,
+  now: number,
+  code: string,
+  retryAt: number | null = null,
+): never {
+  ctx.sqlite
+    .prepare(
+      'UPDATE integration_connections SET lastError=?,backoffUntil=?,lastSyncAt=? WHERE id=?',
+    )
+    .run(code, retryAt, now, row.id);
+  emit(
+    ctx,
+    identityActor(ctx, row.createdBy),
+    row.projectId,
+    'integration.sync.failed',
+    { integrationId: row.id, code },
+    row.id,
+    row.id,
+    'native',
+  );
+  throw new DomainError(code, code === 'INTEGRATION_RATE_LIMITED' ? 429 : 502);
+}
+
+async function fetchIssues(
+  config: Config,
+  token: string,
+  cursor: string | null,
+  options: SyncOptions,
+  now: number,
+): Promise<ExternalIssue[]> {
+  const policy = options.policy ?? {};
+  return config.provider === 'github'
+    ? githubIssues(config, token, cursor, policy, now)
+    : linearIssues(config, token, cursor, policy, now);
+}
+
 /**
  * Pull-based import. Field ownership: the external system owns title and description until work
  * starts; the platform owns state, assignment and results forever. After work starts, an upstream
@@ -148,135 +179,64 @@ export async function syncConnection(
   const row = connection(ctx, projectId, connectionId);
   const config = JSON.parse(row.config) as Config;
   const now = ctx.now();
-  const fail = (code: string, retryAt: number | null = null): never => {
-    ctx.sqlite
-      .prepare(
-        'UPDATE integration_connections SET lastError=?,backoffUntil=?,lastSyncAt=? WHERE id=?',
-      )
-      .run(code, retryAt, now, row.id);
-    emit(
-      ctx,
-      identityActor(ctx, row.createdBy),
-      projectId,
-      'integration.sync.failed',
-      { integrationId: row.id, code },
-      row.id,
-      row.id,
-      'native',
-    );
-    throw new DomainError(code, code === 'INTEGRATION_RATE_LIMITED' ? 429 : 502);
-  };
   if (!row.enabled) throw new DomainError('INTEGRATION_DISABLED', 409);
   if (row.backoffUntil && row.backoffUntil > now)
     throw new DomainError('INTEGRATION_RATE_LIMITED', 429);
   const token = (options.env ?? process.env)[config.tokenEnv];
-  if (!token) return fail('INTEGRATION_TOKEN_MISSING');
+  if (!token) return failSync(ctx, row, now, 'INTEGRATION_TOKEN_MISSING');
   let issues: ExternalIssue[];
   try {
-    const policy = options.policy ?? {};
-    issues =
-      row.provider === 'github'
-        ? await githubIssues(config as unknown as GitHubConfig, token, row.cursor, policy, now)
-        : await linearIssues(config as unknown as LinearConfig, token, row.cursor, policy, now);
+    issues = await fetchIssues(config, token, row.cursor, options, now);
   } catch (error) {
-    if (error instanceof RateLimited) return fail('INTEGRATION_RATE_LIMITED', error.retryAt);
-    if (error instanceof ConnectorError) return fail(`INTEGRATION_${error.code}`);
-    if (error instanceof DomainError) return fail(error.code);
-    return fail('INTEGRATION_UNREACHABLE');
+    if (error instanceof RateLimited)
+      return failSync(ctx, row, now, 'INTEGRATION_RATE_LIMITED', error.retryAt);
+    if (error instanceof ConnectorError)
+      return failSync(ctx, row, now, `INTEGRATION_${error.code}`);
+    if (error instanceof DomainError) return failSync(ctx, row, now, error.code);
+    return failSync(ctx, row, now, 'INTEGRATION_UNREACHABLE');
   }
-  return ctx.sqlite
-    .transaction((): SyncResult => {
-      const actor = identityActor(ctx, row.createdBy);
-      const result: SyncResult = { imported: 0, updated: 0, conflicts: 0 };
-      let cursor = row.cursor;
-      for (const issue of issues) {
-        if (!cursor || issue.updatedAt > cursor) cursor = issue.updatedAt;
-        const hash = hashOf(issue);
-        const link = ctx.sqlite
-          .prepare(
-            'SELECT workId,contentHash,conflict FROM external_links WHERE connectionId=? AND externalId=?',
-          )
-          .get(row.id, issue.externalId) as
-          { workId: string; contentHash: string; conflict: number } | undefined;
-        if (!link) {
-          const key = `integration:${row.id}:${issue.externalId}`;
-          const created = createWork(ctx, {
-            schemaVersion: 1,
-            type: 'work.create',
-            projectId,
-            idempotencyKey: key,
-            correlationId: key,
-            data: {
-              title: `${issue.reference} ${issue.title}`.slice(0, 160),
-              description: `${issue.body}\n\nSource: ${issue.url}`.slice(0, 16000),
-              acceptance: `Resolve ${issue.reference} (${issue.url}). A human must confirm the acceptance criteria before assignment.`,
-              dependencies: [],
-              priority: 1,
-            },
-          } as Extract<Command, { type: 'work.create' }>);
-          ctx.sqlite
-            .prepare(
-              'INSERT INTO external_links(connectionId,externalId,projectId,workId,url,contentHash,externalUpdatedAt) VALUES (?,?,?,?,?,?,?)',
-            )
-            .run(row.id, issue.externalId, projectId, created.id, issue.url, hash, issue.updatedAt);
-          result.imported += 1;
-          continue;
-        }
-        if (link.contentHash === hash) {
-          ctx.sqlite
-            .prepare(
-              'UPDATE external_links SET externalUpdatedAt=? WHERE connectionId=? AND externalId=?',
-            )
-            .run(issue.updatedAt, row.id, issue.externalId);
-          continue;
-        }
-        const work = ctx.sqlite
-          .prepare('SELECT attempt,state FROM work_items WHERE id=?')
-          .get(link.workId) as { attempt: number; state: string };
-        if (work.attempt === 0 && ['backlog', 'ready'].includes(work.state)) {
-          ctx.sqlite
-            .prepare(
-              'UPDATE work_items SET title=?,description=?,version=version+1,updatedAt=? WHERE id=?',
-            )
-            .run(
-              `${issue.reference} ${issue.title}`.slice(0, 160),
-              `${issue.body}\n\nSource: ${issue.url}`.slice(0, 16000),
-              now,
-              link.workId,
-            );
-          ctx.sqlite
-            .prepare(
-              'UPDATE external_links SET contentHash=?,externalUpdatedAt=?,conflict=0,pendingHash=NULL WHERE connectionId=? AND externalId=?',
-            )
-            .run(hash, issue.updatedAt, row.id, issue.externalId);
-          result.updated += 1;
-        } else {
-          ctx.sqlite
-            .prepare(
-              'UPDATE external_links SET conflict=1,pendingHash=?,externalUpdatedAt=? WHERE connectionId=? AND externalId=?',
-            )
-            .run(hash, issue.updatedAt, row.id, issue.externalId);
-          result.conflicts += 1;
-        }
-      }
-      ctx.sqlite
-        .prepare(
-          'UPDATE integration_connections SET cursor=?,lastSyncAt=?,lastError=NULL,backoffUntil=NULL WHERE id=?',
-        )
-        .run(cursor, now, row.id);
-      emit(
-        ctx,
-        actor,
-        projectId,
-        'integration.sync.completed',
-        { integrationId: row.id, ...result },
-        row.id,
-        row.id,
-        'native',
-      );
-      return result;
-    })
-    .immediate();
+  return ctx.sqlite.transaction(() => storeIssues(ctx, row, issues, now)).immediate();
+}
+
+/** Imports the fetched issues, advances the cursor and records that the sync completed. */
+function storeIssues(ctx: Context, row: Row, issues: ExternalIssue[], now: number): SyncResult {
+  const actor = identityActor(ctx, row.createdBy);
+  const result: SyncResult = { imported: 0, updated: 0, conflicts: 0 };
+  let cursor = row.cursor;
+  for (const issue of issues) {
+    if (!cursor || issue.updatedAt > cursor) cursor = issue.updatedAt;
+    const outcome = importIssue(ctx, row, issue, now);
+    if (outcome) result[outcome] += 1;
+  }
+  ctx.sqlite
+    .prepare(
+      'UPDATE integration_connections SET cursor=?,lastSyncAt=?,lastError=NULL,backoffUntil=NULL WHERE id=?',
+    )
+    .run(cursor, now, row.id);
+  emit(
+    ctx,
+    actor,
+    row.projectId,
+    'integration.sync.completed',
+    { integrationId: row.id, ...result },
+    row.id,
+    row.id,
+    'native',
+  );
+  return result;
+}
+
+function postComment(
+  config: Config,
+  token: string,
+  link: { externalId: string; url: string },
+  body: string,
+  policy: FetchPolicy,
+  now: number,
+) {
+  return config.provider === 'github'
+    ? githubComment(config, token, `#${link.url.split('/').pop()}`, body, policy, now)
+    : linearComment(config, token, link.externalId, body, policy, now);
 }
 
 /** Posts the accepted result back to the linked issue. Only an explicit owner action reaches here. */
@@ -294,43 +254,17 @@ export async function postResult(
   if (work.state !== 'completed') throw new DomainError('INTEGRATION_REQUIRES_ACCEPTED_WORK');
   const link = ctx.sqlite
     .prepare(
-      'SELECT l.connectionId,l.externalId,l.url,c.provider,c.config FROM external_links l JOIN integration_connections c ON c.id=l.connectionId WHERE l.workId=?',
+      'SELECT l.connectionId,l.externalId,l.url,c.config FROM external_links l JOIN integration_connections c ON c.id=l.connectionId WHERE l.workId=?',
     )
     .get(workId) as
-    | {
-        connectionId: string;
-        externalId: string;
-        url: string;
-        provider: 'github' | 'linear';
-        config: string;
-      }
-    | undefined;
+    { connectionId: string; externalId: string; url: string; config: string } | undefined;
   if (!link) throw new DomainError('WORK_NOT_LINKED', 404);
   const config = JSON.parse(link.config) as Config;
   const token = (options.env ?? process.env)[config.tokenEnv];
   if (!token) throw new DomainError('INTEGRATION_TOKEN_MISSING', 502);
   const body = `${(work.result ?? 'Accepted.').slice(0, 6000)}\n\n${MARKER(work.id)}`;
-  const now = ctx.now();
-  const policy = options.policy ?? {};
   try {
-    if (link.provider === 'github')
-      await githubComment(
-        config as unknown as GitHubConfig,
-        token,
-        `#${link.url.split('/').pop()}`,
-        body,
-        policy,
-        now,
-      );
-    else
-      await linearComment(
-        config as unknown as LinearConfig,
-        token,
-        link.externalId,
-        body,
-        policy,
-        now,
-      );
+    await postComment(config, token, link, body, options.policy ?? {}, ctx.now());
   } catch (error) {
     if (error instanceof RateLimited) throw new DomainError('INTEGRATION_RATE_LIMITED', 429);
     throw new DomainError(
@@ -372,9 +306,8 @@ export async function handleGithubWebhook(
   // An unknown id answers like a bad signature, so the endpoint does not reveal which integrations exist.
   if (!row) throw new DomainError('WEBHOOK_SIGNATURE_INVALID', 401);
   const config = JSON.parse(row.config) as Config;
-  const secret = config.webhookSecretEnv
-    ? (options.env ?? process.env)[config.webhookSecretEnv]
-    : undefined;
+  const secretEnv = config.provider === 'github' ? config.webhookSecretEnv : undefined;
+  const secret = secretEnv ? (options.env ?? process.env)[secretEnv] : undefined;
   const signature = headers['x-hub-signature-256'];
   if (
     !secret ||

@@ -8,13 +8,10 @@ export async function mapPool<T, R>(
   work: (item: T, index: number) => Promise<R>,
 ): Promise<R[]> {
   const results: R[] = new Array(items.length);
-  let next = 0;
+  const pending = items.entries(); // one iterator shared by the workers: each takes the next item
   await Promise.all(
     Array.from({ length: Math.max(1, Math.min(width, items.length)) }, async () => {
-      while (next < items.length) {
-        const i = next++;
-        results[i] = await work(items[i]!, i);
-      }
+      for (const [i, item] of pending) results[i] = await work(item, i);
     }),
   );
   return results;

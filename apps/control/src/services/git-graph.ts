@@ -60,7 +60,7 @@ export function parseLog(text: string): Omit<GraphCommit, 'lane' | 'edges'>[] {
     .map((line) => {
       const [sha, parents, refs, subject, at, author] = line.split(SEP);
       return {
-        sha: sha!,
+        sha: sha ?? '',
         parents: parents ? parents.split(' ').filter(Boolean) : [],
         refs: refs ? refs.split(', ').filter(Boolean) : [],
         subject: redactSecrets(subject ?? '').slice(0, 160),

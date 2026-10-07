@@ -5,8 +5,30 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Fixed (backend and CLI)
+
+- Claude usage: the parser no longer drops a line whose keys are reordered, whose usage is spaced (`"usage": {`) or whose id follows the usage; the byte fast path stays first (measured on 200 real transcripts: 33,283 of 33,283 messages, identical totals) and a missed assistant line is read by a bounded `JSON.parse`. Lines neither path can read are counted in `scan.skippedLines`, so the existing warning shows them. Rollup version 5.
+- A project folder that does not exist, is not a folder or cannot be read is a 400 `PROJECT_ROOT_NOT_FOUND` / `PROJECT_ROOT_INVALID` (explained in both languages) instead of a 500.
+- `pnpm run doctor`: a missing Claude Code or Codex CLI is a warning (exit 0), only a missing hard prerequisite fails; a Codex version missing from `compat.json` reads "not verified, probably works" and lists the verified versions; `--strict` makes warnings fail.
+- `AETHER_HOME` relocates `~/.aether` (hook scripts, approvals file, hook spool). `pnpm hooks install|remove` prints the files it writes before writing, supports `--dry-run`, and ends with one sentence instead of a stack trace when it cannot write. Tests run under a temporary `AETHER_HOME`.
+- `pnpm run pair` tells an unreachable control plane from a rejected owner token (another data directory) and a missing token.
+- Settings: the model catalog note says that a stale Codex cache runs `codex debug models` (no model session starts).
+
 ### Added
 
+- UI consistency, tokens and shared controls: a control scale (`--control-h-sm/md/lg` 32/36/40 with a mouse, 36/40/44 on touch,
+  switched in one place), `--bar-h`, `--lh-*`, `--shadow-sm/md/lg`, `--dur-slow`, role radii and one focus ring; the shared
+  `u-` classes (`u-btn`, `u-field`, `u-chip`, `u-card`, `u-row`, `u-head`, `u-empty`, `u-switch`, `u-segmented`) with the old
+  classes as aliases; `e2e/role-variance.spec.ts` caps the distinct heights per control role on 14 views at three sizes.
+- A computed quality scorecard: `pnpm run quality` scores ten areas (structure, types and gates, tests, UI tokens, accessibility and
+  i18n, performance budgets, docs truth, security, open-source readiness, product maturity) from measurable rules with their exact
+  files and lines (`--json`, `--area`, `--target 95`); `quality:report` writes `docs/quality/scorecard.{md,json}` and raises the
+  per-area floors in `docs/quality/floors.json`; `quality:check` (in CI after the build) fails on a stale scorecard or an area below
+  its floor. The rubric is in `docs/quality/README.md`. No product code or dependency changed.
+- UI consistency, 3D scene overlays: the scene toolbar's segments, buttons and select take `--control-h-sm` (32 with a mouse,
+  was 30 to 36; the finger-size rule moved out of `touch-targets.css`), the name tag and character menu focus rings use the
+  focus tokens, line heights, the HUD transition and the intro dip use `--lh-*` and `--dur-*`, the character menu's shadow is
+  `--shadow-md`; `e2e/scene-hud-consistency.spec.ts` checks the toolbar heights at three sizes.
 - Licence compliance: `THIRD_PARTY_NOTICES.md` is generated from the lockfile and the installed packages (every shipped
   package with its licence text and NOTICE file) by `pnpm run notices`; `pnpm run notices:check` (in CI) fails on stale notices
   and on an unknown, denied or unapproved licence; `--sbom <file>` writes a CycloneDX 1.5 SBOM. `REUSE.toml`, `LICENSES/` and a
@@ -19,6 +41,8 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   only reports. `pnpm lint` also rejects bare Node built-ins (`fs`) in the kernel and web code, anything but `zod` in the
   contracts, `better-sqlite3` in the runner, and a committed `.only` or `@ts-ignore` in `scripts`, `tests` and `e2e`.
 - `docs/architecture.md` describes how to add a layout `schemaVersion`.
+- `e2e/shell-consistency.spec.ts`: the top bar, its project select and sign-out link, the sessions table actions, the Settings
+  switch and segmented, the KPI office chips and the active nav link's focus ring keep to the control scale.
 - 3D scene, mobile quality (see "Mobile quality" in `docs/design-system.md`): `?msaa=1` / `?msaa=0` overrides the tier's MSAA choice
   so it can be measured on a real phone (the default is unchanged); the soft additive gradients (light shafts, squad beam and zone,
   clouds, holograms, petals, pollen, glass strands) are dithered after the alpha is applied; the planet texture is 1024x512 on a
@@ -28,6 +52,9 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ### Fixed
 
+- Desktop buttons, icon buttons, selects and the sign-out link are no longer drawn at 17 to 30px (now 32 or 36); the Tasks title
+  row keeps its actions together on a tablet; the connect-phone dialog lines up its label, field and timer; the light theme's
+  `--dim` differs from `--muted`; `docs/design-system.md` states the real type scale (13px base) instead of 14px.
 - A character keeps its desk while it stays in the office. The observed building used to be regenerated most-recent-first on
   every refresh, so any session that wrote made characters jump to other desks (name tags, the camera's target and an open
   action menu followed the wrong character). Desks are now assigned once (`assignSeats`: a new arrival takes the first free slot,
@@ -43,6 +70,12 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   bad signature.
 - A migration checksum mismatch says which migration and what to do; the `.pre-migration` database copies are mode 0600 and only
   the newest three are kept.
+- App shell and pages on the control scale: the top bar is `--bar-h` (56, was 60 on a desktop); its project select, the sign-out
+  link and the user dot are 32px; the sessions table's actions are 32px (were 26); the Settings switch and segmented control and
+  the KPI header and office chips use `u-switch`, `u-segmented`, `u-head` and `u-chip`; the phone top bar's project name ends in
+  an ellipsis (the whole name is its tooltip) instead of being cut; the active nav link and the search box keep the one focus
+  ring; the KPI notes under the tiles, a section and the body share one gap (was 4px and 16px); `kpi.css` is split into `kpi.css`
+  and `kpi-charts.css`; the login button is `--control-h-lg` and its text line height is `--lh-body` (was 1.9); `60vh` is `60dvh`.
 
 ### Changed
 
@@ -74,6 +107,17 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   Markdown renderer exists or that only macOS was run. Documentation names the upstream projects instead of the untracked
   `.research/` folder and states the real Git timeouts and the effect of a same-host reverse proxy.
 - Tests wait for conditions instead of sleeps where a positive condition exists, and the last fixed test ports are ephemeral.
+- UI consistency, session panel (track E): the model chip, the quick replies, the squad strip chips and the relation chip are
+  `u-chip`; Send and the text box take `--control-h-md`; the panel, feed, transcript and composer use `--lh-*` instead of
+  literal line heights, `--dur-fast`, `--shadow-md` and the one focus ring (the resize handle's grip, the squad tree rows and
+  a focused turn included); the other panel controls read `--control-h-sm/lg` instead of the older touch sizes (the squad chip
+  and relation chip stay 44px on a finger because they sit in a scroller). `e2e/panel-consistency.spec.ts` checks chip
+  heights, Send against the box and the absence of nested vertical scrollers in the panel at three sizes.
+- Control and runner restructure (no behaviour change): every function in `apps/control/src` and `apps/runner/src` is at most 50
+  lines (`Control.execute` dispatches through one typed handler table, `changeWork`, the MCP server, the observer, the local
+  routes, the usage tracker and the runner loop are split into named steps), the runner and start-up banner write through one
+  tiny `stdio` helper instead of `console`, and non-null assertions, double casts and unused exports in those folders are gone.
+  Three tests no longer sleep for a fixed time.
 
 ### Fixed
 

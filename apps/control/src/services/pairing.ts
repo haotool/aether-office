@@ -119,14 +119,24 @@ export function terminalQr(text: string): string {
   return lines.join('\n');
 }
 
+/** What `pnpm run pair` says when the control plane did not hand out a code: `status` is null when it was not reached. */
+export function pairingFailure(status: number | null, base: string, directory: string): string {
+  if (status === null)
+    return `Could not reach ${base}. Is the control plane running? Start it with pnpm start (or set AETHER_CONTROL_URL or PORT to where it listens).`;
+  if (status === 401 || status === 403)
+    return `${base} is running but did not accept the owner token in ${directory}. It probably uses another data directory: set AETHER_DATA_DIR to the one it was started with.`;
+  return `${base} answered ${status} when asked for a pairing code.`;
+}
+
 /** What a terminal shows for a pairing code: the QR code for the best address, the other addresses, and the caveats. */
 export function pairingText(
   links: readonly { origin: string; url: string }[],
   ttlSeconds: number,
 ): string {
   const [first, ...others] = links;
+  if (!first) throw new Error('PAIRING_LINK_REQUIRED');
   return [
-    `\n${terminalQr(first!.url)}\n\n${first!.origin}`,
+    `\n${terminalQr(first.url)}\n\n${first.origin}`,
     ...(others.length
       ? [`Same code on the other addresses: ${others.map((link) => link.origin).join(', ')}`]
       : []),

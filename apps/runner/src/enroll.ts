@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { assertSecureControlUrl } from './transport.js';
+import { print, warn } from './stdio.js';
 
 /**
  * Redeems a single-use invitation and stores the machine credential (mode 0600, never
@@ -42,15 +43,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const url = flag('--url');
   const invitation = process.env['AETHER_INVITATION'] ?? flag('--invitation');
   if (!url || !invitation) {
-    console.error(
+    warn(
       'usage: AETHER_INVITATION=<token> pnpm runner:enroll --url <control url> [--dir <data dir>]',
     );
     process.exit(2);
   }
   enrollRunner({ url, invitation, directory: resolve(flag('--dir') ?? '.data/live/runner-enroll') })
-    .then((r) => console.log(`enrolled machine ${r.machineId}`))
+    .then((r) => print(`enrolled machine ${r.machineId}`))
     .catch((e: Error) => {
-      console.error(`enrollment failed: ${e.message}`);
+      warn(`enrollment failed: ${e.message}`);
       process.exit(1);
     });
 }

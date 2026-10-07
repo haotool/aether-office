@@ -66,6 +66,57 @@ function validate(r: MergeRequest) {
   if (!r.candidate.startsWith('aether/')) throw new Error('MERGE_CANDIDATE_NAMESPACE');
 }
 
+/** Is the commit already reachable from the base? Then there is nothing to integrate. */
+function isAncestorOfBase(r: MergeRequest): boolean {
+  try {
+    git(r.repository, r.hooksDir, ['merge-base', '--is-ancestor', r.headSha, r.expectedBase]);
+    return true;
+  } catch {
+    return false; // not an ancestor: continue
+  }
+}
+
+/** Merges the head into the detached tree at the base and commits it on a new candidate branch (never overwriting one). */
+function mergeInTree(r: MergeRequest, tree: string): MergeResult {
+  const merge = (args: string[]) =>
+    git(tree, r.hooksDir, [
+      '-c',
+      `user.name=${r.author.name}`,
+      '-c',
+      `user.email=${r.author.email}`,
+      ...args,
+    ]);
+  try {
+    merge(['merge', '--no-ff', '--no-commit', r.headSha]);
+  } catch {
+    const files = git(tree, r.hooksDir, ['diff', '--name-only', '--diff-filter=U'], true)
+      .split('\n')
+      .filter(Boolean);
+    git(tree, r.hooksDir, ['merge', '--abort'], true);
+    return { status: 'conflict', baseSha: r.expectedBase, headSha: r.headSha, files };
+  }
+  merge([
+    'commit',
+    '--no-verify',
+    '-m',
+    `Integrate ${r.headSha.slice(0, 12)} into ${r.baseBranch}`,
+  ]);
+  const mergeSha = git(tree, r.hooksDir, ['rev-parse', 'HEAD']);
+  // `branch` without -f refuses to overwrite an existing candidate.
+  try {
+    git(r.repository, r.hooksDir, ['branch', r.candidate, mergeSha]);
+  } catch (cause) {
+    throw new Error('MERGE_CANDIDATE_EXISTS', { cause });
+  }
+  return {
+    status: 'merged',
+    baseSha: r.expectedBase,
+    headSha: r.headSha,
+    mergeSha,
+    candidate: r.candidate,
+  };
+}
+
 function integrateNow(r: MergeRequest): MergeResult {
   validate(r);
   const actual = git(r.repository, r.hooksDir, [
@@ -75,54 +126,13 @@ function integrateNow(r: MergeRequest): MergeResult {
   ]);
   if (actual !== r.expectedBase) return { status: 'base_moved', expected: r.expectedBase, actual };
   git(r.repository, r.hooksDir, ['cat-file', '-e', `${r.headSha}^{commit}`]);
-  // Nothing to integrate when the commit is already reachable from base.
-  try {
-    git(r.repository, r.hooksDir, ['merge-base', '--is-ancestor', r.headSha, r.expectedBase]);
+  if (isAncestorOfBase(r))
     return { status: 'up_to_date', baseSha: r.expectedBase, headSha: r.headSha };
-  } catch {
-    // not an ancestor: continue
-  }
   const dir = mkdtempSync(join(r.scratchDir, 'integrate-'));
   const tree = join(dir, 'tree');
   try {
     git(r.repository, r.hooksDir, ['worktree', 'add', '--detach', tree, r.expectedBase]);
-    const merge = (args: string[]) =>
-      git(tree, r.hooksDir, [
-        '-c',
-        `user.name=${r.author.name}`,
-        '-c',
-        `user.email=${r.author.email}`,
-        ...args,
-      ]);
-    try {
-      merge(['merge', '--no-ff', '--no-commit', r.headSha]);
-    } catch {
-      const files = git(tree, r.hooksDir, ['diff', '--name-only', '--diff-filter=U'], true)
-        .split('\n')
-        .filter(Boolean);
-      git(tree, r.hooksDir, ['merge', '--abort'], true);
-      return { status: 'conflict', baseSha: r.expectedBase, headSha: r.headSha, files };
-    }
-    merge([
-      'commit',
-      '--no-verify',
-      '-m',
-      `Integrate ${r.headSha.slice(0, 12)} into ${r.baseBranch}`,
-    ]);
-    const mergeSha = git(tree, r.hooksDir, ['rev-parse', 'HEAD']);
-    // `branch` without -f refuses to overwrite an existing candidate.
-    try {
-      git(r.repository, r.hooksDir, ['branch', r.candidate, mergeSha]);
-    } catch (cause) {
-      throw new Error('MERGE_CANDIDATE_EXISTS', { cause });
-    }
-    return {
-      status: 'merged',
-      baseSha: r.expectedBase,
-      headSha: r.headSha,
-      mergeSha,
-      candidate: r.candidate,
-    };
+    return mergeInTree(r, tree);
   } finally {
     git(r.repository, r.hooksDir, ['worktree', 'remove', '--force', tree], true);
     rmSync(dir, { recursive: true, force: true });

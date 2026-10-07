@@ -39,6 +39,56 @@ export function* linesWithFromEnd(data: Buffer, needles: readonly string[]): Gen
   }
 }
 
+type Fields = Record<string, unknown>;
+
+/** Codex: folds one `token_count` or `turn_context` record into `usage`, keeping what a later (earlier-in-file) line already set. */
+function foldCodex(usage: SessionUsage, entry: Fields, payload: Fields) {
+  if (usage.contextTokens === null && payload['type'] === 'token_count' && payload['info']) {
+    const info = obj(payload['info']);
+    usage.contextTokens = num(obj(info['last_token_usage'])['input_tokens']);
+    const total = obj(info['total_token_usage']);
+    const spent = num(total['total_tokens']);
+    // Codex's input count includes what the cache served, so those tokens come off the total.
+    usage.freshTokens =
+      spent === null ? null : Math.max(0, spent - (num(total['cached_input_tokens']) ?? 0));
+    usage.contextWindow = num(info['model_context_window']);
+  }
+  if (usage.limit === null && payload['type'] === 'token_count' && payload['rate_limits']) {
+    const limits = obj(payload['rate_limits']);
+    const primary = obj(limits['primary']);
+    const used = num(primary['used_percent']);
+    const resetsAt = num(primary['resets_at']);
+    if (used !== null)
+      usage.limit = {
+        usedPercent: Math.min(100, used),
+        windowMinutes: num(primary['window_minutes']),
+        resetsAt: resetsAt === null ? null : resetsAt * 1000,
+        plan: typeof limits['plan_type'] === 'string' ? limits['plan_type'] : null,
+      };
+  }
+  if (entry['type'] === 'turn_context' && typeof payload['model'] === 'string') {
+    usage.model ??= payload['model'];
+  }
+}
+
+/** Claude: folds one assistant message's usage into `usage` (new + cached input is the context in use). */
+function foldClaude(usage: SessionUsage, entry: Fields) {
+  const message = obj(entry['message']);
+  const u = obj(message['usage']);
+  // A placeholder the CLI writes for an API error (`<synthetic>`, all zeros) says nothing of the context: look further back.
+  const placeholder =
+    entry['isApiErrorMessage'] === true ||
+    (typeof message['model'] === 'string' && message['model'].startsWith('<'));
+  if (usage.contextTokens !== null || !Object.keys(u).length || placeholder) return;
+  const parts = ['input_tokens', 'cache_creation_input_tokens', 'cache_read_input_tokens'].map(
+    (k) => num(u[k]),
+  );
+  usage.contextTokens = parts.some((p) => p !== null)
+    ? parts.reduce<number>((sum, p) => sum + (p ?? 0), 0)
+    : null;
+  if (typeof message['model'] === 'string') usage.model = message['model'];
+}
+
 /**
  * Pure. Codex: the latest token_count that carries info (the latest request's input is the context in use, the
  * cumulative total is the session's spend) and the model of the turn_context before it. Claude: the latest assistant
@@ -48,58 +98,14 @@ export function parseUsage(provider: 'claude' | 'codex', tail: Buffer): SessionU
   const usage = { ...NONE, compactedAt: compactedAtOf(provider, tail) };
   const needles = provider === 'claude' ? ['"usage"'] : ['"token_count"', '"turn_context"'];
   for (const line of linesWithFromEnd(tail, needles)) {
-    let entry: Record<string, unknown>;
+    let entry: Fields;
     try {
       entry = obj(JSON.parse(line));
     } catch {
       continue; // the first line of a tail read is usually cut in half
     }
-    const payload = obj(entry['payload']);
-    if (provider === 'codex') {
-      if (usage.contextTokens === null && payload['type'] === 'token_count' && payload['info']) {
-        const info = obj(payload['info']);
-        usage.contextTokens = num(obj(info['last_token_usage'])['input_tokens']);
-        const total = obj(info['total_token_usage']);
-        const spent = num(total['total_tokens']);
-        // Codex's input count includes what the cache served, so those tokens come off the total.
-        usage.freshTokens =
-          spent === null ? null : Math.max(0, spent - (num(total['cached_input_tokens']) ?? 0));
-        usage.contextWindow = num(info['model_context_window']);
-      }
-      if (usage.limit === null && payload['type'] === 'token_count' && payload['rate_limits']) {
-        const limits = obj(payload['rate_limits']);
-        const primary = obj(limits['primary']);
-        const used = num(primary['used_percent']);
-        if (used !== null)
-          usage.limit = {
-            usedPercent: Math.min(100, used),
-            windowMinutes: num(primary['window_minutes']),
-            resetsAt: num(primary['resets_at']) === null ? null : num(primary['resets_at'])! * 1000,
-            plan: typeof limits['plan_type'] === 'string' ? limits['plan_type'] : null,
-          };
-      }
-      if (entry['type'] === 'turn_context' && typeof payload['model'] === 'string') {
-        usage.model ??= payload['model'];
-      }
-    } else {
-      const message = obj(entry['message']);
-      const u = obj(message['usage']);
-      // A placeholder the CLI writes for an API error (`<synthetic>`, all zeros) says nothing of the context: look further back.
-      const placeholder =
-        entry['isApiErrorMessage'] === true ||
-        (typeof message['model'] === 'string' && message['model'].startsWith('<'));
-      if (usage.contextTokens === null && Object.keys(u).length && !placeholder) {
-        const parts = [
-          'input_tokens',
-          'cache_creation_input_tokens',
-          'cache_read_input_tokens',
-        ].map((k) => num(u[k]));
-        usage.contextTokens = parts.some((p) => p !== null)
-          ? parts.reduce<number>((sum, p) => sum + (p ?? 0), 0)
-          : null;
-        if (typeof message['model'] === 'string') usage.model = message['model'];
-      }
-    }
+    if (provider === 'codex') foldCodex(usage, entry, obj(entry['payload']));
+    else foldClaude(usage, entry);
     if (
       usage.contextTokens !== null &&
       usage.model !== null &&
@@ -122,9 +128,11 @@ export async function readUsage(provider: 'claude' | 'codex', file: string): Pro
       withEdge(file, 'tail', bytes, (data) => parseUsage(provider, data));
     // Most transcripts name the model in their last few records: widen the window only while it is still missing.
     let usage = NONE;
-    for (let i = 0; i < TAILS.length; i++) {
-      if (i > 0 && (usage.model !== null || size <= TAILS[i - 1]!)) break;
-      usage = await read(TAILS[i]!);
+    let previous = 0;
+    for (const bytes of TAILS) {
+      if (previous > 0 && (usage.model !== null || size <= previous)) break;
+      usage = await read(bytes);
+      previous = bytes;
     }
     if (provider === 'claude') usage = { ...usage, freshTokens: await claudeTotal(file, size) };
     if (cache.size > 512) cache.clear(); // bounded by design

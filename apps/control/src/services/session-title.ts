@@ -14,11 +14,10 @@ const clean = (v: unknown) => (typeof v === 'string' ? cleanTitle(v, MAX_TITLE) 
 
 /** Pure. The latest `ai-title` in a transcript tail. */
 export function parseClaudeTitle(tail: string): string | null {
-  const lines = tail.split('\n');
-  for (let i = lines.length - 1; i >= 0; i--) {
-    if (!lines[i]!.includes('"ai-title"')) continue;
+  for (const line of tail.split('\n').reverse()) {
+    if (!line.includes('"ai-title"')) continue;
     try {
-      const entry = JSON.parse(lines[i]!) as { type?: unknown; aiTitle?: unknown };
+      const entry = JSON.parse(line) as { type?: unknown; aiTitle?: unknown };
       if (entry.type === 'ai-title') return clean(entry.aiTitle);
     } catch {
       /* cut line */

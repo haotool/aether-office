@@ -48,6 +48,7 @@ differ from the pages above, the pages above win.
 
 | Document                                                | Contents                                                                       |
 | ------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [Quality scorecard](quality/scorecard.md)               | Computed score per area, the rubric ([how](quality/README.md)) and what costs points |
 | [Verification ledger](verification/report.md)           | What is implemented and what is verified, per capability                       |
 | [Publishing checklist](release/publishing-checklist.md) | From the readiness check to a public repository, branch protection, a release  |
 | [Cleaning the history](release/history-cleanup.md)      | The three options (A, B, C), the `scripts/oss` kit, commands, measured results |

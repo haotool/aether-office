@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   groupAlive,
   groupStopper,
@@ -10,7 +10,7 @@ import {
   reapSurvivor,
   signalGroup,
 } from '../../packages/providers/src/index.js';
-import { alive, orphan, sleep, startReady, until } from './process-fixtures.js';
+import { alive, orphan, startReady, until } from './process-fixtures.js';
 
 /** A detached child (its own group) that ignores SIGTERM and has a grandchild of its own. */
 const stubborn = () =>
@@ -32,11 +32,18 @@ describe('stopping a group', () => {
 
   it("does not signal after it is cancelled: the group id is the leader's pid, and pids are reused", async () => {
     const child = await stubborn();
-    const stopper = groupStopper(child, 200);
-    stopper.stop();
-    stopper.cancel();
-    await sleep(600); // a negative wait: the SIGKILL that was cancelled must never come, so there is nothing to wait for
-    expect(groupAlive(child.pid!)).toBe(true); // SIGTERM was ignored and the SIGKILL never came
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] }); // the grace period is read off a clock the test owns
+    try {
+      const stopper = groupStopper(child, 200);
+      stopper.stop();
+      expect(vi.getTimerCount()).toBe(1); // the SIGKILL is scheduled
+      stopper.cancel();
+      expect(vi.getTimerCount()).toBe(0); // and cancelling removes it: it can never come
+      vi.advanceTimersByTime(600);
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(groupAlive(child.pid!)).toBe(true); // SIGTERM was ignored and no SIGKILL was sent
     signalGroup(child.pid!, 'SIGKILL');
   });
 });

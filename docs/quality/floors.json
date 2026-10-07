@@ -1,0 +1,15 @@
+{
+  "target": 95,
+  "floors": {
+    "structure": 52.5,
+    "types": 69.3,
+    "tests": 62.3,
+    "ui": 79.4,
+    "a11y": 75.3,
+    "perf": 82.6,
+    "docs": 95,
+    "security": 90.8,
+    "oss": 90.8,
+    "maturity": 80.6
+  }
+}

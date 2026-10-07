@@ -14,11 +14,8 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import {
-  CodexObserver,
-  discoverObservationFiles,
-  observeClaudeFile,
-} from '../../apps/runner/src/observer.js';
+import { CodexObserver, observeClaudeFile } from '../../apps/runner/src/observer.js';
+import { discoverObservationFiles } from '../../apps/runner/src/observer-source.js';
 const line = (value: unknown) => JSON.stringify(value) + '\n';
 it('observes only approved files with complete UTF-8 lines, durable cursors, rotation and explicit unknown formats', () => {
   const root = mkdtempSync(join(tmpdir(), 'aether-observer-'));

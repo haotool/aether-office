@@ -34,7 +34,7 @@
     var(--glass-strong)
   );
   font-size: var(--fs-label);
-  line-height: 1.4;
+  line-height: var(--lh-snug);
   color: var(--on-glass);
   box-shadow:
     0 0 10px color-mix(in srgb, var(--edge) 26%, transparent),

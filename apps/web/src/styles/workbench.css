@@ -63,7 +63,7 @@
   overflow: auto;
   background: var(--bg);
   padding: var(--space-16);
-  font: var(--fs-small) / 1.7 var(--mono);
+  font: var(--fs-small) / var(--lh-body) var(--mono);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -94,7 +94,7 @@
   overflow: hidden;
 }
 .dag-task {
-  height: 94px;
+  height: 94px; /* geometry: the node size TaskDag.tsx hands the flow layout (240 x 94) */
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   background: var(--surface);

@@ -124,13 +124,20 @@ export function checkEnvironment(
     { id: 'claude', version: ['--version'], auth: ['auth', 'status'] },
     { id: 'codex', version: ['--version'], auth: ['login', 'status'] },
   ];
-  const generated = probe
-    .list('packages/providers/generated')
-    .find((d) => /^codex-\d/.test(d) && !d.endsWith('-ts') && !d.endsWith('-json'));
+  const verified =
+    (
+      JSON.parse(probe.read('packages/providers/generated/compat.json') ?? '{}') as {
+        verifiedCliVersions?: string[];
+      }
+    ).verifiedCliVersions ?? [];
   for (const p of providers) {
     const version = probe.run(p.id, p.version);
     if (version.kind === 'enoent') {
-      checks.push({ id: p.id, status: 'missing', detail: `${p.id} CLI not found on PATH` });
+      checks.push({
+        id: p.id,
+        status: 'missing',
+        detail: `${p.id} CLI not found on PATH (optional: install it to use ${p.id} sessions)`,
+      });
       continue;
     }
     const auth = probe.run(p.id, p.auth);
@@ -140,11 +147,11 @@ export function checkEnvironment(
       status: auth.kind === 'ok' ? 'ok' : 'auth_required',
       detail: `${first(version.stdout)}${auth.kind === 'ok' ? '' : ' — not signed in or sign-in could not be confirmed'}`,
     });
-    if (p.id === 'codex' && generated && installed && !generated.endsWith(installed))
+    if (p.id === 'codex' && installed && verified.length && !verified.includes(installed))
       checks.push({
-        id: 'codex-schema',
-        status: 'version_mismatch',
-        detail: `protocol schema generated for ${generated.replace('codex-', '')}, installed CLI is ${installed}; regenerate and re-run the provider tests`,
+        id: 'codex-version',
+        status: 'warn',
+        detail: `codex ${installed} is not verified (it probably works); verified versions: ${verified.join(', ')}`,
       });
   }
   return checks;
@@ -159,13 +166,25 @@ const mark: Record<Status, string> = {
   warn: '~',
 };
 
+/** CLIs for the providers are optional (each is used only for its own sessions); a failing check of anything else is fatal. */
+const OPTIONAL = new Set(['claude', 'codex']);
+
+/** 1 when a hard prerequisite is missing or broken; with `strict`, any check that is not ok fails too. */
+export function exitCodeOf(checks: Check[], strict: boolean): number {
+  const failed = (c: Check) =>
+    strict
+      ? c.status !== 'ok'
+      : (c.status === 'missing' || c.status === 'native_failure') && !OPTIONAL.has(c.id);
+  return checks.some(failed) ? 1 : 0;
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const checks = checkEnvironment(realProbe);
   if (process.argv.includes('--json')) console.log(JSON.stringify(checks, null, 2));
   else
     for (const c of checks)
-      console.log(`${mark[c.status]} ${c.id.padEnd(14)} ${c.status.padEnd(17)} ${c.detail}`);
-  process.exitCode = checks.some((c) => c.status === 'missing' || c.status === 'native_failure')
-    ? 1
-    : 0;
+      console.log(
+        `${c.status === 'missing' && OPTIONAL.has(c.id) ? '!' : mark[c.status]} ${c.id.padEnd(14)} ${c.status.padEnd(17)} ${c.detail}`,
+      );
+  process.exitCode = exitCodeOf(checks, process.argv.includes('--strict'));
 }

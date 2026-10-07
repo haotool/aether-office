@@ -4,9 +4,9 @@
   margin-bottom: var(--space-20);
 }
 .view-switch button {
-  padding: var(--space-6) var(--space-12);
+  padding: var(--space-4) var(--space-12);
   border: 1px solid var(--line);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control);
   font-size: var(--fs-small);
   color: var(--muted);
 }
@@ -127,7 +127,11 @@
   background: transparent;
   flex: 1;
   min-width: 0;
-  outline-offset: -1px;
+  outline: 0; /* the ring is drawn on the box (below), so it is one ring around the whole field */
+}
+.search-box:has(input:focus-visible) {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 .message {
   display: flex;
@@ -225,7 +229,7 @@ th {
 }
 .toggle-label input {
   accent-color: var(--mint);
-  width: 18px;
+  width: 18px; /* the native checkbox's own size; a finger reaches it through its row */
   height: 18px;
 }
 .preset-buttons {
@@ -282,7 +286,7 @@ th {
   justify-content: center;
   flex-direction: column;
   gap: var(--space-20);
-  min-height: 60vh;
+  min-height: 60dvh;
   color: var(--mint);
   font-size: var(--fs-small);
 }

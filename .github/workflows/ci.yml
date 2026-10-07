@@ -57,6 +57,9 @@ jobs:
       # REUSE.toml, community files, no personal paths or secrets in the tree. After the build, so that it also proves
       # the ignore rules cover the build output.
       - run: pnpm run oss:check
+      # The quality scorecard is current and no area is below its floor (scripts/quality; static analysis, no browser).
+      # After the build, so that the bundle budgets are measured.
+      - run: pnpm run quality:check
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm exec playwright test
 

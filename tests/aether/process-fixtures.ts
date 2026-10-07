@@ -6,6 +6,11 @@ export const until = async (check: () => boolean, ms = 4000) => {
   for (let waited = 0; waited < ms && !check(); waited += 50) await sleep(50);
   return check();
 };
+/** `until` for a check that has to ask something asynchronous (a request, a scan). */
+export const untilAsync = async (check: () => Promise<boolean>, ms = 4000) => {
+  for (let waited = 0; waited < ms && !(await check()); waited += 50) await sleep(50);
+  return check();
+};
 /** Starts `node -e script` and resolves once the script has run to its last statement (handlers installed, children spawned). */
 export async function startReady(
   script: string,

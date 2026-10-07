@@ -9,7 +9,7 @@ import type { Transcript } from './usage-files.js';
 
 export type Attribution = { department: string | null; repo: string };
 export type Tracked = { transcript: Transcript; entry: Entry };
-export const RANGE_DAYS = { today: 1, '7d': 7, '30d': 30 } as const;
+const RANGE_DAYS = { today: 1, '7d': 7, '30d': 30 } as const;
 export const WINDOW_DAYS = 30;
 const MAX_PROJECTS = 12;
 const MAX_SESSIONS = 10;
@@ -28,7 +28,7 @@ const empty = (): UsageTotals => ({
 });
 
 /** Tokens the headline counts: everything but cache reads. */
-export const tokensOf = (t: UsageTotals) => t.input + t.output + t.cacheWrite + t.reasoning;
+const tokensOf = (t: UsageTotals) => t.input + t.output + t.cacheWrite + t.reasoning;
 
 function add(into: UsageTotals, b: Bucket, ms: { carry: number }) {
   into.input += b.i;
@@ -41,34 +41,38 @@ function add(into: UsageTotals, b: Bucket, ms: { carry: number }) {
   ms.carry += b.ms; // minutes are rounded once per scope and day, not per file
 }
 
+type Day = { totals: UsageTotals; millis: { carry: number }; seen: Set<string> };
+
 /** One scope's running sums: a total per day, the sessions seen each day, and tokens per model over the range. */
 class Scope {
-  daily: UsageTotals[];
-  private millis: { carry: number }[];
-  private seen: Set<string>[];
+  private days: Day[];
   private rangeSeen = new Set<string>();
   models = new Map<string, number>();
   constructor(days: number) {
-    this.daily = Array.from({ length: days }, empty);
-    this.millis = Array.from({ length: days }, () => ({ carry: 0 }));
-    this.seen = Array.from({ length: days }, () => new Set());
+    this.days = Array.from({ length: days }, () => ({
+      totals: empty(),
+      millis: { carry: 0 },
+      seen: new Set<string>(),
+    }));
   }
   take(index: number, b: Bucket, session: string, inRange: boolean) {
-    add(this.daily[index]!, b, this.millis[index]!);
-    this.seen[index]!.add(session);
+    const day = this.days[index];
+    if (!day) return;
+    add(day.totals, b, day.millis);
+    day.seen.add(session);
     if (!inRange) return;
     this.rangeSeen.add(session);
     for (const [model, tokens] of Object.entries(b.m))
       this.models.set(model, (this.models.get(model) ?? 0) + tokens);
   }
   tokens(from: number) {
-    return this.daily.slice(from).reduce((n, d) => n + tokensOf(d), 0);
+    return this.days.slice(from).reduce((n, d) => n + tokensOf(d.totals), 0);
   }
   result(from: number): UsageScope {
-    const daily = this.daily.map((d, i) => ({
-      ...d,
-      activeMinutes: Math.round(this.millis[i]!.carry / 60_000),
-      sessions: this.seen[i]!.size,
+    const daily = this.days.map((d) => ({
+      ...d.totals,
+      activeMinutes: Math.round(d.millis.carry / 60_000),
+      sessions: d.seen.size,
     }));
     const totals = daily.slice(from).reduce((sum, d) => {
       for (const key of Object.keys(sum) as (keyof UsageTotals)[]) sum[key] += d[key];
@@ -103,7 +107,7 @@ export function windowDays(today: string): string[] {
   );
 }
 
-export function aggregate(input: {
+type AggregateInput = {
   tracked: readonly Tracked[];
   today: string;
   range: UsageResponse['range'];
@@ -112,12 +116,22 @@ export function aggregate(input: {
   generatedAt: number;
   scan: UsageResponse['scan'];
   limits: UsageResponse['limits'];
-}): UsageResponse {
-  const days = windowDays(input.today);
+};
+
+const getOrCreate = <K, V>(map: Map<K, V>, key: K, make: () => V): V => {
+  const found = map.get(key);
+  if (found !== undefined) return found;
+  const made = make();
+  map.set(key, made);
+  return made;
+};
+
+/** Every scope of the answer, filled from what was read. */
+function fold(input: AggregateInput, days: string[], from: number) {
   const index = new Map(days.map((d, i) => [d, i]));
-  const from = WINDOW_DAYS - RANGE_DAYS[input.range];
   const building = new Scope(WINDOW_DAYS);
-  const offices = new Map(DEPARTMENTS.map((d) => [d.id as string, new Scope(WINDOW_DAYS)]));
+  const offices = DEPARTMENTS.map((d) => ({ d, scope: new Scope(WINDOW_DAYS) }));
+  const officeOf = new Map(offices.map((o) => [o.d.id as string, o.scope]));
   const unplaced = new Scope(WINDOW_DAYS);
   const projects = new Map<string, Scope>();
   const providers = { claude: new Scope(WINDOW_DAYS), codex: new Scope(WINDOW_DAYS) };
@@ -129,9 +143,8 @@ export function aggregate(input: {
       department: null,
       repo: entry.repo ?? 'unknown',
     };
-    const office = (at.department && offices.get(at.department)) || unplaced;
-    const project =
-      projects.get(at.repo) ?? projects.set(at.repo, new Scope(WINDOW_DAYS)).get(at.repo)!;
+    const office = (at.department && officeOf.get(at.department)) || unplaced;
+    const project = getOrCreate(projects, at.repo, () => new Scope(WINDOW_DAYS));
     for (const [day, b] of Object.entries(entry.state.days)) {
       const i = index.get(day);
       if (i === undefined) continue;
@@ -139,18 +152,14 @@ export function aggregate(input: {
       for (const scope of [building, office, project, providers[transcript.provider]])
         scope.take(i, b, session, inRange);
       if (!inRange) continue;
-      const row =
-        rows.get(session) ??
-        rows
-          .set(session, {
-            tokens: 0,
-            req: 0,
-            ms: 0,
-            models: new Map(),
-            at,
-            provider: transcript.provider,
-          })
-          .get(session)!;
+      const row = getOrCreate(rows, session, () => ({
+        tokens: 0,
+        req: 0,
+        ms: 0,
+        models: new Map(),
+        at,
+        provider: transcript.provider,
+      }));
       row.tokens += fresh(b);
       row.req += b.req;
       row.ms += b.ms;
@@ -158,8 +167,16 @@ export function aggregate(input: {
         row.models.set(model, (row.models.get(model) ?? 0) + tokens);
     }
   }
-  const topModel = (models: Map<string, number>) =>
-    [...models].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  return { building, offices, unplaced, projects, providers, rows };
+}
+
+const topModel = (models: Map<string, number>) =>
+  [...models].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+
+export function aggregate(input: AggregateInput): UsageResponse {
+  const days = windowDays(input.today);
+  const from = WINDOW_DAYS - RANGE_DAYS[input.range];
+  const { building, offices, unplaced, projects, providers, rows } = fold(input, days, from);
   return {
     enabled: true,
     range: input.range,
@@ -168,10 +185,10 @@ export function aggregate(input: {
     generatedAt: input.generatedAt,
     scan: input.scan,
     building: building.result(from),
-    offices: DEPARTMENTS.map((d) => ({
+    offices: offices.map(({ d, scope }) => ({
       floor: d.floor,
       department: d.id,
-      scope: offices.get(d.id)!.result(from),
+      scope: scope.result(from),
     })),
     unplaced: unplaced.result(from),
     projects: [...projects]

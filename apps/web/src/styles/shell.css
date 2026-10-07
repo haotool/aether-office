@@ -5,8 +5,8 @@
   overflow: hidden;
 }
 .topbar {
-  height: 60px;
-  min-height: 60px;
+  height: var(--bar-h);
+  min-height: var(--bar-h);
   display: flex;
   align-items: center;
   padding: 0 var(--space-20);
@@ -22,14 +22,14 @@
   display: flex;
   align-items: center;
   gap: var(--space-8);
-  width: 158px;
+  width: 158px; /* the brand column: wide enough for the wordmark, the sidebar's edge is 204px */
   flex-shrink: 0;
 }
 .brand > span {
   font-size: var(--fs-heading);
   letter-spacing: 3.5px;
   font-weight: 650;
-  line-height: 1;
+  line-height: 1; /* a wordmark, not running text */
 }
 .brand small {
   display: block;
@@ -40,7 +40,7 @@
   color: var(--muted);
 }
 .top-divider {
-  height: 28px;
+  height: 28px; /* a hairline between the brand and the picker, not a control */
   width: 1px;
   background: var(--line);
 }
@@ -63,6 +63,10 @@
   padding: 0 var(--space-20) 0 0;
   font-size: var(--fs-small);
   max-width: 230px;
+  min-height: var(--control-h-sm);
+  overflow: hidden;
+  text-overflow: ellipsis; /* a long project name ends in an ellipsis; the select's title carries the whole name */
+  white-space: nowrap;
 }
 .topbar-right {
   margin-left: auto;
@@ -71,8 +75,8 @@
   gap: var(--space-16);
 }
 .user-dot {
-  width: 30px;
-  height: 30px;
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
   border: 1px solid var(--line);
   display: grid;
   place-items: center;
@@ -87,7 +91,7 @@
   min-height: 0;
 }
 .sidebar {
-  width: 204px;
+  width: 204px; /* the navigation column */
   flex-shrink: 0;
   background: color-mix(in srgb, var(--surface) 94%, transparent);
   border-right: 1px solid var(--line);
@@ -125,8 +129,7 @@
 .nav-link.active {
   background: color-mix(in srgb, var(--mint) 11%, transparent);
   color: var(--mint);
-  outline: 1px solid color-mix(in srgb, var(--mint) 38%, transparent);
-  outline-offset: -1px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mint) 38%, transparent); /* not an outline: the focus ring stays the token's */
 }
 .nav-link small {
   margin-left: auto;
@@ -156,7 +159,7 @@
   font-size: var(--fs-label);
 }
 .connection > span {
-  width: 5px;
+  width: 5px; /* a status dot */
   height: 5px;
   border-radius: 50%;
   background: var(--mint);

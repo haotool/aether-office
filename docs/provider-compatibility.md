@@ -14,6 +14,8 @@ and `pnpm run doctor` accept.
 - **Claude Code** is matched per minor series (2.1.x), because the contract is the exactly pinned
   `@anthropic-ai/claude-agent-sdk`.
 
+`pnpm run doctor` reads `verifiedCliVersions` and reports an installed Codex outside it as "not verified, probably works" (a warning; `--strict` makes it fail).
+
 To add a release: install it, run `pnpm run doctor` and the provider tests, then add it to `compat.json`. A version that is not
 listed is refused rather than assumed compatible.
 

@@ -1,4 +1,5 @@
 import { lstat, readdir, stat } from 'node:fs/promises';
+import { deleteOldest } from './oldest-entry.js';
 import { join } from 'node:path';
 import { redactSecrets } from './redaction.js';
 import { readEdge } from './file-edge.js';
@@ -27,7 +28,7 @@ export type SubagentFile = {
   /** When the file was created, which is when the subagent started; null where the file system keeps no creation time. */
   startedAt: number | null;
 };
-export type SubagentMeta = {
+type SubagentMeta = {
   type: string;
   label: string | null;
   /** The parent's tool call that spawned it: how its result is found in the parent's transcript. */
@@ -59,9 +60,10 @@ export async function listSubagentFiles(
       const file = join(dir, name);
       try {
         const s = await stat(file);
-        if (now - s.mtimeMs < windowMs)
+        const id = FILE_NAME.exec(name)?.[1];
+        if (id && now - s.mtimeMs < windowMs)
           found.push({
-            id: FILE_NAME.exec(name)![1]!,
+            id,
             file,
             mtime: s.mtimeMs,
             size: s.size,
@@ -97,7 +99,7 @@ export async function readSubagentMeta(file: string): Promise<SubagentMeta> {
       toolUseId: typeof toolUseId === 'string' && TOOL_ID.test(toolUseId) ? toolUseId : null,
       foreground: raw['requestShape'] === 'foreground',
     };
-    if (metas.size >= MAX_METAS) metas.delete(metas.keys().next().value!);
+    if (metas.size >= MAX_METAS) deleteOldest(metas);
     metas.set(file, meta);
     return meta;
   } catch {

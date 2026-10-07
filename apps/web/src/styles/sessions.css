@@ -62,8 +62,8 @@
   width: 100%;
   margin-bottom: var(--space-4);
   white-space: nowrap;
-  min-height: 26px;
-  padding: var(--space-2) var(--space-8);
+  min-height: var(--control-h-sm);
+  padding: var(--space-4) var(--space-8);
   font-size: var(--fs-label);
 }
 
@@ -83,7 +83,7 @@
   font-family: var(--mono);
 }
 .token-split b {
-  font-size: 1.1em;
+  font-size: var(--fs-body);
 }
 
 .sessions-page small.liveness {

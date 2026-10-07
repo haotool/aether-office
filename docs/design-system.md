@@ -29,34 +29,79 @@ Delivery: [Loading performance](#loading-performance) · [Installable app (PWA)]
 | ---------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | Spacing    | `--space-2` … `--space-64`                                             | 4px grid with 2px and 6px half steps; used by `padding`, `margin` and `gap`             |
 | Radius     | `--r-xs` … `--r-3xl`, `--r-pill`                                       | A circle is `50%`                                                                       |
-| Type       | `--fs-label` (11), `--fs-small` (12), `--fs-meta`, `--fs-body` (14), `--fs-lead` … `--fs-hero` | No visible text under 11px; readable text is 12px or more                       |
+| Type       | `--fs-label` (11), `--fs-small` (12), `--fs-meta` (13), `--fs-body` (14), `--fs-lead` … `--fs-hero` | No visible text under 11px; readable text is 12px or more. Roles: 11 uppercase mono tags, 12 secondary and dense text (most of the UI), 13 the page's base text (`body`), 14 `h3`, row titles and conversation text |
+| Line height | `--lh-tight` (1.25), `--lh-snug` (1.45), `--lh-body` (1.6) | A title or single line; text in a card; long reading text (`body` is `--lh-body`) |
+| Elevation  | `--shadow-sm` / `-md` / `-lg`, `--shadow`                              | A raised chip or toast; a card or menu; a dialog (`.modal`)                             |
+| Motion     | `--dur-fast` (0.15s), `--dur` (0.2s), `--dur-slow` (0.4s), `--ease`     |                                                                                         |
+| Radius roles | `--r-control` (4), `--r-card` (8), `--r-sheet` (16), `--r-pill`       | Aliases of the scale above, so a role can change in one place                           |
 | Layers     | `--z-*`                                                                | Named, ordered layers: scene overlays below page chrome, sheets on top                  |
 | Color      | theme tokens (`--bg`, `--surface`, `--text`, …) and `--glass*`, `--on-glass*` | The glass set is for what is drawn over the 3D scene, a night view in both themes |
-| Touch      | `--target-touch` (44px hit), `--control-touch` (40), `--control-touch-sm` (36), `--target-fine` (32), `--safe-*` | Hit area, drawn control sizes and the notch and home-bar insets |
+| Touch      | `--target-touch` (44px hit), `--control-touch` (40), `--control-touch-sm` (36), `--target-fine` (32), `--safe-*` | Hit area, older drawn sizes and the notch and home-bar insets; new code uses the control scale below |
+| Controls   | `--control-h-sm` / `-md` / `-lg`, `--bar-h` (56), `--tabbar-h`          | See the control scale below                                                             |
+| Focus      | `--focus-ring` (2px mint), `--focus-offset` (2px)                       | One look for every focused control (below)                                              |
+
+### Control scale
+
+Every button, field, select, icon button, chip and segment takes its height from one of three tokens. The touch values
+replace the mouse values in one place, a `@media (pointer: coarse), (max-width: 760px)` block at the end of `tokens.css`; a
+rule never re-declares a height for a finger. `touch-targets.css` only extends the hit area to 44px (an invisible `::before`).
+The 3D scene's toolbar (`.segmented`, `.scene-options` in `office.css`) is a compact HUD over the canvas: its segments, buttons and
+select are `--control-h-sm` (32 with a mouse, 36 with a finger), checked by `e2e/scene-hud-consistency.spec.ts`. The HUD plaques
+(floor card, deck panel, camera wall) are geometry: their insets and widths stay literal, each with a comment saying why.
+
+| Token              | Mouse | Touch / phone | Used by                                                 |
+| ------------------ | ----- | ------------- | ------------------------------------------------------- |
+| `--control-h-sm`   | 32    | 36            | icon button, text button, chip, segment                 |
+| `--control-h-md`   | 36    | 40            | button, field, select, summary                          |
+| `--control-h-lg`   | 40    | 44            | a main call to action                                   |
+| `--bar-h`          | 56    | 56            | top bar, tab bar, drawer header                         |
+
+The heights are minimums: a label that wraps grows the control. `e2e/role-variance.spec.ts` measures the 14 views at
+1440x900, 390x844 and 820x1180 and fails when a role shows more distinct heights than it should (buttons 3, icon buttons 1,
+fields 2, chips 2, segments 1). Chrome that a later track of the UI consistency work owns is excluded there by name.
+
+### Focus ring
+
+`base.css` has one `:focus-visible` rule: `outline: var(--focus-ring)` at `--focus-offset`. A rule that must differ (an
+inset row, a drag handle) sets its own offset and keeps the same ring; it does not pick another color or width.
+
+### Shared classes
+
+The `u-` classes are the shared names (`controls.css`, `forms.css`, `pages.css`); the older classes join them through grouped
+selectors, so nothing had to be renamed at once. `.u-btn` (with `--primary`, `--ghost`, `--icon`; aliases `.primary`,
+`.secondary`, `.icon-button`, `.text-button`), `.u-field` (alias `.field`), `.u-chip`, `.u-card`, `.u-row`, `.u-head` with
+`.u-head__actions` (alias `.page-heading`; the title on one side, any number of actions wrapping on the other), `.u-empty`
+(what `Empty` renders), `.u-switch` and `.u-segmented` (alias `.view-switch`). The Settings switch (`.switch u-switch`) and
+segmented control (`.sseg u-segmented`) and the KPI dashboard's header (`.kpi-head u-head`) and office chips (`.u-chip`) use
+them and keep only their own geometry (the switch track, the segmented's joined frame). The section headings of the panels and
+the other empty states still have their own classes; they move to these as their files are converted. `.kpi-empty` and
+`.kpi-note` are one-line notes, not empty states, and stay as they are.
 
 ## Stylesheet organization
 
 `apps/web/src/styles/index.css` loads the files in cascade order: tokens, base, shell, office, session panel, controls,
 pages, forms, views, login, the desktop breakpoints, the feature files (scene HUD, telemetry, transcript, git, sessions,
 quick open) and finally the touch and phone layers (`touch-targets`, `compact-desktop`, `phone-drawer`, `phone-office`
-with its `-scene` and `-fit` continuations, `phone-sheet`, `phone-pages`, `phone-density`). A rule goes in the file of the thing it styles, never in a catch-all.
+with its `-scene` and `-fit` continuations, `phone-sheet`, `phone-pages`, `phone-density`). A rule goes in the file of the thing it styles, never in a catch-all. The KPI styles are two files: `kpi.css`
+(strip, dashboard, tiles, phone) and `kpi-charts.css` (the token bar, daily bars, rings, shares, the deck line and the floor plaque).
 The file list is documented at the top of `index.css`.
 
 ## Components
 
 Shared pieces live in `apps/web/src/ui.tsx`: `Modal`, `Sheet`, `Fold`, `Hint`, `Clamp`, `Field`, `Badge`, `Empty`,
 `PageHeading`. A feature composes them instead of rebuilding a portal, a backdrop or a close button. Buttons are the
-classes `primary`, `secondary`, `icon-button` and `text-button`; a new variant is added beside them in `controls.css`.
+classes `primary`, `secondary`, `icon-button` and `text-button` (the `u-btn` family, see Shared classes); a new variant is added beside them in `controls.css`.
 
 ## Responsive and touch rules
 
 1. **Width.** A phone is `<= 760px` or a phone on its side (`pointer: coarse` and `max-height: 500px`). There, navigation
    is a drawer and the session panel a bottom sheet. Nothing scrolls the page sideways. A table that is wide on purpose scrolls
    inside `.table-scroll`; a table of rows becomes cards on a phone (`table.stack`, with a `data-label` on every cell).
-2. **Type.** Body text is 14px; form fields are 16px on a phone (iOS zooms the page on anything smaller).
+2. **Type.** The page's base text is 13px (`--fs-meta`); secondary and dense text is 12px, tags 11px, titles and conversation
+   text 14px (see the Type row). Form fields are 16px on a phone (iOS zooms the page on anything smaller).
 3. **Targets.** With a finger a control is drawn 36px (icons, segments, chips) or 40px (buttons, fields) and is hit at 44×44: an
    invisible area reaches past its edges (`touch-targets.css`), and a checkbox is reached through its row. The responsive spec
-   enforces the drawn size (36); with a mouse at least 32.
+   enforces the drawn size (36); with a mouse at least 32 (`--control-h-sm`).
    Overlays that duplicate another way to do the same thing (the name tags on the 3D scene) are exempt. Hover styles live
    under `@media (hover: hover)` so a tap does not leave a control looking hovered, and controls set
    `touch-action: manipulation`.
@@ -133,6 +178,7 @@ member is a conversation, not an identity card. Code: `features/SessionPanel.tsx
   way is clear. A sent message the transcript never shows is flagged after 90 s, never left looking delivered. While the
   session works, **Stop** takes the place of Send: Esc, then Ctrl+C 1.5 s later if it still works, then **Stop process**
   (`terminal.stop`, confirmed). On a phone a row of quick replies (continue, yes, no, Esc) sits above the box.
+  The model chip and the quick replies are `u-chip`; Send and the box are `--control-h-md` (`e2e/panel-consistency.spec.ts`).
 - **Slash menu and @file.** `/` at the start opens a fuzzy list of the CLI's built-in commands, the project's and the user's
   `.claude/commands` and `.claude/skills`; a command that opens a list or dialog in the terminal (`/model`, `/resume`,
   `/config`, `/login`, ...) says so, because it is sent but cannot be answered here. `@` opens file paths of the session's
@@ -538,13 +584,16 @@ quality, see which models were found, connect a phone and flip Advanced; an owne
 - **Groups** (`features/settings/sections.ts`): General, Notifications & approvals, Connections, Models & execution, Office,
   Advanced, Data & privacy, About. Every setting is one entry in `entries.ts` (group, label key, description key, extra words in
   both languages); the page and the search read the same entry, so they cannot drift.
+- **Shell sizes**: the top bar is `--bar-h`; its project select, the sign-out link and the user dot are `--control-h-sm`. A long
+  project name ends in an ellipsis (the select's `title` holds the whole name). The active nav link draws its mark with an inset
+  `box-shadow`, so the focus ring stays the token's. A search box draws one ring around the whole field (`:has(input:focus-visible)`).
 - **Layout** is a container query on the page's own width, not the window's (the sidebar and session panel take theirs). From
   560px: a sticky column of links with a mark that follows the scroll (`useScrollSpy`), a link scrolls to its group and sets
   `/settings/<group>`. Under that: the same links as a row of tabs. A phone (portrait or on its side) shows the groups as large
   rows (44px and more); a group opens as its own page under a bar with Back (not sticky on a phone on its side). A row puts its
   control at the right when its group is 560px wide, below the text otherwise.
 - **Kit** (`features/settings/kit.tsx`): `Row`, `Block` (a whole panel gated by search), `Switch` (a native checkbox with
-  `role="switch"`, drawn 36px, hit at 44px), `Segmented` (radiogroup, arrow keys), `SelectBox`, `StatusChip` (word and mark, never
+  `role="switch"`, the label is `--control-h-sm` and the track 28px, hit at 44px), `Segmented` (radiogroup, arrow keys), `SelectBox`, `StatusChip` (word and mark, never
   colour alone), `CopyCommand` (monospace, scrolls inside its own box, announces "Copied"), `InlineHelp`, `DangerZone`,
   `Skeleton`, `ErrorLine`. A control is named by its row's label and described by its text; a locked row disables it and says why.
 - **Honesty.** A row shows the real state (notification permission, whether answering is allowed on this connection, secure

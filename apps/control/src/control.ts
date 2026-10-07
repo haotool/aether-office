@@ -1,52 +1,65 @@
-import { requestReview } from './services/review-runs.js';
 import { randomUUID } from 'node:crypto';
-import { realpathSync } from 'node:fs';
 import {
   commandSchema,
   projectSchema,
   eventSchema,
   type OfficeEvent,
   type Snapshot,
-  type Mode,
 } from '@aether/contracts';
-import { authorize, assertVersion, DomainError, type Actor } from '@aether/kernel';
-import { validateLayout } from '@aether/kernel';
+import { authorize, DomainError, type Actor } from '@aether/kernel';
 import { connect } from './db/connection.js';
-import { insertRow, selectAll, selectIn, selectOne, updateRows } from './db/query.js';
-import { projects, agents, knowledge } from './db/schema.js';
+import { selectAll, selectIn } from './db/query.js';
+import { projects } from './db/schema.js';
 import { hash, secret, authenticate, createIdentity, identityActor } from './services/identity.js';
-import { agent, emit, project, type Context } from './services/context.js';
-import { requestIntegration, requestJob } from './services/jobs.js';
-import { decideApproval } from './services/approvals.js';
+import { emit, project, type Context } from './services/context.js';
+import { runCommand } from './services/command-handlers.js';
 import { createPermissionRequests } from './services/permission-requests.js';
-import { concludeMeeting, startMeeting } from './services/meetings.js';
-import { startWorkflow } from './services/workflows.js';
-import { roomCommand } from './services/rooms.js';
-import { createA2AClient, revokeA2AClient } from './services/a2a-clients.js';
-import { createInvitation } from './services/invitations.js';
-import { integrationCommand } from './services/integrations.js';
-import { skillCommand } from './services/skills.js';
-import { scheduleCommand } from './services/schedules.js';
-import { addReviewComment } from './services/review-comments.js';
-import { reservationCommand } from './services/reservations.js';
 import { buildSnapshot, highWatermark } from './services/snapshot.js';
-import { terminalCommand } from './services/terminals.js';
-import { changeWork, createWork } from './services/work.js';
-import { acknowledge, getMessage, inbox, sendMessage, messageWaits } from './services/messages.js';
+import { getMessage, inbox, messageWaits } from './services/messages.js';
 
 /** Result fields that are bearer secrets, by command. They are shown to the caller once and nowhere else. */
 const SECRET_RESULT_FIELDS: Partial<Record<string, readonly string[]>> = {
   'machine.invite': ['token'],
   'a2a.client.create': ['token'],
 };
-export function redactSecrets(
-  type: string,
-  result: Record<string, unknown>,
-): Record<string, unknown> {
+function redactSecrets(type: string, result: Record<string, unknown>): Record<string, unknown> {
   const fields = SECRET_RESULT_FIELDS[type];
   return fields
     ? { ...result, ...Object.fromEntries(fields.map((f) => [f, '[shown once]'])) }
     : result;
+}
+
+type Receipt = {
+  schemaVersion: 1;
+  commandId: string;
+  status: 'persisted';
+  result: Record<string, unknown>;
+};
+
+/** A review session may only talk back: it never changes work, files or settings. */
+function assertReviewSessionMayRun(actor: Actor, type: string) {
+  if (
+    actor.runPurpose === 'review' &&
+    !['message.send', 'message.ack', 'knowledge.propose'].includes(type)
+  )
+    throw new DomainError('REVIEW_SESSION_READ_ONLY', 403);
+}
+
+/** The stored receipt of an earlier call with this idempotency key, or a conflict if its request differed. */
+function journaledReceipt(
+  ctx: Context,
+  actor: Actor,
+  idempotencyKey: string,
+  requestHash: string,
+): Receipt | undefined {
+  const old = ctx.sqlite
+    .prepare(
+      'SELECT requestHash,result FROM command_journal WHERE identityId=? AND idempotencyKey=?',
+    )
+    .get(actor.id, idempotencyKey) as { requestHash: string; result: string } | undefined;
+  if (!old) return undefined;
+  if (old.requestHash !== requestHash) throw new DomainError('IDEMPOTENCY_CONFLICT');
+  return JSON.parse(old.result) as Receipt;
 }
 
 export class Control {
@@ -79,264 +92,22 @@ export class Control {
   ) {
     return createIdentity(this.ctx, ...args);
   }
-  execute(actor: Actor, input: unknown) {
+  execute(actor: Actor, input: unknown): Receipt {
     // Revocation is checked for each call, including in-process clients.
     actor = this.identity(actor.id);
     const c = commandSchema.parse(input);
-    if (
-      actor.runPurpose === 'review' &&
-      !['message.send', 'message.ack', 'knowledge.propose'].includes(c.type)
-    )
-      throw new DomainError('REVIEW_SESSION_READ_ONLY', 403);
+    assertReviewSessionMayRun(actor, c.type);
     const projectId = 'projectId' in c ? c.projectId : undefined;
     authorize(actor, c.type, projectId);
     const requestHash = hash(JSON.stringify(c));
     return this.ctx.sqlite
-      .transaction(() => {
+      .transaction((): Receipt => {
         if (projectId) project(this.ctx, actor, projectId);
-        const old = this.ctx.sqlite
-          .prepare(
-            'SELECT requestHash,result FROM command_journal WHERE identityId=? AND idempotencyKey=?',
-          )
-          .get(actor.id, c.idempotencyKey) as { requestHash: string; result: string } | undefined;
-        if (old) {
-          if (old.requestHash !== requestHash) throw new DomainError('IDEMPOTENCY_CONFLICT');
-          return JSON.parse(old.result) as {
-            schemaVersion: 1;
-            commandId: string;
-            status: 'persisted';
-            result: Record<string, unknown>;
-          };
-        }
+        const replay = journaledReceipt(this.ctx, actor, c.idempotencyKey, requestHash);
+        if (replay) return replay;
         const commandId = randomUUID();
-        let result: Record<string, unknown>;
-        let eventProject = projectId;
-        let eventType = c.type;
-        switch (c.type) {
-          case 'terminal.start':
-          case 'terminal.takeover':
-          case 'terminal.release':
-          case 'terminal.input':
-          case 'terminal.resize':
-          case 'terminal.stop':
-            result = terminalCommand(this.ctx, actor, c);
-            break;
-          case 'meeting.start':
-            result = startMeeting(this.ctx, actor, c);
-            break;
-          case 'meeting.conclude':
-            result = concludeMeeting(this.ctx, actor, c);
-            break;
-          case 'workflow.start':
-            result = startWorkflow(this.ctx, actor, c);
-            break;
-          case 'room.create':
-          case 'room.members':
-            result = roomCommand(this.ctx, actor, c);
-            break;
-          case 'a2a.client.create':
-            result = createA2AClient(this.ctx, actor, c);
-            break;
-          case 'a2a.client.revoke':
-            result = revokeA2AClient(this.ctx, c);
-            break;
-          case 'machine.invite':
-            result = createInvitation(this.ctx, actor, c);
-            break;
-          case 'integration.connect':
-          case 'integration.toggle':
-            result = integrationCommand(this.ctx, actor, c);
-            break;
-          case 'skill.import':
-          case 'skill.toggle':
-            result = skillCommand(this.ctx, actor, c);
-            break;
-          case 'schedule.create':
-          case 'schedule.toggle':
-            result = scheduleCommand(this.ctx, actor, c);
-            break;
-          case 'work.integrate':
-            result = requestIntegration(this.ctx, actor, c);
-            break;
-          case 'work.comment':
-            result = addReviewComment(this.ctx, actor, c);
-            break;
-          case 'reservation.acquire':
-          case 'reservation.renew':
-          case 'reservation.release':
-            result = reservationCommand(this.ctx, actor, c);
-            break;
-          case 'project.create': {
-            const row = {
-              id: randomUUID(),
-              name: c.data.name,
-              root: c.data.root ? realpathSync(c.data.root) : null,
-              mode: this.ctx.mode,
-              version: 1,
-              createdAt: this.ctx.now(),
-            };
-            insertRow(this.ctx.sqlite, projects, row);
-            result = row;
-            eventProject = row.id;
-            break;
-          }
-          case 'project.execution.configure': {
-            if (this.ctx.mode !== 'live') throw new DomainError('LIVE_MODE_REQUIRED', 400);
-            const previous = this.ctx.sqlite
-              .prepare('SELECT version FROM project_policies WHERE projectId=?')
-              .get(c.projectId) as { version: number } | undefined;
-            assertVersion(previous?.version ?? 0, c.expectedVersion);
-            this.ctx.sqlite
-              .prepare(
-                'INSERT INTO project_policies(projectId,liveEnabled,maxTurns,timeoutMs,version) VALUES (?,?,?,?,?) ON CONFLICT(projectId) DO UPDATE SET liveEnabled=excluded.liveEnabled,maxTurns=excluded.maxTurns,timeoutMs=excluded.timeoutMs,version=excluded.version',
-              )
-              .run(
-                c.projectId,
-                Number(c.data.liveEnabled),
-                c.data.maxTurns,
-                c.data.timeoutMs,
-                c.expectedVersion + 1,
-              );
-            if (!c.data.liveEnabled) {
-              this.ctx.sqlite
-                .prepare(
-                  "UPDATE work_items SET state='cancelled',version=version+1,updatedAt=? WHERE id IN (SELECT workId FROM runs WHERE projectId=? AND mode='live' AND purpose='implementation' AND state='queued')",
-                )
-                .run(this.ctx.now(), c.projectId);
-              this.ctx.sqlite
-                .prepare(
-                  "UPDATE runner_commands SET state='cancelled' WHERE runId IN (SELECT id FROM runs WHERE projectId=? AND mode='live' AND state='queued')",
-                )
-                .run(c.projectId);
-              this.ctx.sqlite
-                .prepare(
-                  "UPDATE runs SET state=CASE WHEN state='queued' THEN 'cancelled' ELSE 'cancel_requested' END WHERE projectId=? AND mode='live' AND state IN ('queued','claimed','running')",
-                )
-                .run(c.projectId);
-            }
-            result = { ...c.data, version: c.expectedVersion + 1 };
-            break;
-          }
-          case 'agent.register': {
-            if (c.data.provider === 'demo' && this.ctx.mode !== 'demo')
-              throw new DomainError('DEMO_MODE_REQUIRED', 400);
-            if (c.data.provider !== 'demo' && this.ctx.mode === 'demo')
-              throw new DomainError('LIVE_MODE_REQUIRED', 400);
-            const mode: Mode = c.data.provider === 'observe' ? 'observe' : this.ctx.mode;
-            const row = {
-              ...c.data,
-              id: randomUUID(),
-              projectId: c.projectId,
-              mode,
-              activity: mode === 'observe' ? ('unknown' as const) : ('idle' as const),
-              version: 1,
-              createdAt: this.ctx.now(),
-              lastSeen: null,
-            };
-            insertRow(this.ctx.sqlite, agents, row);
-            result = row;
-            break;
-          }
-          case 'work.verify':
-          case 'workspace.diff':
-            result = requestJob(this.ctx, actor, c);
-            break;
-          case 'work.request_review':
-            result = requestReview(this.ctx, c);
-            break;
-          case 'work.create':
-            result = createWork(this.ctx, c);
-            break;
-          case 'work.dependencies':
-          case 'work.extend':
-          case 'work.retry':
-          case 'work.assign':
-          case 'work.submit':
-          case 'work.review':
-          case 'work.accept':
-          case 'work.cancel':
-            result = changeWork(this.ctx, actor, c);
-            break;
-          case 'message.send':
-            result = sendMessage(this.ctx, actor, c);
-            break;
-          case 'message.ack':
-            result = acknowledge(this.ctx, actor, c);
-            break;
-          case 'layout.save': {
-            validateLayout(c.data.objects);
-            // A session AETHER only observes sits at a desk too (`local:` members are not registered agents).
-            for (const object of c.data.objects)
-              if (object.agentId && !object.agentId.startsWith('local:'))
-                agent(this.ctx, c.projectId, object.agentId);
-            const row = this.ctx.sqlite
-              .prepare('SELECT version FROM layouts WHERE projectId=?')
-              .get(c.projectId) as { version: number } | undefined;
-            assertVersion(row?.version ?? 0, c.expectedVersion);
-            this.ctx.sqlite
-              .prepare(
-                'INSERT INTO layouts VALUES (?,?,?,?) ON CONFLICT(projectId) DO UPDATE SET version=excluded.version,data=excluded.data,updatedAt=excluded.updatedAt',
-              )
-              .run(c.projectId, c.expectedVersion + 1, JSON.stringify(c.data), this.ctx.now());
-            result = { version: c.expectedVersion + 1, data: c.data };
-            break;
-          }
-          case 'approval.decide':
-            result = decideApproval(this.ctx, actor, c.projectId, c.expectedVersion, c.data);
-            break;
-          case 'knowledge.approve': {
-            const row = selectOne(this.ctx.sqlite, knowledge, { id: c.data.knowledgeId });
-            if (!row || row.projectId !== c.projectId)
-              throw new DomainError('KNOWLEDGE_NOT_FOUND', 404);
-            assertVersion(row.version, c.expectedVersion);
-            if (row.classification !== 'proposed')
-              throw new DomainError('KNOWLEDGE_ALREADY_REVIEWED');
-            const patch = {
-              classification: c.data.decision === 'approve' ? 'human_approved' : 'rejected',
-              reviewedBy: actor.id,
-              reviewReason: c.data.reason,
-              updatedAt: this.ctx.now(),
-              version: row.version + 1,
-            };
-            updateRows(this.ctx.sqlite, knowledge, { id: row.id }, patch);
-            result = { ...row, ...patch };
-            break;
-          }
-          case 'knowledge.propose': {
-            if (
-              c.data.workId &&
-              !this.ctx.sqlite
-                .prepare('SELECT 1 FROM work_items WHERE id=? AND projectId=?')
-                .get(c.data.workId, c.projectId)
-            )
-              throw new DomainError('KNOWLEDGE_WORK_NOT_FOUND', 404);
-            if (
-              c.data.artifactId &&
-              !this.ctx.sqlite
-                .prepare('SELECT 1 FROM artifacts WHERE id=? AND projectId=?')
-                .get(c.data.artifactId, c.projectId)
-            )
-              throw new DomainError('KNOWLEDGE_ARTIFACT_NOT_FOUND', 404);
-            const row = {
-              id: randomUUID(),
-              projectId: c.projectId,
-              ...c.data,
-              workId: c.data.workId ?? null,
-              artifactId: c.data.artifactId ?? null,
-              commitSha: c.data.commitSha ?? null,
-              author: actor.id,
-              classification: 'proposed',
-              version: 1,
-              createdAt: this.ctx.now(),
-              updatedAt: this.ctx.now(),
-              reviewedBy: null,
-              reviewReason: null,
-            };
-            insertRow(this.ctx.sqlite, knowledge, row);
-            result = row;
-            break;
-          }
-        }
+        const result = runCommand(this.ctx, actor, c);
+        const eventProject = c.type === 'project.create' ? String(result['id']) : projectId;
         if (!eventProject) throw new DomainError('EVENT_SCOPE_REQUIRED', 500);
         // A bearer secret returned to the caller is never stored: not in the event log, not in the journal.
         const persisted = redactSecrets(c.type, result);
@@ -344,7 +115,7 @@ export class Control {
           this.ctx,
           actor,
           eventProject,
-          eventType,
+          c.type,
           persisted,
           commandId,
           c.correlationId,

@@ -13,7 +13,7 @@ type LivenessState =
   | 'orphaned' // alive, but whatever started it has gone
   | 'ended' // no process
   | 'unknown'; // cannot tell (Codex Desktop threads share one app server)
-export type Liveness = {
+type Liveness = {
   state: LivenessState;
   startedAt: number | null;
   quietMs: number | null;

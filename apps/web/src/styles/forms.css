@@ -20,7 +20,8 @@
 .fui {
   position: relative;
 }
-.field {
+.field,
+.u-field {
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
@@ -33,11 +34,17 @@ textarea,
 select {
   background: var(--bg);
   border: 1px solid var(--line);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control);
   color: var(--text);
   padding: var(--space-8) var(--space-12);
   min-width: 0;
   max-width: 100%;
+}
+/* A one-line field or select is one control height (the box types keep their own size). */
+input:where(:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='color'])),
+select {
+  min-height: var(--control-h-md);
+  padding-block: var(--space-6);
 }
 textarea {
   resize: vertical;
@@ -50,7 +57,8 @@ select option {
   display: flex;
   gap: var(--space-12);
 }
-.field-row > .field {
+.field-row > .field,
+.field-row > .u-field {
   flex: 1;
   min-width: 0;
 }
@@ -62,7 +70,7 @@ select option {
   border: 1px solid var(--line);
   border-radius: var(--r-xl);
   padding: var(--space-24);
-  box-shadow: 0 20px 80px var(--shade);
+  box-shadow: var(--shadow-lg);
 }
 .modal::backdrop {
   background: var(--scrim);

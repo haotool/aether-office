@@ -66,7 +66,7 @@ export function KpiDashboard({
       onCancel={onClose}
       onClick={(event) => event.target === event.currentTarget && onClose()}
     >
-      <header className="kpi-head">
+      <header className="kpi-head u-head">
         <h2>{t('kpiTitle')}</h2>
         <div className="segmented" role="group" aria-label={t('kpiRange')}>
           {RANGES.map((r) => (
@@ -85,12 +85,13 @@ export function KpiDashboard({
         </button>
       </header>
       <nav className="kpi-offices" aria-label={t('kpiOffices')}>
-        <button aria-pressed={office === null} onClick={() => onOffice(null)}>
+        <button className="u-chip" aria-pressed={office === null} onClick={() => onOffice(null)}>
           {t('kpiBuilding')}
         </button>
         {DEPARTMENTS.map((d) => (
           <button
             key={d.id}
+            className="u-chip"
             aria-pressed={office === d.floor}
             style={{ ['--accent' as string]: d.accent }}
             title={zh ? d.zh : d.en}

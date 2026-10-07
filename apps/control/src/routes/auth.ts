@@ -14,16 +14,10 @@ import { z } from 'zod';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { RouteContext } from './context.js';
 
-/** Browser sign-in: a token becomes a cookie session; the session endpoint tells the page who it is. */
-export function authRoutes({
-  app,
-  control,
-  origin,
-  options,
-  attempts,
-  pairings,
-  actor,
-}: RouteContext) {
+type Guards = ReturnType<typeof signInGuards>;
+
+/** The session cookie a sign-in sets, and the per-caller limit on failed sign-ins. */
+function signInGuards({ control, origin, attempts }: RouteContext) {
   // `request.protocol` is https only when a proxy that is trusted (AETHER_TRUST_PROXY) says it terminated TLS.
   const startCookie = (
     request: FastifyRequest,
@@ -50,6 +44,10 @@ export function authRoutes({
       until: last && last.until > now ? last.until : now + 300000,
     });
   };
+  return { startCookie, limited };
+}
+
+function loginRoute({ app, control, attempts }: RouteContext, { startCookie, limited }: Guards) {
   app.post('/api/login', async (request, reply) => {
     const key = request.ip;
     limited(key);
@@ -68,6 +66,12 @@ export function authRoutes({
       mode: control.ctx.mode,
     };
   });
+}
+
+function pairingRoutes(
+  { app, control, origin, options, attempts, pairings, actor }: RouteContext,
+  { startCookie, limited }: Guards,
+) {
   // Signing a phone in by scanning (services/pairing.ts): a signed-in person asks for a code; the phone redeems it once.
   app.post('/api/pairings', async (request) => {
     const who = actor(request);
@@ -110,6 +114,9 @@ export function authRoutes({
       mode: control.ctx.mode,
     };
   });
+}
+
+function sessionRoutes({ app, control, actor }: RouteContext, { limited }: Guards) {
   app.get('/api/session', async (request) => ({ actor: actor(request), mode: control.ctx.mode }));
   // A page that is signed in but lost its CSRF token (a closed tab, an iOS-discarded tab) asks for a new one. The session
   // cookie is the credential (HttpOnly, SameSite=Strict, the Host and Origin checks of every request), so a bearer token
@@ -133,4 +140,12 @@ export function authRoutes({
     reply.clearCookie('aether_session', { path: '/' });
     return { ok: true };
   });
+}
+
+/** Browser sign-in: a token becomes a cookie session; the session endpoint tells the page who it is. */
+export function authRoutes(context: RouteContext) {
+  const guards = signInGuards(context);
+  loginRoute(context, guards);
+  pairingRoutes(context, guards);
+  sessionRoutes(context, guards);
 }

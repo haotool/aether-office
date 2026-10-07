@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { homedir } from 'node:os';
 import type { FastifyRequest } from 'fastify';
+import type { Control } from '../control.js';
 import { z } from 'zod';
 import { DomainError, type Actor } from '@aether/kernel';
 import { permissionDecisionSchema } from '@aether/contracts';
@@ -43,74 +44,57 @@ const createSchema = z
   .strict();
 
 /**
- * Remote approvals. Two audiences with two credentials: the hook on this machine (loopback only, its own bearer token,
- * which can only create a request and read or close the requests it made) and a human owner or operator at a browser
- * session (who alone can list and decide; a bearer token cannot).
+ * The hook's caller: on this machine, with the right token, Remote approvals on. The token is compared first, so only a
+ * wrong one is counted (per address, like a login) and can be locked out: guessers can never lock the real hook out.
  */
-export function permissionRoutes({ app, control, actor, origin, attempts }: RouteContext) {
+function assertHook(control: Control, attempts: RouteContext['attempts'], request: FastifyRequest) {
+  // A proxy on this machine makes every remote caller look like loopback; the hook itself never goes through one.
+  const proxied = request.headers['x-forwarded-for'] || request.headers['forwarded'];
+  if (proxied || !LOOPBACK_ADDRESS.test(request.socket.remoteAddress ?? ''))
+    throw new DomainError('HOOK_LOOPBACK_ONLY', 403);
+  const header = request.headers['authorization'];
+  const token = typeof header === 'string' && header.startsWith('Bearer ') ? header.slice(7) : '';
+  if (isHookToken(control.ctx, token)) return;
+  const now = control.ctx.now();
+  const key = `hook:${request.ip}`;
+  const failed = attempts.get(key);
+  const live = failed !== undefined && failed.until > now;
+  if (live && failed.count >= HOOK_FAILURES) throw new DomainError('HOOK_RATE_LIMIT', 429);
+  if (attempts.size >= MAX_ATTEMPTS) pruneAttempts(attempts, now);
+  attempts.set(key, {
+    count: live ? failed.count + 1 : 1,
+    until: live ? failed.until : now + 300000,
+  });
+  throw new DomainError('AUTH_REQUIRED', 401);
+}
+
+/** The project a session belongs to, found the way every other session action finds it. */
+async function projectOf(control: Control, key: string): Promise<string> {
+  const projects = control.ctx.sqlite.prepare('SELECT id,root FROM projects').all() as {
+    id: string;
+    root: string | null;
+  }[];
+  const sessions = await scanLocalSessions(
+    process.env['AETHER_LOCAL_SESSIONS_HOME'] ?? homedir(),
+    Date.now(),
+    0,
+  );
+  const found = attributeSessions(sessions, projects).find((s) => s.key === key);
+  if (!found?.projectId) throw new DomainError('SESSION_HAS_NO_PROJECT', 404);
+  return found.projectId;
+}
+
+/** The hook's three routes: create a request, poll it, fall back. Its own credential, loopback only. */
+function hookRoutes({ app, control, attempts }: RouteContext) {
   const requests = control.permissionRequests;
-  const sqlite = control.ctx.sqlite;
-
-  /**
-   * The hook's caller: on this machine, with the right token, Remote approvals on. The token is compared first, so only a
-   * wrong one is counted (per address, like a login) and can be locked out: guessers can never lock the real hook out.
-   */
-  function hook(request: FastifyRequest) {
-    // A proxy on this machine makes every remote caller look like loopback; the hook itself never goes through one.
-    const proxied = request.headers['x-forwarded-for'] || request.headers['forwarded'];
-    if (proxied || !LOOPBACK_ADDRESS.test(request.socket.remoteAddress ?? ''))
-      throw new DomainError('HOOK_LOOPBACK_ONLY', 403);
-    const header = request.headers['authorization'];
-    const token = typeof header === 'string' && header.startsWith('Bearer ') ? header.slice(7) : '';
-    if (isHookToken(control.ctx, token)) return;
-    const now = control.ctx.now();
-    const key = `hook:${request.ip}`;
-    const failed = attempts.get(key);
-    const live = failed !== undefined && failed.until > now;
-    if (live && failed.count >= HOOK_FAILURES) throw new DomainError('HOOK_RATE_LIMIT', 429);
-    if (attempts.size >= MAX_ATTEMPTS) pruneAttempts(attempts, now);
-    attempts.set(key, {
-      count: live ? failed.count + 1 : 1,
-      until: live ? failed.until : now + 300000,
-    });
-    throw new DomainError('AUTH_REQUIRED', 401);
-  }
-
-  /**
-   * A person at a browser: the cookie session (with its CSRF token on a mutation) and nothing else. A bearer token,
-   * such as the owner token an agent running as this user could read from disk, never counts as one.
-   */
-  function human(request: FastifyRequest): Actor {
-    if (request.headers['authorization']) throw new DomainError('COOKIE_SESSION_REQUIRED', 403);
-    const who = actor(request);
-    requireOperator(who);
-    return who;
-  }
-
-  /** The project a session belongs to, found the way every other session action finds it. */
-  async function projectOf(key: string): Promise<string> {
-    const projects = sqlite.prepare('SELECT id,root FROM projects').all() as {
-      id: string;
-      root: string | null;
-    }[];
-    const sessions = await scanLocalSessions(
-      process.env['AETHER_LOCAL_SESSIONS_HOME'] ?? homedir(),
-      Date.now(),
-      0,
-    );
-    const found = attributeSessions(sessions, projects).find((s) => s.key === key);
-    if (!found?.projectId) throw new DomainError('SESSION_HAS_NO_PROJECT', 404);
-    return found.projectId;
-  }
-
   app.post('/api/hook/permission-requests', async (request) => {
-    hook(request);
+    assertHook(control, attempts, request);
     const body = createSchema.parse(request.body);
     const sessionKey = `claude:${body.sessionId}`;
     requests.checkRate(sessionKey); // before the scan: a flood is refused without doing the expensive part
     const created = requests.create({
       sessionKey,
-      projectId: await projectOf(sessionKey),
+      projectId: await projectOf(control, sessionKey),
       tool: body.tool,
       input: body.input,
       rules: body.rules,
@@ -128,7 +112,7 @@ export function permissionRoutes({ app, control, actor, origin, attempts }: Rout
   app.get<{ Params: { id: string }; Querystring: { wait?: string; nonce?: string } }>(
     '/api/hook/permission-requests/:id',
     async (request) => {
-      hook(request);
+      assertHook(control, attempts, request);
       const nonce = nonceSchema.parse(request.query.nonce);
       const wait = Math.min(Math.max(Number(request.query.wait) || 0, 0), MAX_LONG_POLL_MS);
       if (wait) await requests.waitFor(request.params.id, wait);
@@ -138,20 +122,35 @@ export function permissionRoutes({ app, control, actor, origin, attempts }: Rout
   app.post<{ Params: { id: string } }>(
     '/api/hook/permission-requests/:id/fallback',
     async (request) => {
-      hook(request);
+      assertHook(control, attempts, request);
       const { nonce } = z.object({ nonce: nonceSchema }).strict().parse(request.body);
       return signed(request.params.id, nonce, requests.fallback(request.params.id));
     },
   );
+}
 
+/**
+ * A person at a browser: the cookie session (with its CSRF token on a mutation) and nothing else. A bearer token,
+ * such as the owner token an agent running as this user could read from disk, never counts as one.
+ */
+function humanOf(actor: RouteContext['actor'], request: FastifyRequest): Actor {
+  if (request.headers['authorization']) throw new DomainError('COOKIE_SESSION_REQUIRED', 403);
+  const who = actor(request);
+  requireOperator(who);
+  return who;
+}
+
+/** What a person at a browser sees and decides. */
+function humanRoutes({ app, control, actor, origin }: RouteContext) {
+  const requests = control.permissionRequests;
   app.get('/api/permission-requests', async (request) => {
-    human(request);
+    humanOf(actor, request);
     return { requests: requests.list() };
   });
   // A human's answer. Idempotent by nature: the same answer twice is the same answer; a different one after the first
   // is refused (409), as is any answer once the hook has stopped waiting.
   app.post<{ Params: { id: string } }>('/api/permission-requests/:id/decision', async (request) => {
-    const who = human(request);
+    const who = humanOf(actor, request);
     // Plain HTTP across a network would carry the session cookie in the clear: off unless the owner opts in.
     if (approvalChannel(origin, request.headers.host) === 'blocked')
       throw new DomainError('REMOTE_APPROVALS_LAN_DISABLED', 403);
@@ -177,7 +176,10 @@ export function permissionRoutes({ app, control, actor, origin, attempts }: Rout
     );
     return result;
   });
+}
 
+/** The switch for Remote approvals itself. */
+function switchRoutes({ app, control, actor, origin }: RouteContext) {
   app.get('/api/remote-approvals', async (request) => {
     requireOperator(actor(request));
     return {
@@ -196,4 +198,15 @@ export function permissionRoutes({ app, control, actor, origin, attempts }: Rout
       : disableRemoteApprovals(control.ctx);
     return { ...state, channel: approvalChannel(origin, request.headers.host) };
   });
+}
+
+/**
+ * Remote approvals. Two audiences with two credentials: the hook on this machine (loopback only, its own bearer token,
+ * which can only create a request and read or close the requests it made) and a human owner or operator at a browser
+ * session (who alone can list and decide; a bearer token cannot).
+ */
+export function permissionRoutes(context: RouteContext) {
+  hookRoutes(context);
+  humanRoutes(context);
+  switchRoutes(context);
 }

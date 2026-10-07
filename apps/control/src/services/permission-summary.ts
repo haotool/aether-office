@@ -9,7 +9,7 @@ const str = (v: unknown) => (typeof v === 'string' ? v : '');
 // Controls other than newline and tab, C1 controls (NEL...), soft hyphen, zero-width characters and bidirectional
 // overrides and isolates: none of them can reorder or hide what a person reads before pressing Allow.
 const HIDDEN =
-  // eslint-disable-next-line no-control-regex
+  // eslint-disable-next-line no-control-regex -- matching control characters is the whole purpose of this pattern
   /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f­؜​-‏‪-‮⁠-⁤⁦-⁩﻿]/g;
 /** Hidden characters go first (one inside a secret must not defeat redaction), then secrets, so a cut never leaves half of one. */
 const clean = (v: string) => redactSecrets(v.replace(/\r\n?/g, '\n').replace(HIDDEN, ''));

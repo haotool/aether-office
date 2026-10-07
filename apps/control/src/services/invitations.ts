@@ -35,6 +35,35 @@ export function createInvitation(
   return { id, token, expiresAt: now + c.data.ttlSec * 1000 };
 }
 
+type ClaimedInvitation = {
+  id: string;
+  projectId: string;
+  name: string;
+  concurrency: number;
+  providers: string;
+  roots: string;
+  createdBy: string;
+};
+
+/** The machine an invitation grants, with the providers and roots it was issued for; returns its id. */
+function registerMachine(ctx: Context, claimed: ClaimedInvitation, now: number): string {
+  const machineId = randomUUID();
+  ctx.sqlite
+    .prepare(
+      "INSERT INTO machines(id,name,projectIds,lastSeen,state,concurrency,allowedProviders,allowedRoots) VALUES (?,?,?,?,'offline',?,?,?)",
+    )
+    .run(
+      machineId,
+      claimed.name,
+      JSON.stringify([claimed.projectId]),
+      now,
+      claimed.concurrency,
+      claimed.providers,
+      claimed.roots,
+    );
+  return machineId;
+}
+
 export function redeemInvitation(
   ctx: Context,
   token: string,
@@ -47,17 +76,7 @@ export function redeemInvitation(
         .prepare(
           'UPDATE machine_invitations SET usedAt=? WHERE tokenHash=? AND usedAt IS NULL AND expiresAt>? RETURNING *',
         )
-        .get(now, hash(token), now) as
-        | {
-            id: string;
-            projectId: string;
-            name: string;
-            concurrency: number;
-            providers: string;
-            roots: string;
-            createdBy: string;
-          }
-        | undefined;
+        .get(now, hash(token), now) as ClaimedInvitation | undefined;
       if (!claimed) throw new DomainError('INVITATION_INVALID', 401);
       let creator: Actor;
       try {
@@ -65,20 +84,7 @@ export function redeemInvitation(
       } catch {
         throw new DomainError('INVITATION_INVALID', 401);
       }
-      const machineId = randomUUID();
-      ctx.sqlite
-        .prepare(
-          "INSERT INTO machines(id,name,projectIds,lastSeen,state,concurrency,allowedProviders,allowedRoots) VALUES (?,?,?,?,'offline',?,?,?)",
-        )
-        .run(
-          machineId,
-          claimed.name,
-          JSON.stringify([claimed.projectId]),
-          now,
-          claimed.concurrency,
-          claimed.providers,
-          claimed.roots,
-        );
+      const machineId = registerMachine(ctx, claimed, now);
       const identity = createIdentity(ctx, creator, {
         name: claimed.name,
         role: 'runner',

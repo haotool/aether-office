@@ -1,6 +1,7 @@
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
+  approvalScriptFiles,
   approvalScriptsStatus,
   installApprovalScripts,
 } from '../packages/providers/src/approval-install.js';
@@ -34,14 +35,26 @@ const settings =
 const receiver = resolve(import.meta.dirname, '../packages/providers/src/hook-receiver.mjs');
 // Opt-in: Claude Code's permission prompt can be answered from the AETHER panel. If nobody answers within the wait,
 // Claude asks in its terminal as usual. It also needs Remote approvals switched on in AETHER's settings. The hook runs
-// from a private copy in ~/.aether/hooks (not from this repository, where an agent could edit it).
+// from a private copy in $AETHER_HOME/hooks, default ~/.aether/hooks (not from this repository, where an agent could edit it).
 const remote = rest.includes('--remote-approvals');
 if (remote && provider !== 'claude') {
   console.error('--remote-approvals is for Claude Code only');
   process.exit(2);
 }
+const dryRun = rest.includes('--dry-run');
 const waitSeconds = flag('--wait') === undefined ? undefined : Number(flag('--wait'));
 
+if (action === 'install' || action === 'remove') {
+  // Say what is about to be written, and where, before anything is.
+  const files = [settings, ...(action === 'install' && remote ? approvalScriptFiles() : [])];
+  console.log(`${dryRun ? 'would write' : 'writing'}:\n${files.map((f) => `  ${f}`).join('\n')}`);
+  if (dryRun) process.exit(0);
+}
+// A folder that cannot be written is a sentence, not a stack trace.
+process.on('uncaughtException', (error) => {
+  console.error(`hooks ${action} failed: ${error.message}`);
+  process.exit(1);
+});
 if (action === 'install')
   await installHooksFile(
     settings,
@@ -78,7 +91,7 @@ else if (action === 'status') {
   process.exit(0);
 } else {
   console.error(
-    'usage: pnpm hooks <install|remove|status> [--provider claude|codex] [--scope project|user] [--project <dir>] [--remote-approvals [--wait <seconds>]]',
+    'usage: pnpm hooks <install|remove|status> [--provider claude|codex] [--scope project|user] [--project <dir>] [--remote-approvals [--wait <seconds>]] [--dry-run]',
   );
   process.exit(2);
 }

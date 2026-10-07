@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { pairingText } from './services/pairing.js';
+import { pairingFailure, pairingText } from './services/pairing.js';
 
 /**
  * `pnpm run pair`: shows a QR code in the terminal that signs a phone in. It asks the running control plane for a
@@ -10,16 +10,22 @@ import { pairingText } from './services/pairing.js';
 const mode = process.argv.includes('--demo') ? 'demo' : 'live';
 const directory = resolve(process.env['AETHER_DATA_DIR'] ?? `.data/${mode}`);
 const base = process.env['AETHER_CONTROL_URL'] ?? `http://127.0.0.1:${process.env['PORT'] ?? 4310}`;
-const token = readFileSync(resolve(directory, 'owner-token'), 'utf8').trim();
+let token: string;
+try {
+  token = readFileSync(resolve(directory, 'owner-token'), 'utf8').trim();
+} catch {
+  console.error(
+    `No owner token in ${directory}. Start the control plane once (pnpm start), or set AETHER_DATA_DIR to its data directory.`,
+  );
+  process.exit(1);
+}
 
 const response = await fetch(`${base}/api/pairings`, {
   method: 'POST',
   headers: { authorization: `Bearer ${token}`, origin: base },
-});
-if (!response.ok) {
-  console.error(
-    `Could not ask ${base} for a pairing code (${response.status}). Is the control plane running?`,
-  );
+}).catch(() => null);
+if (!response?.ok) {
+  console.error(pairingFailure(response?.status ?? null, base, directory));
   process.exit(1);
 }
 const made = (await response.json()) as {

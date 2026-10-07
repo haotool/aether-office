@@ -74,7 +74,7 @@
   overflow-wrap: anywhere;
   white-space: pre-wrap;
   font-size: var(--fs-body);
-  line-height: 1.55;
+  line-height: var(--lh-body);
 }
 /* The assistant speaks as plain text on the page with a quiet gutter that warms when you read it */
 .msg.assistant {
@@ -93,7 +93,7 @@
 .markdown {
   overflow-wrap: anywhere;
   font-size: var(--fs-body);
-  line-height: 1.65;
+  line-height: var(--lh-body);
 }
 .markdown p {
   margin: 0 0 var(--space-8);
@@ -115,7 +115,7 @@
   background: var(--raised);
   color: var(--blue);
   font-family: var(--mono);
-  font-size: 0.9em;
+  font-size: 0.9em; /* relative on purpose: inline code stays a notch under the text around it (body, heading, list) */
 }
 @container panel (min-width: 560px) {
   .conv-scroll {
@@ -191,7 +191,7 @@
   margin: 0;
   color: var(--dim);
   font-size: var(--fs-small);
-  line-height: 1.45;
+  line-height: var(--lh-snug);
 }
 .session-footer-actions {
   display: flex;

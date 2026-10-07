@@ -3,6 +3,58 @@ import { jobReportSchema, type RunnerJob, type Command } from '@aether/contracts
 import { authorize, assertVersion, DomainError, type Actor } from '@aether/kernel';
 import { identityActor } from './identity.js';
 import { task, emit, type Context } from './context.js';
+type Work = ReturnType<typeof task>;
+
+/** Queues a job for the runner that owns the workspace, bound to the work's head and version; returns its id. */
+function queueJob(
+  ctx: Context,
+  actor: Actor,
+  work: Work,
+  headSha: string,
+  workspace: { id: string; machineId: string },
+  kind: 'integrate' | 'verify' | 'diff',
+  payload: unknown,
+) {
+  const id = randomUUID();
+  ctx.sqlite
+    .prepare(
+      'INSERT INTO runner_jobs(id,projectId,workId,workspaceId,machineId,kind,state,payload,requestedBy,expectedHead,expectedVersion,createdAt) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+    )
+    .run(
+      id,
+      work.projectId,
+      work.id,
+      workspace.id,
+      workspace.machineId,
+      kind,
+      'queued',
+      JSON.stringify(payload),
+      actor.id,
+      headSha,
+      work.version,
+      ctx.now(),
+    );
+  return id;
+}
+
+/** Integration is serial per project and never repeated for a commit that is already merged. */
+function assertCanIntegrate(ctx: Context, projectId: string, workId: string, headSha: string) {
+  if (
+    ctx.sqlite
+      .prepare(
+        "SELECT 1 FROM runner_jobs WHERE projectId=? AND kind='integrate' AND state IN ('queued','running')",
+      )
+      .get(projectId)
+  )
+    throw new DomainError('INTEGRATION_BUSY');
+  if (
+    ctx.sqlite
+      .prepare("SELECT 1 FROM integrations WHERE workId=? AND headSha=? AND status='merged'")
+      .get(workId, headSha)
+  )
+    throw new DomainError('ALREADY_INTEGRATED');
+}
+
 export function requestIntegration(
   ctx: Context,
   actor: Actor,
@@ -20,42 +72,12 @@ export function requestIntegration(
     .get(work.id) as { id: string; machineId: string } | undefined;
   if (!workspace) throw new DomainError('WORKSPACE_NOT_READY');
   // Serial: one integration per project at a time, so each one sees the previous result.
-  if (
-    ctx.sqlite
-      .prepare(
-        "SELECT 1 FROM runner_jobs WHERE projectId=? AND kind='integrate' AND state IN ('queued','running')",
-      )
-      .get(c.projectId)
-  )
-    throw new DomainError('INTEGRATION_BUSY');
-  if (
-    ctx.sqlite
-      .prepare("SELECT 1 FROM integrations WHERE workId=? AND headSha=? AND status='merged'")
-      .get(work.id, work.headSha)
-  )
-    throw new DomainError('ALREADY_INTEGRATED');
+  assertCanIntegrate(ctx, c.projectId, work.id, work.headSha);
   const candidate = `aether/integrate/${work.id.slice(0, 8)}-${work.headSha.slice(0, 8)}`;
-  const id = randomUUID();
-  ctx.sqlite
-    .prepare(
-      'INSERT INTO runner_jobs(id,projectId,workId,workspaceId,machineId,kind,state,payload,requestedBy,expectedHead,expectedVersion,createdAt) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
-    )
-    .run(
-      id,
-      c.projectId,
-      work.id,
-      workspace.id,
-      workspace.machineId,
-      'integrate',
-      'queued',
-      JSON.stringify({
-        integrate: { baseBranch: c.data.baseBranch, expectedBase: c.data.expectedBase, candidate },
-      }),
-      actor.id,
-      work.headSha,
-      work.version,
-      ctx.now(),
-    );
+  const payload = {
+    integrate: { baseBranch: c.data.baseBranch, expectedBase: c.data.expectedBase, candidate },
+  };
+  const id = queueJob(ctx, actor, work, work.headSha, workspace, 'integrate', payload);
   return { id, kind: 'integrate', state: 'queued', workId: work.id, candidate };
 }
 export function requestJob(
@@ -86,32 +108,10 @@ export function requestJob(
       .get(workspace.id)
   )
     throw new DomainError('WORKSPACE_JOB_BUSY');
-  const id = randomUUID();
+  const kind = c.type === 'work.verify' ? 'verify' : 'diff';
   const payload = { ...(verifier ? { verifier } : {}) };
-  ctx.sqlite
-    .prepare(
-      'INSERT INTO runner_jobs(id,projectId,workId,workspaceId,machineId,kind,state,payload,requestedBy,expectedHead,expectedVersion,createdAt) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
-    )
-    .run(
-      id,
-      c.projectId,
-      work.id,
-      workspace.id,
-      workspace.machineId,
-      c.type === 'work.verify' ? 'verify' : 'diff',
-      'queued',
-      JSON.stringify(payload),
-      actor.id,
-      work.headSha,
-      work.version,
-      ctx.now(),
-    );
-  return {
-    id,
-    kind: c.type === 'work.verify' ? 'verify' : 'diff',
-    state: 'queued',
-    workId: work.id,
-  };
+  const id = queueJob(ctx, actor, work, work.headSha, workspace, kind, payload);
+  return { id, kind, state: 'queued', workId: work.id };
 }
 function machine(ctx: Context, actor: Actor) {
   actor = identityActor(ctx, actor.id);
@@ -161,8 +161,22 @@ type JobRow = {
   expectedHead: string;
   expectedVersion: number;
 };
-type Work = ReturnType<typeof task>;
 type JobReport = ReturnType<typeof jobReportSchema.parse>;
+
+type Verification = NonNullable<JobReport['verification']>;
+
+/** A run that touched nothing: same head, tree, index and base before and after, from a clean start. */
+const isCleanRun = (v: Verification, baseSha: string) =>
+  v.baseBefore === baseSha &&
+  v.before.indexTree === v.before.tree &&
+  v.after.indexTree === v.after.tree &&
+  v.finishedAt >= v.startedAt &&
+  v.before.status === '' &&
+  v.after.status === '' &&
+  v.before.head === v.after.head &&
+  v.before.tree === v.after.tree &&
+  v.before.indexTree === v.after.indexTree &&
+  v.baseBefore === v.baseAfter;
 
 /**
  * A successful verify job: its evidence must be for this job's workspace and harness, and the work becomes verified only
@@ -198,17 +212,7 @@ function recordVerification(ctx: Context, job: JobRow, work: Work, result: JobRe
   const base = ctx.sqlite
     .prepare('SELECT baseSha FROM workspaces WHERE id=?')
     .get(job.workspaceId) as { baseSha: string };
-  const clean =
-    v.baseBefore === base.baseSha &&
-    v.before.indexTree === v.before.tree &&
-    v.after.indexTree === v.after.tree &&
-    v.finishedAt >= v.startedAt &&
-    v.before.status === '' &&
-    v.after.status === '' &&
-    v.before.head === v.after.head &&
-    v.before.tree === v.after.tree &&
-    v.before.indexTree === v.after.indexTree &&
-    v.baseBefore === v.baseAfter;
+  const clean = isCleanRun(v, base.baseSha);
   if (
     job.state === 'running' &&
     v.status === 'passed' &&
@@ -252,6 +256,13 @@ function recordIntegration(ctx: Context, job: JobRow, result: JobReport) {
     );
 }
 
+/** What a succeeded job must have produced, stored by kind. */
+function recordEvidence(ctx: Context, job: JobRow, work: Work, result: JobReport) {
+  if (job.kind === 'verify') recordVerification(ctx, job, work, result);
+  if (job.kind === 'diff' && !result.diff) throw new DomainError('DIFF_REQUIRED');
+  if (job.kind === 'integrate') recordIntegration(ctx, job, result);
+}
+
 export function reportJob(ctx: Context, actor: Actor, input: unknown) {
   actor = machine(ctx, actor);
   const result = jobReportSchema.parse(input);
@@ -269,12 +280,7 @@ export function reportJob(ctx: Context, actor: Actor, input: unknown) {
       if (!['running', 'indeterminate'].includes(job.state))
         throw new DomainError('JOB_NOT_RUNNING');
       const work = task(ctx, job.projectId, job.workId);
-      if (result.status === 'succeeded' && job.kind === 'verify')
-        recordVerification(ctx, job, work, result);
-      if (result.status === 'succeeded' && job.kind === 'diff' && !result.diff)
-        throw new DomainError('DIFF_REQUIRED');
-      if (result.status === 'succeeded' && job.kind === 'integrate')
-        recordIntegration(ctx, job, result);
+      if (result.status === 'succeeded') recordEvidence(ctx, job, work, result);
       const state =
         job.state === 'indeterminate' || result.error === 'RUNNER_RESTARTED_RESULT_UNKNOWN'
           ? 'indeterminate'

@@ -670,7 +670,8 @@ export const zh = {
   quotaUpdated: '資料時間',
   quotaStale: '資料已過時，Claude Code 可能沒有在執行',
   modelsDetected: '偵測到的模型',
-  modelsNote: '讀取本機 Claude Code 與 Codex 的快取，不會寫入任何檔案，也不會執行模型。',
+  modelsNote:
+    '讀取本機 Claude Code 與 Codex 的快取。Codex 的快取過期時，會執行 `codex debug models` 列出模型（不會啟動任何模型工作階段）。不會寫入任何檔案。',
   modelsEffort: '推理強度',
   modelsEffortDefault: '預設',
   modelsRefresh: '重新整理',
@@ -915,6 +916,8 @@ export const zh = {
   errLocalSessionsOff: '本機 session 偵測已關閉（AETHER_LOCAL_SESSIONS=off）。',
   errPairingInvalid: '這個配對碼錯誤、已使用或已過期，請重新產生。',
   errVersionConflict: '有人先改了這筆資料，請重新載入再試。',
+  errProjectRootNotFound: '這部電腦上沒有這個資料夾，請檢查路徑後再試。',
+  errProjectRootInvalid: '這個路徑不是可讀取的資料夾，請改選一個可讀取的資料夾。',
   ...settingsZh,
   ...squadZh,
 } as const;
