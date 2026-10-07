@@ -39,7 +39,8 @@ export const settingsEn = {
   stSystem: 'System',
   stSystemNow: 'System is now',
   stThemeDesc: 'Follow the system, or stay dark or light.',
-  stMotionDesc: 'Calms the scene and the interface. Defaults to your operating system’s setting.',
+  stMotionDesc:
+    'Calms the scene and the interface; while it is on the automatic camera is off too. It takes your operating system’s setting the first time and is yours after that, it does not follow later system changes. Decorative office moments are controlled separately by Calm mode.',
   stOsReduced: 'Your system asks for reduced motion',
   stQualityDesc:
     '3D scene quality: Low saves power and draws no shadows; High is the sharpest and costs the most.',

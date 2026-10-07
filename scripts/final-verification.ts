@@ -32,9 +32,16 @@ export function validateLedger(
 ): string[] {
   const problems: string[] = [];
   const seen = new Set<string>();
+  const blockerOwner = new Map<string, string>();
   for (const f of features) {
     if (seen.has(f.id)) problems.push(`${f.id}: duplicate id`);
     seen.add(f.id);
+    // A blocker says what is missing for this row; one sentence pasted into many rows hides which gap is real.
+    for (const b of f.blockers) {
+      const owner = blockerOwner.get(b);
+      if (owner && owner !== f.id) problems.push(`${f.id}: blocker copied from ${owner}`);
+      blockerOwner.set(b, f.id);
+    }
     for (const p of f.codePaths ?? [])
       if (!exists(p)) problems.push(`${f.id}: code path missing: ${p}`);
     for (const t of f.testIds)

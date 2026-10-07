@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 import { signIn } from './support/sign-in.js';
 
 async function login(page: Page) {
@@ -76,4 +77,24 @@ test('the reduced-motion preference follows the operating system and can be chan
   await page.getByRole('link', { name: '設定', exact: true }).click();
   await expect(page.getByRole('switch', { name: /減少動態/ })).not.toBeChecked(); // the explicit choice persists
   await context.close();
+});
+
+test('a viewer sees the write actions off and told why, and the page has no axe violations', async ({
+  page,
+}) => {
+  await login(page);
+  await page.route('**/api/session', (route) =>
+    route.fulfill({
+      json: { actor: { id: 'v', role: 'viewer', projectIds: ['*'] }, mode: 'demo' },
+    }),
+  );
+  await page.reload();
+  await page.getByRole('link', { name: /^任務/ }).click();
+  const create = page.getByRole('button', { name: '建立任務', exact: true });
+  await expect(create).toBeDisabled();
+  await expect(create).toHaveAttribute('title', /只能檢視/);
+  const result = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+    .analyze();
+  expect(result.violations.map((v) => `${v.id}: ${v.nodes[0]?.html}`)).toEqual([]);
 });

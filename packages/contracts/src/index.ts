@@ -7,3 +7,4 @@ export * from './sessions.js';
 export * from './usage.js';
 export * from './records.js';
 export * from './permissions.js';
+export { APP_VERSION } from './version.js';

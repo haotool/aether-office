@@ -70,10 +70,12 @@ interface data. No personal data was found in them.
 
 ## Research: projects studied
 
-Before and while building AETHER OFFICE the maintainers studied 27 public projects (local, read-only clones in the untracked
-`.research/` folder; the comparison is in [docs/research](../research/README.md)). We are grateful to their authors. The table
+Before and while building AETHER OFFICE the maintainers studied 27 public projects (shallow, read-only clones kept outside this
+repository, so a fresh clone does not contain them; the comparison is in [docs/research](../research/README.md)). We are grateful to their authors. The table
 records each project's licence as read from its `LICENSE` file in the clone, what the project contributed, and the conclusion
-of this audit.
+of this audit. To rebuild a clone: `docs/research/repo-selection-2026-10-01/matrix.json` lists every project as `repo`
+(`https://github.com/<repo>`) with the commit that was read (`localSha`) and its licence file (`licenseSource`); fetch that
+commit with `git fetch --depth 1 origin <localSha>` in a fresh clone.
 
 | Project | Licence (verified in the clone) | Contribution to AETHER OFFICE | Conclusion |
 | --- | --- | --- | --- |
@@ -123,5 +125,5 @@ Run on 2026-10-07 (`--exclude mcp_agent_mail --exclude agents-office`):
 Nothing matched the AGPL projects (claude-squad, agent-teams-ai) or multiagents at either window. One earlier run during the
 same audit included the two excluded projects and found nothing in them either beyond the standard MIT text; they are excluded
 from the recorded run because their own policy entries say they are not opened. The scan cannot see copies that were
-translated, renamed throughout or rewritten line by line, and it only covers the clones in `.research/`, so it is evidence, not
+translated, renamed throughout or rewritten line by line, and it only covers the reference clones, so it is evidence, not
 proof.

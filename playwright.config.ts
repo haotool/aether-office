@@ -60,7 +60,8 @@ export default defineConfig({
   reporter: [['list'], ['json', { outputFile: 'evidence/e2e-results.json' }]],
   use: {
     baseURL: 'http://127.0.0.1:4320',
-    channel: 'chrome',
+    // CI installs Playwright's own Chromium; a developer machine uses the installed Chrome.
+    channel: process.env['CI'] ? undefined : 'chrome',
     headless: true,
     viewport: { width: 1440, height: 900 },
     trace: 'off',

@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Color, InstancedBufferAttribute, PlaneGeometry, ShaderMaterial, Vector3 } from 'three';
+import { DITHER_END, DITHER_PARS, DITHERED } from './dither.js';
 import { seeded } from './random.js';
 
 const COUNT = 44;
@@ -54,6 +55,7 @@ const cloudMaterial = () =>
         gl_Position = projectionMatrix * viewMatrix * vec4(world, 1.0);
       }`,
     fragmentShader: `
+      ${DITHER_PARS}
       uniform float opacity;
       uniform vec3 tint;
       varying vec2 vUv;
@@ -76,7 +78,9 @@ const cloudMaterial = () =>
         color = mix(color, tint * 1.1, 0.3 * low * body);
         gl_FragColor = vec4(color, alpha);
         #include <colorspace_fragment>
+        ${DITHER_END}
       }`,
+    ...DITHERED,
     transparent: true,
     depthWrite: false,
   });

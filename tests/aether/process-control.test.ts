@@ -10,23 +10,18 @@ import {
   reapSurvivor,
   signalGroup,
 } from '../../packages/providers/src/index.js';
-import { alive, orphan, sleep, until } from './process-fixtures.js';
+import { alive, orphan, sleep, startReady, until } from './process-fixtures.js';
 
 /** A detached child (its own group) that ignores SIGTERM and has a grandchild of its own. */
 const stubborn = () =>
-  spawn(
-    process.execPath,
-    [
-      '-e',
-      `process.on('SIGTERM',()=>{});require('node:child_process').spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{stdio:'ignore'});setInterval(()=>{},1000)`,
-    ],
-    { detached: true, stdio: 'ignore' },
+  startReady(
+    `process.on('SIGTERM',()=>{});require('node:child_process').spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{stdio:'ignore'});setInterval(()=>{},1000)`,
+    { detached: true },
   );
 
 describe('stopping a group', () => {
   it('signals the whole group, tolerates one that is gone, and ends a child that ignores SIGTERM', async () => {
-    const child = stubborn();
-    await sleep(400);
+    const child = await stubborn();
     expect(groupAlive(child.pid!)).toBe(true);
     const stopper = groupStopper(child, 300);
     stopper.stop();
@@ -36,12 +31,11 @@ describe('stopping a group', () => {
   });
 
   it("does not signal after it is cancelled: the group id is the leader's pid, and pids are reused", async () => {
-    const child = stubborn();
-    await sleep(400);
+    const child = await stubborn();
     const stopper = groupStopper(child, 200);
     stopper.stop();
     stopper.cancel();
-    await sleep(600);
+    await sleep(600); // a negative wait: the SIGKILL that was cancelled must never come, so there is nothing to wait for
     expect(groupAlive(child.pid!)).toBe(true); // SIGTERM was ignored and the SIGKILL never came
     signalGroup(child.pid!, 'SIGKILL');
   });
@@ -95,7 +89,7 @@ describe('reaping what a dead runner left behind', () => {
       stdio: 'ignore',
     });
     try {
-      await sleep(300);
+      await until(() => alive(child.pid!));
       const identity = processIdentity(child);
       expect(await reapSurvivor(identity)).toEqual({ identity, verdict: 'owned', action: 'none' }); // our own child
       expect(alive(child.pid!)).toBe(true);
@@ -109,7 +103,7 @@ describe('reaping what a dead runner left behind', () => {
     } finally {
       child.kill('SIGKILL');
     }
-    await sleep(200);
+    await until(() => !alive(child.pid!));
     const gone = `${child.pid}:Mon Jan  1 00:00:00 2001`;
     expect((await reapSurvivor(gone)).verdict).toBe('gone');
     expect(await reapSurvivor('garbage')).toEqual({

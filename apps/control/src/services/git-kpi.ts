@@ -6,7 +6,7 @@ import type { DayOf } from './usage-parse.js';
 
 // Git activity of one repository over the last 30 days, from read-only git commands with timeouts: commits, merge
 // commits, branches that became part of the default branch, branches still open, authors, lines changed. Counts only:
-// no subject, author name or path leaves this file. Cached by the branch tips, so an idle repository costs one command.
+// no subject, author or path leaves this file (authors are told apart by email address and only counted). Cached by the branch tips, so an idle repository costs one command.
 
 const KPI_TTL_MS = 60_000;
 const MAX_COMMITS = 5000;
@@ -27,6 +27,8 @@ type Raw = {
   /** Merge commits on the default branch's own line, with the branch tip each brought in. */
   baseMerges: { at: number; tip: string }[];
   lines: { added: number; removed: number } | null;
+  /** A commit list or the line count stopped at its cap: the counts are a lower bound. */
+  truncated: boolean;
   /** Merged branches that sit on the default branch's tip and did move since they were created (fast-forwarded work). */
   worked: Set<string>;
   /** First-commit ages (ms since epoch) of the open branches looked at. */
@@ -99,6 +101,7 @@ export function buildKpi(raw: Raw, days: readonly string[], dayOf: DayOf, now: n
     removed30: raw.lines?.removed ?? null,
     longestOpenDays: raw.openSince.length ? Math.max(0, Math.floor((now - oldest) / DAY_MS)) : null,
     daily,
+    truncated: raw.truncated,
   };
 }
 
@@ -116,7 +119,7 @@ async function collect(
     ),
     git(
       root,
-      ['log', '--branches', since, '-n', String(MAX_COMMITS), '--format=%ct%x09%an'],
+      ['log', '--branches', since, '-n', String(MAX_COMMITS), '--format=%ct%x09%ae'],
       GIT_TIMEOUT_MS,
     ).catch(() => ''),
     git(
@@ -143,10 +146,13 @@ async function collect(
         '-n',
         String(STAT_COMMITS),
         '--shortstat',
-        '--format=',
+        '--format=%x01', // one marker per commit: how many the line count covered
       ],
       GIT_TIMEOUT_MS,
-    ).then(parseShortstat, () => null),
+    ).then(
+      (text) => ({ ...parseShortstat(text), commits: text.split('\x01').length - 1 }),
+      () => null,
+    ),
   ]);
   const mergedSet = new Set(lines(merged));
   const baseTip = branches.find((b) => b.name === base)?.sha;
@@ -193,7 +199,11 @@ async function collect(
       const tip = (parents ?? '').split(' ')[1]; // the second parent is the branch that was merged in
       return tip ? [{ at: Number(at) * 1000, tip }] : [];
     }),
-    lines: stat,
+    lines: stat && { added: stat.added, removed: stat.removed },
+    truncated:
+      lines(log).length >= MAX_COMMITS ||
+      lines(merges).length >= MAX_COMMITS ||
+      (stat?.commits ?? 0) >= STAT_COMMITS,
     worked,
     openSince,
   };
@@ -267,5 +277,6 @@ export function sumKpis(list: readonly GitKpi[]): GitKpi | null {
     removed30: sumLines(list.map((k) => k.removed30)),
     longestOpenDays: ages.length ? Math.max(...ages) : null,
     daily: list[0]!.daily.map((_, i) => list.reduce((n, k) => n + (k.daily[i] ?? 0), 0)),
+    truncated: list.some((k) => k.truncated),
   };
 }

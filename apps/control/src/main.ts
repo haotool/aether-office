@@ -3,6 +3,7 @@ import { isIP } from 'node:net';
 import { resolve } from 'node:path';
 import { Control } from './control.js';
 import { createServer } from './server.js';
+import { parseTrustProxy } from './services/host-policy.js';
 import { secret } from './services/identity.js';
 import { lanOrigins, pairingText } from './services/pairing.js';
 import { reconcileTerminals } from './services/terminals.js';
@@ -40,6 +41,7 @@ const app = createServer(control, {
   lan,
   lanAddresses:
     fixedLan && ((lanPort) => fixedLan.map((address) => `http://${address}:${lanPort}`)),
+  trustProxy: parseTrustProxy(process.env['AETHER_TRUST_PROXY']),
   serveWeb: process.env['AETHER_SERVE_WEB'] !== '0',
   dataDir: directory,
   logger: true,

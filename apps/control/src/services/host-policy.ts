@@ -56,3 +56,24 @@ export function hostPolicy(canonical: URL, lan: boolean): HostPolicy {
     },
   };
 }
+
+/**
+ * AETHER_TRUST_PROXY: the addresses or CIDR ranges of the reverse proxies whose `X-Forwarded-For` and `-Proto` headers
+ * to believe. Only a list of addresses is accepted (never "everything", never a hop count): trusting a peer that is not
+ * the proxy would let any client name its own address.
+ */
+export function parseTrustProxy(value: string | undefined): string | undefined {
+  if (value === undefined || value.trim() === '') return undefined;
+  const entries = value.split(',').map((entry) => entry.trim());
+  const valid = (entry: string) => {
+    const [address, prefix, ...rest] = entry.split('/');
+    const bits = isIPv4(address ?? '') ? 32 : 128;
+    return (
+      (isIPv4(address ?? '') || isIPv6(address ?? '')) &&
+      rest.length === 0 &&
+      (prefix === undefined || (/^\d{1,3}$/.test(prefix) && Number(prefix) <= bits))
+    );
+  };
+  if (!entries.every(valid)) throw new Error('INVALID_TRUST_PROXY');
+  return entries.join(',');
+}

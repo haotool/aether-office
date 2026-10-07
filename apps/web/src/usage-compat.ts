@@ -38,7 +38,16 @@ export function normalizeUsage(r: UsageResponse): UsageResponse {
   return {
     ...r,
     days,
-    scan: r.scan ?? { complete: true, files: 0, pending: 0 },
+    // An older control plane sends no scan at all (or a shorter one): "unknown" is never "complete" or "not cut short".
+    scan: {
+      complete: r.scan?.complete ?? false,
+      files: r.scan?.files ?? 0,
+      pending: r.scan?.pending ?? 0,
+      found: r.scan?.found ?? r.scan?.files ?? 0,
+      truncated: r.scan?.truncated ?? false,
+      failedFiles: r.scan?.failedFiles ?? 0,
+      skippedLines: r.scan?.skippedLines ?? 0,
+    },
     building: scope(r.building, days.length),
     offices: (r.offices ?? []).map((o) => ({ ...o, scope: scope(o.scope, days.length) })),
     unplaced: scope(r.unplaced, days.length),
@@ -53,6 +62,7 @@ export function normalizeUsage(r: UsageResponse): UsageResponse {
 export const normalizeGit = (r: GitKpiResponse): GitKpiResponse => ({
   ...r,
   days: r.days ?? [],
+  omittedRepos: r.omittedRepos ?? 0,
   building: r.building ?? null,
   offices: r.offices ?? [],
   projects: r.projects ?? [],

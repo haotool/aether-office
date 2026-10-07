@@ -157,7 +157,7 @@ it('enrolls two independent runner processes by single-use invitation and keeps 
         .result['id'],
     );
     owner('work.assign', { workId: lateTwo, agentId: agentTwo }, second, 1);
-    await delay(3000);
+    await delay(3000); // a negative wait: a revoked runner must never take the work, so there is nothing to wait for
     expect(machineOf(lateTwo)).toBeUndefined();
 
     // Reconnect: control goes away and comes back on the same database; runner A keeps working.

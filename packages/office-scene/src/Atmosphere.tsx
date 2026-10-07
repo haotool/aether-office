@@ -8,6 +8,7 @@ import {
   DoubleSide,
   ShaderMaterial,
 } from 'three';
+import { DITHER_END, DITHER_PARS, DITHERED } from './dither.js';
 import { AIR, hourOf, tintAt, type AirQuality } from './air.js';
 import { seeded } from './random.js';
 
@@ -98,6 +99,7 @@ const SHAFT_VERTEX = `
   varying vec2 vUv;
   void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
 const SHAFT_FRAGMENT = `
+  ${DITHER_PARS}
   uniform vec3 color;
   uniform float time;
   varying vec2 vUv;
@@ -106,6 +108,7 @@ const SHAFT_FRAGMENT = `
     float along = 0.3 + 0.7 * pow(vUv.y, 1.2);
     float shimmer = 0.8 + 0.2 * sin(time * 0.5 + vUv.x * 7.0);
     gl_FragColor = vec4(color, 0.5 * across * along * shimmer);
+    ${DITHER_END}
   }`;
 
 /** A few soft shafts of light falling from the rear windows across the room, in one draw call. */
@@ -140,6 +143,7 @@ export function LightShafts({ quality, animate }: { quality: AirQuality; animate
       uniforms: { time: { value: 0 }, color: { value: tint() } },
       vertexShader: SHAFT_VERTEX,
       fragmentShader: SHAFT_FRAGMENT,
+      ...DITHERED,
       transparent: true,
       depthWrite: false,
       blending: AdditiveBlending,

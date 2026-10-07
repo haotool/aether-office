@@ -197,6 +197,8 @@ office.lan {
 }
 ```
 
+If the proxy runs on the same machine, start the control plane with `AETHER_TRUST_PROXY=127.0.0.1` (Caddy sets `X-Forwarded-For` and
+`X-Forwarded-Proto` itself): sign-in limits then count each client separately and the session cookie becomes `Secure`.
 The `Origin` rewrite is limited to the proxy's own address, so a request from another web site still carries a foreign
 Origin and is refused, as before. (This recipe follows the Caddy and control-plane code; it has not been run end to end here.)
 

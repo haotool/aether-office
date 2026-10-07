@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
 import { z } from 'zod';
 import { DomainError, type Actor } from '@aether/kernel';
+import { APP_VERSION } from '@aether/contracts';
 import { hostPolicy } from './services/host-policy.js';
 import { sessionActor } from './services/identity.js';
 import { createPairingStore } from './services/pairing.js';
@@ -27,6 +28,7 @@ import { runnerRoutes } from './routes/runner.js';
 import { sessionStreamRoutes } from './routes/session-stream.js';
 import { workRoutes } from './routes/work.js';
 import { pruneAttempts } from './services/attempts.js';
+import { pruneRetention } from './services/retention.js';
 
 /** Routes that answer without a session or bearer token, and why. Everything else under /api requires one. */
 export const PUBLIC_ROUTES: ReadonlySet<string> = new Set([
@@ -45,6 +47,8 @@ export const PUBLIC_ROUTES: ReadonlySet<string> = new Set([
   'POST /api/hook/permission-requests/:id/fallback',
 ]);
 
+const RETENTION_INTERVAL_MS = 60 * 60 * 1000;
+
 /** The reads that carry an ETag: the session list, its speech and one session's transcript (not the stream). */
 const REVALIDATED = /^\/api\/(?:local-sessions(?:\/speech|\/[^/]+\/transcript)?|usage(?:\/git)?)$/;
 
@@ -53,6 +57,7 @@ export function createServer(control: Control, options: ServerOptions) {
   const policy = hostPolicy(origin, options.lan ?? false);
   const app = Fastify({
     bodyLimit: 128 * 1024,
+    trustProxy: options.trustProxy || false,
     logger: options.logger
       ? {
           ...(options.logStream ? { stream: options.logStream } : {}),
@@ -76,7 +81,18 @@ export function createServer(control: Control, options: ServerOptions) {
           options.routeLog!.push({ method, url: route.url });
     });
   let waitTimer: ReturnType<typeof setInterval> | undefined;
+  let retentionTimer: ReturnType<typeof setInterval> | undefined;
+  const prune = () => {
+    try {
+      pruneRetention(control.ctx);
+    } catch {
+      app.log.error('RETENTION_PRUNE_FAILED');
+    }
+  };
   app.addHook('onReady', async () => {
+    prune();
+    retentionTimer = setInterval(prune, RETENTION_INTERVAL_MS);
+    retentionTimer.unref();
     refreshMessageWaits(control.ctx);
     tickSchedules(control.ctx); // catches up after a restart: one occurrence at most, never a burst
     waitTimer = setInterval(() => {
@@ -97,6 +113,7 @@ export function createServer(control: Control, options: ServerOptions) {
 
   app.addHook('preClose', async () => {
     clearInterval(waitTimer);
+    clearInterval(retentionTimer);
     for (const close of streams) close();
   });
   app.register(cookie);
@@ -191,7 +208,7 @@ export function createServer(control: Control, options: ServerOptions) {
   app.get('/health', async () => ({
     status: 'ok',
     mode: control.ctx.mode,
-    version: '0.4.0-dev.0',
+    version: APP_VERSION,
   }));
   const pairings = createPairingStore(() => control.ctx.now());
   const routes: RouteContext = {

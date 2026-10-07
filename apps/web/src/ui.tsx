@@ -13,6 +13,8 @@ import { X } from 'lucide-react';
 import { usePreferences } from './state.js';
 import { translate, type Key } from './i18n.js';
 import { usePhoneAny } from './phone.js';
+/** The attributes that tell a person why a control is off: nothing while it is allowed, otherwise the reason as its title. */
+export const whyNot = (allowed: boolean, reason: string) => (allowed ? {} : { title: reason });
 export function useT() {
   const locale = usePreferences((s) => s.locale);
   return (key: Key) => translate(locale, key);

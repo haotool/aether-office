@@ -72,7 +72,16 @@ classes `primary`, `secondary`, `icon-button` and `text-button`; a new variant i
   between a slim top bar and the tab bar, with no heading, stats or panels over it. Only a floor rail, a few round buttons,
   two chips (Running, Needs you) and, for the member in hand, one slim bar are drawn over it. Names are hidden until asked for. The 2D list is
   always one tap away.
-- Rendering is lighter on a phone: no shadows, no antialiasing, pixel ratio ≤ 1.5, smaller models, about 20 frames a
+- **Animation rule.** An infinite or long animation animates only `transform`/`translate`/`opacity`, never
+  `background-position`, `box-shadow`, `filter` or a box size: those repaint every frame (and a `color-mix` shadow also
+  recalculates style). Move a band across a clipped pseudo-element, fade a glow pseudo-element. Remaining repainting
+  exceptions are listed in the changelog (the thinking line's text shimmer needs `background-clip: text`; loading skeletons run
+  for seconds; the desktop-only floor plaque scan).
+- **Phone glass rule.** Over the live canvas the glass has no `backdrop-filter` on a phone (`styles/phone-glass.css`): a
+  near-opaque tint of `--glass-base` stands in, because a blur re-runs whenever the canvas changes. Desktop keeps the blur.
+  Surfaces that are not over the canvas (tab bar, top bar, sheets) are unchanged except the member bar. Not measurable on a
+  desktop GPU (frame interval identical within noise); the saving is expected on phone GPUs and Safari and is unverified.
+- Rendering is lighter on a phone: no shadows, no antialiasing, pixel ratio ≤ 1.5 (2 on the high tier, not yet tried on a real phone), smaller models, about 20 frames a
   second when idle, and no rim light.
 - Dialogs and sheets put what you act on first and fold the explanations (`Fold`, `Hint`, `Clamp`). Sheets stand on the
   lower half of the screen (56dvh; the session sheet is described below) and render into `document.body`.
@@ -366,6 +375,10 @@ the context share. The technical id (`cx·01a1`) is only in the tooltip, with th
 title, role and state. On touch the hit area grows to 44px with a pseudo-element, not with padding. Motion stops under
 `prefers-reduced-motion` and the page's setting. A tag appears with a short fade and scale; it leaves without an
 animation. The projection's overlap and bubble-avoidance logic is unchanged (a far tag only takes 44px of width).
+The two repeating effects animate only compositor properties: the working band slides by `translate` on a pseudo-element
+(clipped by the chip with `overflow: clip` under a fine pointer; on touch, where the 44px hit area hangs outside the chip, the
+band breathes in `opacity` instead), and the amber glow of a tag waiting for a person is a pseudo-element whose `opacity`
+fades. Measured on the phone profile with 12 tags forced into each state: 2,300+ paints in 8 s fell to under 10.
 
 ## Clock out
 
@@ -720,6 +733,18 @@ and the API). Release on green saves the layout through `layout.save`, release o
 members); desks of sessions that are gone are dropped when a seat is saved so remembered seats do not pile up. A plain drag
 is always the camera: without Alt nothing moves.
 
+**Which desk a member gets** (no saved layout, the normal case for a project AETHER only watches). A member keeps its desk
+(floor and slot) for as long as it stays in the office, whatever the order of activity: a session that writes does not move
+anyone, so a name tag, the camera's target and an open action menu stay with the same character. `assignSeats`
+(`packages/office-scene/src/layout.ts`, pure) takes the desks already held and the members present: those who hold one keep
+it, each new arrival takes the first free slot on its floor (the next floor with room when that one is full), a departure just
+frees its slot for a later arrival (nobody is compacted), and a seat that is invalid or shared is ignored. The first render has
+no held desks, so the arrangement is as before (most recently active first). `useSeats` keeps the map per project in
+`localStorage` (`aether-seats:<project id>`, schema version 1, session ids and two integers only, at most 512 entries, any
+unreadable value ignored) so a reload seats the same people at the same desks; a list that is empty (not loaded yet) never
+overwrites it. A saved layout is never rearranged, and the desks of a member a saved layout does not seat, and of a subagent
+whose squad zone does not fit, are still the first free slot at the time (not remembered). Squads and floors are unchanged.
+
 **Groups.** Shift + click adds the chosen member and another to a group, Shift + drag on the floor selects every character
 inside the rectangle (gold ring and tag). The bar offers Send home (the clock-out dialog with only the group's candidates:
 running, quiet a day or more, owner only; it lists exactly those and asks to confirm), Pin / Unpin, Copy resume commands and
@@ -787,7 +812,7 @@ for re-sampling after a script switches a piece off). Software rendering (SwiftS
 | balanced | 1.5               | 2048 map, redrawn at about 12 Hz   | LOD 1                           | 110 motes, 3 shafts     | yes  | 42       | 108 MB            |
 | high     | 2                 | 4096 map, redrawn at 20 Hz         | LOD 1 (selected: LOD 0)         | 240 motes, 5 shafts     | yes  | 42       | 210 MB            |
 
-A phone (`compact`) is low-like (no shadows, no air, footprints) at a cap of 1.5 on high. Reduced motion freezes the air and
+A phone (`compact`) is low-like (no shadows, no air, footprints) at a cap of 2 on high and 1.5 on balanced (`PIXEL_RATIO_CAP_PHONE_HIGH`, see "Mobile quality" below). Reduced motion freezes the air and
 the breathing of lines and rings and never turns members toward each other. The pixel ratio of every tier may fall to 0.75 (see below).
 
 **Where the time goes** (high, wall off, 1440 by 900; frame time p50 in ms, switching one piece off): all 3.0, shadows off 1.5,
@@ -817,7 +842,7 @@ under 0.1 ms (alternating on and off in one page, four rounds).
 - A character farther than 22 m from the camera updates its mixer at 30 Hz, from 45 m at 15 Hz, from 90 m at 5 Hz; the time it skipped
   is applied in one step. The selected member always runs at full rate.
 - `AdaptiveRatio` (dynamic resolution): over a rolling median of 30 frames it steps the pixel ratio down by 0.25 when frames run 40%
-  over the target (60 Hz while the camera moves, 30 Hz at the ambient pace), never under 0.75, with a 1 s cooldown; it steps back up
+  over the target (60 Hz while the camera moves, 30 Hz at the ambient pace, 15 Hz on a phone whose idle redraw is 50 ms), never under 0.75, with a 1 s cooldown; it steps back up
   after 90 frames within 5% of the target and a 4 s cooldown, and doubles that wait when a step up had to be undone. It never rises
   above the screen's own ratio or the tier's cap. Gaps over 250 ms (an idle scene) are not frames.
 - `Warmup` compiles every program with `compileAsync` while the canvas is held back behind a "Preparing the scene" cover (at most 4 s),
@@ -831,6 +856,68 @@ canvas textures (they repaint only when facts change or twice a second), a post-
 planes carry the glow instead), swaying plants and ceiling flicker (the plants are merged into the floor's geometry), zone floor
 markers (the lit pads already mark them). Integrated GPUs and phones were not available to measure: the adaptive ratio and the
 shadow throttle are aimed at them, and are unproven there.
+
+### Mobile quality (P1: dithering, textures, pixel ratio, MSAA, context loss)
+
+Evidence and the sources are in [the mobile gradient research](research/mobile-gradient-perf.md). Every number below is one
+machine (Apple M4, `--use-angle=metal`, Chrome), phone profile 390x844 at dpr 3 with a 4x CPU throttle, the repository's
+`scripts/perf-matrix.mjs` with interleaved A/B rounds; the display holds 16.7 ms, so p95 stays 18.3 to 18.6 ms in every case and the
+evidence is `jsMs` / `renderMs`, draws, programs and the GPU estimate. **Nothing here was measured on a real phone, on Safari or on another
+GPU.**
+
+- **Dithering (`dither.ts`).** The soft additive gradients (light shafts, squad beam and zone decal, clouds, holograms, petals,
+  pollen, glass strands) take three's `dithering` last. Three adds its noise to the colour _before_ the alpha multiplies it, so on a
+  low-alpha ramp the noise is scaled away: on a synthetic additive strip (dark background, alpha 0 to 0.09) the row-mean error was
+  0.291 LSB without dithering and 0.278 with the flag alone, and 0.025 with `premultipliedAlpha: true` plus the chunks
+  (`DITHERED`, `DITHER_PARS`, `DITHER_END`). Premultiplied blending is the same result for additive and normal blending, adds no
+  programs (the shaders already had their own) and cost nothing measurable (draws, programs and p95 equal; `jsMs` and `renderMs`
+  inside the round-to-round noise in six A/B sets). In the real scene the surfaces are a small part of the picture and a crude
+  "identical neighbours" metric on a crop barely moved (0.807 to 0.794), so the strip, not the scene, is the proof. Not dithered: the
+  nebula sprites (three's `SpriteMaterial` has no dithering chunk), the planet halo, the desk glow and the sprite atlas, because a
+  built-in material with the flags is a new program variant (the programs must not grow) and the phone draws none of the gradients
+  among them. No noise is visible on the phone, or under reduced motion, in screenshots at dpr 3.
+- **Texture sizes.** The planet is painted at 1024x512 on a phone and on the low tier (`earthTextureSize`), 2048x1024 elsewhere:
+  GPU estimate on the phone profile 57.3 to 48.0 MB (low 54.5 to 45.2), desktop unchanged, p95 and draws equal. (The backdrop's `low`
+  already meant "phone or low".) The sprite atlas stays 1024x512, the nebula glows 256x256 and the soft discs 64x64.
+- **Pixel ratio caps** are one named constant per tier in `perf-control.ts` (`PIXEL_RATIO_CAP_PHONE_HIGH` = 2, `_PHONE_BALANCED` = 1.5,
+  `_DESKTOP_HIGH` = 2, `_DESKTOP_BALANCED` = 1.5, `_LOW` = 1), read through `pixelRatioCap(quality, compact)`; `AdaptiveRatio` still lowers
+  them (to 0.75) while frames run slow, and the screen's own ratio caps them. The phone's `high` was 1.5, identical to its `balanced`; it is 2 now
+  (phone profile: GPU estimate 49.3 to 53.2 MB, draws and programs equal, p95 18.4 to 18.5 ms, `jsMs` 4.6 to 5.3 within the noise). The default tier
+  is still `balanced` and is not chosen from the device, so no phone lands on `high` by itself. **A phone at pixel ratio 2 has not been validated:**
+  the maintainer must try an iPhone (Safari) and an Android phone (Chrome) on `high` for five minutes each (p95, dropped frames, the frame time after
+  the phone warms up) and revert the constant to 1.5 if either struggles. The quality help text does not mention pixel ratios, so it is unchanged.
+- **`AdaptiveRatio` on a phone (a bug found while investigating).** The idle phone scene redraws every 50 ms (`AMBIENT_FRAME_MS_PHONE`) but
+  the controller judged it against 33 ms (slow from 47 ms), so every frame counted as slow and the ratio fell from 1.5 to 0.75 within about
+  6 seconds (measured: canvas pixels per CSS pixel 1.5, 1.5, 1.5, 1.25, 1.25, 1, 0.75, 0.75 ... at 1x CPU). The phone's ambient target is now
+  its own pace plus one 60 Hz frame (`frameTargetMs`), and the ratio stays 1.5 at 1x and 4x CPU. A phone that really is slow (frames past
+  about 93 ms) still steps down.
+- **MSAA is not changed** (off on a phone and on low). `?msaa=1` or `?msaa=0` overrides the tier (`antialiasFor`), so it can be measured on a
+  phone: load `/?perf=240&msaa=0`, then `/?perf=240&msaa=1`, at the same tier and size, five minutes each on an iPhone and an Android
+  phone, alternating (the context is made at load, so reload to switch). Compare p95 and dropped frames from `window.__aetherPerf`, and look
+  at the edges of the desks and the grid. On the M4 the two were indistinguishable (16.7 / 18.5 ms), which says nothing about a phone. With
+  `scripts/perf-matrix.mjs` the case is `--cases 'off=;on=msaa=1'`.
+- **Context loss.** A lost WebGL context (iOS does it to a page in the background) used to switch silently to the list with a notice.
+  Now the scene is replaced by a card, "The 3D view was interrupted by the device", with **Reload the scene** (remounts the canvas for a
+  new context) and **Use the list**. A browser-restored context redraws by itself (`onContextRestored`). Other scene failures (no
+  WebGL at all, a model that fails to load) still fall back to the list. Tested with `WEBGL_lose_context` in Chrome
+  (`e2e/scene-context.spec.ts`); whether Safari fires the event for a backgrounded page was not observed.
+- **What the transparent objects are (R4), phone profile, `?intensity=3`, 4x CPU, hiding one class at a time (`renderMs` of a 6.0 ms baseline, 195 draws):**
+
+  | Class (layer, why transparent)                                 | Objects | Draws saved | `renderMs` saved | Instance / merge / opaque?                                        |
+  | -------------------------------------------------------------- | ------- | ----------- | ---------------- | ----------------------------------------------------------------- |
+  | Screen code band (`MemberScreen`, opacity .9) and context gauge backing (`ContextGauge`, .75) | 24 | 24 | 1.7 | one material per member; merging needs shared instanced pools |
+  | Desk screen plane (`MemberScreen`, opacity .12 / .5 / 1)        | 12      | 12          | 1.1              | opaque when working would not change the cost (below)             |
+  | Contact shadow (`DeskGlow`, black plane, phone has no shadows) | 12      | 12          | 0.3              | needed: it is the phone's only ground contact                     |
+  | Smoke and spark points (`DeskEffects`, intensity 2 and 3 only) | 24      | 24          | 0.2 + 0.2        | exist only at all-out effort; a shared texture was tried (below)  |
+  | Status gems (`Labels`, octahedra, opacity .95)                 | 12      | 12          | 0.5              | opaque (.95 to 1) would not change the cost                       |
+  | Planet shells and rings, stars                                 | 5       | 5           | 0.3              | backdrop, one each                                                |
+  | Building holograms and glass                                   | about 10 | about 10    | not isolated     | additive, one material each, merged per floor already             |
+
+  Everything adds to the 102 transparent objects (hiding all: 49 draws, 2.0 ms). **Converting transparent to opaque changed nothing**
+  (octahedra and working screens: 5.5 to 5.6 ms), and **sharing the smoke texture** (one canvas instead of one per member) changed nothing
+  measurable (GPU estimate 61.8 to 61.6 MB, `renderMs` equal), so neither was kept. The cost is per draw call and per material, not blending or
+  sorting; the only real saving is fewer draws, by moving the per-member screens, gauges and shadows into shared instanced pools, which is a
+  refactor of `Member` and was not done. Skipping layers on a phone would change what people see for 0.2 to 0.5 ms each, so it was not done either.
 
 ## Alive and futuristic, cheaply
 

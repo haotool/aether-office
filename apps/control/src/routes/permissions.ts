@@ -56,7 +56,9 @@ export function permissionRoutes({ app, control, actor, origin, attempts }: Rout
    * wrong one is counted (per address, like a login) and can be locked out: guessers can never lock the real hook out.
    */
   function hook(request: FastifyRequest) {
-    if (!LOOPBACK_ADDRESS.test(request.socket.remoteAddress ?? ''))
+    // A proxy on this machine makes every remote caller look like loopback; the hook itself never goes through one.
+    const proxied = request.headers['x-forwarded-for'] || request.headers['forwarded'];
+    if (proxied || !LOOPBACK_ADDRESS.test(request.socket.remoteAddress ?? ''))
       throw new DomainError('HOOK_LOOPBACK_ONLY', 403);
     const header = request.headers['authorization'];
     const token = typeof header === 'string' && header.startsWith('Bearer ') ? header.slice(7) : '';

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ClaimBook,
   dayKeyOf,
   deltaOf,
   fresh,
@@ -102,6 +103,60 @@ describe('Claude transcripts', () => {
       utc,
     );
     expect(totals(state).ms).toBe(4 * 60_000);
+  });
+});
+
+describe('Claude messages seen twice', () => {
+  const at = '2026-10-07T01:00:00.000Z';
+  const u = { i: 3, cw: 100, cr: 5000, o: 10 };
+
+  it('does not count a synthetic row as a request', () => {
+    const state = newState('claude');
+    parseChunk(
+      state,
+      buffer(
+        claudeLine('msg_1', at, { i: 0, o: 0 }, { model: '<synthetic>' }),
+        claudeLine('msg_2', at, u),
+      ),
+      utc,
+    );
+    expect(totals(state)).toMatchObject({ req: 1, i: 3, o: 10 });
+  });
+
+  it('counts a message once when its lines are not adjacent', () => {
+    const book = new ClaimBook();
+    const state = newState('claude');
+    parseChunk(
+      state,
+      buffer(claudeLine('a', at, u), claudeLine('b', at, u), claudeLine('a', at, u)),
+      utc,
+      { book, owner: 'f1' },
+    );
+    expect(totals(state)).toMatchObject({ req: 2, i: 6, o: 20 });
+  });
+
+  it('counts one message once across two copies of a transcript, and counts it again once its owner is released', () => {
+    const book = new ClaimBook();
+    const original = newState('claude');
+    const copy = newState('claude');
+    const lines = buffer(claudeLine('a', at, u), claudeLine('b', at, u));
+    parseChunk(original, lines, utc, { book, owner: 'f1' });
+    parseChunk(copy, lines, utc, { book, owner: 'f2' });
+    expect(totals(copy)).toMatchObject({ req: 0, i: 0, o: 0 });
+    // A copy that goes on past the original counts only what is new.
+    parseChunk(copy, buffer(claudeLine('c', at, u)), utc, { book, owner: 'f2' });
+    expect(totals(copy)).toMatchObject({ req: 1, i: 3 });
+    book.release(new Set(['f1']));
+    const again = newState('claude');
+    parseChunk(again, lines, utc, { book, owner: 'f3' });
+    expect(totals(again)).toMatchObject({ req: 2, i: 6 });
+  });
+
+  it('counts a line with a message id but no timestamp as skipped, not as nothing', () => {
+    const state = newState('claude');
+    parseChunk(state, buffer(claudeLine('a', at, u).replace('"timestamp"', '"stamp"')), utc);
+    expect(state.skipped).toBe(1);
+    expect(totals(state).req).toBe(0);
   });
 });
 

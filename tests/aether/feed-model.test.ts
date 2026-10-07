@@ -1,7 +1,6 @@
 import { expect, it } from 'vitest';
 import type { Agent, AttributedSession } from '../../packages/contracts/src/index.js';
 import {
-  ago,
   attentionCount,
   buildFeed,
   feedItems,
@@ -131,13 +130,6 @@ it('says "No reply yet" only once the replies are known, and only for a running 
   expect(noReplyKey(row(undefined))).toBe('feedReplyNotLoaded');
   expect(noReplyKey(row({}))).toBe('feedNoReply');
   expect(noReplyKey({ ...row({}), session: { ...s, process: 'none' } })).toBe('feedReplyNotLoaded');
-});
-
-it('says how long ago in both languages', () => {
-  expect(ago(20_000, 'en')).toBe('now');
-  expect(ago(20_000, 'zh-TW')).toBe('剛剛');
-  expect(ago(3 * MIN, 'en')).toBe('3 min ago');
-  expect(ago(3 * MIN, 'zh-TW')).toBe('3 分鐘前');
 });
 
 it('remembers when a session was opened, never backwards, and ignores garbage in storage', () => {

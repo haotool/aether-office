@@ -1,7 +1,7 @@
 import { setTimeout as delay } from 'node:timers/promises';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import type { InboxPage, Snapshot } from '@aether/contracts';
+import { APP_VERSION, type InboxPage, type Snapshot } from '@aether/contracts';
 const mcpScopeSchema = z
   .object({
     url: z.url(),
@@ -21,7 +21,7 @@ export function createCollaborationMcp(input: unknown) {
     !(url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname))
   )
     throw new Error('TLS_REQUIRED');
-  const server = new McpServer({ name: 'aether-collaboration', version: '0.4.0-dev.0' });
+  const server = new McpServer({ name: 'aether-collaboration', version: APP_VERSION });
   async function api<T>(path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
     const response = await fetch(new URL(path, url), {
       method: body === undefined ? 'GET' : 'POST',

@@ -21,6 +21,7 @@ import {
   scanLocalSessions,
 } from '../../apps/control/src/services/local-sessions.js';
 import type { AgentProcess } from '../../apps/control/src/services/agent-processes.js';
+import { eventually } from './timing.js';
 
 const DAY = 86400_000;
 const UUID = '374456c6-9009-4372-ac17-4aa8f7535e70';
@@ -101,9 +102,14 @@ it('shows a live session even when it is older than a week and far past the newe
     stdio: 'ignore',
   });
   try {
-    await new Promise((r) => setTimeout(r, 500));
-    resetLocalSessionCache();
-    const sessions = await scanLocalSessions(home, Date.now(), 0, join(home, 'no-hooks.jsonl'));
+    const scan = async () => {
+      resetLocalSessionCache();
+      return scanLocalSessions(home, Date.now(), 0, join(home, 'no-hooks.jsonl'));
+    };
+    const sessions = await eventually(async () => {
+      const scanned = await scan();
+      return scanned.find((s) => s.sessionId === 'quiet')?.process === 'running' && scanned;
+    });
     const mine = sessions.find((s) => s.sessionId === 'quiet');
     expect(mine).toMatchObject({ process: 'running', cwd: work });
     // The transcript is twelve days old, but the process began a moment ago: how quiet a session has been is never

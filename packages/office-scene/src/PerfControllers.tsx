@@ -1,6 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { shadowDue, startRatio, stepRatio, type RatioState } from './perf-control.js';
+import {
+  frameTargetMs,
+  shadowDue,
+  startRatio,
+  stepRatio,
+  type RatioState,
+} from './perf-control.js';
 
 /**
  * Redraws the shadow map at a fixed rate instead of with every render: it does not depend on the camera, and what casts
@@ -41,8 +47,6 @@ export function ShadowThrottle({ intervalMs }: { intervalMs: number }) {
   return null;
 }
 
-/** The frame time a mode is expected to hold on a 60 Hz screen: a continuous camera move, or the ambient pace. */
-const TARGET_MS = { smooth: 1000 / 60, ambient: 1000 / 30 } as const;
 /** A gap this long is the scene sitting idle, not a slow frame. */
 const IDLE_MS = 250;
 
@@ -50,7 +54,15 @@ const IDLE_MS = 250;
  * Dynamic resolution: lowers the pixel ratio (to 0.75 of a pixel at the least) while frames run slow and raises it again
  * when they have room to spare (see `stepRatio`). Only measures frames the scene was asked to keep coming.
  */
-export function AdaptiveRatio({ ceiling: tier, smooth }: { ceiling: number; smooth: boolean }) {
+export function AdaptiveRatio({
+  ceiling: tier,
+  smooth,
+  compact,
+}: {
+  ceiling: number;
+  smooth: boolean;
+  compact: boolean;
+}) {
   const ceiling = Math.min(tier, window.devicePixelRatio || 1); // never above the screen's own pixels
   const setDpr = useThree((s) => s.setDpr);
   const state = useRef<RatioState | null>(null);
@@ -63,13 +75,7 @@ export function AdaptiveRatio({ ceiling: tier, smooth }: { ceiling: number; smoo
     const now = performance.now();
     state.current ??= startRatio(three.viewport.dpr, now);
     const before = state.current.ratio;
-    state.current = stepRatio(
-      state.current,
-      ms,
-      now,
-      smooth ? TARGET_MS.smooth : TARGET_MS.ambient,
-      ceiling,
-    );
+    state.current = stepRatio(state.current, ms, now, frameTargetMs(smooth, compact), ceiling);
     if (state.current.ratio !== before) setDpr(state.current.ratio);
   });
   return null;

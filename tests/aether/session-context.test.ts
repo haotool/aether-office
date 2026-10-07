@@ -3,6 +3,7 @@ import {
   compactedAtOf,
   contextPct,
   resolveContextWindow,
+  resolveContextWindowBasis,
   windowsOf,
   withContext,
 } from '../../apps/control/src/services/session-context.js';
@@ -108,4 +109,26 @@ it('works out a bounded share, null while either side is unknown, never invented
   );
   expect(usage).toMatchObject({ contextWindow: 200_000, contextPct: 50 });
   expect(withContext('codex', parseUsage('codex', Buffer.from('')), none).contextPct).toBeNull();
+});
+
+it('window is assumed, not claimed, without a [1m] signal; inferred when the context passes 200k', () => {
+  const basis = (model: string | null, tokens: number | null, observed: number | null = null) =>
+    resolveContextWindowBasis('claude', model, observed, tokens, none)?.basis;
+  expect(basis('claude-opus-5-5', 90_000)).toBe('assumed');
+  expect(basis('claude-opus-5-5', 250_495)).toBe('inferred');
+  expect(basis('claude-opus-5-5[1m]', 10)).toBe('model');
+  expect(basis('claude-opus-5-5', 10, 272_000)).toBe('observed');
+  expect(
+    withContext('claude', parseUsage('claude', Buffer.from(claudeAssistant(2, 99_998))), none),
+  ).toMatchObject({ contextWindowBasis: 'assumed' });
+});
+
+it('a model with no window and no observation has no percent', () => {
+  expect(resolveContextWindowBasis('codex', 'gpt-unknown', null, 10, none)).toBeNull();
+  const usage = withContext(
+    'codex',
+    { ...parseUsage('codex', Buffer.from('')), model: 'gpt-unknown', contextTokens: 10 },
+    none,
+  );
+  expect(usage).toMatchObject({ contextWindow: null, contextWindowBasis: null, contextPct: null });
 });

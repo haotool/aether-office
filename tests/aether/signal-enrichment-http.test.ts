@@ -18,8 +18,9 @@ import {
   writeSession,
   writeSubagent,
 } from './fixtures/claude-subagents.js';
+import { freePort } from './timing.js';
 
-const PORT = 4443;
+const PORT = await freePort();
 const BASE = `http://127.0.0.1:${PORT}`;
 const SECRET = 'ghp_EXAMPLE_NOT_A_SECRET';
 const receiver = join(process.cwd(), 'packages/providers/src/hook-receiver.mjs');

@@ -3,11 +3,13 @@
 export {
   FLOORS,
   FLOOR_CAPACITY,
+  assignSeats,
   defaultLayout,
   floorZones,
   floorsFrom,
   seatAt,
   zones,
+  type Seat,
 } from './layout.js';
 export {
   MAX_SQUAD_SEATS,

@@ -57,10 +57,18 @@ export function usageRoutes({ app, control, actor, options }: RouteContext) {
   app.get('/api/usage/git', async (request): Promise<GitKpiResponse> => {
     const who = actor(request);
     requireOperator(who);
-    const dayOf = dayKeyOf(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    const dayOf = dayKeyOf(statsFor(localHome()).timeZone); // the zone the token days follow, so the two agree
     const days = windowDays(dayOf(Date.now()));
     const base = { days, generatedAt: Date.now() };
-    if (off()) return { enabled: false, ...base, building: null, offices: [], projects: [] };
+    if (off())
+      return {
+        enabled: false,
+        ...base,
+        omittedRepos: 0,
+        building: null,
+        offices: [],
+        projects: [],
+      };
     const sessions = (await sessionsOf(who)).filter((s) => Date.now() - s.mtime < 30 * DAY_MS);
     const withRoot = new Map(
       control.listProjects(who).flatMap((p) => (p.root ? [[p.id, p] as const] : [])),
@@ -69,9 +77,10 @@ export function usageRoutes({ app, control, actor, options }: RouteContext) {
     for (const s of sessions)
       if (s.projectId && withRoot.has(s.projectId))
         latest.set(s.projectId, Math.max(latest.get(s.projectId) ?? 0, s.mtime));
-    const chosen = [...withRoot.values()]
-      .sort((a, b) => (latest.get(b.id) ?? 0) - (latest.get(a.id) ?? 0))
-      .slice(0, MAX_REPOS);
+    const ranked = [...withRoot.values()].sort(
+      (a, b) => (latest.get(b.id) ?? 0) - (latest.get(a.id) ?? 0),
+    );
+    const chosen = ranked.slice(0, MAX_REPOS);
     const results = new Map<string, GitKpi | null>(
       await mapPool(
         chosen,
@@ -83,6 +92,7 @@ export function usageRoutes({ app, control, actor, options }: RouteContext) {
     return {
       enabled: true,
       ...base,
+      omittedRepos: ranked.length - chosen.length,
       building: sum(results.keys()),
       offices: DEPARTMENTS.map((d) => ({
         floor: d.floor,

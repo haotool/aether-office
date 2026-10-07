@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Send, MessageSquare, ArrowUpRight } from 'lucide-react';
 import type { MessageWait, Snapshot } from '@aether/contracts';
 import { api, execute } from '../api.js';
-import { Empty, Field, Badge, PageHeading, useT } from '../ui.js';
+import { Empty, Field, Badge, PageHeading, useT, whyNot } from '../ui.js';
 import { Avatar } from './Avatar.js';
 import { useRooms } from './Rooms.js';
 export function Messages({
@@ -76,6 +76,7 @@ export function Messages({
                           <button
                             className="text-button"
                             disabled={!canWrite}
+                            {...whyNot(canWrite, t('needOperator'))}
                             onClick={() => setReplyTo(message.id)}
                           >
                             {t('reply')}

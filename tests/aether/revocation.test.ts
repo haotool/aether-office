@@ -4,8 +4,9 @@ import { claim, enroll } from '../../apps/control/src/services/runners.js';
 import { revoke } from '../../apps/control/src/services/identity.js';
 import { createServer } from '../../apps/control/src/server.js';
 import { command, fixture } from './fixture.js';
+import { freePort } from './timing.js';
 
-const PORT = 4500;
+const PORT = await freePort();
 
 it('revoking an identity stops new commands at once and closes its live event stream', async () => {
   const f = fixture();

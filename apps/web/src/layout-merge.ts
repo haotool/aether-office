@@ -5,6 +5,7 @@ import {
   floorsFrom,
   placeSquads,
   seatAt,
+  type Seat,
   type SquadRect,
 } from '@aether/office-scene/model';
 import { SUBAGENT_INFIX, parentOf } from './subagent-id.js';
@@ -15,6 +16,8 @@ export type MergeOptions = {
    * its parent gets no desk (the zone seats it); one whose zone does not fit keeps a desk, as before squads existed.
    */
   squads?: boolean;
+  /** Desks the members already have (`assignSeats`): with no saved layout they keep them whatever order they arrive in. */
+  seats?: ReadonlyMap<string, Seat>;
 };
 
 /**
@@ -36,6 +39,7 @@ export function mergeLayout(
       ? defaultLayout(
           all.filter((a) => !subs.has(a)),
           floorOf,
+          options.seats,
         )
       : null);
   if (!base) return null;

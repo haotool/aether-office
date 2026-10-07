@@ -65,3 +65,14 @@ it('rejects a pass without tests, dangling paths, duplicate ids and verified-but
   expect(problems.join('\n')).toMatch(/passed without any test/);
   expect(problems.join('\n')).toMatch(/verified but not implemented/);
 });
+
+it('rejects a blocker text that is pasted into a second row', () => {
+  const problems = validateLedger(
+    [
+      { ...f('A', 'partial', 'partial', ['same gap']), codePaths: ['a.ts'] },
+      { ...f('B', 'partial', 'partial', ['same gap']), codePaths: ['b.ts'] },
+    ],
+    () => true,
+  );
+  expect(problems).toEqual(['B: blocker copied from A']);
+});

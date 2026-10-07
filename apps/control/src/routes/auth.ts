@@ -11,7 +11,7 @@ import { MAX_ATTEMPTS, pruneAttempts } from '../services/attempts.js';
 import { PAIRING_TTL_MS, lanOrigins, pairingLinks } from '../services/pairing.js';
 import { DomainError } from '@aether/kernel';
 import { z } from 'zod';
-import type { FastifyReply } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { RouteContext } from './context.js';
 
 /** Browser sign-in: a token becomes a cookie session; the session endpoint tells the page who it is. */
@@ -24,12 +24,18 @@ export function authRoutes({
   pairings,
   actor,
 }: RouteContext) {
-  const startCookie = (reply: FastifyReply, session: string, ttlMs: number) =>
+  // `request.protocol` is https only when a proxy that is trusted (AETHER_TRUST_PROXY) says it terminated TLS.
+  const startCookie = (
+    request: FastifyRequest,
+    reply: FastifyReply,
+    session: string,
+    ttlMs: number,
+  ) =>
     reply.setCookie('aether_session', session, {
       path: '/',
       httpOnly: true,
       sameSite: 'strict',
-      secure: origin.protocol === 'https:',
+      secure: origin.protocol === 'https:' || request.protocol === 'https',
       maxAge: Math.floor(ttlMs / 1000),
     });
   /** Counts failed attempts per caller: the same limit for a typed token and a scanned code. */
@@ -54,7 +60,7 @@ export function authRoutes({
     const ttl = remember ? REMEMBERED_SESSION_MS : undefined;
     const session = login(control.ctx, token, ttl);
     attempts.delete(key);
-    startCookie(reply, session.session, ttl ?? 8 * 60 * 60 * 1000);
+    startCookie(request, reply, session.session, ttl ?? 8 * 60 * 60 * 1000);
     return {
       actor: session.actor,
       csrf: session.csrf,
@@ -95,7 +101,7 @@ export function authRoutes({
       REMEMBERED_SESSION_MS,
     );
     attempts.delete(key);
-    startCookie(reply, session.session, REMEMBERED_SESSION_MS);
+    startCookie(request, reply, session.session, REMEMBERED_SESSION_MS);
     request.log.info({ event: 'pairing.redeemed' }, 'a device was paired');
     return {
       actor: session.actor,

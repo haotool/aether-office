@@ -46,10 +46,45 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm lint
-      # Third-party notices up to date, every dependency under an approved licence, every file covered by REUSE.toml.
-      - run: pnpm run notices:check
       - run: pnpm format:check
       - run: pnpm test
       - run: pnpm build
+      # The verification ledger is internally consistent (no claim without evidence).
+      - run: pnpm verification:check
+      # Gzip size of the web JavaScript stays inside the budget (scripts/check-bundle-size.mjs).
+      - run: node scripts/check-bundle-size.mjs
+      # Publishing readiness: notices up to date, every dependency under an approved licence, every file covered by
+      # REUSE.toml, community files, no personal paths or secrets in the tree. After the build, so that it also proves
+      # the ignore rules cover the build output.
+      - run: pnpm run oss:check
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm exec playwright test
+
+  # The product is used mostly on macOS (vm_stat, ps and lsof parsing), so the unit tests run there too. The browser
+  # suite stays on Linux only: it is the slow part and does not depend on the operating system.
+  unit-macos:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .node-version
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  # Needs the npm registry, so an outage or a newly published advisory must not block a pull request: it is reported
+  # here and fixed by a dependency update.
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .node-version
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit:deps

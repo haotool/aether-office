@@ -1,5 +1,5 @@
 import { refreshMessageWaits } from './messages.js';
-import { stepConstraint } from './workflows.js';
+import { stepConstraint } from './step-constraint.js';
 import { randomUUID } from 'node:crypto';
 import type { Command } from '@aether/contracts';
 import {

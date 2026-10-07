@@ -7,6 +7,7 @@ import { activityOf, formatSpan, sessionCommands, tokensByDepartment } from '../
 import { copyText } from '../browser-compat.js';
 import { usePhoneAny } from '../phone.js';
 import { DoorOpen } from 'lucide-react';
+import { contextLabel } from './context-label.js';
 import { PageHeading, useT } from '../ui.js';
 import { reapZombies } from './reap.js';
 import { ClockOut } from './ClockOut.js';
@@ -235,7 +236,11 @@ export function Sessions({
                     </td>
                     <td data-label={t('model')}>
                       {s.usage.model ?? '—'}
-                      {window !== null && <small>ctx {window}%</small>}
+                      {window !== null && (
+                        <small title={contextLabel(s.usage, t, locale) ?? undefined}>
+                          ctx {window}%
+                        </small>
+                      )}
                     </td>
                     <td data-label={t('gitBranch')}>
                       {s.git?.branch ?? (s.git ? 'detached' : '—')}

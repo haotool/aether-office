@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, execute } from '../api.js';
-import { Field, useT } from '../ui.js';
+import { Field, useT, whyNot } from '../ui.js';
 
 type Status = {
   enabled: boolean;
@@ -53,6 +53,7 @@ export function A2AClients({ projectId, canManage }: { projectId: string; canMan
                     {' '}
                     <button
                       disabled={!canManage}
+                      {...whyNot(canManage, t('needOwner'))}
                       onClick={() =>
                         run(() => execute('a2a.client.revoke', { clientId: c.id }, projectId))
                       }

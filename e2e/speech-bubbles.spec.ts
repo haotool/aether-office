@@ -67,7 +67,7 @@ test('a tall reply scrolls by itself, and the pointer holds it', async ({ page }
   // Hovering holds it where it is (and shows more of it).
   await bubble.hover();
   const held = await scrolled(bubble);
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(900); // a negative wait: a held bubble must not move, so there is nothing to wait for
   expect(await scrolled(bubble)).toBe(held);
 });
 
@@ -78,7 +78,7 @@ test('with reduced motion it does not scroll: a clamped preview with a fade, and
   const bubble = reply(page);
   await expect(bubble).toBeVisible({ timeout: 30_000 });
   await expect(bubble).toHaveAttribute('data-overflow', 'true');
-  await page.waitForTimeout(3500);
+  await page.waitForTimeout(3500); // a negative wait: the auto-scroll starts after a short pause, and must not under reduced motion
   expect(await scrolled(bubble)).toBe(0);
   expect(
     await bubble.locator('.speech-scroll').evaluate((el) => getComputedStyle(el).maskImage),

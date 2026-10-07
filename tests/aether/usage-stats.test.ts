@@ -1,5 +1,6 @@
 import {
   appendFileSync,
+  chmodSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -12,6 +13,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { usageResponseSchema } from '../../packages/contracts/src/index.js';
 import { windowDays, type Attribution } from '../../apps/control/src/services/usage-aggregate.js';
+import { listTranscripts } from '../../apps/control/src/services/usage-files.js';
 import { createUsageStats } from '../../apps/control/src/services/usage-stats.js';
 import {
   claudeFile,
@@ -193,6 +195,9 @@ describe('grouping', () => {
     expect(office('quality')).toMatchObject({ input: 10, output: 5 });
     expect(snapshot.unplaced.totals).toMatchObject({ input: 1, output: 1 });
     expect(snapshot.building.totals.input).toBe(118);
+    // Offices plus what no office holds are the building: the page can say so.
+    const placed = snapshot.offices.reduce((n, o) => n + o.scope.totals.input, 0);
+    expect(placed + snapshot.unplaced.totals.input).toBe(snapshot.building.totals.input);
     expect(snapshot.offices.map((o) => o.floor)).toEqual([0, 1, 2, 3, 4]);
     expect(snapshot.projects.map((p) => p.repo)).toEqual(['web', 'api', 'repo']);
     expect(snapshot.sessions[0]).toMatchObject({
@@ -233,6 +238,40 @@ describe('grouping', () => {
   });
 });
 
+describe('Codex subagents', () => {
+  it('counts a spawned rollout as part of its parent session, in the parent’s office', async () => {
+    const parentId = '019d0000-0000-7000-8000-0000000000aa';
+    const childId = '019d0000-0000-7000-8000-0000000000bb';
+    const count = (at: string) =>
+      codexCount(at, { input: 100, output: 10 }, { input: 100, output: 10 });
+    const parent = codexFile(home, parentId);
+    const child = codexFile(home, childId);
+    writeLines(parent, [codexMeta('2026-10-07T01:00:00.000Z'), count('2026-10-07T01:00:10.000Z')]);
+    writeLines(child, [
+      JSON.stringify({
+        timestamp: '2026-10-07T01:00:00.000Z',
+        type: 'session_meta',
+        payload: {
+          id: childId,
+          cwd: '/work/repo',
+          source: { subagent: { thread_spawn: { parent_thread_id: parentId, agent_role: 'x' } } },
+        },
+      }),
+      count('2026-10-07T01:00:20.000Z'),
+    ]);
+    touch(parent);
+    touch(child);
+    const snapshot = await look(stats(), new Map([[`codex:${parentId}`, A('data')]]));
+    expect(snapshot.building.totals.sessions).toBe(1);
+    expect(snapshot.offices.find((o) => o.department === 'data')!.scope.totals).toMatchObject({
+      input: 200,
+      output: 20,
+      sessions: 1,
+    });
+    expect(snapshot.unplaced.totals.input).toBe(0);
+  });
+});
+
 describe('Codex sessions and limits', () => {
   it('reads a rollout, its tokens and the freshest rate-limit windows', async () => {
     const file = codexFile(home, '019d0000-0000-7000-8000-000000000001');
@@ -265,6 +304,83 @@ describe('Codex sessions and limits', () => {
       ],
     });
     expect(snapshot.providers.find((p) => p.provider === 'codex')!.totals.reasoning).toBe(40);
+  });
+});
+
+describe('what the numbers may be missing', () => {
+  const T = '2026-10-07T01:00:00.000Z';
+  const line = (id: string, input = 1) => claudeLine(id, T, { i: input, o: 1 });
+
+  it('counts one message once across two copies of a transcript (a resume), whichever is newer', async () => {
+    const original = claudeFile(home, 'orig');
+    const copy = claudeFile(home, 'copy');
+    writeLines(original, [line('a', 10), line('b', 10)]);
+    writeLines(copy, [line('a', 10), line('b', 10), line('c', 10)]);
+    touch(original, NOW - 120_000);
+    touch(copy, NOW - 60_000);
+    const snapshot = await look(stats());
+    expect(snapshot.building.totals).toMatchObject({ input: 30, requests: 3 });
+  });
+
+  it('reports truncation when the file cap is hit, with the real count, dropping the oldest', async () => {
+    for (let n = 0; n < 6; n++) {
+      const file = claudeFile(home, `cap-${n}`);
+      writeLines(file, [line(`m${n}`, n + 1)]);
+      touch(file, NOW - 60_000 - n * 1000);
+    }
+    const snapshot = await look(stats({ maxFiles: 4 }));
+    expect(snapshot.scan).toMatchObject({ files: 4, found: 6, truncated: true });
+    expect(snapshot.building.totals.input).toBe(1 + 2 + 3 + 4); // the two oldest are the ones left out
+    expect((await look(stats())).scan).toMatchObject({ found: 6, truncated: false });
+  });
+
+  it('lists claude projects newest first under a spent budget, not by folder name', async () => {
+    const old = claudeFile(home, 'old', '-zzz-oldest-project');
+    const fresh = claudeFile(home, 'new', '-aaa-newest-project');
+    writeLines(old, [line('o')]);
+    writeLines(fresh, [line('n')]);
+    touch(old, NOW - 20 * 86_400_000);
+    touch(fresh, NOW - 60_000);
+    utimesSync(
+      join(home, '.claude/projects/-zzz-oldest-project'),
+      (NOW - 20 * 86_400_000) / 1000,
+      (NOW - 20 * 86_400_000) / 1000,
+    );
+    utimesSync(
+      join(home, '.claude/projects/-aaa-newest-project'),
+      (NOW - 60_000) / 1000,
+      (NOW - 60_000) / 1000,
+    );
+    // Entries: the project folder, then its file. A budget of two visits the newest folder and its file only.
+    const listing = await listTranscripts(home, NOW, 30 * 86_400_000, 100, 2);
+    expect(listing.truncated).toBe(true);
+    expect(listing.transcripts.map((t) => t.sessionKey)).toEqual(['claude:new']);
+    expect((await listTranscripts(home, NOW, 30 * 86_400_000, 100)).truncated).toBe(false);
+  });
+
+  it('reports unreadable files and skipped lines in the scan', async () => {
+    const bad = claudeFile(home, 'bad');
+    writeLines(bad, [line('a').replace('"timestamp"', '"stamp"')]);
+    touch(bad);
+    expect((await look(stats())).scan).toMatchObject({ skippedLines: 1, failedFiles: 0 });
+    const locked = claudeFile(home, 'locked');
+    writeLines(locked, [line('l')]);
+    touch(locked);
+    chmodSync(locked, 0); // listed, but cannot be opened
+    expect((await look(stats())).scan).toMatchObject({ skippedLines: 1, failedFiles: 1 });
+  });
+
+  it('reads a file replaced in place with the same start and a larger size again, not as an append', async () => {
+    const file = claudeFile(home, 'swap');
+    const head = line('h', 5);
+    writeLines(file, [head, line('x1', 100)]);
+    touch(file);
+    const s = stats();
+    expect((await look(s)).building.totals.input).toBe(105);
+    // Same first line, different content after it, and longer than before.
+    writeLines(file, [head, line('y1', 7), line('y2', 7)]);
+    touch(file, NOW - 30_000);
+    expect((await look(s)).building.totals.input).toBe(5 + 7 + 7);
   });
 });
 

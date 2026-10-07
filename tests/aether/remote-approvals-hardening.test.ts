@@ -18,8 +18,9 @@ import { approvalProof } from '../../packages/providers/src/approval-config.mjs'
 import { approvalChannel } from '../../apps/control/src/services/remote-approvals.js';
 import { pruneAttempts } from '../../apps/control/src/services/attempts.js';
 import { approvalsFixture } from './permission-fixtures.js';
+import { freePort } from './timing.js';
 
-const PORT = 4368;
+const PORT = await freePort();
 const NONCE = 'n'.repeat(24);
 const script = join(process.cwd(), 'packages/providers/src/hook-approval.mjs');
 const KEY = 'k'.repeat(43);
@@ -351,15 +352,15 @@ it('writes approvals.json privately: a 0700 directory even when it exists, and n
 
 it('only loopback or HTTPS carries an answer unless the LAN opt-in is set', async () => {
   const https = new URL('https://aether.example');
-  const http = new URL('http://192.168.1.20:4368');
+  const http = new URL(`http://192.168.1.20:${PORT}`);
   const on = { AETHER_REMOTE_APPROVALS_LAN: '1' };
-  expect(approvalChannel(http, '127.0.0.1:4368', {})).toBe('ok');
-  expect(approvalChannel(http, 'localhost:4368', {})).toBe('ok');
-  expect(approvalChannel(http, '[::1]:4368', {})).toBe('ok');
+  expect(approvalChannel(http, `127.0.0.1:${PORT}`, {})).toBe('ok');
+  expect(approvalChannel(http, `localhost:${PORT}`, {})).toBe('ok');
+  expect(approvalChannel(http, `[::1]:${PORT}`, {})).toBe('ok');
   expect(approvalChannel(https, 'aether.example', {})).toBe('ok');
-  expect(approvalChannel(http, '192.168.1.20:4368', {})).toBe('blocked');
-  expect(approvalChannel(http, '192.168.1.20:4368', on)).toBe('lan-opt-in');
-  expect(approvalChannel(http, '192.168.1.20:4368', { AETHER_REMOTE_APPROVALS_LAN: '0' })).toBe(
+  expect(approvalChannel(http, `192.168.1.20:${PORT}`, {})).toBe('blocked');
+  expect(approvalChannel(http, `192.168.1.20:${PORT}`, on)).toBe('lan-opt-in');
+  expect(approvalChannel(http, `192.168.1.20:${PORT}`, { AETHER_REMOTE_APPROVALS_LAN: '0' })).toBe(
     'blocked',
   );
 

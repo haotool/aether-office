@@ -28,6 +28,8 @@ import { CharacterMenu, type CharacterCommand } from './CharacterMenu.js';
 import { GroupBar } from './GroupBar.js';
 import { SeatToast } from './SeatToast.js';
 import { useSeatMove } from './seat-move.js';
+import { useSeats } from './use-seats.js';
+import { SUBAGENT_INFIX } from '../subagent-id.js';
 import { useGitGraph } from './GitGraph.js';
 import type { OfficeModel } from './office-model.js';
 import { useCompactions } from './use-compactions.js';
@@ -141,6 +143,10 @@ export function SceneView({
   const sessions = useCachedSessions();
   const [command, setCommand] = useState<CharacterCommand | null>(null);
   const prefs = usePreferences();
+  // The GPU can take the WebGL context away (iOS, a backgrounded tab): the scene is replaced by a card with one tap to mount
+  // it again (`epoch` is the scene's key, so it gets a new context) or to use the list; the 2D view is not forced on the user.
+  const [contextLost, setContextLost] = useState(false);
+  const [epoch, setEpoch] = useState(0);
   const intro = {
     auto:
       !covered &&
@@ -190,17 +196,19 @@ export function SceneView({
   const talk = useTalkPreview(model.agents, talkPreview);
   const squadStandIn = useSquadPreview(model.agents);
   const agents = squadStandIn ? [...model.agents, ...squadStandIn.agents] : model.agents;
+  const observed = [...model.observed, ...(squadStandIn?.agents ?? [])];
+  // Every member keeps its desk while it stays (not the subagents a squad zone seats: they have no desk of their own).
+  const seats = useSeats(
+    data.project.id,
+    [...data.agents, ...observed].filter((a) => squadLegacy || !a.id.includes(SUBAGENT_INFIX)),
+    model.floorOf,
+  );
   const shown =
     preview ??
-    mergeLayout(
-      data.layout?.data ?? null,
-      data.agents,
-      [...model.observed, ...(squadStandIn?.agents ?? [])],
-      model.floorOf,
-      {
-        squads: !squadLegacy, // subagents sit in their supervisor's squad zone, not at desks of their own
-      },
-    );
+    mergeLayout(data.layout?.data ?? null, data.agents, observed, model.floorOf, {
+      squads: !squadLegacy, // subagents sit in their supervisor's squad zone, not at desks of their own
+      seats,
+    });
   const seat = useSeatMove({
     projectId: data.project.id,
     saved: data.layout?.data ?? null,
@@ -227,6 +235,25 @@ export function SceneView({
         />
       </div>
     );
+  if (contextLost)
+    return (
+      <div className="scene-loading" role="alert">
+        <Orbit size={32} />
+        {t('sceneLost')}
+        <div className="form-actions">
+          <button
+            className="primary"
+            onClick={() => {
+              setContextLost(false);
+              setEpoch((n) => n + 1);
+            }}
+          >
+            {t('sceneReload')}
+          </button>
+          <button onClick={() => prefs.set({ view: '2d' })}>{t('sceneUseList')}</button>
+        </div>
+      </div>
+    );
   return (
     <Suspense
       fallback={
@@ -237,6 +264,7 @@ export function SceneView({
       }
     >
       <OfficeScene
+        key={epoch}
         compact={compact}
         paused={covered}
         intro={intro}
@@ -298,6 +326,7 @@ export function SceneView({
           : {})}
         onUserCamera={() => onTour({ type: 'interrupt' })}
         onMessageUnreachable={() => onNotice(t('messageUnreachable'))}
+        onContextLost={() => setContextLost(true)}
         onFailure={() => {
           prefs.set({ view: '2d' });
           onNotice(t('sceneFailed'));

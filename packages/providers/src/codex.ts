@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { z } from 'zod';
+import { APP_VERSION } from '@aether/contracts';
 import type { InitializeParams } from '../generated/codex-0.159.2-ts/InitializeParams.js';
 import type { ThreadStartParams } from '../generated/codex-0.159.2-ts/v2/ThreadStartParams.js';
 import type { ThreadResumeParams } from '../generated/codex-0.159.2-ts/v2/ThreadResumeParams.js';
@@ -15,7 +16,8 @@ import {
   type NativeSink,
   type ProviderEvent,
 } from './protocol.js';
-import { processIdentity, VERSION_PROBE_MS, type ProviderResult } from './index.js';
+import { processIdentity, VERSION_PROBE_MS } from './process-identity.js';
+import type { ProviderResult } from './index.js';
 const threadResponse = z.object({ thread: z.object({ id: z.string().min(1).max(200) }) });
 const turnResponse = z.object({ turn: z.object({ id: z.string().min(1).max(200) }) });
 export class CodexAdapter {
@@ -260,7 +262,7 @@ export class CodexAdapter {
     await this.rpc.ready;
     await this.sink.processStarted(processIdentity(this.rpc.child));
     const initialize: InitializeParams = {
-      clientInfo: { name: 'aether_office', title: 'AETHER OFFICE', version: '0.4.0-dev.0' },
+      clientInfo: { name: 'aether_office', title: 'AETHER OFFICE', version: APP_VERSION },
       capabilities: {
         experimentalApi: false,
         requestAttestation: false,

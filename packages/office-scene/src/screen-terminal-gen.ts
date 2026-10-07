@@ -1,3 +1,4 @@
+import { MEMO_LIMIT, memoized } from './memo.js';
 import { between, pick, seeded, type Rng } from './random.js';
 import { VOCAB } from './screen-lang.js';
 import { generateFile } from './screen-codegen.js';
@@ -186,26 +187,20 @@ export function terminalOutput(
   return lines.slice(0, count);
 }
 
-const arrivals = new Map<string, number[]>();
-
 /** When each streamed line shows up, in ms after the command began: quick runs of lines, then a wait. */
-function arrivalTimes(seed: string): number[] {
-  let times = arrivals.get(seed);
-  if (!times) {
-    const r = seeded(`${seed}:stream`);
-    times = [];
-    let at = between(r, 80, 400);
-    while (times.length < STREAM) {
-      for (let burst = 3 + Math.floor(r() * 6); burst > 0 && times.length < STREAM; burst--) {
-        times.push(at);
-        at += between(r, 40, 170);
-      }
-      at += between(r, 450, 1900);
+const arrivalTimes = memoized(new Map<string, number[]>(), MEMO_LIMIT, (seed: string): number[] => {
+  const r = seeded(`${seed}:stream`);
+  const times: number[] = [];
+  let at = between(r, 80, 400);
+  while (times.length < STREAM) {
+    for (let burst = 3 + Math.floor(r() * 6); burst > 0 && times.length < STREAM; burst--) {
+      times.push(at);
+      at += between(r, 40, 170);
     }
-    arrivals.set(seed, times);
+    at += between(r, 450, 1900);
   }
   return times;
-}
+});
 
 /** How many lines of the stream a command has printed `ms` after it began. */
 export function revealedLines(seed: string, ms: number): number {

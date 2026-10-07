@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { signIn } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   claudeLine,
@@ -116,6 +116,45 @@ async function open(
 
 // 1200+300+800 (a) + 100+400 (b, counted once) + Codex 2000 new input + 400 output + 200 reasoning = 5400 tokens today.
 const TOKENS_TODAY = '5.4K';
+
+test('the dashboard says what no office holds, how old each limit reading is, and what Session time is', async ({
+  page,
+}) => {
+  // Offices show running and the newest 60 sessions: 61 newer ones push the KPI transcripts out of every office.
+  const fillers = join(home, '.claude/projects/kpi-fillers');
+  mkdirSync(fillers, { recursive: true });
+  const soon = new Date(Date.now() + 60_000);
+  for (let n = 0; n < 61; n++) {
+    const file = join(fillers, `filler-${n}.jsonl`);
+    writeFileSync(file, JSON.stringify({ type: 'user', cwd: join(home, 'fixture-repo') }) + '\n');
+    utimesSync(file, soon, soon);
+  }
+  try {
+    await open(page);
+    const strip = page.getByRole('group', { name: 'KPI dashboard' });
+    await expect(strip.locator('.kpi-cell').first()).toContainText(TOKENS_TODAY, {
+      timeout: 30_000,
+    });
+    await strip.locator('.kpi-cell').first().click();
+    const dialog = page.getByRole('dialog', { name: 'KPI dashboard' });
+    await expect(dialog.getByText('Session time')).toBeVisible();
+    await expect(dialog.locator('.kpi-note', { hasText: 'Not placed in an office' })).toContainText(
+      '5.4K',
+      { timeout: 40_000 },
+    );
+    await dialog.getByRole('button', { name: /^1F/ }).click();
+    await expect(dialog.locator('.kpi-headline .kpi-tile').first()).toContainText('0');
+    await expect(dialog.locator('.kpi-note', { hasText: 'Not placed in an office' })).toContainText(
+      '5.4K',
+    );
+    // every limit reading carries its age
+    await expect(dialog.locator('.kpi-rings li', { hasText: 'Claude · 5-hour' })).toContainText(
+      /age \d+ (min|h)/,
+    );
+  } finally {
+    rmSync(fillers, { recursive: true, force: true });
+  }
+});
 
 test('the strip shows the building’s KPIs and opens the dashboard with every breakdown', async ({
   page,

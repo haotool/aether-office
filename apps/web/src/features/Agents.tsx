@@ -4,7 +4,7 @@ import type { Snapshot } from '@aether/contracts';
 import { execute } from '../api.js';
 import { avatarState } from '../avatar/state.js';
 import { Avatar } from './Avatar.js';
-import { PageHeading, Badge, Modal, Field, Empty, useT } from '../ui.js';
+import { PageHeading, Badge, Modal, Field, Empty, useT, whyNot } from '../ui.js';
 export function Agents({
   snapshot,
   onSelect,
@@ -26,7 +26,12 @@ export function Agents({
         title={t('team')}
         subtitle={`${snapshot.agents.length} ${t('agents')}`}
         action={
-          <button className="primary" onClick={() => setAdding(true)} disabled={!canWrite}>
+          <button
+            className="primary"
+            onClick={() => setAdding(true)}
+            disabled={!canWrite}
+            {...whyNot(canWrite, t('needOperator'))}
+          >
             <Plus size={16} />
             {t('addAgent')}
           </button>

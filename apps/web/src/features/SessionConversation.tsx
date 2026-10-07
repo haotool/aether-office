@@ -4,9 +4,11 @@ import { ProviderMark } from '@aether/office-scene/model';
 import type { Agent, AttributedSession, Snapshot } from '@aether/contracts';
 import { avatarState } from '../avatar/state.js';
 import { labelOf } from '../localSessions.js';
+import { usePreferences } from '../state.js';
 import { SUBAGENT_INFIX, parentOf } from '../subagent-id.js';
 import { Badge, useT } from '../ui.js';
 import { Avatar } from './Avatar.js';
+import { contextLabel } from './context-label.js';
 import { squadViewOf } from './feed-squads.js';
 import { HookNote, needsHook } from './HookNote.js';
 import { PermissionCards } from './PermissionCard.js';
@@ -52,8 +54,10 @@ export function SessionConversation({
   onOpen: (agentId: string) => void;
 }) {
   const t = useT();
+  const locale = usePreferences((s) => s.locale);
   const asking = !!session && requestsFor(usePermissionRequests(), session.key).length > 0;
   const percent = session ? contextPercent(session) : null;
+  const contextText = session ? contextLabel(session.usage, t, locale) : null;
   const branch = session?.git?.branch;
   const model = session?.usage.model;
   const isSub = agent.id.includes(SUBAGENT_INFIX);
@@ -115,7 +119,9 @@ export function SessionConversation({
               </span>
             )}
             {percent !== null && (
-              <span className="ctx-text">{`${t('convContext')} ${percent}%`}</span>
+              <span className="ctx-text" title={contextText ?? undefined}>
+                {`${t('convContext')} ${percent}%`}
+              </span>
             )}
           </div>
         )}
@@ -128,8 +134,8 @@ export function SessionConversation({
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={Math.min(percent, 100)}
-            aria-valuetext={`${t('convContext')} ${percent}%`}
-            title={`${t('convContext')} ${percent}%`}
+            aria-valuetext={contextText ?? undefined}
+            title={contextText ?? undefined}
           >
             <i style={{ left: `${Math.min(percent, 100)}%` }} />
           </div>

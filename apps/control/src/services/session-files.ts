@@ -1,8 +1,5 @@
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
 import { fuzzyRank } from '@aether/kernel';
-
-const run = promisify(execFile);
+import { git } from './git-health.js';
 
 const MAX_FILE_RESULTS = 20;
 export const MAX_QUERY_CHARS = 100;
@@ -26,10 +23,11 @@ export function completePaths(paths: readonly string[], query: string, limit: nu
  */
 export async function listSessionFiles(cwd: string, query: string): Promise<string[]> {
   try {
-    const { stdout } = await run(
-      'git',
-      ['-C', cwd, 'ls-files', '--cached', '--others', '--exclude-standard', '-z'],
-      { timeout: 3000, maxBuffer: MAX_LISTED_BYTES, encoding: 'utf8' },
+    const stdout = await git(
+      cwd,
+      ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+      3000,
+      MAX_LISTED_BYTES,
     );
     return completePaths(stdout.split('\0'), query, MAX_FILE_RESULTS);
   } catch {

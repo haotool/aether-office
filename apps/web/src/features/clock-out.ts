@@ -4,12 +4,12 @@ import {
   type AttributedSession,
   type ClockOutResponse,
 } from '@aether/contracts';
+import { DAY_MS } from '@aether/kernel';
 import { STAGGER_MS } from '@aether/office-scene/model';
 import { api } from '../api.js';
 import { uuid } from '../browser-compat.js';
 import { LOCAL_PREFIX } from '../localSessions.js';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 /** How long a session must have been idle to be offered for clocking out. */
 export const IDLE_DAYS = [1, 3, 7] as const;
 export type IdleDays = (typeof IDLE_DAYS)[number];

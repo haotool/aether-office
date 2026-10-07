@@ -1,31 +1,41 @@
 import { Component, useEffect, useRef, type ReactNode } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
+import { AMBIENT_FRAME_MS, AMBIENT_FRAME_MS_PHONE } from './perf-control.js';
 
-export function Runtime({ onFailure }: { onFailure: () => void }) {
+export function Runtime({
+  onLost,
+  onRestored,
+}: {
+  onLost: () => void;
+  onRestored?: (() => void) | undefined;
+}) {
   const { gl, invalidate } = useThree();
   useEffect(() => {
     const lost = (event: Event) => {
-      event.preventDefault();
-      onFailure();
+      event.preventDefault(); // without it the browser never offers the context back
+      onLost();
+    };
+    const restored = () => {
+      invalidate();
+      onRestored?.();
     };
     const visible = () => {
       if (!document.hidden) invalidate();
     };
     gl.domElement.addEventListener('webglcontextlost', lost);
+    gl.domElement.addEventListener('webglcontextrestored', restored);
     document.addEventListener('visibilitychange', visible);
     return () => {
       gl.domElement.removeEventListener('webglcontextlost', lost);
+      gl.domElement.removeEventListener('webglcontextrestored', restored);
       document.removeEventListener('visibilitychange', visible);
     };
-  }, [gl, invalidate, onFailure]);
+  }, [gl, invalidate, onLost, onRestored]);
   return null;
 }
 
 // Ambient motion (drones, scan sweeps, hologram shimmer) needs no more than ~30 frames a second; the camera
 // (fly-to, follow, orbit) invalidates on its own and keeps the full rate. Measured on an M4: halves GPU and renderer work.
-const AMBIENT_FRAME_MS = 24;
-/** On a phone the ambient scene settles at about 20 frames a second: the battery, not the eye, is the limit. */
-const AMBIENT_FRAME_MS_PHONE = 50;
 
 export function AnimationClock({
   active,

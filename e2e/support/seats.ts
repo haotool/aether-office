@@ -1,7 +1,7 @@
 import { expect, type Page } from '@playwright/test';
 import { settled } from './settled.js';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { signIn } from './sign-in.js';
 
@@ -45,8 +45,6 @@ export function seedSeatSessions() {
         .map((line) => JSON.stringify(line))
         .join('\n') + '\n',
     );
-    const when = new Date(Date.now() - 30_000);
-    utimesSync(file, when, when);
   });
 }
 

@@ -6,7 +6,7 @@ export type ScheduleSpec =
 
 export const DEFAULT_TIMEZONE = 'Asia/Taipei';
 const TIME = /^([01]\d|2[0-3]):([0-5]\d)$/;
-const DAY_MS = 86_400_000;
+import { DAY_MS } from './time.js';
 
 export function isValidTimezone(tz: string): boolean {
   try {

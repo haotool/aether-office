@@ -8,6 +8,11 @@ export type ServerOptions = {
   origin: string;
   /** Also accept requests addressed to this machine's private-network address (see services/host-policy.ts). */
   lan?: boolean;
+  /**
+   * The reverse proxies whose `X-Forwarded-*` headers to believe (AETHER_TRUST_PROXY): addresses or CIDR ranges, comma
+   * separated. Unset (the default) believes none, so a forged header changes nothing. See docs/security.md.
+   */
+  trustProxy?: string;
   serveWeb?: boolean;
   /** The data directory: where the usage KPIs keep their numbers-only rollup between runs (none: memory only). */
   dataDir?: string;

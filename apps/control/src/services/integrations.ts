@@ -369,7 +369,8 @@ export async function handleGithubWebhook(
   const row = ctx.sqlite
     .prepare("SELECT * FROM integration_connections WHERE id=? AND provider='github'")
     .get(connectionId) as Row | undefined;
-  if (!row) throw new DomainError('INTEGRATION_NOT_FOUND', 404);
+  // An unknown id answers like a bad signature, so the endpoint does not reveal which integrations exist.
+  if (!row) throw new DomainError('WEBHOOK_SIGNATURE_INVALID', 401);
   const config = JSON.parse(row.config) as Config;
   const secret = config.webhookSecretEnv
     ? (options.env ?? process.env)[config.webhookSecretEnv]

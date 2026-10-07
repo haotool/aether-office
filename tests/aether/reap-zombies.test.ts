@@ -7,7 +7,8 @@ import {
 } from '../../apps/control/src/services/agent-processes.js';
 import { nudgeTargets, reapSessionZombies } from '../../apps/control/src/services/reap-zombies.js';
 import type { LocalSession } from '../../packages/contracts/src/index.js';
-import { alive, sleep } from './process-fixtures.js';
+import { alive } from './process-fixtures.js';
+import { eventually } from './timing.js';
 
 const row = (pid: number, ppid: number, stat = 'S', startedAt = pid * 1000): ProcessRow => ({
   pid,
@@ -101,7 +102,10 @@ describe('asking for a nudge', () => {
       { stdio: 'ignore' },
     );
     try {
-      await sleep(1200);
+      await eventually(
+        async () =>
+          zombiesUnder(await readProcessTable(), [parent.pid!]).get(parent.pid!)?.length === 1,
+      );
       const table = await readProcessTable();
       const startedAt = table.find((r) => r.pid === parent.pid)!.startedAt;
       expect(zombiesUnder(table, [parent.pid!]).get(parent.pid!)).toHaveLength(1);

@@ -14,13 +14,88 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   notes; `scripts/oss/overlap-scan.mjs` looks for code copied from reference projects.
 - The production web build carries `LICENSE.txt` and `THIRD_PARTY_NOTICES.txt`, linked from Settings, About, which also states
   the licence and that the project is not affiliated with Anthropic or OpenAI.
+- CI also runs `pnpm verification:check`, `pnpm run oss:check` (notices, licences and publishing readiness, after the build), a
+  bundle-size budget (`scripts/check-bundle-size.mjs`) and the unit tests on macOS; `pnpm audit:deps` runs in a separate job that
+  only reports. `pnpm lint` also rejects bare Node built-ins (`fs`) in the kernel and web code, anything but `zod` in the
+  contracts, `better-sqlite3` in the runner, and a committed `.only` or `@ts-ignore` in `scripts`, `tests` and `e2e`.
+- `docs/architecture.md` describes how to add a layout `schemaVersion`.
+- 3D scene, mobile quality (see "Mobile quality" in `docs/design-system.md`): `?msaa=1` / `?msaa=0` overrides the tier's MSAA choice
+  so it can be measured on a real phone (the default is unchanged); the soft additive gradients (light shafts, squad beam and zone,
+  clouds, holograms, petals, pollen, glass strands) are dithered after the alpha is applied; the planet texture is 1024x512 on a
+  phone and on low (GPU estimate 57.3 to 48.0 MB on the phone profile); the phone's high tier renders at pixel ratio 2 (one named
+  constant per tier in `perf-control.ts`; **not validated on a real phone**, the default tier is unchanged).
+- A lost WebGL context shows a card with "Reload the scene" and "Use the list" instead of silently switching to the list.
+
+### Fixed
+
+- A character keeps its desk while it stays in the office. The observed building used to be regenerated most-recent-first on
+  every refresh, so any session that wrote made characters jump to other desks (name tags, the camera's target and an open
+  action menu followed the wrong character). Desks are now assigned once (`assignSeats`: a new arrival takes the first free slot,
+  a departure frees its slot, nobody else moves) and remembered per project in the browser across a reload; a saved layout is
+  still never rearranged. The e2e seat fixture no longer needs ordered modification times.
+- `AdaptiveRatio` no longer drops an idle phone's pixel ratio from 1.5 to 0.75 within seconds: it judged the 50 ms idle redraw
+  against a 33 ms target.
+- A hook spool rotation no longer makes every session's hook state, waiting-for-approval badge and subagent squad disappear:
+  the reader also reads the end of the rotated `.1` file.
+- Behind a reverse proxy on the same machine the hook routes refuse a forwarded request, and `AETHER_TRUST_PROXY` (proxy
+  addresses; default none) makes the sign-in limits count the real client and the session cookie `Secure` behind TLS.
+- The public GitHub webhook is limited to 120 calls a minute per address and answers an unknown integration id with 401 like a
+  bad signature.
+- A migration checksum mismatch says which migration and what to do; the `.pre-migration` database copies are mode 0600 and only
+  the newest three are kept.
 
 ### Changed
+
+- Phone and name-tag performance: the name tag's working shimmer and its amber attention glow no longer repaint (`translate`/
+  `opacity` on a pseudo-element instead of `background-position`/`box-shadow`); glass over the 3D canvas has no backdrop blur on
+  a phone (`phone-glass.css`, desktop unchanged). Remaining main-thread animations: the thinking line's text shimmer,
+  loading skeletons and the desktop floor plaque scan.
+- The control database is pruned hourly: events and command receipts after 90 days, runner report ids and webhook delivery ids
+  after 30 days, expired browser sessions (see Data retention in `docs/security.md`). The once-a-second message-wait pass no longer
+  takes the write lock when no wait is open.
+- One definition of when a session counts as working (two minutes) and when one with no process is gone (ten): the server's
+  liveness, the child-rollout window and the web app's activity all read the constants in `@aether/contracts`. One
+  `formatSpan`/`formatAgo`/`DAY_MS` in the kernel replace the duplicated relative-time helpers (the feed now says "just now"
+  instead of "now" in English). The kernel, providers and control services no longer import each other in cycles.
+- Per-seed memos in the office scene are bounded and the terminal send queue forgets drained terminals, so a long-lived tab does
+  not grow with every session it has seen.
+- A viewer sees why write actions are off (tooltip); the Reduce motion help text now states how it relates to the automatic
+  camera and Calm mode, and that it takes the system setting only the first time. A test fails when a file gains an inline
+  bilingual string beyond `tests/aether/inline-i18n-baseline.json`.
+- Removed the two exports nothing referenced (`clearMoments`, the `SpritePool` type).
 
 - The provider marks are small decorative provider indicators: Codex's mark is tinted to the muted text color instead of a
   brand color (`--provider-codex` is gone), the SVG is `aria-hidden` and the provider's name is its tooltip and a visually
   hidden text. `docs/legal/trademarks.md` states they are never used as branding.
 - Every workspace package declares the MIT licence; the CI actions are pinned to commit SHAs.
+- The product version is written once, in the root `package.json`: health, the A2A card, MCP and ACP client info read it from
+  `APP_VERSION` in `@aether/contracts`, and a test fails when a workspace `package.json` differs.
+- Every verification-ledger blocker has its own text (a test rejects a pasted one); SEC-06 and ENV-05 no longer say that no
+  Markdown renderer exists or that only macOS was run. Documentation names the upstream projects instead of the untracked
+  `.research/` folder and states the real Git timeouts and the effect of a same-host reverse proxy.
+- Tests wait for conditions instead of sleeps where a positive condition exists, and the last fixed test ports are ephemeral.
+
+### Fixed
+
+- Usage readings say what they cover. The KPI dashboard shows "Not placed in an office" (what the office tabs, which hold running
+  and the newest 60 sessions, leave out, so offices plus it equal the building) and an unknown office is empty, never the
+  building's numbers. The scan reports `truncated` with the real file count (the oldest transcripts are the ones left out; Claude's
+  project folders are visited newest first; the cap is 8192 files, was 4000), unreadable files and skipped lines, and a server
+  that sends no scan is no longer taken as complete. "Active time" is now "Session time" (sessions' minutes added up, which can
+  exceed the clock). Rate-limit rings show the age of their reading, mark a stale one, and use the usage time zone. Model shares
+  are of the scope total ("unknown" reads "Not recorded"). Git KPIs flag a capped commit list or line count, say how many
+  projects the building figure leaves out, count authors by email and follow the usage time zone.
+- A session whose last turn is `<synthetic>` (an API error) no longer shows 0% context and the model `<synthetic>`: the last real
+  turn is used, or nothing. Such turns are not counted as requests. The context gauge's tooltip says when the window is an
+  assumed 200k or an inferred 1M.
+- A Claude message that appears in two transcripts (a resumed session) or twice apart in one is counted once (0.27% of fresh
+  tokens on one real history); a Codex subagent's rollout counts as part of its parent session (and its office). A file replaced
+  in place with the same start and a larger size is read again, not taken as an append. The session list's spend and the KPI use
+  one parser. The parser no longer searches the whole chunk for tool calls on every message (a cold scan of 8 GB went from
+  about 11 s to about 7.5 s).
+- Concurrent requests share one local-session scan (it ran once per request), and its cache is keyed by home and spool file.
+  The file list, the commit graph and the session scan run git through the one hardened wrapper (`core.fsmonitor=false`,
+  `GIT_OPTIONAL_LOCKS=0`).
 
 ## [0.4.0] - 2026-10-07
 
@@ -451,7 +526,7 @@ For anyone who ran a development build before this release.
 - A runner started before it is enrolled prints how to enroll instead of a stack trace; the terminals and approvals pages say how
   to get profiles and prompts into them; common errors are worded in both languages instead of raw codes.
 - Members beyond a floor's 48 desks take a desk on the next floor with room instead of vanishing; "Show in office" brings the
-  camera to the member on a phone too; sessions with the same modification time keep their order and desks between scans.
+  camera to the member on a phone too.
 - Scene fixes: close-up camera shots push in, members sent home walk with planted feet, pointing at the crown works, the
   control-room wall no longer disappears at 1440x900 or goes black when its members change, a name tag no longer draws over a
   speech bubble, and office chairs no longer flicker.

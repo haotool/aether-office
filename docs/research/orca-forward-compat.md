@@ -3,7 +3,7 @@
 日期：2026-10-07。性質：唯讀研究，未改任何程式碼，未執行 Orca，未連網，未呼叫付費模型。
 承接 [Orca 唯讀 3D 辦公室視圖：可行性研究](orca-view-feasibility.md)（下稱「可行性研究」），沿用它的方案 B：同源 transcript / hook（路徑 c）加薄映射，再加選配的 `orca` CLI 疊加層。
 標記：**[已驗證]** 讀過程式碼或文件原文；**[推論]** 由程式碼合理推得；**[未知]** 需實測。
-`orca:` 指 `.research/orca/`（commit `373d951b`，`package.json:3` 版本 1.4.214）。無前綴的路徑是本 repo。
+`orca:` 指 https://github.com/stablyai/orca 的本機淺層 clone（不在本 repo，取得方式見 [orca-view-feasibility](orca-view-feasibility.md)；commit `373d951b`，`package.json:3` 版本 1.4.214）。無前綴的路徑是本 repo。
 
 ## 0. 先講結論
 

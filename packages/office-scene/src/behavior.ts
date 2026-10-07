@@ -1,4 +1,5 @@
 import type { Agent } from '@aether/contracts';
+import { MEMO_LIMIT, memoized } from './memo.js';
 import { between, seeded, weighted } from './random.js';
 import type { ClipName } from './animal-states.js';
 import { currentWork, type WorkFacts } from './screen-layout.js';
@@ -123,22 +124,16 @@ export type Drift = {
   phase: readonly [number, number, number];
   rate: readonly [number, number, number];
 };
-const drifts = new Map<string, Drift>();
 
 /** A member's own slow sway: two periods for the chair's turn and one for the lean, each seeded, so neighbours never sway together. */
-export function driftParams(seed: string): Drift {
-  let d = drifts.get(seed);
-  if (!d) {
-    const r = seeded(`${seed}:drift`);
-    const tau = Math.PI * 2;
-    d = {
-      phase: [r() * tau, r() * tau, r() * tau],
-      rate: [tau / between(r, 25, 45), tau / between(r, 11, 19), tau / between(r, 17, 31)],
-    };
-    drifts.set(seed, d);
-  }
-  return d;
-}
+export const driftParams = memoized(new Map<string, Drift>(), MEMO_LIMIT, (seed: string): Drift => {
+  const r = seeded(`${seed}:drift`);
+  const tau = Math.PI * 2;
+  return {
+    phase: [r() * tau, r() * tau, r() * tau],
+    rate: [tau / between(r, 25, 45), tau / between(r, 11, 19), tau / between(r, 17, 31)],
+  };
+});
 /** The chair's turn in radians at `t` seconds: within 10 degrees either way. */
 export const yawAt = (d: Drift, t: number): number =>
   MAX_YAW *

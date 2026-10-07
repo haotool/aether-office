@@ -59,9 +59,11 @@ flowchart LR
 
 Enforced by `pnpm lint` (`scripts/check-boundaries.mjs`):
 
-- `packages/kernel` imports nothing that does I/O (no `node:`, React, Three.js, Fastify, SQLite or providers).
+- `packages/kernel` imports nothing that does I/O (no Node built-in, with or without the `node:` prefix, React, Three.js, Fastify, SQLite or providers).
 - `apps/web` and `packages/office-scene` import no Node, Fastify, SQLite or provider modules.
-- `apps/runner` does not import the control database; `packages/providers` does not import the control app.
+- `packages/contracts` imports only `zod` and its own files.
+- `apps/runner` does not import the control database or `better-sqlite3`; `packages/providers` does not import the control app.
+- `scripts`, `tests` and `e2e` are only checked for suppressed type safety and a committed `.only`.
 - Untrusted text never reaches the DOM as HTML; terminal output gains no clipboard or link-opening abilities.
 
 ## Data and consistency
@@ -92,7 +94,7 @@ credential.
 | Work and lists          | `work/:workId/{comments,integrations,post-result,diagnostics,reviews}`, `workspaces`, and the read lists (`terminals`, `reservations`, `schedules`, `skills`, `integrations`, `rooms`, `workflows`, `meetings`, `observations`) |
 | Local sessions          | `GET /api/local-sessions` and `/speech` (last prompt and reply), `GET /api/local-sessions/stream` (change stream), `/:key/transcript`, `/:key/stop`, `/:key/reap-zombies`, `POST /api/local-sessions/clock-out` |
 | Composer                | `GET /api/local-sessions/:key/terminal` (the AETHER terminal the session runs in, if any), `/:key/commands`, `/:key/files`                    |
-| Usage KPIs              | `GET /api/usage?range=today\|7d\|30d` (tokens per day, office, project, model and session, plus Claude's and Codex's limit windows) and `GET /api/usage/git` (commits, merges, merged and open branches per project, office and for the building). Owner and operator only; ETag-revalidated. Transcripts are read incrementally (`services/usage-parse.ts`, `usage-stats.ts`): per file an offset, mtime, size and first-bytes signature, appended bytes only, one shared 1 MiB buffer, a turn of the event loop between chunks, at most 4000 files; a request waits 400 ms at most for a scan still reading history and says `scan.complete: false`; a scan may start again after a tenth of the time the last one took (at most 3 s), and a request inside that gap waits it out when it is short, so a transcript that just appeared is counted by that request. The page refetches the usage when the session stream reports a moved transcript (at most every 5 s). A numbers-only rollup (`usage-rollup.json`, mode 0600, keyed by path hash) lives in the data directory and is ignored when its version or time zone differs. |
+| Usage KPIs              | `GET /api/usage?range=today\|7d\|30d` (tokens per day, office, project, model and session, plus Claude's and Codex's limit windows) and `GET /api/usage/git` (commits, merges, merged and open branches per project, office and for the building). Owner and operator only; ETag-revalidated. Transcripts are read incrementally (`services/usage-parse.ts`, `usage-stats.ts`): per file an offset, mtime, size and first-bytes signature, appended bytes only, one shared 1 MiB buffer, a turn of the event loop between chunks, at most 8192 files (`scan.truncated` and `scan.found` say when more exist; the oldest are the ones left out); a Claude message already counted by another transcript (a resumed session copies earlier messages) is counted once, and a Codex subagent's rollout counts as part of its parent session; the session list's spend and the KPI use the same parser; a request waits 400 ms at most for a scan still reading history and says `scan.complete: false`; a scan may start again after a tenth of the time the last one took (at most 3 s), and a request inside that gap waits it out when it is short, so a transcript that just appeared is counted by that request. The page refetches the usage when the session stream reports a moved transcript (at most every 5 s). A numbers-only rollup (`usage-rollup.json`, mode 0600, keyed by path hash) lives in the data directory and is ignored when its version or time zone differs. |
 | Machine and models      | `GET /api/models` (the models each CLI offers), `/api/claude-limits`, `/api/system`, and per project `git-graph` and `git-health` (`/sizes`, `/clean`) |
 | Permission requests     | Hook side (loopback, its own token): `POST /api/hook/permission-requests`, `GET .../:id` (long poll), `POST .../:id/fallback`. Person side (cookie session): `GET /api/permission-requests`, `POST .../:id/decision`, `GET`/`PUT /api/remote-approvals` |
 | Runner                  | `POST /api/machines`, `/api/runner/{enroll,heartbeat,claim,report,session-credential,jobs/*,terminals/*,observations,approvals/*}`             |
@@ -167,6 +169,28 @@ moved by the version change. Squads that are not saved are placed on the fly by 
 the side of the desk that faces the central aisle first, then the most open floor; when nothing fits (a full floor) the
 subagents keep sitting at desks of their own. The editor can add a zone, edit its anchor, size and seats, and pin the live
 squad.
+
+### Adding a layout version
+
+There are two unrelated "versions" on a layout. `layouts.version` (the table column) is an optimistic-lock counter: it
+rises by one on every save and has nothing to do with the format. `schemaVersion` inside the JSON `data` is the format, and
+`layoutSchema` (`packages/contracts/src/core.ts`) is the only gate for it: the save command validates with it, the snapshot
+parses every stored layout with it on read (`apps/control/src/services/snapshot.ts`), and the editor's import uses it.
+
+A new version 3 is added in one change, in this order:
+
+1. Make the new shape a superset: a version-2 layout must stay valid as version 3, so nothing is rewritten in the
+   database. (The version-1 to version-2 change worked this way: no stored row was migrated.)
+2. Add `z.literal(3)` to the `schemaVersion` union and a `refine` that rejects the new object type below version 3, as
+   the squad rule does for version 2. Beyond three versions, replace the union with
+   `z.number().int().min(1).max(CURRENT)` and a migration function instead of stacking literals.
+3. Extend `layoutVersionOf` (`packages/kernel/src/layout.ts`) so a layout is saved at the lowest version that can hold it.
+   A layout without the new objects then stays readable by an older server or client.
+4. Add the validation rules of the new type to the kernel's `validateLayout`, and a test that loads a stored version-1 and
+   version-2 layout and saves it unchanged.
+
+A layout that does need a version-3 reader is unreadable by an older server (the snapshot parse throws on an unknown
+version), so such a change is a breaking release and goes into the changelog as one.
 
 ## Security posture in one paragraph
 

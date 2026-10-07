@@ -105,6 +105,7 @@ it('parses what git prints, and sums repositories', () => {
       commits: [],
       baseMerges: [],
       lines: null,
+      truncated: false,
       worked: new Set(),
       openSince: [],
     },
@@ -117,11 +118,19 @@ it('parses what git prints, and sums repositories', () => {
     added30: null,
     longestOpenDays: null,
     daily: [0, 0],
+    truncated: false,
   });
   expect(sumKpis([])).toBeNull();
   const two = sumKpis([
     { ...one, openBranches: 2, longestOpenDays: 4 },
     { ...one, openBranches: 1, longestOpenDays: 9 },
   ])!;
-  expect(two).toMatchObject({ openBranches: 3, longestOpenDays: 9, added30: null });
+  expect(two).toMatchObject({
+    openBranches: 3,
+    longestOpenDays: 9,
+    added30: null,
+    truncated: false,
+  });
+  // One repository that was cut short makes every sum it is part of a lower bound.
+  expect(sumKpis([one, { ...one, truncated: true }])!.truncated).toBe(true);
 });

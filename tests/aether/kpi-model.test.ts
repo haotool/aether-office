@@ -42,7 +42,15 @@ const usage = (offices: Partial<UsageTotals>[]): UsageResponse => ({
   timezone: 'UTC',
   days: ['2026-10-05', '2026-10-06', '2026-10-07'],
   generatedAt: 0,
-  scan: { complete: true, files: 1, pending: 0 },
+  scan: {
+    complete: true,
+    files: 1,
+    pending: 0,
+    found: 1,
+    truncated: false,
+    failedFiles: 0,
+    skippedLines: 0,
+  },
   building: scope({}),
   offices: offices.map((o, floor) => ({ floor, department: `d${floor}`, scope: scope(o) })),
   unplaced: scope({}),
@@ -83,6 +91,12 @@ describe('numbers', () => {
   it('shares models out of their total', () => {
     expect(modelShares(scope({})).map((m) => m.share)).toEqual([0.75, 0.25]);
   });
+
+  it('measures a model against the scope total, not against the models that are listed', () => {
+    // 200 tokens in the scope, 100 of them under models that are not listed: the listed ones are half, not all.
+    const shares = modelShares(scope({ input: 100, output: 100 }));
+    expect(shares.map((m) => m.share)).toEqual([0.375, 0.125]);
+  });
 });
 
 describe('rate-limit windows', () => {
@@ -104,6 +118,11 @@ describe('rate-limit windows', () => {
     expect(windows.map((w) => [w.id, w.usedPercent])).toEqual([
       ['claude-5h', 40],
       ['codex-10080', 78],
+    ]);
+    // Each reading carries its age; Claude's own stale flag is passed on, Codex's is worked out from the age.
+    expect(windows.map((w) => [w.updatedAt, w.stale])).toEqual([
+      [1, false],
+      [1, null],
     ]);
     expect(windowName(300)).toEqual({ key: 'fiveHourWindow' });
     expect(windowName(10080)).toEqual({ key: 'sevenDayWindow' });
@@ -144,6 +163,7 @@ describe('floor badges', () => {
     const git = {
       enabled: true,
       days: [],
+      omittedRepos: 0,
       generatedAt: 0,
       building: null,
       projects: [],
@@ -160,6 +180,7 @@ describe('floor badges', () => {
             removed30: null,
             longestOpenDays: null,
             daily: [],
+            truncated: false,
           },
         },
       ],
@@ -193,7 +214,16 @@ describe('a control plane older than this page', () => {
     expect(fixed.building.daily[2]!.input).toBe(5); // the one day it sent is the latest
     expect(fixed.building.totals).toMatchObject({ input: 5, output: 0, requests: 0 });
     expect(fixed.offices[0]!.scope.daily).toHaveLength(3);
-    expect(fixed.scan).toEqual({ complete: true, files: 0, pending: 0 });
+    // No scan from an old server is not a complete one, and not one that cut nothing short either.
+    expect(fixed.scan).toEqual({
+      complete: false,
+      files: 0,
+      pending: 0,
+      found: 0,
+      truncated: false,
+      failedFiles: 0,
+      skippedLines: 0,
+    });
     expect(fixed.limits.codex).toBeNull();
     expect(fixed.unplaced.daily).toHaveLength(3);
     expect(fixed.projects).toEqual([]);

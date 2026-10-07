@@ -1,3 +1,4 @@
+import { MEMO_LIMIT, memoized } from './memo.js';
 import { between, seeded } from './random.js';
 import { lineText, type CodeLine } from './screen-tokens.js';
 
@@ -8,15 +9,11 @@ import { lineText, type CodeLine } from './screen-tokens.js';
  */
 export type Segment = { ms: number; cps: number };
 
-const cycles = new Map<string, { segments: Segment[]; length: number; chars: number }>();
-
 /**
  * One member's typing rhythm, as a cycle that repeats: bursts of a few seconds in short strokes (a word, a small
  * breath, a word at a slightly different speed), each followed by a pause to look at the screen.
  */
-export function typingCycle(seed: string) {
-  const hit = cycles.get(seed);
-  if (hit) return hit;
+const typingCycleOf = (seed: string) => {
   const r = seeded(`${seed}:typing`);
   const base = between(r, 5, 8); // this member's own speed, characters per second
   const segments: Segment[] = [];
@@ -31,10 +28,10 @@ export function typingCycle(seed: string) {
   }
   const length = segments.reduce((sum, s) => sum + s.ms, 0);
   const chars = segments.reduce((sum, s) => sum + (s.ms * s.cps) / 1000, 0);
-  const made = { segments, length, chars };
-  cycles.set(seed, made);
-  return made;
-}
+  return { segments, length, chars };
+};
+const cycles = new Map<string, ReturnType<typeof typingCycleOf>>();
+export const typingCycle = memoized(cycles, MEMO_LIMIT, typingCycleOf);
 
 /** How many characters a member has typed `ms` after it began, at `speed` times its own pace (1 to 2 as it works harder). */
 export function typedChars(seed: string, ms: number, speed = 1): number {

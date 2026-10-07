@@ -1,11 +1,10 @@
-import { execFile } from 'node:child_process';
 import { realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { promisify } from 'node:util';
 import { stat } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import { assignProcesses, listAgentProcesses } from './agent-processes.js';
 import { classifyLiveness, CpuWatch } from './session-liveness.js';
+import { git as readGit } from './git-health.js';
 import { readHookState } from './hook-spool.js';
 import { readClaudeTitle, readCodexTitles } from './session-title.js';
 import { mapPool } from './pool.js';
@@ -31,7 +30,6 @@ import type { AttributedSession, LocalSession } from '@aether/contracts';
 // Read-only discovery of local Claude Code / Codex sessions. Metadata only: id, cwd, mtime.
 // Transcript content is never retained or returned. Every session with a live process is shown; of the rest, the newest
 // MAX_SESSIONS.
-const run = promisify(execFile);
 export const MAX_SESSIONS = 60;
 const MAX_REPOS = 400; // every shown session's directory is classified, none is left unowned by a cap
 const GIT_BATCH = 10; // bounds concurrent git processes
@@ -61,18 +59,7 @@ export function parseGitStatus(text: string): NonNullable<LocalSession['git']> {
   };
 }
 
-async function git(cwd: string, args: string[]): Promise<string> {
-  const { stdout } = await run('git', ['-C', cwd, '-c', 'core.fsmonitor=false', ...args], {
-    timeout: 4000,
-    maxBuffer: 1024 * 1024,
-    env: {
-      PATH: process.env['PATH'] ?? '',
-      GIT_OPTIONAL_LOCKS: '0',
-      HOME: process.env['HOME'] ?? '',
-    },
-  });
-  return stdout;
-}
+const git = (cwd: string, args: string[]) => readGit(cwd, args, 4000, 1024 * 1024);
 
 type RepoInfo = { git: LocalSession['git']; worktree: LocalSession['worktree'] };
 
@@ -131,7 +118,9 @@ async function repoInfo(cwd: string, now: number): Promise<RepoInfo> {
 const hookSpoolFile = () =>
   process.env['AETHER_HOOK_SPOOL'] ?? join(homedir(), '.aether', 'hook-events.jsonl');
 
-let cache: { at: number; value: LocalSession[] } | null = null;
+// What the latest scan found, for the home and spool it read; a scan still running is shared by whoever asks meanwhile.
+let cache: { key: string; at: number; value: LocalSession[] } | null = null;
+let inflight: { key: string; scan: Promise<LocalSession[]> } | null = null;
 // Which transcript each session key was found in by the latest scan. The only way a transcript is opened.
 let files = new Map<string, { provider: 'claude' | 'codex'; file: string }>();
 export const sessionFile = (key: string) => files.get(key) ?? null;
@@ -144,7 +133,22 @@ export async function scanLocalSessions(
   ttlMs = 5000,
   spoolFile = hookSpoolFile(),
 ): Promise<LocalSession[]> {
-  if (cache && now - cache.at < ttlMs) return cache.value;
+  const key = `${home}\0${spoolFile}`;
+  if (cache?.key === key && now - cache.at < ttlMs) return cache.value;
+  if (inflight?.key === key) return inflight.scan;
+  const scan = scanOnce(home, now, spoolFile, key).finally(() => {
+    if (inflight?.scan === scan) inflight = null;
+  });
+  inflight = { key, scan };
+  return scan;
+}
+
+async function scanOnce(
+  home: string,
+  now: number,
+  spoolFile: string,
+  key: string,
+): Promise<LocalSession[]> {
   // Processes first: they decide which sessions are shown. A no-ps host says 'unknown', never 'none'.
   const [found, live] = await Promise.all([
     discoverRaw(home, now),
@@ -299,11 +303,12 @@ export async function scanLocalSessions(
       return pid ? [[`${r.provider}:${r.sessionId}`, pid] as const] : [];
     }),
   );
-  cache = { at: now, value };
+  cache = { key, at: now, value };
   return value;
 }
 export const resetLocalSessionCache = () => {
   cache = null;
+  inflight = null;
   identities.clear();
   statuses.clear();
   resetDiscoveryCache();

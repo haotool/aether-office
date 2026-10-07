@@ -1,10 +1,12 @@
 import { memo, type ReactNode } from 'react';
+import { formatAgo } from '@aether/kernel';
 import { ProviderMark, contextLevel } from '@aether/office-scene/model';
 import { usePreferences } from '../state.js';
 import { useT } from '../ui.js';
 import { Avatar } from './Avatar.js';
 import { FEED_AVATAR_STATE } from './feed-avatar.js';
-import { ago, noReplyKey, type FeedItem } from './feed-model.js';
+import { contextLabel } from './context-label.js';
+import { noReplyKey, type FeedItem } from './feed-model.js';
 
 /** What a session's row says: who, the newest thing it said, what it is doing, how long ago. `extra` goes under the meta line. */
 export function FeedRowBody({ item, extra }: { item: FeedItem; extra?: ReactNode }) {
@@ -31,7 +33,7 @@ export function FeedRowBody({ item, extra }: { item: FeedItem; extra?: ReactNode
           <ProviderMark provider={item.session.provider} />
           <strong title={item.session.title ?? item.label}>{item.label}</strong>
           {item.unread && <i className="unread-dot" role="img" aria-label={t('feedUnread')} />}
-          <time className="feed-time">{ago(Date.now() - item.at, locale)}</time>
+          <time className="feed-time">{formatAgo(Date.now() - item.at, locale)}</time>
         </span>
         <span className="feed-meta">
           {item.where && (
@@ -59,7 +61,7 @@ export function FeedRowBody({ item, extra }: { item: FeedItem; extra?: ReactNode
             aria-valuemax={100}
             aria-valuenow={Math.round(context)}
             data-level={contextLevel(context)}
-            title={`${t('convContext')} ${Math.round(context)}%`}
+            title={contextLabel(item.session.usage, t, locale) ?? undefined}
           >
             <i style={{ width: `${context}%` }} />
           </span>

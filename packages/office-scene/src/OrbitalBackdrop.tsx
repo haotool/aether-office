@@ -1,4 +1,5 @@
 import { useMemo, useEffect } from 'react';
+import { earthTextureSize } from './perf-control.js';
 import {
   AdditiveBlending,
   BackSide,
@@ -81,12 +82,16 @@ const continents = [
     [44, -25],
   ],
 ];
-function earthTexture() {
+/** Painted in a 2048 x 1024 space whatever the canvas size (`small` halves it, see `earthTextureSize`), so the picture is the same. */
+function earthTexture(small: boolean) {
+  const { width, height } = earthTextureSize(small);
   const canvas = document.createElement('canvas');
-  canvas.width = 2048;
-  canvas.height = 1024;
+  canvas.width = width;
+  canvas.height = height;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('CANVAS_TEXTURE_UNAVAILABLE');
+  const scale = width / 2048;
+  ctx.scale(scale, scale);
   const ocean = ctx.createLinearGradient(0, 0, 0, 1024);
   ocean.addColorStop(0, '#315867');
   ocean.addColorStop(0.45, '#123b51');
@@ -104,7 +109,7 @@ function earthTexture() {
     ctx.closePath();
     ctx.fillStyle = '#758976';
     ctx.shadowColor = '#779e99';
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = 12 * scale; // not scaled by the transform
     ctx.fill();
     ctx.shadowBlur = 0;
   }
@@ -156,7 +161,7 @@ const NEBULAE = [
 ] as const;
 
 export function OrbitalBackdrop({ low }: { low: boolean }) {
-  const texture = useMemo(earthTexture, []);
+  const texture = useMemo(() => earthTexture(low), [low]);
   const glows = useMemo(() => NEBULAE.map((n) => glowTexture(n.color, 'rgba(0,0,0,0)')), []);
   const stars = useMemo(() => {
     const geometry = new BufferGeometry();

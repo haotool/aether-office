@@ -7,8 +7,8 @@ import type { ParseState } from './usage-parse.js';
 // store is bounded, and a small copy of it lives in the data directory so a restart need not read history again.
 
 /** Bump when the parser or the shape of the state changes: an older rollup is then ignored and rebuilt. */
-export const ROLLUP_VERSION = 3;
-export const MAX_TRACKED_FILES = 4000;
+export const ROLLUP_VERSION = 4;
+export const MAX_TRACKED_FILES = 8192;
 
 export type Entry = {
   state: ParseState;
@@ -18,8 +18,12 @@ export type Entry = {
   size: number;
   /** The file's first bytes: a different start means the file was rewritten, not appended to. */
   sig: string;
+  /** The bytes just before `offset`: a file rewritten in place with the same start and a larger size is not an append. */
+  tail: string;
   /** Repository folder the transcript's session ran in, when known. */
   repo: string | null;
+  /** Codex: the id of the session that spawned this rollout, whose subagent it is; counted as part of that session. */
+  parent?: string | null;
 };
 
 export const keyOf = (file: string) => createHash('sha1').update(file).digest('hex').slice(0, 16);
@@ -35,6 +39,7 @@ const isEntry = (e: unknown): e is Entry => {
     typeof entry.mtime === 'number' &&
     typeof entry.size === 'number' &&
     typeof entry.sig === 'string' &&
+    typeof entry.tail === 'string' &&
     typeof entry.state === 'object' &&
     entry.state !== null &&
     typeof entry.state.days === 'object'

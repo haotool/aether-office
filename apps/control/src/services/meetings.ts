@@ -54,26 +54,6 @@ export function startMeeting(ctx: Context, actor: Actor, c: Start) {
   return { threadId: opening.threadId, roomId: room.id, maxRounds: c.data.maxRounds, deadlineAt };
 }
 
-/** Enforced on every send into a meeting thread. Humans may always conclude; agents are bounded. */
-export function assertMeetingOpen(
-  ctx: Context,
-  projectId: string,
-  threadId: string,
-  rounds: number,
-  actor: Actor,
-) {
-  const meeting = ctx.sqlite
-    .prepare(
-      'SELECT maxRounds,deadlineAt,concludedAt FROM meetings WHERE threadId=? AND projectId=?',
-    )
-    .get(threadId, projectId) as
-    Pick<MeetingRow, 'maxRounds' | 'deadlineAt' | 'concludedAt'> | undefined;
-  if (!meeting || !actor.agentId) return; // not a meeting, or a human speaking
-  if (meeting.concludedAt || ctx.now() > meeting.deadlineAt)
-    throw new DomainError('MEETING_CLOSED', 409);
-  if (rounds >= meeting.maxRounds) throw new DomainError('MEETING_ROUND_LIMIT', 409);
-}
-
 /** Records the outcome as a knowledge proposal whose provenance is the meeting's own messages. */
 export function concludeMeeting(ctx: Context, actor: Actor, c: Conclude) {
   const meeting = ctx.sqlite

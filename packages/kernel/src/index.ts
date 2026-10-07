@@ -179,15 +179,8 @@ export const GRANTS: Record<Role, readonly Action[]> = {
   ],
   runner: ['read', 'runner.report', 'work.verify'],
 };
-export class DomainError extends Error {
-  constructor(
-    public readonly code: string,
-    public readonly status = 409,
-  ) {
-    super(code);
-    this.name = 'DomainError';
-  }
-}
+export { DomainError } from './errors.js';
+import { DomainError } from './errors.js';
 export function authorize(actor: Actor, action: Action, projectId?: string): void {
   if (!GRANTS[actor.role].includes(action)) throw new DomainError('FORBIDDEN', 403);
   if (projectId && !actor.projectIds.includes(projectId) && !actor.projectIds.includes('*'))
@@ -374,3 +367,4 @@ export {
   type LabelOptions,
 } from './text-title.js';
 export { balanceBrackets } from './text-brackets.js';
+export { DAY_MS, HOUR_MS, MINUTE_MS, formatAgo, formatSpan } from './time.js';

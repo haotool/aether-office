@@ -1,5 +1,9 @@
 import { expect, it } from 'vitest';
-import type { LocalSession } from '../../packages/contracts/src/index.js';
+import {
+  SESSION_ACTIVE_MS,
+  SESSION_GONE_MS,
+  type LocalSession,
+} from '../../packages/contracts/src/index.js';
 import { activityOf } from '../../apps/web/src/localSessions.js';
 
 const NOW = 10_000_000;
@@ -57,4 +61,19 @@ it('derives activity from hooks first, then the process table, then file age, an
   expect(activityOf(session({ process: 'none' }), NOW)).toBe('idle');
   expect(activityOf(session({ process: 'none', mtime: NOW - 11 * 60_000 }), NOW)).toBe('offline');
   expect(activityOf(session({ process: 'running', mtime: NOW - 11 * 60_000 }), NOW)).toBe('idle');
+});
+
+it('shares its thresholds with the server: the working window and the gone window sit on the same constants', () => {
+  const edge = (over: Partial<LocalSession>, ms: number) =>
+    activityOf(session({ ...over, mtime: NOW - ms }), NOW);
+  // [process, ms quiet, expected]: one row either side of each boundary
+  const rows: [LocalSession['process'], number, string][] = [
+    ['running', SESSION_ACTIVE_MS - 1, 'working'],
+    ['running', SESSION_ACTIVE_MS, 'idle'],
+    ['none', SESSION_GONE_MS - 1, 'idle'],
+    ['none', SESSION_GONE_MS, 'offline'],
+  ];
+  for (const [process, ms, expected] of rows) expect(edge({ process }, ms)).toBe(expected);
+  expect(SESSION_ACTIVE_MS).toBe(120_000);
+  expect(SESSION_GONE_MS).toBe(600_000);
 });

@@ -20,6 +20,7 @@ import {
   type AgentProcess,
   type ProcessRow,
 } from '../../apps/control/src/services/agent-processes.js';
+import { eventually } from './timing.js';
 
 const UUID = '374456c6-9009-4372-ac17-4aa8f7535e70';
 
@@ -190,9 +191,11 @@ it('finds a real running agent process and its working directory through ps and 
     stdio: 'ignore',
   });
   try {
-    await new Promise((r) => setTimeout(r, 400));
-    const { processes } = await listAgentProcesses();
-    expect(processes.find((p) => p.pid === child.pid)).toMatchObject({
+    const found = await eventually(async () => {
+      const { processes } = await listAgentProcesses();
+      return processes.find((p) => p.pid === child.pid && p.cwd === work);
+    });
+    expect(found).toMatchObject({
       provider: 'claude',
       cwd: work,
     });
@@ -253,7 +256,9 @@ it('sees a real zombie as <defunct> with no name or directory, and attributes it
     { stdio: 'ignore' },
   );
   try {
-    await new Promise((r) => setTimeout(r, 1200));
+    await eventually(async () =>
+      (await readProcessTable()).some((row) => row.ppid === parent.pid && row.stat.startsWith('Z')),
+    );
     const table = await readProcessTable();
     const zombie = table.find((row) => row.ppid === parent.pid && row.stat.startsWith('Z'));
     expect(zombie).toBeDefined();

@@ -1,4 +1,4 @@
-import { spawn, execFileSync, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { StringDecoder } from 'node:string_decoder';
 import { z } from 'zod';
 import type { RunCommand, Activity } from '@aether/contracts';
@@ -24,18 +24,8 @@ const fixtureLine = z.discriminatedUnion('type', [
     summary: z.string().max(32000),
   }),
 ]);
-/** How long a provider CLI gets to answer `--version`. A slow start on a busy machine (over three seconds at a load
- * average of 18) is not a missing binary. */
-export const VERSION_PROBE_MS = 10_000;
-export function processIdentity(child: Pick<ChildProcessWithoutNullStreams, 'pid'>): string {
-  if (!child.pid) throw new Error('PROCESS_NOT_SPAWNED');
-  const birth = execFileSync('ps', ['-p', String(child.pid), '-o', 'lstart='], {
-    encoding: 'utf8',
-    timeout: 2000,
-  }).trim();
-  if (!birth) throw new Error('PROCESS_IDENTITY_UNAVAILABLE');
-  return `${child.pid}:${birth}`;
-}
+import { processIdentity } from './process-identity.js';
+export { VERSION_PROBE_MS, processIdentity } from './process-identity.js';
 export async function runFixture(
   command: RunCommand,
   sink: ProviderSink,

@@ -1,7 +1,10 @@
 import { authenticateA2AClient } from '../services/a2a-clients.js';
 import { handleGithubWebhook, syncConnection } from '../services/integrations.js';
+import { MAX_ATTEMPTS, pruneAttempts } from '../services/attempts.js';
 import { DomainError, authorize } from '@aether/kernel';
 import type { RouteContext } from './context.js';
+
+const WEBHOOK_PER_MINUTE = 120;
 
 /** Connectors to the outside: integration sync, GitHub webhooks and the A2A gateway. */
 export function externalRoutes({ app, control, actor, options, attempts }: RouteContext) {
@@ -65,6 +68,20 @@ export function externalRoutes({ app, control, actor, options, attempts }: Route
     scope.addContentTypeParser('application/json', { parseAs: 'buffer' }, (_request, body, done) =>
       done(null, body),
     );
+    // Every call counts, valid or not: GitHub sends a few a minute, so this only bounds a flood from one address.
+    scope.addHook('onRequest', async (request) => {
+      const key = `webhook:${request.ip}`;
+      const now = control.ctx.now();
+      const last = attempts.get(key);
+      const live = last !== undefined && last.until > now;
+      if (live && last.count >= WEBHOOK_PER_MINUTE)
+        throw new DomainError('WEBHOOK_RATE_LIMIT', 429);
+      if (attempts.size >= MAX_ATTEMPTS) pruneAttempts(attempts, now);
+      attempts.set(key, {
+        count: live ? last.count + 1 : 1,
+        until: live ? last.until : now + 60_000,
+      });
+    });
     scope.post<{ Params: { integrationId: string } }>(
       '/api/webhooks/github/:integrationId',
       async (request) =>

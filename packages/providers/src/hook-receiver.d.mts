@@ -20,3 +20,4 @@ export function toRecord(
 
 export function outcomeOf(provider: 'claude' | 'codex', payload: unknown): boolean | undefined;
 export function targetOf(input: unknown): string | undefined;
+export function append(record: object, file?: string): void;

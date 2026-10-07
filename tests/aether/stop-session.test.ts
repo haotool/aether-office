@@ -1,12 +1,10 @@
-import { spawn } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { readProcessTable } from '../../apps/control/src/services/agent-processes.js';
 import { stopLocalSession, stopProcess } from '../../apps/control/src/services/stop-session.js';
 import type { LocalSession } from '../../packages/contracts/src/index.js';
-import { alive, sleep, until } from './process-fixtures.js';
+import { alive, startReady, until } from './process-fixtures.js';
 
-const run = (script = 'setInterval(()=>{},1000)') =>
-  spawn(process.execPath, ['-e', script], { stdio: 'ignore' });
+const run = (script = 'setInterval(()=>{},1000)') => startReady(script);
 const startOf = async (pid: number) =>
   (await readProcessTable()).find((r) => r.pid === pid)!.startedAt;
 const session = (
@@ -23,8 +21,7 @@ const session = (
 
 describe('stopping a process by pid and start', () => {
   it('ends a process that is the one named, and reports one that has already gone', async () => {
-    const child = run();
-    await sleep(300);
+    const child = await run();
     const startedAt = await startOf(child.pid!);
     expect(await stopProcess(child.pid!, startedAt, 3000)).toBe('stopped');
     expect(await until(() => !alive(child.pid!))).toBe(true);
@@ -32,10 +29,9 @@ describe('stopping a process by pid and start', () => {
   }, 20000);
 
   it('does not touch a process whose pid now belongs to another life, and says when it will not end', async () => {
-    const child = run();
-    const stubborn = run("process.on('SIGTERM',()=>{});setInterval(()=>{},1000)");
+    const child = await run();
+    const stubborn = await run("process.on('SIGTERM',()=>{});setInterval(()=>{},1000)");
     try {
-      await sleep(400);
       const startedAt = await startOf(child.pid!);
       expect(await stopProcess(child.pid!, startedAt + 5000, 500)).toBe('changed');
       expect(alive(child.pid!)).toBe(true);
@@ -52,9 +48,8 @@ describe('stopping a process by pid and start', () => {
 
 describe('stopping the process behind a session', () => {
   it('refuses unless the session is dormant or orphaned, is still the process the person saw, and is not above the server', async () => {
-    const child = run();
+    const child = await run();
     try {
-      await sleep(300);
       const startedAt = await startOf(child.pid!);
       const stop = (
         s: LocalSession | undefined,

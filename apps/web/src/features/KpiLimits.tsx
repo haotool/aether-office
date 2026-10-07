@@ -1,15 +1,24 @@
 import type { UsageResponse } from '@aether/contracts';
 import { usePreferences } from '../state.js';
 import { useT } from '../ui.js';
+import { formatSpan } from '../localSessions.js';
 import { when } from './ClaudeQuota.js';
 import { Ring } from './kpi-charts.js';
-import { limitWindows, resetsIn, windowName } from './kpi-model.js';
+import { LIMIT_STALE_MS, limitWindows, resetsIn, windowName } from './kpi-model.js';
 
 /**
  * Claude's and Codex's rate-limit windows as rings: percent used, the reset as a countdown and a clock time. Account-wide,
  * not per office. A provider with no reading says so rather than showing a figure it does not have.
  */
-export function KpiLimits({ limits, now }: { limits: UsageResponse['limits']; now: number }) {
+export function KpiLimits({
+  limits,
+  now,
+  timeZone,
+}: {
+  limits: UsageResponse['limits'];
+  now: number;
+  timeZone: string;
+}) {
   const t = useT();
   const locale = usePreferences((s) => s.locale);
   const windows = limitWindows(limits);
@@ -24,8 +33,10 @@ export function KpiLimits({ limits, now }: { limits: UsageResponse['limits']; no
           {windows.map((w) => {
             const name = windowName(w.minutes);
             const left = resetsIn(w.resetsAt, now, locale);
+            const age = Math.max(0, now - w.updatedAt);
+            const stale = w.stale ?? age > LIMIT_STALE_MS;
             return (
-              <li key={w.id}>
+              <li key={w.id} className={stale ? 'stale' : undefined}>
                 <Ring percent={w.usedPercent} />
                 <span className="ring-text">
                   <b>
@@ -34,7 +45,11 @@ export function KpiLimits({ limits, now }: { limits: UsageResponse['limits']; no
                   </b>
                   <small>
                     {left ? `${t('kpiResetsIn')} ${left}` : t('kpiResetUnknown')}
-                    {w.resetsAt ? ` · ${when(w.resetsAt)}` : ''}
+                    {w.resetsAt ? ` · ${when(w.resetsAt, timeZone)}` : ''}
+                  </small>
+                  <small>
+                    {t('kpiReadAge')} {formatSpan(age, locale)}
+                    {stale ? ` · ${t('kpiLimitStale')}` : ''}
                   </small>
                 </span>
               </li>

@@ -10,7 +10,8 @@ import {
   type ProviderEvent,
 } from './protocol.js';
 import { assertClaudeVersion } from './compat.js';
-import { processIdentity, VERSION_PROBE_MS, type ProviderResult } from './index.js';
+import { processIdentity, VERSION_PROBE_MS } from './process-identity.js';
+import type { ProviderResult } from './index.js';
 export function normalizeClaudeMessage(input: unknown, turnId: string): ProviderEvent[] {
   const m = record(input);
   const out: ProviderEvent[] = [];

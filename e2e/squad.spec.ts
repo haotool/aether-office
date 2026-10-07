@@ -131,7 +131,7 @@ test.describe('hand-over', () => {
   test('with the relation effects off a finished subagent just leaves', async ({ page }) => {
     await enter(page, 'squad=1&leave=3000&relation=0');
     await expect(LOG(page)).toContainText('left the squad', { timeout: 45000 });
-    await page.waitForTimeout(8000);
+    await page.waitForTimeout(8000); // a negative wait: with the relation effects off the hand-over must never be announced
     await expect(LOG(page)).not.toContainText('handed over');
   });
 

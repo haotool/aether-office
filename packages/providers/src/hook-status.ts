@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { APP_VERSION } from '@aether/contracts';
 import { APPROVAL_TAG, HOOK_MARKER, eventsFor } from './claude-hooks.js';
 import { JsonRpcProcess } from './jsonrpc.js';
 
@@ -74,7 +75,7 @@ export async function codexHookTrust(
     await rpc.ready;
     await rpc.request(
       'initialize',
-      { clientInfo: { name: 'aether_office', title: 'AETHER OFFICE', version: '0.4.0-dev.0' } },
+      { clientInfo: { name: 'aether_office', title: 'AETHER OFFICE', version: APP_VERSION } },
       timeoutMs,
     );
     rpc.notify('initialized');

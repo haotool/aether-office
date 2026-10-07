@@ -4,7 +4,7 @@ import type { Schedule } from '@aether/contracts';
 import { api, execute } from '../api.js';
 import type { Key } from '../i18n.js';
 import { usePreferences } from '../state.js';
-import { Field, useT } from '../ui.js';
+import { Field, useT, whyNot } from '../ui.js';
 
 /** Short weekday names (Sunday first, as the schedule numbers them) in the person's language. */
 function weekdays(locale: string): string[] {
@@ -56,6 +56,7 @@ export function Schedules({ projectId, canManage }: { projectId: string; canMana
             </small>{' '}
             <button
               disabled={!canManage}
+              {...whyNot(canManage, t('needOwner'))}
               onClick={() =>
                 run(() =>
                   execute(

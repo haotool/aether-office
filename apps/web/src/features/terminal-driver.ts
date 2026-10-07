@@ -17,12 +17,20 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 /** Runs `task` after every earlier task of the same terminal: two messages never interleave their writes. */
 export function serialized<T>(terminalId: string, task: () => Promise<T>): Promise<T> {
   const run = (chains.get(terminalId) ?? Promise.resolve()).then(task, task);
-  chains.set(
-    terminalId,
-    run.catch(() => undefined),
+  const tail = run.then(
+    () => undefined,
+    () => undefined,
   );
+  chains.set(terminalId, tail);
+  // A drained queue is forgotten, so the map does not grow with every terminal ever driven.
+  void tail.then(() => {
+    if (chains.get(terminalId) === tail) chains.delete(terminalId);
+  });
   return run;
 }
+
+/** How many terminals have sends still queued. */
+export const pendingChains = () => chains.size;
 
 /** Pure. Is the terminal under another person's lease? */
 export const heldByOther = (c: TerminalControl, userId: string, now: number): boolean =>

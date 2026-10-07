@@ -1,9 +1,9 @@
 # Orca 唯讀 3D 辦公室視圖：可行性研究（方案 B）
 
 日期：2026-10-07。性質：唯讀研究，未改任何程式碼，未執行 Orca，未連網。
-範圍：Orca 本機 clone（`.research/orca`，commit `373d951b`，2026-09-30，`package.json:3` 版本 1.4.214）；本 repo 為 AETHER OFFICE。
+範圍：Orca 本機 clone（https://github.com/stablyai/orca，MIT，commit `373d951b`，2026-09-30，`package.json:3` 版本 1.4.214）；本 repo 為 AETHER OFFICE。
 標記：**[已驗證]** 讀過程式碼或文件原文；**[推論]** 由程式碼合理推得但未執行；**[未知]** 需實測。
-下文 `orca:` 前綴指 `.research/orca/`。這個 clone 只有 1 個 commit（淺層），無法從 git log 量測更新頻率。
+下文 `orca:` 前綴指該 clone 的根目錄（不在本 repo；用 `git clone --depth 1` 取得後 `git fetch --depth 1 origin <完整 SHA>` 並 checkout，完整 SHA 在 `docs/research/repo-selection-2026-10-01/matrix.json` 的 `localSha`）。這個 clone 只有 1 個 commit（淺層），無法從 git log 量測更新頻率。
 
 ## 1. 結論先行
 

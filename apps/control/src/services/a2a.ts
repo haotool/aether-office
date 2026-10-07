@@ -9,7 +9,7 @@ import {
   type RequestContext,
   type TaskStore,
 } from '@a2a-js/sdk/server';
-import type { Command } from '@aether/contracts';
+import { APP_VERSION, type Command } from '@aether/contracts';
 import { DomainError } from '@aether/kernel';
 import type { Control } from '../control.js';
 import { identityActor } from './identity.js';
@@ -96,7 +96,7 @@ export class A2AGateway {
       name: 'AETHER OFFICE',
       description:
         'Submit work to a local AETHER OFFICE project. Requests become unassigned work items that a human assigns and accepts.',
-      version: '0.4.0-dev.0',
+      version: APP_VERSION,
       supportedInterfaces: [
         { url: `${publicUrl}/a2a`, protocolBinding: 'JSONRPC', protocolVersion: '1.0' },
       ],
