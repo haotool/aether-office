@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
 /** Remote approvals: a Claude Code permission prompt answered from the panel (see docs/security.md). */
-export const PERMISSION_STATES = ['pending', 'allowed', 'denied', 'expired', 'fallback'] as const;
+const PERMISSION_STATES = ['pending', 'allowed', 'denied', 'expired', 'fallback'] as const;
 export type PermissionState = (typeof PERMISSION_STATES)[number];
 
-export const PERMISSION_MESSAGE_MAX = 300;
+const PERMISSION_MESSAGE_MAX = 300;
 export const permissionDecisionSchema = z
   .object({
     decision: z.enum(['allow', 'deny', 'allow_session']),

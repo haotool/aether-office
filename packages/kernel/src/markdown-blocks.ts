@@ -6,7 +6,7 @@ import { neutralizeHtml } from './text-html.js';
  * quotes, rules and fenced code (an unclosed fence runs to the end, as in a reply that is still streaming). Output is
  * data for a renderer to turn into elements, so nothing a reply says is ever HTML.
  */
-export type Align = 'left' | 'center' | 'right' | null;
+type Align = 'left' | 'center' | 'right' | null;
 export type ListItem = { checked: boolean | null; blocks: MdBlock[] };
 export type MdBlock =
   | { type: 'paragraph'; inline: Span[] }
@@ -26,7 +26,12 @@ const TASK = /^\[([ xX])\]\s+(.*)$/;
 const QUOTE = /^\s{0,3}>\s?(.*)$/;
 const TABLE_RULE = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/;
 
-const indentOf = (line: string) => /^\s*/.exec(line.replace(/\t/g, '    '))![0].length;
+const indentOf = (line: string) => {
+  const spaced = line.replace(/\t/g, '    ');
+  return spaced.length - spaced.trimStart().length;
+};
+/** The line at `i`; blocks only ask inside the bounds they just checked. */
+const lineAt = (lines: string[], i: number) => lines[i] ?? '';
 const marker = (line: string) => BULLET.exec(line) ?? NUMBERED.exec(line);
 
 function cells(line: string): string[] {
@@ -40,28 +45,28 @@ const alignOf = (cell: string): Align =>
   /^:-+:$/.test(cell) ? 'center' : /-:$/.test(cell) ? 'right' : /^:-/.test(cell) ? 'left' : null;
 
 /** The list that starts at `lines[at]`: its items (with their nested blocks) and the index just past it. */
-function readList(lines: string[], at: number): { block: MdBlock; next: number } {
-  const first = marker(lines[at]!)!;
-  const ordered = NUMBERED.test(lines[at]!) && !BULLET.test(lines[at]!);
-  const base = indentOf(lines[at]!);
+function readList(
+  lines: string[],
+  at: number,
+  first: RegExpExecArray,
+): { block: MdBlock; next: number } {
+  const ordered = NUMBERED.test(lineAt(lines, at)) && !BULLET.test(lineAt(lines, at));
+  const base = indentOf(lineAt(lines, at));
   const items: ListItem[] = [];
   let i = at;
   while (i < lines.length) {
-    const head = marker(lines[i]!);
-    if (
-      !head ||
-      indentOf(lines[i]!) !== base ||
-      (NUMBERED.test(lines[i]!) && !BULLET.test(lines[i]!)) !== ordered
-    )
+    const line = lineAt(lines, i);
+    const head = marker(line);
+    if (!head || indentOf(line) !== base || (NUMBERED.test(line) && !BULLET.test(line)) !== ordered)
       break;
-    let text = ordered ? head[3]! : head[2]!;
+    let text = (ordered ? head[3] : head[2]) ?? '';
     const task = ordered ? null : TASK.exec(text);
-    if (task) text = task[2]!;
+    if (task) text = task[2] ?? '';
     const body = [text];
     let j = i + 1;
     // The item continues over lines indented deeper than its marker, and over blank lines between them.
     while (j < lines.length) {
-      const line = lines[j]!;
+      const line = lineAt(lines, j);
       if (line.trim() === '') {
         const ahead = lines.slice(j).find((l) => l.trim() !== '');
         if (ahead === undefined || indentOf(ahead) <= base) break;
@@ -79,13 +84,77 @@ function readList(lines: string[], at: number): { block: MdBlock; next: number }
     i = j;
     while (
       i < lines.length &&
-      lines[i]!.trim() === '' &&
+      lineAt(lines, i).trim() === '' &&
       marker(lines.slice(i).find((l) => l.trim() !== '') ?? '')
     )
       i++;
   }
   const start = ordered ? Number(first[2]) : 1;
   return { block: { type: 'list', ordered, start, items }, next: i };
+}
+
+type Read = { block: MdBlock; next: number };
+
+/** The fenced code that opens at `lines[at]`; an unclosed fence runs to the end. */
+function readFence(lines: string[], at: number, fence: RegExpExecArray): Read {
+  const ticks = fence[1] ?? '';
+  const lang = fence[2];
+  const code: string[] = [];
+  const closer = new RegExp(`^\\s{0,3}${ticks.charAt(0)}{${ticks.length},}\\s*$`);
+  let i = at + 1;
+  for (; i < lines.length && !closer.test(lineAt(lines, i)); i++) code.push(lineAt(lines, i));
+  return { block: { type: 'code', text: code.join('\n'), ...(lang ? { lang } : {}) }, next: i + 1 };
+}
+
+/** The run of `>` lines that starts at `lines[at]`, parsed as blocks of their own. */
+function readQuote(lines: string[], at: number): Read {
+  const quoted: string[] = [];
+  let i = at;
+  for (; i < lines.length && QUOTE.test(lineAt(lines, i)); i++)
+    quoted.push(QUOTE.exec(lineAt(lines, i))?.[1] ?? '');
+  return { block: { type: 'quote', blocks: parseBlocks(quoted) }, next: i };
+}
+
+/** The table whose header is `lines[at]` and whose rule line is `rule`. */
+function readTable(lines: string[], at: number, rule: string): Read {
+  const head = cells(lineAt(lines, at));
+  const rows: Span[][][] = [];
+  let i = at + 2;
+  for (
+    ;
+    i < lines.length && lineAt(lines, i).includes('|') && lineAt(lines, i).trim() !== '';
+    i++
+  ) {
+    const row = cells(lineAt(lines, i));
+    rows.push(head.map((_, c) => parseInline(row[c] ?? '')));
+  }
+  const block: MdBlock = {
+    type: 'table',
+    head: head.map((c) => parseInline(c)),
+    align: cells(rule).map(alignOf),
+    rows,
+  };
+  return { block, next: i };
+}
+
+/** The block that starts at `lines[i]`, or null when it is a plain paragraph line. */
+function readBlock(lines: string[], i: number): Read | null {
+  const line = lineAt(lines, i);
+  const fence = FENCE.exec(line);
+  if (fence) return readFence(lines, i, fence);
+  const heading = HEADING.exec(line);
+  if (heading) {
+    const inline = parseInline(heading[2] ?? '');
+    return { block: { type: 'heading', level: (heading[1] ?? '').length, inline }, next: i + 1 };
+  }
+  if (RULE.test(line)) return { block: { type: 'rule' }, next: i + 1 };
+  if (QUOTE.test(line)) return readQuote(lines, i);
+  const head = marker(line);
+  if (head) return readList(lines, i, head);
+  const rule = lines[i + 1];
+  if (line.includes('|') && rule !== undefined && rule.includes('-') && TABLE_RULE.test(rule))
+    return readTable(lines, i, rule);
+  return null;
 }
 
 function parseBlocks(lines: string[]): MdBlock[] {
@@ -99,76 +168,21 @@ function parseBlocks(lines: string[]): MdBlock[] {
     paragraph = [];
   };
   for (let i = 0; i < lines.length;) {
-    const line = lines[i]!;
-    const fence = FENCE.exec(line);
-    if (fence) {
-      flush();
-      const ticks = fence[1]!;
-      const lang = fence[2];
-      const code: string[] = [];
-      for (
-        i++;
-        i < lines.length &&
-        !new RegExp(`^\\s{0,3}${ticks[0]}{${ticks.length},}\\s*$`).test(lines[i]!);
-        i++
-      )
-        code.push(lines[i]!);
-      blocks.push({ type: 'code', text: code.join('\n'), ...(lang ? { lang } : {}) });
-      i++;
-      continue;
-    }
+    const line = lineAt(lines, i);
     if (line.trim() === '') {
       flush();
       i++;
       continue;
     }
-    const heading = HEADING.exec(line);
-    if (heading) {
-      flush();
-      blocks.push({ type: 'heading', level: heading[1]!.length, inline: parseInline(heading[2]!) });
+    const read = readBlock(lines, i);
+    if (!read) {
+      paragraph.push(line.trim());
       i++;
       continue;
     }
-    if (RULE.test(line)) {
-      flush();
-      blocks.push({ type: 'rule' });
-      i++;
-      continue;
-    }
-    if (QUOTE.test(line)) {
-      flush();
-      const quoted: string[] = [];
-      for (; i < lines.length && QUOTE.test(lines[i]!); i++)
-        quoted.push(QUOTE.exec(lines[i]!)![1]!);
-      blocks.push({ type: 'quote', blocks: parseBlocks(quoted) });
-      continue;
-    }
-    if (marker(line)) {
-      flush();
-      const { block, next } = readList(lines, i);
-      blocks.push(block);
-      i = next;
-      continue;
-    }
-    const rule = lines[i + 1];
-    if (line.includes('|') && rule !== undefined && rule.includes('-') && TABLE_RULE.test(rule)) {
-      flush();
-      const head = cells(line);
-      const rows: Span[][][] = [];
-      for (i += 2; i < lines.length && lines[i]!.includes('|') && lines[i]!.trim() !== ''; i++) {
-        const row = cells(lines[i]!);
-        rows.push(head.map((_, c) => parseInline(row[c] ?? '')));
-      }
-      blocks.push({
-        type: 'table',
-        head: head.map((c) => parseInline(c)),
-        align: cells(rule).map(alignOf),
-        rows,
-      });
-      continue;
-    }
-    paragraph.push(line.trim());
-    i++;
+    flush();
+    blocks.push(read.block);
+    i = read.next;
   }
   flush();
   return blocks;

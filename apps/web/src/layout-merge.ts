@@ -10,7 +10,7 @@ import {
 } from '@aether/office-scene/model';
 import { SUBAGENT_INFIX, parentOf } from './subagent-id.js';
 
-export type MergeOptions = {
+type MergeOptions = {
   /**
    * Seat subagents in their supervisor's squad zone instead of at desks of their own: a subagent whose zone fits beside
    * its parent gets no desk (the zone seats it); one whose zone does not fit keeps a desk, as before squads existed.

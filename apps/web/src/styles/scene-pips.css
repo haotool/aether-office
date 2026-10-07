@@ -3,8 +3,8 @@
 .pip-wall {
   position: absolute;
   z-index: var(--z-hud-chip);
-  right: 16px;
-  bottom: 44px;
+  right: 16px; /* token-lint: geometry */
+  bottom: 44px; /* token-lint: geometry */
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -33,11 +33,11 @@
 .pip-bar i,
 .pip-cam::before {
   flex: none;
-  width: 6px;
-  height: 6px;
+  width: 6px; /* token-lint: geometry */
+  height: 6px; /* token-lint: geometry */
   border-radius: 50%;
   background: var(--red);
-  animation: rec 1.6s ease-in-out infinite;
+  animation: rec 1.6s ease-in-out infinite; /* token-lint: loop */
 }
 .pip {
   position: relative;
@@ -45,14 +45,14 @@
   flex: 0 1 auto;
   flex-direction: column;
   justify-content: flex-end;
-  width: 176px;
+  width: 176px; /* token-lint: geometry */
   min-width: 0;
   aspect-ratio: 8 / 5;
   padding: var(--space-6) var(--space-8);
   border: 1px solid var(--glass-accent-line);
   border-radius: var(--r-sm);
   background: linear-gradient(to top, var(--glass-strong), transparent 55%);
-  box-shadow: 0 0 12px var(--glow);
+  box-shadow: 0 0 12px var(--glow); /* token-lint: glow */
   color: var(--on-glass);
   text-align: left;
   pointer-events: auto;
@@ -90,7 +90,7 @@
     transparent 0 2px,
     var(--shade-soft) 2px 3px
   );
-  animation: pip-on 0.5s var(--ease) both;
+  animation: pip-on 0.5s var(--ease) both; /* token-lint: animation */
 }
 @keyframes pip-on {
   from {
@@ -137,8 +137,8 @@
   font-size: var(--fs-label);
 }
 .pip-load i {
-  width: 4px;
-  height: 10px;
+  width: 4px; /* token-lint: geometry */
+  height: 10px; /* token-lint: geometry */
   border-radius: var(--r-xs);
   background: var(--glass-line);
 }
@@ -148,8 +148,8 @@
 .pip-close {
   display: grid;
   place-items: center;
-  width: 20px;
-  height: 20px;
+  width: 20px; /* token-lint: geometry */
+  height: 20px; /* token-lint: geometry */
   margin-left: auto;
   border: 1px solid var(--glass-line);
   border-radius: var(--r-pill);
@@ -170,7 +170,7 @@
   z-index: var(--z-labels);
   background: var(--scene-bg);
   pointer-events: none;
-  animation: cut-dip 0.15s ease-out both;
+  animation: cut-dip var(--dur-fast) ease-out both;
 }
 @keyframes cut-dip {
   to {

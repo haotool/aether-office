@@ -1,0 +1,25 @@
+/** The telemetry words, in Traditional Chinese. */
+export const zhTelemetry = {
+  executionPolicy: '原生代理執行',
+  emergencyStop: '緊急停止',
+  telemetry: '本機 session 概況',
+  sessionCount: '會話',
+  liveProcesses: '執行中',
+  quotaReset: '額度重置',
+  cpu: 'CPU',
+  memory: '記憶體',
+  disk: '磁碟可用',
+  fiveHourWindow: '5 小時',
+  sevenDayWindow: '7 天',
+  quotaUpdated: '資料時間',
+  quotaStale: '資料已過時，Claude Code 可能沒有在執行',
+  floor: '樓層',
+  floorName: 'zh',
+  emergencyConfirm: '確定停止所有執行',
+  executionConsent:
+    '啟用後，派工可能使用已登入提供者的付費額度。停用會取消排隊工作，並要求執行中的工作停止。工具權限仍逐次審核。',
+  enableLive: '允許此專案執行真實代理',
+  maxTurns: '每次執行的回合上限',
+  timeoutSeconds: '逾時秒數',
+  runnerGrantRequired: '執行主機還需要本機啟用設定與 repository 授權。此設定不會啟動模型。',
+} as const;

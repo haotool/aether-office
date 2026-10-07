@@ -4,6 +4,7 @@ import type { LocalSession } from '@aether/contracts';
 import { api } from '../api.js';
 import { formatSpan } from '../localSessions.js';
 import { Modal, useT } from '../ui.js';
+import { ConfirmButtons } from './ConfirmButtons.js';
 
 const OUTCOME = {
   stopped: 'stopDone',
@@ -59,19 +60,13 @@ export function StopSession({
       ) : (
         <>
           <p>{t('stopExplain')}</p>
-          {error && (
-            <p role="alert" className="error">
-              {error}
-            </p>
-          )}
-          <div className="button-row">
-            <button className="primary" disabled={busy} onClick={() => void stop()}>
-              {busy ? t('loading') : t('stopConfirm')}
-            </button>
-            <button className="secondary" disabled={busy} onClick={onClose}>
-              {t('cancel')}
-            </button>
-          </div>
+          <ConfirmButtons
+            error={error}
+            busy={busy}
+            confirmLabel={t('stopConfirm')}
+            onConfirm={() => void stop()}
+            onCancel={onClose}
+          />
         </>
       )}
     </Modal>

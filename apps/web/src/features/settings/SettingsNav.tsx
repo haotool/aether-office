@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Bell,
@@ -49,24 +50,51 @@ export function SideNav({
           const Icon = ICONS[id];
           const meta = SECTIONS.find((s) => s.id === id)!;
           return (
-            <li key={id}>
-              <Link
-                to={settingsPath(id, projectId)}
-                aria-current={active === id ? 'location' : undefined}
-                onClick={(e) => {
-                  if (e.metaKey || e.ctrlKey || e.shiftKey) return; // the browser's own: a new tab
-                  e.preventDefault();
-                  onGo(id);
-                }}
-              >
-                <Icon size={16} aria-hidden="true" />
-                {t(meta.label)}
-              </Link>
-            </li>
+            <SectionItem
+              key={id}
+              {...{ id, projectId, onGo }}
+              current={active === id}
+              keepNewTab // the browser's own: a new tab
+            >
+              <Icon size={16} aria-hidden="true" />
+              {t(meta.label)}
+            </SectionItem>
           );
         })}
       </ul>
     </nav>
+  );
+}
+
+/** One group's entry: a real link to its address that the page answers by scrolling instead of navigating. */
+function SectionItem({
+  id,
+  projectId,
+  onGo,
+  current,
+  keepNewTab,
+  children,
+}: Pick<NavProps, 'projectId' | 'onGo'> & {
+  id: SectionId;
+  current?: boolean;
+  /** Leave Cmd/Ctrl/Shift-clicks to the browser. */
+  keepNewTab?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <li>
+      <Link
+        to={settingsPath(id, projectId)}
+        aria-current={current ? 'location' : undefined}
+        onClick={(e) => {
+          if (keepNewTab && (e.metaKey || e.ctrlKey || e.shiftKey)) return;
+          e.preventDefault();
+          onGo(id);
+        }}
+      >
+        {children}
+      </Link>
+    </li>
   );
 }
 
@@ -80,22 +108,14 @@ export function HomeList({ sections, projectId, onGo }: NavProps) {
           const Icon = ICONS[id];
           const meta = SECTIONS.find((s) => s.id === id)!;
           return (
-            <li key={id}>
-              <Link
-                to={settingsPath(id, projectId)}
-                onClick={(e) => {
-                  e.preventDefault();
-                  onGo(id);
-                }}
-              >
-                <Icon size={20} aria-hidden="true" />
-                <span>
-                  <strong>{t(meta.label)}</strong>
-                  <small>{t(meta.hint)}</small>
-                </span>
-                <ChevronRight size={18} aria-hidden="true" />
-              </Link>
-            </li>
+            <SectionItem key={id} {...{ id, projectId, onGo }}>
+              <Icon size={20} aria-hidden="true" />
+              <span>
+                <strong>{t(meta.label)}</strong>
+                <small>{t(meta.hint)}</small>
+              </span>
+              <ChevronRight size={18} aria-hidden="true" />
+            </SectionItem>
           );
         })}
       </ul>

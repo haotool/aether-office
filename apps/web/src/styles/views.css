@@ -57,7 +57,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 460px;
+  max-width: 460px; /* token-lint: geometry */
 }
 .task-priority {
   font-size: var(--fs-label);
@@ -74,7 +74,7 @@
   padding: var(--space-12);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
-  min-height: 300px;
+  min-height: 300px; /* token-lint: geometry */
 }
 .kanban h3 {
   display: flex;
@@ -229,8 +229,8 @@ th {
 }
 .toggle-label input {
   accent-color: var(--mint);
-  width: 18px; /* the native checkbox's own size; a finger reaches it through its row */
-  height: 18px;
+  width: 18px; /* the native checkbox's own size; a finger reaches it through its row token-lint: geometry */
+  height: 18px; /* token-lint: geometry */
 }
 .preset-buttons {
   display: flex;

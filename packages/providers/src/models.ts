@@ -15,7 +15,7 @@ const DAY_MS = 24 * 3_600_000;
 /** A catalog older than this is shown but marked stale. */
 export const STALE_MS = 7 * DAY_MS;
 /** A Codex cache older than this is refreshed from the CLI when it can be. */
-export const CODEX_REFRESH_MS = DAY_MS;
+const CODEX_REFRESH_MS = DAY_MS;
 const CLI_TIMEOUT_MS = 5000;
 const MEMO_MS = 30_000;
 const MEMO_PROBED_MS = 10 * 60_000;
@@ -45,10 +45,12 @@ export function parseCodexModels(raw: string): { models: ModelEntry[]; fetchedAt
   const root = obj(parse(raw));
   const rows = list(root['models'])
     .map(obj)
-    .filter((m) => m['visibility'] === 'list' && text(m['slug'], 120))
-    .sort((a, b) => Number(a['priority'] ?? 1e9) - Number(b['priority'] ?? 1e9));
-  const models = rows.slice(0, MAX_MODELS).map((m): ModelEntry => {
-    const id = text(m['slug'], 120)!;
+    .flatMap((m) => {
+      const id = text(m['slug'], 120);
+      return m['visibility'] === 'list' && id ? [{ m, id }] : [];
+    })
+    .sort((a, b) => Number(a.m['priority'] ?? 1e9) - Number(b.m['priority'] ?? 1e9));
+  const models = rows.slice(0, MAX_MODELS).map(({ m, id }): ModelEntry => {
     const efforts = list(m['supported_reasoning_levels'])
       .map((l) => text(obj(l)['effort'], 20))
       .filter((e): e is string => !!e);
@@ -99,7 +101,7 @@ export function parseClaudeCatalog(raw: string): { models: ModelEntry[]; fetched
 }
 
 /** Pure. `additionalModelOptionsCache` of `.claude.json`: extra picks such as the 1M-context variants. */
-export function parseClaudeExtras(raw: string): ModelEntry[] {
+function parseClaudeExtras(raw: string): ModelEntry[] {
   return list(obj(parse(raw))['additionalModelOptionsCache'])
     .map(obj)
     .flatMap((o): ModelEntry[] => {
@@ -128,7 +130,7 @@ function withAliases(models: ModelEntry[]): ModelEntry[] {
     const newest = models.find((m) => m.family === family && m.efforts.length);
     return {
       id: family,
-      label: family[0]!.toUpperCase() + family.slice(1),
+      label: family.charAt(0).toUpperCase() + family.slice(1),
       family,
       efforts: newest?.efforts ?? [],
       ...(newest?.defaultEffort && { defaultEffort: newest.defaultEffort }),

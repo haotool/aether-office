@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { id, shortText } from './shared.js';
 
-export const modeSchema = z.enum(['demo', 'live', 'observe']);
+const modeSchema = z.enum(['demo', 'live', 'observe']);
 export const providerSchema = z.enum(['demo', 'claude', 'codex', 'acp', 'observe']);
 export const workStateSchema = z.enum([
   'backlog',
@@ -106,7 +106,7 @@ export const messageWaitSchema = z.object({
   endedAt: z.number().int().nullable(),
 });
 export type MessageWait = z.infer<typeof messageWaitSchema>;
-export const deliveryStateSchema = z.enum([
+const deliveryStateSchema = z.enum([
   'available',
   'injected',
   'acknowledged',
@@ -162,7 +162,7 @@ const squadSchema = z
     seats: z.number().int().min(0).max(12).default(0),
   })
   .strict();
-export const furnitureSchema = z.discriminatedUnion('type', [deskLikeSchema, squadSchema]);
+const furnitureSchema = z.discriminatedUnion('type', [deskLikeSchema, squadSchema]);
 // Version 1 is every layout saved before squad zones; version 2 is written only when the layout holds a squad zone, so a
 // layout without squads stays readable by an older server or client. Every version-1 layout is a valid version-2 layout.
 export const layoutSchema = z

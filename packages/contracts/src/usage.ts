@@ -6,7 +6,7 @@ import { z } from 'zod';
 const count = z.number().int().nonnegative();
 
 /** What one scope (the building, an office, a project) used. Output excludes reasoning; input excludes cache reads. */
-export const usageTotalsSchema = z.object({
+const usageTotalsSchema = z.object({
   input: count,
   output: count,
   cacheRead: count,
@@ -21,7 +21,7 @@ export const usageTotalsSchema = z.object({
 });
 export type UsageTotals = z.infer<typeof usageTotalsSchema>;
 
-export const usageScopeSchema = z.object({
+const usageScopeSchema = z.object({
   totals: usageTotalsSchema,
   /** One entry per day of `UsageResponse.days`, oldest first. */
   daily: z.array(usageTotalsSchema).max(31),
@@ -36,7 +36,7 @@ const limitWindowSchema = z.object({
   usedPercent: z.number(),
   resetsAt: z.number().nullable(),
 });
-export const codexLimitsSchema = z.object({
+const codexLimitsSchema = z.object({
   plan: z.string().nullable(),
   windows: z.array(limitWindowSchema).max(4),
   updatedAt: z.number(),
@@ -107,7 +107,7 @@ export const usageResponseSchema = z.object({
 export type UsageResponse = z.infer<typeof usageResponseSchema>;
 
 const windowedCount = z.object({ today: count, d7: count, d30: count });
-export const gitKpiSchema = z.object({
+const gitKpiSchema = z.object({
   commits: windowedCount,
   /** Merge commits. */
   merges: windowedCount,

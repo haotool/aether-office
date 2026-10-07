@@ -3,6 +3,7 @@ import { SCREEN_H, SCREEN_W } from './screen-draw.js';
 import type { TokenKind } from './screen-tokens.js';
 import type { Work } from './screen-layout.js';
 import type { ScreenFacts } from './screen-facts.js';
+import { context2d } from './canvas-2d.js';
 
 export { SCREEN_H, SCREEN_W };
 /** The title bar above and the footer below every view; a view draws in the box between them. */
@@ -76,10 +77,10 @@ export const PALETTES: Record<Theme, Palette> = {
   },
 };
 
-export type Box = { x: number; y: number; w: number; h: number };
+type Box = { x: number; y: number; w: number; h: number };
 
 /** What a view keeps from one paint to the next: scrolling eases, so it needs to remember where it is. */
-export type ScreenState = { scroll: number; secondScroll: number };
+type ScreenState = { scroll: number; secondScroll: number };
 
 export type ViewCtx = {
   g: CanvasRenderingContext2D;
@@ -123,7 +124,7 @@ export function chromeBar(chrome: Chrome, theme: Theme, accent: string): HTMLCan
   bar = document.createElement('canvas');
   bar.width = SCREEN_W;
   bar.height = BAR_H + 1;
-  const g = bar.getContext('2d')!;
+  const g = context2d(bar);
   const p = PALETTES[theme];
   g.fillStyle = p.panel;
   g.fillRect(0, 0, SCREEN_W, BAR_H);

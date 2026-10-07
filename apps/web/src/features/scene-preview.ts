@@ -144,7 +144,7 @@ const nameHash = (name: string) => [...name].reduce((h, c) => (h * 31 + c.charCo
 /** A stand-in screen for the opt-in previews (`?intensity=`, `?compact=`): invented on purpose, never shown otherwise. It varies by member so the desks differ. */
 
 /** What a deterministic effect preview asks for: draw this effect as it looks `t` ms after it started. */
-export type PreviewParams = { effect: string; t: number; loop?: true };
+type PreviewParams = { effect: string; t: number; loop?: true };
 
 /** An effect id, with an optional `:value` for the ones that read one (`ci-stack:0` is the red CI stack, `tech-debt:60` a bigger pile). */
 const ONE_EFFECT = '[a-z][a-z0-9-]{0,39}(?::\\d{1,6})?';

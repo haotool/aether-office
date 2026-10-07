@@ -25,6 +25,84 @@ export function KpiDashboardHost({ kpi }: { kpi: KpiPanel }) {
   );
 }
 
+/** Modal behaviour of a native dialog: opened on mount, closed on unmount, with focus given back to what opened it. */
+function useModalDialog() {
+  const dialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const el = dialog.current;
+    const opener = document.activeElement;
+    el?.showModal();
+    return () => {
+      el?.close();
+      if (opener instanceof HTMLElement) opener.focus();
+    };
+  }, []);
+  return dialog;
+}
+
+function KpiHead({
+  range,
+  onRange,
+  onClose,
+}: {
+  range: Range;
+  onRange: (range: Range) => void;
+  onClose: () => void;
+}) {
+  const t = useT();
+  return (
+    <header className="kpi-head u-head">
+      <h2>{t('kpiTitle')}</h2>
+      <div className="segmented" role="group" aria-label={t('kpiRange')}>
+        {RANGES.map((r) => (
+          <button
+            key={r}
+            aria-pressed={r === range}
+            className={r === range ? 'selected' : ''}
+            onClick={() => onRange(r)}
+          >
+            {t(RANGE_WORD[r])}
+          </button>
+        ))}
+      </div>
+      <button className="icon-button" aria-label={t('close')} onClick={onClose}>
+        <X size={20} />
+      </button>
+    </header>
+  );
+}
+
+function OfficeTabs({
+  office,
+  onOffice,
+}: {
+  office: number | null;
+  onOffice: (office: number | null) => void;
+}) {
+  const t = useT();
+  const zh = usePreferences((s) => s.locale) === 'zh-TW';
+  return (
+    <nav className="kpi-offices" aria-label={t('kpiOffices')}>
+      <button className="u-chip" aria-pressed={office === null} onClick={() => onOffice(null)}>
+        {t('kpiBuilding')}
+      </button>
+      {DEPARTMENTS.map((d) => (
+        <button
+          key={d.id}
+          className="u-chip"
+          aria-pressed={office === d.floor}
+          style={{ ['--accent' as string]: d.accent }}
+          title={zh ? d.zh : d.en}
+          onClick={() => onOffice(d.floor)}
+        >
+          <b>{d.floor + 1}F</b>
+          <span>{zh ? d.zh : d.en}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
 /**
  * The KPI dashboard: a dialog (a side panel on a desktop, a bottom sheet on a phone) with the building and each office
  * as tabs and the range as a switch. `office` null is the whole building.
@@ -45,19 +123,9 @@ export function KpiDashboard({
   onClose: () => void;
 }) {
   const t = useT();
-  const zh = usePreferences((s) => s.locale) === 'zh-TW';
-  const dialog = useRef<HTMLDialogElement>(null);
+  const dialog = useModalDialog();
   const usage = useUsage(range);
   const git = useGitKpi();
-  useEffect(() => {
-    const el = dialog.current;
-    const opener = document.activeElement;
-    el?.showModal();
-    return () => {
-      el?.close();
-      if (opener instanceof HTMLElement) opener.focus();
-    };
-  }, []);
   return (
     <dialog
       ref={dialog}
@@ -66,42 +134,8 @@ export function KpiDashboard({
       onCancel={onClose}
       onClick={(event) => event.target === event.currentTarget && onClose()}
     >
-      <header className="kpi-head u-head">
-        <h2>{t('kpiTitle')}</h2>
-        <div className="segmented" role="group" aria-label={t('kpiRange')}>
-          {RANGES.map((r) => (
-            <button
-              key={r}
-              aria-pressed={r === range}
-              className={r === range ? 'selected' : ''}
-              onClick={() => onRange(r)}
-            >
-              {t(RANGE_WORD[r])}
-            </button>
-          ))}
-        </div>
-        <button className="icon-button" aria-label={t('close')} onClick={onClose}>
-          <X size={20} />
-        </button>
-      </header>
-      <nav className="kpi-offices" aria-label={t('kpiOffices')}>
-        <button className="u-chip" aria-pressed={office === null} onClick={() => onOffice(null)}>
-          {t('kpiBuilding')}
-        </button>
-        {DEPARTMENTS.map((d) => (
-          <button
-            key={d.id}
-            className="u-chip"
-            aria-pressed={office === d.floor}
-            style={{ ['--accent' as string]: d.accent }}
-            title={zh ? d.zh : d.en}
-            onClick={() => onOffice(d.floor)}
-          >
-            <b>{d.floor + 1}F</b>
-            <span>{zh ? d.zh : d.en}</span>
-          </button>
-        ))}
-      </nav>
+      <KpiHead range={range} onRange={onRange} onClose={onClose} />
+      <OfficeTabs office={office} onOffice={onOffice} />
       <div className="kpi-body">
         {usage.data ? (
           usage.data.enabled ? (

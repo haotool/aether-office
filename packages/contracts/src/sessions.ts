@@ -203,44 +203,41 @@ export type LocalSessionsResponse = { enabled: boolean; sessions: AttributedSess
 
 // Claude's subscription windows, from the numbers a status line already fetched (see services/claude-limits.ts). A
 // window that is absent, or whose reset has passed, is null: never a guess.
-const limitWindowSchema = z.object({ usedPercent: z.number(), resetsAt: z.number().nullable() });
-export const claudeLimitsSchema = z.object({
-  plan: z.string().nullable(),
-  fiveHour: limitWindowSchema.nullable(),
-  sevenDay: limitWindowSchema.nullable(),
-  // When the numbers were fetched, and whether that is too long ago to still call current.
-  updatedAt: z.number(),
-  stale: z.boolean(),
-});
-export type ClaudeLimits = z.infer<typeof claudeLimitsSchema>;
+type LimitWindow = { usedPercent: number; resetsAt: number | null };
+export type ClaudeLimits = {
+  plan: string | null;
+  fiveHour: LimitWindow | null;
+  sevenDay: LimitWindow | null;
+  /** When the numbers were fetched, and whether that is too long ago to still call current. */
+  updatedAt: number;
+  stale: boolean;
+};
 export type ClaudeLimitsResponse = { limits: ClaudeLimits | null };
 
 // The models each provider's CLI offers on this machine (packages/providers/src/models.ts), read from the CLIs' own
 // caches and never written. The readers skip anything they do not recognise, so these hold only what was understood.
-export const modelEntrySchema = z.object({
-  id: z.string().max(120),
-  label: z.string().max(80),
-  family: z.string().max(40).optional(),
-  efforts: z.array(z.string().max(20)).max(12),
-  defaultEffort: z.string().max(20).optional(),
-  isAlias: z.boolean(),
-  contextWindow: z.number().int().positive().optional(),
-});
-export const modelCatalogSchema = z.object({
-  provider: z.enum(['claude', 'codex']),
-  models: z.array(modelEntrySchema).max(100),
-  source: z.enum(['cache', 'cli', 'fallback']),
-  fetchedAt: z.number().optional(),
-  stale: z.boolean(),
-});
-export type ModelEntry = z.infer<typeof modelEntrySchema>;
-export type ModelCatalog = z.infer<typeof modelCatalogSchema>;
+export type ModelEntry = {
+  id: string;
+  label: string;
+  family?: string;
+  efforts: string[];
+  defaultEffort?: string;
+  isAlias: boolean;
+  contextWindow?: number;
+};
+export type ModelCatalog = {
+  provider: 'claude' | 'codex';
+  models: ModelEntry[];
+  source: 'cache' | 'cli' | 'fallback';
+  fetchedAt?: number;
+  stale: boolean;
+};
 export type ModelsResponse = { catalogs: ModelCatalog[] };
 
 // "Clock out": send the sessions that have sat idle for a day or more home in one request. The client names sessions by
 // the key the scanner gave them and the process start time it saw (never a pid); the server decides for each one.
 const DAY_MS = 24 * 60 * 60 * 1000;
-export const CLOCK_OUT_MIN_IDLE_MS = DAY_MS;
+const CLOCK_OUT_MIN_IDLE_MS = DAY_MS;
 export const CLOCK_OUT_MAX_SESSIONS = 50;
 export const clockOutRequestSchema = z
   .object({

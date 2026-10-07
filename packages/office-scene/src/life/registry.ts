@@ -10,8 +10,7 @@ import type { LifeCategory, LifeContext, LifeSignal } from './signals.js';
  * already has, or a turn of the chair (radians; negative is toward the desk's right) held for a while. A gesture, not a
  * claim: it never says more than the effect does.
  */
-export type LifePose =
-  { clip: ClipName; atMs: number } | { turn: number; holdMs: number; atMs: number };
+type LifePose = { clip: ClipName; atMs: number } | { turn: number; holdMs: number; atMs: number };
 
 /**
  * Every office-life effect that fires from the data the server already provides: when it fires, how rarely, and what a

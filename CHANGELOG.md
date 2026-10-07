@@ -5,6 +5,22 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Fixed (frontend, first use and accessibility)
+
+- First run: with no project, or no character and no session, the office page shows what AETHER does, three steps, the commands to
+  copy and `pnpm run doctor`, with "Create a project" as the secondary action; one session in live mode gets a one-line note about
+  bubbles and figures (D01).
+- The first-visit language follows the browser (`zh*` is Traditional Chinese, otherwise English) for the login page, the
+  interface and `<html lang>`; a saved choice is never overridden (D02).
+- A project id in the address that is not available falls back to the first project with a short notice, and a missing project
+  has no Retry (D04). Unknown pages show "Page not found" with a link home; an unknown Settings group still opens the Settings home, as its test pins (D17).
+- The Approvals page lists pending permission requests and its empty text depends on whether Remote approvals is on (D05).
+- The tab title is `<page> · AETHER OFFICE` in the interface language (D08).
+- Create task, Propose knowledge and the login mark required fields and show their own inline errors instead of the browser's
+  bubble; dependencies have a hint; the task version hash is behind "Details" (D13).
+- A skip link to the main landmark, a labelled navigation, and an accessible name plus a live text summary for the 3D canvas (D16).
+- The layout editor is labelled experimental and docks at the side of the screen (D19).
+
 ### Fixed (backend and CLI)
 
 - Claude usage: the parser no longer drops a line whose keys are reordered, whose usage is spaced (`"usage": {`) or whose id follows the usage; the byte fast path stays first (measured on 200 real transcripts: 33,283 of 33,283 messages, identical totals) and a missed assistant line is read by a bounded `JSON.parse`. Lines neither path can read are counted in `scan.skippedLines`, so the existing warning shows them. Rollup version 5.
@@ -13,6 +29,22 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 - `AETHER_HOME` relocates `~/.aether` (hook scripts, approvals file, hook spool). `pnpm hooks install|remove` prints the files it writes before writing, supports `--dry-run`, and ends with one sentence instead of a stack trace when it cannot write. Tests run under a temporary `AETHER_HOME`.
 - `pnpm run pair` tells an unreachable control plane from a rejected owner token (another data directory) and a missing token.
 - Settings: the model catalog note says that a stale Codex cache runs `codex debug models` (no model session starts).
+
+### Fixed (e2e regressions after the parallel merge)
+
+- The selected character's name tag no longer hides under a speech bubble (a two-pixel taller bubble from the line-height token was
+  enough to cover it in a close-up); the other tags still yield. `panel-consistency.spec.ts` switches live execution back on
+  (the emergency stop of `native-workflow.spec.ts` leaves it off) and tolerates an already continued session; a stale
+  `@ts-expect-error` that broke `tsc` is removed.
+
+### Changed (UI consistency, track F: responsive layers, preferences, strict lint)
+
+- Top bar: in the native runner the right-hand controls never shrink and the project picker gives way, so language and theme stay on screen at 320 to 1920px (D06, D07); the emergency stop shows its icon only below 1000px and its confirmation opens under the bar on a phone; the link state is a dot below 760px; the telemetry numbers move to the sidebar below 1500px.
+- Intro tour caption moves to the top left, clear of the floor readout and KPI plaque (D11). The floor panel's buttons keep their glass look in the light theme, and the phone's attention chip uses the scene gold so it reads in both themes (D12).
+- Phone touch targets reach 44px: the brand, hint toggle, KPI chips, floor rail, sidebar and settings links gain the hit area; `.primary` is 44px on touch because its cut corner clips a hit area (D18). The KPI chip strip fades at its right edge.
+- `@media` uses only 760/1000/1250 wide and 500 tall (four documented exceptions); narrow-component rules became container queries. The 36px phone override, the duplicate `--tabbar-h` and every `!important` outside the preference blocks are gone.
+- `forced-colors`, `prefers-contrast: more` and `prefers-reduced-transparency` are supported (`e2e/preferences.spec.ts`).
+- `scripts/check-design-tokens.mjs` holds eight strict rules to `scripts/design-token-baseline.json` (a count may only go down), with the `/* token-lint: <reason> */` escape hatch; the quality scorecard reads the same rules. `e2e/role-variance.spec.ts` no longer excludes any chrome and adds a 44px hit-area check and the native top bar at six widths.
 
 ### Added
 
@@ -118,6 +150,27 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   routes, the usage tracker and the runner loop are split into named steps), the runner and start-up banner write through one
   tiny `stdio` helper instead of `console`, and non-null assertions, double casts and unused exports in those folders are gone.
   Three tests no longer sleep for a fixed time.
+- Quality convergence (structure and types): the release kit (`scripts/oss`) and the documentation screenshots script are split
+  into modules by concern with their entry points, `pnpm run` names and flags unchanged; the HTML neutralizer, the inline Markdown
+  reader, the path finder, the Claude, Codex and ACP adapters, the demo fixture runner and `setup` are small named steps
+  instead of long functions; indexed reads are narrowed instead of asserted; exports nothing imports are no longer exported;
+  the end-to-end specs are type-checked (`tsconfig.json` includes `e2e/` and `playwright.config.ts`) with `noImplicitReturns` and
+  `noFallthroughCasesInSwitch` on. The docs use reserved example hosts (`office.example`, `192.0.2.20`).
+  `@aether/kernel` is marked side-effect free like `@aether/contracts`, and the contract response shapes that only served as
+  types (`ClaudeLimits`, `ModelCatalog`, `FileReservation`, `ReviewComments`, `Room`, `Workflow`) are plain types.
+- The stop-session and clock-out API tests, and one scene-context spec, wait for the process or the frames they need instead of a fixed sleep.
+- The 3D scene package is restructured with no change to what is drawn: `OfficeScene` is a model hook plus a canvas and an overlay
+  component, camera control is split into floor, director, take-over and aim hooks, and the member, squad, spire, intro and life
+  layers are cut along their hook and presentation seams. No `eslint-disable`, `as unknown as` or dead export is left in the
+  package (hooks keyed by value use `use-by-value.ts`; the desk dimensions are typed once in `seating.ts`), and draw calls, shader
+  programs, GPU memory and CPU time per frame measure the same on a real GPU. New characterization tests cover the extracted
+  helpers.
+- The web app: `App`, the pages and the long components are split into container hooks and small presentational parts (no function
+  over 50 lines remains in `apps/web` except the few the quality scorecard lists); the `en` and `zh` locale tables are per-domain
+  modules under `locales/en/` and `locales/zh/` behind the same exports; the exhaustive-deps suppressions are replaced by a
+  `useLatest` ref; the shared project select, quality select, command runner, form check and confirm buttons replace the
+  duplicated blocks. Small differences: a terminal-start error shows under the start form, and a task's "resume session" box and the
+  propose-knowledge form's errors reset when their dialog reopens.
 
 ### Fixed
 
@@ -140,6 +193,7 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 - Concurrent requests share one local-session scan (it ran once per request), and its cache is keyed by home and spool file.
   The file list, the commit graph and the session scan run git through the one hardened wrapper (`core.fsmonitor=false`,
   `GIT_OPTIONAL_LOCKS=0`).
+- A reply ending in a lone backslash that also held HTML or an entity made the HTML neutralizer throw (the chat showed an error instead of the message); the backslash is now kept as text.
 
 ## [0.4.0] - 2026-10-07
 

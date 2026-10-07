@@ -9,18 +9,7 @@ const SHARED_VERTEX = `
   uniform float open[${MAX_FLOWERS}];
 `;
 
-/**
- * The garden's skin. One vertex shader opens every flower: a part's `pose` holds how far it swings and how late in the bloom it
- * comes (so the petals open one after another, outer whorl first, with a little overshoot), then a slow breathing sway.
- * The fragment shader paints by kind: a petal is a gradient from the branch hue to a shifted tip with a fan of glowing veins,
- * a fresnel rim with an iridescent edge and a fake of light shining through (translucency grows with `glass`), and it hides
- * what is behind it a little so a flower reads against the bright glass of the crown; a tube is the strands' glass; a glow is a
- * soft additive spot (florets, bead tips, rings). No textures, no lights, no transmission pass.
- */
-export function gardenMaterial() {
-  return new THREE.ShaderMaterial({
-    uniforms: { time: { value: 0 }, open: { value: new Array<number>(MAX_FLOWERS).fill(0) } },
-    vertexShader: `
+const GARDEN_VERTEX = `
       ${SHARED_VERTEX}
       attribute vec3 hinge;
       attribute vec3 axis;
@@ -65,8 +54,9 @@ export function gardenMaterial() {
         vKind = pose.w;
         vLocal = local;
         gl_Position = projectionMatrix * viewMatrix * world;
-      }`,
-    fragmentShader: `
+      }`;
+
+const GARDEN_FRAGMENT = `
       ${DITHER_PARS}
       uniform float time;
       varying vec4 vTintA;
@@ -117,7 +107,21 @@ export function gardenMaterial() {
         gl_FragColor = vec4(alpha > 0.0 ? min(color, vec3(1.0)) : 1.0 - exp(-color * 2.2), alpha);
         #include <colorspace_fragment>
         ${DITHER_END}
-      }`,
+      }`;
+
+/**
+ * The garden's skin. One vertex shader opens every flower: a part's `pose` holds how far it swings and how late in the bloom it
+ * comes (so the petals open one after another, outer whorl first, with a little overshoot), then a slow breathing sway.
+ * The fragment shader paints by kind: a petal is a gradient from the branch hue to a shifted tip with a fan of glowing veins,
+ * a fresnel rim with an iridescent edge and a fake of light shining through (translucency grows with `glass`), and it hides
+ * what is behind it a little so a flower reads against the bright glass of the crown; a tube is the strands' glass; a glow is a
+ * soft additive spot (florets, bead tips, rings). No textures, no lights, no transmission pass.
+ */
+export function gardenMaterial() {
+  return new THREE.ShaderMaterial({
+    uniforms: { time: { value: 0 }, open: { value: new Array<number>(MAX_FLOWERS).fill(0) } },
+    vertexShader: GARDEN_VERTEX,
+    fragmentShader: GARDEN_FRAGMENT,
     dithering: true,
     transparent: true,
     depthWrite: false,

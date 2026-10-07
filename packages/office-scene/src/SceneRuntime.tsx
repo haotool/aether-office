@@ -71,14 +71,14 @@ export class SceneBoundary extends Component<
   { children: ReactNode; onFailure: () => void },
   { failed: boolean }
 > {
-  state = { failed: false };
+  override state = { failed: false };
   static getDerivedStateFromError() {
     return { failed: true };
   }
-  componentDidCatch() {
+  override componentDidCatch() {
     this.props.onFailure();
   }
-  render() {
+  override render() {
     return this.state.failed ? null : this.props.children;
   }
 }

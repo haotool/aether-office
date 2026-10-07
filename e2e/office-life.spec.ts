@@ -16,6 +16,8 @@ type Seed = {
   quality?: string;
   reducedMotion?: boolean;
   version?: number;
+  panelCollapsed?: boolean;
+  intro?: string;
 };
 
 async function open(page: Page, path: string, seed: Seed = {}) {

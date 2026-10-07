@@ -67,8 +67,8 @@ const ROWS = [-6, -2.2, 3.6, 7.4, 11.2, 15];
 /** Desks one floor can hold: desk positions never leave the floor and never block the circulation aisles. */
 export const FLOOR_CAPACITY = COLUMNS.length * ROWS.length;
 export const seatAt = (index: number): [number, number] => [
-  COLUMNS[index % COLUMNS.length]!,
-  ROWS[Math.floor(index / COLUMNS.length) % ROWS.length]!,
+  COLUMNS[index % COLUMNS.length] ?? 0,
+  ROWS[Math.floor(index / COLUMNS.length) % ROWS.length] ?? 0,
 ];
 
 const clampFloor = (floor: number) => Math.min(FLOORS - 1, Math.max(0, floor));
@@ -95,31 +95,40 @@ export function assignSeats(
   const fresh: Agent[] = [];
   for (const agent of agents) {
     const [floor, slot] = previous.get(agent.id) ?? [-1, -1];
+    const used = taken[floor]; // none for a floor that does not exist
     const ok =
-      Number.isInteger(floor) &&
+      used !== undefined &&
       Number.isInteger(slot) &&
-      floor >= 0 &&
-      floor < FLOORS &&
       slot >= 0 &&
       slot < FLOOR_CAPACITY &&
-      !taken[floor]!.has(slot);
-    if (ok) {
-      taken[floor]!.add(slot);
+      !used.has(slot);
+    if (used && ok) {
+      used.add(slot);
       out.set(agent.id, [floor, slot]);
     } else fresh.push(agent);
   }
   for (const agent of fresh)
     for (const floor of floorsFrom(floorOf(agent))) {
+      const used = taken[floor];
+      if (!used) continue;
       let slot = 0;
-      while (taken[floor]!.has(slot)) slot++;
+      while (used.has(slot)) slot++;
       if (slot >= FLOOR_CAPACITY) continue;
-      taken[floor]!.add(slot);
+      used.add(slot);
       out.set(agent.id, [floor, slot]);
       break;
     }
   return out;
 }
 
+const PLANTS: readonly (readonly [number, number])[] = [
+  [-23, 5],
+  [-10, 13],
+  [10, 13],
+  [23, 5],
+  [-10, -14],
+  [10, -14],
+];
 const MIN_DESKS = [12, 8, 8, 8, 8]; // a populated look even on a quiet floor; the ground floor keeps its original twelve
 /**
  * One layout for the whole building. `floorOf` says which floor an agent works on (default: the ground floor); the
@@ -138,10 +147,11 @@ export function defaultLayout(
   const placed = assignSeats(seats, agents, floorOf);
   for (const agent of agents) {
     const seat = placed.get(agent.id);
-    if (seat) onFloor[seat[0]]![seat[1]] = agent;
+    const column = seat ? onFloor[seat[0]] : undefined;
+    if (seat && column) column[seat[1]] = agent;
   }
   for (let floor = 0; floor < FLOORS; floor++) {
-    const here = onFloor[floor]!;
+    const here = onFloor[floor] ?? [];
     const desks = Math.max(MIN_DESKS[floor] ?? 8, here.length);
     for (let i = 0; i < desks; i++) {
       const [x, z] = seatAt(i);
@@ -177,19 +187,12 @@ export function defaultLayout(
           agentId: null,
           floor,
         });
-    for (const [i, [x, z]] of [
-      [-23, 5],
-      [-10, 13],
-      [10, 13],
-      [23, 5],
-      [-10, -14],
-      [10, -14],
-    ].entries())
+    for (const [i, [x, z]] of PLANTS.entries())
       objects.push({
         id: `plant-${tag}${i}`,
         type: 'plant',
-        x: x!,
-        z: z!,
+        x,
+        z,
         rotation: 0,
         agentId: null,
         floor,

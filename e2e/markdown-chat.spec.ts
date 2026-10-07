@@ -2,14 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { signIn as signInTo } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
 import { spawn, execFileSync, type ChildProcess } from 'node:child_process';
-import {
-  appendFileSync,
-  mkdirSync,
-  readFileSync,
-  realpathSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { appendFileSync, mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 // A running session whose reply is full of Markdown: the feed row, the conversation and the speech endpoint must show it as

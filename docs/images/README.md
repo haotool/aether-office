@@ -3,7 +3,7 @@
 Every image here is a JPEG of at most 250 KB, taken from a throwaway demo stack on **synthetic data**: invented repositories
 (`harbor-web`, `ledger-api`, ...), authors, conversations and token counts, fake `claude` processes (`sleep`, named
 `claude`) and hook records. Nothing is read from a real `~/.claude` or `~/.codex`, no model is called, and the stack and its
-data directory are deleted afterwards. The LAN address in the pairing image is a stand-in (`192.168.1.20`); the QR code in
+data directory are deleted afterwards. The LAN address in the pairing image is a stand-in (a private-range example); the QR code in
 it belongs to the deleted stack and works nowhere. The interface is shown in English, dark theme unless the name says light.
 
 | File                               | Size     | Shows                                                                                          |

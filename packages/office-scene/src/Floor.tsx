@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import type { Layout } from '@aether/contracts';
 import { buildFloor, disposeFloor } from './building.js';
 import type { FloorModel } from './building-parts.js';
+import { setUniform } from './uniforms.js';
 
 export const Floor = memo(function Floor({
   layout,
@@ -25,7 +26,7 @@ export const Floor = memo(function Floor({
     if (!animate || document.hidden) return;
     clock.current += delta;
     for (const s of model.spinners) s.mesh.rotation[s.axis] += s.speed * delta;
-    for (const h of model.holograms) h.uniforms['time']!.value = clock.current;
+    for (const h of model.holograms) setUniform(h, 'time', clock.current);
     for (const o of model.orbiters) {
       const t = clock.current * o.speed + o.phase;
       o.mesh.position.set(Math.cos(t) * o.rx, o.y + Math.sin(t * 2.3) * 0.25, Math.sin(t) * o.rz);
@@ -45,8 +46,7 @@ export const Floor = memo(function Floor({
       attribute.needsUpdate = true;
     }
     for (const p of model.pulsers)
-      (p.material as unknown as { emissiveIntensity: number }).emissiveIntensity =
-        p.base + p.amplitude * Math.sin(clock.current * p.speed);
+      p.material.emissiveIntensity = p.base + p.amplitude * Math.sin(clock.current * p.speed);
     // The next frame is requested by AnimationClock, which sets the pace.
   });
   void detail;

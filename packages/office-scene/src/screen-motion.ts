@@ -7,7 +7,7 @@ import { lineText, type CodeLine } from './screen-tokens.js';
  * file it is working in, where the view scrolls. The screen painter samples these a few times a second; the same
  * seed and moment always give the same answer, so what is drawn never depends on when the screen was last painted.
  */
-export type Segment = { ms: number; cps: number };
+type Segment = { ms: number; cps: number };
 
 /**
  * One member's typing rhythm, as a cycle that repeats: bursts of a few seconds in short strokes (a word, a small
@@ -51,7 +51,7 @@ const BLINK_MS = 1060;
 /** The caret is lit for the first part of each blink period. */
 export const caretOn = (ms: number): boolean => ms % BLINK_MS < 640;
 
-export type Hunk = { start: number; length: number };
+type Hunk = { start: number; length: number };
 
 /** The few places in a file a member edits, in order and apart from each other. */
 export function hunksOf(lines: readonly CodeLine[], seed: string, file: string): Hunk[] {

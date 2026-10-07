@@ -1,4 +1,4 @@
-import SEATING from './desk-seating.json';
+import { SEATING } from './seating.js';
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { CanvasTexture, RepeatWrapping, SRGBColorSpace, Vector3, type Group } from 'three';
@@ -9,6 +9,7 @@ import { SCREEN_H, SCREEN_W } from './screen-draw.js';
 import { screenTexture } from './screens.js';
 import { SECONDARY_H, SECONDARY_W, acquireSecondary } from './screen-secondary.js';
 import { BAND, createFactsScreen, type PaintOptions, type ScreenFacts } from './screen-facts.js';
+import { context2d } from './canvas-2d.js';
 
 const WIDTH = 0.76;
 const HEIGHT = (WIDTH * SCREEN_H) / SCREEN_W;
@@ -29,7 +30,7 @@ function streamTexture(accent: string): CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 32;
   canvas.height = 256;
-  const g = canvas.getContext('2d')!;
+  const g = context2d(canvas);
   g.fillStyle = accent;
   for (let i = 0; i < 16; i++) {
     g.globalAlpha = 0.25 + ((i * 7) % 5) / 8;
@@ -96,12 +97,11 @@ export function MemberScreen({
   useFrame((state, delta) => {
     if (live && facts) {
       // A screen is repainted at the pace its distance from the camera deserves, and only when a paint is due.
-      const distance = state.camera.position.distanceTo(
-        shake.current!.getWorldPosition(here.current),
-      );
+      const at = shake.current ? shake.current.getWorldPosition(here.current) : here.current;
+      const distance = state.camera.position.distanceTo(at);
       const interval = reducedMotion
         ? Infinity
-        : PAINT_MS[distance < NEAR ? 0 : distance < MID ? 1 : 2]!;
+        : PAINT_MS[distance < NEAR ? 0 : distance < MID ? 1 : 2];
       paintOptions.current.interval = interval;
       paintOptions.current.moving = !reducedMotion;
       paintOptions.current.speed = TYPING_SPEED[intensity];

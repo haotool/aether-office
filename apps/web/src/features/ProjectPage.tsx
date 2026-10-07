@@ -1,8 +1,10 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, type ReactNode } from 'react';
 import type { LocalSessionsResponse, Snapshot } from '@aether/contracts';
 import type { Session } from '../api.js';
 import { usePreferences } from '../state.js';
-import { useT, Empty } from '../ui.js';
+import { pageLink } from '../nav.js';
+import { useT } from '../ui.js';
+import { NotFound } from './NotFound.js';
 import { Agents } from './Agents.js';
 import { Approvals } from './Approvals.js';
 import { CapabilityMatrix } from './CapabilityMatrix.js';
@@ -22,19 +24,7 @@ import { Workspace } from './Workspace.js';
 
 const Terminals = lazy(() => import('./Terminals.js').then((m) => ({ default: m.Terminals })));
 
-/** Every page of a project except the office: picks one by its name. */
-export function ProjectPage({
-  page,
-  data,
-  session,
-  projectId,
-  sessions,
-  canWrite,
-  onSelect,
-  onRefresh,
-  onNewTask,
-}: {
-  page: string;
+type PageProps = {
   data: Snapshot;
   session: Session;
   projectId: string;
@@ -43,75 +33,98 @@ export function ProjectPage({
   onSelect: (id: string) => void;
   onRefresh: () => void;
   onNewTask: () => void;
-}) {
+};
+
+function SessionsPage({ sessions, owner }: { sessions: PageProps['sessions']; owner: boolean }) {
+  const locale = usePreferences((s) => s.locale);
+  return <Sessions sessions={sessions} locale={locale} canStop={owner} />;
+}
+
+function TerminalsPage({ projectId, session, canWrite }: PageProps) {
   const t = useT();
-  const prefs = usePreferences();
-  const owner = session.actor.role === 'owner';
+  return (
+    <Suspense fallback={<p>{t('loading')}</p>}>
+      <Terminals
+        key={projectId}
+        projectId={projectId}
+        userId={session.actor.id}
+        canWrite={canWrite}
+      />
+    </Suspense>
+  );
+}
+
+const isOwner = (session: Session) => session.actor.role === 'owner';
+
+/** The body of each page, by the name in the address. */
+const PAGES: Record<string, (p: PageProps) => ReactNode> = {
+  agents: (p) => (
+    <>
+      <Agents snapshot={p.data} onSelect={p.onSelect} onSaved={p.onRefresh} canWrite={p.canWrite} />
+      <CapabilityMatrix />
+    </>
+  ),
+  tasks: (p) => (
+    <Tasks
+      snapshot={p.data}
+      onNew={p.onNewTask}
+      onSaved={p.onRefresh}
+      canWrite={p.canWrite}
+      canExtend={isOwner(p.session)}
+    />
+  ),
+  messages: (p) => (
+    <>
+      <Messages snapshot={p.data} onSaved={p.onRefresh} canWrite={p.canWrite} />
+      <Rooms projectId={p.projectId} agents={p.data.agents} canManage={p.canWrite} />
+      <Meetings projectId={p.projectId} agents={p.data.agents} canManage={p.canWrite} />
+    </>
+  ),
+  sessions: (p) => <SessionsPage sessions={p.sessions} owner={isOwner(p.session)} />,
+  observations: (p) => <Observations key={p.projectId} projectId={p.projectId} />,
+  terminals: (p) => <TerminalsPage {...p} />,
+  workspace: (p) => <Workspace snapshot={p.data} />,
+  reviews: (p) => (
+    <Reviews
+      canRequestReview={p.canWrite}
+      snapshot={p.data}
+      onSaved={p.onRefresh}
+      canReview={['owner', 'reviewer'].includes(p.session.actor.role)}
+      canAccept={isOwner(p.session)}
+    />
+  ),
+  approvals: (p) => <Approvals projectId={p.projectId} live={p.session.mode === 'live'} />,
+  knowledge: (p) => (
+    <>
+      <Knowledge
+        projectId={p.projectId}
+        canWrite={p.canWrite}
+        canApprove={isOwner(p.session)}
+        workItems={p.data.work}
+      />
+      <Skills projectId={p.projectId} canManage={isOwner(p.session)} />
+    </>
+  ),
+  history: (p) => <History projectId={p.projectId} />,
+  machines: (p) => (
+    <MachinesPage data={p.data} projectId={p.projectId} canInvite={isOwner(p.session)} />
+  ),
+  settings: (p) => (
+    <SettingsPage
+      projectId={p.projectId}
+      mode={p.session.mode}
+      owner={isOwner(p.session)}
+      canWrite={p.canWrite}
+    />
+  ),
+};
+
+/** Every page of a project except the office: picks one by its name. */
+export function ProjectPage({ page, ...props }: PageProps & { page: string }) {
+  const render = Object.hasOwn(PAGES, page) ? PAGES[page] : undefined;
   return (
     <div className="page-padding">
-      {page === 'agents' ? (
-        <>
-          <Agents snapshot={data} onSelect={onSelect} onSaved={onRefresh} canWrite={canWrite} />
-          <CapabilityMatrix />
-        </>
-      ) : page === 'tasks' ? (
-        <Tasks
-          snapshot={data}
-          onNew={onNewTask}
-          onSaved={onRefresh}
-          canWrite={canWrite}
-          canExtend={owner}
-        />
-      ) : page === 'messages' ? (
-        <>
-          <Messages snapshot={data} onSaved={onRefresh} canWrite={canWrite} />
-          <Rooms projectId={projectId} agents={data.agents} canManage={canWrite} />
-          <Meetings projectId={projectId} agents={data.agents} canManage={canWrite} />
-        </>
-      ) : page === 'sessions' ? (
-        <Sessions sessions={sessions} locale={prefs.locale} canStop={owner} />
-      ) : page === 'observations' ? (
-        <Observations key={projectId} projectId={projectId} />
-      ) : page === 'terminals' ? (
-        <Suspense fallback={<p>{t('loading')}</p>}>
-          <Terminals
-            key={projectId}
-            projectId={projectId}
-            userId={session.actor.id}
-            canWrite={canWrite}
-          />
-        </Suspense>
-      ) : page === 'workspace' ? (
-        <Workspace snapshot={data} />
-      ) : page === 'reviews' ? (
-        <Reviews
-          canRequestReview={canWrite}
-          snapshot={data}
-          onSaved={onRefresh}
-          canReview={['owner', 'reviewer'].includes(session.actor.role)}
-          canAccept={owner}
-        />
-      ) : page === 'approvals' ? (
-        <Approvals projectId={projectId} />
-      ) : page === 'knowledge' ? (
-        <>
-          <Knowledge
-            projectId={projectId}
-            canWrite={canWrite}
-            canApprove={owner}
-            workItems={data.work}
-          />
-          <Skills projectId={projectId} canManage={owner} />
-        </>
-      ) : page === 'history' ? (
-        <History projectId={projectId} />
-      ) : page === 'machines' ? (
-        <MachinesPage data={data} projectId={projectId} canInvite={owner} />
-      ) : page === 'settings' ? (
-        <SettingsPage projectId={projectId} mode={session.mode} owner={owner} canWrite={canWrite} />
-      ) : (
-        <Empty title={t('empty')} />
-      )}
+      {render ? render(props) : <NotFound home={pageLink('office', props.projectId)} />}
     </div>
   );
 }

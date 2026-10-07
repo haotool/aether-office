@@ -1,6 +1,6 @@
 import { DEPARTMENTS } from '@aether/kernel';
 import type { UsageResponse, UsageScope, UsageTotals } from '@aether/contracts';
-import { fresh, type Bucket } from './usage-parse.js';
+import { fresh, type Bucket } from './usage-counters.js';
 import type { Entry } from './usage-store.js';
 import type { Transcript } from './usage-files.js';
 

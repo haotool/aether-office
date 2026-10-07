@@ -1,6 +1,6 @@
 import { useMemo, useRef } from 'react';
 import type { Agent } from '@aether/contracts';
-import type { Ring } from '../Animal.js';
+import { ringFor } from '../character-ring.js';
 import { ProjectedLabels } from '../Labels.js';
 import { floorY } from '../scene-geometry.js';
 import { SquadBeam, beamTier } from './SquadBeam.js';
@@ -10,7 +10,7 @@ import { SquadZones } from './SquadZones.js';
 import { SupervisorDesk } from './SupervisorDesk.js';
 import { Handover } from './handover/index.js';
 import { PuppetStrings, stringsEnabled } from './puppet/index.js';
-import { CHARACTER_BUDGET } from './squad-draw.js';
+import { CHARACTER_BUDGET, type DrawSquad } from './squad-draw.js';
 import type { Point2 } from './squad-glide.js';
 import type { SquadSceneContext } from './squad-scene.js';
 import type { SquadFrame } from './use-squad.js';
@@ -27,6 +27,81 @@ export type SquadPrefs = {
   handover?: boolean;
 };
 
+/** What a click, a hover or a press on a subagent does: the same as on any member (the page decides). */
+function useMemberActions({ props, fly, hover, ix }: SquadSceneContext): MemberActions {
+  return useMemo(
+    () => ({
+      onActivate: (id, shift) => {
+        if (!ix.seatDrag.justEnded()) ix.marks.activate(id, { shift, keyboard: false });
+      },
+      onMenu: ix.marks.openMenu,
+      onSelect: props.onSelect,
+      onFly: fly,
+      onHoverStart: hover.start,
+      onHoverEnd: hover.end,
+    }),
+    [ix, props.onSelect, fly, hover.start, hover.end],
+  );
+}
+
+/** The squads in view: each zone with its pods, the supervisor's dressing, the hand-over, the strings, the beam and the zone labels. */
+function SquadEffects({
+  squad,
+  scene,
+  squads,
+  podPos,
+}: {
+  squad: SquadFrame;
+  scene: SquadSceneContext;
+  squads: readonly DrawSquad[];
+  podPos: Map<string, Point2>;
+}) {
+  const { props, exploded, compact } = scene;
+  const { quality, reducedMotion } = props;
+  const prefs = props.squadPrefs;
+  const relation = prefs?.relation !== false;
+  const still = reducedMotion || !!prefs?.calm;
+  return (
+    <>
+      <SquadZones
+        squads={squads}
+        frame={squad}
+        exploded={exploded}
+        animate={!reducedMotion}
+        podPos={podPos}
+      />
+      {relation && <SupervisorDesk squads={squads} exploded={exploded} />}
+      {relation && <Handover squads={squads} frame={squad} exploded={exploded} zh={scene.zh} />}
+      {stringsEnabled(quality, prefs) && (
+        <PuppetStrings
+          squads={squads}
+          frame={squad}
+          exploded={exploded}
+          simulate={!still}
+          quality={quality}
+          podPos={podPos}
+        />
+      )}
+      {relation && (
+        <SquadBeam
+          squads={squads}
+          frame={squad}
+          exploded={exploded}
+          animate={!still && quality !== 'low'}
+          tier={beamTier(quality)}
+        />
+      )}
+      {!compact && (
+        <ProjectedLabels
+          labels={squadLabelsOf(squads, exploded)}
+          elements={scene.elements}
+          selected={null}
+        />
+      )}
+    </>
+  );
+}
+
 /**
  * Everything drawn for the squads of the scene: each zone with its pods, the supervisor's dressing, the beam into the
  * core, the subagents (seated, arriving, leaving), the zone labels and the activity log. A sibling of the members,
@@ -35,20 +110,7 @@ export type SquadPrefs = {
 export function SquadLayer({ squad, scene }: { squad: SquadFrame; scene: SquadSceneContext }) {
   const { props, floor, exploded, compact, hover, ix, engagements, pose } = scene;
   const { agents, quality, reducedMotion, selectedId } = props;
-  const prefs = props.squadPrefs;
-  const actions: MemberActions = useMemo(
-    () => ({
-      onActivate: (id, shift) => {
-        if (!ix.seatDrag.justEnded()) ix.marks.activate(id, { shift, keyboard: false });
-      },
-      onMenu: ix.marks.openMenu,
-      onSelect: props.onSelect,
-      onFly: scene.fly,
-      onHoverStart: hover.start,
-      onHoverEnd: hover.end,
-    }),
-    [ix, props.onSelect, scene.fly, hover.start, hover.end],
-  );
+  const actions = useMemberActions(scene);
   const known = useRef(new Map<string, Agent>());
   for (const agent of agents) known.current.set(agent.id, agent); // a leaver is no longer listed: its last look stays
   const podPos = useRef(new Map<string, Point2>());
@@ -58,51 +120,13 @@ export function SquadLayer({ squad, scene }: { squad: SquadFrame; scene: SquadSc
     [all, exploded, floor],
   );
   squad.handover.view.current = { floor, exploded }; // a hand-over is walked only for a desk that is in view
-  const relation = prefs?.relation !== false;
-  const still = reducedMotion || !!prefs?.calm;
   const floorOfSquad = new Map(all.map((s) => [s.supervisor, s.floor]));
   const budget = CHARACTER_BUDGET[quality];
 
   return (
     <>
       {squads.length > 0 && (
-        <>
-          <SquadZones
-            squads={squads}
-            frame={squad}
-            exploded={exploded}
-            animate={!reducedMotion}
-            podPos={podPos.current}
-          />
-          {relation && <SupervisorDesk squads={squads} exploded={exploded} />}
-          {relation && <Handover squads={squads} frame={squad} exploded={exploded} zh={scene.zh} />}
-          {stringsEnabled(quality, prefs) && (
-            <PuppetStrings
-              squads={squads}
-              frame={squad}
-              exploded={exploded}
-              simulate={!still}
-              quality={quality}
-              podPos={podPos.current}
-            />
-          )}
-          {relation && (
-            <SquadBeam
-              squads={squads}
-              frame={squad}
-              exploded={exploded}
-              animate={!still && quality !== 'low'}
-              tier={beamTier(quality)}
-            />
-          )}
-          {!compact && (
-            <ProjectedLabels
-              labels={squadLabelsOf(squads, exploded)}
-              elements={scene.elements}
-              selected={null}
-            />
-          )}
-        </>
+        <SquadEffects squad={squad} scene={scene} squads={squads} podPos={podPos.current} />
       )}
       {squad.members.map((m) => {
         const agent = known.current.get(m.id);
@@ -122,15 +146,7 @@ export function SquadLayer({ squad, scene }: { squad: SquadFrame; scene: SquadSc
             baseY={floorY(memberFloor, exploded)}
             podPos={podPos.current}
             engagements={engagements.get(m.id)}
-            ring={
-              (ix.marks.group.has(m.id)
-                ? 'group'
-                : m.id === selectedId
-                  ? 'selected'
-                  : m.id === hover.id
-                    ? 'hover'
-                    : null) satisfies Ring | null
-            }
+            ring={ringFor(m.id, { group: ix.marks.group, selectedId, hoveredId: hover.id })}
             selected={m.id === selectedId}
             emote={pose.cues[m.id]}
             reducedMotion={reducedMotion}

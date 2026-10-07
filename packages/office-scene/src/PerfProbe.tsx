@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { summarizeFrames, type PerfReport } from './perf.js';
+import { summarizeFrames, type FrameStats, type PerfReport } from './perf.js';
 import { estimateGpuBytes, type PerfRig } from './perf-rig.js';
 
 const WARMUP = 30;
@@ -19,6 +19,12 @@ type Collector = {
 };
 
 const MEGABYTE = 1024 * 1024;
+/** A sample is only reported once it holds frames, so an empty one is never summarised: zeroes keep the types honest. */
+const statsOf = (values: readonly number[]): FrameStats =>
+  summarizeFrames(values) ?? { frames: 0, medianMs: 0, p95Ms: 0, p99Ms: 0, maxMs: 0, medianFps: 0 };
+
+type Rig = PerfRig & { report: (c: Collector) => PerfReport };
+type PerfWindow = Window & { __aetherPerfRig?: Rig };
 
 /**
  * Renders continuously for a number of frames and reports measured frame times, CPU time per frame and what the scene
@@ -42,6 +48,10 @@ export function PerfProbe({
   const main = useRef<{ calls: number; triangles: number; ms: number } | null>(null);
   const lastMain = useRef<{ calls: number; triangles: number; ms: number } | null>(null);
   const { gl, scene, camera, invalidate, size } = useThree();
+  const rigRef = useRef<Rig | null>(null);
+  // What the one-time sample below reads: the current values, never a reason to re-run it.
+  const latest = useRef({ quality, frames, onReport, camera, invalidate, size });
+  latest.current = { quality, frames, onReport, camera, invalidate, size };
 
   useEffect(() => {
     const render = gl.render.bind(gl);
@@ -69,10 +79,10 @@ export function PerfProbe({
       const context = gl.getContext();
       const debug = context.getExtension('WEBGL_debug_renderer_info');
       const pixels = gl.domElement.width * gl.domElement.height;
-      const js = summarizeFrames(c.js)!;
-      const render = summarizeFrames(c.render)!;
+      const js = statsOf(c.js);
+      const render = statsOf(c.render);
       return {
-        stats: summarizeFrames(c.deltas)!,
+        stats: statsOf(c.deltas),
         drawCalls: c.calls,
         triangles: c.triangles,
         geometries: gl.info.memory.geometries,
@@ -86,9 +96,9 @@ export function PerfProbe({
             ? context.getParameter(debug.UNMASKED_RENDERER_WEBGL)
             : context.getParameter(context.RENDERER),
         ),
-        quality,
+        quality: latest.current.quality,
         devicePixelRatio: gl.getPixelRatio(),
-        viewport: { width: size.width, height: size.height },
+        viewport: { width: latest.current.size.width, height: latest.current.size.height },
         measuredAt: new Date().toISOString(),
       };
     };
@@ -104,21 +114,21 @@ export function PerfProbe({
           triangles: 0,
           resolve,
         };
-        invalidate();
+        latest.current.invalidate();
       });
-    const rig: PerfRig & { report: (c: Collector) => PerfReport } = {
+    const rig: Rig = {
       sample: (count) => sample(count),
       scene,
       gl,
-      camera,
+      camera: latest.current.camera,
       report,
     };
-    (window as unknown as { __aetherPerfRig?: unknown }).__aetherPerfRig = rig;
-    void sample(frames).then(onReport);
+    rigRef.current = rig;
+    (window as PerfWindow).__aetherPerfRig = rig;
+    void sample(latest.current.frames).then(latest.current.onReport);
     return () => {
-      delete (window as unknown as { __aetherPerfRig?: unknown }).__aetherPerfRig;
+      delete (window as PerfWindow).__aetherPerfRig;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- one first sample per mount
   }, [gl, scene]);
 
   useFrame((_state, delta) => {
@@ -137,10 +147,7 @@ export function PerfProbe({
     }
     if (c.deltas.length >= c.frames) {
       collector.current = null;
-      const rig = (
-        window as unknown as { __aetherPerfRig: { report: (c: Collector) => PerfReport } }
-      ).__aetherPerfRig;
-      c.resolve(rig.report(c));
+      if (rigRef.current) c.resolve(rigRef.current.report(c));
       return;
     }
     invalidate();

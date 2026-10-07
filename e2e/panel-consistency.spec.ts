@@ -14,6 +14,20 @@ const LAYOUTS = {
   tablet: { viewport: { width: 820, height: 1180 }, touch: true },
 } as const;
 
+/**
+ * "Continue in AETHER" needs the project's live execution on, and the native server is shared: native-workflow.spec.ts ends
+ * with the emergency stop, which switches it off for every spec that runs after it.
+ */
+async function allowLiveExecution(page: Page, projectId: string) {
+  await page.goto(`${nativeOrigin()}/settings/models?project=${projectId}`);
+  const allow = page.getByRole('switch', { name: '允許此專案執行真實代理' });
+  await expect(allow).toBeVisible();
+  if (await allow.isChecked()) return;
+  await allow.check();
+  await allow.locator('xpath=ancestor::form').getByRole('button', { name: '儲存' }).click();
+  await expect(allow).toBeChecked();
+}
+
 async function openConversation(page: Page, phone: boolean) {
   await signIn(page, nativeOrigin(), { session: NATIVE_SESSION });
   await expect(page.getByRole('link', { name: '辦公室', exact: true }).first()).toBeVisible();
@@ -22,6 +36,7 @@ async function openConversation(page: Page, phone: boolean) {
     name: string;
   }[];
   const project = projects.find((p) => p.name.startsWith('Synthetic browser fixture'))!;
+  await allowLiveExecution(page, project.id);
   await page.goto(`${nativeOrigin()}/office?project=${project.id}`);
   if (phone) {
     await page.getByRole('button', { name: '開啟 session 列表' }).tap();
@@ -49,7 +64,8 @@ for (const [layout, { viewport, touch }] of Object.entries(LAYOUTS))
     const resume = scope.getByRole('button', { name: '在 AETHER 繼續', exact: true });
     const composer = scope.getByLabel('傳訊息給 session');
     await expect(resume.or(composer)).toBeVisible({ timeout: 20000 });
-    if (await resume.isVisible()) await resume.click();
+    // an earlier run may have continued it already: the button can give way to the composer between the check and the click
+    if (await resume.isVisible()) await resume.click({ timeout: 3000 }).catch(() => undefined);
     await expect(scope.getByLabel('傳訊息給 session')).toBeVisible({ timeout: 45000 });
     const measured = await scope.evaluate((root) => {
       const heights = (selector: string) =>

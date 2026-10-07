@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { Agent, Room } from '@aether/contracts';
+import { useQuery } from '@tanstack/react-query';
+import type { Room } from '@aether/contracts';
 import { api, execute } from '../api.js';
 import { Field, useT } from '../ui.js';
+import { AgentPicker, useCommandRunner, type AgentPanelProps } from './panel-kit.js';
 
 export function useRooms(projectId: string) {
   return useQuery({
@@ -12,18 +12,9 @@ export function useRooms(projectId: string) {
   });
 }
 
-export function Rooms({
-  projectId,
-  agents,
-  canManage,
-}: {
-  projectId: string;
-  agents: readonly Agent[];
-  canManage: boolean;
-}) {
+export function Rooms({ projectId, agents, canManage }: AgentPanelProps) {
   const t = useT();
-  const client = useQueryClient();
-  const [error, setError] = useState('');
+  const { error, run } = useCommandRunner([['rooms', projectId]], false);
   const rooms = useRooms(projectId);
   const name = (id: string) => agents.find((a) => a.id === id)?.name ?? t('humanRecipient');
   return (
@@ -39,36 +30,24 @@ export function Rooms({
       </ul>
       {canManage && (
         <form
-          onSubmit={async (e) => {
+          onSubmit={(e) => {
             e.preventDefault();
             const element = e.currentTarget; // React clears currentTarget after the first await
             const form = new FormData(element);
-            setError('');
-            try {
+            void run(async () => {
               await execute(
                 'room.create',
                 { name: form.get('name'), members: form.getAll('members') },
                 projectId,
               );
               element.reset();
-              await client.invalidateQueries({ queryKey: ['rooms', projectId] });
-            } catch (err) {
-              setError(err instanceof Error ? err.message : 'REQUEST_FAILED');
-            }
+            });
           }}
         >
           <Field label={t('roomName')}>
             <input name="name" required maxLength={160} />
           </Field>
-          <Field label={t('roomMembers')}>
-            <select name="members" multiple required size={Math.min(6, Math.max(2, agents.length))}>
-              {agents.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <AgentPicker name="members" label={t('roomMembers')} agents={agents} />
           {error && <p role="alert">{error}</p>}
           <button type="submit">{t('roomCreate')}</button>
         </form>

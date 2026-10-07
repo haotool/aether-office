@@ -3,12 +3,8 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseUsage, readUsage } from '../../apps/control/src/services/session-usage.js';
-import {
-  dayKeyOf,
-  fresh,
-  newState,
-  parseChunk,
-} from '../../apps/control/src/services/usage-parse.js';
+import { fresh, newState } from '../../apps/control/src/services/usage-counters.js';
+import { dayKeyOf, parseChunk } from '../../apps/control/src/services/usage-parse.js';
 
 const line = (value: unknown) => JSON.stringify(value);
 

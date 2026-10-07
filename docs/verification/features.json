@@ -2131,17 +2131,20 @@
     "verificationStatus": "partial",
     "codePaths": [
       "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx"
+      "apps/web/src/ui.tsx",
+      "apps/web/src/features/FirstRun.tsx",
+      "apps/web/src/features/NotFound.tsx"
     ],
     "testIds": [
       "e2e/ui-sweep.spec.ts",
-      "e2e/workbench.spec.ts"
+      "e2e/workbench.spec.ts",
+      "e2e/first-run.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "Loading, empty and offline states are covered; no-permission (viewer) states are not browser-tested",
+      "Loading, empty (first run, no sessions, no approvals), error (a missing project, an unknown page) and offline states are covered; no-permission (viewer) states are not browser-tested",
       "Raw error codes were shown for most failures; the ones a CLI user can reach now have words in both languages, the rest of the roughly 200 codes still show as a code (DAG_CYCLE, INTEGRATION_TOKEN_MISSING and others on the orchestration pages)"
     ]
   },
@@ -2152,17 +2155,20 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/i18n.ts"
+      "apps/web/src/i18n.ts",
+      "apps/web/src/state.ts"
     ],
     "testIds": [
       "tests/aether/i18n.test.ts",
-      "e2e/ui-sweep.spec.ts"
+      "e2e/ui-sweep.spec.ts",
+      "tests/aether/first-run.test.ts",
+      "e2e/first-run.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "Key parity, script purity and placeholder-free copy are unit-tested; the English UI is not browser-swept"
+      "Key parity, script purity and placeholder-free copy are unit-tested; the first-visit language (English and Traditional Chinese browsers), the login page, the first-run panel, Approvals, the 404 page and the forms are checked in the browser in both languages; the rest of the English UI is not browser-swept"
     ]
   },
   {
@@ -2597,13 +2603,14 @@
     ],
     "testIds": [
       "e2e/accessibility.spec.ts",
-      "e2e/ui-sweep.spec.ts"
+      "e2e/ui-sweep.spec.ts",
+      "e2e/first-run.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "Task creation is verified by keyboard alone; messaging, approval and review flows are not"
+      "Task creation is verified by keyboard alone, and the skip link reaches the main landmark with one Tab; messaging, approval and review flows are not walked through by keyboard"
     ]
   },
   {
@@ -2633,11 +2640,15 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/web/src/App.tsx",
-      "apps/web/src/features/Agents.tsx"
+      "apps/web/src/features/Agents.tsx",
+      "apps/web/src/features/SceneSummary.tsx",
+      "apps/web/src/features/scene-summary.ts"
     ],
     "testIds": [
       "e2e/navigation.spec.ts",
-      "e2e/scene.spec.ts"
+      "e2e/scene.spec.ts",
+      "e2e/first-run.spec.ts",
+      "tests/aether/first-run.test.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"

@@ -9,6 +9,7 @@ import {
   Float32BufferAttribute,
   Color,
 } from 'three';
+import { context2d } from './canvas-2d.js';
 // Original stylized cartography, hand-authored for the orbital-office backdrop.
 // These coarse silhouettes are decorative and are not a geographical dataset.
 const continents = [
@@ -82,29 +83,28 @@ const continents = [
     [44, -25],
   ],
 ];
-/** Painted in a 2048 x 1024 space whatever the canvas size (`small` halves it, see `earthTextureSize`), so the picture is the same. */
-function earthTexture(small: boolean) {
-  const { width, height } = earthTextureSize(small);
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('CANVAS_TEXTURE_UNAVAILABLE');
-  const scale = width / 2048;
-  ctx.scale(scale, scale);
+type Paint = CanvasRenderingContext2D;
+
+function paintOcean(ctx: Paint) {
   const ocean = ctx.createLinearGradient(0, 0, 0, 1024);
   ocean.addColorStop(0, '#315867');
   ocean.addColorStop(0.45, '#123b51');
   ocean.addColorStop(1, '#3d6472');
   ctx.fillStyle = ocean;
   ctx.fillRect(0, 0, 2048, 1024);
-  const xy = ([lon, lat]: number[]) => [((lon! + 180) / 360) * 2048, ((90 - lat!) / 180) * 1024];
+}
+
+function paintContinents(ctx: Paint, scale: number) {
+  const xy = ([lon = 0, lat = 0]: number[]): [number, number] => [
+    ((lon + 180) / 360) * 2048,
+    ((90 - lat) / 180) * 1024,
+  ];
   for (const polygon of continents) {
     ctx.beginPath();
     polygon.forEach((point, i) => {
       const [x, y] = xy(point);
-      if (i === 0) ctx.moveTo(x!, y!);
-      else ctx.lineTo(x!, y!);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
     });
     ctx.closePath();
     ctx.fillStyle = '#758976';
@@ -113,6 +113,9 @@ function earthTexture(small: boolean) {
     ctx.fill();
     ctx.shadowBlur = 0;
   }
+}
+
+function paintClouds(ctx: Paint) {
   for (let i = 0; i < 150; i++) {
     const x = (Math.sin(i * 31.73) * 0.5 + 0.5) * 2048,
       y = (Math.sin(i * 7.11) * 0.5 + 0.5) * 890 + 67;
@@ -128,6 +131,9 @@ function earthTexture(small: boolean) {
     ctx.fillRect(x - 70, y - 70, 140, 140);
     ctx.restore();
   }
+}
+
+function paintPolarCaps(ctx: Paint) {
   const polar = ctx.createLinearGradient(0, 0, 0, 1024);
   polar.addColorStop(0, 'rgba(225,237,231,.9)');
   polar.addColorStop(0.12, 'rgba(225,237,231,0)');
@@ -135,6 +141,22 @@ function earthTexture(small: boolean) {
   polar.addColorStop(1, 'rgba(225,237,231,.9)');
   ctx.fillStyle = polar;
   ctx.fillRect(0, 0, 2048, 1024);
+}
+
+/** Painted in a 2048 x 1024 space whatever the canvas size (`small` halves it, see `earthTextureSize`), so the picture is the same. */
+function earthTexture(small: boolean) {
+  const { width, height } = earthTextureSize(small);
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('CANVAS_TEXTURE_UNAVAILABLE');
+  const scale = width / 2048;
+  ctx.scale(scale, scale);
+  paintOcean(ctx);
+  paintContinents(ctx, scale);
+  paintClouds(ctx);
+  paintPolarCaps(ctx);
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
   return texture;
@@ -143,7 +165,7 @@ function earthTexture(small: boolean) {
 function glowTexture(inner: string, outer: string) {
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = 256;
-  const ctx = canvas.getContext('2d')!;
+  const ctx = context2d(canvas);
   const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
   gradient.addColorStop(0, inner);
   gradient.addColorStop(1, outer);

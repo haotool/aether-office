@@ -17,17 +17,80 @@ const KIND_LABEL: Record<MemeCategory, Key> = {
   easter: 'lifeKindEaster',
 };
 
-/** Office → Animations: Calm mode, which kinds of little moment the 3D office shows, how often, and the first-visit tour. */
-export function OfficeAnimationsSettings() {
+/** Which kinds of little moment the 3D office shows. */
+function LifeKinds({
+  life,
+  setLife,
+}: {
+  life: LifePrefs;
+  setLife: (next: Partial<LifePrefs>) => void;
+}) {
+  const t = useT();
+  return (
+    <Block id="lifeKinds">
+      <div className="srow-text">
+        <h3>{t('stLifeKindsLabel')}</h3>
+        <p>{t('stLifeKindsDesc')}</p>
+      </div>
+      <ul className="skinds">
+        {LIFE_CATEGORIES.map((id) => (
+          <li key={id}>
+            <span>{t(KIND_LABEL[id])}</span>
+            <Switch
+              name={t(KIND_LABEL[id])}
+              checked={life.categories[id]}
+              disabled={life.calm}
+              onChange={(on) => setLife({ categories: { ...life.categories, [id]: on } })}
+            />
+          </li>
+        ))}
+      </ul>
+    </Block>
+  );
+}
+
+/** The first-visit tour: whether it plays, and a button that plays it again. */
+function IntroRows() {
   const t = useT();
   const prefs = usePreferences();
   const navigate = useNavigate();
   const project = new URLSearchParams(useLocation().search).get('project');
-  const life = prefs.life;
   const replay = () => {
     requestIntroReplay();
     navigate(`/office${project ? `?project=${encodeURIComponent(project)}` : ''}`);
   };
+  return (
+    <>
+      <Row
+        id="intro"
+        control={
+          <Segmented
+            value={prefs.intro}
+            options={[
+              { value: 'auto', label: t('introAuto') },
+              { value: 'never', label: t('introNever') },
+            ]}
+            onChange={(intro) => prefs.set({ intro })}
+          />
+        }
+      />
+      <Row
+        id="introReplay"
+        control={
+          <button type="button" className="secondary" onClick={replay}>
+            {t('introReplayButton')}
+          </button>
+        }
+      />
+    </>
+  );
+}
+
+/** Office → Animations: Calm mode, which kinds of little moment the 3D office shows, how often, and the first-visit tour. */
+export function OfficeAnimationsSettings() {
+  const t = useT();
+  const prefs = usePreferences();
+  const life = prefs.life;
   const setLife = (next: Partial<LifePrefs>) => prefs.set({ life: { ...life, ...next } });
   return (
     <>
@@ -50,25 +113,7 @@ export function OfficeAnimationsSettings() {
           />
         }
       />
-      <Block id="lifeKinds">
-        <div className="srow-text">
-          <h3>{t('stLifeKindsLabel')}</h3>
-          <p>{t('stLifeKindsDesc')}</p>
-        </div>
-        <ul className="skinds">
-          {LIFE_CATEGORIES.map((id) => (
-            <li key={id}>
-              <span>{t(KIND_LABEL[id])}</span>
-              <Switch
-                name={t(KIND_LABEL[id])}
-                checked={life.categories[id]}
-                disabled={life.calm}
-                onChange={(on) => setLife({ categories: { ...life.categories, [id]: on } })}
-              />
-            </li>
-          ))}
-        </ul>
-      </Block>
+      <LifeKinds life={life} setLife={setLife} />
       <Row
         id="lifeFrequency"
         control={
@@ -83,27 +128,7 @@ export function OfficeAnimationsSettings() {
           />
         }
       />
-      <Row
-        id="intro"
-        control={
-          <Segmented
-            value={prefs.intro}
-            options={[
-              { value: 'auto', label: t('introAuto') },
-              { value: 'never', label: t('introNever') },
-            ]}
-            onChange={(intro) => prefs.set({ intro })}
-          />
-        }
-      />
-      <Row
-        id="introReplay"
-        control={
-          <button type="button" className="secondary" onClick={replay}>
-            {t('introReplayButton')}
-          </button>
-        }
-      />
+      <IntroRows />
     </>
   );
 }

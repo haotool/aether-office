@@ -4,7 +4,7 @@ import type { LifeRule } from './registry.js';
 import type { LifeCue } from './schedule.js';
 
 /** A pose to ask for `delayMs` after the effect started. */
-export type PoseCall = { delayMs: number; request: PoseRequest };
+type PoseCall = { delayMs: number; request: PoseRequest };
 
 /**
  * The poses an effect asks of the members it stands over: its desk's member, the members of its group, or the members at

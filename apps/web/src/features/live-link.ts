@@ -1,10 +1,11 @@
 import type { QueryKey } from '@tanstack/react-query';
+import { fill, translate } from '../i18n.js';
 
 /**
  * The live link to the control plane, as pure functions: what a change event refreshes, how long to wait before
  * reconnecting, and what the connection indicator says. The EventSource itself lives in use-session-stream.ts.
  */
-export type ChangeKind = 'state' | 'tool' | 'speech' | 'transcript' | 'squad' | 'outcome';
+type ChangeKind = 'state' | 'tool' | 'speech' | 'transcript' | 'squad' | 'outcome';
 export type SessionChange = { seq: number; key: string; kinds: ChangeKind[] };
 
 /** Parses an event's data; anything that is not a change is ignored rather than trusted. */
@@ -101,7 +102,6 @@ export function pollMs<T>(live: boolean, fallback: T): T | number {
 /** "4s", "3 min": how long ago, for the connection indicator. */
 export function ageText(ms: number, locale: 'zh-TW' | 'en'): string {
   const s = Math.max(0, Math.round(ms / 1000));
-  if (s < 60) return locale === 'zh-TW' ? `${s} 秒` : `${s}s`;
-  const m = Math.floor(s / 60);
-  return locale === 'zh-TW' ? `${m} 分` : `${m} min`;
+  if (s < 60) return fill(translate(locale, 'ageSeconds'), s);
+  return fill(translate(locale, 'ageMinutes'), Math.floor(s / 60));
 }

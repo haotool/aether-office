@@ -247,7 +247,7 @@ export function assertOwnedAgent(actor: Actor, agentId: string): void {
   if (actor.role === 'agent' && actor.agentId !== agentId)
     throw new DomainError('RECIPIENT_FORBIDDEN', 403);
 }
-export type Usage = { input: number; output: number };
+type Usage = { input: number; output: number };
 export function usageDelta(previous: Usage, cumulative: Usage): Usage {
   if (
     ![previous.input, previous.output, cumulative.input, cumulative.output].every(
@@ -283,53 +283,25 @@ export {
   SQUAD_PITCH,
   layoutVersionOf,
   objectBounds,
-  objectSize,
   squadCapacity,
   validateLayout,
   type PlacedObject,
 } from './layout.js';
+export { normalizePattern, patternsOverlap, findConflicts } from './reservations.js';
+export { parseDiff, commentStatus } from './diff.js';
+export { CAPABILITIES, capabilitiesOf, supports } from './capabilities.js';
+export { buildNavGrid, findPath, pathLength, type NavGrid, type Point } from './navigation.js';
 export {
-  normalizePattern,
-  patternsOverlap,
-  findConflicts,
-  type Reservation,
-} from './reservations.js';
-export { parseDiff, commentStatus, type Hunk, type CommentStatus } from './diff.js';
-export {
-  CAPABILITIES,
-  capabilitiesOf,
-  supports,
-  type Capabilities,
-  type CapabilityFlag,
-  type Injection,
-} from './capabilities.js';
-export {
-  buildNavGrid,
-  findPath,
-  nearestWalkable,
-  pathLength,
-  type NavGrid,
-  type PathResult,
-  type Point,
-} from './navigation.js';
-export {
-  DEFAULT_TIMEZONE,
   dueDecision,
   isValidSpec,
   isValidTimezone,
   nextRun,
   type ScheduleSpec,
 } from './schedule.js';
-export { parseSkill, SkillError, type ParsedSkill } from './skill.js';
+export { parseSkill, SkillError } from './skill.js';
 export { fuzzyRank, fuzzyScore } from './fuzzy.js';
-export { TEMPLATES, isTemplate, type StepPlan, type WorkflowTemplate } from './workflows.js';
-export {
-  DEPARTMENTS,
-  ROLE_LABELS,
-  type Department,
-  type DepartmentId,
-  type RoleId,
-} from './departments.js';
+export { TEMPLATES } from './workflows.js';
+export { DEPARTMENTS, ROLE_LABELS, type DepartmentId, type RoleId } from './departments.js';
 export {
   classifySession,
   scoreSession,
@@ -338,33 +310,16 @@ export {
   type ToolCall,
   type Classification,
   type ClassifyInput,
-  type Scored,
   type Settled,
 } from './classify-session.js';
-export {
-  plainTerminalLines,
-  terminalAgentState,
-  type TerminalAgentState,
-} from './terminal-state.js';
-export { safeHref, parseInline, spansText, type Span } from './markdown-inline.js';
-export { parseMarkdown, type Align, type ListItem, type MdBlock } from './markdown-blocks.js';
-export {
-  toPlainPreview,
-  toInlineSegments,
-  type PreviewKind,
-  type PreviewLine,
-  type PreviewOptions,
-} from './markdown-preview.js';
+export { terminalAgentState, type TerminalAgentState } from './terminal-state.js';
+export { parseInline, spansText, type Span } from './markdown-inline.js';
+export { parseMarkdown, type ListItem, type MdBlock } from './markdown-blocks.js';
+export { toPlainPreview, toInlineSegments, type PreviewLine } from './markdown-preview.js';
 export { cutMarkdown, graphemes } from './markdown-cut.js';
 export { countWords, revealWords, splitWords } from './markdown-words.js';
 export { neutralizeHtml } from './text-html.js';
 export { structureWrappers, stripCliWrappers, type Notice } from './text-wrappers.js';
-export {
-  cleanTitle,
-  shortLabel,
-  displayWidth,
-  graphemeWidth,
-  type LabelOptions,
-} from './text-title.js';
+export { cleanTitle, shortLabel, displayWidth } from './text-title.js';
 export { balanceBrackets } from './text-brackets.js';
 export { DAY_MS, HOUR_MS, MINUTE_MS, formatAgo, formatSpan } from './time.js';

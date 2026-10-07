@@ -20,16 +20,22 @@ import {
   type InstancedMesh,
 } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import SEATING from '../desk-seating.json';
+import { SLAB_TOP } from '../seating.js';
 
 /** The top of a desk, where the supervisor's things stand. */
-export const DESK_TOP = SEATING.slab.at[1]! + SEATING.slab.size[1]! / 2;
+export const DESK_TOP = SLAB_TOP;
 /** The gold of the group ring: a supervisor is marked in it. */
 export const SUPERVISOR_GOLD = '#ffc65c';
 /** The amber of a subagent waiting for a person (the attention ring's). */
 export const WAITING_AMBER = '#ffc65c';
 
 const FLAT = -Math.PI / 2;
+/** The parts of one piece, as one geometry (every part carries the same attributes, so merging cannot fail). */
+export const merged = (parts: BufferGeometry[]): BufferGeometry => {
+  const geometry = mergeGeometries(parts);
+  if (!geometry) throw new Error('the parts of a squad piece must share their attributes');
+  return geometry;
+};
 const paint = (g: BufferGeometry, hex: string): BufferGeometry => {
   const c = new Color(hex);
   const n = g.getAttribute('position').count;
@@ -47,27 +53,27 @@ function build() {
     /** The flat ring on the floor round a pod. */
     ring: paint(new RingGeometry(0.5, 0.57, 40).rotateX(FLAT), WHITE),
     /** The hover stool and the stalk of its pane, in the pod's frame (the sitter looks along -z, the pane stands in front). */
-    stool: mergeGeometries([
+    stool: merged([
       paint(at(new CylinderGeometry(0.27, 0.22, 0.4, 14), 0, 0.2, 0), WHITE),
       paint(at(new CylinderGeometry(0.31, 0.31, 0.07, 14), 0, 0.44, 0), WHITE),
       paint(at(new BoxGeometry(0.03, 0.78, 0.03), 0, 0.39, -0.62), WHITE),
-    ])!,
+    ]),
     /** The holo pane on its stalk, facing the sitter. */
     pane: paint(at(new PlaneGeometry(0.5, 0.32), 0, 0.92, -0.62), WHITE),
     /** A member past the character budget: a faceless seated figure, one colour. */
-    silhouette: mergeGeometries([
+    silhouette: merged([
       paint(at(new CapsuleGeometry(0.2, 0.34, 3, 8), 0, 0.82, 0), WHITE),
       paint(at(new SphereGeometry(0.15, 10, 8), 0, 1.36, 0), WHITE),
-    ])!,
+    ]),
     /** A thin bar of light from the core to a halo: unit length along y. */
     filament: paint(new CylinderGeometry(0.018, 0.018, 1, 5, 1, true), WHITE),
     halo: paint(new RingGeometry(0.34, 0.4, 36).rotateX(FLAT), WHITE),
     /** The supervisor's desk dressing in the desk's own frame: the in-tray and the gold edge (the stamp is the hand-over's: it moves). */
-    dressing: mergeGeometries([
+    dressing: merged([
       paint(at(new BoxGeometry(0.34, 0.035, 0.26), -0.55, DESK_TOP + 0.02, -0.18), '#d8c9a3'),
       paint(at(new BoxGeometry(0.34, 0.035, 0.26), -0.55, DESK_TOP + 0.06, -0.18), '#c9b88c'),
       paint(at(new BoxGeometry(1.7, 0.012, 0.03), 0, DESK_TOP + 0.006, 0.4), SUPERVISOR_GOLD),
-    ])!,
+    ]),
   };
 }
 /** The shared parts. Built when a scene first shows a squad, and kept: there are only a handful, all small. */
@@ -187,7 +193,8 @@ export function writeInstances(
   const n = Math.min(items.length, mesh.instanceMatrix.count);
   let changed = false;
   for (let i = 0; i < n; i++) {
-    const item = items[i]!;
+    const item = items[i];
+    if (!item) break;
     if (!item.quaternion) quat.setFromAxisAngle(UP, item.yaw ?? 0);
     const moved = writeInstance(
       mesh,

@@ -24,6 +24,9 @@ export type Probe = {
   list: (directory: string) => string[];
 };
 
+const first = (text: string) => text.split('\n')[0] ?? '';
+const semver = (text: string) => /\d+\.\d+\.\d+/.exec(text)?.[0] ?? null;
+
 const realProbe: Probe = {
   run: (command, args) => {
     const result = spawnSync(command, args, { encoding: 'utf8', timeout: 8000 });
@@ -43,7 +46,7 @@ const realProbe: Probe = {
       if (module === 'better-sqlite3') new loaded(':memory:').close();
       return null;
     } catch (error) {
-      return error instanceof Error ? error.message.split('\n')[0]! : 'load failed';
+      return error instanceof Error ? first(error.message) : 'load failed';
     }
   },
   read: (file) => {
@@ -62,75 +65,66 @@ const realProbe: Probe = {
   },
 };
 
-const first = (text: string) => text.split('\n')[0] ?? '';
-const semver = (text: string) => /\d+\.\d+\.\d+/.exec(text)?.[0] ?? null;
+type Host = { platform: string; arch: string; release: string; node: string };
+type Manifest = { engines?: { node?: string }; packageManager?: string };
 
-export function checkEnvironment(
-  probe: Probe,
-  host: { platform: string; arch: string; release: string; node: string } = {
-    platform: platform(),
-    arch: arch(),
-    release: release(),
-    node: process.versions.node,
-  },
-): Check[] {
-  const checks: Check[] = [
-    { id: 'os', status: 'ok', detail: `${host.platform} ${host.release} ${host.arch}` },
-  ];
-  const manifest = JSON.parse(probe.read('package.json') ?? '{}') as {
-    engines?: { node?: string };
-    packageManager?: string;
-  };
-
+function nodeCheck(manifest: Manifest, host: Host): Check {
   const wanted = /(\d+\.\d+\.\d+)/.exec(manifest.engines?.node ?? '')?.[1];
-  checks.push({
+  return {
     id: 'node',
     status: wanted && host.node.split('.')[0] !== wanted.split('.')[0] ? 'version_mismatch' : 'ok',
     detail: `node ${host.node}${wanted ? ` (project wants ${manifest.engines?.node})` : ''}`,
-  });
+  };
+}
 
+function pnpmCheck(probe: Probe, manifest: Manifest): Check {
   const pnpm = probe.run('pnpm', ['--version']);
+  if (pnpm.kind === 'enoent')
+    return { id: 'pnpm', status: 'missing', detail: 'pnpm not found; run via corepack' };
   const pinned = manifest.packageManager?.replace('pnpm@', '');
-  checks.push(
-    pnpm.kind === 'enoent'
-      ? { id: 'pnpm', status: 'missing', detail: 'pnpm not found; run via corepack' }
-      : {
-          id: 'pnpm',
-          status: pinned && semver(pnpm.stdout) !== pinned ? 'version_mismatch' : 'ok',
-          detail: `pnpm ${first(pnpm.stdout)}${pinned ? ` (pinned ${pinned})` : ''}`,
-        },
-  );
+  return {
+    id: 'pnpm',
+    status: pinned && semver(pnpm.stdout) !== pinned ? 'version_mismatch' : 'ok',
+    detail: `pnpm ${first(pnpm.stdout)}${pinned ? ` (pinned ${pinned})` : ''}`,
+  };
+}
 
-  const git = probe.run('git', ['--version']);
-  checks.push(
-    git.kind === 'ok'
-      ? { id: 'git', status: 'ok', detail: first(git.stdout) }
-      : { id: 'git', status: 'missing', detail: 'git not found' },
-  );
+function vcsCheck(probe: Probe): Check {
+  const vcs = probe.run('git', ['--version']);
+  return vcs.kind === 'ok'
+    ? { id: 'git', status: 'ok', detail: first(vcs.stdout) }
+    : { id: 'git', status: 'missing', detail: 'git not found' };
+}
 
-  for (const [module, app] of [
-    ['better-sqlite3', 'apps/control'],
-    ['node-pty', 'apps/runner'],
-  ] as const) {
+function nativeChecks(probe: Probe): Check[] {
+  return (
+    [
+      ['better-sqlite3', 'apps/control'],
+      ['node-pty', 'apps/runner'],
+    ] as const
+  ).map(([module, app]) => {
     const error = probe.load(module, app);
-    checks.push(
-      error
-        ? { id: module, status: 'native_failure', detail: error }
-        : { id: module, status: 'ok', detail: 'native module loads' },
-    );
-  }
+    return error
+      ? { id: module, status: 'native_failure', detail: error }
+      : { id: module, status: 'ok', detail: 'native module loads' };
+  });
+}
 
-  const providers = [
-    { id: 'claude', version: ['--version'], auth: ['auth', 'status'] },
-    { id: 'codex', version: ['--version'], auth: ['login', 'status'] },
-  ];
+const PROVIDER_CLIS = [
+  { id: 'claude', version: ['--version'], auth: ['auth', 'status'] },
+  { id: 'codex', version: ['--version'], auth: ['login', 'status'] },
+];
+
+/** The sign-in state of each provider CLI, and a note when the codex version is not one the compat table verified. */
+function providerChecks(probe: Probe): Check[] {
+  const checks: Check[] = [];
   const verified =
     (
       JSON.parse(probe.read('packages/providers/generated/compat.json') ?? '{}') as {
         verifiedCliVersions?: string[];
       }
     ).verifiedCliVersions ?? [];
-  for (const p of providers) {
+  for (const p of PROVIDER_CLIS) {
     const version = probe.run(p.id, p.version);
     if (version.kind === 'enoent') {
       checks.push({
@@ -155,6 +149,26 @@ export function checkEnvironment(
       });
   }
   return checks;
+}
+
+export function checkEnvironment(
+  probe: Probe,
+  host: Host = {
+    platform: platform(),
+    arch: arch(),
+    release: release(),
+    node: process.versions.node,
+  },
+): Check[] {
+  const manifest = JSON.parse(probe.read('package.json') ?? '{}') as Manifest;
+  return [
+    { id: 'os', status: 'ok', detail: `${host.platform} ${host.release} ${host.arch}` },
+    nodeCheck(manifest, host),
+    pnpmCheck(probe, manifest),
+    vcsCheck(probe),
+    ...nativeChecks(probe),
+    ...providerChecks(probe),
+  ];
 }
 
 const mark: Record<Status, string> = {

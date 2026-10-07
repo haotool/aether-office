@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api.js';
 import { bytes } from './GitHealth.js';
@@ -15,7 +15,105 @@ const format = (now: Date) =>
     hour12: false,
     timeZone: TIME_ZONE,
   }).format(now);
+const formatReset = (at: number) =>
+  new Intl.DateTimeFormat('en-GB', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: TIME_ZONE,
+  }).format(at);
 const pad = (n: number) => String(n).padStart(3, '0');
+
+type System = {
+  cpu: { busyPercent: number | null; cores: number; loadAverage: number[] };
+  memory: { totalBytes: number; freeBytes: number };
+  disks: { path: string; totalBytes: number; freeBytes: number }[];
+};
+
+/** One readout: a label, its value (flagged when it needs a look) and an optional tooltip. */
+function Stat({
+  label,
+  warn = false,
+  title,
+  children,
+}: {
+  label: string;
+  warn?: boolean;
+  title?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div title={title}>
+      <dt>{label}</dt>
+      <dd className={warn ? 'warn' : ''}>{children}</dd>
+    </div>
+  );
+}
+
+/** The newest Codex window anyone reported (Claude's windows come from <ClaudeQuota />). */
+const newestCodexLimit = (sessions: readonly LocalSession[]) =>
+  [...sessions]
+    .filter((s) => s.provider === 'codex' && s.usage.limit)
+    .sort((a, b) => b.mtime - a.mtime)[0]?.usage.limit;
+
+function CodexStat({ sessions }: { sessions: readonly LocalSession[] }) {
+  const t = useT();
+  const codex = newestCodexLimit(sessions);
+  const resets = codex?.resetsAt ? formatReset(codex.resetsAt) : null;
+  const title = codex
+    ? `${t('quotaReset')} ${resets ?? '—'}${codex.plan ? ` · ${codex.plan}` : ''}`
+    : t('quotaUnknown');
+  return (
+    <Stat label="CODEX" title={title} warn={!!codex && codex.usedPercent >= 85}>
+      {codex ? `${Math.round(codex.usedPercent)}%` : '—'}
+    </Stat>
+  );
+}
+
+/** The machine's CPU, memory and disk, read every few seconds from the control server. */
+function SystemStats() {
+  const t = useT();
+  const system = useQuery({
+    queryKey: ['system'],
+    queryFn: () => api<System>('/api/system'),
+    refetchInterval: 20000,
+    retry: false,
+  }).data;
+  const memUsed = system ? 100 - (system.memory.freeBytes / system.memory.totalBytes) * 100 : null;
+  const disk = system?.disks[0];
+  const load = system?.cpu.loadAverage.map((n) => n.toFixed(1)).join(' / ');
+  const busy = system?.cpu.busyPercent;
+  return (
+    <>
+      <Stat
+        label={t('cpu')}
+        warn={(busy ?? 0) >= 85}
+        title={system ? `load ${load} · ${system.cpu.cores} cores` : ''}
+      >
+        {busy == null ? '—' : `${Math.round(busy)}%`}
+      </Stat>
+      <Stat
+        label={t('memory')}
+        title={
+          system
+            ? `${bytes(system.memory.totalBytes - system.memory.freeBytes)} / ${bytes(system.memory.totalBytes)}`
+            : ''
+        }
+      >
+        {memUsed === null ? '—' : `${Math.round(memUsed)}%`}
+      </Stat>
+      <Stat
+        label={t('disk')}
+        warn={!!disk && disk.freeBytes / disk.totalBytes < 0.1}
+        title={disk ? `${disk.path} · ${bytes(disk.totalBytes)}` : ''}
+      >
+        {disk ? bytes(disk.freeBytes) : '—'}
+      </Stat>
+    </>
+  );
+}
 
 /** Readout in the top bar: how many local agent sessions exist, how many have a live process, and the time in Taipei. */
 export function Telemetry({
@@ -32,97 +130,21 @@ export function Telemetry({
     return () => clearInterval(timer);
   }, []);
   const live = sessions.filter((s) => s.process === 'running').length;
-  const stale = sessions.filter(needsAttention);
-  const system = useQuery({
-    queryKey: ['system'],
-    queryFn: () =>
-      api<{
-        cpu: { busyPercent: number | null; cores: number; loadAverage: number[] };
-        memory: { totalBytes: number; freeBytes: number };
-        disks: { path: string; totalBytes: number; freeBytes: number }[];
-      }>('/api/system'),
-    refetchInterval: 20000,
-    retry: false,
-  }).data;
-  const memUsed = system ? 100 - (system.memory.freeBytes / system.memory.totalBytes) * 100 : null;
-  const disk = system?.disks[0];
-  // The newest Codex window anyone reported (Claude's windows come from <ClaudeQuota />).
-  const codex = [...sessions]
-    .filter((s) => s.provider === 'codex' && s.usage.limit)
-    .sort((a, b) => b.mtime - a.mtime)[0]?.usage.limit;
-  const resets = codex?.resetsAt
-    ? new Intl.DateTimeFormat('en-GB', {
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-        timeZone: TIME_ZONE,
-      }).format(codex.resetsAt)
-    : null;
+  const stale = sessions.filter(needsAttention).length;
   return (
     <dl className="telemetry" aria-label={t('telemetry')}>
-      <div>
-        <dt>{t('sessionCount')}</dt>
-        <dd>{pad(sessions.length)}</dd>
-      </div>
-      <div title={t('unreadHint')}>
-        <dt>{t('unread')}</dt>
-        <dd className={unread ? 'warn' : ''}>{pad(unread)}</dd>
-      </div>
-      <div>
-        <dt>{t('liveProcesses')}</dt>
-        <dd>{pad(live)}</dd>
-      </div>
-      <div title={t('staleHint')}>
-        <dt>{t('staleCount')}</dt>
-        <dd className={stale.length ? 'warn' : ''}>{pad(stale.length)}</dd>
-      </div>
-      <div
-        title={
-          codex
-            ? `${t('quotaReset')} ${resets ?? '—'}${codex.plan ? ` · ${codex.plan}` : ''}`
-            : t('quotaUnknown')
-        }
-      >
-        <dt>CODEX</dt>
-        <dd className={codex && codex.usedPercent >= 85 ? 'warn' : ''}>
-          {codex ? `${Math.round(codex.usedPercent)}%` : '—'}
-        </dd>
-      </div>
+      <Stat label={t('sessionCount')}>{pad(sessions.length)}</Stat>
+      <Stat label={t('unread')} title={t('unreadHint')} warn={unread > 0}>
+        {pad(unread)}
+      </Stat>
+      <Stat label={t('liveProcesses')}>{pad(live)}</Stat>
+      <Stat label={t('staleCount')} title={t('staleHint')} warn={stale > 0}>
+        {pad(stale)}
+      </Stat>
+      <CodexStat sessions={sessions} />
       <ClaudeQuota />
-      <div
-        title={
-          system
-            ? `load ${system.cpu.loadAverage.map((n) => n.toFixed(1)).join(' / ')} · ${system.cpu.cores} cores`
-            : ''
-        }
-      >
-        <dt>{t('cpu')}</dt>
-        <dd className={(system?.cpu.busyPercent ?? 0) >= 85 ? 'warn' : ''}>
-          {system?.cpu.busyPercent == null ? '—' : `${Math.round(system.cpu.busyPercent)}%`}
-        </dd>
-      </div>
-      <div
-        title={
-          system
-            ? `${bytes(system.memory.totalBytes - system.memory.freeBytes)} / ${bytes(system.memory.totalBytes)}`
-            : ''
-        }
-      >
-        <dt>{t('memory')}</dt>
-        <dd>{memUsed === null ? '—' : `${Math.round(memUsed)}%`}</dd>
-      </div>
-      <div title={disk ? `${disk.path} · ${bytes(disk.totalBytes)}` : ''}>
-        <dt>{t('disk')}</dt>
-        <dd className={disk && disk.freeBytes / disk.totalBytes < 0.1 ? 'warn' : ''}>
-          {disk ? bytes(disk.freeBytes) : '—'}
-        </dd>
-      </div>
-      <div>
-        <dt>TPE</dt>
-        <dd>{format(now)}</dd>
-      </div>
+      <SystemStats />
+      <Stat label="TPE">{format(now)}</Stat>
     </dl>
   );
 }

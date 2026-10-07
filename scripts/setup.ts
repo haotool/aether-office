@@ -4,6 +4,79 @@ import { pathToFileURL } from 'node:url';
 import { Control } from '../apps/control/src/control.js';
 import { secret } from '../apps/control/src/services/identity.js';
 import { enroll } from '../apps/control/src/services/runners.js';
+type Identity = ReturnType<Control['authenticate']>;
+
+const DEMO_PEOPLE = [
+  ['Atlas', 'fox', 'coordinator', '#d39b6c'],
+  ['Mika', 'rabbit', 'engineer', '#8bbac0'],
+  ['Nova', 'panda', 'reviewer', '#99b1a2'],
+  ['Sora', 'cat', 'engineer', '#a09bc9'],
+  ['Koda', 'dog', 'engineer', '#c5a478'],
+  ['Rin', 'raccoon', 'reviewer', '#9cabb6'],
+  ['Otto', 'otter', 'engineer', '#b5a089'],
+  ['Bram', 'bear', 'engineer', '#aa8c79'],
+  ['Luna', 'rabbit', 'observer', '#b8b8d2'],
+  ['Kai', 'fox', 'engineer', '#c1957e'],
+  ['Yuki', 'cat', 'engineer', '#7bb5b3'],
+  ['Nori', 'panda', 'reviewer', '#88a6bc'],
+];
+
+const DEMO_TASKS = [
+  {
+    key: 'task-1',
+    title: '驗證第一條工作流程',
+    description: '將這份示範任務派給一位成員。獨立執行主機將啟動真實 fixture 程序，並回報結果。',
+    acceptance: '確認狀態經過已派工、執行中、待審查；不將 fixture 說成真實模型。',
+    priority: 2,
+  },
+  {
+    key: 'task-2',
+    title: '檢查辦公室動線',
+    description: '選擇不同桌位，檢查相機、角色與辦公桌的位置。',
+    acceptance: '記錄實際觀察與需要調整的物件。',
+    priority: 1,
+  },
+];
+
+/** The demo project: twelve stand-in agents and two tasks, with fixed idempotency keys so a re-run adds nothing. */
+function seedDemo(control: Control, owner: Identity) {
+  const cmd = (type: string, data: unknown, key: string, projectId?: string) =>
+    control.execute(owner, {
+      schemaVersion: 1,
+      type,
+      data,
+      idempotencyKey: `seed-v1-${key}`,
+      correlationId: 'a0000000-0000-4000-8000-000000000001',
+      ...(projectId ? { projectId } : {}),
+    });
+  const projectId = String(
+    cmd('project.create', { name: 'AETHER · 軌道研究室' }, 'project').result['id'],
+  );
+  for (const [name, species, role, color] of DEMO_PEOPLE)
+    cmd(
+      'agent.register',
+      { name, species, role, provider: 'demo', color },
+      `agent-${name}`,
+      projectId,
+    );
+  for (const { key, ...task } of DEMO_TASKS)
+    cmd('work.create', { ...task, dependencies: [] }, key, projectId);
+}
+
+/** Creates the owner identity (and its token file) on the first run; returns the file's path. */
+function ensureOwner(control: Control, directory: string): string {
+  const ownerFile = resolve(directory, 'owner-token');
+  if (!control.ctx.sqlite.prepare('SELECT 1 FROM identities LIMIT 1').get()) {
+    const owner = control.createIdentity(undefined, {
+      name: 'Local owner',
+      role: 'owner',
+      projectIds: ['*'],
+    });
+    writeFileSync(ownerFile, owner.token, { mode: 0o600, flag: 'wx' });
+  }
+  return ownerFile;
+}
+
 export function setup(mode: 'demo' | 'live', directory: string) {
   mkdirSync(directory, { recursive: true, mode: 0o700 });
   const secretFile = resolve(directory, 'cursor-secret');
@@ -13,76 +86,9 @@ export function setup(mode: 'demo' | 'live', directory: string) {
     cursorSecret: readFileSync(secretFile, 'utf8'),
   });
   try {
-    const ownerFile = resolve(directory, 'owner-token');
-    if (!control.ctx.sqlite.prepare('SELECT 1 FROM identities LIMIT 1').get()) {
-      const owner = control.createIdentity(undefined, {
-        name: 'Local owner',
-        role: 'owner',
-        projectIds: ['*'],
-      });
-      writeFileSync(ownerFile, owner.token, { mode: 0o600, flag: 'wx' });
-    }
+    const ownerFile = ensureOwner(control, directory);
     const owner = control.authenticate(readFileSync(ownerFile, 'utf8').trim());
-    if (mode === 'demo' && !control.listProjects(owner).length) {
-      const cmd = (type: string, data: unknown, key: string, projectId?: string) =>
-        control.execute(owner, {
-          schemaVersion: 1,
-          type,
-          data,
-          idempotencyKey: `seed-v1-${key}`,
-          correlationId: 'a0000000-0000-4000-8000-000000000001',
-          ...(projectId ? { projectId } : {}),
-        });
-      const projectId = String(
-        cmd('project.create', { name: 'AETHER · 軌道研究室' }, 'project').result['id'],
-      );
-      const people = [
-        ['Atlas', 'fox', 'coordinator', '#d39b6c'],
-        ['Mika', 'rabbit', 'engineer', '#8bbac0'],
-        ['Nova', 'panda', 'reviewer', '#99b1a2'],
-        ['Sora', 'cat', 'engineer', '#a09bc9'],
-        ['Koda', 'dog', 'engineer', '#c5a478'],
-        ['Rin', 'raccoon', 'reviewer', '#9cabb6'],
-        ['Otto', 'otter', 'engineer', '#b5a089'],
-        ['Bram', 'bear', 'engineer', '#aa8c79'],
-        ['Luna', 'rabbit', 'observer', '#b8b8d2'],
-        ['Kai', 'fox', 'engineer', '#c1957e'],
-        ['Yuki', 'cat', 'engineer', '#7bb5b3'],
-        ['Nori', 'panda', 'reviewer', '#88a6bc'],
-      ];
-      for (const [name, species, role, color] of people)
-        cmd(
-          'agent.register',
-          { name, species, role, provider: 'demo', color },
-          `agent-${name}`,
-          projectId,
-        );
-      cmd(
-        'work.create',
-        {
-          title: '驗證第一條工作流程',
-          description:
-            '將這份示範任務派給一位成員。獨立執行主機將啟動真實 fixture 程序，並回報結果。',
-          acceptance: '確認狀態經過已派工、執行中、待審查；不將 fixture 說成真實模型。',
-          priority: 2,
-          dependencies: [],
-        },
-        'task-1',
-        projectId,
-      );
-      cmd(
-        'work.create',
-        {
-          title: '檢查辦公室動線',
-          description: '選擇不同桌位，檢查相機、角色與辦公桌的位置。',
-          acceptance: '記錄實際觀察與需要調整的物件。',
-          priority: 1,
-          dependencies: [],
-        },
-        'task-2',
-        projectId,
-      );
-    }
+    if (mode === 'demo' && !control.listProjects(owner).length) seedDemo(control, owner);
     const projects = control.listProjects(owner);
     if (projects.length && !existsSync(resolve(directory, 'runner-token'))) {
       const runner = enroll(

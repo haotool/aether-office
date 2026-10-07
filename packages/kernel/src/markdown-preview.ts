@@ -8,7 +8,7 @@ import { cutMarkdown, graphemes } from './markdown-cut.js';
  * its first line, links their label, tables compact rows). `toInlineSegments` keeps the styling as runs for a renderer;
  * `toPlainPreview` is the same content as a string.
  */
-export type PreviewKind = 'text' | 'bullet' | 'heading' | 'code';
+type PreviewKind = 'text' | 'bullet' | 'heading' | 'code';
 export type PreviewLine = {
   kind: PreviewKind;
   /** Nesting depth of a list item, 0 for everything else. */
@@ -19,7 +19,7 @@ export type PreviewLine = {
   soft?: true;
   spans: Span[];
 };
-export type PreviewOptions = { maxChars?: number; maxLines?: number };
+type PreviewOptions = { maxChars?: number; maxLines?: number };
 
 const plain = (text: string): Span => ({ text });
 const ELLIPSIS = '…';
@@ -47,7 +47,7 @@ function splitLines(spans: readonly Span[]): Span[][] {
     const parts = span.text.split('\n');
     parts.forEach((part, i) => {
       if (i > 0) lines.push([]);
-      if (part) lines.at(-1)!.push({ ...span, text: part });
+      if (part) lines[lines.length - 1]?.push({ ...span, text: part });
     });
   }
   return lines.filter((l) => l.some((s) => s.text.trim()));

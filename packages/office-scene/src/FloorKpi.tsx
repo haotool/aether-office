@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { DEPARTMENTS } from '@aether/kernel';
+import { departmentAt } from './scene-geometry.js';
 
 /**
  * What the building shows of one floor's KPIs: strings the page has already formatted (the scene knows no number
@@ -43,7 +43,7 @@ export function FloorPlaque({
   badge: FloorKpiBadge;
   onOpen: (floor: number) => void;
 }) {
-  const department = DEPARTMENTS[floor]!;
+  const department = departmentAt(floor);
   return (
     <button
       className="floor-plaque fui"

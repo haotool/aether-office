@@ -40,7 +40,7 @@ export const SHAPE_KEYS = [
   'veins', // how strongly the veins glow
 ] as const;
 type ShapeKey = (typeof SHAPE_KEYS)[number];
-export type Shape = Record<ShapeKey, number>;
+type Shape = Record<ShapeKey, number>;
 
 export const SHAPE_RANGE: Record<ShapeKey, [number, number]> = {
   pitch: [0.4, 1.5],

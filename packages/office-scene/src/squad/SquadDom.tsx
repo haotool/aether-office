@@ -13,7 +13,7 @@ const LABEL_LIFT = 0.14;
 const LABEL_WIDTH = 96;
 
 /** The id a squad's label has in the scene's table of label elements. */
-export const labelId = (supervisor: string) => `squad:${supervisor}`;
+const labelId = (supervisor: string) => `squad:${supervisor}`;
 
 /** Where each squad's label is projected from: over the front edge of its zone. Pure. */
 export function squadLabelsOf(squads: readonly DrawSquad[], exploded: boolean) {

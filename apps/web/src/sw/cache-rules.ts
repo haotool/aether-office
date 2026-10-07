@@ -8,7 +8,7 @@ export const SKIP_WAITING = 'aether-skip-waiting';
 /** Vite's hashed script and style names under /assets (the rule the server uses for `immutable`). */
 const HASHED_ASSET = /^\/assets\/[^/]+-[\w-]{8}\.(js|css)$/;
 
-export type Handling = 'asset' | 'navigation' | 'network';
+type Handling = 'asset' | 'navigation' | 'network';
 
 /**
  * 'asset': a hashed file, answered from the cache first (an open page keeps its own chunks after a rebuild).

@@ -22,10 +22,13 @@ export function useT() {
 export function Modal({
   title,
   onClose,
+  dock = false,
   children,
 }: {
   title: string;
   onClose: () => void;
+  /** Stands at the side instead of the middle, so the page behind it (a live preview) stays in view. */
+  dock?: boolean;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -45,7 +48,12 @@ export function Modal({
     };
   }, []);
   return (
-    <dialog ref={ref} className="modal" onCancel={onClose} aria-label={title}>
+    <dialog
+      ref={ref}
+      className={`modal ${dock ? 'modal-dock' : ''}`}
+      onCancel={onClose}
+      aria-label={title}
+    >
       <div className="modal-heading">
         <h2>{title}</h2>
         <button className="icon-button" aria-label={t('close')} onClick={onClose}>
@@ -219,14 +227,43 @@ export function PageHeading({
     </div>
   );
 }
-export function Field({ label, children }: { label: string; children: ReactNode }) {
+export function Field({
+  label,
+  error,
+  hint,
+  children,
+}: {
+  label: string;
+  /** Why the field cannot be submitted, shown under it (the form's own check, see form-errors.ts). */
+  error?: string | undefined;
+  hint?: string;
+  children: ReactNode;
+}) {
   const id = useId();
+  const child = isValidElement(children)
+    ? (children as ReactElement<{ id?: string; required?: boolean }>)
+    : null;
+  const described = [error && `${id}-error`, hint && `${id}-hint`].filter(Boolean).join(' ');
   return (
-    <div className="field">
+    <div className={child?.props.required ? 'field field-required' : 'field'}>
       <label htmlFor={id}>{label}</label>
-      {isValidElement(children)
-        ? cloneElement(children as ReactElement<{ id?: string }>, { id })
+      {child
+        ? cloneElement(child as ReactElement<Record<string, unknown>>, {
+            id,
+            ...(error ? { 'aria-invalid': true } : {}),
+            ...(described ? { 'aria-describedby': described } : {}),
+          })
         : children}
+      {hint && (
+        <small id={`${id}-hint`} className="field-hint">
+          {hint}
+        </small>
+      )}
+      {error && (
+        <p id={`${id}-error`} className="field-error" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

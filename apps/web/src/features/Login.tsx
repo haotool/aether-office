@@ -1,28 +1,104 @@
 import { useEffect, useState } from 'react';
 import { ArrowUpRight, Globe2 } from 'lucide-react';
 import { login, pair, type Session } from '../api.js';
-import { usePreferences } from '../state.js';
+import { checkForm, type FieldErrors } from '../form-errors.js';
+import { useLocaleToggle } from './PreferenceControls.js';
+import { useLatest } from '../use-latest.js';
 import { useT, Field } from '../ui.js';
 
-export function Login({ onLogin }: { onLogin: (session: Session) => void }) {
+/**
+ * Opened from a pairing QR code: the code is in the address's fragment. It is taken out of the address bar before
+ * anything else (so it is in no history, bookmark or screenshot), then swapped for a session. True while that runs.
+ */
+function usePairingArrival(
+  onLogin: (session: Session) => void,
+  onFailed: (message: string) => void,
+) {
   const t = useT();
-  const prefs = usePreferences();
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-  // Opened from a pairing QR code: the code is in the address's fragment. It is taken out of the address bar before
-  // anything else (so it is in no history, bookmark or screenshot), then swapped for a session.
   const [pairing, setPairing] = useState(() => /^#pair=/.test(window.location.hash));
+  const latest = useLatest({ onLogin, onFailed, message: t('pairFailed') });
   useEffect(() => {
     const code = new URLSearchParams(window.location.hash.slice(1)).get('pair');
     if (!code) return;
     window.history.replaceState(null, '', window.location.pathname + window.location.search);
     pair(code)
-      .then(onLogin)
+      .then((session) => latest.current.onLogin(session))
       .catch(() => {
-        setError(t('pairFailed'));
+        latest.current.onFailed(latest.current.message);
         setPairing(false);
       });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- once, on arrival
+  }, [latest]); // once, on arrival
+  return pairing;
+}
+
+/** The access token form: checks the fields, then signs in. */
+function LoginForm({
+  error,
+  setError,
+  onLogin,
+}: {
+  error: string;
+  setError: (message: string) => void;
+  onLogin: (session: Session) => void;
+}) {
+  const t = useT();
+  const [busy, setBusy] = useState(false);
+  const [invalid, setInvalid] = useState<FieldErrors>({});
+  return (
+    <form
+      noValidate
+      onSubmit={async (e) => {
+        e.preventDefault();
+        const problems = checkForm(e.currentTarget);
+        setInvalid(problems);
+        if (Object.keys(problems).length) return;
+        setBusy(true);
+        setError('');
+        try {
+          const form = new FormData(e.currentTarget);
+          onLogin(await login(String(form.get('token')), form.get('remember') === 'on'));
+        } catch (e) {
+          setError(e instanceof Error ? e.message : 'LOGIN_FAILED');
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      <Field label={t('token')} error={invalid['token'] && t(invalid['token'])}>
+        <input
+          autoFocus
+          name="token"
+          type="password"
+          autoComplete="off"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          required
+          minLength={32}
+        />
+      </Field>
+      <label className="toggle-label remember">
+        <input type="checkbox" name="remember" />
+        <span>{t('rememberDevice')}</span>
+      </label>
+      {error && (
+        <p role="alert" className="error-text">
+          {error}
+        </p>
+      )}
+      <button className="primary full-width" disabled={busy}>
+        {busy ? t('loading') : t('login')}
+        <ArrowUpRight size={17} />
+      </button>
+    </form>
+  );
+}
+
+export function Login({ onLogin }: { onLogin: (session: Session) => void }) {
+  const t = useT();
+  const locale = useLocaleToggle();
+  const [error, setError] = useState('');
+  const pairing = usePairingArrival(onLogin, setError);
   if (pairing)
     return (
       <main className="login-page">
@@ -47,55 +123,11 @@ export function Login({ onLogin }: { onLogin: (session: Session) => void }) {
         <span className="eyebrow">YOUR WORK, IN ORBIT</span>
         <h1>{t('loginTitle')}</h1>
         <p>{t('loginHint')}</p>
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            setBusy(true);
-            setError('');
-            try {
-              const form = new FormData(e.currentTarget);
-              onLogin(await login(String(form.get('token')), form.get('remember') === 'on'));
-            } catch (e) {
-              setError(e instanceof Error ? e.message : 'LOGIN_FAILED');
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          <Field label={t('token')}>
-            <input
-              autoFocus
-              name="token"
-              type="password"
-              autoComplete="off"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              required
-              minLength={32}
-            />
-          </Field>
-          <label className="toggle-label remember">
-            <input type="checkbox" name="remember" />
-            <span>{t('rememberDevice')}</span>
-          </label>
-          {error && (
-            <p role="alert" className="error-text">
-              {error}
-            </p>
-          )}
-          <button className="primary full-width" disabled={busy}>
-            {busy ? t('loading') : t('login')}
-            <ArrowUpRight size={17} />
-          </button>
-        </form>
+        <LoginForm error={error} setError={setError} onLogin={onLogin} />
         <small>{t('tokenHelp')}</small>
-        <button
-          className="text-button"
-          onClick={() => prefs.set({ locale: prefs.locale === 'zh-TW' ? 'en' : 'zh-TW' })}
-        >
+        <button className="text-button" onClick={locale.toggle}>
           <Globe2 size={15} />
-          {prefs.locale === 'zh-TW' ? 'English' : '繁體中文'}
+          {locale.nextName}
         </button>
       </section>
     </main>

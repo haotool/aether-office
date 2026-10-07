@@ -115,7 +115,7 @@ Size: S ≈ 1–2 days, M ≈ 3–5 days, L ≈ 1–2 weeks.
 | **Files (owned)** | `packages/contracts/src/sessions.ts` (subagent part), `apps/control/src/services/hook-spool.ts`, `apps/control/src/services/local-sessions.ts` (the merge line), `apps/control/src/services/session-discovery.ts` (Codex child times only), `apps/web/src/features/office-model.ts` |
 | **Public API** | `squadsOf(sessions): Squad[]` with `Squad = { supervisor: string; members: SquadMemberFacts[] }` |
 | **Acceptance** | A SubagentStart → 3 PreToolUse → SubagentStop spool fixture yields `running` (count 3), then `finished` for 90 s, then removed. An old server payload without the new fields still parses. |
-| **Tests** | `tests/aether/hook-spool.test.ts` (lifecycle), a contracts round-trip, `office-model` `squadsOf`. |
+| **Tests** | `tests/aether/hook-spool-rotation.test.ts` (lifecycle), a contracts round-trip, `office-model` `squadsOf`. |
 | **Perf gate** | Scan time unchanged (the existing scan bench, ±5%). |
 | **Docs** | `docs/features.md` (subagent lifecycle); the `docs/provider-compatibility.md` table row. |
 | **Dependencies / merge** | **After the KPI-plaques branch** (it touches `session-discovery.ts` and `contracts/index.ts`). |
@@ -192,7 +192,7 @@ Size: S ≈ 1–2 days, M ≈ 3–5 days, L ≈ 1–2 weeks.
 | --- | --- |
 | **Goal** | The registry, scheduler, pools, aria log, settings and Calm mode, with the rows that need no new server data. |
 | **Scope** | `life/signals.ts`, `registry.ts`, `schedule.ts`, `pools/*`, `LifeLayer.tsx`, `LifeLog.tsx`. Effects R8, R9 (target-based amber only), R14, R15, R16, R24, R26–R38, R41, R42, R44, R45, R49–R58. Adopt the existing compaction (R29). Web: `apps/web/src/features/life-signals.ts` (the snapshot diff), `OfficeAnimationsSettings.tsx`, prefs `life.*`, the Calm switch in QuickPrefs, Konami and Quick Open hooks. |
-| **Files (owned)** | `packages/office-scene/src/life/*`, `apps/web/src/features/life-signals.ts`, `apps/web/src/features/OfficeAnimationsSettings.tsx`, `state.ts` (the `life` keys), `SettingsPage.tsx` (one line), `QuickPrefs.tsx` (one switch), `QuickOpen.tsx` (one match hook), `OfficePage.tsx`/`SceneView.tsx` (wiring), `OfficeScene.tsx` (mount, ≤ 10 lines), locales |
+| **Files (owned)** | `packages/office-scene/src/life/*`, `apps/web/src/features/life-signals.ts`, `state.ts` (the `life` keys), `SettingsPage.tsx` (one line), `QuickPrefs.tsx` (one switch), `QuickOpen.tsx` (one match hook), `OfficePage.tsx`/`SceneView.tsx` (wiring), `OfficeScene.tsx` (mount, ≤ 10 lines), locales |
 | **Public API** | `schedule(state, signals, now, prefs)`, `LIFE_RULES`, `<LifeLayer cues seats exploded/>`, `deriveLifeSignals(prev, next, now)` |
 | **Acceptance** | Each rule has a trigger test, a cooldown test and an aria text in en and zh. The arbiter limits hold (1 per member, 2 per floor, the bucket). Startup replays nothing older than 30 s. Calm mode silences memes. Every effect has a contact-sheet tile. |
 | **Tests** | `life-registry.test.ts` (honesty rules: no outcome rule enabled without `ok`), `life-schedule.test.ts`, `life-signals.test.ts`, effect timeline tests, `e2e/office-life.spec.ts` (Calm, toggles, aria log). |

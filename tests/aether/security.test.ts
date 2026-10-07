@@ -207,4 +207,13 @@ describe('server trust boundaries', () => {
     });
     expect(forged.statusCode).toBe(400);
   });
+
+  it('limits how often one address may call the liveness probe', async () => {
+    const f = setup();
+    const probe = () => f.app.inject({ url: '/health', headers: { host: '127.0.0.1:4310' } });
+    for (let i = 0; i < 120; i++) expect((await probe()).statusCode).toBe(200);
+    const limited = await probe();
+    expect(limited.statusCode).toBe(429);
+    expect(limited.json()).toMatchObject({ error: { code: 'HEALTH_RATE_LIMIT' } });
+  });
 });

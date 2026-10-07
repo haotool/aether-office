@@ -62,7 +62,7 @@
   display: flex;
   align-items: flex-end;
   gap: var(--space-2);
-  height: 104px; /* the bars' own plot height */
+  height: 104px; /* the bars' own plot height token-lint: geometry */
   margin: 0;
   padding: var(--space-12) 0 0;
   list-style: none;
@@ -83,7 +83,7 @@
 }
 .daily-bars li.today i {
   background: var(--kpi-input);
-  box-shadow: 0 0 10px var(--glow);
+  box-shadow: 0 0 10px var(--glow); /* token-lint: glow */
 }
 .daily-bars li:hover i,
 .daily-bars li:focus-visible i {
@@ -143,8 +143,8 @@
 .ring {
   position: relative;
   flex: none;
-  width: 56px;
-  height: 56px;
+  width: 56px; /* token-lint: geometry */
+  height: 56px; /* token-lint: geometry */
 }
 .ring svg {
   width: 100%;
@@ -222,7 +222,7 @@
   position: absolute;
   left: 0;
   bottom: 0;
-  height: 2px;
+  height: 2px; /* token-lint: geometry */
   width: calc(var(--share) * 100%);
   background: color-mix(in srgb, var(--mint) 60%, transparent);
 }
@@ -246,7 +246,7 @@
 .slab-kpi u {
   position: relative;
   flex: 1;
-  height: 3px;
+  height: 3px; /* token-lint: geometry */
   background: color-mix(in srgb, var(--accent) 22%, transparent);
 }
 .slab-kpi u::after {
@@ -267,8 +267,8 @@
 .floor-plaque.fui {
   position: absolute;
   z-index: var(--z-hud-chip);
-  left: 18px; /* geometry over the 3D scene: clear of the floor readout (90px) in the bottom-left corner */
-  bottom: 136px;
+  left: 18px; /* geometry over the 3D scene: clear of the floor readout (90px) in the bottom-left corner token-lint: geometry */
+  bottom: 136px; /* token-lint: geometry */
   display: flex;
   align-items: stretch;
   gap: var(--space-16);
@@ -317,7 +317,7 @@
   );
   background-size: 100% 300%;
   opacity: 0.35;
-  animation: plaque-scan 7s linear infinite; /* a slow loop, not a transition */
+  animation: plaque-scan 7s linear infinite; /* a slow loop, not a transition token-lint: loop */
 }
 @keyframes plaque-scan {
   from {
@@ -335,7 +335,7 @@
     transition: none;
   }
 }
-@media (max-width: 960px) {
+@media (max-width: 1000px) {
   .floor-plaque.fui {
     display: none; /* the toolbar and the shot caption need the room */
   }

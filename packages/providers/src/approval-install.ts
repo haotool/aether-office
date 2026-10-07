@@ -12,7 +12,7 @@ export const approvalScriptsDir = () => join(aetherDir(), 'hooks');
 /** The files `installApprovalScripts` writes into `dir`. */
 export const approvalScriptFiles = (dir = approvalScriptsDir()) =>
   FILES.map((name) => join(dir, name));
-export type ApprovalScriptsState = 'installed' | 'modified' | 'missing';
+type ApprovalScriptsState = 'installed' | 'modified' | 'missing';
 
 const sha = (content: Buffer) => createHash('sha256').update(content).digest('hex');
 

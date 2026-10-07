@@ -37,7 +37,7 @@ export type RigMember = {
   master: Vec3;
 };
 
-export type Rig = {
+type Rig = {
   strings: Strings;
   /** Slot of each live member (its strings are `slot * STRINGS_PER_MEMBER` and the three after it). */
   slots: Map<string, number>;

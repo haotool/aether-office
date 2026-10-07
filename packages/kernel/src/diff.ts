@@ -1,5 +1,5 @@
 // Unified-diff hunk extraction for review comments. Pure, no I/O.
-export type Hunk = { path: string; header: string; body: string };
+type Hunk = { path: string; header: string; body: string };
 
 const stripPrefix = (p: string) => p.replace(/^[ab]\//, '');
 
@@ -34,7 +34,7 @@ export function parseDiff(text: string): Hunk[] {
   return hunks;
 }
 
-export type CommentStatus = 'current' | 'carried' | 'stale' | 'unknown';
+type CommentStatus = 'current' | 'carried' | 'stale' | 'unknown';
 
 /**
  * `current`: written against today's head. `carried`: head moved but the identical hunk still

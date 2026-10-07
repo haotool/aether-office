@@ -22,7 +22,7 @@ const MAX_ITERATIONS = 80;
 const TROPISM = 0.18;
 const up = new THREE.Vector3(0, 1, 0);
 
-export type Envelope = {
+type Envelope = {
   /** The middle of the flat side of the hemisphere (on the deck); the points lie above it. */
   centre: Vec3;
   radius: number;

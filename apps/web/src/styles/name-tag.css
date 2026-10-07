@@ -51,19 +51,19 @@
 }
 .scene-label .tag-dot {
   flex: none;
-  width: 8px;
-  height: 8px;
+  width: 8px; /* token-lint: geometry */
+  height: 8px; /* token-lint: geometry */
   border-radius: 50%;
   background: var(--state);
-  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--state) 70%, transparent);
+  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--state) 70%, transparent); /* token-lint: glow */
 }
 .scene-label .tag-unread {
   flex: none;
-  width: 7px;
-  height: 7px;
+  width: 7px; /* token-lint: geometry */
+  height: 7px; /* token-lint: geometry */
   border-radius: 50%;
   background: var(--scene-gold);
-  box-shadow: 0 0 8px var(--scene-gold);
+  box-shadow: 0 0 8px var(--scene-gold); /* token-lint: glow */
 }
 .scene-label .tag-meta {
   flex-basis: 100%;
@@ -89,10 +89,10 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: 0 0 16px color-mix(in srgb, var(--scene-gold) 70%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--scene-gold) 70%, transparent); /* token-lint: glow */
   opacity: 0;
   pointer-events: none;
-  animation: tag-attention 1.8s ease-in-out infinite;
+  animation: tag-attention 1.8s ease-in-out infinite; /* token-lint: loop */
 }
 .scene-label[data-state='error'] {
   --state: var(--scene-red);
@@ -120,7 +120,7 @@
     transparent
   );
   pointer-events: none;
-  animation: tag-sheen 2.8s linear infinite;
+  animation: tag-sheen 2.8s linear infinite; /* token-lint: loop */
 }
 /* The band slides by `translate` (compositor, no repaint), so the chip clips it; a finger's 44px area hangs outside the chip and
    would be clipped too, so on touch the band breathes in place instead */
@@ -131,7 +131,7 @@
 }
 @media (pointer: coarse) {
   .scene-label[data-state='working']::before {
-    animation: tag-sheen-still 1.4s ease-in-out infinite alternate;
+    animation: tag-sheen-still 1.4s ease-in-out infinite alternate; /* token-lint: loop */
   }
 }
 

@@ -126,7 +126,11 @@ process.once('SIGINT', () => {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 let cookie = '';
 let csrf = '';
-async function http(method: 'GET' | 'POST', path: string, body?: unknown) {
+async function http<T = Record<string, unknown>>(
+  method: 'GET' | 'POST',
+  path: string,
+  body?: unknown,
+): Promise<T> {
   const response = await fetch(base + path, {
     method,
     headers: {
@@ -139,10 +143,10 @@ async function http(method: 'GET' | 'POST', path: string, body?: unknown) {
   });
   const text = await response.text();
   if (!response.ok) throw new Error(`${method} ${path} → ${response.status} ${text.slice(0, 200)}`);
-  return text ? (JSON.parse(text) as any) : {};
+  return (text ? JSON.parse(text) : {}) as T;
 }
 const command = (type: string, data: unknown, projectId?: string, expectedVersion?: number) =>
-  http('POST', '/api/commands', {
+  http<{ result: Record<string, unknown> }>('POST', '/api/commands', {
     schemaVersion: 1,
     type,
     data,
@@ -160,7 +164,34 @@ const note = (message: string) => {
   log(message);
 };
 
-async function main() {
+type WorkRow = { id: string; state: string; version: number; result?: unknown };
+type Message = {
+  id: string;
+  senderId: string;
+  kind: string;
+  body: string;
+  deliveries: { state: string }[];
+};
+type Snapshot = { work: WorkRow[]; messages: Message[] };
+type Approval = {
+  id: string;
+  state: string;
+  kind: string;
+  toolId: string;
+  version: number;
+  actionHash: string;
+  parameters: string;
+};
+type Work = { id: string; label: string };
+
+const snapshotOf = (projectId: string) =>
+  http<Snapshot>('GET', `/api/projects/${projectId}/snapshot`);
+
+const nonceA = `A-${randomUUID().slice(0, 8)}`;
+const nonceB = `B-${randomUUID().slice(0, 8)}`;
+
+/** Starts the control plane and the runner, then waits (up to 20 s) until the control plane answers. */
+async function startProcesses() {
   for (const name of ['control', 'runner'])
     children.push(
       spawn(process.execPath, [`apps/${name}/dist/main.js`], {
@@ -177,120 +208,135 @@ async function main() {
       break;
     await sleep(250);
   }
+}
+
+async function signIn() {
   const login = await fetch(`${base}/api/login`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', host: `127.0.0.1:${PORT}` },
     body: JSON.stringify({ token }),
   });
-  cookie = login.headers.get('set-cookie')!.split(';')[0]!;
+  const setCookie = login.headers.get('set-cookie');
+  if (!setCookie) throw new Error(`login → ${login.status} without a session cookie`);
+  cookie = setCookie.split(';')[0] ?? '';
   csrf = ((await login.json()) as { csrf: string }).csrf;
+}
 
-  const { projectId, claudeId, codexId } = seeded;
-  note(
-    `project and two agents created (claude ${claudeId.slice(0, 8)}, codex ${codexId.slice(0, 8)})`,
+async function createWork(
+  projectId: string,
+  title: string,
+  description: string,
+  acceptance: string,
+) {
+  const created = await command(
+    'work.create',
+    { title, description, acceptance, priority: 1 },
+    projectId,
   );
+  return String(created.result['id']);
+}
 
-  const nonceA = `A-${randomUUID().slice(0, 8)}`;
-  const nonceB = `B-${randomUUID().slice(0, 8)}`;
-  const create = async (title: string, description: string, acceptance: string) =>
-    String(
-      (await command('work.create', { title, description, acceptance, priority: 1 }, projectId))
-        .result.id,
-    );
-  const assign = async (workId: string, agentId: string) => {
-    const snapshot = await http('GET', `/api/projects/${projectId}/snapshot`);
-    const work = snapshot.work.find((w: { id: string }) => w.id === workId);
-    await command('work.assign', { workId, agentId }, projectId, work.version);
-  };
+async function assign(projectId: string, workId: string, agentId: string) {
+  const work = (await snapshotOf(projectId)).work.find((w) => w.id === workId);
+  if (!work) throw new Error(`work ${workId} is not in the snapshot`);
+  await command('work.assign', { workId, agentId }, projectId, work.version);
+}
 
-  const works: { id: string; label: string }[] = [];
-  if (only === 'exchange') {
-    const codexWork = await create(
-      'Answer the message from Claude',
-      `You are "Codex Smoke". Do not edit files or run shell commands. Use only the aether MCP tools.\n1. Call wait_for_message (timeoutMs 25000) until a message arrives; repeat up to 6 times.\n2. The message contains a nonce starting with "A-". Reply with send_message to the sender (recipients: use the sender id from the message) with replyTo set to that message id and a body that contains exactly the text "${nonceB}" and the nonce you received.\n3. Then ack_message the received message and finish with a one-line summary.`,
-      `A reply containing ${nonceB} and the received nonce was sent.`,
+/** The two agents write to each other: Codex waits for Claude's nonce and answers with its own. */
+async function startExchange(
+  projectId: string,
+  claudeId: string,
+  codexId: string,
+): Promise<Work[]> {
+  const codexWork = await createWork(
+    projectId,
+    'Answer the message from Claude',
+    `You are "Codex Smoke". Do not edit files or run shell commands. Use only the aether MCP tools.\n1. Call wait_for_message (timeoutMs 25000) until a message arrives; repeat up to 6 times.\n2. The message contains a nonce starting with "A-". Reply with send_message to the sender (recipients: use the sender id from the message) with replyTo set to that message id and a body that contains exactly the text "${nonceB}" and the nonce you received.\n3. Then ack_message the received message and finish with a one-line summary.`,
+    `A reply containing ${nonceB} and the received nonce was sent.`,
+  );
+  const claudeWork = await createWork(
+    projectId,
+    'Exchange nonces with Codex',
+    `You are "Claude Smoke". Do not edit files or run shell commands. Use only the aether MCP tools.\n1. Call send_message to recipient ${codexId} with kind "request" and a body containing exactly the text "${nonceA}".\n2. Then call wait_for_message (timeoutMs 25000) until a reply arrives; repeat up to 8 times.\n3. Finish with a one-line summary that quotes the reply text.`,
+    `A reply containing ${nonceB} was received.`,
+  );
+  await assign(projectId, codexWork, codexId);
+  await sleep(4000);
+  await assign(projectId, claudeWork, claudeId);
+  return [
+    { id: codexWork, label: 'codex' },
+    { id: claudeWork, label: 'claude' },
+  ];
+}
+
+/** One agent calls `whoami` and reports its id. */
+async function startIdentity(projectId: string, agentId: string): Promise<Work[]> {
+  const id = await createWork(
+    projectId,
+    'Report your identity',
+    'Do not edit files or run shell commands. Call the aether MCP tool whoami once, then finish with one line that states your agentId.',
+    'The summary contains the agentId.',
+  );
+  await assign(projectId, id, agentId);
+  return [{ id, label: only }];
+}
+
+/** Decides every new pending approval: only the AETHER collaboration tools are approved. */
+async function decideApprovals(projectId: string, decided: Set<string>) {
+  const approvals = await http<Approval[]>('GET', `/api/projects/${projectId}/approvals`);
+  for (const a of approvals.filter((x) => x.state === 'pending' && !decided.has(x.id))) {
+    // Only the AETHER collaboration tools, named by the provider (Claude: mcp__aether__*); never a command or a file change.
+    const allowed =
+      a.kind.startsWith('mcp__aether__') ||
+      (a.kind === 'mcpToolCall' && String(a.parameters).includes('"serverName":"aether"'));
+    decided.add(a.id);
+    await command(
+      'approval.decide',
+      { approvalId: a.id, actionHash: a.actionHash, decision: allowed ? 'approve' : 'deny' },
+      projectId,
+      a.version,
     );
-    const claudeWork = await create(
-      'Exchange nonces with Codex',
-      `You are "Claude Smoke". Do not edit files or run shell commands. Use only the aether MCP tools.\n1. Call send_message to recipient ${codexId} with kind "request" and a body containing exactly the text "${nonceA}".\n2. Then call wait_for_message (timeoutMs 25000) until a reply arrives; repeat up to 8 times.\n3. Finish with a one-line summary that quotes the reply text.`,
-      `A reply containing ${nonceB} was received.`,
+    note(
+      `approval ${a.kind} (${a.toolId.slice(0, 24)}) → ${allowed ? 'approved: aether tool' : 'denied: not an aether tool'}`,
     );
-    await assign(codexWork, codexId);
-    works.push({ id: codexWork, label: 'codex' });
-    await sleep(4000);
-    await assign(claudeWork, claudeId);
-    works.push({ id: claudeWork, label: 'claude' });
-  } else {
-    const provider = only === 'claude' ? claudeId : codexId;
-    const id = await create(
-      'Report your identity',
-      'Do not edit files or run shell commands. Call the aether MCP tool whoami once, then finish with one line that states your agentId.',
-      'The summary contains the agentId.',
-    );
-    await assign(id, provider);
-    works.push({ id, label: only });
   }
+}
 
+const FINAL_STATES = [
+  'submitted',
+  'reviewing',
+  'completed',
+  'failed',
+  'cancelled',
+  'indeterminate',
+];
+
+/** Decides approvals and logs each state change of the works until all are final (at most 8 minutes). */
+async function watch(projectId: string, works: Work[]) {
   const decided = new Set<string>();
   const seen = new Map<string, string>();
   const deadline = Date.now() + 8 * 60 * 1000;
   while (Date.now() < deadline) {
-    const approvals = (await http('GET', `/api/projects/${projectId}/approvals`)) as {
-      id: string;
-      state: string;
-      kind: string;
-      toolId: string;
-      version: number;
-      actionHash: string;
-      parameters: string;
-    }[];
-    for (const a of approvals.filter((x) => x.state === 'pending' && !decided.has(x.id))) {
-      // Only the AETHER collaboration tools, named by the provider (Claude: mcp__aether__*); never a command or a file change.
-      const allowed =
-        a.kind.startsWith('mcp__aether__') ||
-        (a.kind === 'mcpToolCall' && String(a.parameters).includes('"serverName":"aether"'));
-      decided.add(a.id);
-      await command(
-        'approval.decide',
-        { approvalId: a.id, actionHash: a.actionHash, decision: allowed ? 'approve' : 'deny' },
-        projectId,
-        a.version,
-      );
-      note(
-        `approval ${a.kind} (${a.toolId.slice(0, 24)}) → ${allowed ? 'approved: aether tool' : 'denied: not an aether tool'}`,
-      );
-    }
-    const snapshot = await http('GET', `/api/projects/${projectId}/snapshot`);
+    await decideApprovals(projectId, decided);
+    const { work } = await snapshotOf(projectId);
     for (const w of works) {
-      const row = snapshot.work.find((x: { id: string }) => x.id === w.id);
+      const row = work.find((x) => x.id === w.id);
       if (row && seen.get(w.id) !== row.state) {
         seen.set(w.id, row.state);
         note(`${w.label} work → ${row.state}`);
       }
     }
-    if (
-      works.every((w) =>
-        ['submitted', 'reviewing', 'completed', 'failed', 'cancelled', 'indeterminate'].includes(
-          seen.get(w.id) ?? '',
-        ),
-      )
-    )
-      break;
+    if (works.every((w) => FINAL_STATES.includes(seen.get(w.id) ?? ''))) break;
     await sleep(2000);
   }
+}
 
-  const snapshot = await http('GET', `/api/projects/${projectId}/snapshot`);
-  const messages = snapshot.messages as {
-    id: string;
-    senderId: string;
-    kind: string;
-    body: string;
-    deliveries: { state: string }[];
-  }[];
-  const result = {
+function summarize(snapshot: Snapshot, works: Work[], claudeId: string, codexId: string) {
+  const { messages } = snapshot;
+  return {
     only,
     works: works.map((w) => {
-      const row = snapshot.work.find((x: { id: string }) => x.id === w.id);
+      const row = snapshot.work.find((x) => x.id === w.id);
       return {
         provider: w.label,
         state: row?.state,
@@ -312,6 +358,23 @@ async function main() {
       ),
     timeline,
   };
+}
+
+async function main() {
+  await startProcesses();
+  await signIn();
+
+  const { projectId, claudeId, codexId } = seeded;
+  note(
+    `project and two agents created (claude ${claudeId.slice(0, 8)}, codex ${codexId.slice(0, 8)})`,
+  );
+  const works =
+    only === 'exchange'
+      ? await startExchange(projectId, claudeId, codexId)
+      : await startIdentity(projectId, only === 'claude' ? claudeId : codexId);
+  await watch(projectId, works);
+
+  const result = summarize(await snapshotOf(projectId), works, claudeId, codexId);
   mkdirSync('evidence', { recursive: true });
   const file = `evidence/live-smoke-${only}.json`;
   writeFileSync(file, JSON.stringify(result, null, 2) + '\n');

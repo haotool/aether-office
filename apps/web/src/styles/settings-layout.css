@@ -5,7 +5,7 @@
  */
 .settings {
   container: settings / inline-size;
-  max-width: 1040px;
+  max-width: 1040px; /* token-lint: geometry */
 }
 .settings-layout {
   display: grid;
@@ -37,7 +37,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  max-width: 480px;
+  max-width: 480px; /* token-lint: geometry */
   margin-bottom: var(--space-16);
 }
 .ssearch > svg {
@@ -96,7 +96,7 @@
 .snav a[aria-current='location'] {
   background: var(--selected);
   color: var(--text);
-  box-shadow: inset 0 0 0 1px var(--glass-accent-line);
+  box-shadow: inset 0 0 0 1px var(--glass-accent-line); /* token-lint: ring */
 }
 @media (hover: hover) {
   .snav a:hover {

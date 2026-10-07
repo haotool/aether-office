@@ -59,7 +59,7 @@
   overflow-wrap: anywhere;
 }
 .diff-view {
-  max-height: 480px;
+  max-height: 480px; /* token-lint: geometry */
   overflow: auto;
   background: var(--bg);
   padding: var(--space-16);
@@ -71,7 +71,7 @@
 .terminal-screen {
   overflow: auto;
   max-width: 100%;
-  min-height: 340px;
+  min-height: 340px; /* token-lint: geometry */
   padding: var(--space-12);
   background: var(--terminal-bg);
   border-radius: var(--r-lg);
@@ -82,19 +82,19 @@
 }
 
 .observation-text {
-  max-height: 320px;
+  max-height: 320px; /* token-lint: geometry */
   overflow: auto;
   overflow-wrap: anywhere;
 }
 
 .task-dag {
-  height: 520px;
+  height: 520px; /* token-lint: geometry */
   border: 1px solid var(--line);
   border-radius: var(--r-xl);
   overflow: hidden;
 }
 .dag-task {
-  height: 94px; /* geometry: the node size TaskDag.tsx hands the flow layout (240 x 94) */
+  height: 94px; /* geometry: the node size TaskDag.tsx hands the flow layout (240 x 94) token-lint: geometry */
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   background: var(--surface);

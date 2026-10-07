@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useEffectEvent, useRef, useState, type RefObject } from 'react';
 import type { Agent, Layout } from '@aether/contracts';
 import { emoteBlock, type EmoteId } from './emotes.js';
 import type { HoverFacts } from './InteractionLayer.js';
@@ -71,6 +71,94 @@ type Params = {
   pose: PoseApi['request'];
 };
 
+type Marks = ReturnType<typeof useCharacterMarks>;
+type Wall = ReturnType<typeof useWallFeeds>;
+type Emotes = ReturnType<typeof useEmotes>;
+type Words = ReturnType<typeof wordsFor>;
+
+/** Where each member's head is over its desk, for the marquee to pick by. */
+function headsOf(agents: readonly Agent[], layout: Layout, exploded: boolean) {
+  return new Map(
+    agents.flatMap((a): [string, [number, number, number]][] => {
+      const d = layout.objects.find((o) => o.agentId === a.id);
+      return d ? [[a.id, [d.x, floorY(d.floor ?? 0, exploded) + 1.3, d.z]]] : [];
+    }),
+  );
+}
+
+/** The card over the character the pointer is on (not while a menu is open or a desk is carried). */
+function hoverFactsOf(p: Params, hoverId: string | null, menuId: string | null, carrying: boolean) {
+  const agent =
+    hoverId && !menuId && !carrying ? p.sceneAgents.find((a) => a.id === hoverId) : undefined;
+  if (!agent) return null;
+  const facts: HoverFacts = {
+    agent,
+    role: p.roleOf?.(agent) ?? 'generalist',
+    context: p.screens?.[agent.id]?.contextPercent ?? null,
+    doing: p.doing?.[agent.id],
+  };
+  return facts;
+}
+
+/** Where DOM boxes for members go: over their desks, `lift` metres higher than their name tags. */
+function anchorsFor(p: Params) {
+  return (ids: readonly string[], lift = 0) =>
+    labelsOf(
+      p.sceneAgents.filter((a) => ids.includes(a.id)),
+      p.layout,
+      p.nav.floor,
+      p.nav.exploded && !p.compact,
+    )
+      .filter((l) => ids.includes(l.id))
+      .map((l) => ({ ...l, y: l.y + lift }));
+}
+
+/** What the page's menu may ask of the scene for one character, and the pins on the wall of small views. */
+function characterActions(o: {
+  p: Params;
+  marks: Marks;
+  wall: Wall;
+  emotes: Emotes;
+  words: Words;
+  announce: (text: string) => void;
+  setWallClosed: (closed: boolean) => void;
+}) {
+  const { p, marks, wall, emotes, words, announce } = o;
+  const pinnable = (id: string) =>
+    wall.capacity > 0 && (marks.pinned.has(id) || marks.pinned.size < wall.capacity);
+  const pinIds = (ids: readonly string[], on: boolean) => {
+    if (on) o.setWallClosed(false);
+    marks.pin(ids, on);
+  };
+  const blocked = (id: string) =>
+    emoteBlock({
+      apparition: p.apparitions?.[id] as string | undefined,
+      leaving: p.leaving?.[id] !== undefined,
+    });
+  const actionsFor = (id: string): SceneActions => ({
+    followed: p.nav.following === id,
+    toggleFollow: () => {
+      p.nav.follow(p.nav.following === id ? null : id);
+      announce(p.nav.following === id ? words.followOff : words.followOn);
+    },
+    lookAtScreen: () => p.nav.lookAtScreen(id),
+    pinned: marks.pinned.has(id),
+    canPin: pinnable(id),
+    togglePin: () => pinIds([id], !marks.pinned.has(id)),
+    emoteBlocked: blocked(id),
+    emote: (emote) => {
+      if (blocked(id)) {
+        announce(words.emoteBlocked);
+        return 'blocked';
+      }
+      const result = emotes.play(id, emote);
+      announce(result === 'played' ? words.emote[emote] : words.emoteWait);
+      return result;
+    },
+  });
+  return { pinnable, pinIds, actionsFor };
+}
+
 /**
  * Everything the person can do to the characters directly: the hover card, the action menu, emotes, the group picked
  * with Shift or a rectangle, pins on the wall of small views, carrying a desk to another seat. The state lives here so
@@ -124,79 +212,21 @@ export function useSceneInteraction(p: Params) {
             : words.dragBlocked[outcome.reason],
       ),
   });
-  const heads = new Map(
-    p.sceneAgents.flatMap((a): [string, [number, number, number]][] => {
-      const d = p.layout.objects.find((o) => o.agentId === a.id);
-      return d ? [[a.id, [d.x, floorY(d.floor ?? 0, p.nav.exploded) + 1.3, d.z]]] : [];
-    }),
-  );
   const marquee = useMarquee({
     container: stage,
     bridge,
-    points: heads,
+    points: headsOf(p.sceneAgents, p.layout, p.nav.exploded),
     enabled: !p.compact && p.hasGroupBar,
     onSelect: marks.pick,
   });
   // The menu closes when the person chooses someone else; opening it chooses its character first, so only a change counts.
-  useEffect(() => {
+  const closeStaleMenu = useEffectEvent(() => {
     if (marks.menuId && p.selectedId !== marks.menuId) marks.closeMenu(false);
-  }, [p.selectedId]); // eslint-disable-line react-hooks/exhaustive-deps -- a change of choice, not of the menu
-
-  const pinnable = (id: string) =>
-    wall.capacity > 0 && (marks.pinned.has(id) || marks.pinned.size < wall.capacity);
-  const pinIds = (ids: readonly string[], on: boolean) => {
-    if (on) setWallClosed(false);
-    marks.pin(ids, on);
-  };
-  const blocked = (id: string) =>
-    emoteBlock({
-      apparition: p.apparitions?.[id] as string | undefined,
-      leaving: p.leaving?.[id] !== undefined,
-    });
-  const actionsFor = (id: string): SceneActions => ({
-    followed: p.nav.following === id,
-    toggleFollow: () => {
-      p.nav.follow(p.nav.following === id ? null : id);
-      announce(p.nav.following === id ? words.followOff : words.followOn);
-    },
-    lookAtScreen: () => p.nav.lookAtScreen(id),
-    pinned: marks.pinned.has(id),
-    canPin: pinnable(id),
-    togglePin: () => pinIds([id], !marks.pinned.has(id)),
-    emoteBlocked: blocked(id),
-    emote: (emote) => {
-      if (blocked(id)) {
-        announce(words.emoteBlocked);
-        return 'blocked';
-      }
-      const result = emotes.play(id, emote);
-      announce(result === 'played' ? words.emote[emote] : words.emoteWait);
-      return result;
-    },
   });
-  const menuAgent = marks.menuId ? p.sceneAgents.find((a) => a.id === marks.menuId) : undefined;
-  const hoverAgent =
-    hoverId && !marks.menuId && !seatDrag.drag
-      ? p.sceneAgents.find((a) => a.id === hoverId)
-      : undefined;
-  const hover: HoverFacts | null = hoverAgent
-    ? {
-        agent: hoverAgent,
-        role: p.roleOf?.(hoverAgent) ?? 'generalist',
-        context: p.screens?.[hoverAgent.id]?.contextPercent ?? null,
-        doing: p.doing?.[hoverAgent.id],
-      }
-    : null;
-  /** Where DOM boxes for these members go: over their desks, `lift` metres higher than their name tags. */
-  const anchorsOf = (ids: readonly string[], lift = 0) =>
-    labelsOf(
-      p.sceneAgents.filter((a) => ids.includes(a.id)),
-      p.layout,
-      p.nav.floor,
-      p.nav.exploded && !p.compact,
-    )
-      .filter((l) => ids.includes(l.id))
-      .map((l) => ({ ...l, y: l.y + lift }));
+  useEffect(() => closeStaleMenu(), [p.selectedId]);
+
+  const actions = characterActions({ p, marks, wall, emotes, words, announce, setWallClosed });
+  const anchorsOf = anchorsFor(p);
   const spriteAnchors = emotes.sprites.flatMap((sprite) =>
     anchorsOf([sprite.id], 0.2).map((a) => ({ ...a, id: `s${sprite.key}` })),
   );
@@ -211,11 +241,9 @@ export function useSceneInteraction(p: Params) {
     emotes,
     seatDrag,
     marquee,
-    hover,
-    menuAgent,
-    actionsFor,
-    pinnable,
-    pinIds,
+    hover: hoverFactsOf(p, hoverId, marks.menuId, !!seatDrag.drag),
+    menuAgent: marks.menuId ? p.sceneAgents.find((a) => a.id === marks.menuId) : undefined,
+    ...actions,
     anchorsOf,
     spriteAnchors,
     cardElements,

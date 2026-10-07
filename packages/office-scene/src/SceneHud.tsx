@@ -5,11 +5,13 @@ import type { PulseKind, Shot } from './director.js';
 import { FLOORS } from './layout.js';
 import { SlabKpi, type FloorKpiBadge } from './FloorKpi.js';
 import { introWords } from './intro/intro-text.js';
+import { departmentAt } from './scene-geometry.js';
 
 const PIPS = 8;
 const pad = (n: number) => String(n).padStart(3, '0');
 
 export type FloorCount = { total: number; working: number };
+const NO_FLOOR: FloorCount = { total: 0, working: 0 };
 
 const KIND_ZH: Record<PulseKind, string> = {
   inform: '通知',
@@ -91,9 +93,10 @@ export function FloorHud({
   floor: number;
   perFloor: readonly FloorCount[];
 }) {
-  const department = DEPARTMENTS[floor]!;
-  const members = exploded ? perFloor.reduce((n, f) => n + f.total, 0) : perFloor[floor]!.total;
-  const working = exploded ? perFloor.reduce((n, f) => n + f.working, 0) : perFloor[floor]!.working;
+  const department = departmentAt(floor);
+  const here = perFloor[floor] ?? NO_FLOOR;
+  const members = exploded ? perFloor.reduce((n, f) => n + f.total, 0) : here.total;
+  const working = exploded ? perFloor.reduce((n, f) => n + f.working, 0) : here.working;
   return (
     <div className="floor-hud fui" style={{ ['--accent' as string]: department.accent }}>
       <small>
@@ -181,7 +184,7 @@ export function BuildingPanel({
         <>
           <ol>
             {[...DEPARTMENTS].reverse().map((d) => {
-              const entry = perFloor[d.floor]!;
+              const entry = perFloor[d.floor] ?? NO_FLOOR;
               const lit = entry.total
                 ? Math.max(entry.working ? 1 : 0, Math.round((entry.working / entry.total) * PIPS))
                 : 0;

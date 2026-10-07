@@ -8,7 +8,7 @@
   .page-heading h1,
   .office-heading h1 {
     font-size: var(--fs-heading);
-    line-height: 1.25;
+    line-height: var(--lh-tight);
     margin: 0;
   }
   h2 {
@@ -43,16 +43,22 @@
   .primary,
   .secondary,
   button:not([class]) {
-    min-height: var(--control-touch);
+    min-height: var(
+      --control-h-md
+    ); /* wins over the plain buttons a feature sets smaller (a message's copy buttons) */
     padding-inline: var(--space-16);
     font-size: var(--fs-body);
+  }
+  .primary {
+    min-height: var(
+      --control-h-lg
+    ); /* the cut corner clips a hit area (compact-desktop.css), so the button is the 44px */
   }
   .view-switch {
     gap: var(--space-6);
     margin: 0 0 var(--space-12);
   }
   .view-switch button {
-    min-height: var(--control-touch-sm);
     padding: 0 var(--space-12);
     font-size: var(--fs-body);
   }
@@ -97,7 +103,7 @@
     font-size: var(--fs-label);
   }
   .toggle-label {
-    min-height: var(--control-touch-sm);
+    min-height: var(--control-h-sm);
     margin: var(--space-12) 0;
   }
   /* A member is a row: avatar, name and role, state. */
@@ -157,12 +163,16 @@
   }
 }
 
-@media (max-width: 380px) {
+/* A narrow list (the narrowest phones) keeps the title and the state. */
+.task-list {
+  container: tasks / inline-size;
+}
+@container tasks (max-width: 348px) {
   .task-row {
     padding-inline: var(--space-8);
   }
   .task-row .task-priority {
-    display: none; /* the narrowest phones keep the title and the state */
+    display: none;
   }
 }
 

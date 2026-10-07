@@ -2,7 +2,7 @@
 import type { SquadMemberInput, SquadZoneState } from './squad-model.js';
 
 /** Where the beam's rate comes from: the subagents' transcript token counts, or (when there are none) the tool calls. */
-export type BeamSource = 'tokens' | 'tools';
+type BeamSource = 'tokens' | 'tools';
 export type BeamRate = { source: BeamSource; perMinute: number };
 
 /** The beam's fallback rate is the tool starts in this window (the zone keeps them for as long). */
@@ -14,8 +14,10 @@ export const RATE_WINDOW_MS = 60_000;
  * which is "not known", never "zero".
  */
 export function squadTokenRate(members: readonly SquadMemberInput[]): number | null {
-  const sampled = members.filter((m) => m.status !== 'finished' && m.tokensPerMinute != null);
-  return sampled.length ? sampled.reduce((sum, m) => sum + m.tokensPerMinute!, 0) : null;
+  const rates = members.flatMap((m) =>
+    m.status !== 'finished' && m.tokensPerMinute != null ? [m.tokensPerMinute] : [],
+  );
+  return rates.length ? rates.reduce((sum, rate) => sum + rate, 0) : null;
 }
 
 /**

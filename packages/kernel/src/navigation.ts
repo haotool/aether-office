@@ -10,7 +10,7 @@ export type NavGrid = {
   minZ: number;
   blocked: Uint8Array;
 };
-export type PathResult = { status: 'ok'; points: Point[] } | { status: 'unreachable' };
+type PathResult = { status: 'ok'; points: Point[] } | { status: 'unreachable' };
 
 // Mirrors the floor limits enforced by validateLayout.
 const FLOOR = { minX: -24.5, maxX: 24.5, minZ: -16.5, maxZ: 16.5 };
@@ -53,7 +53,7 @@ const open = (g: NavGrid, c: number, r: number) =>
   c >= 0 && r >= 0 && c < g.cols && r < g.rows && g.blocked[r * g.cols + c] === 0;
 
 /** Closest walkable cell centre to `p` within `maxRadius` metres, or null. */
-export function nearestWalkable(g: NavGrid, p: Point, maxRadius = 3): Point | null {
+function nearestWalkable(g: NavGrid, p: Point, maxRadius = 3): Point | null {
   const [c0, r0] = cellOf(g, p);
   const span = Math.ceil(maxRadius / g.cell);
   let best: { d: number; c: number; r: number } | null = null;
@@ -77,6 +77,25 @@ function lineOfSight(g: NavGrid, a: Point, b: Point): boolean {
   return true;
 }
 
+const NEIGHBOURS = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+  [1, 1],
+  [1, -1],
+  [-1, 1],
+  [-1, -1],
+] as const;
+
+/** The cells from the start to `at`, following each cell's parent back. */
+function cellsTo(g: NavGrid, parent: Map<number, number>, at: number): Point[] {
+  const cells: Point[] = [];
+  for (let cur: number | undefined = at; cur !== undefined; cur = parent.get(cur))
+    cells.push(pointOf(g, cur % g.cols, Math.floor(cur / g.cols)));
+  return cells.reverse();
+}
+
 export function findPath(g: NavGrid, from: Point, to: Point): PathResult {
   const start = nearestWalkable(g, from);
   const goal = nearestWalkable(g, to);
@@ -92,33 +111,19 @@ export function findPath(g: NavGrid, from: Point, to: Point): PathResult {
     heap.sort((a, b) => b.f - a.f); // small grid: simple and deterministic
   };
   const done = new Set<number>();
-  while (heap.length) {
-    const { c, r } = heap.pop()!;
+  for (let node = heap.pop(); node; node = heap.pop()) {
+    const { c, r } = node;
     const here = index(c, r);
     if (done.has(here)) continue;
     done.add(here);
-    if (c === gc && r === gr) {
-      const cells: Point[] = [];
-      for (let at: number | undefined = here; at !== undefined; at = parent.get(at))
-        cells.push(pointOf(g, at % g.cols, Math.floor(at / g.cols)));
-      cells.reverse();
-      return { status: 'ok', points: smooth(g, cells) };
-    }
-    for (const [dc, dr] of [
-      [1, 0],
-      [-1, 0],
-      [0, 1],
-      [0, -1],
-      [1, 1],
-      [1, -1],
-      [-1, 1],
-      [-1, -1],
-    ] as const) {
+    if (c === gc && r === gr) return { status: 'ok', points: smooth(g, cellsTo(g, parent, here)) };
+    const base = cost.get(here) ?? Infinity;
+    for (const [dc, dr] of NEIGHBOURS) {
       const nc = c + dc;
       const nr = r + dr;
       if (!open(g, nc, nr)) continue;
       if (dc !== 0 && dr !== 0 && !(open(g, c + dc, r) && open(g, c, r + dr))) continue; // no corner cutting
-      const next = cost.get(here)! + Math.hypot(dc, dr);
+      const next = base + Math.hypot(dc, dr);
       const key = index(nc, nr);
       if (next < (cost.get(key) ?? Infinity)) {
         cost.set(key, next);
@@ -131,19 +136,25 @@ export function findPath(g: NavGrid, from: Point, to: Point): PathResult {
 }
 
 function smooth(g: NavGrid, cells: Point[]): Point[] {
-  const out: Point[] = [cells[0]!];
-  let anchor = 0;
-  for (let i = 2; i < cells.length; i++)
-    if (!lineOfSight(g, cells[anchor]!, cells[i]!)) {
-      out.push(cells[i - 1]!);
-      anchor = i - 1;
+  const first = cells[0];
+  const last = cells.at(-1);
+  if (!first || !last) return cells;
+  const out: Point[] = [first];
+  let anchor = first;
+  for (let i = 2; i < cells.length; i++) {
+    const prev = cells[i - 1];
+    const cell = cells[i];
+    if (prev && cell && !lineOfSight(g, anchor, cell)) {
+      out.push(prev);
+      anchor = prev;
     }
-  out.push(cells[cells.length - 1]!);
+  }
+  out.push(last);
   return out;
 }
 
 export const pathLength = (points: readonly Point[]) =>
-  points.reduce(
-    (n, p, i) => (i ? n + Math.hypot(p.x - points[i - 1]!.x, p.z - points[i - 1]!.z) : 0),
-    0,
-  );
+  points.reduce((n, p, i) => {
+    const q = points[i - 1];
+    return q ? n + Math.hypot(p.x - q.x, p.z - q.z) : 0;
+  }, 0);

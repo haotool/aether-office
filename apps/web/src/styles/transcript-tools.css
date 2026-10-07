@@ -141,7 +141,7 @@
   inset: 0;
   background: linear-gradient(100deg, transparent 30%, var(--glow) 50%, transparent 70%);
   transform: translateX(-100%);
-  animation: panel-shimmer 1.8s ease-in-out infinite;
+  animation: panel-shimmer 1.8s ease-in-out infinite; /* token-lint: loop */
   pointer-events: none;
 }
 @keyframes panel-shimmer {
@@ -257,7 +257,7 @@
   border-radius: var(--r-sm);
   background: linear-gradient(90deg, var(--raised) 30%, var(--selected) 50%, var(--raised) 70%) 0
     0 / 200% 100%;
-  animation: skeleton-sweep 1.4s ease-in-out infinite;
+  animation: skeleton-sweep 1.4s ease-in-out infinite; /* token-lint: loop */
 }
 .skeleton-row.user {
   justify-items: end;

@@ -15,14 +15,14 @@ import type { StampKind } from './stamp.js';
 export const BOX_CAPACITY = 160;
 export const SEAL_CAPACITY = 8;
 
-export type BoxItem = {
+type BoxItem = {
   at: readonly [number, number, number];
   size: readonly [number, number, number];
   yaw: number;
   color: string;
 };
-export type SealItem = { at: readonly [number, number, number]; yaw: number; scale: number };
-export type HandoverItems = { boxes: BoxItem[]; seals: Record<StampKind, SealItem[]> };
+type SealItem = { at: readonly [number, number, number]; yaw: number; scale: number };
+type HandoverItems = { boxes: BoxItem[]; seals: Record<StampKind, SealItem[]> };
 
 const FOLDER = [0.3, FOLDER_THICKNESS, 0.22] as const;
 const TAB_SIZE = [0.1, FOLDER_THICKNESS, 0.04] as const;

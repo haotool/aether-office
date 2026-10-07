@@ -12,7 +12,7 @@ import type { Pose, V3 } from '../shot-camera.js';
 
 export type IntroPhase = 'orbit' | 'toExploded' | 'rise' | 'hold' | 'toStacked';
 
-export type IntroSegment = {
+type IntroSegment = {
   phase: IntroPhase;
   /** Seconds from the start of the tour. */
   from: number;
@@ -24,7 +24,7 @@ export type IntroSegment = {
 };
 
 /** The dip's length: the building switches state under it. */
-export const DIP_S = 0.4;
+const DIP_S = 0.4;
 const ORBIT_S = 26;
 const RISE_S = 15;
 const HOLD_S = 4;

@@ -1,0 +1,22 @@
+{
+  "counts": {
+    "literal-size": 0,
+    "viewport-height": 0,
+    "literal-duration": 0,
+    "literal-shadow": 0,
+    "literal-line-height": 0,
+    "important": 0,
+    "custom-property-literal": 0,
+    "media-breakpoint": 0
+  },
+  "files": {
+    "literal-size": {},
+    "viewport-height": {},
+    "literal-duration": {},
+    "literal-shadow": {},
+    "literal-line-height": {},
+    "important": {},
+    "custom-property-literal": {},
+    "media-breakpoint": {}
+  }
+}

@@ -84,3 +84,19 @@ it('handles mixed emphasis, code containing markers and escapes', () => {
     ],
   });
 });
+
+it('ends a paragraph at each block start and lets an unclosed fence or a table run to the end', () => {
+  expect(types('text\n# h\nmore\n- item\nlast\n> q\n---\n| a |\n|---|\n| 1 |\n| 2 |')).toEqual([
+    'paragraph',
+    'heading',
+    'paragraph',
+    'list',
+    'paragraph',
+    'quote',
+    'rule',
+    'table',
+  ]);
+  expect(parseMarkdown('~~~sh\nls\n```\n')).toEqual([
+    { type: 'code', text: 'ls\n```\n', lang: 'sh' },
+  ]);
+});

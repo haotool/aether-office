@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { DEFAULT_LIFE_PREFS, type LifePrefs } from '@aether/office-scene/model';
-import type { Locale } from './i18n.js';
+import { resolveLocale, type Locale } from './i18n.js';
 import { migratePreferences, normalizeLife, PREFS_VERSION } from './prefs-migrate.js';
 import { resolveTheme, useSystemDark, type Theme, type ThemePreference } from './theme.js';
 type Preferences = {
@@ -34,7 +34,7 @@ type Preferences = {
 export const usePreferences = create<Preferences>()(
   persist(
     (set) => ({
-      locale: 'zh-TW',
+      locale: resolveLocale(navigator.language), // first visit only: a saved choice is merged over this
       theme: 'dark',
       quality: 'balanced',
       reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -59,7 +59,7 @@ export const usePreferences = create<Preferences>()(
     {
       name: 'aether-ui-preferences',
       version: PREFS_VERSION,
-      migrate: (stored, version) => migratePreferences(stored, version) as unknown as Preferences,
+      migrate: (stored, version) => migratePreferences(stored, version) as Preferences,
       // A stored `life` is checked on every load, so a hand-edited or half-written one cannot break the scene.
       merge: (stored, current) => {
         const saved = (stored ?? {}) as Partial<Preferences>;
@@ -84,6 +84,16 @@ export const usePreferences = create<Preferences>()(
     },
   ),
 );
+
+// First visit: store the detected language, so a later change of the browser's language does not flip the interface.
+try {
+  const saved = JSON.parse(localStorage.getItem('aether-ui-preferences') ?? '{}') as {
+    state?: { locale?: string };
+  };
+  if (!saved.state?.locale) usePreferences.setState({});
+} catch {
+  /* no storage (a private window): the detected language is used for this visit */
+}
 
 /** The theme being drawn: the person's choice, or the system's when they chose to follow it. */
 export function useTheme(): Theme {

@@ -63,6 +63,8 @@ export default defineConfig({
     // CI installs Playwright's own Chromium; a developer machine uses the installed Chrome.
     channel: process.env['CI'] ? undefined : 'chrome',
     headless: true,
+    // The specs read the interface in Traditional Chinese; the app now follows the browser's language on a first visit.
+    locale: 'zh-TW',
     viewport: { width: 1440, height: 900 },
     trace: 'off',
     screenshot: 'only-on-failure',

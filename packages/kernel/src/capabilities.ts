@@ -1,7 +1,7 @@
 // Verified provider capabilities. A flag is true only when the adapter implements it and a test
 // exercises it; everything else stays false so the platform refuses and the UI disables the control.
-export type Injection = 'mid_turn' | 'turn_boundary' | 'none';
-export type Capabilities = {
+type Injection = 'mid_turn' | 'turn_boundary' | 'none';
+type Capabilities = {
   start: boolean;
   resume: boolean;
   interrupt: boolean;
@@ -16,7 +16,7 @@ export type Capabilities = {
   externalObservation: boolean;
   messageInjection: Injection;
 };
-export type CapabilityFlag = Exclude<keyof Capabilities, 'messageInjection'>;
+type CapabilityFlag = Exclude<keyof Capabilities, 'messageInjection'>;
 
 const none: Capabilities = {
   start: false,

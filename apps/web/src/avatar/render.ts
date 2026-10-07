@@ -1,6 +1,6 @@
 import { eyes, mouth, INK } from './face.js';
 import { avatarSpec, type AvatarSpec } from './spec.js';
-import { avatarState, stateLook, type AvatarState } from './state.js';
+import { stateLook, type AvatarState } from './state.js';
 import { SPECIES } from './species.js';
 
 const CLOTH = '#3F6F78';
@@ -151,5 +151,4 @@ export function renderAvatar(seed: string, species: string, state: AvatarState =
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">${parts.back}${face}${lips}${parts.front}${look.overlay}</svg>`;
 }
 
-export { avatarSpec, avatarState };
 export type { AvatarState };

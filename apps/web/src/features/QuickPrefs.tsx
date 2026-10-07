@@ -1,30 +1,24 @@
 import { Globe2, Moon, Sprout, Sun, Wind } from 'lucide-react';
-import { usePreferences, useTheme } from '../state.js';
+import { usePreferences } from '../state.js';
 import { useT } from '../ui.js';
 import { PairPhoneButton } from './ConnectPhone.js';
+import { QualitySelect, useLocaleToggle, useThemeToggle } from './PreferenceControls.js';
 
 /** Language, theme and 3D quality, at the foot of the drawer: the top bar has no room for them on a phone. */
 export function QuickPrefs({ canPair }: { canPair: boolean }) {
   const t = useT();
   const prefs = usePreferences();
-  const theme = useTheme();
+  const locale = useLocaleToggle();
+  const theme = useThemeToggle();
   return (
     <div className="quick-prefs">
-      <button
-        className="secondary"
-        aria-label={t('language')}
-        onClick={() => prefs.set({ locale: prefs.locale === 'zh-TW' ? 'en' : 'zh-TW' })}
-      >
+      <button className="secondary" aria-label={t('language')} onClick={locale.toggle}>
         <Globe2 size={18} />
-        {prefs.locale === 'zh-TW' ? 'English' : '繁體中文'}
+        {locale.nextName}
       </button>
-      <button
-        className="secondary"
-        aria-label={t('appearance')}
-        onClick={() => prefs.set({ theme: theme === 'dark' ? 'light' : 'dark' })}
-      >
-        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-        {theme === 'dark' ? t('light') : t('dark')}
+      <button className="secondary" aria-label={t('appearance')} onClick={theme.toggle}>
+        {theme.theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+        {theme.theme === 'dark' ? t('light') : t('dark')}
       </button>
       <button
         className="secondary"
@@ -45,16 +39,7 @@ export function QuickPrefs({ canPair }: { canPair: boolean }) {
       {canPair && <PairPhoneButton variant="text" />}
       <label>
         <span>{t('quality')}</span>
-        <select
-          value={prefs.quality}
-          onChange={(e) => prefs.set({ quality: e.target.value as typeof prefs.quality })}
-        >
-          {(['low', 'balanced', 'high'] as const).map((q) => (
-            <option key={q} value={q}>
-              {t(q)}
-            </option>
-          ))}
-        </select>
+        <QualitySelect />
       </label>
     </div>
   );

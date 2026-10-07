@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { AttributedSession } from '@aether/contracts';
 import { Modal, useT } from '../ui.js';
+import { ConfirmButtons } from './ConfirmButtons.js';
 import type { CharacterCommand } from './CharacterMenu.js';
 import { ClockOut } from './ClockOut.js';
 import { StopSession } from './StopSession.js';
@@ -37,19 +38,13 @@ function StopTerminal({
         <b>{command.session.title ?? command.session.repo}</b>
       </p>
       <p>{t('composerStopConfirm')}</p>
-      {error && (
-        <p role="alert" className="error">
-          {error}
-        </p>
-      )}
-      <div className="button-row">
-        <button className="primary" disabled={busy} onClick={() => void stop()}>
-          {busy ? t('loading') : t('composerStopProcess')}
-        </button>
-        <button className="secondary" disabled={busy} onClick={onClose}>
-          {t('cancel')}
-        </button>
-      </div>
+      <ConfirmButtons
+        error={error}
+        busy={busy}
+        confirmLabel={t('composerStopProcess')}
+        onConfirm={() => void stop()}
+        onCancel={onClose}
+      />
     </Modal>
   );
 }

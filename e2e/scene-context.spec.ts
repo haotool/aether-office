@@ -56,7 +56,12 @@ test('a lost WebGL context shows a card, and one tap mounts the scene again with
     undefined,
     { timeout: 30000 },
   );
-  await page.waitForTimeout(1000);
+  // Thirty drawn frames (scene time): the new scene is running, which is what the second loss must find.
+  await page.evaluate(() =>
+    (
+      window as unknown as { __aetherPerfRig: { sample: (n: number) => Promise<unknown> } }
+    ).__aetherPerfRig.sample(30),
+  );
   await loseContext(page);
   await expect(card).toBeVisible();
   await page.getByRole('button', { name: RELOAD }).click();

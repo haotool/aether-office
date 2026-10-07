@@ -2,7 +2,7 @@
   width: 100%;
 }
 .quick-list {
-  max-height: 50vh;
+  max-height: 50dvh;
   overflow: auto;
   margin: var(--space-8) 0 0;
   padding: 0;

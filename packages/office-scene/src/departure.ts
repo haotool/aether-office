@@ -44,11 +44,15 @@ export type DeparturePose = {
   gone: boolean;
 };
 
-const length = (points: readonly Point[]) =>
-  points.reduce(
-    (sum, p, i) => (i ? sum + Math.hypot(p.x - points[i - 1]!.x, p.z - points[i - 1]!.z) : 0),
-    0,
-  );
+export const pathLength = (points: readonly Point[]) => {
+  let total = 0;
+  for (let i = 1; i < points.length; i++) {
+    const from = points[i - 1];
+    const to = points[i];
+    if (from && to) total += Math.hypot(to.x - from.x, to.z - from.z);
+  }
+  return total;
+};
 const heading = (from: Point, to: Point, otherwise: number) =>
   from.x === to.x && from.z === to.z ? otherwise : Math.atan2(to.x - from.x, to.z - from.z);
 /** The turn from `a` to `b` by the shorter way round. */
@@ -66,7 +70,7 @@ function planDeparture(grid: NavGrid, desk: Desk): Departure {
   };
   const found = findPath(grid, seat, { x: 0, z: 0 });
   const points = [seat, ...(found.status === 'ok' ? found.points : [{ x: 0, z: 0 }])];
-  return { points, walkMetres: Math.max(0, length(points) - CORE_RADIUS), deskYaw };
+  return { points, walkMetres: Math.max(0, pathLength(points) - CORE_RADIUS), deskYaw };
 }
 
 /** Plans for the given members, one navigation grid per floor (a floor's own furniture is what is in the way). */
@@ -77,9 +81,12 @@ export function planDepartures(layout: Layout, ids: readonly string[]): Record<s
     const desk = layout.objects.find((o) => o.agentId === id);
     if (!desk) continue;
     const floor = desk.floor ?? 0;
-    if (!grids.has(floor))
-      grids.set(floor, buildNavGrid(layout.objects.filter((o) => (o.floor ?? 0) === floor)));
-    out[id] = planDeparture(grids.get(floor)!, desk);
+    let grid = grids.get(floor);
+    if (!grid) {
+      grid = buildNavGrid(layout.objects.filter((o) => (o.floor ?? 0) === floor));
+      grids.set(floor, grid);
+    }
+    out[id] = planDeparture(grid, desk);
   }
   return out;
 }
@@ -90,7 +97,7 @@ export function departureAt(
   elapsedMs: number,
   reducedMotion = false,
 ): DeparturePose {
-  const seat = plan.points[0]!;
+  const seat = plan.points[0] ?? { x: 0, z: 0 };
   const pose = (at: Point, facing: number, over: Partial<DeparturePose>): DeparturePose => {
     const dx = at.x - seat.x;
     const dz = at.z - seat.z;

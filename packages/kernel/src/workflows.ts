@@ -1,9 +1,9 @@
 // Workflow templates as pure data. Each step becomes an ordinary WorkItem; dependencies make the
 // DAG, and provider constraints are enforced when an agent is assigned or asked to review.
-export type WorkflowTemplate =
+type WorkflowTemplate =
   'claude_codex_review' | 'codex_claude_review' | 'frontend_backend' | 'research_design_impl';
 
-export type StepPlan = {
+type StepPlan = {
   role: string;
   titleSuffix: string;
   acceptanceNote: string;
@@ -86,5 +86,3 @@ export const TEMPLATES: Record<WorkflowTemplate, readonly StepPlan[]> = {
     },
   ],
 };
-
-export const isTemplate = (value: string): value is WorkflowTemplate => value in TEMPLATES;

@@ -22,7 +22,7 @@ const SPECIES = ['fox', 'cat', 'rabbit', 'bear', 'otter', 'raccoon', 'panda', 'd
 export const LOCAL_PREFIX = 'local:';
 export { SUBAGENT_INFIX } from './subagent-id.js';
 export { formatSpan };
-export { mergeLayout, type MergeOptions } from './layout-merge.js';
+export { mergeLayout } from './layout-merge.js';
 
 const basename = (path: string) => path.split('/').filter(Boolean).pop() ?? '';
 // An untitled session in a worktree named after its repository is named by what sets the worktree apart
@@ -97,6 +97,7 @@ function observed(
 export const classificationOf = (s: LocalSession): Classification =>
   s.classification as Classification;
 
+const KERNEL_LANGUAGE = { 'zh-TW': 'zh', en: 'en' } as const;
 const NOTE = {
   dormant: { 'zh-TW': '休眠', en: 'dormant' },
   orphaned: { 'zh-TW': '孤兒', en: 'orphaned' },
@@ -119,7 +120,7 @@ export function sessionsToAgents(
 ): Agent[] {
   return sessions.flatMap((s) => {
     const kind = classificationOf(s);
-    const roleName = ROLE_LABELS[kind.role][locale === 'zh-TW' ? 'zh' : 'en'];
+    const roleName = ROLE_LABELS[kind.role][KERNEL_LANGUAGE[locale]];
     const branch = s.git?.branch ? ` · ${s.git.branch}` : '';
     const worktree = s.worktree?.linked ? ' · worktree' : '';
     const parent = observed(

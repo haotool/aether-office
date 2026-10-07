@@ -19,7 +19,7 @@
   display: grid;
   gap: var(--space-6);
   width: max-content;
-  max-width: 232px;
+  max-width: 232px; /* token-lint: geometry */
 }
 .speech-bubble {
   --edge: var(--accent, var(--mint));
@@ -40,7 +40,7 @@
     0 0 10px color-mix(in srgb, var(--edge) 26%, transparent),
     0 3px 10px var(--shade-soft);
   transform-origin: 50% 100%;
-  animation: speech-in 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: speech-in 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both; /* token-lint: animation */
   transition:
     opacity var(--dur) var(--ease),
     box-shadow var(--dur) var(--ease);
@@ -133,7 +133,7 @@
   flex: none;
   color: var(--edge);
   font-family: var(--mono);
-  text-shadow: 0 0 6px color-mix(in srgb, var(--edge) 70%, transparent);
+  text-shadow: 0 0 6px color-mix(in srgb, var(--edge) 70%, transparent); /* token-lint: glow */
 }
 .sl.heading .tx {
   color: var(--edge);
@@ -165,7 +165,7 @@
   margin-left: var(--space-2);
   background: var(--edge);
   vertical-align: text-bottom;
-  animation: caret-blink 0.9s steps(2, start) infinite;
+  animation: caret-blink 0.9s steps(2, start) infinite; /* token-lint: loop */
 }
 @keyframes caret-blink {
   to {

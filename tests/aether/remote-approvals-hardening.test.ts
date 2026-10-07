@@ -85,7 +85,7 @@ const squatter = (sign: (id: string, nonce: string) => Record<string, unknown>) 
       response.setHeader('content-type', 'application/json');
       const url = new URL(request.url!, 'http://x');
       if (request.method === 'POST' && url.pathname === '/api/hook/permission-requests')
-        return response.end(JSON.stringify({ id: 'req-1', expiresAt: 0 }));
+        return void response.end(JSON.stringify({ id: 'req-1', expiresAt: 0 }));
       const nonce =
         url.searchParams.get('nonce') ?? (JSON.parse(body || '{}') as { nonce?: string }).nonce;
       response.end(

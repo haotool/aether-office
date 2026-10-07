@@ -45,8 +45,14 @@ export function EmergencyStop({ projectId }: { projectId: string }) {
       {error && <span role="alert">{error}</span>}
     </span>
   ) : (
-    <button className="danger" onClick={() => setConfirming(true)}>
-      <OctagonX size={15} aria-hidden="true" /> {t('emergencyStop')}
+    <button
+      className="danger"
+      aria-label={t('emergencyStop')}
+      title={t('emergencyStop')}
+      onClick={() => setConfirming(true)}
+    >
+      <OctagonX size={15} aria-hidden="true" />{' '}
+      <span className="stop-label">{t('emergencyStop')}</span>
     </button>
   );
 }

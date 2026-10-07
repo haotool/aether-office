@@ -25,7 +25,7 @@ export function tagSets(prose: string): TagSets {
   return sets;
 }
 
-export type TagFacts = {
+type TagFacts = {
   closing: boolean;
   selfClosing: boolean;
   hasAttrs: boolean;

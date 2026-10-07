@@ -14,6 +14,7 @@ import {
 } from './intro-machine.js';
 import { introPoseAt, introSegmentAt, introSegments, type IntroPhase } from './intro-tour.js';
 import { captionKeyOf, type IntroCaptionKey } from './intro-text.js';
+import { useIntroClock, useIntroInterrupts } from './use-intro-inputs.js';
 
 /** What the page tells the scene about the first-visit tour. Without it the scene has no tour and no Replay button. */
 export type IntroProps = {
@@ -26,7 +27,7 @@ export type IntroProps = {
 };
 
 /** The building's state while the tour owns it. */
-export type IntroDrive = { floor: number; exploded: boolean };
+type IntroDrive = { floor: number; exploded: boolean };
 
 export type IntroTour = {
   /** The page gave the scene a tour (so Replay exists). */
@@ -45,13 +46,6 @@ export type IntroTour = {
   replay: () => void;
   never: () => void;
 };
-
-/** Frames that must run smoothly in a row before the tour starts, and the longest the scene waits for them. */
-const SMOOTH_FRAMES = 10;
-const SMOOTH_MS = 40;
-const WAIT_MS = 4000;
-const TICK_MS = 100;
-const BARE_MODIFIERS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Fn']);
 
 const homePose = (floor: number, aspect: number): Pose => {
   const target: Pose['target'] = [0, lookY(floor, false), 0];
@@ -107,58 +101,8 @@ export function useIntroTour({
     dispatch({ type: 'start', reduced: latest.current.reducedMotion });
   }, [props?.auto, warm]);
 
-  // Preparing: the floors mount; the tour starts when frames run smoothly, or after a few seconds at most.
-  useEffect(() => {
-    if (state.status !== 'preparing') return;
-    let smooth = 0;
-    let last = performance.now();
-    const began = last;
-    let raf = 0;
-    const step = (now: number) => {
-      smooth = now - last < SMOOTH_MS ? smooth + 1 : 0;
-      last = now;
-      if (smooth >= SMOOTH_FRAMES || now - began >= WAIT_MS) dispatch({ type: 'ready', now });
-      else raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [state.status]);
-
-  // Playing: the camera's frames carry the clock (see `pose`); this tick is the backstop when no frame runs.
-  useEffect(() => {
-    if (state.status !== 'playing') return;
-    const every = setInterval(() => dispatch({ type: 'tick', now: performance.now() }), TICK_MS);
-    return () => clearInterval(every);
-  }, [state.status]);
-
-  // Every input that is the person's hands on the scene ends it where the camera is; Esc lands on the start view.
-  useEffect(() => {
-    if (!active) return;
-    const inside = (event: Event) => (event.target as Element | null)?.closest?.('[data-intro-ui]');
-    const touch = (event: Event) => {
-      if (!inside(event)) dispatch({ type: 'interrupt' });
-    };
-    const key = (event: KeyboardEvent) => {
-      if (BARE_MODIFIERS.has(event.key)) return;
-      if (event.key === 'Escape') dispatch({ type: 'skip', now: performance.now() });
-      else if (!inside(event)) dispatch({ type: 'interrupt' });
-    };
-    const hidden = () => {
-      if (document.hidden) dispatch({ type: 'abort' });
-    };
-    window.addEventListener('pointerdown', touch, true);
-    window.addEventListener('touchstart', touch, { capture: true, passive: true });
-    window.addEventListener('wheel', touch, { capture: true, passive: true });
-    window.addEventListener('keydown', key, true);
-    document.addEventListener('visibilitychange', hidden);
-    return () => {
-      window.removeEventListener('pointerdown', touch, true);
-      window.removeEventListener('touchstart', touch, true);
-      window.removeEventListener('wheel', touch, true);
-      window.removeEventListener('keydown', key, true);
-      document.removeEventListener('visibilitychange', hidden);
-    };
-  }, [active]);
+  useIntroClock(state.status, dispatch);
+  useIntroInterrupts(active, dispatch);
 
   // Choosing a member or asking for a place is the person taking over.
   const firstChoice = useRef(true);

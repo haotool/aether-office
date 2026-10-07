@@ -33,7 +33,7 @@ export function MachineInvite({ projectId, canInvite }: { projectId: string; can
               },
               projectId,
             );
-            setInvitation(receipt.result as unknown as Invitation);
+            setInvitation(receipt.result as Invitation);
           } catch (err) {
             setError(err instanceof Error ? err.message : 'REQUEST_FAILED');
           }

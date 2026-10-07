@@ -6,7 +6,7 @@ import type { ClipName } from './animal-states.js';
 // playing (Animal's `busy`), which makes them the lowest priority by construction.
 
 /** Who asks. A higher one takes over from a lower one that is still playing; a lower one waits its turn (it is dropped, never queued). */
-export type PoseSource = 'emote' | 'handover' | 'life';
+type PoseSource = 'emote' | 'handover' | 'life';
 export const POSE_PRIORITY: Readonly<Record<PoseSource, number>> = {
   emote: 3,
   handover: 2,
@@ -38,7 +38,7 @@ export type PoseGate = {
 };
 export const emptyPoseGate: PoseGate = { holds: {}, lifeClip: {}, lifeMember: {} };
 
-export type PoseVerdict =
+type PoseVerdict =
   { ok: true; gate: PoseGate } | { ok: false; reason: 'reduced-motion' | 'busy' | 'cooldown' };
 
 const holdOf = (request: PoseRequest) => request.turn?.holdMs ?? POSE_HOLD_MS;

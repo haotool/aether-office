@@ -1,11 +1,11 @@
 /** The lines waiting to be announced, and when the last one was. */
-export type LogQueue = { queue: readonly string[]; lastAt: number };
+type LogQueue = { queue: readonly string[]; lastAt: number };
 export const emptyLogQueue: LogQueue = { queue: [], lastAt: Number.NEGATIVE_INFINITY };
 
 /** At most one line a screen reader hears per this long; the rest wait their turn. */
 export const LOG_GAP_MS = 5_000;
 /** How many lines the region keeps. */
-export const LOG_KEEP = 5;
+const LOG_KEEP = 5;
 
 export const announce = (log: LogQueue, text: string): LogQueue => ({
   ...log,

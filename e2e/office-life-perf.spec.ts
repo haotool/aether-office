@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { signIn } from './support/sign-in.js';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 
 // The office-life performance gate (docs/design/office-life.md section 10): a baseline scene against a variant scene, each
 // mounted several times in turn (A, B, A, B, ...) so a loaded machine hits both alike, on a real GPU. Skipped unless

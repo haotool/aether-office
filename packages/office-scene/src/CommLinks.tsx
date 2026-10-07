@@ -12,6 +12,7 @@ import {
 import { PULSE_WINDOW_MS, type Pulse, type PulseKind, type Seat } from './director.js';
 import { ENVELOPE_MS, distanceFade, envelopeProgress } from './interplay.js';
 import { toWorld, type V3 } from './shot-camera.js';
+import { useByValue } from './use-by-value.js';
 
 // What a request, a decision, a handoff looks like in the air between two members. Colours match the rest of the
 // scene: cyan is flow, amber wants an answer, violet hands something over.
@@ -35,15 +36,16 @@ function Link({
   to: V3;
   height: { from: number; to: number };
 }) {
+  const start = useByValue(from); // the arrays are new on every render
+  const end = useByValue(to);
   const curve = useMemo(() => {
-    const a = new Vector3(from[0], height.from + HEAD, from[2]);
-    const b = new Vector3(to[0], height.to + HEAD, to[2]);
+    const a = new Vector3(start[0], height.from + HEAD, start[2]);
+    const b = new Vector3(end[0], height.to + HEAD, end[2]);
     const lift = 1.1 + a.distanceTo(b) * 0.2;
     const mid = a.clone().add(b).multiplyScalar(0.5);
     mid.y = Math.max(a.y, b.y) + lift;
     return new QuadraticBezierCurve3(a, mid, b);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- by value: the arrays are new on every render
-  }, [from[0], from[1], from[2], to[0], to[1], to[2], height.from, height.to]);
+  }, [start, end, height.from, height.to]);
   const geometry = useMemo(() => new TubeGeometry(curve, 36, 0.05, 6, false), [curve]);
   useEffect(() => () => geometry.dispose(), [geometry]);
   const tube = useRef<Mesh>(null);

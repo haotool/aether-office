@@ -14,6 +14,7 @@ import {
 } from './screen-theme.js';
 import { fit, text } from './screen-ui.js';
 import type { ViewId } from './screen-layout.js';
+import { context2d } from './canvas-2d.js';
 
 /** Where the ambient column sits on a screen, as a share of its width: the stream that scrolls over it shares these. */
 export const BAND = { from: 0.89, to: 0.985 } as const;
@@ -161,7 +162,7 @@ export function drawScanlines(g: CanvasRenderingContext2D): void {
     lines = document.createElement('canvas');
     lines.width = SCREEN_W;
     lines.height = SCREEN_H;
-    const l = lines.getContext('2d')!;
+    const l = context2d(lines);
     l.fillStyle = 'rgba(255,255,255,0.035)';
     for (let y = 0; y < SCREEN_H; y += 3) l.fillRect(0, y, SCREEN_W, 1);
   }

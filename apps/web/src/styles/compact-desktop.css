@@ -1,9 +1,9 @@
-@media (max-width: 1100px) {
+@media (max-width: 1000px) {
   .sessions-page table {
-    min-width: 860px; /* a tablet scrolls the table instead of breaking every cell into single letters */
+    min-width: 860px; /* a tablet scrolls the table instead of breaking every cell into single letters token-lint: geometry */
   }
   .sessions-page td:nth-child(n + 3) {
-    min-width: 96px;
+    min-width: 96px; /* token-lint: geometry */
   }
 }
 
@@ -64,8 +64,12 @@
     border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
     white-space: normal;
     overflow-wrap: anywhere;
-    min-width: 0 !important;
-    max-width: none !important;
+    min-width: 0;
+    max-width: none;
+  }
+  .sessions-page table.stack td {
+    min-width: 0; /* outranks the tablet's column minimum above */
+    max-width: none;
   }
   table.stack td:last-child {
     border-bottom: 0;
@@ -97,7 +101,6 @@
   .sessions-page .actions button {
     display: inline-flex;
     width: auto;
-    min-height: var(--control-touch);
     padding: var(--space-6) var(--space-12);
     font-size: var(--fs-small);
   }
@@ -115,29 +118,29 @@
       calc(var(--space-12) + var(--safe-left));
   }
   .scene-shell {
-    height: calc(100dvh - 190px);
-    min-height: 420px;
+    height: calc(100dvh - 190px); /* token-lint: geometry */
+    min-height: 420px; /* token-lint: geometry */
     max-height: none;
   }
   .scene-toolbar {
-    top: 8px;
-    left: 8px;
-    right: 8px;
+    top: 8px; /* token-lint: geometry */
+    left: 8px; /* token-lint: geometry */
+    right: 8px; /* token-lint: geometry */
     gap: var(--space-6);
     flex-wrap: wrap;
     justify-content: flex-start;
   }
   .building-panel {
-    right: 8px;
-    bottom: calc(8px + var(--safe-bottom));
-    width: min(260px, calc(100% - 16px));
+    right: 8px; /* token-lint: geometry */
+    bottom: calc(8px + var(--safe-bottom)); /* token-lint: geometry */
+    width: min(260px, calc(100% - 16px)); /* token-lint: geometry */
   }
   .scene-footer {
     display: none;
   }
 }
 
-/* The top bar's numbers: in the sidebar instead whenever the top bar has no room for them (<= 1320px). */
+/* The top bar's numbers: in the sidebar instead whenever the top bar has no room for them (<= 1500px). */
 .sidebar .telemetry {
   display: none;
 }
@@ -148,7 +151,7 @@
 .sidebar-backdrop {
   display: none;
 }
-@media (max-width: 1320px) {
+@media (max-width: 1500px) {
   .sidebar .telemetry {
     display: grid;
     grid-template-columns: repeat(
@@ -167,16 +170,46 @@
   }
 }
 
-/* A coarse pointer wins over the compact desktop sizes set before it (breakpoints.css). */
+/* A coarse pointer: the control tokens already switched to the touch sizes (tokens.css), so no selector lowers or raises a height here. */
 @media (pointer: coarse) {
-  .sessions-page .actions button,
-  .primary,
-  .secondary {
-    min-height: var(--control-touch);
+  .primary {
+    min-height: var(
+      --control-h-lg
+    ); /* its cut corner (clip-path) would clip a hit area, so the button is the 44px itself */
   }
   .section-label a {
     display: inline-flex;
     align-items: center;
-    min-height: var(--control-touch);
+    min-height: var(--target-touch);
+  }
+  .kpi-cell {
+    min-height: var(
+      --target-touch
+    ); /* the tablet's strip scrolls and clips, so its cells are the 44px themselves */
+  }
+  /* Drawn smaller than a finger, hit at --target-touch: the same invisible area touch-targets.css gives the other controls. */
+  .brand,
+  .nav-link,
+  .snav a,
+  .building-replay,
+  .hint-fold > summary,
+  .kpi-cell,
+  .kpi-open,
+  .rail-floor,
+  .rail-tool {
+    position: relative;
+  }
+  .brand::before,
+  .nav-link::before,
+  .snav a::before,
+  .building-replay::before,
+  .hint-fold > summary::before,
+  .kpi-cell::before,
+  .kpi-open::before,
+  .rail-floor::before,
+  .rail-tool::before {
+    content: '';
+    position: absolute;
+    inset: min(0px, calc((100% - var(--target-touch)) / 2));
   }
 }

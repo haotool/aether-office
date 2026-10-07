@@ -7,7 +7,7 @@
 }
 .sessions-page .filters input[type='search'] {
   flex: 1;
-  min-width: 220px;
+  min-width: 220px; /* token-lint: geometry */
 }
 .sessions-page .count {
   margin-left: auto;
@@ -15,7 +15,7 @@
   color: var(--dim);
 }
 .sessions-page .table-scroll {
-  max-height: calc(100dvh - 300px);
+  max-height: calc(100dvh - 300px); /* token-lint: geometry */
   overflow: auto;
 }
 .sessions-page table {
@@ -35,8 +35,8 @@
   overflow-wrap: anywhere;
 }
 .sessions-page td:first-child {
-  min-width: 200px;
-  max-width: 300px;
+  min-width: 200px; /* token-lint: geometry */
+  max-width: 300px; /* token-lint: geometry */
 }
 .sessions-page td small {
   display: block;
@@ -55,7 +55,7 @@
   font-family: var(--mono);
 }
 .sessions-page td:nth-child(5) {
-  max-width: 160px;
+  max-width: 160px; /* token-lint: geometry */
 }
 .sessions-page .actions button {
   display: block;

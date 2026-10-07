@@ -14,6 +14,7 @@ it('says in words, in the chosen language, what a CLI user can run into', () => 
     'VERSION_CONFLICT',
     'PROJECT_ROOT_NOT_FOUND',
     'PROJECT_ROOT_INVALID',
+    'PROJECT_NOT_FOUND',
   ]) {
     expect(errorText(code, 'en'), code).not.toBe(code);
     expect(errorText(code, 'en'), code).not.toMatch(CJK);

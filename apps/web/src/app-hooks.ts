@@ -4,6 +4,7 @@ import type { SetURLSearchParams } from 'react-router-dom';
 import { type LocalSessionsResponse } from '@aether/contracts';
 import { api, ensureCsrf, forgetCsrf, type Session } from './api.js';
 import { activityOf, sessionLink } from './localSessions.js';
+import { useLatest } from './use-latest.js';
 import { isDomainEvent } from './stream-event.js';
 import { useSessionAlerts, type AlertSink } from './notifications.js';
 import {
@@ -15,13 +16,33 @@ import {
   type TourAction,
 } from './tour.js';
 
-const TITLE = 'AETHER OFFICE · 軌道辦公室';
+const BRAND = 'AETHER OFFICE';
 
-/** The theme and language of the document, and a tab title that carries how many things wait for the person. */
-export function useDocumentChrome(theme: string, locale: string, waitingOn: number) {
+/** The tab's title: the page in the person's language, then the product; how many things wait for them leads it. */
+export const documentTitle = (page: string, waitingOn: number) =>
+  `${waitingOn ? `(${waitingOn}) ` : ''}${page ? `${page} · ` : ''}${BRAND}`;
+
+/** The tab title of the page being shown (WCAG 2.4.2), so a background tab and the history say where each one is. */
+export function useDocumentTitle(page: string, waitingOn: number) {
+  useEffect(() => {
+    document.title = documentTitle(page, waitingOn);
+  }, [page, waitingOn]);
+}
+
+const HTML_LANG: Record<string, string> = { 'zh-TW': 'zh-Hant', en: 'en' };
+
+/** Nobody is signed in: the tab carries only the product name. */
+export function useSignedOutTitle(signedIn: boolean) {
+  useEffect(() => {
+    if (!signedIn) document.title = documentTitle('', 0);
+  }, [signedIn]);
+}
+
+/** The theme and language of the document. */
+export function useDocumentChrome(theme: string, locale: string) {
   useEffect(() => {
     document.documentElement.dataset['theme'] = theme;
-    document.documentElement.lang = locale === 'zh-TW' ? 'zh-Hant' : 'en';
+    document.documentElement.lang = HTML_LANG[locale] ?? 'en';
   }, [theme, locale]);
   useEffect(() => {
     // The browser's address bar and the phone's status bar take the page's own surface color, whatever the system theme is.
@@ -29,9 +50,6 @@ export function useDocumentChrome(theme: string, locale: string, waitingOn: numb
     for (const meta of document.querySelectorAll('meta[name="theme-color"]'))
       meta.setAttribute('content', surface);
   }, [theme]);
-  useEffect(() => {
-    document.title = waitingOn ? `(${waitingOn}) ${TITLE}` : TITLE;
-  }, [waitingOn]);
 }
 
 /** Brings the feed row of a member into view and focuses it, once the panel has drawn. */
@@ -53,13 +71,14 @@ export function useTour(setFocus: (focus: string) => void) {
     dispatch(action);
     if (restore) setFocus(restore);
   };
+  const latest = useLatest({ act, setFocus });
   useEffect(() => {
     const target = tourFocus(tour);
-    if (target) setFocus(target);
+    if (target) latest.current.setFocus(target);
     if (tour.status !== 'playing') return;
-    const timer = setTimeout(() => act({ type: 'skip' }), TOUR_INTERVAL_MS);
+    const timer = setTimeout(() => latest.current.act({ type: 'skip' }), TOUR_INTERVAL_MS);
     return () => clearTimeout(timer);
-  }, [tour]); // eslint-disable-line react-hooks/exhaustive-deps -- `act` only closes over `tour`, this effect's dependency
+  }, [tour, latest]);
   return { tour, act };
 }
 

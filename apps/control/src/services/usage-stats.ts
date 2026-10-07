@@ -5,7 +5,9 @@ import type { CodexLimits, UsageResponse } from '@aether/contracts';
 import { readCodexLimits } from './codex-limits.js';
 import { aggregate, WINDOW_DAYS, type Attribution, type Tracked } from './usage-aggregate.js';
 import { listTranscripts, parentOf, repoOf, type Transcript } from './usage-files.js';
-import { ClaimBook, dayKeyOf, newState, parseChunk } from './usage-parse.js';
+import { ClaimBook } from './usage-claude.js';
+import { newState } from './usage-counters.js';
+import { dayKeyOf, parseChunk } from './usage-parse.js';
 import { MAX_TRACKED_FILES, keyOf, loadRollup, saveRollup, type Entry } from './usage-store.js';
 
 // Token usage of every local session, per day, kept current by reading only what each transcript gained since the last

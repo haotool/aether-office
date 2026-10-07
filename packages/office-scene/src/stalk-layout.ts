@@ -30,6 +30,8 @@ export const PALETTE = [
   '#ff6fd8',
   '#f6ad55',
 ] as const;
+/** The colour of a strand: the palette goes round again once the strands outnumber it. */
+export const paletteAt = (strand: number): string => PALETTE[strand % PALETTE.length] ?? PALETTE[0];
 
 /** Inside the building the braid stays within the elevator core's glass (radius 1.5, with the strands' own thickness). */
 export const CORE_RADIUS = 1.5;
@@ -203,7 +205,7 @@ export function layoutStalk(
     const name = branchNames(tip.refs);
     return {
       name: name.find((n) => !n.startsWith('origin/')) ?? name[0] ?? '',
-      color: PALETTE[k % PALETTE.length]!,
+      color: paletteAt(k),
       radius: k === 0 ? thickness : thickness * 0.7,
       free: [k === 0 || !(anchor && samples.has(anchor)), k === 0 || into === undefined],
       points: centerline(path).map((s) => braid(s, roof, top)),

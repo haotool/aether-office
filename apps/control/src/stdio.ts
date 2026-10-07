@@ -2,3 +2,4 @@
 // not into the request log. This is the one place that writes there; messages never carry secrets other than the
 // one-time pairing code the person asked for.
 export const print = (line: string): void => void process.stdout.write(`${line}\n`);
+export const warn = (line: string): void => void process.stderr.write(`${line}\n`);

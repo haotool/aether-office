@@ -206,6 +206,11 @@ describe('neutralizeHtml properties', () => {
     expect(Date.now() - started).toBeLessThan(2000);
   });
 
+  it('keeps a lone backslash that ends the text', () => {
+    expect(neutralizeHtml('<b>x</b>\\')).toBe('**x**\\');
+    expect(neutralizeHtml('a &amp; b\\')).toBe('a & b\\');
+  });
+
   it('is never raw HTML for the renderer: the inline parser shows only text', () => {
     const out = neutralizeHtml(
       '<a href="https://x.dev" onclick="x()">go</a> &lt;img src=x onerror=1&gt;',

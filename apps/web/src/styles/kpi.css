@@ -9,7 +9,7 @@
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   background: var(--surface);
-  box-shadow: inset 0 1px 0 var(--glass-accent-line);
+  box-shadow: inset 0 1px 0 var(--glass-accent-line); /* token-lint: ring */
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -77,8 +77,8 @@
   color: var(--mint);
 }
 .spark {
-  width: 72px; /* a sparkline's own size */
-  height: 22px;
+  width: 72px; /* a sparkline's own size token-lint: geometry */
+  height: 22px; /* token-lint: geometry */
 }
 .spark-line {
   fill: none;
@@ -93,7 +93,7 @@
 
 /* The dashboard: a side panel on a desktop, a bottom sheet on a phone. */
 .kpi-dialog {
-  width: min(760px, 100vw);
+  width: min(760px, 100vw); /* token-lint: geometry */
   max-width: 100vw;
   height: 100dvh;
   max-height: 100dvh;
@@ -223,8 +223,8 @@
   gap: var(--space-8);
 }
 .kpi-tile dd .spark {
-  width: 48px;
-  height: 18px;
+  width: 48px; /* token-lint: geometry */
+  height: 18px; /* token-lint: geometry */
 }
 .kpi-tile small {
   color: var(--muted);
@@ -240,7 +240,7 @@
     display: block;
     position: absolute;
     z-index: var(--z-hud-top);
-    top: calc(var(--hud-inset) + var(--control-touch-sm) + var(--space-8));
+    top: calc(var(--hud-inset) + var(--control-h-sm) + var(--space-8));
     left: var(--hud-inset);
     right: var(--hud-inset);
   }
@@ -275,7 +275,7 @@
     margin: 0;
   }
   .phone-kpi .spark {
-    width: 44px;
+    width: 44px; /* token-lint: geometry */
   }
   .phone-kpi .kpi-scan,
   .phone-kpi .kpi-off {

@@ -8,7 +8,7 @@ import { CACHE_PREFIX, SKIP_WAITING } from './sw/cache-rules.js';
 const FLAG = 'aether-sw';
 const INSTALL_DELAY_MS = 3000;
 
-export type Environment = {
+type Environment = {
   secure: boolean;
   supported: boolean;
   production: boolean;

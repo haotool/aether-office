@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { OfficeEvent } from '@aether/contracts';
 import { api } from '../api.js';
 import { Badge, PageHeading, Empty, useT } from '../ui.js';
+import { QueryStatus } from './QueryStatus.js';
 export function History({ projectId }: { projectId: string }) {
   const t = useT();
   const [replayTo, setReplayTo] = useState<string | null>(null);
@@ -36,13 +37,8 @@ export function History({ projectId }: { projectId: string }) {
           </button>
         </div>
       )}
-      {query.isPending ? (
-        <p>{t('loading')}</p>
-      ) : query.error ? (
-        <p role="alert" className="error-text">
-          {query.error.message}
-        </p>
-      ) : query.data?.events.length ? (
+      <QueryStatus query={query} />
+      {query.isPending || query.error ? null : query.data?.events.length ? (
         <div className="history-table" tabIndex={0} role="region" aria-label={t('history')}>
           <table className="stack">
             <thead>

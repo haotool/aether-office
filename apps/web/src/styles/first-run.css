@@ -1,0 +1,92 @@
+/* First run, form errors, the skip link and the docked dialog: the pieces the first-use and accessibility pass added. */
+.first-run {
+  display: grid;
+  gap: var(--space-12);
+  max-width: 640px; /* token-lint: geometry (a readable line length for the first-run panel) */
+  margin: var(--space-24) auto;
+  line-height: var(--lh-snug);
+}
+.first-run h2 {
+  margin: 0;
+  font-size: var(--fs-title);
+}
+.first-run p {
+  margin: 0;
+  color: var(--muted);
+}
+.first-run-steps {
+  display: grid;
+  gap: var(--space-12);
+  margin: 0;
+  padding-left: var(--space-20);
+  list-style: decimal;
+}
+.first-run-steps li > * + * {
+  margin-top: var(--space-8);
+}
+.first-run > .secondary {
+  justify-self: start;
+}
+.first-run-hint {
+  margin: 0 0 var(--space-12);
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: var(--fs-small);
+  line-height: var(--lh-snug);
+}
+.first-run-hint strong {
+  color: var(--text);
+}
+
+/* The mark is drawn, not written, so it stays out of the field's name (the `/ ''` gives it no text for assistive technology). */
+.field-required > label::after {
+  content: ' *';
+  content: ' *' / '';
+  color: var(--red);
+}
+.field-hint {
+  color: var(--muted);
+  font-size: var(--fs-small);
+}
+.field-error {
+  margin: var(--space-4) 0 0;
+  color: var(--red);
+  font-size: var(--fs-small);
+}
+.field [aria-invalid='true'] {
+  border-color: var(--red);
+}
+
+/* Invisible, and not in anyone's way, until it has the keyboard; then the first thing on the page. */
+.skip-link {
+  position: fixed;
+  top: var(--space-8);
+  left: var(--space-8);
+  z-index: var(--z-sheet);
+  padding: var(--space-8) var(--space-16);
+  border-radius: var(--r-control);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--mint);
+}
+.skip-link:not(:focus) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* A dialog that stands at the side, so what it edits stays in view behind it. */
+.modal.modal-dock {
+  margin: auto auto auto var(--space-16);
+  width: min(
+    360px,
+    calc(100% - var(--space-32))
+  ); /* token-lint: geometry (the notice card width) */
+}
+.modal.modal-dock::backdrop {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}

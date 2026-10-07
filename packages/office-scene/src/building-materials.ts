@@ -4,11 +4,7 @@ import { DITHER_END, DITHER_PARS, DITHERED } from './dither.js';
 /** Materials of a floor: the department-tinted hull, glass and glow, and the holographic surfaces. */
 export type Materials = ReturnType<typeof createMaterials>;
 
-export const glow = (
-  color: string,
-  intensity: number,
-  extra: THREE.MeshStandardMaterialParameters = {},
-) =>
+const glow = (color: string, intensity: number, extra: THREE.MeshStandardMaterialParameters = {}) =>
   new THREE.MeshStandardMaterial({
     color,
     emissive: color,
@@ -19,7 +15,7 @@ export const glow = (
   });
 
 /** A holographic surface: additive, see-through, never writes depth, so overlapping layers shine rather than occlude. */
-export const holo = (color: string, opacity: number) =>
+const holo = (color: string, opacity: number) =>
   new THREE.MeshBasicMaterial({
     color,
     transparent: true,

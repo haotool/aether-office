@@ -12,6 +12,7 @@ import {
   type Mesh,
   type MeshBasicMaterial,
 } from 'three';
+import { useByValue } from './use-by-value.js';
 
 const IDLE_TINT = new Color('#8196ab'); // a member who is not working: the branch colour cooled and greyed
 const IDLE_HZ = 0.3;
@@ -50,14 +51,20 @@ function BranchBeam({
   flowing: boolean;
   animate: boolean;
 }) {
+  const start = useByValue(from);
+  const end = useByValue(to);
   const curve = useMemo(
     () =>
       new QuadraticBezierCurve3(
-        new Vector3(...from),
-        new Vector3((from[0] + to[0]) / 2, Math.max(from[1], to[1]) + 2.2, (from[2] + to[2]) / 2),
-        new Vector3(...to),
+        new Vector3(...start),
+        new Vector3(
+          (start[0] + end[0]) / 2,
+          Math.max(start[1], end[1]) + 2.2,
+          (start[2] + end[2]) / 2,
+        ),
+        new Vector3(...end),
       ),
-    [from[0], from[1], from[2], to[0], to[1], to[2]], // eslint-disable-line react-hooks/exhaustive-deps -- by value
+    [start, end],
   );
   const geometry = useMemo(
     () => new TubeGeometry(curve, 28, flowing ? 0.075 : 0.04, 6, false),

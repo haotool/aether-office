@@ -1,0 +1,21 @@
+/** The observe words, in Traditional Chinese. */
+export const zhObserve = {
+  obNote: '只讀取明確核准的外部 session。觀察文字不是完成證據，也不會觸發派工或批准。',
+  obEmpty: '尚未收到觀察資料；請檢查 runner 的 opt-in 設定與日誌。',
+  obObserved: '已讀到可見記錄',
+  obUnchanged: '本次沒有新可見記錄',
+  obPartial: '等待完整記錄',
+  obMissing: '來源檔案不存在',
+  obBlocked: '來源路徑未獲允許',
+  obUnsupported: '不支援的格式或版本',
+  obLimit: '超出讀取上限',
+  obError: '來源讀取失敗',
+  obStale: '沒有近期新記錄，活性未知',
+  obOffline: '觀察機器離線或已撤銷',
+  obLastRead: '最近讀取回報',
+  obLastNew: '最近新增觀察',
+  obHistory: '觀察記錄',
+  obSession: '外部 Session',
+  obLatest: '最新資料',
+  obOlder: '較早記錄',
+} as const;

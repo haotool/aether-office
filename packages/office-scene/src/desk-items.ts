@@ -10,14 +10,14 @@ import {
   type BufferGeometry,
 } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import SEATING from './desk-seating.json';
+import { SLAB_TOP } from './seating.js';
 import type { DeskItem } from './desk-profile.js';
 
 /**
  * The small things on a desk, each a few low-poly parts in one colour per part. A desk's items are merged into one
  * geometry (one draw call) and share one material; the geometry is shared by every desk with the same things.
  */
-const TOP = SEATING.slab.at[1]! + SEATING.slab.size[1]! / 2;
+const TOP = SLAB_TOP;
 /** Corners of the desk's top where things sit, clear of the keyboard, the emitter bar and the character's arms. */
 const SLOTS = [
   { x: 0.66, z: 0.12 },

@@ -53,7 +53,7 @@ const CONFETTI: readonly Rgb[] = [
 ];
 
 /** How many pieces of confetti fall over a desk. */
-export const CONFETTI_PER_DESK = 5;
+const CONFETTI_PER_DESK = 5;
 
 /** Confetti over a desk (the Konami code): a few pieces fall, spinning, each with its own start, colour and sway. */
 export const konami: Effect = (t, d, seed) => {

@@ -83,7 +83,7 @@ export type BehaviorInput = {
   /** The last actions, newest last. */
   recent: readonly ClipName[];
 };
-export type Micro = { clip: ClipName; waitMs: number; holdMs?: number };
+type Micro = { clip: ClipName; waitMs: number; holdMs?: number };
 
 function tableKey(activity: Activity, mode: WorkMode): keyof typeof BEHAVIOR_WEIGHTS | null {
   if (activity === 'working') return `working:${mode}`;
@@ -120,7 +120,7 @@ export function microAction(input: BehaviorInput): Micro | null {
 
 const MAX_YAW = (10 * Math.PI) / 180;
 const MAX_LEAN = 0.03;
-export type Drift = {
+type Drift = {
   phase: readonly [number, number, number];
   rate: readonly [number, number, number];
 };

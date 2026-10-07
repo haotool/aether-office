@@ -1,7 +1,7 @@
 import { useEffect, useRef, type ComponentRef, type RefObject } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { MathUtils, PerspectiveCamera, Vector3 } from 'three';
+import { MathUtils, PerspectiveCamera, Vector3, type Camera } from 'three';
 import { fittedOffset } from './scene-geometry.js';
 import type { Seat } from './director.js';
 import type { Directed } from './scene-navigation.js';
@@ -14,13 +14,217 @@ export type FlyTo = {
 };
 
 const MAX_DISTANCE = 300;
+const HOME_FOV = 38;
 
 const smoothstep = (t: number) => t * t * (3 - 2 * t);
+const lerp3 = (a: V3, b: V3, u: number): V3 => [
+  MathUtils.lerp(a[0], b[0], u),
+  MathUtils.lerp(a[1], b[1], u),
+  MathUtils.lerp(a[2], b[2], u),
+];
 const blend = (a: Pose, b: Pose, u: number): Pose => ({
-  position: a.position.map((v, i) => MathUtils.lerp(v, b.position[i]!, u)) as Pose['position'],
-  target: a.target.map((v, i) => MathUtils.lerp(v, b.target[i]!, u)) as Pose['target'],
+  position: lerp3(a.position, b.position, u),
+  target: lerp3(a.target, b.target, u),
   fov: MathUtils.lerp(a.fov, b.fov, u),
 });
+
+type Controls = NonNullable<ComponentRef<typeof OrbitControls>>;
+/** A flight in progress; `snap` is a move with no animation (reduced motion), taken as soon as the controls exist. */
+type Goal = { target: Vector3; position: Vector3; snap: boolean };
+type Glide = { from: Pose; startedAt: number };
+/** What the frame loop keeps between frames: the flight, the shot being played and the glide that brings the camera to it. */
+type Flight = { goal: Goal | null; shot: number; glide: Glide | null };
+
+/** Sets the lens angle (only when it differs, since a projection update is not free). */
+function setFov(camera: Camera, fov: number) {
+  if (camera instanceof PerspectiveCamera && camera.fov !== fov) {
+    camera.fov = fov;
+    camera.updateProjectionMatrix();
+  }
+}
+
+/** The first-visit tour holds the camera exactly where its path says, like a shot: nothing chases, nothing is blended. */
+function holdTour(c: Controls, camera: Camera, tour: Pose) {
+  camera.position.set(...tour.position);
+  c.target.set(...tour.target);
+  setFov(camera, tour.fov);
+  c.update();
+}
+
+/** Smooth fly-to: ease the camera and what it looks at toward the destination (at once under reduced motion). */
+function flyToGoal(f: Flight, c: Controls, camera: Camera, delta: number, invalidate: () => void) {
+  const g = f.goal;
+  if (!g) return;
+  if (g.snap) {
+    c.target.copy(g.target);
+    camera.position.copy(g.position);
+    camera.lookAt(g.target);
+    c.update();
+    f.goal = null;
+    invalidate();
+    return;
+  }
+  const k = 1 - Math.exp(-delta * 4.5);
+  c.target.lerp(g.target, k);
+  camera.position.lerp(g.position, k);
+  c.update();
+  invalidate();
+  if (c.target.distanceTo(g.target) < 0.04 && camera.position.distanceTo(g.position) < 0.08)
+    f.goal = null;
+}
+
+/**
+ * Following: once a flight is over, the camera and what it looks at slide together towards the member, keeping the
+ * distance and bearing the person has. The seat is still, so this only moves when the seat does (a layout change, a floor).
+ */
+function followMember(
+  c: Controls,
+  camera: Camera,
+  point: V3,
+  delta: number,
+  invalidate: () => void,
+) {
+  const k = 1 - Math.exp(-delta * 3);
+  const move = new Vector3(...point).sub(c.target).multiplyScalar(k);
+  if (move.lengthSq() <= 1e-6) return;
+  c.target.add(move);
+  camera.position.add(move);
+  c.update();
+  invalidate();
+}
+
+/**
+ * The director's shot: the camera is put exactly where the shot's move says it is at this moment, never chased
+ * towards it, so a held shot holds and a move is the move and nothing else. A near shot is reached by a timed,
+ * eased glide from where the camera was; a far one by a cut.
+ */
+function playShot(
+  f: Flight,
+  directed: Directed,
+  seats: ReadonlyMap<string, Seat>,
+  aspect: number,
+  c: Controls,
+  camera: Camera,
+) {
+  if (f.shot !== directed.startedAt) {
+    f.shot = directed.startedAt;
+    f.glide =
+      directed.entry === 'fly'
+        ? {
+            from: {
+              position: camera.position.toArray(),
+              target: c.target.toArray(),
+              fov: camera instanceof PerspectiveCamera ? camera.fov : HOME_FOV,
+            },
+            startedAt: directed.startedAt,
+          }
+        : null;
+  }
+  const now = Date.now();
+  const pose = poseAt(
+    directed.shot,
+    seats,
+    (now - directed.startedAt) / (directed.shot.seconds * 1000),
+    aspect,
+  );
+  const entering = f.glide;
+  const u = entering ? smoothstep(Math.min(1, (now - entering.startedAt) / FLY_MS)) : 1;
+  if (entering && u >= 1) f.glide = null;
+  const at = entering ? blend(entering.from, pose, u) : pose;
+  camera.position.set(...at.position);
+  c.target.set(...at.target);
+  setFov(camera, at.fov);
+  c.update();
+}
+
+type Keyboard = { forward: Vector3; side: Vector3 };
+
+/** Keyboard flight: WASD or arrows glide over the ground, Q/E orbit, +/- dolly; Shift is faster. */
+function flyByKeys(
+  keys: ReadonlySet<string>,
+  f: Flight,
+  c: Controls,
+  camera: Camera,
+  { forward, side }: Keyboard,
+  delta: number,
+) {
+  const fast = keys.has('shift') ? 2.4 : 1;
+  const distance = camera.position.distanceTo(c.target);
+  const step = Math.max(6, distance * 0.55) * fast * delta;
+  forward.set(c.target.x - camera.position.x, 0, c.target.z - camera.position.z).normalize();
+  side.set(-forward.z, 0, forward.x);
+  const move = new Vector3();
+  if (keys.has('w') || keys.has('arrowup')) move.addScaledVector(forward, step);
+  if (keys.has('s') || keys.has('arrowdown')) move.addScaledVector(forward, -step);
+  if (keys.has('d') || keys.has('arrowright')) move.addScaledVector(side, -step);
+  if (keys.has('a') || keys.has('arrowleft')) move.addScaledVector(side, step);
+  if (move.lengthSq()) {
+    c.target.add(move);
+    camera.position.add(move);
+    f.goal = null;
+  }
+  const turn = (keys.has('q') ? 1 : 0) - (keys.has('e') ? 1 : 0);
+  if (turn) {
+    const offset = camera.position
+      .clone()
+      .sub(c.target)
+      .applyAxisAngle(new Vector3(0, 1, 0), turn * 1.4 * delta);
+    camera.position.copy(c.target).add(offset);
+    f.goal = null;
+  }
+  const dolly = (keys.has('=') || keys.has('+') ? 1 : 0) - (keys.has('-') || keys.has('_') ? 1 : 0);
+  if (dolly) {
+    const offset = camera.position.clone().sub(c.target);
+    const next = MathUtils.clamp(
+      offset.length() * Math.exp(-dolly * 1.1 * delta),
+      MIN_DISTANCE,
+      MAX_DISTANCE,
+    );
+    camera.position.copy(c.target).add(offset.setLength(next));
+    f.goal = null;
+  }
+  c.update();
+}
+
+/** A new command starts a flight to its target (at once under reduced motion); the frame loop carries it out. */
+function useFlyCommand(
+  flight: RefObject<Flight>,
+  command: FlyTo,
+  reducedMotion: boolean,
+  latestAspect: RefObject<number>,
+) {
+  const camera = useThree((s) => s.camera);
+  const invalidate = useThree((s) => s.invalidate);
+  useEffect(() => {
+    const target = new Vector3(...command.target);
+    const position = target
+      .clone()
+      .add(new Vector3(...fittedOffset(command.offset, latestAspect.current)));
+    // Never move the camera without its controls: they would turn it back toward where they last looked. When they
+    // are not mounted yet (a project opened straight from the address) the move waits for them in useFrame.
+    flight.current.goal = { target, position, snap: reducedMotion };
+    invalidate();
+  }, [command, camera, invalidate, reducedMotion, flight, latestAspect]);
+}
+
+/** The person's hands on the controls end a flight at once: nothing pulls the camera on from under the hand. */
+function useUserTouch(
+  controls: RefObject<Controls | null>,
+  flight: RefObject<Flight>,
+  onUserCamera: (() => void) | undefined,
+) {
+  useEffect(() => {
+    const instance = controls.current;
+    if (!instance || !onUserCamera) return;
+    // 'start' fires only for user input, never for programmatic camera moves (the director gives way through `onUserCamera`).
+    const touched = () => {
+      flight.current.goal = null;
+      onUserCamera();
+    };
+    instance.addEventListener('start', touched);
+    return () => instance.removeEventListener('start', touched);
+  }, [controls, flight, onUserCamera]);
+}
 
 export function SceneCamera({
   command,
@@ -51,171 +255,44 @@ export function SceneCamera({
   const aspect = useThree((s) => s.size.width / Math.max(1, s.size.height));
   const latestAspect = useRef(aspect);
   latestAspect.current = aspect;
-  // A flight in progress; `snap` is a move with no animation (reduced motion), taken as soon as the controls exist.
-  const goal = useRef<{ target: Vector3; position: Vector3; snap: boolean } | null>(null);
-  useEffect(() => {
-    const target = new Vector3(...command.target);
-    const position = target
-      .clone()
-      .add(new Vector3(...fittedOffset(command.offset, latestAspect.current)));
-    // Never move the camera without its controls: they would turn it back toward where they last looked. When they
-    // are not mounted yet (a project opened straight from the address) the move waits for them in useFrame.
-    goal.current = { target, position, snap: reducedMotion };
-    invalidate();
-  }, [command, camera, invalidate, reducedMotion]);
-  useEffect(() => {
-    const instance = controls.current;
-    if (!instance || !onUserCamera) return;
-    // 'start' fires only for user input, never for programmatic camera moves. A touch ends a flight at once: nothing
-    // pulls the camera on from under the hand (the director gives way through `onUserCamera`).
-    const touched = () => {
-      goal.current = null;
-      onUserCamera();
-    };
-    instance.addEventListener('start', touched);
-    return () => instance.removeEventListener('start', touched);
-  }, [onUserCamera]);
-  // The shot being played (by its start) and the glide that brings the camera to it from where it was.
-  const shot = useRef(0);
-  const glide = useRef<{ from: Pose; startedAt: number } | null>(null);
+  const flight = useRef<Flight>({ goal: null, shot: 0, glide: null });
+  useFlyCommand(flight, command, reducedMotion, latestAspect);
+  useUserTouch(controls, flight, onUserCamera);
   const followed = useRef<V3 | null>(null);
   followed.current = followPoint ?? null;
-  const forward = useRef(new Vector3());
-  const side = useRef(new Vector3());
+  const keyboard = useRef<Keyboard>({ forward: new Vector3(), side: new Vector3() });
   useFrame((_state, delta) => {
     const c = controls.current;
     if (!c) return;
-    // The first-visit tour holds the camera exactly where its path says, like a shot: nothing chases, nothing is blended.
+    const f = flight.current;
     const tour = introPose?.(latestAspect.current) ?? null;
     if (tour) {
-      goal.current = null;
-      camera.position.set(...tour.position);
-      c.target.set(...tour.target);
-      if (camera instanceof PerspectiveCamera && camera.fov !== tour.fov) {
-        camera.fov = tour.fov;
-        camera.updateProjectionMatrix();
-      }
-      c.update();
+      f.goal = null;
+      holdTour(c, camera, tour);
       invalidate();
       return;
     }
-    // Smooth fly-to: ease the camera and what it looks at toward the destination.
-    const g = goal.current;
-    if (g?.snap) {
-      c.target.copy(g.target);
-      camera.position.copy(g.position);
-      camera.lookAt(g.target);
-      c.update();
-      goal.current = null;
-      invalidate();
-    } else if (g) {
-      const k = 1 - Math.exp(-delta * 4.5);
-      c.target.lerp(g.target, k);
-      camera.position.lerp(g.position, k);
-      c.update();
-      invalidate();
-      if (c.target.distanceTo(g.target) < 0.04 && camera.position.distanceTo(g.position) < 0.08)
-        goal.current = null;
-    }
-    // Following: once a flight is over, the camera and what it looks at slide together towards the member, keeping the
-    // distance and bearing the person has. The seat is still, so this only moves when the seat does (a layout change, a floor).
-    const follow = followed.current;
-    if (follow && !goal.current && !reducedMotion) {
-      const k = 1 - Math.exp(-delta * 3);
-      const move = new Vector3(...follow).sub(c.target).multiplyScalar(k);
-      if (move.lengthSq() > 1e-6) {
-        c.target.add(move);
-        camera.position.add(move);
-        c.update();
-        invalidate();
-      }
-    }
-    // The director's shot: the camera is put exactly where the shot's move says it is at this moment, never chased
-    // towards it, so a held shot holds and a move is the move and nothing else. A near shot is reached by a timed,
-    // eased glide from where the camera was; a far one by a cut.
-    if (directed && !g) {
-      if (shot.current !== directed.startedAt) {
-        shot.current = directed.startedAt;
-        glide.current =
-          directed.entry === 'fly'
-            ? {
-                from: {
-                  position: camera.position.toArray(),
-                  target: c.target.toArray(),
-                  fov: camera instanceof PerspectiveCamera ? camera.fov : 38,
-                },
-                startedAt: directed.startedAt,
-              }
-            : null;
-      }
-      const now = Date.now();
-      const pose = poseAt(
-        directed.shot,
-        seats,
-        (now - directed.startedAt) / (directed.shot.seconds * 1000),
-        latestAspect.current,
-      );
-      const entering = glide.current;
-      const u = entering ? smoothstep(Math.min(1, (now - entering.startedAt) / FLY_MS)) : 1;
-      if (entering && u >= 1) glide.current = null;
-      const at = entering ? blend(entering.from, pose, u) : pose;
-      camera.position.set(...at.position);
-      c.target.set(...at.target);
-      if (camera instanceof PerspectiveCamera && camera.fov !== at.fov) {
-        camera.fov = at.fov;
-        camera.updateProjectionMatrix();
-      }
-      c.update();
+    const flying = f.goal !== null; // a flight that ends this frame still holds the shot back until the next
+    flyToGoal(f, c, camera, delta, invalidate);
+    if (followed.current && !f.goal && !reducedMotion)
+      followMember(c, camera, followed.current, delta, invalidate);
+    if (directed && !flying) {
+      playShot(f, directed, seats, latestAspect.current, c, camera);
       invalidate();
     }
     // Handed back to the person: the lens returns to its usual angle of view.
-    if (!directed && camera instanceof PerspectiveCamera && Math.abs(camera.fov - 38) > 0.05) {
-      camera.fov += (38 - camera.fov) * (1 - Math.exp(-delta * 3));
+    if (
+      !directed &&
+      camera instanceof PerspectiveCamera &&
+      Math.abs(camera.fov - HOME_FOV) > 0.05
+    ) {
+      camera.fov += (HOME_FOV - camera.fov) * (1 - Math.exp(-delta * 3));
       camera.updateProjectionMatrix();
       invalidate();
     }
-    // Keyboard flight: WASD or arrows glide over the ground, Q/E orbit, +/- dolly; Shift is faster.
     const keys = keyboardRef.current;
     if (keys && keys.size) {
-      const fast = keys.has('shift') ? 2.4 : 1;
-      const distance = camera.position.distanceTo(c.target);
-      const step = Math.max(6, distance * 0.55) * fast * delta;
-      forward.current
-        .set(c.target.x - camera.position.x, 0, c.target.z - camera.position.z)
-        .normalize();
-      side.current.set(-forward.current.z, 0, forward.current.x);
-      const move = new Vector3();
-      if (keys.has('w') || keys.has('arrowup')) move.addScaledVector(forward.current, step);
-      if (keys.has('s') || keys.has('arrowdown')) move.addScaledVector(forward.current, -step);
-      if (keys.has('d') || keys.has('arrowright')) move.addScaledVector(side.current, -step);
-      if (keys.has('a') || keys.has('arrowleft')) move.addScaledVector(side.current, step);
-      if (move.lengthSq()) {
-        c.target.add(move);
-        camera.position.add(move);
-        goal.current = null;
-      }
-      const turn = (keys.has('q') ? 1 : 0) - (keys.has('e') ? 1 : 0);
-      if (turn) {
-        const offset = camera.position
-          .clone()
-          .sub(c.target)
-          .applyAxisAngle(new Vector3(0, 1, 0), turn * 1.4 * delta);
-        camera.position.copy(c.target).add(offset);
-        goal.current = null;
-      }
-      const dolly =
-        (keys.has('=') || keys.has('+') ? 1 : 0) - (keys.has('-') || keys.has('_') ? 1 : 0);
-      if (dolly) {
-        const offset = camera.position.clone().sub(c.target);
-        const next = MathUtils.clamp(
-          offset.length() * Math.exp(-dolly * 1.1 * delta),
-          MIN_DISTANCE,
-          MAX_DISTANCE,
-        );
-        camera.position.copy(c.target).add(offset.setLength(next));
-        goal.current = null;
-      }
-      c.update();
+      flyByKeys(keys, f, c, camera, keyboard.current, delta);
       invalidate();
     }
   });

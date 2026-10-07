@@ -88,17 +88,12 @@ export function PermissionCard({
         />
       )}
       <div className="permission-actions">
-        {review ? (
-          <button className="primary" onClick={() => setReviewed(true)}>
-            <Eye size={16} aria-hidden />
-            {t('reqReview')}
-          </button>
-        ) : (
-          <button className="primary" disabled={disabled} onClick={() => answer('allow')}>
-            <Check size={16} aria-hidden />
-            {t('reqAllowOnce')}
-          </button>
-        )}
+        <AllowButton
+          review={review}
+          disabled={disabled}
+          onReview={() => setReviewed(true)}
+          onAllow={() => answer('allow')}
+        />
         {full && request.sessionRules.length > 0 && (
           <button className="secondary" disabled={disabled} onClick={() => answer('allow_session')}>
             {t('reqAllowSession')}
@@ -113,16 +108,48 @@ export function PermissionCard({
           {t('reqDeny')}
         </button>
       </div>
-      {decide.isError && (
-        <p className="permission-error" role="alert">
-          {decideError(decide.error) === 'PERMISSION_REQUEST_CLOSED'
-            ? t('reqTooLate')
-            : decideError(decide.error) === 'REMOTE_APPROVALS_LAN_DISABLED'
-              ? t('reqLanBlocked')
-              : t('reqFailed')}
-        </p>
-      )}
+      {decide.isError && <DecideError error={decide.error} />}
     </section>
+  );
+}
+
+/** Allow once, or Review when the compact line is not the whole call. */
+function AllowButton({
+  review,
+  disabled,
+  onReview,
+  onAllow,
+}: {
+  review: boolean;
+  disabled: boolean;
+  onReview: () => void;
+  onAllow: () => void;
+}) {
+  const t = useT();
+  return review ? (
+    <button className="primary" onClick={onReview}>
+      <Eye size={16} aria-hidden />
+      {t('reqReview')}
+    </button>
+  ) : (
+    <button className="primary" disabled={disabled} onClick={onAllow}>
+      <Check size={16} aria-hidden />
+      {t('reqAllowOnce')}
+    </button>
+  );
+}
+
+function DecideError({ error }: { error: unknown }) {
+  const t = useT();
+  const code = decideError(error);
+  return (
+    <p className="permission-error" role="alert">
+      {code === 'PERMISSION_REQUEST_CLOSED'
+        ? t('reqTooLate')
+        : code === 'REMOTE_APPROVALS_LAN_DISABLED'
+          ? t('reqLanBlocked')
+          : t('reqFailed')}
+    </p>
   );
 }
 

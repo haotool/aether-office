@@ -1,5 +1,5 @@
 // Frame-time statistics from real measurements. Never estimates: callers pass measured deltas.
-type FrameStats = {
+export type FrameStats = {
   frames: number;
   medianMs: number;
   p95Ms: number;
@@ -20,7 +20,7 @@ export function summarizeFrames(deltasMs: readonly number[]): FrameStats | null 
     medianMs: round(median),
     p95Ms: round(percentile(sorted, 0.95)),
     p99Ms: round(percentile(sorted, 0.99)),
-    maxMs: round(sorted[sorted.length - 1]!),
+    maxMs: round(sorted.at(-1) ?? median),
     medianFps: round(1000 / median),
   };
 }

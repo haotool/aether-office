@@ -74,3 +74,6 @@ export const tabPages = (advanced: boolean) =>
 /** The address of a page, keeping the project that is open. */
 export const pageLink = (page: string, projectId: string | undefined) =>
   `/${page}${projectId ? `?project=${projectId}` : ''}`;
+
+/** Whether an address names a page of the app (the first segment of its path). */
+export const isPage = (page: string) => nav.some(([key]) => key === page);

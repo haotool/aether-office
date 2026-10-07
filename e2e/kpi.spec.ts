@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { signIn } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   claudeLine,
@@ -287,7 +287,7 @@ test('a session that starts while the office is open is counted in seconds, not 
   try {
     writeLines(late, [
       JSON.stringify({ type: 'user', cwd: repo }),
-      claudeLine('msg_late', new Date().toISOString(), { i: 1000 }, { cwd: repo }),
+      claudeLine('msg_late', new Date().toISOString(), { i: 1000, o: 0 }, { cwd: repo }),
     ]);
     await expect(tokens).toContainText('6.4K', { timeout: 15_000 });
   } finally {

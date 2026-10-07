@@ -1,6 +1,6 @@
 // Skill definitions are inert text. Parsing extracts metadata and flags executable-looking content
 // so it can be shown to the human; nothing here (or anywhere) ever runs a skill's content.
-export type ParsedSkill = {
+type ParsedSkill = {
   name: string;
   description: string;
   body: string;
@@ -39,9 +39,10 @@ export function parseSkill(text: string): ParsedSkill {
   const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(text);
   if (!match) throw new SkillError('SKILL_FRONTMATTER_REQUIRED');
   const fields = new Map<string, string>();
-  for (const line of match[1]!.split(/\r?\n/)) {
+  const [, front = '', rest = ''] = match;
+  for (const line of front.split(/\r?\n/)) {
     const kv = /^([A-Za-z][\w-]*):\s*(.*)$/.exec(line);
-    if (kv) fields.set(kv[1]!.toLowerCase(), unquote(kv[2]!));
+    if (kv) fields.set((kv[1] ?? '').toLowerCase(), unquote(kv[2] ?? ''));
   }
   const name = fields.get('name') ?? '';
   const description = fields.get('description') ?? '';
@@ -51,7 +52,7 @@ export function parseSkill(text: string): ParsedSkill {
   for (const key of fields.keys())
     if (EXECUTABLE_KEYS.has(key))
       warnings.push(`frontmatter "${key}" declares executable behaviour and is ignored`);
-  if (SHELL_FENCE.test(match[2]!))
+  if (SHELL_FENCE.test(rest))
     warnings.push('body contains shell snippets; they are displayed, never run');
-  return { name, description, body: match[2]!.trim(), warnings };
+  return { name, description, body: rest.trim(), warnings };
 }

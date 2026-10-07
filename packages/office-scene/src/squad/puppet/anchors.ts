@@ -5,7 +5,7 @@ import type { Vec3 } from './verlet.js';
 
 /** The chair's place and its turn about the vertical (the pod faces any of four ways); `y` is the floor's height. */
 export type Chair = { x: number; z: number; yaw: number; y: number };
-export type Anchors = { cross: Vec3; head: Vec3; handL: Vec3; handR: Vec3 };
+type Anchors = { cross: Vec3; head: Vec3; handL: Vec3; handR: Vec3 };
 
 /** The master thread ends this high over the supervisor's chair: at its halo (`HALO_Y` in SquadBeam.tsx). */
 export const MASTER_Y = 2.25;
@@ -67,7 +67,7 @@ export function registerAnchors(id: string, root: Model): () => void {
 /** The world position of a node as of the last time the scene updated its matrices (the frame before: one frame of lag, no cost). */
 const world = (node: Socket): Vec3 => {
   const e = node.matrixWorld.elements;
-  return [e[12]!, e[13]!, e[14]!];
+  return [e[12] ?? 0, e[13] ?? 0, e[14] ?? 0];
 };
 
 /**

@@ -54,7 +54,7 @@ export function useConvFind(root: RefObject<HTMLElement | null>, content: unknow
   };
 }
 
-export type ConvFindState = ReturnType<typeof useConvFind>;
+type ConvFindState = ReturnType<typeof useConvFind>;
 
 /** The find row: a field, "3 / 12", previous and next, close. Enter goes on, Shift+Enter back, Escape closes. */
 export function FindBar({ find, onClose }: { find: ConvFindState; onClose: () => void }) {

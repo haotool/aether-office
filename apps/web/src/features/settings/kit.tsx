@@ -18,7 +18,7 @@ import { highlight } from './search.js';
 const RowIds = createContext({ label: '', desc: '', name: '', locked: false });
 
 /** Text with the words of the search marked. */
-export function Marked({ text }: { text: string }) {
+function Marked({ text }: { text: string }) {
   const { query } = useSettings();
   return (
     <>
@@ -121,22 +121,26 @@ export function Switch({
   );
 }
 
+/** What a row of choices (segmented buttons or a select) takes. */
+type ChoiceProps<T extends string> = {
+  value: T;
+  options: readonly { value: T; label: string }[];
+  onChange: (next: T) => void;
+  disabled?: boolean;
+};
+
 /** A few exclusive choices in a row; arrow keys move between them. */
 export function Segmented<T extends string>({
   value,
   options,
   onChange,
   disabled,
-}: {
-  value: T;
-  options: readonly { value: T; label: string }[];
-  onChange: (next: T) => void;
-  disabled?: boolean;
-}) {
+}: ChoiceProps<T>) {
   const ids = useContext(RowIds);
   const group = useRef<HTMLDivElement>(null);
   const move = (from: number, step: number) => {
-    const next = options[(from + step + options.length) % options.length]!;
+    const next = options[(from + step + options.length) % options.length];
+    if (!next) return;
     onChange(next.value);
     group.current?.querySelectorAll<HTMLElement>('[role=radio]')[options.indexOf(next)]?.focus();
   };
@@ -176,12 +180,7 @@ export function SelectBox<T extends string>({
   options,
   onChange,
   disabled,
-}: {
-  value: T;
-  options: readonly { value: T; label: string }[];
-  onChange: (next: T) => void;
-  disabled?: boolean;
-}) {
+}: ChoiceProps<T>) {
   const ids = useContext(RowIds);
   return (
     <select

@@ -11,8 +11,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: var(--control-touch-sm);
-    height: var(--control-touch-sm);
+    width: var(--control-h-sm);
+    height: var(--control-h-sm);
     margin: 0;
     color: var(--dim);
     font-size: var(--fs-title);
@@ -46,7 +46,7 @@
     color: var(--dim);
   }
   select[multiple] {
-    max-height: 112px; /* a list to scroll, not a box that takes the screen */
+    max-height: 112px; /* a list to scroll, not a box that takes the screen token-lint: geometry */
   }
   /* A dialog puts what you act on first and the explanations after, folded. */
   dialog.modal[open] {
@@ -70,25 +70,27 @@
     align-items: center;
     justify-content: center;
     gap: var(--space-6);
-    min-width: 56px;
-    height: 44px;
+    min-width: 56px; /* token-lint: geometry */
+    height: var(--target-touch);
     padding: 0 var(--space-12);
     border-radius: var(--r-3xl);
-    border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent);
+    border: 1px solid color-mix(in srgb, var(--scene-gold) 55%, transparent);
     background: var(--glass);
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
-    color: var(--gold);
+    color: var(
+      --scene-gold
+    ); /* over the night scene: the light theme's dark gold would not read on the glass */
     font: 700 var(--fs-body) var(--mono);
-    box-shadow: 0 4px 16px var(--shade);
+    box-shadow: var(--shadow-sm);
   }
   .chip-attention span {
     display: grid;
     place-items: center;
-    width: 18px;
-    height: 18px;
+    width: 18px; /* token-lint: geometry */
+    height: 18px; /* token-lint: geometry */
     border-radius: 50%;
-    background: var(--gold);
+    background: var(--scene-gold);
     color: var(--on-gold);
     font-size: var(--fs-small);
   }
@@ -102,9 +104,6 @@
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-8);
-  }
-  .attention-actions button {
-    min-height: var(--control-touch);
   }
   .danger-soft {
     color: var(--red);

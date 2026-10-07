@@ -16,13 +16,14 @@ export function assertCodexVersion(output: string): void {
 /** Claude Code is accepted per minor series (e.g. 2.1.x): patch releases do not need a code change. */
 export function assertClaudeVersion(output: string): void {
   const match = /^(\d+\.\d+)\.\d+/.exec(output.trim());
-  if (!match || !compat.claudeCodeSeries.includes(match[1]!))
+  const series = match?.[1];
+  if (!series || !compat.claudeCodeSeries.includes(series))
     throw new Error('CLAUDE_VERSION_UNVERIFIED');
 }
 
 export const claudeRolloutVersion = (version: string): boolean => {
   const match = /^(\d+\.\d+)\.\d+$/.exec(version);
-  return !!match && compat.claudeCodeSeries.includes(match[1]!);
+  return !!match && compat.claudeCodeSeries.includes(match[1] ?? '');
 };
 
 /** Codex rollout files carry the CLI version that wrote them; only verified versions are decoded. */

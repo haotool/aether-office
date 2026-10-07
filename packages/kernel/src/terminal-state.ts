@@ -20,7 +20,7 @@ const REDRAW = /\x1b\[[0-9;]*[ABEFGHf]/g;
 const OTHER_CSI = /\x1b\[[0-9;?]*[ -/]*[@-~]/g;
 
 /** The text of a terminal stream as lines: colors and modes gone, in-place redraws turned into line breaks. */
-export function plainTerminalLines(raw: string): string[] {
+function plainTerminalLines(raw: string): string[] {
   return raw
     .replace(OSC, '')
     .replace(REDRAW, '\n')

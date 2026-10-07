@@ -3,77 +3,36 @@
 import { at, top } from '../lib.mjs';
 import { info, rule, skipped } from '../model.mjs';
 import { matching, runCommand } from '../repo.mjs';
+import {
+  BREAKPOINTS,
+  RULES,
+  declarations,
+  mediaViolations,
+  violationsIn,
+} from '../../design-token-rules.mjs';
 
-const TOKENS = /(^|\/)tokens\.css$/;
 const BASELINE = 'scripts/design-token-baseline.json';
 const ROLE_RESULTS = ['evidence/role-variance.json', 'test-results/role-variance.json'];
-/** Media-query widths the layout may use; a width one pixel above is the `min-width` partner of a `max-width`. */
-export const BREAKPOINTS = [500, 760, 1000, 1250];
-const LITERAL_PX = /(?<![\w.-])([2-9]|\d{2,})(\.\d+)?px\b/;
-
-const SIZE_PROPERTY = /^(min-|max-)?(width|height)$|^(inset|top|left|right|bottom)(-[a-z]+)*$/;
 const PHYSICAL =
   /^(margin|padding)-(left|right)$|^(left|right)$|^border-(left|right)(-[a-z]+)*$|^text-align$/;
 
-/** [property, value, line] for each single-line declaration, comments cut off. */
-export function declarations(text) {
-  const out = [];
-  text.split('\n').forEach((raw, i) => {
-    const match = /^\s*([a-z-]+):\s*(.*?);?\s*(\/\*.*)?$/.exec(raw);
-    if (match) out.push({ property: match[1], value: match[2], line: i + 1 });
-  });
-  return out;
-}
-
-export const RULES = {
-  'literal-size': ({ property, value }) =>
-    SIZE_PROPERTY.test(property) && LITERAL_PX.test(value.replace(/var\([^)]*\)/g, '')),
-  'viewport-height': ({ value }) => /\d(?:\.\d+)?vh\b/.test(value),
-  'literal-duration': ({ property, value }) =>
-    /^(transition|animation)(-duration|-delay)?$/.test(property) &&
-    /(?<![\w.-])\d*\.?\d*[1-9]\d*m?s\b/.test(value.replace(/var\([^)]*\)/g, '')),
-  'literal-shadow': ({ property, value }) =>
-    /^(box|text)-shadow$/.test(property) && /\d+px/.test(value.replace(/var\([^)]*\)/g, '')),
-  'literal-line-height': ({ property, value }) =>
-    property === 'line-height' && !/^(var\(--lh-|inherit$|normal$)/.test(value),
-  important: ({ value }) => /!important/.test(value),
-  'custom-property-literal': ({ property, value }) =>
-    property.startsWith('--') && /\d+(\.\d+)?px/.test(value),
-};
-
-export function mediaViolations(text) {
-  const bad = [];
-  text.split('\n').forEach((line, i) => {
-    if (!line.trim().startsWith('@media')) return;
-    for (const m of line.matchAll(/(\d+)px/g)) {
-      const px = Number(m[1]);
-      if (!BREAKPOINTS.some((b) => px === b || px === b + 1))
-        bad.push({ line: i + 1, text: line.trim() });
-    }
-  });
-  return bad;
-}
+// The rules themselves live in scripts/design-token-rules.mjs, shared with the gate (check-design-tokens.mjs).
+export { BREAKPOINTS, RULES, declarations, mediaViolations };
 
 export const physicalProperties = (text) =>
   declarations(text).filter(({ property }) => PHYSICAL.test(property));
 
-/** Counts per rule name over the style files: { counts, lines }. */
+/** Counts per rule name over the style files: { counts, lines }. A line with the escape hatch is not counted. */
 export function measureStyles(repo, files) {
   const counts = {};
   const lines = {};
-  const add = (name, entry) => {
-    counts[name] = (counts[name] ?? 0) + 1;
-    (lines[name] ??= []).push(entry);
-  };
-  for (const file of files) {
-    const text = repo.read(file);
-    const found = TOKENS.test(file) ? [] : declarations(text);
-    for (const d of found)
-      for (const [name, bad] of Object.entries(RULES))
-        if (bad(d)) add(name, at(file, d.line, `${d.property}: ${d.value}`.slice(0, 80)));
-    if (!TOKENS.test(file))
-      for (const m of mediaViolations(text)) add('media-breakpoint', at(file, m.line, m.text));
-  }
+  for (const file of files)
+    for (const { rule, line, text } of violationsIn(repo.read(file), {
+      tokens: /(^|\/)tokens\.css$/.test(file),
+    })) {
+      counts[rule] = (counts[rule] ?? 0) + 1;
+      (lines[rule] ??= []).push(at(file, line, text));
+    }
   return { counts, lines };
 }
 
@@ -123,6 +82,12 @@ export function ui(repo, { root = repo.root } = {}) {
         .map(([name, n]) => `${name}: ${n} now, baseline ${baseline[name] ?? 0}`)
     : [];
   const count = (name) => counts[name] ?? 0;
+  const escapes = styles.flatMap((f) =>
+    repo
+      .read(f)
+      .split('\n')
+      .flatMap((text, i) => (text.includes('token-lint:') ? [at(f, i + 1, text.trim())] : [])),
+  );
   const physical = styles.reduce((n, f) => n + physicalProperties(repo.read(f)).length, 0);
   const counted = (id, label, name, weight, full) =>
     rule({ id, label, weight, value: count(name), full, details: top(lines[name] ?? []) });
@@ -161,6 +126,17 @@ export function ui(repo, { root = repo.root } = {}) {
       5,
       20,
     ),
+    // The escape hatch keeps the other counts at zero, so its own total is a budget: genuine geometry may be marked, but a
+    // growing pile of marks means values are being hidden rather than tokenised.
+    rule({
+      id: 'escape-comments',
+      label: 'token-lint escape comments over the budget of 100',
+      weight: 10,
+      value: escapes.length,
+      limit: 100,
+      full: 200,
+      details: top(escapes),
+    }),
     baseline
       ? rule({
           id: 'baseline-regression',

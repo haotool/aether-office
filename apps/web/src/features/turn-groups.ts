@@ -4,6 +4,7 @@
  * results paired back by id.
  */
 import type { Notice } from '@aether/kernel';
+import { fill, translate, type Key } from '../i18n.js';
 
 export type Entry = {
   at: number | null;
@@ -29,7 +30,7 @@ export type ToolCall = {
   /** Null until the result arrives: the call is still running. */
   result: { text: string; error: boolean; at: number | null } | null;
 };
-export type Block =
+type Block =
   | { type: 'assistant'; text: string; at: number | null }
   | { type: 'tools'; calls: ToolCall[]; at: number | null }
   | { type: 'notices'; items: Notice[]; at: number | null };
@@ -145,19 +146,13 @@ export function shortDuration(ms: number): string {
 /** "read 4 files · edited 2 · ran 1 command": what a group of tool calls did, in a few words. */
 export function toolSummaryText(calls: readonly ToolCall[], locale: 'zh-TW' | 'en'): string {
   const { counts } = countCalls(calls);
-  const zh = locale === 'zh-TW';
-  const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
+  const say = (n: number, one: Key, many: Key = one) =>
+    n > 0 ? fill(translate(locale, n === 1 ? one : many), n) : '';
   const parts = [
-    counts.read &&
-      (zh
-        ? `讀取 ${counts.read} 次`
-        : `read ${counts.read} ${plural(counts.read, 'file', 'files')}`),
-    counts.edit && (zh ? `編輯 ${counts.edit} 次` : `edited ${counts.edit}`),
-    counts.run &&
-      (zh
-        ? `執行 ${counts.run} 個指令`
-        : `ran ${counts.run} ${plural(counts.run, 'command', 'commands')}`),
-    counts.other && (zh ? `其他 ${counts.other} 次` : `${counts.other} other`),
+    say(counts.read, 'toolReadOne', 'toolReadMany'),
+    say(counts.edit, 'toolEdit'),
+    say(counts.run, 'toolRunOne', 'toolRunMany'),
+    say(counts.other, 'toolOther'),
   ].filter(Boolean);
   return parts.join(' · ');
 }

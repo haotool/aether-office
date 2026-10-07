@@ -34,7 +34,7 @@ export function patternsOverlap(a: string, b: string): boolean {
   return x === '' || y === '' || x === y || x.startsWith(`${y}/`) || y.startsWith(`${x}/`);
 }
 
-export type Reservation = {
+type Reservation = {
   id: string;
   ownerId: string;
   patterns: readonly string[];

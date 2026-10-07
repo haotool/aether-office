@@ -1,10 +1,5 @@
 import { devices, expect, test } from '@playwright/test';
 import { signIn } from './support/sign-in.js';
-import { readFileSync } from 'node:fs';
-
-const runtime = () =>
-  JSON.parse(readFileSync('.data/e2e-session.json', 'utf8')) as { directory: string };
-
 test('a pairing link that is wrong or used up says so, leaves no code in the address bar and offers the token', async ({
   page,
 }) => {

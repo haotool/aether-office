@@ -2,8 +2,9 @@ import { NavLink } from 'react-router-dom';
 import { Globe2, Menu, Moon, Plus, Sun } from 'lucide-react';
 import type { LocalSessionsResponse, Project } from '@aether/contracts';
 import type { Session } from '../api.js';
-import { usePreferences, useTheme } from '../state.js';
 import { useT, Badge } from '../ui.js';
+import { ProjectSelect } from './ProjectSelect.js';
+import { useLocaleToggle, useThemeToggle } from './PreferenceControls.js';
 import { PairPhoneButton } from './ConnectPhone.js';
 import { EmergencyStop } from './EmergencyStop.js';
 import { ConnectionStatus } from './ConnectionStatus.js';
@@ -37,8 +38,8 @@ export function Topbar({
   onNewProject: () => void;
 }) {
   const t = useT();
-  const prefs = usePreferences();
-  const theme = useTheme();
+  const locale = useLocaleToggle();
+  const theme = useThemeToggle();
   return (
     <header className="topbar">
       <button className="icon-button mobile-menu" aria-label="Menu" onClick={onMenu}>
@@ -53,18 +54,12 @@ export function Topbar({
       <span className="top-divider" />
       <div className="project-picker">
         <span className="tiny-label">WORKSPACE</span>
-        <select
-          aria-label={t('project')}
+        <ProjectSelect
+          projects={projects}
+          projectId={projectId}
+          onProject={onProject}
           title={projects.find((p) => p.id === projectId)?.name}
-          value={projectId ?? ''}
-          onChange={(e) => onProject(e.target.value)}
-        >
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+        />
       </div>
       <button
         className="icon-button add-project"
@@ -86,16 +81,12 @@ export function Topbar({
           className="icon-button"
           aria-label={t('language')}
           title={t('language')}
-          onClick={() => prefs.set({ locale: prefs.locale === 'zh-TW' ? 'en' : 'zh-TW' })}
+          onClick={locale.toggle}
         >
           <Globe2 size={18} />
         </button>
-        <button
-          className="icon-button"
-          aria-label={t('appearance')}
-          onClick={() => prefs.set({ theme: theme === 'dark' ? 'light' : 'dark' })}
-        >
-          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+        <button className="icon-button" aria-label={t('appearance')} onClick={theme.toggle}>
+          {theme.theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </button>
         <span className="user-dot">A</span>
       </div>

@@ -22,7 +22,7 @@ export type RoleId =
   | 'research'
   | 'generalist';
 
-export type Department = {
+type Department = {
   id: DepartmentId;
   floor: number;
   en: string;

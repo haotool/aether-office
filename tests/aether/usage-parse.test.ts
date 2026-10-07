@@ -1,14 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { ClaimBook } from '../../apps/control/src/services/usage-claude.js';
+import { deltaOf } from '../../apps/control/src/services/usage-codex.js';
 import {
-  ClaimBook,
-  dayKeyOf,
-  deltaOf,
   fresh,
   newState,
-  parseChunk,
   type Bucket,
   type ParseState,
-} from '../../apps/control/src/services/usage-parse.js';
+} from '../../apps/control/src/services/usage-counters.js';
+import { dayKeyOf, parseChunk } from '../../apps/control/src/services/usage-parse.js';
 import { buffer, claudeLine, codexContext, codexCount, codexTool } from './usage-fixtures.js';
 
 const utc = dayKeyOf('UTC');

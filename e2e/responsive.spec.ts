@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { signIn } from './support/sign-in.js';
-import { mkdirSync, readFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 
 // The UI rules (AGENTS.md → "UI rules") as a check, on every page at four widths: nothing sideways, no text under the
 // type floor, and, where the pointer is a finger, every control a finger target.

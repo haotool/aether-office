@@ -3,7 +3,7 @@
 
 const PLAYED_KEY = 'aether.intro.played';
 
-export type IntroGateInput = {
+type IntroGateInput = {
   /** The persisted preference: `auto` or "don't show again". */
   pref: 'auto' | 'never';
   /** The tour already ran in this browser session. */

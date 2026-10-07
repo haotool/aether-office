@@ -13,9 +13,9 @@ const EDITS = new Set(['Edit', 'Write', 'MultiEdit']);
 const TEST_FILE = /\.(test|spec)\./i;
 
 /** A test run's real outcome, kept for the cross-session pairing. */
-export type TestRun = { member: string; repo: string; ok: boolean; at: number };
+type TestRun = { member: string; repo: string; ok: boolean; at: number };
 /** A session whose tests failed: since when, and when a test file was edited after that (null: not yet). */
-export type Fixing = { failAt: number; editedAt: number | null };
+type Fixing = { failAt: number; editedAt: number | null };
 /** What the outcome deriver remembers between scans. */
 export type OutcomeMemory = {
   tests: readonly TestRun[];

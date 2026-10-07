@@ -17,13 +17,13 @@
 }
 .fold > summary::after {
   content: '';
-  width: 8px;
-  height: 8px;
+  width: 8px; /* token-lint: geometry */
+  height: 8px; /* token-lint: geometry */
   margin-left: auto;
   border-right: 2px solid var(--dim);
   border-bottom: 2px solid var(--dim);
   transform: rotate(45deg);
-  transition: transform 0.15s;
+  transition: transform var(--dur-fast);
 }
 .fold[open] > summary::after {
   transform: rotate(225deg);

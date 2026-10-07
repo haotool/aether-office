@@ -16,6 +16,7 @@ import { STATUS_KEY, fmt, rowName, squadSummary, toolsText } from './squad-text.
 import { treeNav } from './tree-nav.js';
 
 type Open = (agentId: string) => void;
+type Toggle = (sessionKey: string, open: boolean) => void;
 
 /** One subagent under its supervisor: status dot, type, how long it has run, tool calls; a button-like tree item. */
 const SquadRowView = memo(
@@ -80,31 +81,13 @@ const SquadRowView = memo(
     a.onOpen === b.onOpen,
 );
 
-/**
- * A supervisor and its subagents as a tree: the supervisor row (level 1, opens or folds) and one nested row per subagent
- * (level 2). One item is the tab stop; Up and Down, Home and End move, Right opens or enters, Left folds or goes to the
- * parent, Enter opens the item.
- */
-export function FeedSquad({
-  item,
-  open,
-  onToggle,
-  onOpen,
-}: {
-  item: FeedItem;
-  open: boolean;
-  onToggle: (sessionKey: string, open: boolean) => void;
-  onOpen: Open;
-}) {
-  const t = useT();
-  const squad = item.squad!;
+/** The roving focus and the keys of the squad tree: which item is the tab stop, and how the arrows and Enter act. */
+function useSquadTree(item: FeedItem, open: boolean, onToggle: Toggle) {
   const tree = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(item.agent.id);
-  const ids = [item.agent.id, ...(open ? squad.rows.map((r) => r.id) : [])];
+  const ids = [item.agent.id, ...(open ? (item.squad?.rows ?? []).map((r) => r.id) : [])];
   const current = ids.includes(active) ? active : item.agent.id;
-  const tab = (id: string) => (id === current ? 0 : -1);
-
-  const items = () => [...(tree.current?.querySelectorAll<HTMLElement>('[role="treeitem"]') ?? [])];
+  const tab = (id: string): 0 | -1 => (id === current ? 0 : -1);
   const onKeyDown = (e: KeyboardEvent) => {
     const el = (e.target as HTMLElement).closest<HTMLElement>('[role="treeitem"]');
     if (!el) return;
@@ -113,7 +96,7 @@ export function FeedSquad({
       el.click();
       return;
     }
-    const all = items();
+    const all = [...(tree.current?.querySelectorAll<HTMLElement>('[role="treeitem"]') ?? [])];
     const expanded = el.getAttribute('aria-expanded');
     const action = treeNav(
       e.key,
@@ -132,11 +115,85 @@ export function FeedSquad({
     ];
     if (id) setActive(id);
   };
+  return { tree, tab, onKeyDown, onFocus };
+}
+
+/** The supervisor's own row (level 1): opens the supervisor; its chevron folds or unfolds the subagents. */
+function SupervisorRow({
+  item,
+  squad,
+  open,
+  tabIndex,
+  onToggle,
+  onOpen,
+}: {
+  item: FeedItem;
+  squad: NonNullable<FeedItem['squad']>;
+  open: boolean;
+  tabIndex: 0 | -1;
+  onToggle: Toggle;
+  onOpen: Open;
+}) {
+  const t = useT();
   const toggle = (e: MouseEvent) => {
     e.stopPropagation();
     onToggle(item.key, !open);
   };
+  return (
+    <div
+      role="treeitem"
+      aria-level={1}
+      aria-expanded={open}
+      aria-posinset={1}
+      aria-setsize={1}
+      tabIndex={tabIndex}
+      className={`feed-row bucket-${item.bucket} ${item.stale ? 'stale' : ''}`}
+      data-agent={item.agent.id}
+      onClick={() => onOpen(item.agent.id)}
+    >
+      <FeedRowBody
+        item={item}
+        extra={
+          <span className="feed-squad">
+            <CornerDownRight size={12} aria-hidden="true" />
+            <span className="squad-chip">{squadSummary(t, squad)}</span>
+            <button
+              type="button"
+              className="squad-toggle"
+              tabIndex={-1}
+              aria-hidden="true"
+              data-open={open}
+              title={t(open ? 'squadHide' : 'squadShow')}
+              onClick={toggle}
+            >
+              <ChevronDown size={14} />
+            </button>
+          </span>
+        }
+      />
+    </div>
+  );
+}
 
+/**
+ * A supervisor and its subagents as a tree: the supervisor row (level 1, opens or folds) and one nested row per subagent
+ * (level 2). One item is the tab stop; Up and Down, Home and End move, Right opens or enters, Left folds or goes to the
+ * parent, Enter opens the item.
+ */
+export function FeedSquad({
+  item,
+  open,
+  onToggle,
+  onOpen,
+}: {
+  item: FeedItem;
+  open: boolean;
+  onToggle: Toggle;
+  onOpen: Open;
+}) {
+  const t = useT();
+  const squad = item.squad!;
+  const { tree, tab, onKeyDown, onFocus } = useSquadTree(item, open, onToggle);
   return (
     <div
       ref={tree}
@@ -147,38 +204,7 @@ export function FeedSquad({
       onKeyDown={onKeyDown}
       onFocus={onFocus}
     >
-      <div
-        role="treeitem"
-        aria-level={1}
-        aria-expanded={open}
-        aria-posinset={1}
-        aria-setsize={1}
-        tabIndex={tab(item.agent.id)}
-        className={`feed-row bucket-${item.bucket} ${item.stale ? 'stale' : ''}`}
-        data-agent={item.agent.id}
-        onClick={() => onOpen(item.agent.id)}
-      >
-        <FeedRowBody
-          item={item}
-          extra={
-            <span className="feed-squad">
-              <CornerDownRight size={12} aria-hidden="true" />
-              <span className="squad-chip">{squadSummary(t, squad)}</span>
-              <button
-                type="button"
-                className="squad-toggle"
-                tabIndex={-1}
-                aria-hidden="true"
-                data-open={open}
-                title={t(open ? 'squadHide' : 'squadShow')}
-                onClick={toggle}
-              >
-                <ChevronDown size={14} />
-              </button>
-            </span>
-          }
-        />
-      </div>
+      <SupervisorRow {...{ item, squad, open, onToggle, onOpen }} tabIndex={tab(item.agent.id)} />
       {open &&
         squad.rows.map((row, i) => (
           <SquadRowView
