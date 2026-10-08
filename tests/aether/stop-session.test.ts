@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { readProcessTable } from '../../apps/control/src/services/agent-processes.js';
-import { stopLocalSession, stopProcess } from '../../apps/control/src/services/stop-session.js';
+import { readProcessTable } from '../../apps/control/src/services/runtime/agent-processes.js';
+import {
+  stopLocalSession,
+  stopProcess,
+} from '../../apps/control/src/services/runtime/stop-session.js';
 import type { LocalSession } from '../../packages/contracts/src/index.js';
 import { alive, startReady, until } from './process-fixtures.js';
 

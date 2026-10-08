@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   buildPlan,
@@ -12,6 +13,10 @@ import {
   NOREPLY,
   syntheticRepo,
 } from './oss-tooling-env.js';
+
+const loadHistory = () => import(pathToFileURL(resolve('scripts/oss/readiness-history.mjs')).href);
+const loadTree = () => import(pathToFileURL(resolve('scripts/oss/readiness-tree.mjs')).href);
+const loadResults = () => import(pathToFileURL(resolve('scripts/oss/readiness-results.mjs')).href);
 
 describe('plans', () => {
   const repo = syntheticRepo('src-plan');
@@ -121,6 +126,26 @@ describe('commit-msg.sh', () => {
     expect(check('feat:no space')).toBe(1);
     expect(check(`feat: ${'x'.repeat(70)}`)).toBe(1);
     expect(check(`feat: ${'x'.repeat(66)}`)).toBe(0);
+  });
+});
+
+describe('agent artifact hygiene', () => {
+  it('flags tracked .omc paths as agent configuration', async () => {
+    const { checkAgentArtifactsInTree } = await loadHistory();
+    const { results } = await loadResults();
+    results.length = 0;
+    checkAgentArtifactsInTree(['src/a.ts', '.omc/state.json']);
+    expect(results.find((r: { id: string }) => r.id === 'agent-artifacts')?.status).toBe('fail');
+  });
+
+  it('flags tracked .omc paths in tracked-artifacts hygiene', async () => {
+    const { checkTrackedHygiene } = await loadTree();
+    const { results } = await loadResults();
+    results.length = 0;
+    checkTrackedHygiene(process.cwd(), ['README.md', '.omc/config.toml']);
+    const entry = results.find((r: { id: string }) => r.id === 'tracked-artifacts');
+    expect(entry?.status).toBe('fail');
+    expect(entry?.lines.some((line: string) => line.includes('.omc/'))).toBe(true);
   });
 });
 

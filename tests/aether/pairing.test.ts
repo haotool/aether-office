@@ -8,7 +8,7 @@ import {
   lanOrigins,
   pairingText,
   terminalQr,
-} from '../../apps/control/src/services/pairing.js';
+} from '../../apps/control/src/services/remote/pairing.js';
 import { fixture } from './fixture.js';
 
 // qrcode belongs to the control app, so it is resolved from there rather than hoisted into the root
@@ -65,16 +65,16 @@ describe('the addresses a phone can use', () => {
       en3: nic('8.8.8.8'),
       en0: nic('192.168.1.20'),
     };
-    expect(lanOrigins('4310', interfaces)).toEqual([
-      'http://192.168.1.20:4310',
-      'http://172.20.1.5:4310',
+    expect(lanOrigins('8780', interfaces)).toEqual([
+      'http://192.168.1.20:8780',
+      'http://172.20.1.5:8780',
     ]);
   });
 });
 
 describe('the QR code in the terminal', () => {
   it('is a clean block with a quiet zone that holds the same modules as the code', () => {
-    const url = 'http://192.168.1.20:4310/#pair=AAAAAAAAAAAAAAAAAAAAAA';
+    const url = 'http://192.168.1.20:8780/#pair=AAAAAAAAAAAAAAAAAAAAAA';
     const { size, data } = QRCode.create(url, { errorCorrectionLevel: 'M' }).modules;
     const lines = terminalQr(url).split('\n');
     const rows = lines.map((line) => stripVTControlCharacters(line));
@@ -100,14 +100,14 @@ describe('signing a phone in by scanning', () => {
     const f = fixture();
     clean.push(() => f.control.close());
     const app = createServer(f.control, {
-      origin: 'http://127.0.0.1:4310',
+      origin: 'http://127.0.0.1:8780',
       lan,
       lanAddresses: (port) => [`http://192.168.1.20:${port}`, `http://10.0.0.7:${port}`],
     });
     clean.push(() => app.close());
     return { ...f, app };
   }
-  const HOST = { host: '127.0.0.1:4310', origin: 'http://127.0.0.1:4310' };
+  const HOST = { host: '127.0.0.1:8780', origin: 'http://127.0.0.1:8780' };
   const bearer = (f: ReturnType<typeof setup>) => ({
     ...HOST,
     authorization: `Bearer ${f.owner.token}`,
@@ -124,14 +124,14 @@ describe('signing a phone in by scanning', () => {
     };
     expect(body.ttlSeconds).toBe(300);
     const link = body.links[0]!;
-    expect(link.url).toMatch(/^http:\/\/192\.168\.1\.20:4310\/#pair=[A-Za-z0-9_-]{22}$/); // fragment, not query
+    expect(link.url).toMatch(/^http:\/\/192\.168\.1\.20:8780\/#pair=[A-Za-z0-9_-]{22}$/); // fragment, not query
     expect(link.svg).toContain('<svg');
     // one code for every address: the links differ only by host, and only one code is waiting
     expect(body.links.map((l) => l.url.split('#pair=')[1])).toEqual([
       link.url.split('#pair=')[1],
       link.url.split('#pair=')[1],
     ]);
-    expect(body.links[1]!.url).toMatch(/^http:\/\/10\.0\.0\.7:4310\/#pair=/);
+    expect(body.links[1]!.url).toMatch(/^http:\/\/10\.0\.0\.7:8780\/#pair=/);
     const code = link.url.split('#pair=')[1]!;
 
     const redeemed = await f.app.inject({
@@ -201,13 +201,13 @@ describe('signing a phone in by scanning', () => {
 describe('the pairing text for a terminal', () => {
   it('shows the QR of the best address, lists the others and says the link is plain HTTP', () => {
     const links = [
-      { origin: 'http://192.168.1.20:4310', url: 'http://192.168.1.20:4310/#pair=A' },
-      { origin: 'http://10.0.0.5:4310', url: 'http://10.0.0.5:4310/#pair=A' },
+      { origin: 'http://192.168.1.20:8780', url: 'http://192.168.1.20:8780/#pair=A' },
+      { origin: 'http://10.0.0.5:8780', url: 'http://10.0.0.5:8780/#pair=A' },
     ];
     const text = pairingText(links, 300);
     expect(text).toContain(terminalQr(links[0]!.url));
-    expect(text).toContain('http://192.168.1.20:4310');
-    expect(text).toContain('Same code on the other addresses: http://10.0.0.5:4310');
+    expect(text).toContain('http://192.168.1.20:8780');
+    expect(text).toContain('Same code on the other addresses: http://10.0.0.5:8780');
     expect(text).toContain('expires in 5 minutes');
     expect(text).toContain('Plain HTTP');
   });

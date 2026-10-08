@@ -1,10 +1,10 @@
 import { expect, it } from 'vitest';
-import { precacheUrls, shellVersion } from '../../scripts/sw-precache.ts';
+import { precacheUrls, shellVersion } from '../../scripts/sw-precache.js';
 import { cacheName, handling } from '../../apps/web/src/sw/cache-rules.js';
-import { isIos, installHint } from '../../apps/web/src/install-prompt.js';
-import { canRegister, switchedOff } from '../../apps/web/src/pwa.js';
+import { isIos, installHint } from '../../apps/web/src/lib/platform/install-prompt.js';
+import { canRegister, switchedOff } from '../../apps/web/src/lib/platform/pwa.js';
 
-const ORIGIN = 'http://127.0.0.1:4310';
+const ORIGIN = 'http://127.0.0.1:8780';
 const request = (path: string, mode = 'no-cors', method = 'GET') => ({
   method,
   mode,

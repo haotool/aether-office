@@ -6,7 +6,7 @@ import { expect, it } from 'vitest';
 import {
   resetLocalSessionCache,
   scanLocalSessions,
-} from '../../apps/control/src/services/local-sessions.js';
+} from '../../apps/control/src/services/runtime/local-sessions.js';
 
 const git = (cwd: string, ...args: string[]) =>
   execFileSync('git', ['-C', cwd, '-c', 'user.name=t', '-c', 'user.email=t@t.test', ...args], {

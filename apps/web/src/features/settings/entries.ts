@@ -1,4 +1,4 @@
-import type { Key } from '../../i18n.js';
+import type { Key } from '../../lib/i18n/i18n.js';
 import type { SectionId } from './sections.js';
 
 /**

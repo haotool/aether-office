@@ -105,7 +105,7 @@
 | 訊息、房間、會議、預約 | W | `Messages`、`Rooms`、`Meetings`、`Reservations` | MSG-01..08 | MSG-05、MSG-07 partial | e2e `rooms`、`meetings`、`reservations`、`message-waits` |
 | 版面編輯器 | O | `LayoutEditor`、`layout-merge` | OFFICE-LIFE-02 | partial | e2e `layout-editor`(2) |
 | 辦公桌螢幕 | O | `office-scene`（桌面顯示） | OBS-CHAR-01 | impl | e2e `scene` |
-| 辦公室小動畫 | O | `life-*` | OBS-LIFE-01..03、F1 | partial（單機量測） | e2e `office-life`(20)、`office-life-follow-up`、`office-life-perf` |
+| 辦公室小動畫 | O | `life-*` | OBS-LIFE-01..03、F1 | partial（單機量測） | e2e `office-life`(20)、`office-life-scene-preview`、`office-life-perf` |
 | 開場導覽、房間導覽 | O | `tour.ts`、intro | OBS-LIFE-02、CAM-01 | partial | e2e `intro`(7)、`tour`、`intro-perf` |
 | 角色造型 | O | `tools/blender`、`avatar` | VIS-04、VIS-08 | partial | e2e `avatars`、`validate-assets` |
 | 模型目錄 | O | `models.ts`、`ModelsSection` | （CLA／CDX 周邊） | impl | 單元 |

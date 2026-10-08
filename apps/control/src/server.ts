@@ -1,7 +1,7 @@
 import Fastify, { LogController, type FastifyInstance } from 'fastify';
 import cookie from '@fastify/cookie';
-import { hostPolicy } from './services/host-policy.js';
-import { createPairingStore } from './services/pairing.js';
+import { hostPolicy } from './services/platform/host-policy.js';
+import { createPairingStore } from './services/remote/pairing.js';
 import type { Control } from './control.js';
 import type { RouteContext, ServerOptions } from './routes/context.js';
 import { adminRoutes } from './routes/admin.js';

@@ -1,9 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import { DEPARTMENTS } from '../../packages/kernel/src/index.js';
-import { characterEvents } from '../../packages/office-scene/src/character-events.js';
-import { ringFor } from '../../packages/office-scene/src/character-ring.js';
-import { createLongPress } from '../../packages/office-scene/src/long-press.js';
-import { AGENT_OFFSET, departmentAt } from '../../packages/office-scene/src/scene-geometry.js';
+import { characterEvents } from '../../packages/office-scene/src/characters/character-events.js';
+import { ringFor } from '../../packages/office-scene/src/characters/character-ring.js';
+import { createLongPress } from '../../packages/office-scene/src/core/long-press.js';
+import {
+  AGENT_OFFSET,
+  departmentAt,
+} from '../../packages/office-scene/src/scene/scene-geometry.js';
 
 type Fake = Record<string, unknown>;
 const event = (over: Fake = {}) => ({

@@ -1,8 +1,8 @@
 // The hand-over runtime of a scene: plans a hand-over when a subagent finishes, keeps the book, and moves it on with the
 // clock. Plain objects, no React: use-squad.ts owns one and calls `begin` (when a member starts to leave) and `tick`.
 import type { NavGrid, Point } from '@aether/kernel';
-import { hashText } from '../../hash.js';
-import type { Quality } from '../../scene-types.js';
+import { hashText } from '../../environment/hash.js';
+import type { Quality } from '../../scene/scene-types.js';
 import type { DrawSquad } from '../squad-draw.js';
 import {
   admit,

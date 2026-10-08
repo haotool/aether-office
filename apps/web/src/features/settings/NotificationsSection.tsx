@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Mode, RemoteApprovalsState } from '@aether/contracts';
-import { api } from '../../api.js';
+import { api } from '../../lib/api/api.js';
 import {
   notificationsSupported,
   permissionNow,
   requestNotificationPermission,
-} from '../../notifications.js';
-import { usePreferences } from '../../state.js';
+} from '../../lib/notifications/notifications.js';
+import { usePreferences } from '../../lib/preferences/state.js';
 import { useT } from '../../ui/useT.js';
 import { useSettings } from './context.js';
 import { CopyCommand, InlineHelp, Row, StatusChip, Switch } from './kit.js';

@@ -5,7 +5,7 @@ import {
   longTaskTotalBlockingMs,
   parseUserAgent,
   type FieldPerfCaptureInput,
-} from '../../packages/office-scene/src/field-perf-report.js';
+} from '../../packages/office-scene/src/field/field-perf-report.js';
 
 const frameCapture = (
   deltas: number[],

@@ -7,10 +7,10 @@ import {
   mostUrgent,
   noReplyKey,
   type Speech,
-} from '../../apps/web/src/features/feed-model.js';
+} from '../../apps/web/src/features/feed/feed-model.js';
 import { toPlainPreview } from '../../packages/kernel/src/index.js';
-import { parseMarkdown } from '../../apps/web/src/features/md-parse.js';
-import { parseSeen, withSeen } from '../../apps/web/src/features/session-seen.js';
+import { parseMarkdown } from '../../apps/web/src/features/conversation/md-parse.js';
+import { parseSeen, withSeen } from '../../apps/web/src/features/sessions/session-seen.js';
 
 const NOW = Date.parse('2026-10-06T12:00:00Z');
 const MIN = 60_000;

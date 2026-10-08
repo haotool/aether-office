@@ -29,8 +29,8 @@ const {
   useProjectStream,
   useQuickOpen,
   useTour,
-} = await import('../../apps/web/src/app-hooks.js');
-const { TOUR_INTERVAL_MS, TOUR_STOPS } = await import('../../apps/web/src/tour.js');
+} = await import('../../apps/web/src/lib/app/app-hooks.js');
+const { TOUR_INTERVAL_MS, TOUR_STOPS } = await import('../../apps/web/src/lib/navigation/tour.js');
 
 afterAll(removeBrowserEnv);
 beforeEach(() => {

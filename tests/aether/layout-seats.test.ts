@@ -5,9 +5,13 @@ import {
   FLOOR_CAPACITY,
   assignSeats,
   defaultLayout,
-} from '../../packages/office-scene/src/layout.js';
-import { mergeLayout } from '../../apps/web/src/layout-merge.js';
-import { MAX_SEATS, parseSeats, serializeSeats } from '../../apps/web/src/seat-store.js';
+} from '../../packages/office-scene/src/environment/layout.js';
+import { mergeLayout } from '../../apps/web/src/features/office/layout-merge.js';
+import {
+  MAX_SEATS,
+  parseSeats,
+  serializeSeats,
+} from '../../apps/web/src/features/office/seat-store.js';
 
 const agent = (id: string): Agent =>
   ({ id, projectId: 'p', name: id, activity: 'working', species: 'fox', color: '#fff' }) as Agent;

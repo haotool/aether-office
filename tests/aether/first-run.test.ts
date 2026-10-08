@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { Agent } from '../../packages/contracts/src/index.js';
-import { fill, resolveLocale } from '../../apps/web/src/i18n.js';
-import { documentTitle } from '../../apps/web/src/app-hooks.js';
-import { isPage } from '../../apps/web/src/nav.js';
-import { sceneSummary } from '../../apps/web/src/features/scene-summary.js';
+import { fill, resolveLocale } from '../../apps/web/src/lib/i18n/i18n.js';
+import { documentTitle } from '../../apps/web/src/lib/app/app-hooks.js';
+import { isPage } from '../../apps/web/src/lib/navigation/nav.js';
+import { sceneSummary } from '../../apps/web/src/features/office/scene-summary.js';
 
 describe('first-run language', () => {
   it('follows the browser: Chinese gets Traditional Chinese, everything else English', () => {

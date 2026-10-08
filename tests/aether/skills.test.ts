@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { listSkills } from '../../apps/control/src/services/skills.js';
+import { listSkills } from '../../apps/control/src/services/domain/skills.js';
 import { command, fixture } from './fixture.js';
 
 const file = (body: string) =>

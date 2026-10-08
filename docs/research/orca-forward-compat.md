@@ -81,7 +81,7 @@ off 的原因代碼與使用者文案（zh-TW / English 兩語，走 `apps/web/s
 
 ### 2.3 CLI 執行的安全與成本控制
 
-沿用本 repo 已有的 `execFile` 習慣（`apps/control/src/services/agent-processes.ts:261-262,300-301`：`timeout: 4000`、`maxBuffer`；`git-health.ts:14-17`）：
+沿用本 repo 已有的 `execFile` 習慣（`apps/control/src/services/runtime/agent-processes.ts:261-262,300-301`：`timeout: 4000`、`maxBuffer`；`git-health.ts:14-17`）：
 
 | 項目 | 設計 |
 |---|---|
@@ -178,9 +178,9 @@ Orca 應**重用同一機制，但採 Claude 式的系列規則，不採 Codex �
 |---|---|---|
 | 純解析器、等級判定、版本矩陣讀取 | `packages/providers/src/orca-compat.ts`、`orca-parse.ts` 與 `generated/orca-compat.json` | `packages/providers` 不得 import control（`check-boundaries.mjs:24`），純函式不需要 I/O；與 `compat.ts` 並列 |
 | `execFile` 轉接、快取、斷路器、單飛 | `apps/control/src/services/orca-source.ts` | control 才有 Node I/O；與 `agent-processes.ts` 同層、同風格 |
-| 與 session 合併 | `apps/control/src/services/local-sessions.ts`（讀快取、不等待） | 現有合併點 |
-| 變更事件 | `apps/control/src/services/session-changes.ts`：`ChangeKind`（`:9`）新增 `'source'` | 讓 SSE 帶「來源變了」，仍是無內容事件 |
-| 顯示與徽章 | `apps/web/src/features/office-model.ts` 等 | web 不得 import `node:` 或 providers（`check-boundaries.mjs:21-22`），所以等級與原因以**契約型別**傳過去，不 import 解析器 |
+| 與 session 合併 | `apps/control/src/services/runtime/local-sessions.ts`（讀快取、不等待） | 現有合併點 |
+| 變更事件 | `apps/control/src/services/sessions/session-changes.ts`：`ChangeKind`（`:9`）新增 `'source'` | 讓 SSE 帶「來源變了」，仍是無內容事件 |
+| 顯示與徽章 | `apps/web/src/features/office/office-model.ts` 等 | web 不得 import `node:` 或 providers（`check-boundaries.mjs:21-22`），所以等級與原因以**契約型別**傳過去，不 import 解析器 |
 | 探針與產生器 | `scripts/orca-probe.ts`、`scripts/orca-compat.ts` | `scripts/` 已放 doctor 等 |
 
 ### 4.2 `packages/contracts` 的新增（全部選用）
@@ -190,7 +190,7 @@ Orca 應**重用同一機制，但採 Claude 式的系列規則，不採 Codex �
   - `source: z.enum(['orca']).nullable().default(null)`（**不改 `provider`**，因為 Orca 不是 provider，是來源）。
   - `orca: z.object({ worktreeId, displayName, workspaceStatus, parentWorktreeId, linkedPR, level, hostKind }).partial().nullable().default(null)`：每欄皆可缺。
   - 回應層級（非每個 session）新增 `sources: { orca: { level, reason, version, protocol, checkedAt, breakerUntil } }`，放 `/api/system` 或 session 回應的頂層。
-- 舊 client：`apps/web/src/local-session-compat.ts:11-48` 的 `normalizeSession` 正是處理「控制面比頁面舊／新」的樣板（缺欄補未知值）。新增欄位在那裡補 `source ?? null`、`orca ?? null`，一個欄位壞掉不得拖垮整頁。舊 client 遇到新欄位：zod 預設會 strip 未知欄位，所以也不會壞。
+- 舊 client：`apps/web/src/lib/sessions/local-session-compat.ts:11-48` 的 `normalizeSession` 正是處理「控制面比頁面舊／新」的樣板（缺欄補未知值）。新增欄位在那裡補 `source ?? null`、`orca ?? null`，一個欄位壞掉不得拖垮整頁。舊 client 遇到新欄位：zod 預設會 strip 未知欄位，所以也不會壞。
 - **不得**把 `prompt`、`lastAssistantMessage`、`toolInput`、`preview`、`comment` 加進契約。
 
 ### 4.3 診斷、SSE、重新整理、效能預算
@@ -211,7 +211,7 @@ Orca 應**重用同一機制，但採 Claude 式的系列規則，不採 Codex �
 - **只保留數字與中繼資料**：`worktreeId`（不透明字串）、`displayName`（經 `cleanTitle`、長度上限）、`workspaceStatus`、父子 id、PR 號碼與 state。
 - **解析器的輸出型別從不含** `prompt`、`lastAssistantMessage`、`toolInput`、`preview`、`comment`、`mainAgent`；原始 stdout 緩衝在解析後立即丟棄，不寫入日誌、不放進快取、不入 SQLite、不放進錯誤訊息。
 - 錯誤訊息只含**原因代碼與計數**，不含 stdout 片段。
-- 所有顯示字串過既有的 redaction 與文字管線（`apps/control/src/services/redaction.ts`、`neutralizeHtml`、`structureWrappers`、`cleanTitle`；`docs/architecture.md` 資料流 3）。
+- 所有顯示字串過既有的 redaction 與文字管線（`apps/control/src/services/platform/redaction.ts`、`neutralizeHtml`、`structureWrappers`、`cleanTitle`；`docs/architecture.md` 資料流 3）。
 - 能用 `worktree list`（不含 agent 列）達成的映射，就**不要呼叫 `ps`**：`ps` 才含 prompt／回覆全文（`runtime-worktree-contracts.ts:14-30`）。**[推論]** `list` 不含 agent rows，需 Phase 0 實測確認；若成立，預設只用 `list`，`ps` 僅在需要 agent 狀態且路徑 c 無法提供時才用。
 - fixture 脫敏規則同上，並加一個測試：fixture 與解析器輸出中不得出現看起來像 token 的字串（可重用 `redaction.ts` 的樣式）。
 

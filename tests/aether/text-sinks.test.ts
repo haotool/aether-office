@@ -73,12 +73,12 @@ describe('text sources', () => {
   const source = (file: string) => readFileSync(file, 'utf8');
   // Where session text enters the product, and the sanitizer each must use.
   const WIRING: [string, string][] = [
-    ['apps/control/src/services/session-transcript.ts', 'structureWrappers'],
-    ['apps/control/src/services/session-title.ts', 'cleanTitle'],
-    ['apps/control/src/services/session-topic.ts', 'cleanTitle'],
-    ['apps/control/src/services/subagent-text.ts', 'stripCliWrappers'],
-    ['apps/web/src/features/feed-model.ts', 'toPlainPreview'],
-    ['apps/web/src/features/md-parse.ts', 'parseMarkdown'],
+    ['apps/control/src/services/sessions/session-transcript.ts', 'structureWrappers'],
+    ['apps/control/src/services/sessions/session-title.ts', 'cleanTitle'],
+    ['apps/control/src/services/sessions/session-topic.ts', 'cleanTitle'],
+    ['apps/control/src/services/subagents/subagent-text.ts', 'stripCliWrappers'],
+    ['apps/web/src/features/feed/feed-model.ts', 'toPlainPreview'],
+    ['apps/web/src/features/conversation/md-parse.ts', 'parseMarkdown'],
     ['packages/kernel/src/text-title.ts', 'stripCliWrappers'],
   ];
   it.each(WIRING)('%s goes through %s', (file, sanitizer) => {

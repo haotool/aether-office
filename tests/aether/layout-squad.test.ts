@@ -14,7 +14,7 @@ import {
   FLOOR_CAPACITY,
   defaultLayout,
   seatAt,
-} from '../../packages/office-scene/src/layout.js';
+} from '../../packages/office-scene/src/environment/layout.js';
 import {
   MAX_SQUAD_SEATS,
   placeSquads,
@@ -22,7 +22,7 @@ import {
   squadLayout,
   squadObjectOf,
 } from '../../packages/office-scene/src/squad/squad-layout.js';
-import { mergeLayout } from '../../apps/web/src/layout-merge.js';
+import { mergeLayout } from '../../apps/web/src/features/office/layout-merge.js';
 
 const desk = (
   id: string,

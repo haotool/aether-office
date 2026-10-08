@@ -4,12 +4,12 @@ import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { toRecord } from '../../packages/providers/src/hook-receiver.mjs';
-import { deriveHookState, parseSpool } from '../../apps/control/src/services/hook-spool.js';
+import { deriveHookState, parseSpool } from '../../apps/control/src/services/hooks/hook-spool.js';
 import {
   attributeSessions,
   resetLocalSessionCache,
   scanLocalSessions,
-} from '../../apps/control/src/services/local-sessions.js';
+} from '../../apps/control/src/services/runtime/local-sessions.js';
 
 const receiver = join(process.cwd(), 'packages/providers/src/hook-receiver.mjs');
 const rec = (event: string, at: number, extra = {}) => ({

@@ -1,8 +1,8 @@
 import { LIFE_CATEGORIES, type LifePrefs, type MemeCategory } from '@aether/office-scene/model';
 import { useLocation, useNavigate } from 'react-router-dom';
-import type { Key } from '../../i18n.js';
-import { requestIntroReplay } from '../../intro-gate.js';
-import { usePreferences } from '../../state.js';
+import type { Key } from '../../lib/i18n/i18n.js';
+import { requestIntroReplay } from '../../lib/navigation/intro-gate.js';
+import { usePreferences } from '../../lib/preferences/state.js';
 import { useT } from '../../ui/useT.js';
 import { Block, Row, Segmented, StatusChip, Switch } from './kit.js';
 

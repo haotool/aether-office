@@ -5,9 +5,12 @@ import {
   colonize,
   twigShare,
   type ColonyParams,
-} from '../../packages/office-scene/src/flower-tree.js';
-import { gardenOf } from '../../packages/office-scene/src/garden-geometry.js';
-import { layoutStalk, type StalkCommit } from '../../packages/office-scene/src/stalk-layout.js';
+} from '../../packages/office-scene/src/flowers/flower-tree.js';
+import { gardenOf } from '../../packages/office-scene/src/core/garden-geometry.js';
+import {
+  layoutStalk,
+  type StalkCommit,
+} from '../../packages/office-scene/src/core/stalk-layout.js';
 
 const centre: [number, number, number] = [10, 40, -4];
 const distance = (a: number[], b: number[]) =>

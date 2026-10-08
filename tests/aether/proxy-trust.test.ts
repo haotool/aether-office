@@ -1,6 +1,6 @@
 import { afterEach, expect, it } from 'vitest';
 import { createServer } from '../../apps/control/src/server.js';
-import { parseTrustProxy } from '../../apps/control/src/services/host-policy.js';
+import { parseTrustProxy } from '../../apps/control/src/services/platform/host-policy.js';
 import { fixture } from './fixture.js';
 
 const clean: (() => void | Promise<unknown>)[] = [];
@@ -8,13 +8,13 @@ afterEach(async () => {
   for (const fn of clean.splice(0).reverse()) await fn();
 });
 const PROXY = '127.0.0.1';
-const host = { host: '127.0.0.1:4310' };
+const host = { host: '127.0.0.1:8780' };
 
 function setup(trustProxy?: string) {
   const f = fixture();
   clean.push(() => f.control.close());
   const app = createServer(f.control, {
-    origin: 'http://127.0.0.1:4310',
+    origin: 'http://127.0.0.1:8780',
     ...(trustProxy === undefined ? {} : { trustProxy }),
   });
   clean.push(() => app.close());

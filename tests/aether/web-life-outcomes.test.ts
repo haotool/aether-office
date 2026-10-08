@@ -4,9 +4,9 @@ import {
   emptyOutcomes,
   outcomeSignals,
   type OutcomeMemory,
-} from '../../apps/web/src/features/life-outcomes.js';
-import { SUBAGENT_INFIX, parentOf } from '../../apps/web/src/subagent-id.js';
-import { isOperator } from '../../apps/web/src/roles.js';
+} from '../../apps/web/src/features/office/life-outcomes.js';
+import { SUBAGENT_INFIX, parentOf } from '../../apps/web/src/lib/sessions/subagent-id.js';
+import { isOperator } from '../../apps/web/src/lib/navigation/roles.js';
 
 const MIN = 60_000;
 const NOW = 10_000_000;

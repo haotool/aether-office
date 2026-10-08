@@ -1,6 +1,10 @@
 import { expect, it } from 'vitest';
-import { claimJob, listIntegrations, reportJob } from '../../apps/control/src/services/jobs.js';
-import { enroll } from '../../apps/control/src/services/runners.js';
+import {
+  claimJob,
+  listIntegrations,
+  reportJob,
+} from '../../apps/control/src/services/work/jobs.js';
+import { enroll } from '../../apps/control/src/services/runtime/runners.js';
 import { command, fixture, seedWork } from './fixture.js';
 
 const sha = (c: string) => c.repeat(40);

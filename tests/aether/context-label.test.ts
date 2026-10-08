@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
-import { contextLabel } from '../../apps/web/src/features/context-label.js';
-import { translate } from '../../apps/web/src/i18n.js';
+import { contextLabel } from '../../apps/web/src/features/sessions/context-label.js';
+import { translate } from '../../apps/web/src/lib/i18n/i18n.js';
 
 const t = (key: Parameters<typeof translate>[1]) => translate('en', key);
 

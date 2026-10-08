@@ -1,8 +1,8 @@
 import { expect, it } from 'vitest';
 import type { AttributedSession, Subagent } from '../../packages/contracts/src/index.js';
 import { subagentSchema } from '../../packages/contracts/src/index.js';
-import { officeModel, squadsOf } from '../../apps/web/src/features/office-model.js';
-import { sessionsToAgents } from '../../apps/web/src/localSessions.js';
+import { officeModel, squadsOf } from '../../apps/web/src/features/office/office-model.js';
+import { sessionsToAgents } from '../../apps/web/src/lib/sessions/localSessions.js';
 
 const child = (over: Partial<Subagent> & { id: string }): Subagent =>
   subagentSchema.parse({ type: 'Explore', lastSeen: Date.now(), status: 'running', ...over });

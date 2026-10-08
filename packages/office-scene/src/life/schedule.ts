@@ -1,6 +1,6 @@
-import { hashText } from '../hash.js';
-import { seeded } from '../seeded.js';
-import type { Quality } from '../scene-types.js';
+import { hashText } from '../environment/hash.js';
+import { seeded } from '../environment/seeded.js';
+import type { Quality } from '../scene/scene-types.js';
 import { LIFE_RULES, type LifeRule } from './registry.js';
 import { TIER, type LifeContext, type LifePrefs, type LifeSignal } from './signals.js';
 

@@ -7,12 +7,12 @@ import { gzipSync } from 'node:zlib';
 import { z } from 'zod';
 import { DomainError, type Actor } from '@aether/kernel';
 import type { Control } from './control.js';
-import type { hostPolicy } from './services/host-policy.js';
-import { sessionActor } from './services/identity.js';
-import { refreshMessageWaits } from './services/messages.js';
-import { tickSchedules } from './services/schedules.js';
-import { pruneAttempts } from './services/attempts.js';
-import { pruneRetention } from './services/retention.js';
+import type { hostPolicy } from './services/platform/host-policy.js';
+import { sessionActor } from './services/domain/identity.js';
+import { refreshMessageWaits } from './services/domain/messages.js';
+import { tickSchedules } from './services/domain/schedules.js';
+import { pruneAttempts } from './services/runtime/attempts.js';
+import { pruneRetention } from './services/domain/retention.js';
 import type { AuthInput, RouteContext } from './routes/context.js';
 
 const RETENTION_INTERVAL_MS = 60 * 60 * 1000;

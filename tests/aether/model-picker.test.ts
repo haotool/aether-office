@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { chipText } from '../../apps/web/src/features/model-chip.js';
+import { chipText } from '../../apps/web/src/features/conversation/model-chip.js';
 
 const opus = {
   id: 'claude-opus-5-5',

@@ -8,11 +8,11 @@ import {
   type RefObject,
 } from 'react';
 import type { Agent, Layout } from '@aether/contracts';
-import { tierCount } from '../crown-layout.js';
-import { busiestFloor, floorCounts } from '../floor-counts.js';
-import { FLOORS } from '../layout.js';
-import { OVERVIEW, fittedOffset, lookY } from '../scene-geometry.js';
-import type { Pose } from '../shot-camera.js';
+import { tierCount } from '../core/crown-layout.js';
+import { busiestFloor, floorCounts } from '../core/floor-counts.js';
+import { FLOORS } from '../environment/layout.js';
+import { OVERVIEW, fittedOffset, lookY } from '../scene/scene-geometry.js';
+import type { Pose } from '../core/shot-camera.js';
 import {
   introActive,
   introElapsed,

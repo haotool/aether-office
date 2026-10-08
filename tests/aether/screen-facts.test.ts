@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { screensOf } from '../../apps/web/src/features/office-model.js';
+import { screensOf } from '../../apps/web/src/features/office/office-model.js';
 import type { AttributedSession } from '../../packages/contracts/src/index.js';
 
 const NOW = 1_800_000_000_000;

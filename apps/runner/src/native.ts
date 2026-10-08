@@ -123,6 +123,71 @@ function reviewTarget(command: RunCommand) {
   return { head: command.reviewHead, base: command.reviewBase };
 }
 
+function installObservationProfiles(
+  workspaces: Workspaces,
+  observationProfiles: Map<string, ObservationProfile>,
+  observations: NativeConfig['observations'],
+) {
+  for (const [name, config] of Object.entries(observations)) {
+    const projectRoot = realpathSync(config.projectRoot),
+      approvedRoot = realpathSync(config.approvedRoot);
+    if (!workspaces.allowed.includes(projectRoot))
+      throw new Error('OBSERVATION_PROJECT_NOT_GRANTED');
+    observationProfiles.set(name, { ...config, projectRoot, approvedRoot });
+  }
+}
+
+function installTerminalProfiles(
+  workspaces: Workspaces,
+  terminalProfiles: NativeExecutor['terminalProfiles'],
+  terminals: NativeConfig['terminals'],
+) {
+  for (const [name, config] of Object.entries(terminals)) {
+    const root = realpathSync(config.root);
+    if (!workspaces.allowed.includes(root)) throw new Error('TERMINAL_ROOT_NOT_GRANTED');
+    const profile = {
+      binary: realpathSync(config.binary),
+      args: config.args,
+      cwd: root,
+      timeoutMs: config.timeoutMs,
+    };
+    terminalProfiles.set(name, { profile, root, hash: digest(JSON.stringify(profile)) });
+  }
+}
+
+function installCliTerminalProfiles(
+  workspaces: Workspaces,
+  terminalProfiles: NativeExecutor['terminalProfiles'],
+  config: NativeConfig,
+) {
+  for (const root of workspaces.allowed)
+    for (const provider of ['claude', 'codex'] as const) {
+      const binary = config.binaries[provider];
+      if (!binary) continue;
+      const name = `${provider}-${basename(root).replace(/[^a-zA-Z0-9_-]/g, '-')}`.slice(0, 80);
+      if (terminalProfiles.has(name)) continue;
+      const profile = { binary: realpathSync(binary), args: [], cwd: root, timeoutMs: 3600000 };
+      terminalProfiles.set(name, { profile, root, hash: digest(JSON.stringify(profile)) });
+    }
+}
+
+function installVerifiers(
+  workspaces: Workspaces,
+  verifiers: Map<string, Harness>,
+  verifiersConfig: NativeConfig['verifiers'],
+) {
+  for (const [name, config] of Object.entries(verifiersConfig))
+    verifiers.set(
+      name,
+      workspaces.registerHarness(
+        readFileSync(config.file, 'utf8'),
+        process.execPath,
+        [],
+        config.timeoutMs,
+      ),
+    );
+}
+
 export class NativeExecutor {
   readonly workspaces: Workspaces;
   readonly verifiers = new Map<string, Harness>();
@@ -137,45 +202,11 @@ export class NativeExecutor {
     for (const binary of Object.values(this.config.binaries)) realpathSync(binary);
     if (this.config.acpAgent) realpathSync(this.config.acpAgent.command);
     this.workspaces = new Workspaces(directory, this.config.repositories);
-    for (const [name, config] of Object.entries(this.config.observations)) {
-      const projectRoot = realpathSync(config.projectRoot),
-        approvedRoot = realpathSync(config.approvedRoot);
-      if (!this.workspaces.allowed.includes(projectRoot))
-        throw new Error('OBSERVATION_PROJECT_NOT_GRANTED');
-      this.observationProfiles.set(name, { ...config, projectRoot, approvedRoot });
-    }
-    for (const [name, config] of Object.entries(this.config.terminals)) {
-      const root = realpathSync(config.root);
-      if (!this.workspaces.allowed.includes(root)) throw new Error('TERMINAL_ROOT_NOT_GRANTED');
-      const profile = {
-        binary: realpathSync(config.binary),
-        args: config.args,
-        cwd: root,
-        timeoutMs: config.timeoutMs,
-      };
-      this.terminalProfiles.set(name, { profile, root, hash: digest(JSON.stringify(profile)) });
-    }
+    installObservationProfiles(this.workspaces, this.observationProfiles, this.config.observations);
+    installTerminalProfiles(this.workspaces, this.terminalProfiles, this.config.terminals);
     if (this.config.cliTerminals)
-      for (const root of this.workspaces.allowed)
-        for (const provider of ['claude', 'codex'] as const) {
-          const binary = this.config.binaries[provider];
-          if (!binary) continue;
-          const name = `${provider}-${basename(root).replace(/[^a-zA-Z0-9_-]/g, '-')}`.slice(0, 80);
-          if (this.terminalProfiles.has(name)) continue; // an explicit profile of the same name wins
-          // The CLI's own default permission mode: no flag is added, so it asks as it normally would.
-          const profile = { binary: realpathSync(binary), args: [], cwd: root, timeoutMs: 3600000 };
-          this.terminalProfiles.set(name, { profile, root, hash: digest(JSON.stringify(profile)) });
-        }
-    for (const [name, config] of Object.entries(this.config.verifiers))
-      this.verifiers.set(
-        name,
-        this.workspaces.registerHarness(
-          readFileSync(config.file, 'utf8'),
-          process.execPath,
-          [],
-          config.timeoutMs,
-        ),
-      );
+      installCliTerminalProfiles(this.workspaces, this.terminalProfiles, this.config);
+    installVerifiers(this.workspaces, this.verifiers, this.config.verifiers);
   }
   get providers(): ('codex' | 'claude' | 'acp')[] {
     return [

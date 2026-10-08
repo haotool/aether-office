@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { quotaNearLimit, quotaText } from '../../apps/web/src/features/quota.js';
+import { quotaNearLimit, quotaText } from '../../apps/web/src/features/kpi/quota.js';
 
 const w = (usedPercent: number) => ({ usedPercent, resetsAt: null });
 const limits = (fiveHour: number | null, sevenDay: number | null) => ({

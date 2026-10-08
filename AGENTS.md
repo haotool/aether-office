@@ -27,7 +27,7 @@ Run before finishing: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm 
 
 ## UI
 
-Follow [docs/design-system.md](docs/design-system.md): values come from `apps/web/src/styles/tokens.css`, shared pieces from
+Follow [docs/design-system.md](docs/design-system.md): values come from `apps/web/src/styles/core/tokens.css`, shared pieces from
 `apps/web/src/ui/` (one module per piece), rules go in the stylesheet file of the thing they style. A UI change is done when the responsive and
 accessibility specs pass and the changed pages were looked at on a phone-sized and a tablet-sized screen.
 

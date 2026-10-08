@@ -1,7 +1,7 @@
 import { it, expect } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { fixture, command } from './fixture.js';
-import { taskPositions } from '../../apps/web/src/features/taskGraph.js';
+import { taskPositions } from '../../apps/web/src/features/tasks-git/taskGraph.js';
 it('edits only unassigned dependencies atomically and rejects cycles, foreign references and stale versions', () => {
   const f = fixture();
   try {

@@ -2,9 +2,9 @@ import type { OutgoingHttpHeaders } from 'node:http';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { homedir } from 'node:os';
 import { DomainError } from '@aether/kernel';
-import { scanLocalSessions } from '../services/local-sessions.js';
-import { createSessionHub, type SessionChange } from '../services/session-changes.js';
-import { runningSpeech } from '../services/session-speech.js';
+import { scanLocalSessions } from '../services/runtime/local-sessions.js';
+import { createSessionHub, type SessionChange } from '../services/sessions/session-changes.js';
+import { runningSpeech } from '../services/sessions/session-speech.js';
 import { requireOperator, type RouteContext } from './context.js';
 
 const SCAN_MS = 2000;

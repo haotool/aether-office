@@ -10,7 +10,7 @@ const CASES: [string, string[]][] = [
   ['npm test -- --watch=false', ['test']],
   ['yarn test', ['test']],
   ['npx vitest run tests/aether/foo.test.ts', ['test']],
-  ['pnpm exec playwright test e2e/kpi.spec.ts', ['test']],
+  ['pnpm exec playwright test e2e/scene/kpi.spec.ts', ['test']],
   ['vitest', ['test']],
   ['pytest -x tests/', ['test']],
   ['python3 -m pytest tests', ['test']],

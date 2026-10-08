@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vites
 import type { Agent } from '../../packages/contracts/src/index.js';
 import { installBrowserEnv, removeBrowserEnv, type BrowserEnv } from './fixtures/browser-env.js';
 import { renderHook } from './fixtures/mini-react.js';
-import type { Turn } from '../../apps/web/src/features/turn-groups.js';
+import type { Turn } from '../../apps/web/src/features/conversation/turn-groups.js';
 
 // Product hooks on a synthetic hook runtime (fixtures/mini-react.ts): the repo's vitest has no DOM environment.
 // phone.ts reads window.matchMedia as it loads, so the browser exists before the modules do and lasts for the file.
@@ -13,12 +13,14 @@ const web = await vi.hoisted(async () => {
 });
 vi.mock(web.react, () => import('./fixtures/mini-react.js'));
 
-const { useCompactions } = await import('../../apps/web/src/features/use-compactions.js');
+const { useCompactions } =
+  await import('../../apps/web/src/features/conversation/use-compactions.js');
 const { firstUnreadId, blockId, promptId, turnIds, useFreshIds } =
-  await import('../../apps/web/src/features/use-fresh-ids.js');
-const { useSeats } = await import('../../apps/web/src/features/use-seats.js');
-const { useConvDensity } = await import('../../apps/web/src/features/use-conv-density.js');
-const { usePhone, usePhoneAny } = await import('../../apps/web/src/phone.js');
+  await import('../../apps/web/src/features/conversation/use-fresh-ids.js');
+const { useSeats } = await import('../../apps/web/src/features/office/use-seats.js');
+const { useConvDensity } =
+  await import('../../apps/web/src/features/conversation/use-conv-density.js');
+const { usePhone, usePhoneAny } = await import('../../apps/web/src/lib/preferences/phone.js');
 
 beforeEach(() => {
   vi.useFakeTimers();

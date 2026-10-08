@@ -5,7 +5,7 @@ import { expect, it } from 'vitest';
 import {
   resetLocalSessionCache,
   scanLocalSessions,
-} from '../../apps/control/src/services/local-sessions.js';
+} from '../../apps/control/src/services/runtime/local-sessions.js';
 import { assistantLine, textBlock, toolBlock, writeSubagent } from './fixtures/claude-subagents.js';
 import { timingTests } from './timing.js';
 

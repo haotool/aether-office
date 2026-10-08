@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { summarizeFrames } from '../../packages/office-scene/src/perf.js';
+import { summarizeFrames } from '../../packages/office-scene/src/perf/perf.js';
 
 it('summarises measured frame times without inventing numbers', () => {
   expect(summarizeFrames([])).toBeNull();

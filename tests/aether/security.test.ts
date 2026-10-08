@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { createServer } from '../../apps/control/src/server.js';
-import { revoke } from '../../apps/control/src/services/identity.js';
+import { revoke } from '../../apps/control/src/services/domain/identity.js';
 import { command, fixture } from './fixture.js';
+import { injectHost, injectOrigin } from './test-origins.js';
 const clean: (() => void | Promise<unknown>)[] = [];
 afterEach(async () => {
   for (const fn of clean.splice(0).reverse()) await fn();
@@ -9,7 +10,7 @@ afterEach(async () => {
 function setup() {
   const f = fixture();
   clean.push(() => f.control.close());
-  const app = createServer(f.control, { origin: 'http://127.0.0.1:4310' });
+  const app = createServer(f.control, { origin: injectOrigin });
   clean.push(() => app.close());
   return { ...f, app };
 }
@@ -21,7 +22,7 @@ describe('server trust boundaries', () => {
       role: 'viewer',
       projectIds: [f.projectId],
     });
-    const host = { host: '127.0.0.1:4310' };
+    const host = { host: injectHost };
     expect((await f.app.inject({ url: '/api/projects', headers: host })).statusCode).toBe(401);
     expect(
       (
@@ -60,7 +61,7 @@ describe('server trust boundaries', () => {
   });
   it('cookie mutation requires CSRF; logout invalidates the existing session', async () => {
     const f = setup();
-    const host = { host: '127.0.0.1:4310' };
+    const host = { host: injectHost };
     const login = await f.app.inject({
       method: 'POST',
       url: '/api/login',
@@ -95,7 +96,7 @@ describe('server trust boundaries', () => {
   });
   it('a signed-in browser whose page lost its CSRF token gets a new one, and the old one stops working', async () => {
     const f = setup();
-    const host = { host: '127.0.0.1:4310' };
+    const host = { host: injectHost };
     const login = await f.app.inject({
       method: 'POST',
       url: '/api/login',
@@ -109,7 +110,7 @@ describe('server trust boundaries', () => {
       f.app.inject({
         method: 'POST',
         url: '/api/session/csrf',
-        headers: { ...headers, origin: 'http://127.0.0.1:4310', ...extra },
+        headers: { ...headers, origin: injectOrigin, ...extra },
         payload: {},
       });
     const write = (csrf: string) =>
@@ -134,7 +135,7 @@ describe('server trust boundaries', () => {
         await f.app.inject({
           method: 'POST',
           url: '/api/session/csrf',
-          headers: { ...host, origin: 'http://127.0.0.1:4310' },
+          headers: { ...host, origin: injectOrigin },
           payload: {},
         })
       ).statusCode,
@@ -191,7 +192,7 @@ describe('server trust boundaries', () => {
   });
   it('caps payload size and refuses unknown command fields', async () => {
     const f = setup();
-    const headers = { host: '127.0.0.1:4310', authorization: `Bearer ${f.owner.token}` };
+    const headers = { host: injectHost, authorization: `Bearer ${f.owner.token}` };
     const huge = await f.app.inject({
       method: 'POST',
       url: '/api/commands',
@@ -210,7 +211,7 @@ describe('server trust boundaries', () => {
 
   it('limits how often one address may call the liveness probe', async () => {
     const f = setup();
-    const probe = () => f.app.inject({ url: '/health', headers: { host: '127.0.0.1:4310' } });
+    const probe = () => f.app.inject({ url: '/health', headers: { host: injectHost } });
     for (let i = 0; i < 120; i++) expect((await probe()).statusCode).toBe(200);
     const limited = await probe();
     expect(limited.statusCode).toBe(429);

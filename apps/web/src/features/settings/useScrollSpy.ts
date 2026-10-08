@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLatest } from '../../use-latest.js';
+import { useLatest } from '../../hooks/use-latest.js';
 
 /**
  * The last of the sections that reach the upper part of the scrolling page (its `s-<id>` element), so the navigation

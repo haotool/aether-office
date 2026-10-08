@@ -29,9 +29,9 @@ async function load(
     onLine: true,
   });
   // The modules are new, so their language tables are empty: a language change waits for its table unless it is there.
-  const { loadLocale } = await import('../../apps/web/src/i18n.js');
+  const { loadLocale } = await import('../../apps/web/src/lib/i18n/i18n.js');
   await Promise.all([loadLocale('en'), loadLocale('zh-TW')]);
-  return (await import('../../apps/web/src/state.js')).usePreferences;
+  return (await import('../../apps/web/src/lib/preferences/state.js')).usePreferences;
 }
 const stored = () =>
   JSON.parse(env.storage.getItem(KEY)!) as { state: Record<string, unknown>; version: number };

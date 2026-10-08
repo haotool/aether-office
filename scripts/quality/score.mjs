@@ -52,6 +52,7 @@ async function main() {
       report: { type: 'boolean', default: false },
       check: { type: 'boolean', default: false },
       release: { type: 'boolean', default: false },
+      gates: { type: 'string' },
       out: { type: 'string' },
       target: { type: 'string' },
       details: { type: 'string', default: '5' },
@@ -60,7 +61,7 @@ async function main() {
   if (values.release) {
     if (values.report || values.check || values.json)
       throw new Error('--release cannot be combined with --report, --check, or --json');
-    const report = await scoreRelease(root);
+    const report = await scoreRelease(root, { gatesPath: values.gates ?? undefined });
     const table = renderReleaseTable(report);
     if (values.out) {
       const outPath = path.resolve(root, values.out);
@@ -79,6 +80,7 @@ async function main() {
       }
     }
     if (report.evidenceError) console.error(report.evidenceError);
+    if (report.gatesError) console.error(report.gatesError);
     console.log(table);
     if (!report.pass) process.exitCode = 1;
     return;

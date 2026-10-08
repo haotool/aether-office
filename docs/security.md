@@ -150,7 +150,7 @@ rebuilt still finds its scripts, and so that the page can ask before it updates.
   build time), in one cache named for a hash of those files. Old caches are deleted when a new version takes over.
 - **What it never caches or touches:** anything under `/api/` (sessions, transcripts, tokens, the event stream), `/health`, the
   characters, icons, any request that is not a `GET`, any other origin. These requests do not enter the worker's fetch
-  handling at all, so no session data is stored on the device by it (`tests/aether/pwa.test.ts` and `e2e/pwa.spec.ts` check
+  handling at all, so no session data is stored on the device by it (`tests/aether/pwa.test.ts` and `e2e/perf/pwa.spec.ts` check
   the rules and the stored keys).
 - **Updates:** a new worker waits; the page shows "A new version is ready" and takes it over only when the person taps
   Reload (`skipWaiting` is never called on its own).
@@ -174,7 +174,7 @@ The SQLite file does not grow without bound. Once an hour (and at start) the con
 events and their outbox rows older than 90 days (the newest event of every project always stays; a client whose cursor is older
 gets `SNAPSHOT_REQUIRED` and refetches), command receipts older than 90 days, runner report ids older than 30 days for runs that
 are over, GitHub delivery ids older than 30 days and expired browser sessions. The constants are `RETENTION` in
-`apps/control/src/services/retention.ts`. Each schema migration first writes a full `control.sqlite.pre-migration-*.sqlite` copy
+`apps/control/src/services/domain/retention.ts`. Each schema migration first writes a full `control.sqlite.pre-migration-*.sqlite` copy
 (mode 0600); the newest three are kept.
 
 ## Hardening checklist for a LAN deployment

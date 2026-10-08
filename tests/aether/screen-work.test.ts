@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
-import { hashText } from '../../packages/office-scene/src/hash.js';
-import { elapsedLabel, kindOf } from '../../packages/office-scene/src/screen-work.js';
+import { hashText } from '../../packages/office-scene/src/environment/hash.js';
+import { elapsedLabel, kindOf } from '../../packages/office-scene/src/screen/screen-work.js';
 
 it('sorts a tool call into the kind of work its row is drawn as', () => {
   const kind = (tool: string, target: string | null = null) => kindOf({ tool, target });

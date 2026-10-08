@@ -9,7 +9,7 @@ import {
   shortTarget,
   toolSummaryText,
   type Entry,
-} from '../../apps/web/src/features/turn-groups.js';
+} from '../../apps/web/src/features/conversation/turn-groups.js';
 
 const e = (role: Entry['role'], text: string, extra: Partial<Entry> = {}): Entry => ({
   at: null,

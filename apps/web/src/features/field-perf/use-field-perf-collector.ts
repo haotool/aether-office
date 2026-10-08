@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { usePhone } from '../../phone.js';
+import { usePhone } from '../../lib/preferences/phone.js';
 import { attachFieldPerfHooks, FieldPerfCollector } from './collector.js';
 
 export function useFieldPerfCollector() {

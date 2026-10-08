@@ -3,7 +3,7 @@ import {
   availableFromVmStat,
   cpuBusy,
   systemMetrics,
-} from '../../apps/control/src/services/system-metrics.js';
+} from '../../apps/control/src/services/platform/system-metrics.js';
 
 it('computes CPU busy share between samples and reads real memory and disk', async () => {
   expect(cpuBusy({ idle: 100, total: 200 }, { idle: 150, total: 300 })).toBe(50);

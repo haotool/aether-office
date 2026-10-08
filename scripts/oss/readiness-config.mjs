@@ -38,7 +38,7 @@ export const FORBIDDEN_TRACKED = [
   [/(^|\/)dist\//, 'build output'],
   [/^\.data\//, 'runtime data directory'],
   [/(^|\/)\.env(\.(?!example$).*)?$/, 'environment file'],
-  [/^\.(claude|cursor|codex|aider|superclaude)(\/|$)/, 'agent configuration or worktrees'],
+  [/^\.(claude|cursor|codex|omc|aider|superclaude)(\/|$)/, 'agent configuration or worktrees'],
   [/\.blend1?$/, "Blender file (embeds the builder's paths)"],
   [/(^|\/)\.DS_Store$/, 'macOS metadata'],
   [/^\.(tools|research)\//, 'local tooling'],

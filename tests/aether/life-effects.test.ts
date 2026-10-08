@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Seat } from '../../packages/office-scene/src/director.js';
+import type { Seat } from '../../packages/office-scene/src/environment/director.js';
 import { CELLS } from '../../packages/office-scene/src/life/effects/types.js';
 import { EFFECTS, EFFECT_IDS } from '../../packages/office-scene/src/life/effects/index.js';
 import {

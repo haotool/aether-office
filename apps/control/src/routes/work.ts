@@ -1,7 +1,7 @@
-import { diagnoseWork } from '../services/diagnostics.js';
-import { postResult } from '../services/integrations.js';
-import { listIntegrations } from '../services/jobs.js';
-import { listReviewComments } from '../services/review-comments.js';
+import { diagnoseWork } from '../services/platform/diagnostics.js';
+import { postResult } from '../services/domain/integrations.js';
+import { listIntegrations } from '../services/work/jobs.js';
+import { listReviewComments } from '../services/reviews/review-comments.js';
 import { DomainError, authorize } from '@aether/kernel';
 import type { RouteContext } from './context.js';
 

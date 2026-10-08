@@ -2,9 +2,12 @@ import { expect, it } from 'vitest';
 import type { ShaderMaterial } from 'three';
 import { createBeam } from '../../packages/office-scene/src/squad/beam-shader.js';
 import { createZoneDecal } from '../../packages/office-scene/src/squad/zone-shader.js';
-import { createMaterials } from '../../packages/office-scene/src/building-materials.js';
-import { gardenMaterial, pollenMaterial } from '../../packages/office-scene/src/garden-material.js';
-import { stalkMaterial } from '../../packages/office-scene/src/stalk-materials.js';
+import { createMaterials } from '../../packages/office-scene/src/environment/building-materials.js';
+import {
+  gardenMaterial,
+  pollenMaterial,
+} from '../../packages/office-scene/src/core/garden-material.js';
+import { stalkMaterial } from '../../packages/office-scene/src/core/stalk-materials.js';
 
 // The soft additive gradients take three's dithering last, on the colour that is blended (see dither.ts). A material that
 // loses the flag, or the two chunks, would band again without anything failing: this pins the wiring.

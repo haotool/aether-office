@@ -27,7 +27,7 @@ const client = {
 vi.mock(web.query, () => ({ useQueryClient: () => client }));
 
 const { useLink, useLinkLive, useSessionStream } =
-  await import('../../apps/web/src/features/use-session-stream.js');
+  await import('../../apps/web/src/hooks/use-session-stream.js');
 
 let env: BrowserEnv;
 const latest = () => FakeEventSource.all.at(-1)!;

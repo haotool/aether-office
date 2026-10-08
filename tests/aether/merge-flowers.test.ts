@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { gardenOf } from '../../packages/office-scene/src/garden-geometry.js';
-import { MAX_MERGE_FLOWERS, mergeStands } from '../../packages/office-scene/src/merge-flowers.js';
-import { MAX_FLOWERS } from '../../packages/office-scene/src/garden-material.js';
-import { layoutStalk, type StalkCommit } from '../../packages/office-scene/src/stalk-layout.js';
+import { gardenOf } from '../../packages/office-scene/src/core/garden-geometry.js';
+import {
+  MAX_MERGE_FLOWERS,
+  mergeStands,
+} from '../../packages/office-scene/src/core/merge-flowers.js';
+import { MAX_FLOWERS } from '../../packages/office-scene/src/core/garden-material.js';
+import {
+  layoutStalk,
+  type StalkCommit,
+} from '../../packages/office-scene/src/core/stalk-layout.js';
 
 const NOW = 1_800_000_000_000;
 /** A linear history with a second parent (a merge) on every `every`th commit. */

@@ -1,6 +1,9 @@
 import { expect, it } from 'vitest';
 import type { Layout } from '../../packages/contracts/src/index.js';
-import { withoutObject, withPatchedObject } from '../../apps/web/src/features/layout-edit.js';
+import {
+  withoutObject,
+  withPatchedObject,
+} from '../../apps/web/src/features/office/layout-edit.js';
 
 const layout = {
   schemaVersion: 2,

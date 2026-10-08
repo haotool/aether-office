@@ -7,11 +7,14 @@ import {
   SHAPE_RANGE,
   genomeOf,
   spreadOf,
-} from '../../packages/office-scene/src/flower-genome.js';
-import { MAX_MERGE_FLOWERS } from '../../packages/office-scene/src/merge-flowers.js';
-import { speciesName } from '../../packages/office-scene/src/flower-names.js';
-import { gardenOf } from '../../packages/office-scene/src/garden-geometry.js';
-import { layoutStalk, type StalkCommit } from '../../packages/office-scene/src/stalk-layout.js';
+} from '../../packages/office-scene/src/flowers/flower-genome.js';
+import { MAX_MERGE_FLOWERS } from '../../packages/office-scene/src/core/merge-flowers.js';
+import { speciesName } from '../../packages/office-scene/src/flowers/flower-names.js';
+import { gardenOf } from '../../packages/office-scene/src/core/garden-geometry.js';
+import {
+  layoutStalk,
+  type StalkCommit,
+} from '../../packages/office-scene/src/core/stalk-layout.js';
 
 const NOW = 1_800_000_000_000;
 const input = (seed: string, extra = {}) => ({

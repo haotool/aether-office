@@ -4,9 +4,9 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, expect, it } from 'vitest';
 import type { LocalSession } from '../../packages/contracts/src/index.js';
 import { createServer } from '../../apps/control/src/server.js';
-import { revoke } from '../../apps/control/src/services/identity.js';
-import { resetLocalSessionCache } from '../../apps/control/src/services/local-sessions.js';
-import { diffSessions } from '../../apps/control/src/services/session-changes.js';
+import { revoke } from '../../apps/control/src/services/domain/identity.js';
+import { resetLocalSessionCache } from '../../apps/control/src/services/runtime/local-sessions.js';
+import { diffSessions } from '../../apps/control/src/services/sessions/session-changes.js';
 import { fixture } from './fixture.js';
 import { eventually, freePort } from './timing.js';
 

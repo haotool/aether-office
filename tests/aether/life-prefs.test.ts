@@ -3,7 +3,7 @@ import {
   migratePreferences,
   normalizeLife,
   PREFS_VERSION,
-} from '../../apps/web/src/prefs-migrate.js';
+} from '../../apps/web/src/lib/preferences/prefs-migrate.js';
 import {
   DEFAULT_LIFE_PREFS,
   LIFE_CATEGORIES,

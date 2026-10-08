@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { Control } from '../../apps/control/src/control.js';
 import { createServer } from '../../apps/control/src/server.js';
-import { enroll, claim } from '../../apps/control/src/services/runners.js';
+import { enroll, claim } from '../../apps/control/src/services/runtime/runners.js';
 import { Runner } from '../../apps/runner/src/runner.js';
 import { NativeExecutor } from '../../apps/runner/src/native.js';
 import { Journal } from '../../apps/runner/src/journal.js';

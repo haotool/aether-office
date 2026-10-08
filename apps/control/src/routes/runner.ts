@@ -1,13 +1,19 @@
-import { approvalSent, pollApproval, requestApproval } from '../services/approvals.js';
-import { redeemInvitation } from '../services/invitations.js';
-import { claimJob, reportJob } from '../services/jobs.js';
-import { reportObservation } from '../services/observations.js';
-import { claim, enroll, heartbeat, report, sessionCredential } from '../services/runners.js';
+import { approvalSent, pollApproval, requestApproval } from '../services/permissions/approvals.js';
+import { redeemInvitation } from '../services/remote/invitations.js';
+import { claimJob, reportJob } from '../services/work/jobs.js';
+import { reportObservation } from '../services/domain/observations.js';
+import {
+  claim,
+  enroll,
+  heartbeat,
+  report,
+  sessionCredential,
+} from '../services/runtime/runners.js';
 import {
   claimTerminalCommand,
   reportTerminalCommand,
   reportTerminalSnapshot,
-} from '../services/terminals.js';
+} from '../services/platform/terminals.js';
 import { terminalProfileSchema, verifierSchema } from '@aether/contracts';
 import { DomainError } from '@aether/kernel';
 import { z } from 'zod';

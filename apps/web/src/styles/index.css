@@ -2,67 +2,68 @@
  * The web app's stylesheet, in cascade order: tokens first, then the desktop layers, then the touch and phone layers
  * (which win over the desktop sizes). Add a rule to the file of the thing it styles; a value comes from tokens.css.
  *
- *   tokens        every color, size, space, radius and layer (the only file that may hold a raw value)
- *   base          reset and typography
+ *   core/tokens   every color, size, space, radius and layer (the only file that may hold a raw value)
+ *   core/base     reset and typography
  *   shell         top bar, sidebar, connection state
- *   office        the office page, 3D shell, toolbar, labels, team strip
- *   session-panel the session panel: feed and conversation column (the phone sheet is phone-sheet); panel-resize its handle and rail,
+ *   shell/office  the office page, 3D shell, toolbar, labels, team strip
+ *   session       the session panel: feed and conversation column (the phone sheet is phone/phone-sheet); panel-resize its handle and rail,
  *                 session-feed its feed rows, squad the squad's tree, strip and cards, transcript-tools code blocks and tool chips, transcript-markdown the rendered reply, transcript-notices notice chips, find and day lines
- *   controls      badges and buttons
+ *   session/controls badges and buttons
  *   pages, forms, views, login   the pages and their forms
- *   breakpoints   the desktop sizes (wide, narrow, tablet)
- *   workbench ... quick-open     features: the scene HUD and speech bubbles, the character menu and its marks (character-menu), telemetry, transcript, git, sessions, clock out, approvals, quick open
- *   settings-kit, settings-layout   Settings: the row kit (switch, segmented, chips, commands) and the page (navigation, phone list)
- *   touch-targets ... phone-density   the touch and phone layers (UI rules in AGENTS.md)
+ *   pages/breakpoints   the desktop sizes (wide, narrow, tablet)
+ *   pages/workbench ... workspace/quick-open     features: the scene HUD and speech bubbles, the character menu and its marks (character-menu), telemetry, transcript, git, sessions, clock out, approvals, quick open
+ *   settings      Settings: the row kit (switch, segmented, chips, commands) and the page (navigation, phone list)
+ *   phone         the touch and phone layers (UI rules in AGENTS.md)
  */
-@import url('./tokens.css');
-@import url('./base.css');
-@import url('./shell.css');
-@import url('./office.css');
-@import url('./session-panel.css');
-@import url('./panel-resize.css');
-@import url('./session-feed.css');
-@import url('./squad.css');
-@import url('./controls.css');
-@import url('./pages.css');
-@import url('./forms.css');
-@import url('./views.css');
-@import url('./login.css');
-@import url('./breakpoints.css');
-@import url('./workbench.css');
-@import url('./scene-hud.css');
-@import url('./scene-pips.css');
-@import url('./scene-speech.css');
-@import url('./name-tag.css');
-@import url('./character-menu.css');
-@import url('./telemetry.css');
-@import url('./kpi.css');
-@import url('./kpi-charts.css');
-@import url('./transcript.css');
-@import url('./transcript-tools.css');
-@import url('./transcript-markdown.css');
-@import url('./transcript-notices.css');
-@import url('./composer.css');
-@import url('./git.css');
-@import url('./sessions.css');
-@import url('./models.css');
-@import url('./clock-out.css');
-@import url('./permission-card.css');
-@import url('./quick-open.css');
-@import url('./first-run.css');
-@import url('./settings-kit.css');
-@import url('./settings-content.css');
-@import url('./settings-layout.css');
-@import url('./touch-targets.css');
-@import url('./compact-desktop.css');
-@import url('./phone-drawer.css');
-@import url('./phone-office.css');
-@import url('./phone-office-scene.css');
-@import url('./phone-office-fit.css');
-@import url('./phone-sheet.css');
-@import url('./scene-overlays.css');
-@import url('./scene-intro.css');
-@import url('./folds.css');
-@import url('./phone-pages.css');
-@import url('./phone-density.css');
-@import url('./phone-glass.css');
+@import url('./core/tokens.css');
+@import url('./core/base.css');
+@import url('./shell/shell.css');
+@import url('./shell/office.css');
+@import url('./session/session-panel.css');
+@import url('./session/panel-resize.css');
+@import url('./session/session-feed.css');
+@import url('./session/squad-tree.css');
+@import url('./session/squad-strip.css');
+@import url('./session/controls.css');
+@import url('./pages/pages.css');
+@import url('./pages/forms.css');
+@import url('./pages/views.css');
+@import url('./pages/login.css');
+@import url('./pages/breakpoints.css');
+@import url('./pages/workbench.css');
+@import url('./scene/scene-hud.css');
+@import url('./scene/scene-pips.css');
+@import url('./scene/scene-speech.css');
+@import url('./scene/name-tag.css');
+@import url('./scene/character-menu.css');
+@import url('./workspace/telemetry.css');
+@import url('./scene/kpi.css');
+@import url('./scene/kpi-charts.css');
+@import url('./transcript/transcript.css');
+@import url('./transcript/transcript-tools.css');
+@import url('./transcript/transcript-markdown.css');
+@import url('./transcript/transcript-notices.css');
+@import url('./transcript/composer.css');
+@import url('./workspace/git.css');
+@import url('./workspace/sessions.css');
+@import url('./workspace/models.css');
+@import url('./workspace/clock-out.css');
+@import url('./workspace/permission-card.css');
+@import url('./workspace/quick-open.css');
+@import url('./workspace/first-run.css');
+@import url('./settings/settings-kit.css');
+@import url('./settings/settings-content.css');
+@import url('./settings/settings-layout.css');
+@import url('./phone/touch-targets.css');
+@import url('./phone/compact-desktop.css');
+@import url('./phone/phone-drawer.css');
+@import url('./phone/phone-office.css');
+@import url('./phone/phone-office-scene.css');
+@import url('./phone/phone-office-fit.css');
+@import url('./phone/phone-sheet.css');
+@import url('./scene/scene-overlays.css');
+@import url('./scene/scene-intro.css');
+@import url('./phone/folds.css');
+@import url('./phone/phone-pages.css');
+@import url('./phone/phone-density.css');
+@import url('./phone/phone-glass.css');

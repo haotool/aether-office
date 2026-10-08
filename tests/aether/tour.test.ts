@@ -7,7 +7,7 @@ import {
   tourReducer,
   type TourAction,
   type TourState,
-} from '../../apps/web/src/tour.js';
+} from '../../apps/web/src/lib/navigation/tour.js';
 
 const run = (actions: TourAction[], from: TourState = idle) =>
   actions.reduce((s, a) => tourReducer(s, a), from);

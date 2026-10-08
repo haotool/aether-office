@@ -2,8 +2,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { Control } from '../apps/control/src/control.js';
-import { secret } from '../apps/control/src/services/identity.js';
-import { enroll } from '../apps/control/src/services/runners.js';
+import { secret } from '../apps/control/src/services/domain/identity.js';
+import { enroll } from '../apps/control/src/services/runtime/runners.js';
 type Identity = ReturnType<Control['authenticate']>;
 
 const DEMO_PEOPLE = [

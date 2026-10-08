@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { readProcessTable } from '../../apps/control/src/services/agent-processes.js';
-import { clockOutSessions } from '../../apps/control/src/services/clock-out.js';
+import { readProcessTable } from '../../apps/control/src/services/runtime/agent-processes.js';
+import { clockOutSessions } from '../../apps/control/src/services/runtime/clock-out.js';
 import type { AttributedSession } from '../../packages/contracts/src/index.js';
 import { alive, startReady, until } from './process-fixtures.js';
 

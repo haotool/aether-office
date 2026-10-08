@@ -193,7 +193,7 @@ squad.
 There are two unrelated "versions" on a layout. `layouts.version` (the table column) is an optimistic-lock counter: it
 rises by one on every save and has nothing to do with the format. `schemaVersion` inside the JSON `data` is the format, and
 `layoutSchema` (`packages/contracts/src/core.ts`) is the only gate for it: the save command validates with it, the snapshot
-parses every stored layout with it on read (`apps/control/src/services/snapshot.ts`), and the editor's import uses it.
+parses every stored layout with it on read (`apps/control/src/services/domain/snapshot.ts`), and the editor's import uses it.
 
 A new version 3 is added in one change, in this order:
 

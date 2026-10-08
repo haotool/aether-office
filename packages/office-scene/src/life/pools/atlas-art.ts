@@ -1,7 +1,7 @@
 import { CELLS, type CellId } from '../effects/types.js';
 import { SIGN_ART } from './atlas-art-signs.js';
 import { ATLAS_COLUMNS, CELL_PX, C, blob, label, rounded, soft, type Ctx } from './atlas-draw.js';
-import { context2d } from '../../canvas-2d.js';
+import { context2d } from '../../core/canvas-2d.js';
 
 export { ATLAS_COLUMNS, CELL_PX } from './atlas-draw.js';
 export const ATLAS_ROWS = Math.ceil(CELLS.length / ATLAS_COLUMNS);

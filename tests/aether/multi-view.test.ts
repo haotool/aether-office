@@ -3,8 +3,8 @@ import {
   MAX_FEEDS,
   chooseFeeds,
   feedCapacity,
-} from '../../packages/office-scene/src/multi-view.js';
-import { chooseShot, pacedSeconds } from '../../packages/office-scene/src/director.js';
+} from '../../packages/office-scene/src/core/multi-view.js';
+import { chooseShot, pacedSeconds } from '../../packages/office-scene/src/environment/director.js';
 import type { Agent } from '../../packages/contracts/src/index.js';
 
 const agent = (id: string, activity: Agent['activity']) =>

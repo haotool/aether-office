@@ -1,8 +1,8 @@
 // Real-GPU perf matrix: scene variants through the perf probe on one device profile, interleaved and repeated, medians.
 //
-//   node scripts/perf-matrix.mjs --url http://127.0.0.1:4320 --cases 'base=;squad=squad=8&tools=900' \
+//   node --import tsx scripts/perf-matrix.mjs --url http://127.0.0.1:4320 --cases 'base=;squad=squad=8&tools=900' \
 //        [--quality balanced|high|low] [--size 1440x900] [--dpr 2] [--throttle 4] [--phone] [--rounds 3] [--frames 240]
-//        [--motion] [--hitch] [--token-file .data/e2e-session.json] [--out evidence/perf-matrix.json]
+//        [--motion] [--hitch] [--network slow-4g] [--token-file .data/e2e-session.json] [--out evidence/perf-matrix.json]
 //
 // A case is `name=query` (the query is added to `/?perf=N`). Every round mounts every case once, in turn (A, B, A, B), so a
 // loaded machine hits all alike. `--phone` is the phone profile: compact layout, beanstalk off, touch. `--throttle N` slows the CPU
@@ -12,6 +12,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { chromium } from '@playwright/test';
+import { applyNetworkProfile } from './mobile-perf/network.ts';
 
 const flags = (argv) => {
   const out = {};
@@ -125,10 +126,9 @@ async function mount(browser, query) {
     },
     { q: quality, panel: Boolean(args.phone) },
   );
-  if (throttle > 1) {
-    const cdp = await context.newCDPSession(page);
-    await cdp.send('Emulation.setCPUThrottlingRate', { rate: throttle });
-  }
+  const cdp = await context.newCDPSession(page);
+  if (throttle > 1) await cdp.send('Emulation.setCPUThrottlingRate', { rate: throttle });
+  if (typeof args.network === 'string') await applyNetworkProfile(cdp, args.network);
   await page.goto(`${base}/?perf=${frames}${query ? `&${query}` : ''}`);
   await page.getByLabel(/access token|存取權杖/i).fill(token);
   await page.getByRole('button', { name: /enter office|進入辦公室/i }).click();
@@ -222,6 +222,7 @@ const report = {
   quality,
   viewport: { width, height, dpr },
   throttle,
+  network: typeof args.network === 'string' ? args.network : 'none',
   phone: Boolean(args.phone),
   rounds,
   framesPerRun: frames,

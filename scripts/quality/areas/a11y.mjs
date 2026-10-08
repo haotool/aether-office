@@ -78,7 +78,7 @@ function axeRule(repo) {
   if (!file)
     return skipped(
       'axe',
-      'axe violations (e2e/accessibility.spec.ts)',
+      'axe violations (e2e/ui/accessibility.spec.ts)',
       20,
       'not run: no recorded result (expected evidence/axe-results.json with { "violations": [...] })',
     );

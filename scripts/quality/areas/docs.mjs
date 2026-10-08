@@ -124,7 +124,7 @@ export function docs(repo, { readiness = [] } = {}) {
   const links = readiness.find((r) => r.id === 'doc-links');
   const ledger = runCommand(
     process.execPath,
-    ['node_modules/tsx/dist/cli.mjs', 'scripts/final-verification.ts', '--check'],
+    ['node_modules/tsx/dist/cli.mjs', 'scripts/verification-ledger.ts', '--check'],
     { cwd: repo.root },
   );
   const notices = runCommand(process.execPath, ['scripts/oss/third-party-notices.mjs', '--check'], {

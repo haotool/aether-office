@@ -5,7 +5,7 @@ import {
   noteAdoption,
   unclaimedRepos,
   type AdoptTracker,
-} from '../../apps/web/src/adoptProjects.js';
+} from '../../apps/web/src/features/integrations/adoptProjects.js';
 
 const session = (main: string | null, projectId: string | null): AttributedSession =>
   ({

@@ -1,11 +1,14 @@
 # Office Life: squads, signals and the first visit
 
+- Status: partly implemented
+- Date: 2026-10-08
+
 > **Design record.** This is the specification the office-life work was built from, kept for the reasoning and the budgets. It
 > was written before the code and some details moved while building; for how the features behave today read
-> [features](../features.md) and the [design system](../design-system.md), and for what is verified the ledger.
+> [features](../features.md) and the [design system](../design-system.md), and for what is verified the verification ledger.
 
-Status: design; what is built is tracked per iteration in the verification ledger (`OFFICE-LIFE-*` in `docs/verification/features.json`). Squads in the scene (§2, §4.1 to §4.4, §4.6, §4.10), the puppet strings (§4.5) and the hand-over with its stamp (§4.6 to §4.8) are built (I4, I5); the registry and the signals are tracked per iteration. Owner: the 3D office (`packages/office-scene`) with server work in `apps/control`.
-Work plan: [office-life-iterations.md](office-life-iterations.md).
+What is built is tracked in the verification ledger (`OFFICE-LIFE-*` in `docs/verification/features.json`). Squads in the scene (§2, §4.1 to §4.4, §4.6, §4.10), the puppet strings (§4.5) and the hand-over with its stamp (§4.6 to §4.8) are built (I4, I5); the registry and the signals are tracked per iteration. Owner: the 3D office (`packages/office-scene`) with server work in `apps/control`.
+Work plan: [office-life-work-plan.md](office-life-work-plan.md).
 
 This spec covers three things that each make the office easier to read:
 
@@ -37,14 +40,14 @@ expose, the layout model, the module boundaries, the budgets and the tests.
 
 | Piece | Where | Relevance |
 | --- | --- | --- |
-| Subagents as observed members `local:<key>:sub:<id>`, always `working`, labelled by type | `apps/web/src/localSessions.ts` `sessionsToAgents` | They get **ordinary desks in the first free slot of the floor** (`mergeLayout`, `desk-obs-*`). A subagent can end up across the room from its parent, so the relationship is hard to read. This is the core problem. |
+| Subagents as observed members `local:<key>:sub:<id>`, always `working`, labelled by type | `apps/web/src/lib/sessions/localSessions.ts` `sessionsToAgents` | They get **ordinary desks in the first free slot of the floor** (`mergeLayout`, `desk-obs-*`). A subagent can end up across the room from its parent, so the relationship is hard to read. This is the core problem. |
 | Tethers parent→child (violet fat lines, one draw) | `office-model.ts` `tethersOf`, `interplay.ts` `relationEdges`, `RelationLines.tsx` | Too faint to read as a relationship; full strength only when hovered. |
 | `sub` pulses (a light stream on a Bezier, the camera's `-15` score) | `office-model.ts` `pulsesOf`, `CommLinks.tsx`, `director.ts` | Reused as the director's "squad" shot input. |
 | Branch beams desk→core (Tube + packets) | `BranchBeams.tsx`, `scene-markers.ts` | Same visual language as the squad beam, but the squad beam must not be confused with it (§4.4). |
 | Departure: stand_up → wave → walk the nav-grid path into the core → sink | `departure.ts`, `Departing.tsx`, kernel `navigation.ts` | The template for arrival, delivery and dismissal walks (§4.6). |
 | Clips: idle, walk, turn, sit_down, stand_up, seated_idle, typing, reading, thinking, scratch_head, reviewing, testing, waiting_permission, waiting_peer, error, cheer, celebrate, sleeping, stretch, sip, wave, shrug, look_around, nod | `animal-states.ts` `CLIPS`, `tools/blender/animal_clips.py` | Enough for every storyboard frame (§4.8). Sockets `head_socket`, `hand_socket_L/R` already exist in the rig (`animal_rig.py` L65-66, validated by `validate-assets.mjs`). They anchor the strings. |
 | Director, shot camera, comfort rules (one slow dolly per shot, level horizon, no zoom, cut instead of long flights, `MIN_DISTANCE` 4, `FLY_MAX` 6) | `director.ts`, `shot-camera.ts`, `SceneCamera.tsx`, `scene-navigation.ts` | The intro tour obeys the same rules (§6). |
-| Zone tour (8 stops, 4 s each, pause/skip/stop) | `apps/web/src/tour.ts`, `e2e/tour.spec.ts` | Kept. The new intro is a different feature and is not a replacement (§6.7). |
+| Zone tour (8 stops, 4 s each, pause/skip/stop) | `apps/web/src/lib/navigation/tour.ts`, `e2e/office-life/tour.spec.ts` | Kept. The new intro is a different feature and is not a replacement (§6.7). |
 | Compaction paper→cube effect, attention ring, Zzz rabbit, ghost, jiangshi | `CompactionEffect.tsx`, `DeskGlow.tsx`, `animal-states.ts` | Already "office life". The registry adopts them as rows, so they get the toggles too. |
 | Exploded view switch | `scene-navigation.ts` `toggleExploded`, `scene-geometry.ts` `floorY` | Instant, with no morph. `spreadStalk` rebuilds the tubes. The intro hides the switch under a dip (§6). |
 
@@ -492,7 +495,7 @@ looks again once a second instead of building its lists every frame.
 instanced materials, the strings, the points and the seal) linked inside the first frames of the squad, 17.6 ms of render calls on
 desktop and a worst frame of 33 ms (16.8 ms for the same scene without a squad); `SquadWarm` now builds one hidden copy of each from
 the layer's own factories, so the warm-up that already runs behind the loading cover links them (the strings and points only above
-the low tier), and the first appearance links none (0 ms of linking, worst frame 16.8 ms on desktop; `e2e/office-life-follow-up.spec.ts` fails
+the low tier), and the first appearance links none (0 ms of linking, worst frame 16.8 ms on desktop; `e2e/office-life/office-life-scene-preview.spec.ts` fails
 without it). The life layer needed nothing: its sprite pool is mounted from the start, so its one program is linked at warm-up, and
 looping effects start without a linking render. On the phone profile (4x CPU throttle) the worst frame on first appearance is
 still 100 to 117 ms, and it is not the squad's: the legacy seating of the same 8 characters shows 133 ms, and the 9 programs that
@@ -554,7 +557,7 @@ export function schedule(state: LifeState, signals: readonly LifeSignal[], now: 
 };
 ```
 
-The derivation lives in `apps/web/src/features/life-signals.ts`. It diffs successive `LocalSessionsResponse` snapshots
+The derivation lives in `apps/web/src/features/office/life-signals.ts`. It diffs successive `LocalSessionsResponse` snapshots
 (2 s scan) plus the beanstalk commits and UI events, in the same place where `office-model.ts` already derives pulses.
 Scheduling and drawing live in the scene package. The web never decides on an animation, and the scene never parses a
 session.
@@ -673,7 +676,7 @@ command, plus a plain subcommand):
 | R56 | Confetti on every desk in view (at most 40 desks), and the members at the desks in view (at most 24, the same as the confetti dresses) play `celebrate` 0.4 s in, through the pose registry (§5.6). |
 
 How the I8 rows differ from their table lines. An outcome row starts from a `tool.end` signal, which the web makes the first
-time a call's `ok` is known (`apps/web/src/features/life-outcomes.ts`); a call whose `ok` stays null makes nothing, so no
+time a call's `ok` is known (`apps/web/src/features/office/life-outcomes.ts`); a call whose `ok` stays null makes nothing, so no
 outcome effect can start from a guess, and the scheduler drops such a signal for any rule marked `claimsOutcome` as a second
 guard. A start rule reads the `tags` the hook receiver put on the call, never its arguments. Every effect is a joke or a mark
 on the desk; none of them stops, blocks or reports anything.
@@ -1080,7 +1083,7 @@ Edits outside the new folders, and who else is touching those areas:
 | `MemberScreen.tsx`, `screen-*.ts` | **none**: the kernel-panic and pane effects are our own quads in front of the pane | **desk-screens branch** | never edit; read `SEATING.screenY` only |
 | `desk-items.ts` | none; our props avoid its `SLOTS` | behavior branch | if they export slots, read them |
 | `seeded.ts` / `pick.ts` | none (we import `seeded`) | behavior branch changed it | merge after it, keep imports compatible |
-| `apps/web/src/state.ts` | prefs `intro`, `life` | Settings work | additive keys; persisted-store version bump coordinated |
+| `apps/web/src/lib/preferences/state.ts` | prefs `intro`, `life` | Settings work | additive keys; persisted-store version bump coordinated |
 | `SettingsPage.tsx` | one line mounting `OfficeAnimationsSettings.tsx` | **Settings redesign** | our section is its own component; it merges after theirs |
 | `localSessions.ts`, `office-model.ts` | skip `:sub:` desks; `squadsOf`; `life-signals.ts` new file | text pipeline (labels) | additive |
 | `contracts/sessions.ts`, `hook-spool.ts`, `session-discovery.ts` | §7 | **KPI plaques branch** (`session-discovery.ts`, `contracts/index.ts`, `usage-parse.ts`) | merge after KPI and reuse its parser |
@@ -1098,10 +1101,10 @@ Edits outside the new folders, and who else is touching those areas:
 | Honesty | no rule whose effect claims an outcome (R10–R13, R17, R39, R46–R48) fires with `ok === null`; every rule has an aria text in both locales and `decorative: true` | `tests/aether/life-registry.test.ts` |
 | Data | the command-tag table (≥ 60 cases); hook-spool lifecycle (start → tools → stop → 90 s grace); redaction of `label` and `result.summary` | `tests/aether/command-tags.test.ts`, `hook-spool.test.ts`, the security suite |
 | Layout | schema v1/v2 round trips, the squad validation codes, auto placement on crowded floors | `tests/aether/layout*.test.ts` |
-| E2E | intro: plays once, skip by key, tap and Esc, don't-show-again persists, Replay works, reduced motion = stills. Squad: the demo fixture spawns 3 subagents, then the zone, pods and aria log lines show; finish leads to the hand-over aria line | `e2e/intro.spec.ts`, `e2e/squad.spec.ts` (synthetic fixture providers, labelled) |
-| Visual regression | **contact sheets**: a deterministic preview route `?preview=life&effect=<id>&t=<ms>` (the `scene-preview.ts` pattern) renders each effect at 3 times. Playwright assembles a sheet per category; review is human; a pixel diff runs only on the real-GPU runner | `e2e/office-life.spec.ts` + `scripts/contact-sheet.mjs` |
-| Perf gates | `PerfProbe` on a real GPU (not SwiftShader). Baseline scene vs the same scene with 1 squad × 8, 3 live memes and strings: Δ median frame ≤ 1.0 ms, Δ p95 ≤ 2.0 ms, Δ draw calls ≤ 19, Δ programs ≤ 4, Δ GPU MB ≤ 4, Δ jsMs median ≤ 0.4. Phone emulation tier: Δ median ≤ 2 ms | `e2e/office-life-perf.spec.ts`, run on demand (`PERF_GPU=1`); results recorded in the verification ledger as *measured*, never assumed |
-| Perf matrix | one scene variant per case through the same probe on a device profile (desktop sizes and tiers, the phone at 4x CPU throttle), interleaved and repeated, medians; motion cost (`&loop=1` effects, strings, hand-overs running) and the first appearance (`&after=MS`: the render calls that link a program) | `scripts/perf-matrix.mjs` (results in section 4.9); `e2e/office-life-follow-up.spec.ts` pins that a late squad links no program |
+| E2E | intro: plays once, skip by key, tap and Esc, don't-show-again persists, Replay works, reduced motion = stills. Squad: the demo fixture spawns 3 subagents, then the zone, pods and aria log lines show; finish leads to the hand-over aria line | `e2e/office-life/intro.spec.ts`, `e2e/office-life/squad.spec.ts` (synthetic fixture providers, labelled) |
+| Visual regression | **contact sheets**: a deterministic preview route `?preview=life&effect=<id>&t=<ms>` (the `scene-preview.ts` pattern) renders each effect at 3 times. Playwright assembles a sheet per category; review is human; a pixel diff runs only on the real-GPU runner | `e2e/office-life/office-life.spec.ts` + `scripts/contact-sheet.mjs` |
+| Perf gates | `PerfProbe` on a real GPU (not SwiftShader). Baseline scene vs the same scene with 1 squad × 8, 3 live memes and strings: Δ median frame ≤ 1.0 ms, Δ p95 ≤ 2.0 ms, Δ draw calls ≤ 19, Δ programs ≤ 4, Δ GPU MB ≤ 4, Δ jsMs median ≤ 0.4. Phone emulation tier: Δ median ≤ 2 ms | `e2e/office-life/office-life-perf.spec.ts`, run on demand (`PERF_GPU=1`); results recorded in the verification ledger as *measured*, never assumed |
+| Perf matrix | one scene variant per case through the same probe on a device profile (desktop sizes and tiers, the phone at 4x CPU throttle), interleaved and repeated, medians; motion cost (`&loop=1` effects, strings, hand-overs running) and the first appearance (`&after=MS`: the render calls that link a program) | `scripts/perf-matrix.mjs` (results in section 4.9); `e2e/office-life/office-life-scene-preview.spec.ts` pins that a late squad links no program |
 
 ---
 
@@ -1123,7 +1126,7 @@ Edits outside the new folders, and who else is touching those areas:
 
 ## 12. Iteration plan and 2D information design
 
-The dispatch-ready briefs are in [office-life-iterations.md](office-life-iterations.md): I0–I9 with file ownership,
+The dispatch-ready briefs are in [office-life-work-plan.md](office-life-work-plan.md): I0–I9 with file ownership,
 public APIs, acceptance criteria, gates, merge order and the parallel schedule. That document also holds the
 prioritized UX backlog and the 2D design for the panel (squad groups, nested subagent rows, relation chips,
 "spawned by" links) and for Settings (Office → Animations).

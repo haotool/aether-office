@@ -4,8 +4,11 @@ import {
   readProcessTable,
   zombiesUnder,
   type ProcessRow,
-} from '../../apps/control/src/services/agent-processes.js';
-import { nudgeTargets, reapSessionZombies } from '../../apps/control/src/services/reap-zombies.js';
+} from '../../apps/control/src/services/runtime/agent-processes.js';
+import {
+  nudgeTargets,
+  reapSessionZombies,
+} from '../../apps/control/src/services/runtime/reap-zombies.js';
 import type { LocalSession } from '../../packages/contracts/src/index.js';
 import { alive } from './process-fixtures.js';
 import { eventually } from './timing.js';

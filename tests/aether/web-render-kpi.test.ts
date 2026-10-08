@@ -4,15 +4,20 @@ import { QueryClient, h, renderHtml, textOf } from './fixtures/ssr.js';
 
 // First paint on the server renderer (fixtures/ssr.ts), with data put in the query cache the way a fetch would.
 installBrowserEnv();
-vi.mock('../../apps/web/src/phone.js', () => ({ usePhone: () => false, usePhoneAny: () => false }));
-const { translate } = await import('../../apps/web/src/i18n.js');
-const { ClaudeQuota, when } = await import('../../apps/web/src/features/ClaudeQuota.js');
-const { KpiLimits } = await import('../../apps/web/src/features/KpiLimits.js');
-const { Ring } = await import('../../apps/web/src/features/kpi-charts.js');
-const { CountUp } = await import('../../apps/web/src/features/CountUp.js');
-const { MessageActions } = await import('../../apps/web/src/features/MessageActions.js');
-const { SeatToast } = await import('../../apps/web/src/features/SeatToast.js');
-const { Ago, DaySeparator, NowProvider } = await import('../../apps/web/src/features/ConvTime.js');
+vi.mock('../../apps/web/src/lib/preferences/phone.js', () => ({
+  usePhone: () => false,
+  usePhoneAny: () => false,
+}));
+const { translate } = await import('../../apps/web/src/lib/i18n/i18n.js');
+const { ClaudeQuota, when } = await import('../../apps/web/src/features/kpi/ClaudeQuota.js');
+const { KpiLimits } = await import('../../apps/web/src/features/kpi/KpiLimits.js');
+const { Ring } = await import('../../apps/web/src/features/kpi/kpi-charts.js');
+const { CountUp } = await import('../../apps/web/src/features/kpi/CountUp.js');
+const { MessageActions } =
+  await import('../../apps/web/src/features/conversation/MessageActions.js');
+const { SeatToast } = await import('../../apps/web/src/features/office/SeatToast.js');
+const { Ago, DaySeparator, NowProvider } =
+  await import('../../apps/web/src/features/conversation/ConvTime.js');
 
 afterAll(removeBrowserEnv);
 const en = (key: Parameters<typeof translate>[1]) => translate('en', key);

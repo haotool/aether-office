@@ -6,8 +6,8 @@ import {
   resolveContextWindowBasis,
   windowsOf,
   withContext,
-} from '../../apps/control/src/services/session-context.js';
-import { parseUsage } from '../../apps/control/src/services/session-usage.js';
+} from '../../apps/control/src/services/sessions/session-context.js';
+import { parseUsage } from '../../apps/control/src/services/sessions/session-usage.js';
 
 const line = (value: unknown) => JSON.stringify(value);
 const none = new Map<string, number>();

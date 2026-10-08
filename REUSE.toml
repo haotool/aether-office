@@ -16,7 +16,7 @@ SPDX-License-Identifier = "MIT"
 
 # Adapted from AgentSystemLabs/agent-office (MIT), the project this one started from.
 [[annotations]]
-path = ["tools/blender/aokit.py", "tools/blender/build_animals.py", "packages/office-scene/src/geometry.ts"]
+path = ["tools/blender/aokit.py", "tools/blender/build_animals.py", "packages/office-scene/src/environment/geometry.ts"]
 precedence = "override"
 SPDX-FileCopyrightText = ["2026 AgentSystemLabs", "2026 haotool and the AETHER OFFICE contributors"]
 SPDX-License-Identifier = "MIT"
@@ -30,7 +30,7 @@ SPDX-License-Identifier = "MIT"
 
 # Secret patterns adapted from stablyai/orca (MIT), src/shared/crash-report-redaction.ts at commit 373d951b.
 [[annotations]]
-path = "apps/control/src/services/redaction.ts"
+path = "apps/control/src/services/platform/redaction.ts"
 precedence = "override"
 SPDX-FileCopyrightText = ["2026 Lovecast Inc.", "2026 haotool and the AETHER OFFICE contributors"]
 SPDX-License-Identifier = "MIT"

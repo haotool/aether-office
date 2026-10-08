@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { usePhoneAny } from '../../phone.js';
-import { usePreferences } from '../../state.js';
-import { useLatest } from '../../use-latest.js';
+import { usePhoneAny } from '../../lib/preferences/phone.js';
+import { usePreferences } from '../../lib/preferences/state.js';
+import { useLatest } from '../../hooks/use-latest.js';
 import { ADVANCED_ONLY } from './AdvancedSection.js';
 import type { Notice } from './context.js';
 import { ENTRIES } from './entries.js';

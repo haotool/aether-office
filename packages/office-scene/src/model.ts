@@ -10,7 +10,7 @@ export {
   seatAt,
   zones,
   type Seat,
-} from './layout.js';
+} from './environment/layout.js';
 export {
   MAX_SQUAD_SEATS,
   placeSquads,
@@ -23,22 +23,22 @@ export {
   type SquadRect,
   type SquadRequest,
 } from './squad/squad-layout.js';
-export { apparitionOf, type Apparition } from './animal-states.js';
-export { STAGGER_MS } from './departure.js';
-export type { SceneMessage } from './carriers.js';
-export type { BranchInfo, Quality } from './scene-types.js';
-export type { ScreenFacts } from './screen-facts.js';
-export type { FloorKpiBadge } from './FloorKpi.js';
-export type { PerfReport } from './perf.js';
-export type { Pulse, PulseKind } from './director.js';
-export type { SceneSpeech, Utterance } from './Speech.js';
+export { apparitionOf, type Apparition } from './animals/animal-states.js';
+export { STAGGER_MS } from './animals/departure.js';
+export type { SceneMessage } from './environment/carriers.js';
+export type { BranchInfo, Quality } from './scene/scene-types.js';
+export type { ScreenFacts } from './screen/screen-facts.js';
+export type { FloorKpiBadge } from './components/FloorKpi.js';
+export type { PerfReport } from './perf/perf.js';
+export type { Pulse, PulseKind } from './environment/director.js';
+export type { SceneSpeech, Utterance } from './components/Speech.js';
 export {
   COMPACTION_LIVE_MS,
   compactionLabel,
   contextLevel,
   type ContextLevel,
   type SceneCompaction,
-} from './context.js';
+} from './environment/context.js';
 export {
   DEFAULT_LIFE_PREFS,
   LIFE_CATEGORIES,
@@ -48,6 +48,6 @@ export {
   type LifeSignal,
   type MemeCategory,
 } from './life/signals.js';
-export { ProviderMark, type MarkProvider } from './provider-marks.js';
-export { EMOTES, type Emote, type EmoteId } from './emotes.js';
-export type { SeatMove } from './use-seat-drag.js';
+export { ProviderMark, type MarkProvider } from './core/provider-marks.js';
+export { EMOTES, type Emote, type EmoteId } from './animals/emotes.js';
+export type { SeatMove } from './core/use-seat-drag.js';

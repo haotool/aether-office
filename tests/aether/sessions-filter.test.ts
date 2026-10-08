@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AttributedSession } from '../../packages/contracts/src/index.js';
-import { filterSessions } from '../../apps/web/src/features/sessions-filter.js';
+import { filterSessions } from '../../apps/web/src/features/sessions/sessions-filter.js';
 
 const none = { query: '', provider: '', department: '', runningOnly: false, liveness: '' };
 const make = (key: string, over: Record<string, unknown>) =>

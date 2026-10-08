@@ -1,6 +1,6 @@
 import { draw, envelope } from './shared.js';
 import type { Effect, Rgb, Sprite } from './types.js';
-import { itemAt } from '../../checked.js';
+import { itemAt } from '../../environment/checked.js';
 
 /**
  * A pile of boxes beside the desk for a session with many uncommitted files: one box more each time the count doubles,

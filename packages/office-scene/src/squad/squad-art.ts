@@ -20,7 +20,7 @@ import {
   type InstancedMesh,
 } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { SLAB_TOP } from '../seating.js';
+import { SLAB_TOP } from '../core/seating.js';
 
 /** The top of a desk, where the supervisor's things stand. */
 export const DESK_TOP = SLAB_TOP;

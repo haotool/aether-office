@@ -4,13 +4,13 @@ import { installBrowserEnv, installGlobal, removeBrowserEnv } from './fixtures/b
 
 // api.ts keeps its CSRF token in sessionStorage and opens a BroadcastChannel as it loads.
 installBrowserEnv();
-const { reapZombies } = await import('../../apps/web/src/features/reap.js');
-const { TERMINAL_KEYS } = await import('../../apps/web/src/features/terminal-keys.js');
-const { FEED_AVATAR_STATE } = await import('../../apps/web/src/features/feed-avatar.js');
-const { useOutbox } = await import('../../apps/web/src/features/outbox.js');
+const { reapZombies } = await import('../../apps/web/src/features/operations/reap.js');
+const { TERMINAL_KEYS } = await import('../../apps/web/src/features/terminal/terminal-keys.js');
+const { FEED_AVATAR_STATE } = await import('../../apps/web/src/features/feed/feed-avatar.js');
+const { useOutbox } = await import('../../apps/web/src/features/conversation/outbox.js');
 const { clockOutKeys, kindOf, sessionOf } =
-  await import('../../apps/web/src/features/character-session.js');
-const { checkForm } = await import('../../apps/web/src/form-errors.js');
+  await import('../../apps/web/src/features/sessions/character-session.js');
+const { checkForm } = await import('../../apps/web/src/lib/i18n/form-errors.js');
 
 afterAll(removeBrowserEnv);
 

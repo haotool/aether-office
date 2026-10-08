@@ -6,8 +6,11 @@ import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { Control } from '../../apps/control/src/control.js';
 import { createServer } from '../../apps/control/src/server.js';
-import { enroll } from '../../apps/control/src/services/runners.js';
-import { claimTerminalCommand, readTerminal } from '../../apps/control/src/services/terminals.js';
+import { enroll } from '../../apps/control/src/services/runtime/runners.js';
+import {
+  claimTerminalCommand,
+  readTerminal,
+} from '../../apps/control/src/services/platform/terminals.js';
 import { NativeExecutor } from '../../apps/runner/src/native.js';
 import { Runner } from '../../apps/runner/src/runner.js';
 import { TerminalRunner } from '../../apps/runner/src/terminals.js';

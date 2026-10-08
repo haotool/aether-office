@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Layout } from '../../packages/contracts/src/index.js';
-import { checkSeat, movedTo, snapSeat } from '../../packages/office-scene/src/seat-drag.js';
-import { seatMoveLayout } from '../../apps/web/src/features/seat-move.js';
+import { checkSeat, movedTo, snapSeat } from '../../packages/office-scene/src/core/seat-drag.js';
+import { seatMoveLayout } from '../../apps/web/src/features/office/seat-move.js';
 
 const desk = (id: string, x: number, z: number, agentId: string | null = null, floor = 0) =>
   ({ id, type: 'desk', x, z, rotation: 0, agentId, floor }) as Layout['objects'][number];

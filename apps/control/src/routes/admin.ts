@@ -1,4 +1,4 @@
-import { revoke } from '../services/identity.js';
+import { revoke } from '../services/domain/identity.js';
 import { authorize } from '@aether/kernel';
 import type { RouteContext } from './context.js';
 

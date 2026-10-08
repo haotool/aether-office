@@ -3,7 +3,7 @@ import {
   introForced,
   phoneRemembersIntro,
   shouldAutoplayIntro,
-} from '../../apps/web/src/intro-gate.js';
+} from '../../apps/web/src/lib/navigation/intro-gate.js';
 
 const first = { pref: 'auto', playedThisSession: false, automated: false, force: false } as const;
 

@@ -1,6 +1,6 @@
 import { buildNavGrid } from '../../packages/kernel/src/index.js';
 import type { Agent } from '../../packages/contracts/src/index.js';
-import { defaultLayout } from '../../packages/office-scene/src/layout.js';
+import { defaultLayout } from '../../packages/office-scene/src/environment/layout.js';
 import {
   register,
   type Book,

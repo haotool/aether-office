@@ -124,6 +124,54 @@ it('maps tool lifecycle updates and ignores everything that is not a canonical f
       'x',
     ),
   ).toEqual([]);
+  expect(
+    normalizeAcpUpdate(
+      n({
+        sessionUpdate: 'tool_call',
+        toolCallId: 't',
+        title: 'Run',
+        kind: 'execute',
+        status: 'completed',
+      }),
+      'turn',
+    )[0]?.kind,
+  ).toBe('tool.completed');
+  expect(
+    normalizeAcpUpdate(
+      n({
+        sessionUpdate: 'tool_call',
+        toolCallId: 't',
+        title: 'Run',
+        kind: 'execute',
+        status: 'failed',
+      }),
+      'turn',
+    )[0]?.kind,
+  ).toBe('tool.failed');
+  expect(
+    normalizeAcpUpdate(
+      n({
+        sessionUpdate: 'tool_call_update',
+        toolCallId: 't',
+        status: 'failed',
+        title: 'Run',
+        kind: 'execute',
+      }),
+      'turn',
+    )[0]?.kind,
+  ).toBe('tool.failed');
+  expect(
+    normalizeAcpUpdate(
+      n({
+        sessionUpdate: 'tool_call',
+        toolCallId: 't',
+        title: 'Plan',
+        kind: 'other',
+        status: 'pending',
+      }),
+      'turn',
+    )[0]?.kind,
+  ).toBe('tool.requested');
 });
 
 it('negotiates with the real @agentclientprotocol/claude-agent-acp adapter (initialize only, no model call)', async () => {

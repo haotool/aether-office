@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { createServer } from '../../apps/control/src/server.js';
-import { revoke } from '../../apps/control/src/services/identity.js';
+import { revoke } from '../../apps/control/src/services/domain/identity.js';
 import { enrollRunner } from '../../apps/runner/src/enroll.js';
 import { assertSecureControlUrl } from '../../apps/runner/src/transport.js';
 import { command, fixture } from './fixture.js';

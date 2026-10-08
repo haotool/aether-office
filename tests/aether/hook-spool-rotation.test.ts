@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { append } from '../../packages/providers/src/hook-receiver.mjs';
-import { readHookState } from '../../apps/control/src/services/hook-spool.js';
+import { readHookState } from '../../apps/control/src/services/hooks/hook-spool.js';
 
 const rec = (event: string, at: number, extra = {}) => ({
   at,

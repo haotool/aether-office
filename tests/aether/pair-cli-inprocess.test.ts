@@ -110,8 +110,8 @@ describe('pair-cli, in this process', () => {
           lan: true,
           ttlSeconds: 300,
           links: [
-            { origin: 'http://192.168.1.5:4310', url: 'http://192.168.1.5:4310/#pair=abc' },
-            { origin: 'http://10.0.0.2:4310', url: 'http://10.0.0.2:4310/#pair=abc' },
+            { origin: 'http://192.168.1.5:8780', url: 'http://192.168.1.5:8780/#pair=abc' },
+            { origin: 'http://10.0.0.2:8780', url: 'http://10.0.0.2:8780/#pair=abc' },
           ],
         }),
       ),
@@ -122,8 +122,8 @@ describe('pair-cli, in this process', () => {
     expect(requests).toEqual([{ auth: 'Bearer owner-secret', origin: url, method: 'POST' }]);
     const text = printed.join('\n');
     expect(text).toContain('█');
-    expect(text).toContain('http://192.168.1.5:4310');
-    expect(text).toContain('Same code on the other addresses: http://10.0.0.2:4310');
+    expect(text).toContain('http://192.168.1.5:8780');
+    expect(text).toContain('Same code on the other addresses: http://10.0.0.2:8780');
     expect(text).toContain('expires in 5 minutes');
     expect(text).not.toContain('owner-secret');
   });

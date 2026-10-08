@@ -1,6 +1,6 @@
-import { useInstallHint } from '../../install-prompt.js';
+import { useInstallHint } from '../../lib/platform/install-prompt.js';
 import { useT } from '../../ui/useT.js';
-import { PairPhoneButton } from '../ConnectPhone.js';
+import { PairPhoneButton } from '../integrations/ConnectPhone.js';
 import { CopyCommand, InlineHelp, Row, StatusChip } from './kit.js';
 
 const standalone = () => window.matchMedia('(display-mode: standalone)').matches;

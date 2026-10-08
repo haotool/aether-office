@@ -9,7 +9,7 @@ import {
   panelMax,
   snapPanel,
   stepPanel,
-} from '../../apps/web/src/features/panel-width.js';
+} from '../../apps/web/src/features/shell-chrome/panel-width.js';
 
 describe('panel width', () => {
   it('defaults by window size, as the fixed widths used to', () => {

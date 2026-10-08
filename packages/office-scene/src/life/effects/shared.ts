@@ -1,4 +1,4 @@
-import { seeded } from '../../seeded.js';
+import { seeded } from '../../environment/seeded.js';
 
 export const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 export const lerp = (a: number, b: number, k: number) => a + (b - a) * k;

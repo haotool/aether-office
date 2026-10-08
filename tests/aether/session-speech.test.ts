@@ -6,12 +6,12 @@ import type { LocalSession } from '../../packages/contracts/src/index.js';
 import {
   resetLocalSessionCache,
   scanLocalSessions,
-} from '../../apps/control/src/services/local-sessions.js';
+} from '../../apps/control/src/services/runtime/local-sessions.js';
 import {
   readSpeech,
   resetSpeechCache,
   runningSpeech,
-} from '../../apps/control/src/services/session-speech.js';
+} from '../../apps/control/src/services/sessions/session-speech.js';
 
 const line = (v: unknown) => JSON.stringify(v) + '\n';
 const user = (content: string, timestamp = '2026-10-04T10:00:00Z') =>

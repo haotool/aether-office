@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { previewParams } from '../../apps/web/src/features/scene-preview.js';
+import { previewParams } from '../../apps/web/src/features/office/scene-preview.js';
 
 describe('previewParams loop', () => {
   it('is off unless asked, so a frozen frame stays frozen', () => {

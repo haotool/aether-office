@@ -1,7 +1,7 @@
-import { crownTop } from '../crown-layout.js';
-import { EXPLODED_GAP, FLOOR_HEIGHT } from '../building.js';
-import { FLOORS } from '../layout.js';
-import type { Pose, V3 } from '../shot-camera.js';
+import { crownTop } from '../core/crown-layout.js';
+import { EXPLODED_GAP, FLOOR_HEIGHT } from '../environment/building.js';
+import { FLOORS } from '../environment/layout.js';
+import type { Pose, V3 } from '../core/shot-camera.js';
 
 /**
  * The first-visit camera tour as a pure function of time (docs/design/office-life.md section 6): a slow 360 degree orbit

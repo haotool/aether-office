@@ -1,8 +1,8 @@
 // What the squad layers draw, worked out once per change of the frame: one entry per squad with its zone, its pods and
 // the supervisor's desk. Pure; the layers add the clock (the glide, the beam's brightness) on top.
 import type { Layout } from '@aether/contracts';
-import { SEAT_DEPTH } from '../departure.js';
-import { departmentAt } from '../scene-geometry.js';
+import { SEAT_DEPTH } from '../animals/departure.js';
+import { departmentAt } from '../scene/scene-geometry.js';
 import { handoverSide } from './handover/plan.js';
 import type { SquadMemberState } from './squad-model.js';
 import type { PlacedZone, PodSeat } from './squad-seats.js';

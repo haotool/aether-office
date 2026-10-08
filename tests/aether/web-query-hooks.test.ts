@@ -17,17 +17,18 @@ vi.mock(web.react, () => import('./fixtures/mini-react.js'));
 vi.mock(web.zustand, () => import('./fixtures/mini-zustand.js'));
 vi.mock(web.query, () => import('./fixtures/mini-query.js'));
 const prefs = create<{ locale: 'en' | 'zh-TW' }>(() => ({ locale: 'en' }));
-vi.mock('../../apps/web/src/state.js', () => ({ usePreferences: prefs }));
+vi.mock('../../apps/web/src/lib/preferences/state.js', () => ({ usePreferences: prefs }));
 
-const { useModels } = await import('../../apps/web/src/features/useModels.js');
-const { useGitKpi, useUsage } = await import('../../apps/web/src/features/use-kpi.js');
-const { useKpiPanel } = await import('../../apps/web/src/features/use-kpi-panel.js');
-const { useLocalSessions, usePendingApprovals } = await import('../../apps/web/src/app-data.js');
+const { useModels } = await import('../../apps/web/src/features/settings/useModels.js');
+const { useGitKpi, useUsage } = await import('../../apps/web/src/features/kpi/use-kpi.js');
+const { useKpiPanel } = await import('../../apps/web/src/features/kpi/use-kpi-panel.js');
+const { useLocalSessions, usePendingApprovals } =
+  await import('../../apps/web/src/lib/app/app-data.js');
 const { useActor, useCachedSessions, useTerminalState } =
-  await import('../../apps/web/src/features/character-session.js');
-const { useContinue } = await import('../../apps/web/src/features/use-continue.js');
-const { useLink } = await import('../../apps/web/src/features/use-session-stream.js');
-const { useAdoptRepos } = await import('../../apps/web/src/adoptProjects.js');
+  await import('../../apps/web/src/features/sessions/character-session.js');
+const { useContinue } = await import('../../apps/web/src/features/shell-chrome/use-continue.js');
+const { useLink } = await import('../../apps/web/src/hooks/use-session-stream.js');
+const { useAdoptRepos } = await import('../../apps/web/src/features/integrations/adoptProjects.js');
 
 afterAll(removeBrowserEnv);
 const sent: { url: string; body: unknown }[] = [];

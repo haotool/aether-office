@@ -111,7 +111,7 @@ export const CRITERIA = [
   { id: 'L2-08', layer: 'L2', type: 'E', label: 'SSOT duplication', measure: 'review' },
   { id: 'L3-01', layer: 'L3', type: 'G', label: 'pnpm test', measure: 'vitest' },
   { id: 'L3-02', layer: 'L3', type: 'G', label: 'playwright', measure: 'playwright' },
-  { id: 'L3-03', layer: 'L3', type: 'M', failAt: 1, label: 'coverage', measure: 'coverage' },
+  { id: 'L3-03', layer: 'L3', type: 'M', failAt: 30, label: 'coverage', measure: 'coverage' },
   { id: 'L3-04', layer: 'L3', type: 'G', label: 'verification ledger', measure: 'features.json' },
   {
     id: 'L3-05',
@@ -264,10 +264,19 @@ export const MEASURED_IDS = new Set([
   'L2-02',
   'L2-03',
   'L2-06',
+  'L3-03',
   'L3-05',
   'L3-06',
+  'L4-05',
+  'L4-06',
+  'L5-03',
+  'L5-04',
+  'L6-07',
   'L7-03',
   'L7-04',
+  'L8-03',
+  'L8-05',
+  'L9-04',
 ]);
 
 export const criteriaById = Object.fromEntries(CRITERIA.map((c) => [c.id, c]));

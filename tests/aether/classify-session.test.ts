@@ -10,12 +10,15 @@ import {
   settle,
   type Settled,
 } from '../../packages/kernel/src/index.js';
-import { claudeActions, codexActions } from '../../apps/control/src/services/session-work.js';
-import { roleOf, resetRoles } from '../../apps/control/src/services/session-role.js';
-import { mergeLayout } from '../../apps/web/src/layout-merge.js';
-import { roleResolver } from '../../apps/web/src/localSessions.js';
-import { roleWhy } from '../../apps/web/src/features/role-why.js';
-import { translate } from '../../apps/web/src/i18n.js';
+import {
+  claudeActions,
+  codexActions,
+} from '../../apps/control/src/services/sessions/session-work.js';
+import { roleOf, resetRoles } from '../../apps/control/src/services/sessions/session-role.js';
+import { mergeLayout } from '../../apps/web/src/features/office/layout-merge.js';
+import { roleResolver } from '../../apps/web/src/lib/sessions/localSessions.js';
+import { roleWhy } from '../../apps/web/src/features/office/role-why.js';
+import { translate } from '../../apps/web/src/lib/i18n/i18n.js';
 import { CORPUS } from './fixtures/session-corpus.js';
 
 describe('labelled corpus', () => {
@@ -59,6 +62,42 @@ describe('signals', () => {
     ['Add a REST endpoint for invoices', 'backend'],
   ])('reads %s as %s in either language', (prompt, role) => {
     expect(classifySession({ prompt }).role).toBe(role);
+  });
+
+  it('scores tool names, paths, shell commands, delegation and read-only exploration', () => {
+    expect(
+      classifySession({
+        actions: [
+          { tool: 'Grep', target: 'src/x.ts' },
+          { tool: 'Glob', target: '**/*.ts' },
+          { tool: 'Read', target: 'a.ts' },
+          { tool: 'LS', target: '.' },
+          { tool: 'WebSearch', target: 'q' },
+        ],
+      }).evidence,
+    ).toContain('reads: read-only exploration');
+    const delegated = scoreSession({
+      actions: [{ tool: 'Task', target: 'code-reviewer' }],
+    });
+    expect(delegated.byRole.review?.evidence.some((e) => e.startsWith('subagent: delegates'))).toBe(
+      true,
+    );
+    const shell = scoreSession({
+      actions: [{ tool: 'Bash', target: 'pnpm vitest run packages/kernel' }],
+    });
+    expect(
+      Object.values(shell.byRole).some((t) => t?.evidence.some((e) => e.startsWith('runs:'))),
+    ).toBe(true);
+    const doubled = classifySession({
+      actions: [
+        { tool: 'Edit', target: 'src/ui/A.tsx' },
+        { tool: 'Edit', target: 'src/ui/A.tsx' },
+      ],
+    });
+    expect(doubled.evidence.some((e) => e.includes('×2'))).toBe(true);
+    expect(classifySession({ actions: [{ tool: 'NotebookRead', target: null }] }).role).toBe(
+      'generalist',
+    );
   });
 
   it('weighs what a session did above what it was called', () => {
@@ -293,8 +332,8 @@ describe('no model, no network', () => {
   const ENTRY = [
     'packages/kernel/src/classify-session.ts',
     'packages/kernel/src/role-signals.ts',
-    'apps/control/src/services/session-work.ts',
-    'apps/control/src/services/session-role.ts',
+    'apps/control/src/services/sessions/session-work.ts',
+    'apps/control/src/services/sessions/session-role.ts',
   ].map((p) => resolve(__dirname, '../..', p));
 
   const modulesOf = (entry: string, seen = new Set<string>()): Set<string> => {

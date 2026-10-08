@@ -9,21 +9,21 @@ const FORBIDDEN =
   /from ['"](?:node:)?(?:child_process|http|https|http2|net|tls|dgram|dns|worker_threads)['"]|from ['"](?:@anthropic-ai|@openai|openai|@google|@aether\/providers|undici|node-fetch|axios|ws)[^'"]*['"]|\bimport\(|\brequire\(|(?<![.\w])(?:fetch|spawn|execFile|exec)\(|\bXMLHttpRequest\b|\bWebSocket\b|claude -p|codex exec/;
 
 const MODULES = [
-  'usage-aggregate',
-  'usage-files',
-  'usage-claude',
-  'usage-codex',
-  'usage-counters',
-  'usage-parse',
-  'usage-stats',
-  'usage-store',
-  'session-usage',
-  'session-context',
-  'claude-limits',
-  'codex-limits',
-  'subagent-usage',
-  'git-kpi',
-].map((name) => resolve(__dirname, '../../apps/control/src/services', `${name}.ts`));
+  'usage/usage-aggregate.ts',
+  'usage/usage-files.ts',
+  'usage/usage-claude.ts',
+  'usage/usage-codex.ts',
+  'usage/usage-counters.ts',
+  'usage/usage-parse.ts',
+  'usage/usage-stats.ts',
+  'usage/usage-store.ts',
+  'sessions/session-usage.ts',
+  'sessions/session-context.ts',
+  'platform/claude-limits.ts',
+  'platform/codex-limits.ts',
+  'subagents/subagent-usage.ts',
+  'git/git-kpi.ts',
+].map((rel) => resolve(__dirname, '../../apps/control/src/services', rel));
 
 it('usage modules import no network, process or SDK', () => {
   for (const file of MODULES) {

@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { STAND_MS, WAVE_MS } from '../../packages/office-scene/src/departure.js';
+import { STAND_MS, WAVE_MS } from '../../packages/office-scene/src/animals/departure.js';
 import {
   GLIDE_MS,
   POP_MS,

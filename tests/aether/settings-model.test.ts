@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { en } from '../../apps/web/src/locales/en.js';
 import { zh } from '../../apps/web/src/locales/zh.js';
-import { resolveTheme } from '../../apps/web/src/theme.js';
+import { resolveTheme } from '../../apps/web/src/lib/preferences/theme.js';
 import { ENTRIES } from '../../apps/web/src/features/settings/entries.js';
 import { highlight, searchSettings } from '../../apps/web/src/features/settings/search.js';
 import {

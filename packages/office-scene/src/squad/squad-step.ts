@@ -1,8 +1,8 @@
 // One look at the squads: the state machine stepped to now, the walks of whoever starts to leave, what is said about it.
 import type { Dispatch, RefObject, SetStateAction } from 'react';
 import type { Agent, Layout } from '@aether/contracts';
-import type { PoseApi } from '../use-pose-cues.js';
-import type { Quality } from '../scene-types.js';
+import type { PoseApi } from '../core/use-pose-cues.js';
+import type { Quality } from '../scene/scene-types.js';
 import type { SquadPrefs } from './SquadLayer.js';
 import { leaveDuration, planLeave } from './errand.js';
 import { stepSquad, type SquadInput, type SquadState } from './squad-model.js';

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Agent } from '../../packages/contracts/src/index.js';
 import { objectBounds } from '../../packages/kernel/src/index.js';
-import { mergeLayout } from '../../apps/web/src/layout-merge.js';
+import { mergeLayout } from '../../apps/web/src/features/office/layout-merge.js';
 import {
   EMPTY_SQUAD,
   stepSquad,

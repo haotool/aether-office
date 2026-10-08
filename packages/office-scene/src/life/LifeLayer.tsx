@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import type { Seat } from '../director.js';
-import { floorY } from '../scene-geometry.js';
-import type { PoseApi } from '../use-pose-cues.js';
-import type { Quality } from '../scene-types.js';
+import type { Seat } from '../environment/director.js';
+import { floorY } from '../scene/scene-geometry.js';
+import type { PoseApi } from '../core/use-pose-cues.js';
+import type { Quality } from '../scene/scene-types.js';
 import { cueSprites, type Stage } from './place.js';
 import { createSpritePool } from './pools/sprite-pool.js';
 import type { LifeCue, ScheduleEnv } from './schedule.js';

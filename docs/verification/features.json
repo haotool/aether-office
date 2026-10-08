@@ -185,7 +185,7 @@
     "verificationStatus": "partial",
     "codePaths": [
       "packages/contracts/src",
-      "apps/control/src/services/runners.ts"
+      "apps/control/src/services/runtime/runners.ts"
     ],
     "testIds": [
       "tests/aether/native-runner.test.ts"
@@ -205,7 +205,7 @@
     "verificationStatus": "partial",
     "codePaths": [
       "packages/contracts/src",
-      "apps/control/src/services/runners.ts"
+      "apps/control/src/services/runtime/runners.ts"
     ],
     "testIds": [
       "tests/aether/native-runner.test.ts"
@@ -225,16 +225,16 @@
     "verificationStatus": "passed",
     "codePaths": [
       "packages/kernel/src/capabilities.ts",
-      "apps/control/src/services/work.ts",
+      "apps/control/src/services/work/work.ts",
       "apps/control/src/server.ts",
       "apps/control/src/routes",
-      "apps/web/src/features/CapabilityMatrix.tsx",
-      "apps/web/src/features/Tasks.tsx"
+      "apps/web/src/features/integrations/CapabilityMatrix.tsx",
+      "apps/web/src/features/tasks-git/Tasks.tsx"
     ],
     "testIds": [
       "tests/aether/capabilities.test.ts",
       "tests/aether/control.test.ts",
-      "e2e/capabilities.spec.ts"
+      "e2e/settings/capabilities.spec.ts"
     ],
     "evidencePaths": [],
     "blockers": [
@@ -250,7 +250,7 @@
     "codePaths": [
       "apps/control/src/db/migrations/017-work-state-guard.sql",
       "packages/kernel/src/index.ts",
-      "apps/control/src/services/work.ts"
+      "apps/control/src/services/work/work.ts"
     ],
     "testIds": [
       "tests/aether/state-guard.test.ts"
@@ -267,12 +267,12 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/features/History.tsx",
+      "apps/web/src/features/conversation/History.tsx",
       "apps/web/src/App.tsx"
     ],
     "testIds": [
-      "e2e/replay.spec.ts",
-      "e2e/local-sessions.spec.ts"
+      "e2e/session/replay.spec.ts",
+      "e2e/session/local-sessions.spec.ts"
     ],
     "evidencePaths": [],
     "blockers": [
@@ -347,11 +347,14 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/work.ts",
-      "apps/control/src/services/runners.ts",
+      "apps/control/src/services/work/work.ts",
+      "apps/control/src/services/runtime/runners.ts",
       "apps/runner/src/native.ts"
     ],
-    "testIds": [],
+    "testIds": [
+      "tests/aether/native-runner.test.ts",
+      "tests/aether/control-runner-leases.test.ts"
+    ],
     "evidencePaths": [
       "evidence/tests-resume-corrected.log",
       "evidence/e2e-resume.log"
@@ -519,8 +522,8 @@
       "packages/providers/src/codex.ts",
       "packages/providers/src/claude.ts",
       "packages/providers/src/jsonrpc.ts",
-      "apps/control/src/services/work.ts",
-      "apps/control/src/services/runners.ts",
+      "apps/control/src/services/work/work.ts",
+      "apps/control/src/services/runtime/runners.ts",
       "apps/runner/src/native.ts"
     ],
     "testIds": [
@@ -649,14 +652,14 @@
     "implementationStatus": "partial",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/runners.ts",
+      "apps/control/src/services/runtime/runners.ts",
       "apps/runner/src/runner.ts",
       "apps/runner/src/journal.ts",
       "apps/control/src/db/connection.ts",
       "apps/runner/src/pty.ts",
       "apps/runner/src/terminals.ts",
-      "apps/control/src/services/terminals.ts",
-      "apps/web/src/features/Terminals.tsx"
+      "apps/control/src/services/platform/terminals.ts",
+      "apps/web/src/features/terminal/Terminals.tsx"
     ],
     "testIds": [
       "tests/aether/control.test.ts",
@@ -664,7 +667,7 @@
       "tests/aether/pty.test.ts",
       "tests/aether/terminal-runner.test.ts",
       "tests/aether/terminals.test.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/workbench/native-workflow.spec.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log",
@@ -682,14 +685,14 @@
     "implementationStatus": "partial",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/runners.ts",
+      "apps/control/src/services/runtime/runners.ts",
       "apps/runner/src/runner.ts",
       "apps/runner/src/journal.ts",
       "apps/control/src/db/connection.ts",
       "apps/runner/src/pty.ts",
       "apps/runner/src/terminals.ts",
-      "apps/control/src/services/terminals.ts",
-      "apps/web/src/features/Terminals.tsx"
+      "apps/control/src/services/platform/terminals.ts",
+      "apps/web/src/features/terminal/Terminals.tsx"
     ],
     "testIds": [
       "tests/aether/control.test.ts",
@@ -697,7 +700,7 @@
       "tests/aether/pty.test.ts",
       "tests/aether/terminal-runner.test.ts",
       "tests/aether/terminals.test.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/workbench/native-workflow.spec.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log",
@@ -717,14 +720,14 @@
     "codePaths": [
       "apps/runner/src/pty.ts",
       "apps/runner/src/terminals.ts",
-      "apps/control/src/services/terminals.ts",
-      "apps/web/src/features/Terminals.tsx"
+      "apps/control/src/services/platform/terminals.ts",
+      "apps/web/src/features/terminal/Terminals.tsx"
     ],
     "testIds": [
       "tests/aether/pty.test.ts",
       "tests/aether/terminal-runner.test.ts",
       "tests/aether/terminals.test.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/workbench/native-workflow.spec.ts"
     ],
     "evidencePaths": [
       "evidence/tests-terminal-release-candidate.log",
@@ -743,14 +746,14 @@
     "codePaths": [
       "apps/runner/src/pty.ts",
       "apps/runner/src/terminals.ts",
-      "apps/control/src/services/terminals.ts",
-      "apps/web/src/features/Terminals.tsx"
+      "apps/control/src/services/platform/terminals.ts",
+      "apps/web/src/features/terminal/Terminals.tsx"
     ],
     "testIds": [
       "tests/aether/pty.test.ts",
       "tests/aether/terminal-runner.test.ts",
       "tests/aether/terminals.test.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/workbench/native-workflow.spec.ts"
     ],
     "evidencePaths": [
       "evidence/tests-terminal-release-candidate.log",
@@ -769,14 +772,14 @@
     "codePaths": [
       "apps/runner/src/observer.ts",
       "apps/runner/src/observers.ts",
-      "apps/control/src/services/observations.ts",
-      "apps/web/src/features/Observations.tsx"
+      "apps/control/src/services/domain/observations.ts",
+      "apps/web/src/features/operations/Observations.tsx"
     ],
     "testIds": [
       "tests/aether/observer.test.ts",
       "tests/aether/observer-runner.test.ts",
       "tests/aether/observation-control.test.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/workbench/native-workflow.spec.ts"
     ],
     "evidencePaths": [
       "evidence/tests-observe-nonblocking.log",
@@ -795,14 +798,14 @@
     "codePaths": [
       "apps/runner/src/observer.ts",
       "apps/runner/src/observers.ts",
-      "apps/control/src/services/observations.ts",
-      "apps/web/src/features/Observations.tsx"
+      "apps/control/src/services/domain/observations.ts",
+      "apps/web/src/features/operations/Observations.tsx"
     ],
     "testIds": [
       "tests/aether/observer.test.ts",
       "tests/aether/observer-runner.test.ts",
       "tests/aether/observation-control.test.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/workbench/native-workflow.spec.ts"
     ],
     "evidencePaths": [
       "evidence/tests-observe-nonblocking.log",
@@ -819,14 +822,14 @@
     "implementationStatus": "partial",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/runners.ts",
+      "apps/control/src/services/runtime/runners.ts",
       "apps/runner/src/runner.ts",
       "apps/runner/src/journal.ts",
       "apps/control/src/db/connection.ts",
       "apps/runner/src/observer.ts",
       "apps/runner/src/observers.ts",
-      "apps/control/src/services/observations.ts",
-      "apps/web/src/features/Observations.tsx"
+      "apps/control/src/services/domain/observations.ts",
+      "apps/web/src/features/operations/Observations.tsx"
     ],
     "testIds": [
       "tests/aether/control.test.ts",
@@ -834,7 +837,7 @@
       "tests/aether/observer.test.ts",
       "tests/aether/observer-runner.test.ts",
       "tests/aether/observation-control.test.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/workbench/native-workflow.spec.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log",
@@ -854,14 +857,14 @@
     "codePaths": [
       "apps/runner/src/pty.ts",
       "apps/runner/src/terminals.ts",
-      "apps/control/src/services/terminals.ts",
-      "apps/web/src/features/Terminals.tsx"
+      "apps/control/src/services/platform/terminals.ts",
+      "apps/web/src/features/terminal/Terminals.tsx"
     ],
     "testIds": [
       "tests/aether/pty.test.ts",
       "tests/aether/terminal-runner.test.ts",
       "tests/aether/terminals.test.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/workbench/native-workflow.spec.ts"
     ],
     "evidencePaths": [
       "evidence/tests-terminal-release-candidate.log",
@@ -879,7 +882,7 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/control/src/control.ts",
-      "apps/control/src/services/context.ts"
+      "apps/control/src/services/domain/context.ts"
     ],
     "testIds": [
       "tests/aether/control.test.ts"
@@ -897,7 +900,7 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/control/src/control.ts",
-      "apps/control/src/services/context.ts"
+      "apps/control/src/services/domain/context.ts"
     ],
     "testIds": [
       "tests/aether/control.test.ts"
@@ -914,7 +917,7 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/provider-events.ts",
+      "apps/control/src/services/runtime/provider-events.ts",
       "packages/providers/src/codex.ts"
     ],
     "testIds": [
@@ -974,7 +977,7 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/runners.ts"
+      "apps/control/src/services/runtime/runners.ts"
     ],
     "testIds": [
       "tests/aether/reconciliation.test.ts",
@@ -992,8 +995,8 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/runners.ts",
-      "apps/control/src/services/work.ts"
+      "apps/control/src/services/runtime/runners.ts",
+      "apps/control/src/services/work/work.ts"
     ],
     "testIds": [
       "tests/aether/reconciliation.test.ts"
@@ -1032,15 +1035,15 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/rooms.ts",
-      "apps/control/src/services/messages.ts",
+      "apps/control/src/services/domain/rooms.ts",
+      "apps/control/src/services/domain/messages.ts",
       "apps/control/src/db/migrations/023-rooms.sql",
-      "apps/web/src/features/Rooms.tsx"
+      "apps/web/src/features/operations/Rooms.tsx"
     ],
     "testIds": [
       "tests/aether/rooms.test.ts",
       "tests/aether/control.test.ts",
-      "e2e/rooms.spec.ts"
+      "e2e/workbench/rooms.spec.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log",
@@ -1057,7 +1060,7 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/messages.ts"
+      "apps/control/src/services/domain/messages.ts"
     ],
     "testIds": [
       "tests/aether/control.test.ts"
@@ -1074,7 +1077,7 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/messages.ts",
+      "apps/control/src/services/domain/messages.ts",
       "packages/kernel/src/capabilities.ts"
     ],
     "testIds": [
@@ -1098,8 +1101,8 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/messages.ts",
-      "packages/office-scene/src/carriers.ts"
+      "apps/control/src/services/domain/messages.ts",
+      "packages/office-scene/src/environment/carriers.ts"
     ],
     "testIds": [
       "tests/aether/fault-injection.test.ts",
@@ -1118,7 +1121,7 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/messages.ts"
+      "apps/control/src/services/domain/messages.ts"
     ],
     "testIds": [
       "tests/aether/message-waits.test.ts",
@@ -1146,7 +1149,7 @@
     "verificationStatus": "passed",
     "codePaths": [
       "packages/kernel/src/capabilities.ts",
-      "apps/control/src/services/messages.ts"
+      "apps/control/src/services/domain/messages.ts"
     ],
     "testIds": [
       "tests/aether/capabilities.test.ts"
@@ -1163,7 +1166,7 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/messages.ts"
+      "apps/control/src/services/domain/messages.ts"
     ],
     "testIds": [
       "tests/aether/rooms.test.ts"
@@ -1206,18 +1209,18 @@
     "verificationStatus": "passed",
     "codePaths": [
       "packages/kernel/src/index.ts",
-      "apps/control/src/services/work.ts",
-      "apps/control/src/services/jobs.ts",
-      "apps/web/src/features/TaskDag.tsx",
-      "apps/web/src/features/taskGraph.ts",
-      "apps/web/src/features/Tasks.tsx"
+      "apps/control/src/services/work/work.ts",
+      "apps/control/src/services/work/jobs.ts",
+      "apps/web/src/features/tasks-git/TaskDag.tsx",
+      "apps/web/src/features/tasks-git/taskGraph.ts",
+      "apps/web/src/features/tasks-git/Tasks.tsx"
     ],
     "testIds": [
       "tests/aether/kernel.test.ts",
       "tests/aether/control.test.ts",
       "tests/aether/native-runner.test.ts",
       "tests/aether/dag.test.ts",
-      "e2e/dag.spec.ts"
+      "e2e/workbench/dag.spec.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log",
@@ -1235,8 +1238,8 @@
     "verificationStatus": "passed",
     "codePaths": [
       "packages/kernel/src/index.ts",
-      "apps/control/src/services/work.ts",
-      "apps/control/src/services/jobs.ts"
+      "apps/control/src/services/work/work.ts",
+      "apps/control/src/services/work/jobs.ts"
     ],
     "testIds": [
       "tests/aether/kernel.test.ts",
@@ -1256,7 +1259,7 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/runners.ts"
+      "apps/control/src/services/runtime/runners.ts"
     ],
     "testIds": [
       "tests/aether/scheduler.test.ts",
@@ -1276,16 +1279,16 @@
     "verificationStatus": "partial",
     "codePaths": [
       "packages/kernel/src/workflows.ts",
-      "apps/control/src/services/workflows.ts",
-      "apps/control/src/services/review-runs.ts",
-      "apps/control/src/services/work.ts",
-      "apps/web/src/features/WorkflowStart.tsx"
+      "apps/control/src/services/work/workflows.ts",
+      "apps/control/src/services/reviews/review-runs.ts",
+      "apps/control/src/services/work/work.ts",
+      "apps/web/src/features/operations/WorkflowStart.tsx"
     ],
     "testIds": [
       "tests/aether/workflows.test.ts",
       "tests/aether/review-runs.test.ts",
       "tests/aether/native-review.test.ts",
-      "e2e/workflows.spec.ts"
+      "e2e/workbench/workflows.spec.ts"
     ],
     "evidencePaths": [
       "evidence/verification-workflow-test.log",
@@ -1304,16 +1307,16 @@
     "verificationStatus": "partial",
     "codePaths": [
       "packages/kernel/src/workflows.ts",
-      "apps/control/src/services/workflows.ts",
-      "apps/control/src/services/meetings.ts",
-      "apps/web/src/features/WorkflowStart.tsx",
-      "apps/web/src/features/Meetings.tsx"
+      "apps/control/src/services/work/workflows.ts",
+      "apps/control/src/services/domain/meetings.ts",
+      "apps/web/src/features/operations/WorkflowStart.tsx",
+      "apps/web/src/features/operations/Meetings.tsx"
     ],
     "testIds": [
       "tests/aether/workflows.test.ts",
       "tests/aether/meetings.test.ts",
-      "e2e/workflows.spec.ts",
-      "e2e/meetings.spec.ts"
+      "e2e/workbench/workflows.spec.ts",
+      "e2e/workbench/meetings.spec.ts"
     ],
     "evidencePaths": [
       "evidence/verification-workflow-test.log",
@@ -1332,8 +1335,8 @@
     "verificationStatus": "passed",
     "codePaths": [
       "packages/kernel/src/index.ts",
-      "apps/control/src/services/work.ts",
-      "apps/control/src/services/jobs.ts"
+      "apps/control/src/services/work/work.ts",
+      "apps/control/src/services/work/jobs.ts"
     ],
     "testIds": [
       "tests/aether/kernel.test.ts",
@@ -1353,8 +1356,8 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/diagnostics.ts",
-      "apps/control/src/services/work.ts"
+      "apps/control/src/services/platform/diagnostics.ts",
+      "apps/control/src/services/work/work.ts"
     ],
     "testIds": [
       "tests/aether/diagnostics.test.ts",
@@ -1379,8 +1382,8 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/work.ts",
-      "apps/control/src/services/messages.ts"
+      "apps/control/src/services/work/work.ts",
+      "apps/control/src/services/domain/messages.ts"
     ],
     "testIds": [
       "tests/aether/cancel-dag.test.ts",
@@ -1404,7 +1407,7 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/runner/src/workspaces.ts",
-      "apps/control/src/services/jobs.ts"
+      "apps/control/src/services/work/jobs.ts"
     ],
     "testIds": [
       "tests/aether/workspaces.test.ts",
@@ -1423,12 +1426,12 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/runner/src/workspaces.ts",
-      "apps/web/src/features/Workspace.tsx"
+      "apps/web/src/features/integrations/Workspace.tsx"
     ],
     "testIds": [
       "tests/aether/workspaces.test.ts",
       "tests/aether/workspace-matrix.test.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/workbench/native-workflow.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
@@ -1445,15 +1448,15 @@
     "verificationStatus": "passed",
     "codePaths": [
       "packages/kernel/src/reservations.ts",
-      "apps/control/src/services/reservations.ts",
+      "apps/control/src/services/domain/reservations.ts",
       "apps/runner/src/mcp.ts",
-      "apps/web/src/features/Reservations.tsx"
+      "apps/web/src/features/operations/Reservations.tsx"
     ],
     "testIds": [
       "tests/aether/reservations-kernel.test.ts",
       "tests/aether/reservations.test.ts",
       "tests/aether/mcp.test.ts",
-      "e2e/reservations.spec.ts"
+      "e2e/workbench/reservations.spec.ts"
     ],
     "evidencePaths": [],
     "blockers": [
@@ -1468,7 +1471,7 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/runner/src/workspaces.ts",
-      "apps/control/src/services/jobs.ts"
+      "apps/control/src/services/work/jobs.ts"
     ],
     "testIds": [
       "tests/aether/workspaces.test.ts",
@@ -1487,12 +1490,12 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/runner/src/workspaces.ts",
-      "apps/web/src/features/Workspace.tsx"
+      "apps/web/src/features/integrations/Workspace.tsx"
     ],
     "testIds": [
       "tests/aether/workspaces.test.ts",
       "tests/aether/workspace-matrix.test.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/workbench/native-workflow.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
@@ -1509,13 +1512,13 @@
     "verificationStatus": "partial",
     "codePaths": [
       "packages/kernel/src/diff.ts",
-      "apps/control/src/services/review-comments.ts",
-      "apps/web/src/features/HunkComments.tsx"
+      "apps/control/src/services/reviews/review-comments.ts",
+      "apps/web/src/features/tasks-git/HunkComments.tsx"
     ],
     "testIds": [
       "tests/aether/review-diff.test.ts",
       "tests/aether/review-comments.test.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/workbench/native-workflow.spec.ts"
     ],
     "evidencePaths": [],
     "blockers": [
@@ -1531,7 +1534,7 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/runner/src/workspaces.ts",
-      "apps/control/src/services/jobs.ts"
+      "apps/control/src/services/work/jobs.ts"
     ],
     "testIds": [
       "tests/aether/workspaces.test.ts",
@@ -1550,14 +1553,14 @@
     "verificationStatus": "partial",
     "codePaths": [
       "apps/runner/src/merge.ts",
-      "apps/control/src/services/jobs.ts",
-      "apps/web/src/features/Integration.tsx"
+      "apps/control/src/services/work/jobs.ts",
+      "apps/web/src/features/integrations/Integration.tsx"
     ],
     "testIds": [
       "tests/aether/merge.test.ts",
       "tests/aether/integration-control.test.ts",
       "tests/aether/native-runner.test.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/workbench/native-workflow.spec.ts"
     ],
     "evidencePaths": [],
     "blockers": [
@@ -1576,7 +1579,7 @@
       "apps/control/src/server.ts",
       "apps/control/src/routes",
       "packages/kernel/src/index.ts",
-      "apps/control/src/services/identity.ts"
+      "apps/control/src/services/domain/identity.ts"
     ],
     "testIds": [
       "tests/aether/security.test.ts"
@@ -1621,7 +1624,7 @@
       "apps/control/src/server.ts",
       "apps/control/src/routes",
       "packages/kernel/src/index.ts",
-      "apps/control/src/services/identity.ts"
+      "apps/control/src/services/domain/identity.ts"
     ],
     "testIds": [
       "tests/aether/security.test.ts"
@@ -1638,9 +1641,9 @@
     "implementationStatus": "partial",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/approvals.ts",
+      "apps/control/src/services/permissions/approvals.ts",
       "apps/runner/src/mcp.ts",
-      "apps/control/src/services/identity.ts"
+      "apps/control/src/services/domain/identity.ts"
     ],
     "testIds": [
       "tests/aether/approvals.test.ts",
@@ -1663,7 +1666,7 @@
       "apps/control/src/server.ts",
       "apps/control/src/routes",
       "packages/kernel/src/index.ts",
-      "apps/control/src/services/identity.ts"
+      "apps/control/src/services/domain/identity.ts"
     ],
     "testIds": [
       "tests/aether/security.test.ts"
@@ -1680,10 +1683,10 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/safe-fetch.ts",
-      "apps/control/src/services/connectors.ts",
+      "apps/control/src/services/platform/safe-fetch.ts",
+      "apps/control/src/services/domain/connectors.ts",
       "scripts/check-boundaries.mjs",
-      "apps/web/src/features/Terminals.tsx"
+      "apps/web/src/features/terminal/Terminals.tsx"
     ],
     "testIds": [
       "tests/aether/safe-fetch.test.ts",
@@ -1724,8 +1727,8 @@
     "verificationStatus": "passed",
     "codePaths": [
       "packages/kernel/src/index.ts",
-      "apps/control/src/services/a2a.ts",
-      "apps/control/src/services/schedules.ts"
+      "apps/control/src/services/a2a/a2a.ts",
+      "apps/control/src/services/domain/schedules.ts"
     ],
     "testIds": [
       "tests/aether/authz-matrix.test.ts",
@@ -1747,7 +1750,7 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/invitations.ts",
+      "apps/control/src/services/remote/invitations.ts",
       "apps/control/src/db/migrations/021-machine-invitations.sql",
       "apps/runner/src/enroll.ts",
       "apps/runner/src/transport.ts",
@@ -1768,16 +1771,16 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/invitations.ts",
+      "apps/control/src/services/remote/invitations.ts",
       "apps/control/src/db/migrations/021-machine-invitations.sql",
       "apps/runner/src/enroll.ts",
       "apps/runner/src/transport.ts",
-      "apps/web/src/features/MachineInvite.tsx"
+      "apps/web/src/features/integrations/MachineInvite.tsx"
     ],
     "testIds": [
       "tests/aether/machine-grants.test.ts",
       "tests/aether/remote-runners.test.ts",
-      "e2e/machine-invite.spec.ts"
+      "e2e/workbench/machine-invite.spec.ts"
     ],
     "evidencePaths": [],
     "blockers": []
@@ -1789,8 +1792,8 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/runners.ts",
-      "apps/control/src/services/invitations.ts",
+      "apps/control/src/services/runtime/runners.ts",
+      "apps/control/src/services/remote/invitations.ts",
       "apps/control/src/db/migrations/021-machine-invitations.sql",
       "apps/runner/src/enroll.ts",
       "apps/runner/src/transport.ts"
@@ -1810,7 +1813,7 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/identity.ts",
+      "apps/control/src/services/domain/identity.ts",
       "apps/control/src/server.ts",
       "apps/control/src/routes"
     ],
@@ -1832,7 +1835,7 @@
     "codePaths": [
       "apps/runner/src/journal.ts",
       "apps/runner/src/runner.ts",
-      "apps/control/src/services/runners.ts"
+      "apps/control/src/services/runtime/runners.ts"
     ],
     "testIds": [
       "tests/aether/runner-spool.test.ts",
@@ -1854,7 +1857,7 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/runner/src/runner.ts",
-      "apps/control/src/services/runners.ts"
+      "apps/control/src/services/runtime/runners.ts"
     ],
     "testIds": [
       "tests/aether/runner-spool.test.ts",
@@ -1894,7 +1897,7 @@
     "verificationStatus": "partial",
     "codePaths": [
       "apps/runner/src/main.ts",
-      "apps/control/src/services/invitations.ts"
+      "apps/control/src/services/remote/invitations.ts"
     ],
     "testIds": [
       "tests/aether/remote-runners.test.ts"
@@ -1913,7 +1916,7 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/runner/src/mcp.ts",
-      "apps/control/src/services/identity.ts"
+      "apps/control/src/services/domain/identity.ts"
     ],
     "testIds": [
       "tests/aether/mcp.test.ts",
@@ -1934,7 +1937,7 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/runner/src/mcp.ts",
-      "apps/control/src/services/identity.ts"
+      "apps/control/src/services/domain/identity.ts"
     ],
     "testIds": [
       "tests/aether/mcp.test.ts",
@@ -1991,7 +1994,7 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/a2a.ts",
+      "apps/control/src/services/a2a/a2a.ts",
       "apps/control/src/server.ts",
       "apps/control/src/routes"
     ],
@@ -2010,8 +2013,8 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/a2a.ts",
-      "apps/control/src/services/a2a-clients.ts"
+      "apps/control/src/services/a2a/a2a.ts",
+      "apps/control/src/services/a2a/a2a-clients.ts"
     ],
     "testIds": [
       "tests/aether/a2a.test.ts"
@@ -2028,9 +2031,9 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/a2a.ts",
-      "apps/control/src/services/safe-fetch.ts",
-      "apps/control/src/services/a2a-clients.ts"
+      "apps/control/src/services/a2a/a2a.ts",
+      "apps/control/src/services/platform/safe-fetch.ts",
+      "apps/control/src/services/a2a/a2a-clients.ts"
     ],
     "testIds": [
       "tests/aether/a2a.test.ts",
@@ -2048,13 +2051,13 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/features/A2AClients.tsx",
-      "apps/web/src/features/Agents.tsx",
-      "apps/web/src/features/CapabilityMatrix.tsx"
+      "apps/web/src/features/integrations/A2AClients.tsx",
+      "apps/web/src/features/integrations/Agents.tsx",
+      "apps/web/src/features/integrations/CapabilityMatrix.tsx"
     ],
     "testIds": [
-      "e2e/a2a.spec.ts",
-      "e2e/capabilities.spec.ts"
+      "e2e/workbench/a2a.spec.ts",
+      "e2e/settings/capabilities.spec.ts"
     ],
     "evidencePaths": [],
     "blockers": [
@@ -2072,8 +2075,8 @@
       "apps/web/src/ui/PageHeading.tsx"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "e2e/native-workflow.spec.ts"
+      "e2e/workbench/workbench.spec.ts",
+      "e2e/workbench/native-workflow.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
@@ -2094,9 +2097,9 @@
       "apps/web/src/ui/Badge.tsx"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
-      "e2e/native-workflow.spec.ts",
-      "e2e/navigation.spec.ts"
+      "e2e/workbench/workbench.spec.ts",
+      "e2e/workbench/native-workflow.spec.ts",
+      "e2e/workbench/navigation.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
@@ -2114,13 +2117,13 @@
       "apps/web/src/ui/whyNot.ts"
     ],
     "testIds": [
-      "e2e/ui-sweep.spec.ts"
+      "e2e/ui/ui-sweep.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "Write actions a viewer cannot use now say why (a title, covered by e2e/accessibility.spec.ts); controls disabled while busy or for missing input still do not"
+      "Write actions a viewer cannot use now say why (a title, covered by e2e/ui/accessibility.spec.ts); controls disabled while busy or for missing input still do not"
     ]
   },
   {
@@ -2132,13 +2135,13 @@
     "codePaths": [
       "apps/web/src/App.tsx",
       "apps/web/src/ui/Empty.tsx",
-      "apps/web/src/features/FirstRun.tsx",
-      "apps/web/src/features/NotFound.tsx"
+      "apps/web/src/features/shell-chrome/FirstRun.tsx",
+      "apps/web/src/features/shell-chrome/NotFound.tsx"
     ],
     "testIds": [
-      "e2e/ui-sweep.spec.ts",
-      "e2e/workbench.spec.ts",
-      "e2e/first-run.spec.ts"
+      "e2e/ui/ui-sweep.spec.ts",
+      "e2e/workbench/workbench.spec.ts",
+      "e2e/settings/first-run.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
@@ -2155,14 +2158,14 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/i18n.ts",
-      "apps/web/src/state.ts"
+      "apps/web/src/lib/i18n/i18n.ts",
+      "apps/web/src/lib/preferences/state.ts"
     ],
     "testIds": [
       "tests/aether/i18n.test.ts",
-      "e2e/ui-sweep.spec.ts",
+      "e2e/ui/ui-sweep.spec.ts",
       "tests/aether/first-run.test.ts",
-      "e2e/first-run.spec.ts"
+      "e2e/settings/first-run.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
@@ -2181,8 +2184,8 @@
       "apps/web/src/styles/index.css"
     ],
     "testIds": [
-      "e2e/ui-sweep.spec.ts",
-      "e2e/workbench.spec.ts"
+      "e2e/ui/ui-sweep.spec.ts",
+      "e2e/workbench/workbench.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
@@ -2202,8 +2205,8 @@
       "apps/web/src/ui/PageHeading.tsx"
     ],
     "testIds": [
-      "e2e/navigation.spec.ts",
-      "e2e/ui-sweep.spec.ts"
+      "e2e/workbench/navigation.spec.ts",
+      "e2e/ui/ui-sweep.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
@@ -2220,8 +2223,8 @@
       "apps/web/src/ui/Badge.tsx"
     ],
     "testIds": [
-      "e2e/navigation.spec.ts",
-      "e2e/ui-sweep.spec.ts"
+      "e2e/workbench/navigation.spec.ts",
+      "e2e/ui/ui-sweep.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
@@ -2237,13 +2240,13 @@
     "implementationStatus": "partial",
     "verificationStatus": "partial",
     "codePaths": [
-      "packages/office-scene/src/OfficeScene.tsx",
-      "packages/office-scene/src/Animal.tsx",
+      "packages/office-scene/src/components/OfficeScene.tsx",
+      "packages/office-scene/src/animals/Animal.tsx",
       "tools/blender/build_animals.py",
       "scripts/validate-assets.mjs"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
+      "e2e/workbench/workbench.spec.ts",
       "tests/aether/kernel.test.ts"
     ],
     "evidencePaths": [
@@ -2262,13 +2265,13 @@
     "implementationStatus": "partial",
     "verificationStatus": "partial",
     "codePaths": [
-      "packages/office-scene/src/OfficeScene.tsx",
-      "packages/office-scene/src/Animal.tsx",
+      "packages/office-scene/src/components/OfficeScene.tsx",
+      "packages/office-scene/src/animals/Animal.tsx",
       "tools/blender/build_animals.py",
       "scripts/validate-assets.mjs"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
+      "e2e/workbench/workbench.spec.ts",
       "tests/aether/kernel.test.ts"
     ],
     "evidencePaths": [
@@ -2287,13 +2290,13 @@
     "implementationStatus": "partial",
     "verificationStatus": "partial",
     "codePaths": [
-      "packages/office-scene/src/OfficeScene.tsx",
-      "packages/office-scene/src/Animal.tsx",
+      "packages/office-scene/src/components/OfficeScene.tsx",
+      "packages/office-scene/src/animals/Animal.tsx",
       "tools/blender/build_animals.py",
       "scripts/validate-assets.mjs"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
+      "e2e/workbench/workbench.spec.ts",
       "tests/aether/kernel.test.ts"
     ],
     "evidencePaths": [
@@ -2312,13 +2315,13 @@
     "implementationStatus": "partial",
     "verificationStatus": "partial",
     "codePaths": [
-      "packages/office-scene/src/OfficeScene.tsx",
-      "packages/office-scene/src/Animal.tsx",
+      "packages/office-scene/src/components/OfficeScene.tsx",
+      "packages/office-scene/src/animals/Animal.tsx",
       "tools/blender/build_animals.py",
       "scripts/validate-assets.mjs"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
+      "e2e/workbench/workbench.spec.ts",
       "tests/aether/kernel.test.ts"
     ],
     "evidencePaths": [
@@ -2337,13 +2340,13 @@
     "implementationStatus": "partial",
     "verificationStatus": "partial",
     "codePaths": [
-      "packages/office-scene/src/OfficeScene.tsx",
-      "packages/office-scene/src/Animal.tsx",
+      "packages/office-scene/src/components/OfficeScene.tsx",
+      "packages/office-scene/src/animals/Animal.tsx",
       "tools/blender/build_animals.py",
       "scripts/validate-assets.mjs"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
+      "e2e/workbench/workbench.spec.ts",
       "tests/aether/kernel.test.ts"
     ],
     "evidencePaths": [
@@ -2362,8 +2365,8 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "packages/office-scene/src/carriers.ts",
-      "packages/office-scene/src/MessageCarriers.tsx"
+      "packages/office-scene/src/environment/carriers.ts",
+      "packages/office-scene/src/components/MessageCarriers.tsx"
     ],
     "testIds": [
       "tests/aether/carriers.test.ts"
@@ -2382,7 +2385,7 @@
     "verificationStatus": "passed",
     "codePaths": [
       "packages/kernel/src/navigation.ts",
-      "packages/office-scene/src/carriers.ts",
+      "packages/office-scene/src/environment/carriers.ts",
       "apps/web/src/App.tsx"
     ],
     "testIds": [
@@ -2402,13 +2405,13 @@
     "implementationStatus": "partial",
     "verificationStatus": "partial",
     "codePaths": [
-      "packages/office-scene/src/OfficeScene.tsx",
-      "packages/office-scene/src/Animal.tsx",
+      "packages/office-scene/src/components/OfficeScene.tsx",
+      "packages/office-scene/src/animals/Animal.tsx",
       "tools/blender/build_animals.py",
       "scripts/validate-assets.mjs"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
+      "e2e/workbench/workbench.spec.ts",
       "tests/aether/kernel.test.ts"
     ],
     "evidencePaths": [
@@ -2427,13 +2430,13 @@
     "implementationStatus": "partial",
     "verificationStatus": "partial",
     "codePaths": [
-      "packages/office-scene/src/OfficeScene.tsx",
-      "packages/office-scene/src/Animal.tsx",
+      "packages/office-scene/src/components/OfficeScene.tsx",
+      "packages/office-scene/src/animals/Animal.tsx",
       "tools/blender/build_animals.py",
       "scripts/validate-assets.mjs"
     ],
     "testIds": [
-      "e2e/workbench.spec.ts",
+      "e2e/workbench/workbench.spec.ts",
       "tests/aether/kernel.test.ts"
     ],
     "evidencePaths": [
@@ -2452,13 +2455,13 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/tour.ts",
+      "apps/web/src/lib/navigation/tour.ts",
       "apps/web/src/App.tsx",
-      "packages/office-scene/src/OfficeScene.tsx"
+      "packages/office-scene/src/components/OfficeScene.tsx"
     ],
     "testIds": [
       "tests/aether/tour.test.ts",
-      "e2e/tour.spec.ts"
+      "e2e/office-life/tour.spec.ts"
     ],
     "evidencePaths": [],
     "blockers": []
@@ -2470,11 +2473,11 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/features/LayoutEditor.tsx",
+      "apps/web/src/features/office/LayoutEditor.tsx",
       "apps/control/src/control.ts"
     ],
     "testIds": [
-      "e2e/layout-editor.spec.ts",
+      "e2e/scene/layout-editor.spec.ts",
       "tests/aether/layout.test.ts"
     ],
     "evidencePaths": [
@@ -2491,7 +2494,7 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/features/LayoutEditor.tsx",
+      "apps/web/src/features/office/LayoutEditor.tsx",
       "packages/kernel/src/layout.ts",
       "packages/contracts/src"
     ],
@@ -2512,11 +2515,11 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "packages/office-scene/src/OfficeScene.tsx",
-      "packages/office-scene/src/PerfProbe.tsx"
+      "packages/office-scene/src/components/OfficeScene.tsx",
+      "packages/office-scene/src/components/PerfProbe.tsx"
     ],
     "testIds": [
-      "e2e/scene.spec.ts"
+      "e2e/scene/scene.spec.ts"
     ],
     "evidencePaths": [
       "evidence/assets-validation.json",
@@ -2534,11 +2537,11 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "packages/office-scene/src/OfficeScene.tsx",
+      "packages/office-scene/src/components/OfficeScene.tsx",
       "apps/web/src/App.tsx"
     ],
     "testIds": [
-      "e2e/scene.spec.ts"
+      "e2e/scene/scene.spec.ts"
     ],
     "evidencePaths": [
       "evidence/assets-validation.json",
@@ -2556,11 +2559,11 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "packages/office-scene/src/OfficeScene.tsx",
-      "packages/office-scene/src/PerfProbe.tsx"
+      "packages/office-scene/src/components/OfficeScene.tsx",
+      "packages/office-scene/src/components/PerfProbe.tsx"
     ],
     "testIds": [
-      "e2e/scene.spec.ts"
+      "e2e/scene/scene.spec.ts"
     ],
     "evidencePaths": [
       "evidence/assets-validation.json",
@@ -2578,12 +2581,12 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "packages/office-scene/src/perf.ts",
-      "packages/office-scene/src/PerfProbe.tsx"
+      "packages/office-scene/src/perf/perf.ts",
+      "packages/office-scene/src/components/PerfProbe.tsx"
     ],
     "testIds": [
       "tests/aether/perf.test.ts",
-      "e2e/perf.spec.ts"
+      "e2e/perf/perf.spec.ts"
     ],
     "evidencePaths": [],
     "blockers": [
@@ -2602,9 +2605,9 @@
       "apps/web/src/ui/Field.tsx"
     ],
     "testIds": [
-      "e2e/accessibility.spec.ts",
-      "e2e/ui-sweep.spec.ts",
-      "e2e/first-run.spec.ts"
+      "e2e/ui/accessibility.spec.ts",
+      "e2e/ui/ui-sweep.spec.ts",
+      "e2e/settings/first-run.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
@@ -2623,7 +2626,7 @@
       "apps/web/src/ui/Modal.tsx"
     ],
     "testIds": [
-      "e2e/accessibility.spec.ts"
+      "e2e/ui/accessibility.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
@@ -2640,14 +2643,14 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/web/src/App.tsx",
-      "apps/web/src/features/Agents.tsx",
-      "apps/web/src/features/SceneSummary.tsx",
-      "apps/web/src/features/scene-summary.ts"
+      "apps/web/src/features/integrations/Agents.tsx",
+      "apps/web/src/features/office/SceneSummary.tsx",
+      "apps/web/src/features/office/scene-summary.ts"
     ],
     "testIds": [
-      "e2e/navigation.spec.ts",
-      "e2e/scene.spec.ts",
-      "e2e/first-run.spec.ts",
+      "e2e/workbench/navigation.spec.ts",
+      "e2e/scene/scene.spec.ts",
+      "e2e/settings/first-run.spec.ts",
       "tests/aether/first-run.test.ts"
     ],
     "evidencePaths": [
@@ -2662,11 +2665,11 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/state.ts",
-      "packages/office-scene/src/Animal.tsx"
+      "apps/web/src/lib/preferences/state.ts",
+      "packages/office-scene/src/animals/Animal.tsx"
     ],
     "testIds": [
-      "e2e/accessibility.spec.ts"
+      "e2e/ui/accessibility.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
@@ -2682,10 +2685,10 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/styles/tokens.css"
+      "apps/web/src/styles/core/tokens.css"
     ],
     "testIds": [
-      "e2e/ui-sweep.spec.ts"
+      "e2e/ui/ui-sweep.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
@@ -2701,10 +2704,10 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/features/LayoutEditor.tsx"
+      "apps/web/src/features/office/LayoutEditor.tsx"
     ],
     "testIds": [
-      "e2e/layout-editor.spec.ts"
+      "e2e/scene/layout-editor.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
@@ -2720,13 +2723,13 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/notifications.ts",
-      "apps/web/src/features/Approvals.tsx",
-      "apps/web/src/state.ts"
+      "apps/web/src/lib/notifications/notifications.ts",
+      "apps/web/src/features/operations/Approvals.tsx",
+      "apps/web/src/lib/preferences/state.ts"
     ],
     "testIds": [
       "tests/aether/notifications.test.ts",
-      "e2e/notifications.spec.ts"
+      "e2e/settings/notifications.spec.ts"
     ],
     "evidencePaths": [],
     "blockers": [
@@ -2740,11 +2743,11 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "e2e/ui-sweep.spec.ts"
+      "e2e/ui/ui-sweep.spec.ts"
     ],
     "testIds": [
-      "e2e/ui-sweep.spec.ts",
-      "e2e/accessibility.spec.ts"
+      "e2e/ui/ui-sweep.spec.ts",
+      "e2e/ui/accessibility.spec.ts"
     ],
     "evidencePaths": [
       "evidence/e2e-full-workflow-first.log"
@@ -2760,14 +2763,14 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/integrations.ts",
-      "apps/control/src/services/connectors.ts",
+      "apps/control/src/services/domain/integrations.ts",
+      "apps/control/src/services/domain/connectors.ts",
       "apps/control/src/db/migrations/020-integrations-sync.sql",
-      "apps/web/src/features/Integrations.tsx"
+      "apps/web/src/features/integrations/Integrations.tsx"
     ],
     "testIds": [
       "tests/aether/integrations.test.ts",
-      "e2e/integrations.spec.ts"
+      "e2e/settings/integrations.spec.ts"
     ],
     "evidencePaths": [],
     "blockers": [
@@ -2783,10 +2786,10 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/integrations.ts",
-      "apps/control/src/services/connectors.ts",
+      "apps/control/src/services/domain/integrations.ts",
+      "apps/control/src/services/domain/connectors.ts",
       "apps/control/src/db/migrations/020-integrations-sync.sql",
-      "apps/web/src/features/Integrations.tsx"
+      "apps/web/src/features/integrations/Integrations.tsx"
     ],
     "testIds": [
       "tests/aether/integrations.test.ts"
@@ -2804,10 +2807,10 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/integrations.ts",
-      "apps/control/src/services/connectors.ts",
+      "apps/control/src/services/domain/integrations.ts",
+      "apps/control/src/services/domain/connectors.ts",
       "apps/control/src/db/migrations/020-integrations-sync.sql",
-      "apps/web/src/features/Integrations.tsx"
+      "apps/web/src/features/integrations/Integrations.tsx"
     ],
     "testIds": [
       "tests/aether/integrations.test.ts"
@@ -2824,19 +2827,19 @@
     "implementationStatus": "partial",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/provider-events.ts",
+      "apps/control/src/services/runtime/provider-events.ts",
       "apps/runner/src/runner.ts",
-      "apps/web/src/features/ExecutionSettings.tsx",
+      "apps/web/src/features/operations/ExecutionSettings.tsx",
       "apps/control/src/control.ts",
       "apps/control/src/db/migrations/010-knowledge-review.sql",
-      "apps/web/src/features/Knowledge.tsx",
+      "apps/web/src/features/operations/Knowledge.tsx",
       "apps/runner/src/mcp.ts"
     ],
     "testIds": [
       "tests/aether/kernel.test.ts",
       "tests/aether/native-runner.test.ts",
       "tests/aether/knowledge.test.ts",
-      "e2e/knowledge.spec.ts"
+      "e2e/workbench/knowledge.spec.ts"
     ],
     "evidencePaths": [
       "evidence/workflow-all-tests.log",
@@ -2856,14 +2859,14 @@
     "verificationStatus": "passed",
     "codePaths": [
       "packages/kernel/src/skill.ts",
-      "apps/control/src/services/skills.ts",
+      "apps/control/src/services/domain/skills.ts",
       "apps/runner/src/mcp.ts",
-      "apps/web/src/features/Skills.tsx"
+      "apps/web/src/features/operations/Skills.tsx"
     ],
     "testIds": [
       "tests/aether/skill-kernel.test.ts",
       "tests/aether/skills.test.ts",
-      "e2e/skills.spec.ts"
+      "e2e/settings/skills.spec.ts"
     ],
     "evidencePaths": [],
     "blockers": [
@@ -2878,14 +2881,14 @@
     "verificationStatus": "passed",
     "codePaths": [
       "packages/kernel/src/schedule.ts",
-      "apps/control/src/services/schedules.ts",
+      "apps/control/src/services/domain/schedules.ts",
       "apps/control/src/db/migrations/018-schedules.sql",
-      "apps/web/src/features/Schedules.tsx"
+      "apps/web/src/features/operations/Schedules.tsx"
     ],
     "testIds": [
       "tests/aether/schedule-kernel.test.ts",
       "tests/aether/schedules.test.ts",
-      "e2e/schedules.spec.ts"
+      "e2e/settings/schedules.spec.ts"
     ],
     "evidencePaths": [],
     "blockers": [
@@ -2900,9 +2903,9 @@
     "implementationStatus": "partial",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/provider-events.ts",
+      "apps/control/src/services/runtime/provider-events.ts",
       "apps/runner/src/runner.ts",
-      "apps/web/src/features/ExecutionSettings.tsx"
+      "apps/web/src/features/operations/ExecutionSettings.tsx"
     ],
     "testIds": [
       "tests/aether/kernel.test.ts",
@@ -2922,9 +2925,9 @@
     "implementationStatus": "partial",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/provider-events.ts",
+      "apps/control/src/services/runtime/provider-events.ts",
       "apps/runner/src/runner.ts",
-      "apps/web/src/features/ExecutionSettings.tsx"
+      "apps/web/src/features/operations/ExecutionSettings.tsx"
     ],
     "testIds": [
       "tests/aether/kernel.test.ts",
@@ -2948,7 +2951,7 @@
       "docs/native-execution.md"
     ],
     "testIds": [
-      "e2e/native-workflow.spec.ts",
+      "e2e/workbench/native-workflow.spec.ts",
       "tests/aether/native-runner.test.ts"
     ],
     "evidencePaths": [
@@ -2987,7 +2990,7 @@
       "docs/native-execution.md"
     ],
     "testIds": [
-      "e2e/native-workflow.spec.ts",
+      "e2e/workbench/native-workflow.spec.ts",
       "tests/aether/native-runner.test.ts"
     ],
     "evidencePaths": [
@@ -3009,7 +3012,7 @@
       "docs/native-execution.md"
     ],
     "testIds": [
-      "e2e/native-workflow.spec.ts",
+      "e2e/workbench/native-workflow.spec.ts",
       "tests/aether/native-runner.test.ts"
     ],
     "evidencePaths": [
@@ -3031,7 +3034,7 @@
       "docs/native-execution.md"
     ],
     "testIds": [
-      "e2e/native-workflow.spec.ts",
+      "e2e/workbench/native-workflow.spec.ts",
       "tests/aether/native-runner.test.ts"
     ],
     "evidencePaths": [
@@ -3053,7 +3056,7 @@
       "docs/native-execution.md"
     ],
     "testIds": [
-      "e2e/native-workflow.spec.ts",
+      "e2e/workbench/native-workflow.spec.ts",
       "tests/aether/native-runner.test.ts"
     ],
     "evidencePaths": [
@@ -3088,11 +3091,11 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "scripts/final-verification.ts",
+      "scripts/verification-ledger.ts",
       "docs/verification/report.md"
     ],
     "testIds": [
-      "tests/aether/final-verification.test.ts"
+      "tests/aether/verification-ledger.test.ts"
     ],
     "evidencePaths": [],
     "blockers": []
@@ -3104,13 +3107,13 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/local-sessions.ts",
-      "apps/control/src/services/agent-processes.ts",
-      "apps/control/src/services/hook-spool.ts",
-      "apps/web/src/localSessions.ts",
-      "apps/web/src/adoptProjects.ts",
-      "apps/web/src/features/SessionPanel.tsx",
-      "apps/web/src/features/feed-model.ts",
+      "apps/control/src/services/runtime/local-sessions.ts",
+      "apps/control/src/services/runtime/agent-processes.ts",
+      "apps/control/src/services/hooks/hook-spool.ts",
+      "apps/web/src/lib/sessions/localSessions.ts",
+      "apps/web/src/features/integrations/adoptProjects.ts",
+      "apps/web/src/features/sessions/SessionPanel.tsx",
+      "apps/web/src/features/feed/feed-model.ts",
       "packages/contracts/src"
     ],
     "testIds": [
@@ -3118,8 +3121,8 @@
       "tests/aether/agent-processes.test.ts",
       "tests/aether/hook-bridge.test.ts",
       "tests/aether/adopt-projects.test.ts",
-      "e2e/local-sessions.spec.ts",
-      "e2e/session-panel.spec.ts",
+      "e2e/session/local-sessions.spec.ts",
+      "e2e/session/session-panel.spec.ts",
       "tests/aether/feed-model.test.ts",
       "tests/aether/turn-groups.test.ts"
     ],
@@ -3145,15 +3148,15 @@
     "verificationStatus": "partial",
     "codePaths": [
       "apps/control/src/routes/session-stream.ts",
-      "apps/control/src/services/session-changes.ts",
-      "apps/web/src/features/use-session-stream.ts",
-      "apps/web/src/features/live-link.ts"
+      "apps/control/src/services/sessions/session-changes.ts",
+      "apps/web/src/hooks/use-session-stream.ts",
+      "apps/web/src/features/integrations/live-link.ts"
     ],
     "testIds": [
       "tests/aether/session-stream.test.ts",
       "tests/aether/live-link.test.ts",
       "tests/aether/api-compression.test.ts",
-      "e2e/live-link.spec.ts"
+      "e2e/session/live-link.spec.ts"
     ],
     "blockers": [
       "Reconnect backoff and tab-visibility handling are covered by pure tests, not by a run on an unreliable network"
@@ -3167,19 +3170,19 @@
     "verificationStatus": "partial",
     "codePaths": [
       "apps/control/src/routes/composer.ts",
-      "apps/control/src/services/terminal-link.ts",
-      "apps/control/src/services/session-commands.ts",
-      "apps/control/src/services/session-files.ts",
-      "apps/web/src/features/Composer.tsx",
-      "apps/web/src/features/composer-model.ts",
-      "apps/web/src/features/terminal-driver.ts"
+      "apps/control/src/services/terminals/terminal-link.ts",
+      "apps/control/src/services/sessions/session-commands.ts",
+      "apps/control/src/services/sessions/session-files.ts",
+      "apps/web/src/features/terminal/Composer.tsx",
+      "apps/web/src/features/conversation/composer-model.ts",
+      "apps/web/src/features/terminal/terminal-driver.ts"
     ],
     "testIds": [
       "tests/aether/composer-api.test.ts",
       "tests/aether/composer-model.test.ts",
       "tests/aether/session-commands.test.ts",
       "tests/aether/terminal-resume.test.ts",
-      "e2e/composer.spec.ts"
+      "e2e/workbench/composer.spec.ts"
     ],
     "blockers": [
       "Verified against synthetic terminals; typing into a live Claude Code or Codex prompt was not run (it would use a paid session)",
@@ -3194,12 +3197,12 @@
     "verificationStatus": "partial",
     "codePaths": [
       "apps/control/src/routes/permissions.ts",
-      "apps/control/src/services/permission-requests.ts",
-      "apps/control/src/services/permission-summary.ts",
-      "apps/control/src/services/remote-approvals.ts",
+      "apps/control/src/services/permissions/permission-requests.ts",
+      "apps/control/src/services/permissions/permission-summary.ts",
+      "apps/control/src/services/remote/remote-approvals.ts",
       "packages/providers/src/hook-approval.mjs",
       "packages/providers/src/approval-install.ts",
-      "apps/web/src/features/PermissionCard.tsx"
+      "apps/web/src/features/operations/PermissionCard.tsx"
     ],
     "testIds": [
       "tests/aether/permission-requests.test.ts",
@@ -3221,11 +3224,11 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/clock-out.ts",
-      "apps/control/src/services/stop-session.ts",
+      "apps/control/src/services/runtime/clock-out.ts",
+      "apps/control/src/services/runtime/stop-session.ts",
       "apps/control/src/routes/local.ts",
-      "apps/web/src/features/ClockOut.tsx",
-      "packages/office-scene/src/departure.ts"
+      "apps/web/src/features/operations/ClockOut.tsx",
+      "packages/office-scene/src/animals/departure.ts"
     ],
     "testIds": [
       "tests/aether/clock-out.test.ts",
@@ -3246,7 +3249,7 @@
     "codePaths": [
       "packages/providers/src/models.ts",
       "apps/control/src/routes/local.ts",
-      "apps/web/src/features/ModelPicker.tsx",
+      "apps/web/src/features/conversation/ModelPicker.tsx",
       "apps/web/src/features/settings/ModelsSection.tsx"
     ],
     "testIds": [
@@ -3264,7 +3267,7 @@
     "codePaths": [
       "packages/kernel/src/classify-session.ts",
       "packages/kernel/src/role-signals.ts",
-      "apps/control/src/services/session-role.ts",
+      "apps/control/src/services/sessions/session-role.ts",
       "docs/roles.md"
     ],
     "testIds": [
@@ -3282,18 +3285,18 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/web/src/features/character-actions.ts",
-      "apps/web/src/features/CharacterMenu.tsx",
-      "apps/web/src/features/seat-move.ts",
-      "packages/office-scene/src/InteractionLayer.tsx",
-      "packages/office-scene/src/emotes.ts",
-      "packages/office-scene/src/seat-drag.ts"
+      "apps/web/src/features/office/character-actions.ts",
+      "apps/web/src/features/office/CharacterMenu.tsx",
+      "apps/web/src/features/office/seat-move.ts",
+      "packages/office-scene/src/components/InteractionLayer.tsx",
+      "packages/office-scene/src/animals/emotes.ts",
+      "packages/office-scene/src/core/seat-drag.ts"
     ],
     "testIds": [
       "tests/aether/character-actions.test.ts",
       "tests/aether/emotes.test.ts",
       "tests/aether/seat-drag.test.ts",
-      "e2e/z-characters.spec.ts"
+      "e2e/scene/z-characters.spec.ts"
     ],
     "blockers": [
       "Touch gestures were exercised with emulated touch, not on a physical phone"
@@ -3306,11 +3309,11 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/git-graph.ts",
-      "packages/office-scene/src/stalk-layout.ts",
-      "packages/office-scene/src/crown-layout.ts",
-      "packages/office-scene/src/flower-genome.ts",
-      "packages/office-scene/src/Garden.tsx"
+      "apps/control/src/services/git/git-graph.ts",
+      "packages/office-scene/src/core/stalk-layout.ts",
+      "packages/office-scene/src/core/crown-layout.ts",
+      "packages/office-scene/src/flowers/flower-genome.ts",
+      "packages/office-scene/src/components/Garden.tsx"
     ],
     "testIds": [
       "tests/aether/git-graph.test.ts",
@@ -3330,11 +3333,11 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/control/src/services/session-usage.ts",
-      "apps/control/src/services/session-context.ts",
-      "apps/control/src/services/session-speech.ts",
-      "apps/web/src/features/compaction.ts",
-      "packages/office-scene/src/context.ts"
+      "apps/control/src/services/sessions/session-usage.ts",
+      "apps/control/src/services/sessions/session-context.ts",
+      "apps/control/src/services/sessions/session-speech.ts",
+      "apps/web/src/features/conversation/compaction.ts",
+      "packages/office-scene/src/environment/context.ts"
     ],
     "testIds": [
       "tests/aether/session-usage.test.ts",
@@ -3352,18 +3355,18 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "packages/office-scene/src/director.ts",
-      "packages/office-scene/src/multi-view.ts",
-      "packages/office-scene/src/MultiCam.tsx",
-      "packages/office-scene/src/PipWall.tsx",
-      "apps/web/src/features/activity-rate.ts"
+      "packages/office-scene/src/environment/director.ts",
+      "packages/office-scene/src/core/multi-view.ts",
+      "packages/office-scene/src/components/MultiCam.tsx",
+      "packages/office-scene/src/components/PipWall.tsx",
+      "apps/web/src/features/sessions/activity-rate.ts"
     ],
     "testIds": [
       "tests/aether/director.test.ts",
       "tests/aether/multi-view.test.ts",
       "tests/aether/activity-rate.test.ts",
       "tests/aether/perf-control.test.ts",
-      "e2e/director.spec.ts"
+      "e2e/scene/director.spec.ts"
     ],
     "blockers": [
       "Visual quality of the camera moves is judged by eye; only the rules (shot choice, pacing, frame layout) are asserted"
@@ -3376,21 +3379,21 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/web/src/features/SessionPanel.tsx",
-      "apps/web/src/features/SessionFeed.tsx",
-      "apps/web/src/features/SessionConversation.tsx",
-      "apps/web/src/features/SessionSheet.tsx",
-      "apps/web/src/features/PanelResizer.tsx",
-      "apps/web/src/features/panel-width.ts",
-      "apps/web/src/features/needs-you.ts"
+      "apps/web/src/features/sessions/SessionPanel.tsx",
+      "apps/web/src/features/sessions/SessionFeed.tsx",
+      "apps/web/src/features/sessions/SessionConversation.tsx",
+      "apps/web/src/features/sessions/SessionSheet.tsx",
+      "apps/web/src/features/shell-chrome/PanelResizer.tsx",
+      "apps/web/src/features/shell-chrome/panel-width.ts",
+      "apps/web/src/features/sessions/needs-you.ts"
     ],
     "testIds": [
       "tests/aether/feed-model.test.ts",
       "tests/aether/turn-groups.test.ts",
       "tests/aether/panel-width.test.ts",
       "tests/aether/needs-you.test.ts",
-      "e2e/session-panel.spec.ts",
-      "e2e/panel-resize.spec.ts"
+      "e2e/session/session-panel.spec.ts",
+      "e2e/ui/panel-resize.spec.ts"
     ],
     "blockers": [
       "Layout was checked at the six widths of the responsive spec, not on physical devices"
@@ -3403,11 +3406,11 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/nav.ts",
-      "apps/web/src/notifications.ts",
-      "apps/web/src/features/Topbar.tsx",
-      "apps/web/src/features/ConnectPhone.tsx",
-      "apps/control/src/services/pairing.ts"
+      "apps/web/src/lib/navigation/nav.ts",
+      "apps/web/src/lib/notifications/notifications.ts",
+      "apps/web/src/features/shell-chrome/Topbar.tsx",
+      "apps/web/src/features/integrations/ConnectPhone.tsx",
+      "apps/control/src/services/remote/pairing.ts"
     ],
     "testIds": [
       "tests/aether/nav-advanced.test.ts",
@@ -3415,25 +3418,25 @@
       "tests/aether/notifications.test.ts",
       "tests/aether/pairing.test.ts",
       "tests/aether/session-alerts.test.ts",
-      "e2e/advanced.spec.ts",
-      "e2e/notifications.spec.ts",
-      "e2e/pairing.spec.ts"
+      "e2e/workbench/advanced.spec.ts",
+      "e2e/settings/notifications.spec.ts",
+      "e2e/session/pairing.spec.ts"
     ],
     "blockers": []
   },
   {
     "id": "OFFICE-LIFE-01",
     "requirement": "網頁知道每個 subagent 何時開始與結束、是否在等授權、執行了幾次工具；結束的 subagent 保留 90 秒；舊版伺服器的回應仍可解析。",
-    "scope": "AETHER target; office life iteration I1, see docs/design/office-life-iterations.md",
+    "scope": "AETHER target; office life iteration I1, see docs/design/office-life-work-plan.md",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
       "packages/contracts/src/sessions.ts",
-      "apps/control/src/services/hook-spool.ts",
-      "apps/control/src/services/session-discovery.ts",
-      "apps/control/src/services/local-sessions.ts",
-      "apps/web/src/features/office-model.ts",
-      "apps/web/src/local-session-compat.ts"
+      "apps/control/src/services/hooks/hook-spool.ts",
+      "apps/control/src/services/sessions/session-discovery.ts",
+      "apps/control/src/services/runtime/local-sessions.ts",
+      "apps/web/src/features/office/office-model.ts",
+      "apps/web/src/lib/sessions/local-session-compat.ts"
     ],
     "testIds": [
       "tests/aether/subagent-lifecycle.test.ts",
@@ -3449,7 +3452,7 @@
   {
     "id": "OFFICE-LIFE-02",
     "requirement": "小隊區域是經過驗證的配置物件：schema 版本 1|2（只有含小隊區域時才寫 2）、核心驗證錯誤碼、可通行、自動擺放於主管桌旁，空間不足時退回原本的辦公桌座位；既有配置維持有效且桌子不會被移動。",
-    "scope": "AETHER target; office life iteration I3, see docs/design/office-life-iterations.md",
+    "scope": "AETHER target; office life iteration I3, see docs/design/office-life-work-plan.md",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
@@ -3457,15 +3460,15 @@
       "packages/kernel/src/layout.ts",
       "packages/kernel/src/navigation.ts",
       "packages/office-scene/src/squad/squad-layout.ts",
-      "apps/web/src/layout-merge.ts",
-      "apps/web/src/features/LayoutEditor.tsx"
+      "apps/web/src/features/office/layout-merge.ts",
+      "apps/web/src/features/office/LayoutEditor.tsx"
     ],
     "testIds": [
       "tests/aether/layout-squad.test.ts",
       "tests/aether/layout-squad-http.test.ts",
       "tests/aether/layout.test.ts",
       "tests/aether/navigation.test.ts",
-      "e2e/layout-editor.spec.ts"
+      "e2e/scene/layout-editor.spec.ts"
     ],
     "blockers": [
       "Default placement was checked on the generated default layout of every floor and on a full floor, not on layouts saved by real users"
@@ -3474,7 +3477,7 @@
   {
     "id": "OFFICE-LIFE-I7-01",
     "requirement": "工具呼叫帶有來自封閉詞彙的指令標籤（只存標籤，不存參數、路徑、樣式或祕密），以及結果 ok：僅在提供者明確回報時為 true／false，否則為 null，不猜測；結果以工具 id 精確配對，不以時間或順序配對。",
-    "scope": "AETHER target; office life iteration I7, see docs/design/office-life-iterations.md",
+    "scope": "AETHER target; office life iteration I7, see docs/design/office-life-work-plan.md",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
@@ -3482,10 +3485,10 @@
       "packages/providers/src/hook-receiver.mjs",
       "packages/providers/src/claude-hooks.ts",
       "packages/contracts/src/sessions.ts",
-      "apps/control/src/services/hook-spool.ts",
-      "apps/control/src/services/tool-outcomes.ts",
-      "apps/control/src/services/session-signals.ts",
-      "apps/web/src/local-session-compat.ts"
+      "apps/control/src/services/hooks/hook-spool.ts",
+      "apps/control/src/services/runtime/tool-outcomes.ts",
+      "apps/control/src/services/sessions/session-signals.ts",
+      "apps/web/src/lib/sessions/local-session-compat.ts"
     ],
     "testIds": [
       "tests/aether/command-tags.test.ts",
@@ -3506,16 +3509,16 @@
   {
     "id": "OFFICE-LIFE-I7-02",
     "requirement": "Claude 的 subagent 可由自己的 transcript 檔案辨識（不需要 hooks），並帶有 label、token 用量與每分鐘速率、工具次數，以及結束後的純文字 result（至多 160 字，先遮蔽祕密再截斷）；每次掃描有位元組讀取預算且只讀新增的部分。",
-    "scope": "AETHER target; office life iteration I7, see docs/design/office-life-iterations.md",
+    "scope": "AETHER target; office life iteration I7, see docs/design/office-life-work-plan.md",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/subagent-files.ts",
-      "apps/control/src/services/subagent-usage.ts",
-      "apps/control/src/services/subagent-text.ts",
-      "apps/control/src/services/subagent-transcripts.ts",
-      "apps/control/src/services/session-signals.ts",
-      "apps/control/src/services/local-sessions.ts",
+      "apps/control/src/services/subagents/subagent-files.ts",
+      "apps/control/src/services/subagents/subagent-usage.ts",
+      "apps/control/src/services/subagents/subagent-text.ts",
+      "apps/control/src/services/subagents/subagent-transcripts.ts",
+      "apps/control/src/services/sessions/session-signals.ts",
+      "apps/control/src/services/runtime/local-sessions.ts",
       "packages/contracts/src/sessions.ts"
     ],
     "testIds": [
@@ -3535,13 +3538,13 @@
   {
     "id": "OFFICE-LIFE-I7-03",
     "requirement": "每個 session 有 git.conflicts（未合併檔案數，取自掃描本來就會執行的 git status，不新增 Git 程序），事件串流新增不含內容的變更類型 squad 與 outcome。",
-    "scope": "AETHER target; office life iteration I7, see docs/design/office-life-iterations.md",
+    "scope": "AETHER target; office life iteration I7, see docs/design/office-life-work-plan.md",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/control/src/services/local-sessions.ts",
-      "apps/control/src/services/session-changes.ts",
-      "apps/web/src/features/live-link.ts",
+      "apps/control/src/services/runtime/local-sessions.ts",
+      "apps/control/src/services/sessions/session-changes.ts",
+      "apps/web/src/features/integrations/live-link.ts",
       "packages/contracts/src/sessions.ts"
     ],
     "testIds": [
@@ -3558,23 +3561,23 @@
   {
     "id": "OFFICE-LIFE-03",
     "requirement": "3D 辦公室中，subagent 坐在主管桌旁小隊區域的座艙裡（不再佔用遠處的辦公桌）：新 subagent 從電梯核心走進來坐下，結束或消失者起身揮手走回核心；座位不會在人坐著時重排，區域縮小需穩定 10 秒；能量束由小隊經核心連到主管光環，亮度隨每分鐘工具呼叫數；區域標籤是可聚焦按鈕，螢幕閱讀器的紀錄區會朗讀加入與離開；低階畫質、平靜模式與減少動態各有靜態備援；樓層太滿時仍使用原本的辦公桌。",
-    "scope": "AETHER target; office life iteration I4, see docs/design/office-life-iterations.md",
+    "scope": "AETHER target; office life iteration I4, see docs/design/office-life-work-plan.md",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
       "packages/office-scene/src/squad/",
-      "packages/office-scene/src/OfficeScene.tsx",
-      "packages/office-scene/src/scene-props.ts",
-      "apps/web/src/features/SceneView.tsx",
-      "apps/web/src/features/squad-preview.ts",
-      "apps/web/src/features/office-model.ts"
+      "packages/office-scene/src/components/OfficeScene.tsx",
+      "packages/office-scene/src/scene/scene-props.ts",
+      "apps/web/src/features/office/SceneView.tsx",
+      "apps/web/src/features/squad/squad-preview.ts",
+      "apps/web/src/features/office/office-model.ts"
     ],
     "testIds": [
       "tests/aether/squad-model.test.ts",
       "tests/aether/errand.test.ts",
       "tests/aether/layout-squad.test.ts",
-      "e2e/squad.spec.ts",
-      "e2e/office-life-perf.spec.ts"
+      "e2e/office-life/squad.spec.ts",
+      "e2e/office-life/office-life-perf.spec.ts"
     ],
     "blockers": [
       "Decorative: the beam encodes tokens per minute when subagents report them and tool calls per minute otherwise (see OFFICE-LIFE-I8-02), and claims no outcome",
@@ -3588,7 +3591,7 @@
   {
     "id": "OFFICE-LIFE-04",
     "requirement": "Subagent 提線與結果交付：每位工作中的 subagent 上方有控制十字，細光線連到頭與雙手（綁在角色自己的 head/hand socket），每次開始工具呼叫時抖動、休息時放鬆、等待授權時凍結並轉琥珀色；低階畫質不顯示，平靜模式與減少動態為靜止直線，可單獨關閉。Subagent 完成時拿著資料夾走到主管桌邊放進收件匣，主管閱讀、點頭並蓋章：章只寫「RECEIVED／已收到」（只代表有結果回來，絕不寫 approved），父層工具結果旗標為錯誤時為中性灰色「RETURNED／已退回」（不用紅綠）；每層樓最多兩位同時走動、每張桌子一次一個章，低階畫質與看不到桌子時以資料夾彈入收件匣呈現，平靜與減少動態直接顯示；紀錄區朗讀「{type} handed over its result」。",
-    "scope": "AETHER target; office life iteration I5, see docs/design/office-life-iterations.md",
+    "scope": "AETHER target; office life iteration I5, see docs/design/office-life-work-plan.md",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
@@ -3599,19 +3602,19 @@
       "packages/office-scene/src/squad/SupervisorDesk.tsx",
       "packages/office-scene/src/squad/use-squad.ts",
       "packages/office-scene/src/squad/errand.ts",
-      "packages/office-scene/src/Animal.tsx",
+      "packages/office-scene/src/animals/Animal.tsx",
       "apps/web/src/features/settings/OfficeAnimationsSettings.tsx",
-      "apps/web/src/features/squad-preview.ts",
-      "apps/web/src/features/office-model.ts",
-      "apps/web/src/state.ts",
+      "apps/web/src/features/squad/squad-preview.ts",
+      "apps/web/src/features/office/office-model.ts",
+      "apps/web/src/lib/preferences/state.ts",
       "scripts/contact-sheet.mjs"
     ],
     "testIds": [
       "tests/aether/puppet-strings.test.ts",
       "tests/aether/handover.test.ts",
       "tests/aether/office-squads.test.ts",
-      "e2e/squad.spec.ts",
-      "e2e/office-life-perf.spec.ts"
+      "e2e/office-life/squad.spec.ts",
+      "e2e/office-life/office-life-perf.spec.ts"
     ],
     "blockers": [
       "Decorative: the strings and the hand-over claim no outcome. The stamp is a receipt (RECEIVED) and only a real `result.error === true` makes it a grey RETURNED; a subagent whose result flag is unknown gets RECEIVED",
@@ -3627,13 +3630,13 @@
   {
     "id": "OBS-LIFE-01",
     "requirement": "辦公室動畫有視覺與效能閘門：確定性預覽網址 ?preview=life&effect=&t=、每類一張的 contact sheet，以及在真實 GPU 上比較基準與變體場景的效能規格（未設 PERF_GPU=1 時為略過，不是通過）。",
-    "scope": "AETHER target; office-life iteration I0, see docs/design/office-life-iterations.md",
+    "scope": "AETHER target; office-life iteration I0, see docs/design/office-life-work-plan.md",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/web/src/features/scene-preview.ts",
+      "apps/web/src/features/office/scene-preview.ts",
       "scripts/contact-sheet.mjs",
-      "e2e/office-life-perf.spec.ts"
+      "e2e/office-life/office-life-perf.spec.ts"
     ],
     "testIds": [
       "tests/aether/scene-preview.test.ts"
@@ -3650,18 +3653,18 @@
     "verificationStatus": "partial",
     "codePaths": [
       "packages/office-scene/src/intro",
-      "packages/office-scene/src/SceneCamera.tsx",
-      "packages/office-scene/src/scene-navigation.ts",
-      "apps/web/src/intro-gate.ts",
-      "apps/web/src/features/SceneView.tsx",
-      "apps/web/src/styles/scene-intro.css"
+      "packages/office-scene/src/scene/SceneCamera.tsx",
+      "packages/office-scene/src/scene/scene-navigation.ts",
+      "apps/web/src/lib/navigation/intro-gate.ts",
+      "apps/web/src/features/office/SceneView.tsx",
+      "apps/web/src/styles/scene/scene-intro.css"
     ],
     "testIds": [
       "tests/aether/intro-tour.test.ts",
       "tests/aether/intro-machine.test.ts",
       "tests/aether/intro-gate.test.ts",
-      "e2e/intro.spec.ts",
-      "e2e/intro-perf.spec.ts"
+      "e2e/office-life/intro.spec.ts",
+      "e2e/office-life/intro-perf.spec.ts"
     ],
     "blockers": [
       "Frame gate measured on desktop Chrome (ANGLE Metal, Apple M4) including a phone-sized emulation on the same GPU, with other work running; no real phone or other GPU was run.",
@@ -3671,28 +3674,29 @@
   {
     "id": "OBS-LIFE-09",
     "requirement": "面板中的 2D 小隊資訊設計：主管列下以樹狀（role=tree）巢狀顯示子代理（狀態、類型、已執行時間、工具次數、等待批准、完成後 90 秒寬限內淡出），可摺疊且記住選擇、可用鍵盤操作、有計數晶片；主管對話有小隊列與每次派出的活動卡片；子代理自己的檢視連回主管；同小隊共用強調色與連結標記；Claude 未安裝 hook 時說明並提供安裝指令；變化以節流的 live region 通報。",
-    "scope": "AETHER target; office-life iteration I9, see docs/design/office-life-iterations.md section 3 and docs/design-system.md 'Squads in the panel'",
+    "scope": "AETHER target; office-life iteration I9, see docs/design/office-life-work-plan.md section 3 and docs/design-system.md 'Squads in the panel'",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/web/src/features/feed-squads.ts",
-      "apps/web/src/features/squad-open.ts",
-      "apps/web/src/features/squad-text.ts",
-      "apps/web/src/features/tree-nav.ts",
-      "apps/web/src/features/FeedRow.tsx",
-      "apps/web/src/features/FeedSquad.tsx",
-      "apps/web/src/features/SquadStrip.tsx",
-      "apps/web/src/features/SubagentCards.tsx",
-      "apps/web/src/features/SubagentView.tsx",
-      "apps/web/src/features/HookNote.tsx",
-      "apps/web/src/features/SquadAnnouncer.tsx",
-      "apps/web/src/features/SquadParts.tsx",
-      "apps/web/src/styles/squad.css"
+      "apps/web/src/features/feed/feed-squads.ts",
+      "apps/web/src/features/squad/squad-open.ts",
+      "apps/web/src/features/squad/squad-text.ts",
+      "apps/web/src/features/shell-chrome/tree-nav.ts",
+      "apps/web/src/features/feed/FeedRow.tsx",
+      "apps/web/src/features/feed/FeedSquad.tsx",
+      "apps/web/src/features/squad/SquadStrip.tsx",
+      "apps/web/src/features/sessions/SubagentCards.tsx",
+      "apps/web/src/features/sessions/SubagentView.tsx",
+      "apps/web/src/features/shell-chrome/HookNote.tsx",
+      "apps/web/src/features/squad/SquadAnnouncer.tsx",
+      "apps/web/src/features/squad/SquadParts.tsx",
+      "apps/web/src/styles/session/squad-tree.css",
+      "apps/web/src/styles/session/squad-strip.css"
     ],
     "testIds": [
       "tests/aether/squad-feed.test.ts",
-      "e2e/squad-panel.spec.ts",
-      "e2e/squad-panel-states.spec.ts"
+      "e2e/office-life/squad-panel.spec.ts",
+      "e2e/office-life/squad-panel-states.spec.ts"
     ],
     "blockers": [
       "The transcript's entries carry no agent id, so the conversation itself is not filtered to one subagent; its calls come from hook.recent (the last few).",
@@ -3709,17 +3713,17 @@
     "verificationStatus": "partial",
     "codePaths": [
       "packages/office-scene/src/life",
-      "packages/office-scene/src/OfficeScene.tsx",
-      "packages/office-scene/src/scene-props.ts",
-      "apps/web/src/features/life-signals.ts",
-      "apps/web/src/features/use-life.ts",
+      "packages/office-scene/src/components/OfficeScene.tsx",
+      "packages/office-scene/src/scene/scene-props.ts",
+      "apps/web/src/features/office/life-signals.ts",
+      "apps/web/src/features/office/use-life.ts",
       "apps/web/src/features/settings/OfficeAnimationsSettings.tsx",
-      "apps/web/src/features/SceneView.tsx",
-      "apps/web/src/features/QuickPrefs.tsx",
-      "apps/web/src/prefs-migrate.ts",
-      "apps/web/src/state.ts",
+      "apps/web/src/features/office/SceneView.tsx",
+      "apps/web/src/features/shell-chrome/QuickPrefs.tsx",
+      "apps/web/src/lib/preferences/prefs-migrate.ts",
+      "apps/web/src/lib/preferences/state.ts",
       "scripts/contact-sheet.mjs",
-      "e2e/office-life-perf.spec.ts"
+      "e2e/office-life/office-life-perf.spec.ts"
     ],
     "testIds": [
       "tests/aether/life-schedule.test.ts",
@@ -3729,7 +3733,7 @@
       "tests/aether/life-distribution.test.ts",
       "tests/aether/life-prefs.test.ts",
       "tests/aether/scene-preview.test.ts",
-      "e2e/office-life.spec.ts"
+      "e2e/office-life/office-life.spec.ts"
     ],
     "blockers": [
       "Twelve rows ship (R8, R9, R14, R17, R27, R32, R36, R38, R41, R44, R53, R56); the rest wait for the server data of I7 or for more plumbing (see the \"Implemented in I6\" notes in the design). Rows that claim an outcome (R10-R13, R17 as \"pushed\", R39, R46-R48) are not built and are refused by the scheduler without a real ok.",
@@ -3741,29 +3745,29 @@
   {
     "id": "OFFICE-LIFE-I8-01",
     "requirement": "3D 辦公室的第二波裝飾動畫只在資料為真時出現：測試通過／失敗、CI 監看結束、建置／型別錯誤、成功的 push（R17）、強制 push、合併衝突、部署與週五下午部署、rm -rf 骷髏玩笑、sudo、curl | sh、「在我機器上能跑」、「不是 bug 是功能」、gh pr 核准的 LGTM。凡宣稱結果的規則只在提供者明確回報 ok 時啟動；ok 為 null 不產生任何結果動畫（排程器另有 claimsOutcome 防線）。R39、R40 不做（沒有真實的 404／418 資料）。每個動畫標示為裝飾，有冷卻、種子機率、品質門檻、減少動態備援與中英文朗讀文字。",
-    "scope": "AETHER target; office life iteration I8, see docs/design/office-life-iterations.md",
+    "scope": "AETHER target; office life iteration I8, see docs/design/office-life-work-plan.md",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "packages/office-scene/src/life/registry-wave2.ts",
+      "packages/office-scene/src/life/registry-command-outcomes.ts",
       "packages/office-scene/src/life/registry.ts",
       "packages/office-scene/src/life/matchers.ts",
       "packages/office-scene/src/life/effects/outcomes.ts",
       "packages/office-scene/src/life/effects/danger.ts",
       "packages/office-scene/src/life/effects/ops.ts",
       "packages/office-scene/src/life/pools/atlas-art-signs.ts",
-      "apps/web/src/features/life-outcomes.ts",
-      "apps/web/src/features/life-signals.ts"
+      "apps/web/src/features/office/life-outcomes.ts",
+      "apps/web/src/features/office/life-signals.ts"
     ],
     "testIds": [
-      "tests/aether/life-wave2.test.ts",
+      "tests/aether/life-command-outcomes.test.ts",
       "tests/aether/life-outcomes.test.ts",
       "tests/aether/life-registry.test.ts",
       "tests/aether/life-effects.test.ts",
       "tests/aether/life-distribution.test.ts",
       "tests/aether/life-schedule.test.ts",
-      "e2e/office-life.spec.ts",
-      "e2e/office-life-perf.spec.ts"
+      "e2e/office-life/office-life.spec.ts",
+      "e2e/office-life/office-life-perf.spec.ts"
     ],
     "blockers": [
       "Exercised with synthetic hook records in the on-disk format and with the preview address, not a live Claude Code or Codex session; ok for Codex is often null, so its outcome rows show less",
@@ -3778,7 +3782,7 @@
   {
     "id": "OFFICE-LIFE-I8-02",
     "requirement": "小隊能量束的亮度以子代理每分鐘 token 速率為準（有 transcript 的 Claude 子代理，加總仍在工作者），沒有 token 資料時退回每分鐘工具呼叫數；以平滑飽和曲線 tanh(1.5·ln(1+r)/ln(1+ref)) 換算亮度；區域標籤按鈕的提示與無障礙名稱說明速率與依據（「~12K tokens/min（依 token 用量）」或「~8 tool calls/min（依工具呼叫次數）」，數字用 Intl 精簡格式），閒置時不顯示，工具呼叫速率從不被說成 token。",
-    "scope": "AETHER target; office life iteration I8, see docs/design/office-life-iterations.md",
+    "scope": "AETHER target; office life iteration I8, see docs/design/office-life-work-plan.md",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
@@ -3787,12 +3791,12 @@
       "packages/office-scene/src/squad/SquadBeam.tsx",
       "packages/office-scene/src/squad/SquadDom.tsx",
       "packages/office-scene/src/squad/squad-model.ts",
-      "apps/web/src/features/office-model.ts"
+      "apps/web/src/features/office/office-model.ts"
     ],
     "testIds": [
       "tests/aether/squad-beam-rate.test.ts",
       "tests/aether/squad-model.test.ts",
-      "e2e/squad.spec.ts"
+      "e2e/office-life/squad.spec.ts"
     ],
     "blockers": [
       "Verified with stand-in subagents (?squad=N&tokens=N) and unit tests; a live Claude subagent's real tokens.perMinute was not watched driving the beam",
@@ -3803,19 +3807,19 @@
   {
     "id": "OFFICE-LIFE-I8-03",
     "requirement": "對話標頭有一個預設收合的「近期小動態」摺疊，列出辦公室為該成員顯示的最近幾個動畫（最多 5 筆，標示為裝飾，只存在記憶體）；設定 → 辦公室 → 動畫有「重播導覽」按鈕，會回到辦公室頁面並立即播放開場導覽（即使選了「不再顯示」或在自動化下）。",
-    "scope": "AETHER target; office life iteration I8, see docs/design/office-life-iterations.md",
+    "scope": "AETHER target; office life iteration I8, see docs/design/office-life-work-plan.md",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "apps/web/src/features/RecentMoments.tsx",
-      "apps/web/src/features/life-moments.ts",
-      "apps/web/src/features/SessionConversation.tsx",
+      "apps/web/src/features/feed/RecentMoments.tsx",
+      "apps/web/src/features/feed/life-moments.ts",
+      "apps/web/src/features/sessions/SessionConversation.tsx",
       "apps/web/src/features/settings/OfficeAnimationsSettings.tsx",
-      "apps/web/src/intro-gate.ts"
+      "apps/web/src/lib/navigation/intro-gate.ts"
     ],
     "testIds": [
       "tests/aether/life-moments.test.ts",
-      "e2e/office-life.spec.ts"
+      "e2e/office-life/office-life.spec.ts"
     ],
     "blockers": [
       "The chip was looked at in the desktop panel and checked by the settings and axe specs; a phone-sized look is part of the responsive spec run, not a separate review",
@@ -3829,17 +3833,17 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "packages/office-scene/src/pose-cues.ts",
-      "packages/office-scene/src/use-pose-cues.ts",
-      "packages/office-scene/src/use-emotes.ts",
-      "packages/office-scene/src/Poser.tsx",
-      "packages/office-scene/src/Member.tsx",
-      "packages/office-scene/src/OfficeScene.tsx",
+      "packages/office-scene/src/core/pose-cues.ts",
+      "packages/office-scene/src/core/use-pose-cues.ts",
+      "packages/office-scene/src/core/use-emotes.ts",
+      "packages/office-scene/src/components/Poser.tsx",
+      "packages/office-scene/src/components/Member.tsx",
+      "packages/office-scene/src/components/OfficeScene.tsx",
       "packages/office-scene/src/squad/use-squad.ts",
       "packages/office-scene/src/life/poses.ts",
       "packages/office-scene/src/life/LifeLayer.tsx",
       "packages/office-scene/src/life/registry.ts",
-      "packages/office-scene/src/life/registry-wave2.ts",
+      "packages/office-scene/src/life/registry-command-outcomes.ts",
       "packages/office-scene/src/life/effects/notes.ts"
     ],
     "testIds": [
@@ -3847,7 +3851,7 @@
       "tests/aether/life-poses.test.ts",
       "tests/aether/life-notes.test.ts",
       "tests/aether/life-registry.test.ts",
-      "e2e/office-life-follow-up.spec.ts"
+      "e2e/office-life/office-life-scene-preview.spec.ts"
     ],
     "blockers": [
       "Decorative: a pose is a gesture, never a claim; R21 says the reset was started, never that it worked",
@@ -3871,14 +3875,14 @@
       "packages/office-scene/src/squad/SquadWarm.tsx",
       "packages/office-scene/src/squad/puppet/string-lines.ts",
       "packages/office-scene/src/life/LifeLayer.tsx",
-      "apps/web/src/features/scene-preview.ts",
-      "apps/web/src/features/squad-preview.ts"
+      "apps/web/src/features/office/scene-preview.ts",
+      "apps/web/src/features/squad/squad-preview.ts"
     ],
     "testIds": [
       "tests/aether/squad-instances.test.ts",
       "tests/aether/scene-preview-loop.test.ts",
-      "e2e/office-life-follow-up.spec.ts",
-      "e2e/office-life-perf.spec.ts"
+      "e2e/office-life/office-life-scene-preview.spec.ts",
+      "e2e/office-life/office-life-perf.spec.ts"
     ],
     "blockers": [
       "Measured on one machine (Apple M4, ANGLE Metal, Chrome headless), which was loaded by other work (load average 27 to 37); cases are interleaved and medians of 3 to 5 rounds, but the frame time is capped by 60 Hz in every case, so the evidence is the CPU time per frame and a CDP profile, not a frame time",
@@ -3886,7 +3890,7 @@
       "The squad layer links 6 to 7 shader programs against the spec's budget of 4 (all at warm-up, so a one-time cost)",
       "On the phone profile the first appearance of the subagent characters still links 9 programs (110 to 125 ms of render calls at 4x throttle, the same with the legacy desk seating): the characters' own warm-up is an open follow-up, not the squad's",
       "The busy building uses stand-ins (?squad, ?intensity, ?preview=life&loop=1) and a synthetic commit history, not real sessions",
-      "The official gate e2e/office-life-perf.spec.ts was run on the real GPU (balanced, 806x552, 5 rounds): 8 subagents in a squad against at desks: median and p95 frame equal, -23 draws, +6 programs (over its limit of 4, recorded as not within), +0.5 GPU MB, jsMs -0.4; six looping effects against the same camera without them: +1 draw, 0 programs, 0 jsMs, all within"
+      "The official gate e2e/office-life/office-life-perf.spec.ts was run on the real GPU (balanced, 806x552, 5 rounds): 8 subagents in a squad against at desks: median and p95 frame equal, -23 draws, +6 programs (over its limit of 4, recorded as not within), +0.5 GPU MB, jsMs -0.4; six looping effects against the same camera without them: +1 draw, 0 programs, 0 jsMs, all within"
     ]
   },
   {
@@ -3916,17 +3920,17 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "packages/office-scene/src/dither.ts",
-      "packages/office-scene/src/perf-control.ts",
-      "packages/office-scene/src/PerfControllers.tsx",
-      "packages/office-scene/src/OrbitalBackdrop.tsx",
-      "packages/office-scene/src/SceneRuntime.tsx",
-      "apps/web/src/features/SceneView.tsx"
+      "packages/office-scene/src/environment/dither.ts",
+      "packages/office-scene/src/perf/perf-control.ts",
+      "packages/office-scene/src/components/PerfControllers.tsx",
+      "packages/office-scene/src/components/OrbitalBackdrop.tsx",
+      "packages/office-scene/src/components/SceneRuntime.tsx",
+      "apps/web/src/features/office/SceneView.tsx"
     ],
     "testIds": [
       "tests/aether/dither.test.ts",
       "tests/aether/perf-control.test.ts",
-      "e2e/scene-context.spec.ts"
+      "e2e/scene/scene-context.spec.ts"
     ],
     "blockers": [
       "No real phone, no Safari and no other GPU was measured (Apple M4, ANGLE Metal, 4x CPU throttle emulates a phone and is capped at 60 Hz, so the evidence is CPU time per frame, draws, programs and the GPU estimate); the phone high tier at pixel ratio 2 (PIXEL_RATIO_CAP_PHONE_HIGH) must be validated on an iPhone and an Android phone for five minutes (heat, sustained frame time) before it is trusted",

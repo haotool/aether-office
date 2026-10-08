@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } fro
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createServer } from '../../apps/control/src/server.js';
-import { resetLocalSessionCache } from '../../apps/control/src/services/local-sessions.js';
+import { resetLocalSessionCache } from '../../apps/control/src/services/runtime/local-sessions.js';
 import { command, fixture } from './fixture.js';
 
 /** A control plane with one project whose repository holds one Claude session, all under a temporary home. */

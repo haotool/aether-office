@@ -1,6 +1,10 @@
 import { expect, it } from 'vitest';
-import { gridFor, planCarriers, positionAt } from '../../packages/office-scene/src/carriers.js';
-import { defaultLayout } from '../../packages/office-scene/src/layout.js';
+import {
+  gridFor,
+  planCarriers,
+  positionAt,
+} from '../../packages/office-scene/src/environment/carriers.js';
+import { defaultLayout } from '../../packages/office-scene/src/environment/layout.js';
 import type { Agent } from '../../packages/contracts/src/index.js';
 
 const agents = ['a', 'b', 'c'].map((id) => ({ id }) as Agent);

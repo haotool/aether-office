@@ -1,8 +1,8 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { expect, it } from 'vitest';
-import { createPermissionRequests } from '../../apps/control/src/services/permission-requests.js';
-import { redactSecrets } from '../../apps/control/src/services/redaction.js';
-import { summarize } from '../../apps/control/src/services/permission-summary.js';
+import { createPermissionRequests } from '../../apps/control/src/services/permissions/permission-requests.js';
+import { redactSecrets } from '../../apps/control/src/services/platform/redaction.js';
+import { summarize } from '../../apps/control/src/services/permissions/permission-summary.js';
 import { approvalsFixture } from './permission-fixtures.js';
 
 it('summarizes a tool call: redacted, bounded, and never the raw input', () => {
@@ -169,7 +169,7 @@ it('long-poll wakes on a decision', async () => {
 });
 
 it('is off by default; the hook token only creates and reads; only a human owner or operator decides; it is audited', async () => {
-  const f = approvalsFixture(4368);
+  const f = approvalsFixture(5688);
   try {
     const hookPost = (token: string, payload: unknown = {}) =>
       f.app.inject({
@@ -211,7 +211,7 @@ it('is off by default; the hook token only creates and reads; only a human owner
     expect((await f.enable()).json()).toEqual({ enabled: true, channel: 'ok' });
     expect(statSync(f.configFile).mode & 0o777).toBe(0o600);
     const token = f.hookToken();
-    expect(readFileSync(f.configFile, 'utf8')).toContain(`"url":"http://127.0.0.1:4368"`);
+    expect(readFileSync(f.configFile, 'utf8')).toContain(`"url":"http://127.0.0.1:5688"`);
 
     // the owner's own token is not a hook token, and a hook token is not a login
     expect((await hookPost(f.owner.token, body)).statusCode).toBe(401);
@@ -309,7 +309,7 @@ it('is off by default; the hook token only creates and reads; only a human owner
 });
 
 it('rate-limits a caller that guesses the hook token', async () => {
-  const f = approvalsFixture(4368);
+  const f = approvalsFixture(5688);
   try {
     await f.enable();
     const guess = () =>

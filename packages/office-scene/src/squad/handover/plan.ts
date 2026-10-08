@@ -4,7 +4,7 @@
 // so a subagent that scrolls out of view and back is where it would have been. All member poses are in the seat's frame
 // (the chair is the origin, the sitter looks along -z), like arrivals and leaves (errand.ts).
 import type { NavGrid, Point } from '@aether/kernel';
-import { positionAt } from '../../carriers.js';
+import { positionAt } from '../../environment/carriers.js';
 import {
   CORE_RADIUS,
   SINK_MS,
@@ -13,7 +13,7 @@ import {
   WALK_SPEED,
   WALK_STRIDE_SPEED,
   WAVE_MS,
-} from '../../departure.js';
+} from '../../animals/departure.js';
 import { toWorld } from '../puppet/anchors.js';
 import { heading, length, pathIn, shortest, TURN_MS } from '../errand.js';
 import { DESK_TOP } from '../squad-art.js';

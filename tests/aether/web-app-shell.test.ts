@@ -6,14 +6,17 @@ import { QueryClient, h, renderHtml, textOf } from './fixtures/ssr.js';
 // server, and effects do not run on the server, so what is checked is the page a visitor sees first. The two hooks that
 // read the browser's media queries need a snapshot the server lacks and are replaced.
 installBrowserEnv();
-vi.mock('../../apps/web/src/phone.js', () => ({ usePhone: () => false, usePhoneAny: () => false }));
-vi.mock('../../apps/web/src/theme.js', async (original) => ({
-  ...(await original<typeof import('../../apps/web/src/theme.js')>()),
+vi.mock('../../apps/web/src/lib/preferences/phone.js', () => ({
+  usePhone: () => false,
+  usePhoneAny: () => false,
+}));
+vi.mock('../../apps/web/src/lib/preferences/theme.js', async (original) => ({
+  ...(await original<typeof import('../../apps/web/src/lib/preferences/theme.js')>()),
   useSystemDark: () => true,
 }));
-const { translate } = await import('../../apps/web/src/i18n.js');
+const { translate } = await import('../../apps/web/src/lib/i18n/i18n.js');
 const { App } = await import('../../apps/web/src/App.js');
-const { Login } = await import('../../apps/web/src/features/Login.js');
+const { Login } = await import('../../apps/web/src/features/shell-chrome/Login.js');
 const { RootBoundary } = await import('../../apps/web/src/RootBoundary.js');
 const { Empty } = await import('../../apps/web/src/ui/Empty.js');
 const { PageHeading } = await import('../../apps/web/src/ui/PageHeading.js');

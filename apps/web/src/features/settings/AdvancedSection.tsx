@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
-import { usePreferences } from '../../state.js';
-import { pageLink } from '../../nav.js';
+import { usePreferences } from '../../lib/preferences/state.js';
+import { pageLink } from '../../lib/navigation/nav.js';
 import { useT } from '../../ui/useT.js';
-import { A2AClients } from '../A2AClients.js';
-import { Integrations } from '../Integrations.js';
-import { Schedules } from '../Schedules.js';
+import { A2AClients } from '../integrations/A2AClients.js';
+import { Integrations } from '../integrations/Integrations.js';
+import { Schedules } from '../operations/Schedules.js';
 import { useSettings } from './context.js';
 import type { EntryId } from './entries.js';
 import { Block, Row, StatusChip, Switch } from './kit.js';

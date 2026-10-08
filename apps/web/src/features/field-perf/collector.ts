@@ -5,13 +5,13 @@ import {
   type FieldPerfLoaf,
   type FieldPerfLongTask,
   type FieldPerfReport,
-} from '../../../../../packages/office-scene/src/field-perf-report.js';
+} from '../../../../../packages/office-scene/src/field/field-perf-report.js';
 import { mayAppendFieldPerfFrameDelta } from './frame-delta.js';
 import {
   FrameDeltaBuffer,
   LoafSampleBuffer,
   LongTaskSampleBuffer,
-} from '../../../../../packages/office-scene/src/field-perf-samples.js';
+} from '../../../../../packages/office-scene/src/field/field-perf-samples.js';
 
 const DROPPED_FRAME_MS = 50;
 

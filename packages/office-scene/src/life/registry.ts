@@ -1,8 +1,8 @@
-import type { ClipName } from '../animal-states.js';
-import type { Quality } from '../scene-types.js';
+import type { ClipName } from '../animals/animal-states.js';
+import type { Quality } from '../scene/scene-types.js';
 import type { EffectId } from './effects/index.js';
 import { isInstall, isQaSite, isTestRun, isVim, pushed } from './matchers.js';
-import { WAVE_2_RULES } from './registry-wave2.js';
+import { COMMAND_OUTCOME_RULES } from './registry-command-outcomes.js';
 import type { LifeCategory, LifeContext, LifeSignal } from './signals.js';
 
 /**
@@ -266,6 +266,6 @@ const WAVE_1_RULES: readonly LifeRule[] = [
 ];
 
 /** Every rule, wave 1 (what the office already showed) then wave 2 (the outcome rows). The first rule an arbiter admits wins a shared call. */
-export const LIFE_RULES: readonly LifeRule[] = [...WAVE_1_RULES, ...WAVE_2_RULES];
+export const LIFE_RULES: readonly LifeRule[] = [...WAVE_1_RULES, ...COMMAND_OUTCOME_RULES];
 
 export const ruleOf = (id: string): LifeRule | undefined => LIFE_RULES.find((r) => r.id === id);

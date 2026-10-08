@@ -2,8 +2,8 @@ import { mkdtempSync, rmSync, utimesSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach } from 'vitest';
-import { type Attribution } from '../../apps/control/src/services/usage-aggregate.js';
-import { createUsageStats } from '../../apps/control/src/services/usage-stats.js';
+import { type Attribution } from '../../apps/control/src/services/usage/usage-aggregate.js';
+import { createUsageStats } from '../../apps/control/src/services/usage/usage-stats.js';
 
 export const NOW = Date.parse('2026-10-07T12:00:00Z');
 

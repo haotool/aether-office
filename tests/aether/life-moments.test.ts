@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LifeMoment } from '../../packages/office-scene/src/life/signals.js';
-import { MOMENTS_PER_MEMBER, withMoment } from '../../apps/web/src/features/life-moments.js';
+import { MOMENTS_PER_MEMBER, withMoment } from '../../apps/web/src/features/feed/life-moments.js';
 
 const moment = (n: number): LifeMoment => ({
   member: 'm1',

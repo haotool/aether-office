@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { BufferGeometry, Float32BufferAttribute, type InstancedMesh } from 'three';
-import type { Quality } from '../scene-types.js';
+import type { Quality } from '../scene/scene-types.js';
 import { createBeam, createDotMaterial } from './beam-shader.js';
 import { sealGeometry, sealMaterial } from './handover/handover-art.js';
 import { createStringLines } from './puppet/string-lines.js';

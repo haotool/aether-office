@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeSessions } from '../../apps/web/src/local-session-compat.js';
+import { normalizeSessions } from '../../apps/web/src/lib/sessions/local-session-compat.js';
 import type { LocalSessionsResponse } from '../../packages/contracts/src/index.js';
 
 describe('a session from a control plane older than this page', () => {

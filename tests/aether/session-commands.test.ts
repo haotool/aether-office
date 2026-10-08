@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { sessionCommands } from '../../apps/web/src/localSessions.js';
+import { sessionCommands } from '../../apps/web/src/lib/sessions/localSessions.js';
 
 it('builds each CLI’s own resume and fork commands, quoting the directory safely', () => {
   expect(sessionCommands({ provider: 'claude', sessionId: 'abc', cwd: "/tmp/it's here" })).toEqual({

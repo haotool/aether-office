@@ -8,7 +8,7 @@ import {
   parseGitStatus,
   resetLocalSessionCache,
   scanLocalSessions,
-} from '../../apps/control/src/services/local-sessions.js';
+} from '../../apps/control/src/services/runtime/local-sessions.js';
 
 it('parses branch, upstream, ahead/behind and uncommitted counts', () => {
   expect(parseGitStatus('## main...origin/main [ahead 2, behind 1]\n M a\n?? b\n')).toEqual({

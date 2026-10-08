@@ -1,14 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import type { Agent, Layout } from '../../packages/contracts/src/index.js';
-import { EXPLODED_GAP, FLOOR_HEIGHT } from '../../packages/office-scene/src/building.js';
+import {
+  EXPLODED_GAP,
+  FLOOR_HEIGHT,
+} from '../../packages/office-scene/src/environment/building.js';
 import {
   deskItemsGeometry,
   deskItemsMaterial,
-} from '../../packages/office-scene/src/desk-items.js';
-import { wordsFor } from '../../packages/office-scene/src/interaction-text.js';
-import { floorZones } from '../../packages/office-scene/src/layout.js';
-import { beaconsOf, beamsOf, labelsOf } from '../../packages/office-scene/src/scene-markers.js';
-import type { BranchInfo } from '../../packages/office-scene/src/scene-types.js';
+} from '../../packages/office-scene/src/desks/desk-items.js';
+import { wordsFor } from '../../packages/office-scene/src/core/interaction-text.js';
+import { floorZones } from '../../packages/office-scene/src/environment/layout.js';
+import {
+  beaconsOf,
+  beamsOf,
+  labelsOf,
+} from '../../packages/office-scene/src/scene/scene-markers.js';
+import type { BranchInfo } from '../../packages/office-scene/src/scene/scene-types.js';
 
 const agent = (id: string, name = id, activity = 'idle'): Agent =>
   ({ id, name, activity }) as Agent;

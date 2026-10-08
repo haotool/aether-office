@@ -2,8 +2,8 @@
 // zones, the pod seats, the walks). Everything drawn, and every seat lookup in the scene, reads the frame it returns.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Layout } from '@aether/contracts';
-import type { PoseApi } from '../use-pose-cues.js';
-import type { OfficeSceneProps } from '../scene-props.js';
+import type { PoseApi } from '../core/use-pose-cues.js';
+import type { OfficeSceneProps } from '../scene/scene-props.js';
 import { EMPTY_SQUAD, type SquadState } from './squad-model.js';
 import { createHandover, type HandoverRuntime } from './handover/index.js';
 import { buildFrame, type Plans, type SquadFrame, type View } from './squad-frame.js';

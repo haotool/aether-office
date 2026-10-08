@@ -190,6 +190,21 @@ export function elseIfThenInnerIf(a: boolean) {
     expect(await cognitiveByName(fixtureProject(extra), 'elseIfThenInnerIf')).toBe(5);
   });
 
+  it('deepLoneIf = 16 (else { if } after else-if at nesting > 2 skips else +1; SonarJS 4.2.2)', async () => {
+    const extra = `
+export function deepLoneIf(a: boolean, b: boolean) {
+  if (a) {
+    if (b) {
+      if (false) {}
+      else if (false) {}
+      else { if (a) { if (a) {} } }
+    }
+  }
+}
+`;
+    expect(await cognitiveByName(fixtureProject(extra), 'deepLoneIf')).toBe(16);
+  });
+
   it('elseIfChainElseLoneIf = 5 (no +1 for else { if } after else-if; SonarJS 4.2.2)', async () => {
     const extra = `
 export function elseIfChainElseLoneIf(a: boolean) {
@@ -208,6 +223,110 @@ export function ternaryWithAndInConst(a: boolean, b: boolean, c: string) {
 }
 `;
     expect(await cognitiveByName(fixtureProject(extra), 'ternaryWithAndInConst')).toBe(2);
+  });
+
+  it('testEachCallback = 1 (test.each row callback is its own unit; SonarJS 4.2.2)', async () => {
+    const extra = `
+import { test } from 'vitest';
+export function row() {
+  test.each([1])('x', (n) => { if (n) return; });
+}
+`;
+    const { analyzeProject } = await loadAst();
+    const dir = fixtureProject(extra);
+    const { facts } = await analyzeProject(dir, (f: string) => f.endsWith('.ts'));
+    const fns = facts.flatMap(
+      (fact: { functions: { name: string; cognitive: number; line: number }[] }) => fact.functions,
+    );
+    expect(fns.find((f: { name: string }) => f.name === 'row')).toBeUndefined();
+    expect(fns.find((f: { name: string }) => f.name === '(anonymous)')?.cognitive).toBe(1);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('describeEachOuter = 0 and inner it = 1 (SonarJS 4.2.2)', async () => {
+    const extra = `
+import { describe, it } from 'vitest';
+export function rows() {
+  describe.each([1])('n', (n) => { it('x', () => { if (n) return; }); });
+}
+`;
+    const { analyzeProject } = await loadAst();
+    const dir = fixtureProject(extra);
+    const { facts } = await analyzeProject(dir, (f: string) => f.endsWith('.ts'));
+    const fns = facts.flatMap(
+      (fact: { functions: { name: string; cognitive: number; line: number }[] }) => fact.functions,
+    );
+    expect(
+      fns
+        .filter((f: { name: string }) => f.name === '(anonymous)')
+        .map((f: { cognitive: number }) => f.cognitive)
+        .sort(),
+    ).toEqual([0, 1]);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('itSkipCallback = 1 (it.skip still names a test callback; SonarJS 4.2.2)', async () => {
+    const extra = `
+import { it } from 'vitest';
+export function skipped() {
+  it.skip('later', () => { if (1) return; });
+}
+`;
+    const { analyzeProject } = await loadAst();
+    const dir = fixtureProject(extra);
+    const { facts } = await analyzeProject(dir, (f: string) => f.endsWith('.ts'));
+    const fns = facts.flatMap(
+      (fact: { functions: { name: string; cognitive: number }[] }) => fact.functions,
+    );
+    expect(fns.find((f: { name: string }) => f.name === 'skipped')).toBeUndefined();
+    expect(fns.find((f: { name: string }) => f.name === '(anonymous)')?.cognitive).toBe(1);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('benchCallback = 1 (bench callback is its own unit; SonarJS 4.2.2)', async () => {
+    const extra = `
+import { bench } from 'vitest';
+export function runBench() {
+  bench('b', () => { if (1) return; });
+}
+`;
+    const { analyzeProject } = await loadAst();
+    const dir = fixtureProject(extra);
+    const { facts } = await analyzeProject(dir, (f: string) => f.endsWith('.ts'));
+    const fns = facts.flatMap(
+      (fact: { functions: { name: string; cognitive: number }[] }) => fact.functions,
+    );
+    expect(fns.find((f: { name: string }) => f.name === 'runBench')).toBeUndefined();
+    expect(fns.find((f: { name: string }) => f.name === '(anonymous)')?.cognitive).toBe(1);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('nestedDescribeSuite = 0 (inner describe/it suppressed; SonarJS 4.2.2)', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'cc-suite-'));
+    mkdirSync(join(dir, 'src'), { recursive: true });
+    writeFileSync(
+      join(dir, 'tsconfig.json'),
+      JSON.stringify({
+        compilerOptions: { target: 'ES2020', module: 'ESNext', strict: true },
+        include: ['src/**/*'],
+      }),
+    );
+    writeFileSync(
+      join(dir, 'src/suite.test.ts'),
+      `import { describe, it } from 'vitest';
+describe('outer', () => {
+  describe('inner', () => { it('x', () => { if (1) return; }); });
+});
+`,
+    );
+    const { analyzeProject } = await loadAst();
+    const { facts } = await analyzeProject(dir, (f: string) => f.endsWith('.ts'));
+    const fns = facts.flatMap(
+      (fact: { functions: { name: string; cognitive: number }[] }) => fact.functions,
+    );
+    expect(fns).toHaveLength(1);
+    expect(fns[0].cognitive).toBe(0);
+    rmSync(dir, { recursive: true, force: true });
   });
 
   it('describeItNested = 1 (only describe callback; it suppressed; SonarJS 4.2.2)', async () => {

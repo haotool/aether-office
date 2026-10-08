@@ -7,7 +7,7 @@ import {
   type Pulse,
   type Seat,
   type Shot,
-} from '../../packages/office-scene/src/director.js';
+} from '../../packages/office-scene/src/environment/director.js';
 import {
   FLY_MAX,
   MAX_TRAVEL,
@@ -15,7 +15,7 @@ import {
   chooseEntry,
   poseAt,
   type V3,
-} from '../../packages/office-scene/src/shot-camera.js';
+} from '../../packages/office-scene/src/core/shot-camera.js';
 
 const agent = (id: string, activity: Agent['activity']) => ({ id, activity }) as Agent;
 const seats = new Map<string, Seat>([

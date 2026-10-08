@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import {
   parseClaudeTitle,
   parseCodexIndex,
-} from '../../apps/control/src/services/session-title.js';
+} from '../../apps/control/src/services/sessions/session-title.js';
 
 it('takes the latest Claude ai-title and nothing else from the transcript', () => {
   const tail = [

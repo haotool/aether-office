@@ -3,9 +3,9 @@ import {
   chooseView,
   currentWork,
   type WorkFacts,
-} from '../../packages/office-scene/src/screen-layout.js';
-import { generateFile } from '../../packages/office-scene/src/screen-codegen.js';
-import { terminalOutput } from '../../packages/office-scene/src/screen-terminal-gen.js';
+} from '../../packages/office-scene/src/screen/screen-layout.js';
+import { generateFile } from '../../packages/office-scene/src/screen/screen-codegen.js';
+import { terminalOutput } from '../../packages/office-scene/src/screen/screen-terminal-gen.js';
 
 const facts = (over: Partial<WorkFacts>): WorkFacts => ({
   state: 'working',

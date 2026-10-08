@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import type { Agent } from '../../packages/contracts/src/index.js';
-import type { Pulse, Seat } from '../../packages/office-scene/src/director.js';
+import type { Pulse, Seat } from '../../packages/office-scene/src/environment/director.js';
 import {
   ENVELOPE_MS,
   MAX_TURN,
@@ -14,7 +14,7 @@ import {
   threadPeers,
   turnToward,
   wrapAngle,
-} from '../../packages/office-scene/src/interplay.js';
+} from '../../packages/office-scene/src/environment/interplay.js';
 
 const seat = (x: number, z: number, rotation = 0, floor = 0): Seat => ({ x, z, floor, rotation });
 

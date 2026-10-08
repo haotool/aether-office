@@ -63,9 +63,9 @@
 
 ### 2.1 渲染器與分級
 
-- `packages/office-scene/src/OfficeScene.tsx:229-238`：R3F `<Canvas>`，`frameloop={warm && !props.paused ? 'demand' : 'never'}`、`dpr={[0.75, maxRatio]}`、`gl={{ antialias: !compact && quality !== 'low', powerPreference: 'high-performance', alpha: false }}`。沒有 `preserveDrawingBuffer`。
+- `packages/office-scene/src/components/OfficeScene.tsx:229-238`：R3F `<Canvas>`，`frameloop={warm && !props.paused ? 'demand' : 'never'}`、`dpr={[0.75, maxRatio]}`、`gl={{ antialias: !compact && quality !== 'low', powerPreference: 'high-performance', alpha: false }}`。沒有 `preserveDrawingBuffer`。
 - 像素比上限（`OfficeScene.tsx` 約 195 行）：`high ? (compact ? 1.5 : 2) : balanced ? 1.5 : 1`。**手機的 `high` 與 `balanced` 都是 1.5**，實測兩者的繪製數、程式數、GPU 記憶體完全相同（§3.1）。
-- 分級由偏好值決定，預設 `balanced`（`apps/web/src/state.ts:39`）；沒有 UA、GPU 探測或 dpr 探測。手機版由頁面傳入 `compact`。減少動態來自 `matchMedia('(prefers-reduced-motion: reduce)')`（`state.ts:40`）。
+- 分級由偏好值決定，預設 `balanced`（`apps/web/src/lib/preferences/state.ts:39`）；沒有 UA、GPU 探測或 dpr 探測。手機版由頁面傳入 `compact`。減少動態來自 `matchMedia('(prefers-reduced-motion: reduce)')`（`state.ts:40`）。
 - 色調與色彩空間：R3F 預設在 `toneMapping` 未指定且非 `flat` 時使用 ACESFilmic（`@react-three/fiber@9.8.1` `events-*.cjs.dev.js:1640`），輸出 sRGB，後備緩衝是 8 位元。專案內沒有任何 `dithering`、後處理或 HalfFloat。
 - 動態解析度：`PerfControllers.tsx` 的 `AdaptiveRatio`，30 幀滾動中位數，慢 40% 就降 0.25（最低 0.75），快 5% 以內 90 幀才升，冷卻 1 s 與 4 s；對手機環境節奏目標是 30 Hz。這已經是 drei `PerformanceMonitor` 的自製等價物，不需要換。
 - 閒置：`AnimationClock` 手機環境節奏 50 ms（約 20 fps，`SceneRuntime.tsx`），桌機 24 ms；`document.hidden` 不排程；工作表蓋住場景時 `paused={covered}`（`SceneView.tsx:241`）使 `frameloop='never'`，文件實測主執行緒 1.0 至 1.3 s 降到 0.07 至 0.29 s（`docs/design-system.md`）。
@@ -230,7 +230,7 @@
 
 接受條件：以下三個指標都不得比基準變差（在誤差內，每個案例至少 3 輪交錯），且至少有一項要有明確收益。
 
-1. **p95 幀時間與 `jsMs`：** `node scripts/perf-matrix.mjs --cases 'base=;variant=...' --phone --size 390x844 --dpr 3 --throttle 4 --rounds 3 --frames 240 --motion`；各分級 balanced、low、high 都要跑（`PERF_GPU=1` 的正式規格 `e2e/office-life-perf.spec.ts` 照常）。M4 受 vsync 限制，所以看 `jsMs` 與 `renderMs`；要看 GPU 極限就加 `--disable-gpu-vsync --disable-frame-rate-limit` 並指明這是非正式量測。
+1. **p95 幀時間與 `jsMs`：** `node scripts/perf-matrix.mjs --cases 'base=;variant=...' --phone --size 390x844 --dpr 3 --throttle 4 --rounds 3 --frames 240 --motion`；各分級 balanced、low、high 都要跑（`PERF_GPU=1` 的正式規格 `e2e/office-life/office-life-perf.spec.ts` 照常）。M4 受 vsync 限制，所以看 `jsMs` 與 `renderMs`；要看 GPU 極限就加 `--disable-gpu-vsync --disable-frame-rate-limit` 並指明這是非正式量測。
 2. **繪製數、三角形、程式數、`gpuMB`：** 同一份報告的 `draws`、`triangles`、`programs`、`gpuMB`，不得增加（R3 要減少）。
 3. **色帶指標：** 對固定截圖的漸層區塊算（a）逐列平均與解析解的 RMS（LSB），（b）相鄰 16x16 區塊平均的最大階差；腳本範本是 `dither.mjs` 與 `band.mjs`（用頁面 canvas 解 PNG，不加依賴）。不得變差；R2 預期（a）降到 0.05 以下。單欄「最長相同值連續列數」只當輔助，因為抖色本來就會讓它較短。
 4. **真機（任何影響像素比、MSAA、`backdrop-filter`、context 的變更）：** 至少一台 iPhone（Safari）與一台 Android（Chrome），持續 5 分鐘，記錄 p95、掉幀與熱降頻後的幀時間；並以 Safari 看 CSS 漸層是否有色帶。沒有真機證據的變更不得宣稱「手機更快」。

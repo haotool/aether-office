@@ -1,5 +1,5 @@
-import { usePreferences } from '../state.js';
-import { translate, type Key } from '../i18n.js';
+import { usePreferences } from '../lib/preferences/state.js';
+import { translate, type Key } from '../lib/i18n/i18n.js';
 import { whyNot, type Need } from './whyNot.js';
 
 /** The language of the interface: the one preference most components read and nothing else of it. */

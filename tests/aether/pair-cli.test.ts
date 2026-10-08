@@ -5,7 +5,7 @@ import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { pairingFailure } from '../../apps/control/src/services/pairing.js';
+import { pairingFailure } from '../../apps/control/src/services/remote/pairing.js';
 
 describe('pairingFailure', () => {
   it('tells apart unreachable, unauthorised and any other answer', () => {

@@ -4,7 +4,7 @@ import {
   MONITOR_CHANCE,
   deskProfile,
   type DeskProfile,
-} from '../../packages/office-scene/src/desk-profile.js';
+} from '../../packages/office-scene/src/desks/desk-profile.js';
 
 const seeds = Array.from({ length: 200 }, (_, i) => `member-${i}`);
 const share = (profiles: DeskProfile[], pick: (p: DeskProfile) => boolean) =>

@@ -1,7 +1,7 @@
 import { it, expect } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { fixture, command } from './fixture.js';
-import { enroll, claim, report } from '../../apps/control/src/services/runners.js';
+import { enroll, claim, report } from '../../apps/control/src/services/runtime/runners.js';
 it('serializes each agent across machines and keeps cancellation/unknown work fenced', () => {
   let now = 0;
   const f = fixture(':memory:', () => ++now);

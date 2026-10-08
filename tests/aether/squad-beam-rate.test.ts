@@ -14,7 +14,7 @@ import {
   type SquadState,
 } from '../../packages/office-scene/src/squad/squad-model.js';
 import { zoneName } from '../../packages/office-scene/src/squad/squad-text.js';
-import { squadsOf } from '../../apps/web/src/features/office-model.js';
+import { squadsOf } from '../../apps/web/src/features/office/office-model.js';
 import type { AttributedSession } from '../../packages/contracts/src/index.js';
 
 const SUP = 'local:s1';

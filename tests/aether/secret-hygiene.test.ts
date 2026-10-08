@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { createServer } from '../../apps/control/src/server.js';
-import { redeemInvitation } from '../../apps/control/src/services/invitations.js';
+import { redeemInvitation } from '../../apps/control/src/services/remote/invitations.js';
 import { command, fixture } from './fixture.js';
 
 it('no credential, invitation, A2A token or provider secret ever lands in the database, events, logs or error responses', async () => {

@@ -1,7 +1,7 @@
 import { setTimeout as delay } from 'node:timers/promises';
 import { expect, it } from 'vitest';
-import { claim, enroll } from '../../apps/control/src/services/runners.js';
-import { revoke } from '../../apps/control/src/services/identity.js';
+import { claim, enroll } from '../../apps/control/src/services/runtime/runners.js';
+import { revoke } from '../../apps/control/src/services/domain/identity.js';
 import { createServer } from '../../apps/control/src/server.js';
 import { command, fixture } from './fixture.js';
 import { freePort } from './timing.js';

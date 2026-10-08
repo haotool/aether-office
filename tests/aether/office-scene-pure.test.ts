@@ -2,10 +2,10 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Agent, Layout } from '../../packages/contracts/src/index.js';
 import * as THREE from '../../packages/office-scene/node_modules/three/build/three.module.js';
 import { DomainError } from '../../packages/kernel/src/errors.js';
-import { busiestFloor, floorCounts } from '../../packages/office-scene/src/floor-counts.js';
-import { box, mergeStatic } from '../../packages/office-scene/src/geometry.js';
-import { FLOORS } from '../../packages/office-scene/src/layout.js';
-import { pickSpeakers } from '../../packages/office-scene/src/speakers.js';
+import { busiestFloor, floorCounts } from '../../packages/office-scene/src/core/floor-counts.js';
+import { box, mergeStatic } from '../../packages/office-scene/src/environment/geometry.js';
+import { FLOORS } from '../../packages/office-scene/src/environment/layout.js';
+import { pickSpeakers } from '../../packages/office-scene/src/environment/speakers.js';
 import {
   domEvent,
   installBrowserEnv,
@@ -19,7 +19,7 @@ const web = await vi.hoisted(async () => {
   return { react: paths.WEB_REACT };
 });
 vi.mock(web.react, () => import('./fixtures/mini-react.js'));
-const { useSceneKeys } = await import('../../packages/office-scene/src/scene-keys.js');
+const { useSceneKeys } = await import('../../packages/office-scene/src/scene/scene-keys.js');
 
 const agent = (id: string, activity = 'idle'): Agent => ({ id, activity }) as Agent;
 const layoutWith = (desks: Record<string, number>) =>

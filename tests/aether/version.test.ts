@@ -28,6 +28,8 @@ describe('one version string', () => {
 
   it('is the one the sidebar badge names', () => {
     const [major, minor] = rootVersion.split('.');
-    expect(read('apps/web/src/features/Sidebar.tsx')).toContain(`v${major}.${minor} DEV`);
+    expect(read('apps/web/src/features/shell-chrome/Sidebar.tsx')).toContain(
+      `v${major}.${minor} DEV`,
+    );
   });
 });

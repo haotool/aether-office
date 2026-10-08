@@ -1,5 +1,9 @@
 import { expect, it } from 'vitest';
-import { diffKind, isDiff, parseMarkdown } from '../../apps/web/src/features/md-parse.js';
+import {
+  diffKind,
+  isDiff,
+  parseMarkdown,
+} from '../../apps/web/src/features/conversation/md-parse.js';
 
 it('keeps the language of a fenced block, and none when it has none', () => {
   const [ts, plain] = parseMarkdown('```ts\nconst a = 1;\n```\n\n```\nraw\n```');

@@ -133,7 +133,7 @@ real rollouts), bounded and never quoted. "Gives" is in the provider's own outpu
 | Layer                                        | Wire protocol                           | Package                       | Notes                                                                                                                       |
 | -------------------------------------------- | --------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | ACP client (`packages/providers/src/acp.ts`) | ACP v1, selected by the agent at `initialize` | `@agentclientprotocol/sdk` 1.7.0 | Capabilities come from negotiation. `@agentclientprotocol/claude-agent-acp` and Gemini CLI negotiated v1 (initialize only, no model call). Not usable for read-only review. |
-| A2A gateway (`apps/control/src/services/a2a.ts`) | A2A 1.0.0, JSON-RPC binding        | `@a2a-js/sdk` 1.3.0           | Off unless `AETHER_A2A=on`. `SendMessage`, `GetTask`, `CancelTask`, `ListTasks`. No streaming, push or follow-up turns.      |
+| A2A gateway (`apps/control/src/services/a2a/a2a.ts`) | A2A 1.0.0, JSON-RPC binding        | `@a2a-js/sdk` 1.3.0           | Off unless `AETHER_A2A=on`. `SendMessage`, `GetTask`, `CancelTask`, `ListTasks`. No streaming, push or follow-up turns.      |
 
 The ACP wire version, the SDK version and the A2A spec version move independently; a test pins the ACP SDK version to the
 installed package.

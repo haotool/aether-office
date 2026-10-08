@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
 import type { InstancedMesh } from 'three';
-import { floorY } from '../scene-geometry.js';
+import { floorY } from '../scene/scene-geometry.js';
 import type { DrawSquad } from './squad-draw.js';
 import { art, squadMaterials, withColors, writeInstances } from './squad-art.js';
 import { ZONE_CAPACITY } from './zone-shader.js';

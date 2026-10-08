@@ -7,8 +7,8 @@ import {
   readTarget,
   typedChars,
   typingCycle,
-} from '../../packages/office-scene/src/screen-motion.js';
-import { generateFile } from '../../packages/office-scene/src/screen-codegen.js';
+} from '../../packages/office-scene/src/screen/screen-motion.js';
+import { generateFile } from '../../packages/office-scene/src/screen/screen-codegen.js';
 
 describe('typing cadence', () => {
   it('is the same for the same seed and moment, and differs between members', () => {

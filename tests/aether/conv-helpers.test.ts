@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { dayLabel, relativeAgo, sameDay } from '../../apps/web/src/features/conv-time.js';
+import {
+  dayLabel,
+  relativeAgo,
+  sameDay,
+} from '../../apps/web/src/features/conversation/conv-time.js';
 import {
   holdBaseline,
   releaseBaseline,
   seenBaseline,
-} from '../../apps/web/src/features/session-seen.js';
-import { matchOffsets } from '../../apps/web/src/features/conv-find.js';
-import { nextKey, type KeyState } from '../../apps/web/src/features/conv-keys.js';
-import { noticeTone, groupNotices } from '../../apps/web/src/features/notice-model.js';
+} from '../../apps/web/src/features/sessions/session-seen.js';
+import { matchOffsets } from '../../apps/web/src/features/conversation/conv-find.js';
+import { nextKey, type KeyState } from '../../apps/web/src/features/conversation/conv-keys.js';
+import { noticeTone, groupNotices } from '../../apps/web/src/features/feed/notice-model.js';
 import type { Notice } from '../../packages/kernel/src/index.js';
 
 const NOW = new Date(2026, 9, 7, 15, 30).getTime();

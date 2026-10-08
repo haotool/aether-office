@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { isChunkLoadError, mayReloadForChunk } from '../../apps/web/src/root-boundary.js';
+import { isChunkLoadError, mayReloadForChunk } from '../../apps/web/src/lib/app/root-boundary.js';
 
 it('recognises a chunk that failed to load in Chrome, Safari and Firefox', () => {
   for (const m of [

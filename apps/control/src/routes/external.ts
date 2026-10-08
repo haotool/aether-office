@@ -1,6 +1,6 @@
-import { authenticateA2AClient } from '../services/a2a-clients.js';
-import { handleGithubWebhook, syncConnection } from '../services/integrations.js';
-import { MAX_ATTEMPTS, pruneAttempts } from '../services/attempts.js';
+import { authenticateA2AClient } from '../services/a2a/a2a-clients.js';
+import { handleGithubWebhook, syncConnection } from '../services/domain/integrations.js';
+import { MAX_ATTEMPTS, pruneAttempts } from '../services/runtime/attempts.js';
 import { APP_VERSION } from '@aether/contracts';
 import { DomainError, authorize } from '@aether/kernel';
 import type { RouteContext } from './context.js';
@@ -75,7 +75,7 @@ function integrationRoutes({ app, control, actor, options }: RouteContext, a2aEn
 // A2A gateway: absent (404) unless explicitly enabled. The SDK is only loaded when it is.
 function a2aGateway({ app, control, options, attempts }: RouteContext) {
   app.register(async (scope) => {
-    const { A2AGateway } = await import('../services/a2a.js');
+    const { A2AGateway } = await import('../services/a2a/a2a.js');
     const { AgentCard } = await import('@a2a-js/sdk');
     const gateway = new A2AGateway(control, options.origin);
     scope.get('/.well-known/agent-card.json', async (_request, reply) =>

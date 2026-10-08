@@ -6,8 +6,8 @@ import {
   microAction,
   workMode,
   type BehaviorInput,
-} from '../../packages/office-scene/src/behavior.js';
-import { CLIPS, type ClipName } from '../../packages/office-scene/src/animal-states.js';
+} from '../../packages/office-scene/src/environment/behavior.js';
+import { CLIPS, type ClipName } from '../../packages/office-scene/src/animals/animal-states.js';
 
 const base: BehaviorInput = {
   activity: 'working',

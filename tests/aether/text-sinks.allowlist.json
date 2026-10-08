@@ -1,88 +1,88 @@
 {
-  "apps/web/src/features/ActiveSessions.tsx": {
+  "apps/web/src/features/sessions/ActiveSessions.tsx": {
     "s.title": "session-title"
   },
-  "apps/web/src/features/AppQuickOpen.tsx": {
+  "apps/web/src/features/shell-chrome/AppQuickOpen.tsx": {
     "s.title": "session-title"
   },
-  "apps/web/src/features/AttentionSessions.tsx": {
+  "apps/web/src/features/sessions/AttentionSessions.tsx": {
     "s.title": "session-title"
   },
-  "apps/web/src/features/CharacterCommands.tsx": {
+  "apps/web/src/features/office/CharacterCommands.tsx": {
     "command.session.title": "session-title"
   },
-  "apps/web/src/features/ClockOut.tsx": {
+  "apps/web/src/features/operations/ClockOut.tsx": {
     "s.title": "session-title"
   },
-  "apps/web/src/features/FeedRow.tsx": {
+  "apps/web/src/features/feed/FeedRow.tsx": {
     "item.reply": "feed-reply",
     "item.session.title": "session-title"
   },
-  "apps/web/src/features/GitGraph.tsx": {
+  "apps/web/src/features/tasks-git/GitGraph.tsx": {
     "c.subject": "commit-subject"
   },
-  "apps/web/src/features/Knowledge.tsx": {
+  "apps/web/src/features/operations/Knowledge.tsx": {
     "entry.title": "authored-title",
     "work.title": "authored-title"
   },
-  "apps/web/src/features/KpiScopeView.tsx": {
+  "apps/web/src/features/kpi/KpiScopeView.tsx": {
     "s.title": "session-title"
   },
-  "apps/web/src/features/Meetings.tsx": {
+  "apps/web/src/features/operations/Meetings.tsx": {
     "m.topic": "authored-title"
   },
-  "apps/web/src/features/NoticeChips.tsx": {
+  "apps/web/src/features/feed/NoticeChips.tsx": {
     "notice.summary": "notice"
   },
-  "apps/web/src/features/PermissionCard.tsx": {
+  "apps/web/src/features/operations/PermissionCard.tsx": {
     "request.summary": "tool-target"
   },
-  "apps/web/src/features/Reviews.tsx": {
+  "apps/web/src/features/tasks-git/Reviews.tsx": {
     "work.title": "authored-title"
   },
-  "apps/web/src/features/SessionConversation.tsx": {
+  "apps/web/src/features/sessions/SessionConversation.tsx": {
     "session?.title": "session-title"
   },
-  "apps/web/src/features/SessionDetails.tsx": {
+  "apps/web/src/features/sessions/SessionDetails.tsx": {
     "work.title": "authored-title"
   },
-  "apps/web/src/features/SessionSheet.tsx": {
+  "apps/web/src/features/sessions/SessionSheet.tsx": {
     "item?.reply": "feed-reply",
     "top.reply": "feed-reply",
     "top?.reply": "feed-reply"
   },
-  "apps/web/src/features/SessionsTable.tsx": {
+  "apps/web/src/features/sessions/SessionsTable.tsx": {
     "s.title": "session-title"
   },
-  "apps/web/src/features/StopSession.tsx": {
+  "apps/web/src/features/operations/StopSession.tsx": {
     "session.title": "session-title"
   },
-  "apps/web/src/features/TaskActions.tsx": {
+  "apps/web/src/features/tasks-git/TaskActions.tsx": {
     "w.title": "authored-title"
   },
-  "apps/web/src/features/TaskDag.tsx": {
+  "apps/web/src/features/tasks-git/TaskDag.tsx": {
     "data.work.title": "authored-title"
   },
-  "apps/web/src/features/TaskDetail.tsx": {
+  "apps/web/src/features/tasks-git/TaskDetail.tsx": {
     "prerequisite.title": "authored-title",
     "work.title": "authored-title"
   },
-  "apps/web/src/features/TaskForm.tsx": {
+  "apps/web/src/features/tasks-git/TaskForm.tsx": {
     "work.title": "authored-title"
   },
-  "apps/web/src/features/Tasks.tsx": {
+  "apps/web/src/features/tasks-git/Tasks.tsx": {
     "work.title": "authored-title"
   },
-  "apps/web/src/features/TranscriptTurns.tsx": {
+  "apps/web/src/features/conversation/TranscriptTurns.tsx": {
     "call.summary": "tool-target"
   },
-  "apps/web/src/features/Workspace.tsx": {
+  "apps/web/src/features/integrations/Workspace.tsx": {
     "work?.title": "authored-title"
   },
-  "packages/office-scene/src/NameTag.tsx": {
+  "packages/office-scene/src/components/NameTag.tsx": {
     "names.title": "session-title"
   },
-  "packages/office-scene/src/StalkTooltip.tsx": {
+  "packages/office-scene/src/components/StalkTooltip.tsx": {
     "bloom.merge.subject": "commit-subject",
     "node.subject": "commit-subject"
   }

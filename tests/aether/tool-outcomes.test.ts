@@ -5,13 +5,13 @@ import { describe, expect, it } from 'vitest';
 import {
   resetLocalSessionCache,
   scanLocalSessions,
-} from '../../apps/control/src/services/local-sessions.js';
+} from '../../apps/control/src/services/runtime/local-sessions.js';
 import {
   exitStatusOf,
   parseOutcomes,
   readOutcomes,
   resetOutcomeCache,
-} from '../../apps/control/src/services/tool-outcomes.js';
+} from '../../apps/control/src/services/runtime/tool-outcomes.js';
 import { append, toolResultLine, writeSession } from './fixtures/claude-subagents.js';
 
 const line = (v: unknown) => `${JSON.stringify(v)}\n`;

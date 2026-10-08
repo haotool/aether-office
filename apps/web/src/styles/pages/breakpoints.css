@@ -1,0 +1,372 @@
+@media (min-width: 1800px) {
+  .office-page {
+    padding: var(--space-32) var(--space-40) 0;
+  }
+  .scene-shell {
+    min-height: 540px; /* token-lint: geometry */
+  }
+  .sidebar {
+    width: 220px; /* token-lint: geometry */
+  }
+  .team-chip {
+    min-width: 160px; /* token-lint: geometry */
+  }
+}
+@media (max-width: 1250px) {
+  .sidebar {
+    width: 172px; /* token-lint: geometry */
+  }
+  .topbar {
+    padding: 0 var(--space-16);
+  }
+  .brand {
+    width: 132px; /* token-lint: geometry */
+  }
+  .office-page {
+    padding: var(--space-20) var(--space-16) 0;
+  }
+  .office-stats > .stats-note {
+    display: none;
+  }
+  .messages-layout {
+    grid-template-columns: 1fr;
+  }
+  .compose {
+    max-width: none;
+  }
+  .scene-shell {
+    min-height: 380px; /* token-lint: geometry */
+  }
+  .page-padding {
+    padding: var(--space-24);
+  }
+}
+@media (max-width: 1000px) {
+  .login-panel {
+    padding: var(--space-40);
+  }
+  .login-wordmark {
+    font-size: var(--fs-wordmark-md);
+    letter-spacing: 8px;
+  }
+  /* The top bar keeps every control on screen: the stop shows its icon only, the decorative initial goes. */
+  .topbar-right {
+    gap: var(--space-8);
+  }
+  .stop-label,
+  .user-dot {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .link-text,
+  .link-status small {
+    display: none; /* the dot and its title carry the link state; the sidebar has the words */
+  }
+  .emergency-stop {
+    position: absolute;
+    top: 100%;
+    right: var(--space-12);
+    z-index: var(--z-topbar);
+    padding: var(--space-8);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-card);
+    box-shadow: var(--shadow-md);
+  }
+  body {
+    font-size: var(--fs-meta);
+  }
+  .topbar {
+    padding: 0 var(--space-12);
+    gap: var(--space-8);
+  }
+  .brand {
+    width: auto;
+  }
+  .brand > span {
+    font-size: var(--fs-lead);
+    letter-spacing: 2px;
+  }
+  .brand small {
+    font-size: var(--fs-label);
+    letter-spacing: 4px;
+  }
+  .brand img {
+    width: var(--icon-xl);
+    height: var(--icon-xl);
+  }
+  .top-divider,
+  .project-picker,
+  .add-project,
+  .user-dot {
+    display: none;
+  }
+  .topbar-right {
+    gap: var(--space-6);
+  }
+  .topbar-right .badge {
+    font-size: var(--fs-label);
+  }
+  .mobile-menu {
+    display: flex;
+    padding: var(--space-4);
+  }
+  .sidebar {
+    display: none;
+  }
+  .sidebar.open {
+    display: flex;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    z-index: var(--z-drawer); /* top and width: phone-drawer.css */
+    box-shadow: 30px 0 60px var(--shade); /* token-lint: shadow */
+  }
+  .main-content {
+    width: 100%;
+  }
+  .office-page {
+    padding: var(--space-20) var(--space-12) 0;
+  }
+  .office-heading {
+    gap: var(--space-8);
+  }
+  .office-heading h1 {
+    font-size: var(--fs-display);
+  }
+  .office-heading p {
+    font-size: var(--fs-label);
+  }
+  .office-heading-actions .secondary {
+    display: none;
+  }
+  .office-heading-actions .primary {
+    font-size: var(--fs-label);
+    padding: var(--space-8) var(--space-8);
+  }
+  .eyebrow {
+    font-size: var(--fs-label);
+    letter-spacing: 1.3px;
+  }
+  .office-stats {
+    gap: var(--space-12);
+    font-size: var(--fs-label);
+    padding: var(--space-16) 0 var(--space-12);
+  }
+  .scene-shell {
+    min-height: 400px; /* token-lint: geometry */
+    height: 60dvh;
+    flex: 0 0 auto;
+  }
+  .scene-toolbar {
+    left: 10px; /* token-lint: geometry */
+    right: 10px; /* token-lint: geometry */
+    top: 10px; /* token-lint: geometry */
+    gap: var(--space-8);
+  }
+  .segmented button {
+    padding: var(--space-6) var(--space-8);
+  }
+  .scene-footer {
+    font-size: var(--fs-label);
+    letter-spacing: 0.5px;
+    left: var(--space-12);
+    right: var(--space-12);
+  }
+  .team-chip {
+    min-width: 140px; /* token-lint: geometry */
+  }
+  .team-strip {
+    padding-top: var(--space-16);
+  }
+  .page-padding {
+    padding: var(--space-20) var(--space-16);
+  }
+  .page-heading {
+    align-items: flex-start;
+    gap: var(--space-8);
+  }
+  .page-heading h1 {
+    font-size: var(--fs-display);
+  }
+  .page-heading p {
+    font-size: var(--fs-label);
+  }
+  .page-heading .primary {
+    font-size: var(--fs-label);
+    white-space: nowrap;
+  }
+  .agent-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-8);
+  }
+  .agent-card {
+    padding: var(--space-12);
+  }
+  .agent-card h3 {
+    font-size: var(--fs-meta);
+  }
+  .agent-card footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-6);
+  }
+  .agent-card p {
+    font-size: var(--fs-label);
+    margin-bottom: var(--space-12);
+  }
+  .office-2d {
+    padding: var(--space-64) var(--space-8) var(--space-32);
+  }
+  .office-2d .page-heading {
+    display: none;
+  }
+  .task-row {
+    padding: var(--space-12) var(--space-8);
+    gap: var(--space-8);
+    flex-wrap: wrap;
+  }
+  .task-row > div {
+    flex: 1;
+    min-width: 170px; /* token-lint: geometry */
+  }
+  .task-row .task-priority {
+    margin-left: auto;
+  }
+  .task-row small {
+    max-width: 240px; /* token-lint: geometry */
+  }
+  .task-row .badge {
+    margin-left: var(--space-24);
+  }
+  .message header {
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+  .modal {
+    padding: var(--space-20);
+  }
+  .field-row {
+    flex-wrap: wrap;
+  }
+  .login-page {
+    display: block;
+  }
+  .login-art {
+    height: 200px; /* token-lint: geometry */
+  }
+  .login-wordmark {
+    font-size: var(--fs-wordmark-sm);
+  }
+  .login-wordmark span {
+    font-size: var(--fs-label);
+    letter-spacing: 3px;
+  }
+  .login-panel {
+    padding: var(--space-32) var(--space-24);
+  }
+  .login-panel > img {
+    display: none;
+  }
+  .login-panel h1 {
+    font-size: var(--fs-hero);
+  }
+  .login-panel form {
+    margin-top: var(--space-20);
+  }
+  .scene-options select {
+    width: 62px; /* token-lint: geometry */
+  }
+  .nav-link {
+    padding: var(--space-12) var(--space-12);
+  }
+  .preset-buttons .secondary {
+    flex: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important; /* token-lint: preference */
+    transition: none !important; /* token-lint: preference */
+    animation: none !important; /* token-lint: preference */
+  }
+}
+
+.scene-shell:has(.office-2d) .scene-footer {
+  color: var(--muted);
+  background: var(--bg);
+  padding: var(--space-6) var(--space-12);
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+:root[data-theme='light'] .primary {
+  color: var(--white);
+}
+
+/*
+ * User preferences (the viewport queries above are the layout; these are what the person's system asks for). Each is
+ * checked with Playwright's emulateMedia in e2e/settings/preferences.spec.ts. Colors for them live in tokens.css.
+ */
+/* Reduced transparency or more contrast: no blur behind a surface (the glass tokens are opaque in tokens.css). A person's
+   setting outranks every component rule, hence !important. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  * {
+    -webkit-backdrop-filter: none !important; /* token-lint: preference */
+    backdrop-filter: none !important; /* token-lint: preference */
+  }
+}
+/* Forced colors (Windows high contrast): the system paints colors, so what a border or a fill said must be said by a
+   border or an outline: a button without a border gets one, the cut corner goes, a selected control is outlined, the
+   focus ring is the system highlight. */
+@media (forced-colors: active) {
+  .primary,
+  .secondary,
+  .icon-button,
+  .text-button,
+  .u-btn,
+  .u-chip,
+  .badge,
+  .tab,
+  .round,
+  .fab,
+  .chip-active,
+  .chip-attention,
+  .kpi-cell,
+  .rail-floor,
+  .rail-tool,
+  .sheet-chip {
+    border: 1px solid ButtonText;
+  }
+  .primary {
+    clip-path: none;
+  }
+  .selected,
+  .active,
+  [aria-pressed='true'],
+  [aria-current],
+  [aria-selected='true'] {
+    outline: 2px solid Highlight;
+    outline-offset: calc(-1 * var(--space-2));
+  }
+  .topbar,
+  .sidebar,
+  .tabbar,
+  .panel,
+  .modal,
+  .sheet,
+  .session-sheet,
+  .member-bar,
+  .floor-hud,
+  .building-panel,
+  .floor-plaque,
+  .intro-caption {
+    border: 1px solid CanvasText;
+  }
+  /* last, so a selected control that is also focused still shows the ring */
+  :root :focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: var(--focus-offset);
+  }
+}

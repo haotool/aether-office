@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { api } from '../../api.js';
-import { forgetCsrf } from '../../api-csrf.js';
+import { api } from '../../lib/api/api.js';
+import { forgetCsrf } from '../../lib/api/api-csrf.js';
 import { useT } from '../../ui/useT.js';
 import { DangerZone, InlineHelp, Row } from './kit.js';
 

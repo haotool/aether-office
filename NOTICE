@@ -4,9 +4,9 @@ Licensed under the MIT License (see LICENSE).
 
 This project started from agent-office (https://github.com/AgentSystemLabs/agent-office),
 Copyright (c) 2026 AgentSystemLabs, MIT License. Parts of it remain in tools/blender and
-packages/office-scene/src/geometry.ts.
+packages/office-scene/src/environment/geometry.ts.
 
-apps/control/src/services/redaction.ts adapts secret patterns from Orca
+apps/control/src/services/platform/redaction.ts adapts secret patterns from Orca
 (https://github.com/stablyai/orca), Copyright (c) 2026 Lovecast Inc., MIT License.
 
 packages/providers/generated contains protocol bindings generated, unmodified, by the OpenAI

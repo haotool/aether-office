@@ -2,8 +2,8 @@ import { afterEach, expect, it } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { fixture, command } from './fixture.js';
 import { createServer } from '../../apps/control/src/server.js';
-import { enroll, claim, report } from '../../apps/control/src/services/runners.js';
-import { revoke } from '../../apps/control/src/services/identity.js';
+import { enroll, claim, report } from '../../apps/control/src/services/runtime/runners.js';
+import { revoke } from '../../apps/control/src/services/domain/identity.js';
 const cleanups: (() => unknown | Promise<unknown>)[] = [];
 afterEach(async () => {
   for (const close of cleanups.splice(0).reverse()) await close();

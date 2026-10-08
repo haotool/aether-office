@@ -30,7 +30,7 @@
 
 ## 2. 量測表
 
-### 2.1 Token 清單（`styles/tokens.css`，163 行）
+### 2.1 Token 清單（`styles/core/tokens.css`，163 行）
 
 | 家族          | 數量 | 命名                                                    | 備註                                                                 |
 | ------------- | ---- | ------------------------------------------------------- | -------------------------------------------------------------------- |
@@ -126,7 +126,7 @@
 | 字級 < 11px             | 全部情境 0                                                                                                        |
 | 多行本文 line-height < 1.3 | 0（實測多行 1.6）。注意：1.0/1.2/1.25 僅用於單行元素                                                             |
 | 本文字級分佈（桌面）     | 11px 467、12px 651、13px 182、14px 43、16px 38、18px 25、20px 14、28px 14：**12px 與 11px 是主體，14px 本文只有 43 處** |
-| axe wcag2a/aa/21aa      | 14 頁 × 桌面/手機/平板 × 兩主題：**0 違規**。覆蓋 `e2e/ui-sweep.spec.ts`（14 頁、兩主題、桌面與手機）；不含對話框、KPI、快速開啟、sheet 展開狀態 |
+| axe wcag2a/aa/21aa      | 14 頁 × 桌面/手機/平板 × 兩主題：**0 違規**。覆蓋 `e2e/ui/ui-sweep.spec.ts`（14 頁、兩主題、桌面與手機）；不含對話框、KPI、快速開啟、sheet 展開狀態 |
 | 對比（自行計算）        | 無真實失敗。light 的偵測值（`收合` 1.9、登入 `AETHER` 1.01）是因我的探測不處理漸層與深色玻璃底，視為誤報，須人工在 3D 場景上抽查 |
 | 焦點環                  | 主路徑一致（2px mint，offset 4px，`base.css:33,40`）；變體 4 種：`.nav-link` 1px 38% 透明 offset -1px、`input` offset -1px、`.panel-resizer` outline none + 3px 背景、`.table-scroll/.history-table` 瀏覽器預設 `auto 1px`（手機深色上是 `rgb(238,238,238)` 淡灰） |
 | 水平溢出                | 全部 0                                                                                                            |
@@ -183,7 +183,7 @@ i18n 溢出：英文 `Open on your phone`、`New project` 等較中文長 2 到 
 | 12 | 共用元件 `Modal Sheet Fold Hint Clamp Field Badge Empty PageHeading` | 全存在於 `ui.tsx`                                                  | 準確 |
 | 13 | 按鈕類別 `primary secondary icon-button text-button`         | 存在，另有 `button:not([class])` 隱式按鈕                              | 準確 |
 | 14 | 面板寬度 320 到 720 與 container query                        | `session-panel.css` container 與 `panel-resize.css` 符合              | 準確 |
-| 15 | 設計 token 檔路徑 `apps/web/src/tokens.css`（lint 檔頭註解）  | 實際 `styles/tokens.css`                                              | 漂移 |
+| 15 | 設計 token 檔路徑 `apps/web/src/tokens.css`（lint 檔頭註解）  | 實際 `styles/core/tokens.css`                                              | 漂移 |
 
 ## 修正狀態（Track A 到 F 合併後）
 
@@ -194,7 +194,7 @@ i18n 溢出：英文 `Open on your phone`、`New project` 等較中文長 2 到 
 | P1 標題列、空狀態、標題、開關                | 已修 | Track B/C（`.u-head`、`.u-empty`、`.u-switch`）                                                                                        |
 | P1 本文字級                                  | 已修 | Track A（文件與 token 一致）                                                                                                          |
 | P1 焦點環 4 種變體                           | 已修 | Track A/B/D/E（`--focus-ring` 單一規則）；forced-colors 下為 3px `Highlight`                                                          |
-| P2 forced-colors、prefers-contrast、reduced-transparency | 已修 | `breakpoints.css` 末尾與 `tokens.css`；`e2e/preferences.spec.ts` 用 `emulateMedia` 驗證並存截圖                                       |
+| P2 forced-colors、prefers-contrast、reduced-transparency | 已修 | `breakpoints.css` 末尾與 `tokens.css`；`e2e/settings/preferences.spec.ts` 用 `emulateMedia` 驗證並存截圖                                       |
 | P2 物理屬性 163 處（RTL）                    | 未做 | 排在最後的 Track G，機械式替換，不在本輪                                                                                              |
 | P2 line-height、radius 角色                  | 已修 | `--lh-*`、`--r-control/card/sheet`；字面 line-height 剩 0（2 條單行字符以逃生註解標 `glyph`）                                         |
 | P2 動態字面秒數、陰影字面                    | 已修 | 短轉場用 `--dur*`，陰影用 `--shadow-sm/md/lg/up`；剩餘的循環動畫、發光與外框以逃生註解標 `loop`/`animation`/`glow`/`ring`/`shadow`    |
@@ -257,7 +257,7 @@ i18n 溢出：英文 `Open on your phone`、`New project` 等較中文長 2 到 
 ### 規則與驗證（所有 track 共用）
 
 - 驗證：`pnpm lint`、`pnpm format:check`、`pnpm typecheck`、`pnpm test`、`pnpm build`、`pnpm exec playwright test`，並在 390×844 與 820×1180 看過改動頁。
-- 新增 `e2e/role-variance.spec.ts`：對 14 頁在桌面與手機量測，**同角色 distinct 高度上限**：按鈕 ≤ 3（含單行/兩種觸控）、icon button ≤ 1（在每個斷點內）、輸入 ≤ 2、tab/分段 = 1、chip ≤ 2，超過即失敗。腳本骨架即本稽核的 `measure.mjs` 的 `probe`。
+- 新增 `e2e/ui/role-variance.spec.ts`：對 14 頁在桌面與手機量測，**同角色 distinct 高度上限**：按鈕 ≤ 3（含單行/兩種觸控）、icon button ≤ 1（在每個斷點內）、輸入 ≤ 2、tab/分段 = 1、chip ≤ 2，超過即失敗。腳本骨架即本稽核的 `measure.mjs` 的 `probe`。
 - 擴充 `check-design-tokens.mjs` 的新規則：（a）`width/height/min-*/max-*/inset/top/left/right/bottom` 的字面 px 需在白名單（`0`、`1px`、`100%`、`auto` 與明列的例外檔案行）；（b）`line-height` 必須用 `--lh-*`；（c）`@media` 內 px 只允許 4 個斷點；（d）`--x: 12px` 自訂屬性在 tokens.css 以外要報錯；（e）`transition/animation` 時間要用 `--dur*`；（f）`vh` 報錯。以「基準檔」`scripts/design-token-baseline.json` 記錄現有違規數，只允許下降，各 track 完成時下調。
 - 螢幕截圖檢查：沿用 `ui-sweep.spec.ts` 的 `evidence/screenshots`，各 track 附前後對照。
 
@@ -270,7 +270,7 @@ i18n 溢出：英文 `Open on your phone`、`New project` 等較中文長 2 到 
 | C     | 外框與頁面：頂欄、側欄、設定、頁面、KPI                                                                      | `shell.css`、`settings-kit.css`、`settings-content.css`、`settings-layout.css`、`kpi.css`（拆成 `kpi.css` 與 `kpi-charts.css`）、`views.css`、`login.css`、`sessions.css`            | 用 B 的類別；移除字面高度；`vh` 改 `dvh`；KPI 說明文字間距統一                                                       | 對應頁截圖、`vh` lint 為 0                    |
 | D     | 場景與浮層：HUD、工具列、name-tag、角色選單、speech、overlays                                                | `office.css`、`scene-*.css`、`name-tag.css`、`character-menu.css`、`telemetry.css`、`workbench.css`                                                                                | 工具列控制項改用 `--control-h-*`；陰影與秒數 token 化                                                                | 3D 頁截圖、字面秒數與陰影為 0                 |
 | E     | 對話與面板：session panel、feed、transcript、composer、squad、permission card、git                          | `session-panel.css`、`panel-resize.css`、`session-feed.css`、`squad.css`、`transcript*.css`、`composer.css`、`permission-card.css`、`git.css`、`models.css`、`clock-out.css`、`quick-open.css` | line-height 映射到 `--lh-*`；移除 `em` 字級；空狀態用 `.u-empty`                                                    | session-panel 與 squad 既有 e2e、截圖          |
-| F     | 手機與響應式層、偏好與 lint                                                                                  | `breakpoints.css`、`compact-desktop.css`、`phone-*.css`、`scripts/check-design-tokens.mjs`、`e2e/role-variance.spec.ts`、`docs/design-system.md`                                   | 斷點只用 4 值；加 `forced-colors`、`prefers-contrast`、`prefers-reduced-transparency`；`--tabbar-h` 搬到 A（回報給 A）| 新 lint 與 spec；`responsive.spec.ts` 仍過    |
+| F     | 手機與響應式層、偏好與 lint                                                                                  | `breakpoints.css`、`compact-desktop.css`、`phone-*.css`、`scripts/check-design-tokens.mjs`、`e2e/ui/role-variance.spec.ts`、`docs/design-system.md`                                   | 斷點只用 4 值；加 `forced-colors`、`prefers-contrast`、`prefers-reduced-transparency`；`--tabbar-h` 搬到 A（回報給 A）| 新 lint 與 spec；`responsive.spec.ts` 仍過    |
 
 另一條可選的獨立軌道 G（RTL 邏輯屬性）會碰所有 CSS 檔，**必須排在最後**，用機械式替換單獨一個提交。
 

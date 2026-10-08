@@ -4,7 +4,7 @@ import {
   revealedLines,
   terminalOutput,
   type CommandKind,
-} from '../../packages/office-scene/src/screen-terminal-gen.js';
+} from '../../packages/office-scene/src/screen/screen-terminal-gen.js';
 
 const CONTEXT = {
   branch: 'feat/login',

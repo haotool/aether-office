@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { CLIPS } from '../../packages/office-scene/src/animal-states.js';
+import { CLIPS } from '../../packages/office-scene/src/animals/animal-states.js';
 import {
   EMOTES,
   EMOTE_COOLDOWN_MS,
@@ -10,9 +10,9 @@ import {
   emoteGate,
   withSprite,
   type Sprite,
-} from '../../packages/office-scene/src/emotes.js';
-import { createLongPress } from '../../packages/office-scene/src/long-press.js';
-import { insideMarquee } from '../../packages/office-scene/src/use-marquee.js';
+} from '../../packages/office-scene/src/animals/emotes.js';
+import { createLongPress } from '../../packages/office-scene/src/core/long-press.js';
+import { insideMarquee } from '../../packages/office-scene/src/core/use-marquee.js';
 
 describe('emotes', () => {
   it('reuse clips the animal models carry, one emote per id', () => {

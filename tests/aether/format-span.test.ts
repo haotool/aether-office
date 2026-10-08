@@ -1,5 +1,9 @@
 import { expect, it } from 'vitest';
-import { apparitionsOf, needsAttention, zombiesOf } from '../../apps/web/src/session-attention.js';
+import {
+  apparitionsOf,
+  needsAttention,
+  zombiesOf,
+} from '../../apps/web/src/lib/sessions/session-attention.js';
 import { formatSpan } from '../../packages/kernel/src/index.js';
 
 it('writes a span the way a person reads it, rounded down and never zero', () => {

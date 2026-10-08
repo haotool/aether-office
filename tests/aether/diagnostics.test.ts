@@ -1,9 +1,17 @@
 import { it, expect } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { fixture, command } from './fixture.js';
-import { diagnoseWork } from '../../apps/control/src/services/diagnostics.js';
-import { enroll, claim, heartbeat, report } from '../../apps/control/src/services/runners.js';
-import { requestApproval, decideApproval } from '../../apps/control/src/services/approvals.js';
+import { diagnoseWork } from '../../apps/control/src/services/platform/diagnostics.js';
+import {
+  enroll,
+  claim,
+  heartbeat,
+  report,
+} from '../../apps/control/src/services/runtime/runners.js';
+import {
+  requestApproval,
+  decideApproval,
+} from '../../apps/control/src/services/permissions/approvals.js';
 it('diagnoses event silence independently of heartbeat, explicit waits and ownership without side effects', () => {
   let now = 100000;
   const f = fixture(':memory:', () => now);

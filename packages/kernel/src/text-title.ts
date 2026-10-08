@@ -47,6 +47,38 @@ function once(raw: string): string {
   return t;
 }
 
+function cutBoundaryTiers(
+  gs: readonly string[],
+  depth: readonly number[],
+): ((i: number) => boolean)[] {
+  const before = (i: number) => gs[i - 1] ?? '';
+  const midWord = (i: number) => ASCII_WORD.test(before(i)) && ASCII_WORD.test(gs[i] ?? '');
+  return [
+    (i) => depth[i] === 0 && (CLAUSE_END.test(before(i)) || gs[i] === ' '),
+    (i) => CLAUSE_END.test(before(i)) || gs[i] === ' ',
+    (i) => depth[i] === 0 && !midWord(i),
+    (i) => !midWord(i),
+  ];
+}
+
+function pickCutIndex(
+  at: number,
+  floor: number,
+  sum: (to: number) => number,
+  tiers: ((i: number) => boolean)[],
+): number {
+  let pick = 0;
+  for (const tier of tiers) {
+    for (let i = at; i >= 1 && sum(i) >= floor; i--)
+      if (tier(i)) {
+        pick = i;
+        break;
+      }
+    if (pick) break;
+  }
+  return pick || at;
+}
+
 /** Whole graphemes of `text` kept up to `max` of `measure`, cut on the best boundary; `null` when it already fits. */
 function cutOn(text: string, max: number, measure: (g: string) => number): string | null {
   const gs = graphemes(text);
@@ -57,25 +89,9 @@ function cutOn(text: string, max: number, measure: (g: string) => number): strin
   while (limit < gs.length && sum(limit + 1) <= budget) limit++;
   const depth = brackets(gs);
   const floor = Math.floor(sum(limit) * 0.4);
-  const before = (i: number) => gs[i - 1] ?? '';
-  const midWord = (i: number) => ASCII_WORD.test(before(i)) && ASCII_WORD.test(gs[i] ?? '');
-  const tiers: ((i: number) => boolean)[] = [
-    (i) => depth[i] === 0 && (CLAUSE_END.test(before(i)) || gs[i] === ' '),
-    (i) => CLAUSE_END.test(before(i)) || gs[i] === ' ',
-    (i) => depth[i] === 0 && !midWord(i),
-    (i) => !midWord(i),
-  ];
+  const tiers = cutBoundaryTiers(gs, depth);
   for (let at = limit; at >= 1;) {
-    let pick = 0;
-    for (const tier of tiers) {
-      for (let i = at; i >= 1 && sum(i) >= floor; i--)
-        if (tier(i)) {
-          pick = i;
-          break;
-        }
-      if (pick) break;
-    }
-    pick ||= at;
+    const pick = pickCutIndex(at, floor, sum, tiers);
     const kept = balanceBrackets(gs.slice(0, pick).join('').replace(SEPARATORS, ''));
     const result = kept ? kept + ELLIPSIS : ELLIPSIS;
     if (graphemes(result).reduce((s, g) => s + measure(g), 0) <= max) return result;

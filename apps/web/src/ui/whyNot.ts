@@ -1,4 +1,4 @@
-import type { Key } from '../i18n.js';
+import type { Key } from '../lib/i18n/i18n.js';
 
 /** Every reason a control can give for being off. `ReasonDefs` renders each once, so `aria-describedby` can name it. */
 export const REASONS = [

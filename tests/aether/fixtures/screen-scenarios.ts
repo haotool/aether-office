@@ -1,5 +1,5 @@
 // The desk screens and the office-life scheduler, as characterization scenarios (see scene-scenarios.ts).
-import type { DeskProfile } from '../../../packages/office-scene/src/desk-profile.js';
+import type { DeskProfile } from '../../../packages/office-scene/src/desks/desk-profile.js';
 import {
   LIFE_CATEGORIES,
   type LifeContext,

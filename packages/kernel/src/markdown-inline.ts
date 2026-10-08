@@ -71,20 +71,18 @@ export function closingTicks(text: string, from: number, n: number): number {
   return -1;
 }
 
-/** The `[label](url)` that starts at `at` (after any `!`), or null. `end` is just past the closing parenthesis. */
-function linkAt(text: string, at: number) {
+function linkLabelClose(text: string, at: number): number {
   let depth = 0;
-  let close = -1;
   for (let j = at; j < text.length; j++) {
     const c = text[j];
     if (c === '\\') j++;
     else if (c === '[') depth++;
-    else if (c === ']' && --depth === 0) {
-      close = j;
-      break;
-    }
+    else if (c === ']' && --depth === 0) return j;
   }
-  if (close < 0 || text[close + 1] !== '(') return null;
+  return -1;
+}
+
+function linkDestination(text: string, close: number): { url: string; end: number } {
   let level = 1;
   let j = close + 2;
   for (; j < text.length && level > 0; j++) {
@@ -92,14 +90,23 @@ function linkAt(text: string, at: number) {
     else if (text[j] === ')') level--;
     else if (text[j] === '\n') break;
   }
-  const label = text.slice(at + 1, close);
   if (level > 0) {
     // Cut off inside the address: keep the label, drop the half-written address.
     const stop = text.slice(close + 2).search(/\s/);
-    return { label, url: '', end: stop < 0 ? text.length : close + 2 + stop };
+    return { url: '', end: stop < 0 ? text.length : close + 2 + stop };
   }
   const target = text.slice(close + 2, j - 1).trim();
-  return { label, url: /^<([^>]*)>/.exec(target)?.[1] ?? target.split(/\s+/)[0] ?? '', end: j };
+  const url = /^<([^>]*)>/.exec(target)?.[1] ?? target.split(/\s+/)[0] ?? '';
+  return { url, end: j };
+}
+
+/** The `[label](url)` that starts at `at` (after any `!`), or null. `end` is just past the closing parenthesis. */
+function linkAt(text: string, at: number) {
+  const close = linkLabelClose(text, at);
+  if (close < 0 || text[close + 1] !== '(') return null;
+  const label = text.slice(at + 1, close);
+  const dest = linkDestination(text, close);
+  return { label, url: dest.url, end: dest.end };
 }
 
 /** Where the marker that closes the emphasis opened at `from` starts, or -1. */

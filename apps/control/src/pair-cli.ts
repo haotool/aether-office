@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { pairingFailure, pairingText } from './services/pairing.js';
+import { pairingFailure, pairingText } from './services/remote/pairing.js';
 import { print, warn } from './stdio.js';
 
 /**
