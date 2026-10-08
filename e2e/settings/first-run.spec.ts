@@ -87,6 +87,7 @@ test.describe('nothing is running yet', () => {
     const create = panel.getByRole('button', { name: 'Create a project by hand' });
     await expect(create).toHaveClass(/secondary/);
     await expect(create).not.toHaveClass(/primary/);
+    await expect(page.getByRole('combobox', { name: 'Project' })).toHaveCount(0); // nothing to choose from yet
   });
 
   test('a project with no session shows it in the office view and the list, not an empty building', async ({

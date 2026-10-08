@@ -76,7 +76,8 @@ export default defineConfig({
     serviceWorkers: 'block',
   },
   projects: [
-    { name: 'chrome', testIgnore: /ios-only/ },
+    // e2e/ux-matrix is the audit matrix, about 15 minutes of its own (`pnpm run ux:matrix`).
+    { name: 'chrome', testIgnore: /ios-only|ux-matrix/ },
     // WebKit is the engine of every browser on iOS. Opt in once `playwright install webkit` has been run.
     ...(process.env['AETHER_WEBKIT']
       ? [

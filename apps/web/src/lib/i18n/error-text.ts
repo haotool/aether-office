@@ -3,12 +3,14 @@ import { resolveLocale, translate, type Key, type Locale } from './i18n.js';
 // What a person can run into without the orchestration pages, in words. Any other code is shown as it is: a code is
 // better than a guess about what went wrong.
 const WORDS: Record<string, Key> = {
+  REQUEST_FAILED: 'errRequestFailed',
   AUTH_REQUIRED: 'errAuthRequired',
   LOGIN_RATE_LIMIT: 'errLoginRateLimit',
   FORBIDDEN: 'errForbidden',
   LIVE_EXECUTION_NOT_ENABLED: 'errLiveExecutionOff',
   TERMINAL_PROFILE_NOT_GRANTED: 'errTerminalProfile',
   TERMINAL_MACHINE_UNAVAILABLE: 'errNoRunner',
+  TERMINAL_CAPACITY: 'errTerminalCapacity',
   SESSION_NOT_FOUND: 'errSessionNotFound',
   SESSION_NOT_RUNNING: 'errSessionNotRunning',
   PROCESS_CHANGED: 'errProcessChanged',

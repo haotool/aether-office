@@ -99,11 +99,13 @@ export function Sidebar({
   return (
     <nav className={`sidebar ${open ? 'open' : ''}`} aria-label={t('navigation')}>
       {/* The top bar's project picker has no room on a phone; it lives here instead. */}
-      <label className="drawer-project">
-        <span className="nav-title">WORKSPACE</span>
-        <ProjectSelect projects={projects} projectId={projectId} onProject={onProject} />
-      </label>
-      <div className="nav-title desktop-title">WORKSPACE</div>
+      {projects.length > 0 && (
+        <label className="drawer-project">
+          <span className="nav-title">{t('project')}</span>
+          <ProjectSelect projects={projects} projectId={projectId} onProject={onProject} />
+        </label>
+      )}
+      <div className="nav-title desktop-title">{t('project')}</div>
       <NavGroups
         advanced={advanced}
         projectId={projectId}

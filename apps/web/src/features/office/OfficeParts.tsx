@@ -1,7 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import {
   ArrowUpRight,
-  Orbit,
   Pause,
   PanelRightClose,
   PencilRuler,
@@ -48,9 +47,6 @@ export function OfficeHeading({
   return (
     <div className="office-heading">
       <div>
-        <div className="eyebrow">
-          AETHER ORBITAL CAMPUS <span>/ 01</span>
-        </div>
         <h1>{t('title')}</h1>
         <p>{t('subtitle')}</p>
       </div>
@@ -229,9 +225,6 @@ export function SceneFooter({ mode }: { mode: Session['mode'] }) {
   const view = usePreferences((s) => s.view);
   return (
     <div className="scene-footer">
-      <span>
-        <Orbit size={13} /> AETHER / ORBITAL CAMPUS
-      </span>
       <span>
         {view === '3d' ? 'WEBGL2' : '2D'} · {t(mode)}
       </span>

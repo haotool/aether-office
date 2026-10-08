@@ -1,7 +1,7 @@
 // Dithering for the soft, dark, additive gradients (light shafts, beams, clouds, glass strands, holograms): an 8-bit frame
 // buffer shows their slow ramps as bands, and three's own `dithering` (+-0.5 LSB, one hash per pixel) breaks them up.
 //
-// Measured on a synthetic strip (docs/research/mobile-gradient-perf.md and docs/design-system.md): three adds the noise to the
+// Measured on a synthetic strip (docs/internal/mobile-gradient-perf.md and docs/design-system.md): three adds the noise to the
 // colour BEFORE the alpha multiplies it, so on a low-alpha ramp the noise is scaled away and nothing changes (row-mean error
 // 0.278 against 0.291 LSB without it). The noise helps only when it is added to the colour that is blended, so these
 // materials are premultiplied (`premultipliedAlpha`, which makes three blend with ONE instead of SRC_ALPHA: the same result

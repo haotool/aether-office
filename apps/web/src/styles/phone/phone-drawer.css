@@ -167,12 +167,6 @@
   }
 }
 
-@media (max-width: 760px) {
-  .eyebrow span {
-    display: none; /* the decorative "/ 01" would wrap onto a line of its own */
-  }
-}
-
 /* A short screen (an iPad on its side, a small laptop) must still reach the last link and the sign-out button. */
 .sidebar {
   overflow-y: auto;

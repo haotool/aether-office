@@ -149,6 +149,24 @@ describe('agent artifact hygiene', () => {
   });
 });
 
+describe('large tracked files', () => {
+  it('lets shipped assets pass the file limit inside their budget and warns about any other big file', async () => {
+    const { largeTracked } = await loadTree();
+    const { results } = await loadResults();
+    const root = join(scratch, 'large');
+    mkdirSync(join(root, 'apps/web/public/assets'), { recursive: true });
+    writeFileSync(join(root, 'apps/web/public/assets/a.glb'), Buffer.alloc(1_500_000));
+    writeFileSync(join(root, 'big.bin'), Buffer.alloc(1_500_000));
+    const status = (files: string[]) => {
+      results.length = 0;
+      largeTracked(root, files, 1);
+      return results.find((r: { id: string }) => r.id === 'large-tree')?.status;
+    };
+    expect(status(['apps/web/public/assets/a.glb'])).toBe('pass');
+    expect(status(['apps/web/public/assets/a.glb', 'big.bin'])).toBe('warn');
+  });
+});
+
 describe('readiness check', () => {
   it('fails on a personal path in the tree and passes on clean content', async () => {
     const repo = join(scratch, 'ready');

@@ -9,6 +9,16 @@
     position: relative;
     height: 100%;
     background: var(--scene-bg);
+    --fab-bottom: calc(
+      var(--hud-inset) + var(--peek-h) + var(--space-8)
+    ); /* above the session sheet's peek */
+    --fab-clear: calc(
+      var(--fab-bottom) + var(--fab-size) + var(--space-8)
+    ); /* the first free line above the new-task button */
+    --hud-clear: calc(
+      var(--hud-inset) + var(--control-h-sm) + var(--space-8) + var(--control-touch) +
+        var(--space-8)
+    ); /* the first free line under the view switch and the chips */
   }
   .phone-office .canvas-container {
     position: absolute;
@@ -83,9 +93,7 @@
     position: absolute;
     z-index: var(--z-hud-top);
     right: var(--hud-inset);
-    bottom: calc(
-      var(--hud-inset) + var(--peek-h) + var(--space-8)
-    ); /* above the session sheet's peek */
+    bottom: var(--fab-bottom);
     width: var(--fab-size);
     height: var(--fab-size);
     border-radius: 50%;

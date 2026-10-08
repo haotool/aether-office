@@ -1,6 +1,7 @@
 // Additional CHARTER §5.3 M criteria for release mode (static / recorded inputs only).
 import { execFileSync, spawnSync } from 'node:child_process';
 import { parityGaps, inlinePairs } from '../areas/a11y.mjs';
+import { HISTORY } from '../areas/docs.mjs';
 import { ui } from '../areas/ui.mjs';
 import { at, top } from '../lib.mjs';
 import { runCommand } from '../repo.mjs';
@@ -8,7 +9,6 @@ import { conventional, SUBJECT_MAX } from '../../oss/git-messages.mjs';
 import { readCommits, upstreamSet } from '../../oss/history-groups.mjs';
 
 const COVERAGE_PATH = 'coverage/coverage-summary.json';
-const DOC_HISTORY = /^(docs\/research\/|CHANGELOG\.md|docs\/verification\/|docs\/adr\/)/;
 const SKIP_SUBJECT = /^(Merge |Revert "|fixup! |squash! )|^Merge branch 'worktree-agent-/;
 
 /** Charter L3-03: shortfall in percentage points vs 80% lines / 70% branches. */
@@ -135,7 +135,7 @@ function paragraphMixed(text) {
 /** @param {import('../repo.mjs').Repo} repo */
 export function measureMixedLanguageDocs(repo) {
   const files = repo.files.filter(
-    (f) => f.startsWith('docs/') && f.endsWith('.md') && !DOC_HISTORY.test(f),
+    (f) => f.startsWith('docs/') && f.endsWith('.md') && !HISTORY.test(f),
   );
   const hits = [];
   for (const file of files) {
@@ -144,6 +144,44 @@ export function measureMixedLanguageDocs(repo) {
       if (paragraphMixed(para)) hits.push(`${file}: paragraph ${i + 1} mixes English and Chinese`);
     });
   }
+  return { violations: hits.length, value: hits.length, detail: top(hits) };
+}
+
+const CHANGELOG = 'CHANGELOG.md';
+const CHANGELOG_BYTES = 32 * 1024;
+const CHANGELOG_KINDS = new Set([
+  'Added',
+  'Changed',
+  'Deprecated',
+  'Removed',
+  'Fixed',
+  'Security',
+  'Upgrade notes',
+]);
+const RELEASE_HEADING = /^## (\[Unreleased\]|\[\d+\.\d+\.\d+\] - \d{4}-\d{2}-\d{2})$/;
+const WORKING_WORDS = /\b(wave \d|track [A-F]|WP-?\d|PM-)\b/;
+
+/** Charter L6-05: Keep a Changelog layout, no working vocabulary, and a size a reader can finish (one violation per 4 KB over). */
+export function measureChangelog(repo) {
+  if (!repo.exists(CHANGELOG)) return { unmeasured: true, detail: [`missing ${CHANGELOG}`] };
+  const text = repo.read(CHANGELOG);
+  const hits = [];
+  let kinds = new Set();
+  text.split('\n').forEach((line, i) => {
+    const where = `${CHANGELOG}:${i + 1}`;
+    if (line.startsWith('## ')) {
+      kinds = new Set();
+      if (!RELEASE_HEADING.test(line)) hits.push(`${where} release heading: ${line}`);
+    } else if (line.startsWith('### ')) {
+      const kind = line.slice(4);
+      if (!CHANGELOG_KINDS.has(kind) || kinds.has(kind)) hits.push(`${where} section: ${kind}`);
+      kinds.add(kind);
+    }
+    if (WORKING_WORDS.test(line)) hits.push(`${where} working vocabulary`);
+  });
+  if (!text.includes('\n## [Unreleased]\n')) hits.push(`${CHANGELOG} has no [Unreleased] section`);
+  const over = Math.ceil(Math.max(0, Buffer.byteLength(text) - CHANGELOG_BYTES) / 4096);
+  for (let n = 0; n < over; n++) hits.push(`${CHANGELOG} is over ${CHANGELOG_BYTES / 1024} KB`);
   return { violations: hits.length, value: hits.length, detail: top(hits) };
 }
 

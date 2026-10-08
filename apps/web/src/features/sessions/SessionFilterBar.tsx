@@ -65,7 +65,7 @@ export function FilterBar({
         onChange={(e) => onChange({ query: e.target.value })}
       />
       <select
-        aria-label="provider"
+        aria-label={t('provider')}
         value={filters.provider}
         onChange={(e) => onChange({ provider: e.target.value })}
       >
@@ -108,7 +108,9 @@ export function DepartmentTokens({
         return (
           <li key={d.department}>
             <span>{dept ? (locale === 'zh-TW' ? dept.zh : dept.en) : d.department}</span>
-            <b>{compact.format(d.tokens)}</b>
+            <b>
+              {compact.format(d.tokens)} {t('tokensUnit')}
+            </b>
             <small>
               {d.sessions} {t('sessionCount')}
             </small>

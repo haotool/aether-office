@@ -1,4 +1,4 @@
-// Area 4: UI system and design tokens. The existing token lint plus the rules proposed in docs/research/ui-token-audit.md
+// Area 4: UI system and design tokens. The existing token lint plus the rules proposed in docs/internal/ui-token-audit.md
 // section 5, counted per declaration; compared with scripts/design-token-baseline.json when that file exists.
 import { ROLE_VARIANCE_PATHS } from '../inputs.mjs';
 import { at, top } from '../lib.mjs';

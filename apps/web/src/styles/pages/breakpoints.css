@@ -61,7 +61,11 @@
 @media (max-width: 760px) {
   .link-text,
   .link-status small {
-    display: none; /* the dot and its title carry the link state; the sidebar has the words */
+    display: none; /* a live link is a dot; the sidebar has the words */
+  }
+  /* A link that is not live says so in words: a touch screen has no tooltip to explain a red dot. */
+  .link-status:is([data-status='reconnecting'], [data-status='offline']) .link-text {
+    display: inline;
   }
   .emergency-stop {
     position: absolute;

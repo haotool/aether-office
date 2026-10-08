@@ -180,15 +180,26 @@ export function checkSecrets(root, history, skip, configOption) {
   return true;
 }
 
+/** Models and textures the app serves: each may pass the single-file limit while the folder stays within its budget. */
+const SHIPPED_ASSETS = /^apps\/web\/public\/assets\//;
+const SHIPPED_BUDGET_MB = 40;
+
 export function largeTracked(root, files, limitMb) {
-  const rows = files
-    .map((f) => ({ f, size: readFileSafe(path.join(root, f))?.length ?? 0 }))
-    .filter((r) => r.size > limitMb * MB)
+  const sized = files.map((f) => ({ f, size: readFileSafe(path.join(root, f))?.length ?? 0 }));
+  const shippedMb =
+    sized.filter((r) => SHIPPED_ASSETS.test(r.f)).reduce((sum, r) => sum + r.size, 0) / MB;
+  const rows = sized
+    .filter((r) => r.size > limitMb * MB && !SHIPPED_ASSETS.test(r.f))
     .sort((a, b) => b.size - a.size);
+  const lines = rows.slice(0, 15).map((r) => `${(r.size / MB).toFixed(2).padStart(6)} MB  ${r.f}`);
+  if (shippedMb > SHIPPED_BUDGET_MB)
+    lines.push(
+      `${shippedMb.toFixed(1)} MB of shipped assets, over the ${SHIPPED_BUDGET_MB} MB budget`,
+    );
   add(
     'large-tree',
-    `Tracked files over ${limitMb} MB (shipped assets are expected here)`,
-    worst(rows, 'warn'),
-    rows.slice(0, 15).map((r) => `${(r.size / MB).toFixed(2).padStart(6)} MB  ${r.f}`),
+    `Tracked files over ${limitMb} MB outside the shipped assets (${shippedMb.toFixed(1)} of ${SHIPPED_BUDGET_MB} MB)`,
+    worst(lines, 'warn'),
+    lines,
   );
 }

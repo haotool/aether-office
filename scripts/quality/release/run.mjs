@@ -14,6 +14,7 @@ import { evidenceForCriteria } from './evidence.mjs';
 import { gateRow, loadGates } from './gates-evidence.mjs';
 import {
   measureAuthorIdentities,
+  measureChangelog,
   measureCompactBlur,
   measureConventionalCommits,
   measureCoverage,
@@ -39,6 +40,7 @@ import {
   measureStructureSize,
   measureTypeEscapes,
 } from './measure.mjs';
+import { measureStateMatrix, measureTouchTargets } from './measure-ux.mjs';
 
 function headSha(root) {
   return execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
@@ -148,6 +150,9 @@ export async function scoreRelease(root, options = {}) {
       ...measureCompactBlur(repo),
       source: 'rg compact/touch blur',
     }),
+    'L4-03': () => ({ ...measureTouchTargets(root), source: 'docs/verification/ux-matrix.json' }),
+    'L4-08': () => ({ ...measureStateMatrix(root), source: 'docs/verification/ux-matrix.json' }),
+    'L6-05': () => ({ ...measureChangelog(repo), source: 'CHANGELOG.md' }),
     'L6-07': () => ({
       ...measureMixedLanguageDocs(repo),
       source: 'docs mixed-language paragraphs',

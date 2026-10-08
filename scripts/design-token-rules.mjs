@@ -1,5 +1,5 @@
 /**
- * The strict design-token rules (docs/research/ui-token-audit.md section 5), as pure functions over CSS text. The gate
+ * The strict design-token rules (docs/internal/ui-token-audit.md section 5), as pure functions over CSS text. The gate
  * (check-design-tokens.mjs) compares their counts with scripts/design-token-baseline.json and the quality scorecard
  * (scripts/quality/areas/ui.mjs) reports the same numbers, so both read this one file.
  *

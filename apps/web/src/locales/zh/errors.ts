@@ -1,5 +1,6 @@
 /** The errors words, in Traditional Chinese. */
 export const zhErrors = {
+  errRequestFailed: '請求沒有成功，請檢查連線後再試一次。',
   errAuthRequired: '登入失敗或已過期。請確認存取權杖後再試一次。',
   errLoginRateLimit: '登入嘗試次數過多，請等一分鐘再試。',
   errForbidden: '你沒有執行這項操作的權限。',
@@ -8,6 +9,7 @@ export const zhErrors = {
   errTerminalProfile:
     '這個資料夾沒有終端機設定。請連上執行主機並開啟 cliTerminals（docs/native-execution.md）。',
   errNoRunner: '沒有連上的執行主機，無法啟動終端機。',
+  errTerminalCapacity: '這部主機的終端機已達上限，請先關閉一個再開新的。',
   errSessionNotFound: '找不到這個 session，清單會重新整理。',
   errSessionNotRunning: '這個 session 已不在執行。',
   errProcessChanged: '程序在你查看之後變了，請重新整理再試。',

@@ -32,7 +32,12 @@ export function ConnectionStatus({ updatedAt, offline }: { updatedAt: number; of
   const last = Math.max(link.lastAt ?? 0, updatedAt);
   const age = last ? ageText(now - last, locale) : null;
   return (
-    <span className="link-status" role="status" title={age ? `${t('linkLastUpdate')} ${age}` : ''}>
+    <span
+      className="link-status"
+      data-status={status}
+      role="status"
+      title={age ? `${t('linkLastUpdate')} ${age}` : ''}
+    >
       <i className={`dot ${DOT[status]}`} />
       <span className="link-text">{t(LABEL[status])}</span>
       {age && <small>{age}</small>}
