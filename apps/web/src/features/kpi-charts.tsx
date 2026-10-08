@@ -1,7 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { UsageTotals } from '@aether/contracts';
-import { usePreferences } from '../state.js';
-import { useT } from '../ui.js';
+import { useT, useLocale } from '../ui/useT.js';
 import {
   breakdown,
   compact,
@@ -54,7 +53,7 @@ export function Sparkline({
 /** The token breakdown as one bar split by kind, with a legend that carries the numbers. */
 export function StackedBar({ totals }: { totals: UsageTotals }) {
   const t = useT();
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   const parts = breakdown(totals);
   if (!parts.length) return <p className="kpi-empty">{t('kpiNoTokens')}</p>;
   return (
@@ -92,7 +91,7 @@ export function DailyBars({
   totals: readonly UsageTotals[];
 }) {
   const t = useT();
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   const values = totals.map(tokensOf);
   const peak = Math.max(...values, 1);
   return (

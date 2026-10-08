@@ -2,7 +2,7 @@ import { test, expect, type Browser, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { frames } from './support/settled.js';
+import { frames, throughout } from './support/settled.js';
 
 // The office-life follow-ups: R21 and R43 (docs/design/office-life.md section 5.3), the looped preview that the perf matrix
 // measures motion with, and the first-appearance shader warm-up of the squad layer (no program is linked when a squad shows).
@@ -58,8 +58,12 @@ test.describe('R21 and R43', () => {
     );
     await high.close();
     const balanced = await scenario(browser, preview('time-machine'), { quality: 'balanced' });
-    await balanced.page.waitForTimeout(4000); // a negative wait: the tier says nothing, so there is nothing to wait for; this is longer than the high tier's effect took to show
-    await expect(balanced.page.locator(`${LOG} p`)).toHaveCount(0);
+    // The tier says nothing: no announcement in a window longer than the high tier's effect took to show.
+    await throughout(
+      balanced.page,
+      () => expect(balanced.page.locator(`${LOG} p`)).toHaveCount(0),
+      240,
+    );
     await balanced.close();
   });
 
@@ -101,8 +105,8 @@ test.describe('the looped preview', () => {
   test('plays the effect on past one loop and is still announced once', async ({ page }) => {
     await open(page, preview('ci-pass', '&loop=1'));
     await expect(page.locator(`${LOG} p`)).toHaveCount(1, { timeout: 30_000 });
-    await page.waitForTimeout(3500); // a negative wait, past one loop of a 3.2 s effect: it must not be announced a second time
-    await expect(page.locator(`${LOG} p`)).toHaveCount(1);
+    // Past one loop of a 3.2 s effect: it must not be announced a second time.
+    await throughout(page, () => expect(page.locator(`${LOG} p`)).toHaveCount(1), 210);
   });
 });
 
@@ -116,8 +120,12 @@ test.describe('the squad layer is warm before the first subagent shows', () => {
         (window as unknown as { __aetherPerfRig: { gl: { info: { programs: unknown[] } } } })
           .__aetherPerfRig.gl.info.programs.length,
     );
-    // The squad shows 6 s after load (`after=6000`, a page timer) and nothing in the DOM marks it, so this is a time wait.
-    await page.waitForTimeout(12_000); // the squad has shown, its zone, pods, beam and strings drawn
+    // The squad shows 6 s after load (`after=6000`, a page timer): its zone label is the mark, and the frames after it
+    // are the zone, pods, beam and strings drawn.
+    await expect(page.getByRole('button', { name: /^Squad of .*, \d+ working/ })).toBeAttached({
+      timeout: 60_000,
+    });
+    await frames(page, 120);
     const after = await page.evaluate(() => {
       const rig = (
         window as unknown as {

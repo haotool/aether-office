@@ -1,4 +1,5 @@
 import type { Archetype } from './flower-genome.js';
+import { itemAt } from './checked.js';
 
 const GENUS: Record<Archetype, [string, string]> = {
   lotus: ['Lotus', '蓮'],
@@ -42,6 +43,6 @@ const EPITHET: [string, string][] = [
 /** "Lotus Aurelia" in English, "金輝蓮" in Chinese. */
 export function speciesName(archetype: Archetype, epithet: number, en: boolean): string {
   const [genusEn, genusZh] = GENUS[archetype];
-  const [epithetEn, epithetZh] = EPITHET[epithet % EPITHET.length]!;
+  const [epithetEn, epithetZh] = itemAt(EPITHET, epithet % EPITHET.length);
   return en ? `${genusEn} ${epithetEn}` : `${epithetZh}${genusZh}`;
 }

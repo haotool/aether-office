@@ -14,6 +14,27 @@ export type { SquadEvent, SquadFrame } from './squad-frame.js';
 /** How often the state machine is looked at: arrivals, the pod hand-over and the shrink all wait on the clock. */
 const TICK_MS = 250;
 
+type SquadSceneProps = Pick<
+  OfficeSceneProps,
+  'squads' | 'quality' | 'reducedMotion' | 'agents' | 'locale' | 'squadPrefs'
+>;
+
+/** What each step of the machine reads, as of the latest render. */
+const mirrorOf = (
+  layout: Layout,
+  { squads, quality, reducedMotion, agents, locale, squadPrefs }: SquadSceneProps,
+  say: (line: string) => void,
+) => ({
+  layout,
+  squads,
+  agents,
+  zh: locale === 'zh-TW',
+  say,
+  quality,
+  reducedMotion,
+  prefs: squadPrefs,
+});
+
 /**
  * Steps the squads and returns the frame. `squads` undefined turns the whole feature off: the layout comes back as it
  * was given, so the page without squads is exactly what it was. Who joins and who leaves is handed to `say` (the scene's
@@ -21,20 +42,11 @@ const TICK_MS = 250;
  */
 export function useSquad(
   layout: Layout,
-  {
-    squads,
-    quality,
-    reducedMotion,
-    agents,
-    locale,
-    squadPrefs,
-  }: Pick<
-    OfficeSceneProps,
-    'squads' | 'quality' | 'reducedMotion' | 'agents' | 'locale' | 'squadPrefs'
-  >,
+  props: SquadSceneProps,
   say: (line: string) => void,
   pose: PoseApi['request'],
 ): SquadFrame {
+  const { squads, quality, reducedMotion } = props;
   const enabled = squads !== undefined;
   const state = useRef<SquadState>(EMPTY_SQUAD);
   const [view, setView] = useState<View>({ state: EMPTY_SQUAD, now: 0, version: 0 });
@@ -42,28 +54,9 @@ export function useSquad(
   handoverRef.current ??= createHandover();
   const handover = handoverRef.current;
   const plans = useRef<Plans>({ arrivals: new Map(), leaves: new Map() });
-  const latest = useRef<Latest>({
-    layout,
-    squads,
-    agents,
-    zh: locale === 'zh-TW',
-    say,
-    pose,
-    view: null,
-    quality,
-    reducedMotion,
-    prefs: squadPrefs,
-  });
-  Object.assign(latest.current, {
-    layout,
-    squads,
-    agents,
-    zh: locale === 'zh-TW',
-    say,
-    quality,
-    reducedMotion,
-    prefs: squadPrefs,
-  });
+  const mirror = mirrorOf(layout, props, say);
+  const latest = useRef<Latest>({ ...mirror, pose, view: null });
+  Object.assign(latest.current, mirror);
   const order = useMemo(() => (squads ?? []).map((s) => s.supervisor), [squads]);
 
   const frame = useMemo(

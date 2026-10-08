@@ -1,9 +1,8 @@
 import { lazy, Suspense, type ReactNode } from 'react';
 import type { LocalSessionsResponse, Snapshot } from '@aether/contracts';
-import type { Session } from '../api.js';
-import { usePreferences } from '../state.js';
+import type { Session } from '../api-session.js';
 import { pageLink } from '../nav.js';
-import { useT } from '../ui.js';
+import { useT, useLocale } from '../ui/useT.js';
 import { NotFound } from './NotFound.js';
 import { Agents } from './Agents.js';
 import { Approvals } from './Approvals.js';
@@ -36,7 +35,7 @@ type PageProps = {
 };
 
 function SessionsPage({ sessions, owner }: { sessions: PageProps['sessions']; owner: boolean }) {
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   return <Sessions sessions={sessions} locale={locale} canStop={owner} />;
 }
 

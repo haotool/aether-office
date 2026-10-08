@@ -3,7 +3,7 @@
 @media (pointer: coarse) and (max-height: 500px) {
   .scene-rail {
     top: auto;
-    bottom: 8px; /* token-lint: geometry */
+    bottom: var(--space-8);
     left: 50%;
     right: auto;
     transform: translateX(-50%);
@@ -22,7 +22,7 @@
     align-items: flex-start;
   }
   .fab {
-    bottom: 8px; /* token-lint: geometry */
+    bottom: var(--space-8);
   }
 }
 

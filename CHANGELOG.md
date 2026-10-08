@@ -5,6 +5,16 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Changed (web structure and accessibility)
+
+- A disabled control names its reason to assistive technology as well as in a tooltip: `whyNot` sets `aria-describedby` to a text kept
+  in the page by `ReasonDefs`; about sixty buttons and fields that were off with no reason now give one (new `why*` locale keys in both
+  languages). `e2e/disabled-reasons.spec.ts` checks the main pages as the owner and as a viewer, with axe.
+- `apps/web/src/ui.tsx`, `api.ts` and `localSessions.ts` are split into focused modules (`ui/*`, `api-csrf`, `api-session`, `api-commands`,
+  `api-error`, `session-names`, `session-attention`) and every importer names the module it uses; no names or behaviour changed. `useLocale`
+  reads the interface language without importing the whole preferences store.
+- Every function in `apps/web/src` is under 50 lines, and no web source file is over 400 lines (Terminals, Sessions, Reviews and Composer were split).
+
 ### Fixed (frontend, first use and accessibility)
 
 - First run: with no project, or no character and no session, the office page shows what AETHER does, three steps, the commands to
@@ -194,6 +204,46 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   The file list, the commit graph and the session scan run git through the one hardened wrapper (`core.fsmonitor=false`,
   `GIT_OPTIONAL_LOCKS=0`).
 - A reply ending in a lone backslash that also held HTML or an entity made the HTML neutralizer throw (the chat showed an error instead of the message); the backslash is now kept as text.
+
+### Changed (quality convergence, backend and packages)
+
+- `GET /health` is rate-limited per address (120 calls a minute, then 429, the webhook's limit); it is the one public route that had none. The three approval-hook routes now name their credential (the hook's bearer token) in `docs/security.md` and in the `PUBLIC_ROUTES` table.
+- Behaviour-preserving refactors: the markdown block parser, the doctor checks and the usage parser (now counters, Claude and Codex readers) are split into functions and modules under 50 lines and 400 lines; the pair CLI writes through the stdio helpers; no non-null assertions remain in the control, runner, kernel, contracts, providers or scripts sources; five large test files are split by topic.
+
+### Changed (first-load JavaScript)
+
+- First-load JavaScript and CSS of the web page, as transferred (what the scorer's `first-load` rule counts), fell from 251 KB to
+  186 KB brotli (budget 200 KB). Only the language in use is downloaded (`loadLocale` in `i18n.ts`; `main.tsx` waits for it before
+  the first render, and a language change waits for its table, so no key flashes); the zod runtime no longer reaches the entry
+  (`local-session-compat.ts` fills a stale subagent with plain defaults, and the session limits live in
+  `contracts/src/session-limits.ts`, apart from the schemas); the conversation panel's content (feed, transcript, Markdown) is a
+  lazy chunk behind a header that is there at once, fetched when the page is idle; the page-level Suspense fallbacks show the
+  loading screen instead of nothing. The page's own language table (16 to 18 KB brotli) and, on a desktop, the panel chunk (18 KB)
+  come on top of the 186 KB.
+- `scripts/check-bundle-size.mjs` budgets ratcheted: total 1000 to 870 KB gzip, largest chunk 450 to 400 KB.
+- Tests that render text get both language tables from `tests/aether/setup-locales.ts`; `en` and `zh` are no longer exported by `i18n.ts`.
+
+### Changed (office-scene, types and structure)
+
+- `packages/office-scene` has no non-null assertion left (241 before; the repository's 324 are now 83) and no function over 50
+  lines (81 before): long components, hooks and drawing functions are short ones that call named parts, props types are hoisted
+  above their component, and `flower-bloom.ts` is split with `flower-petals.ts`. Indexed reads whose index is already proven go
+  through `checked.ts` (`itemAt`, `lastOf`, `valueOf`) and fail with a `RangeError` instead of handing back `undefined`; a
+  string-table or loop that can narrow does so (`?? ''`, `entries()`, `pick`). No behaviour change: a seeded characterization
+  test (`scene-characterization.test.ts`: 400 genomes, 14 spires with their gardens, 300 shots, feeds and camera poses, 300
+  squad steps, layouts, floors, desk items, every desk-screen view and the life scheduler) keeps the digests taken from the code
+  before, and the scene's Playwright specs pass unchanged.
+- `random.ts` (41 importers) is split into `hash.ts` (`hashText`), `seeded.ts` (`seeded`, `Rng`), `pick.ts` (`pick`, `weighted`,
+  `between`) and `screen-seed.ts` (the per-member streams of the desk screens); every importer names the module it uses.
+  `pick` and `weighted` now throw a `RangeError` on an empty list or all-zero weights (they crashed there already, later).
+- The puppet-string simulation (`squad/puppet/verlet.ts`, the per-frame hot loop) reads its typed arrays through one local
+  `read` (0 for a stray index) instead of 51 `!`. Measured against the code it replaced on a real GPU (Apple M4, Chrome, 1440x900,
+  balanced, interleaved A/B, same data): desktop jsMs median 1.6 and 1.6, phone 1.6 and 1.6 (8 rounds, new first on half of
+  them), the squad scene (`squad=8&tools=900`) 3.9 and 4.0; draws, programs, GPU MB and triangles identical. A micro-benchmark of
+  `stepStrings` (60 strings, 41 interleaved rounds) gave 391 ms and 374 ms at the 10th percentile.
+- Web JavaScript is about 4 KB gzip larger in total (816 to 820 KB, all of it in the lazily loaded scene chunk: the extra function
+  boundaries); the first load is unchanged (251.4 to 251.3 KB transferred): `emotes.ts` is a table typed by id (a missing emote is
+  a type error, and `emoteOf` needs no lookup), and `layout.ts` builds a floor's objects through one `place` helper.
 
 ## [0.4.0] - 2026-10-07
 

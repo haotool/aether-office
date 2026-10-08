@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Layout } from '@aether/contracts';
 import type { SeatMove } from '@aether/office-scene/model';
-import { execute } from '../api.js';
-import { LOCAL_PREFIX } from '../localSessions.js';
+import { execute } from '../api-commands.js';
+import { LOCAL_PREFIX } from '../session-names.js';
 
 type Desk = Layout['objects'][number];
 
@@ -46,6 +46,16 @@ export function seatMoveLayout({
 
 export type SeatToast = { text: string; undo: (() => void) | null };
 
+type SeatMoveOptions = {
+  projectId: string;
+  saved: Layout | null;
+  version: number;
+  shown: Layout | null;
+  liveIds: ReadonlySet<string>;
+  onRefresh: () => void;
+  words: { moved: string; undone: string; failed: string };
+};
+
 /**
  * Saves a dropped desk through the layout API and offers to undo it. The moved layout is drawn at once and kept until the
  * saved one arrives (its version changes), or the save fails and it is dropped.
@@ -58,15 +68,7 @@ export function useSeatMove({
   liveIds,
   onRefresh,
   words,
-}: {
-  projectId: string;
-  saved: Layout | null;
-  version: number;
-  shown: Layout | null;
-  liveIds: ReadonlySet<string>;
-  onRefresh: () => void;
-  words: { moved: string; undone: string; failed: string };
-}) {
+}: SeatMoveOptions) {
   const [optimistic, setOptimistic] = useState<Layout | null>(null);
   const [toast, setToast] = useState<SeatToast | null>(null);
   const versionRef = useRef(version);

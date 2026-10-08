@@ -1,16 +1,16 @@
 import { useMemo, useState } from 'react';
 import { translate } from '../i18n.js';
-import { usePreferences } from '../state.js';
 import { useCachedSessions } from './character-session.js';
 import { floorBadges, runningSessions, type Range } from './kpi-model.js';
 import { useGitKpi, useUsage } from './use-kpi.js';
+import { useLocale } from '../ui/useT.js';
 
 /**
  * Everything the office page needs of the KPIs: the data for the strip, each floor's badge for the building, and whether the
  * dashboard is open and on which office and range. One hook so the desktop page and the phone page cannot differ.
  */
 export function useKpiPanel() {
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   const sessions = useCachedSessions();
   const usage = useUsage('7d');
   const git = useGitKpi();

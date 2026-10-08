@@ -1,5 +1,5 @@
 import type { Mode } from '@aether/contracts';
-import { useT } from '../../ui.js';
+import { useT } from '../../ui/useT.js';
 import { AboutSection } from './AboutSection.js';
 import { AdvancedSection } from './AdvancedSection.js';
 import { ConnectionsSection } from './ConnectionsSection.js';

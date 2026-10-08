@@ -14,8 +14,8 @@
   letter-spacing: 0.1px;
 }
 .badge > span {
-  width: 4px; /* token-lint: geometry */
-  height: 4px; /* token-lint: geometry */
+  width: var(--space-4);
+  height: var(--space-4);
   border-radius: 50%;
   background: currentColor;
 }

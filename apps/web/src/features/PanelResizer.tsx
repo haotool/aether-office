@@ -1,5 +1,5 @@
 import { useRef, type KeyboardEvent, type PointerEvent } from 'react';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import {
   PANEL_MIN,
   defaultPanelWidth,
@@ -11,23 +11,8 @@ import {
 
 type Drag = { id: number; startX: number; startWidth: number; width: number; frame: number };
 
-/**
- * The drag handle on the panel's left edge: a hairline with a larger hit area, a separator for assistive tech and the
- * keyboard. While dragging, the width goes straight to the `--panel-w` variable of the app body once per frame, so
- * React does not render per pointer move and the office (a flex sibling) follows live; the choice is stored on release.
- */
-export function PanelResizer({
-  width,
-  viewport,
-  onCommit,
-  onCollapse,
-}: {
-  width: number;
-  viewport: number;
-  onCommit: (width: number) => void;
-  onCollapse: () => void;
-}) {
-  const t = useT();
+/** The drag itself: the width goes to the app body's variable once per frame and is committed on release. */
+function usePanelDrag(width: number, viewport: number, onCommit: (width: number) => void) {
   const handle = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
   const host = () => handle.current?.closest<HTMLElement>('.app-body') ?? null;
@@ -69,6 +54,27 @@ export function PanelResizer({
     paint(d.width);
     finish(true);
   };
+  return { handle, drag, finish, pointer: { onPointerDown, onPointerMove, onPointerUp } };
+}
+
+/**
+ * The drag handle on the panel's left edge: a hairline with a larger hit area, a separator for assistive tech and the
+ * keyboard. While dragging, the width goes straight to the `--panel-w` variable of the app body once per frame, so
+ * React does not render per pointer move and the office (a flex sibling) follows live; the choice is stored on release.
+ */
+export function PanelResizer({
+  width,
+  viewport,
+  onCommit,
+  onCollapse,
+}: {
+  width: number;
+  viewport: number;
+  onCommit: (width: number) => void;
+  onCollapse: () => void;
+}) {
+  const t = useT();
+  const { handle, drag, finish, pointer } = usePanelDrag(width, viewport, onCommit);
 
   /** Back to the default; already there, down to the rail. */
   const activate = () =>
@@ -92,9 +98,7 @@ export function PanelResizer({
       aria-valuemax={panelMax(viewport)}
       aria-valuenow={width}
       tabIndex={0}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
+      {...pointer}
       onPointerCancel={() => finish(false)}
       onLostPointerCapture={() => finish(false)}
       onDoubleClick={activate}

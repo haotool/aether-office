@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { Bloom } from './flower-bloom.js';
 import { genomeOf, type Genome } from './flower-genome.js';
-import { seeded } from './random.js';
+import { seeded } from './seeded.js';
 import { paletteAt } from './stalk-layout.js';
 import type { Stalk, StalkNode } from './stalk-types.js';
 

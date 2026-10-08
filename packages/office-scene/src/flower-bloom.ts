@@ -1,14 +1,9 @@
 import * as THREE from 'three';
 import type { Genome } from './flower-genome.js';
 import { KIND, MeshBuilder, type Style } from './flower-mesh.js';
-import { seeded } from './random.js';
-
-export const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
-const V3 = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
-const smooth = (a: number, b: number, x: number) => {
-  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
-  return t * t * (3 - 2 * t);
-};
+import { GOLDEN_ANGLE, V3, orderOf, petals } from './flower-petals.js';
+import { seeded } from './seeded.js';
+import { itemAt } from './checked.js';
 
 /** One flower to draw: where it stands, which way it faces, how big, and in what colours. */
 export type Bloom = {
@@ -26,9 +21,6 @@ export type Bloom = {
   after?: number;
 };
 
-/** A part's `order` (how late in the bloom it appears), 0 to 1 within the flower's own share of the bloom. */
-const orderOf = (bloom: Bloom, x: number) => (bloom.after ?? 0) + (1 - (bloom.after ?? 0)) * x;
-
 const pale = (c: THREE.Color) => c.clone().lerp(new THREE.Color('#ffffff'), 0.7);
 
 /** Local flower frame: +Y along the axis. */
@@ -41,183 +33,45 @@ function frameOf(origin: THREE.Vector3, axis: THREE.Vector3) {
   return new THREE.Matrix4().makeBasis(x, y, z).setPosition(origin);
 }
 
-type Petal = { phi: number; whorl: number; scale: number; lip: number; order: number };
+/** What the centre's parts share: the style of a glowing part, its two colours and the size of the disc. */
+type CentreKit = {
+  style: (color: THREE.Color, other: THREE.Color, order: number) => Style;
+  white: THREE.Color;
+  colorB: THREE.Color;
+  disc: number;
+};
 
-/** One petal as a grid of points: the centerline bends by `curl`, the cross-section cups, the edge ruffles, the whole twists. */
-function petal(
-  b: MeshBuilder,
-  bloom: Bloom,
-  frame: THREE.Matrix4,
-  p: Petal,
-  grid: [number, number],
-  tint: [THREE.Color, THREE.Color],
-) {
+function centreKit(bloom: Bloom, frame: THREE.Matrix4): CentreKit {
   const { genome: g, size } = bloom;
-  const s = g.shape;
-  const [cols, rows] = grid;
-  const length = size * s.length * p.scale * (1 - 0.18 * p.whorl);
-  const wmax = length * s.width;
-  const r0 = size * Math.max(0.05, s.disc * 0.8) + s.float * size * 0.22;
-  const h0 = s.float * size * 0.28 * p.whorl + (bloom.grand ? size * 0.07 * p.whorl : 0);
-  const theta0 = Math.max(0.03, s.pitch - s.pitchStep * p.whorl);
-  const er = V3(Math.cos(p.phi), 0, Math.sin(p.phi));
-  const ey = V3(0, 1, 0);
-  const et = V3(-Math.sin(p.phi), 0, Math.cos(p.phi));
-  // The centerline, row by row.
-  const along = Array.from({ length: cols }, (_, i) => i / (cols - 1));
-  let r = r0;
-  let y = h0;
-  const centers = along.map((u, i) => {
-    if (i > 0) {
-      const theta = theta0 + (s.curl + p.lip) * (u - 0.5 / (cols - 1));
-      r += (length / (cols - 1)) * Math.sin(theta);
-      y += (length / (cols - 1)) * Math.cos(theta);
-    }
-    return { r, y, theta: theta0 + (s.curl + p.lip) * u };
-  });
-  const point = (i: number, j: number) => {
-    const u = along[i]!;
-    const v = -1 + (2 * j) / (rows - 1);
-    const { r, y, theta } = centers[i]!;
-    const profile = Math.pow(Math.max(0, Math.sin(Math.PI * Math.pow(u, s.taper))), s.belly);
-    const w = v * wmax * profile;
-    const n = er.clone().multiplyScalar(-Math.cos(theta)).addScaledVector(ey, Math.sin(theta));
-    const alpha = s.twist * u;
-    const side = et.clone().multiplyScalar(Math.cos(alpha)).addScaledVector(n, Math.sin(alpha));
-    const lift = n.clone().multiplyScalar(Math.cos(alpha)).addScaledVector(et, -Math.sin(alpha));
-    const bend =
-      s.cup * Math.abs(w) * 0.9 +
-      s.ruffle * wmax * Math.sin(u * 9 + p.phi * 3) * v * v * smooth(0.15, 1, u);
-    return er
-      .clone()
-      .multiplyScalar(r)
-      .addScaledVector(ey, y)
-      .addScaledVector(side, w)
-      .addScaledVector(lift, bend);
-  };
-  const positions = along.flatMap((_, i) => Array.from({ length: rows }, (_, j) => point(i, j)));
-  const at = (i: number, j: number) =>
-    positions[Math.min(cols - 1, Math.max(0, i)) * rows + Math.min(rows - 1, Math.max(0, j))]!;
-  const hinge = er.clone().multiplyScalar(r0).addScaledVector(ey, h0).applyMatrix4(frame);
-  const style: Style = {
-    hinge,
-    axis: et.clone().transformDirection(frame),
-    swing: Math.max(0, theta0 - 0.06),
-    order: p.order,
-    flower: bloom.flower,
-    kind: KIND.petal,
-    colorA: tint[0],
-    colorB: tint[1],
-    detail: s.veins,
-    glass: s.glass,
-    sway: size * 0.1,
-  };
-  // The petal closes to a point at both ends, where the grid has no width and no normal: those rows borrow their neighbour's.
-  const normalAt = (i: number, j: number) => {
-    const row = Math.min(cols - 2, Math.max(1, i));
-    const du = at(row + 1, j)
-      .clone()
-      .sub(at(row - 1, j));
-    const dv = at(row, j + 1)
-      .clone()
-      .sub(at(row, j - 1));
-    return new THREE.Vector3().crossVectors(dv, du).normalize().transformDirection(frame);
-  };
-  // Vertices are laid out row by row along the length, `rows` across.
-  const first = b.position.length / 3;
-  for (let i = 0; i < cols; i++)
-    for (let j = 0; j < rows; j++)
-      b.vertex(
-        at(i, j).clone().applyMatrix4(frame),
-        normalAt(i, j),
-        along[i]!,
-        -1 + (2 * j) / (rows - 1),
-        style,
-      );
-  for (let i = 0; i < cols - 1; i++)
-    for (let j = 0; j < rows - 1; j++) {
-      const a = first + i * rows + j;
-      b.quad(a, a + 1, a + rows + 1, a + rows);
-    }
-}
-
-/** The great bloom's whorls bend differently: the outer ones turn their tips back, the inner ones cup inwards. */
-const grandCurl = (whorl: number, whorls: number) => 0.55 - 0.9 * (whorl / Math.max(1, whorls - 1));
-
-/** The petals: whorls of `petals` each, each whorl turned from the last (evenly, or by the golden angle), outer ones first. */
-function petals(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4, low: boolean, bud: boolean) {
-  const { genome: g } = bloom;
-  const s = g.shape;
-  const whorls = bud ? 1 : g.whorls;
-  // The great bloom thins its whorls towards the centre and draws each petal finer.
-  const countOf = (j: number) =>
-    bud ? 5 : bloom.grand ? Math.max(5, Math.round(g.petals * (1 - 0.17 * j))) : g.petals;
-  const grid: [number, number] = bud
-    ? [4, 2]
-    : bloom.grand
-      ? low
-        ? [6, 4]
-        : [11, 6]
-      : s.facet > 0.5
-        ? [4, 3]
-        : low
-          ? [4, 3]
-          : [7, 4];
-  for (let j = 0; j < whorls; j++) {
-    const count = countOf(j);
-    const turn = (1 - s.spiral) * (Math.PI / count) + s.spiral * GOLDEN_ANGLE;
-    const tint: [THREE.Color, THREE.Color] = [
-      bloom.base.clone().offsetHSL(bloom.grand ? 0.02 * j : 0, 0, 0.04 * j),
-      bloom.base
-        .clone()
-        .offsetHSL(g.hueSpan * (1 + (bloom.grand ? 0.3 * j : 0)), 0, 0.1 + 0.03 * j),
-    ];
-    for (let k = 0; k < count; k++) {
-      const phi = (2 * Math.PI * k) / count + turn * j + (bloom.grand ? GOLDEN_ANGLE * j * 0.5 : 0);
-      const front = Math.cos(phi);
-      petal(
-        b,
-        bloom,
-        frame,
-        {
-          phi,
-          whorl: j,
-          scale: 1 + 0.5 * s.bilateral * front,
-          lip: s.bilateral * 0.9 * Math.max(0, front) + (bloom.grand ? grandCurl(j, whorls) : 0),
-          order: orderOf(bloom, 0.1 + 0.55 * (j / whorls) + 0.15 * (k / count)),
-        },
-        grid,
-        tint,
-      );
-    }
-  }
-}
-
-/** The centre: a Vogel-spiral disc of florets (r = c sqrt(n), n x the golden angle) and glowing stamens ending in beads. */
-function centre(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4, low: boolean) {
-  const { genome: g, size } = bloom;
-  const random = seeded(`centre:${g.code}`);
-  const disc = size * g.shape.disc;
-  const florets = low ? Math.min(g.florets, 21) : g.florets;
-  const dome = disc * 0.5 + size * 0.08;
-  const colorB = bloom.base.clone().offsetHSL(g.hueSpan, 0, 0.1);
   const centre = V3(0, size * 0.02 + g.shape.float * size * 0.1, 0).applyMatrix4(frame);
-  const style = (color: THREE.Color, other: THREE.Color, order: number): Style => ({
-    hinge: centre,
-    axis: V3(1, 0, 0),
-    swing: 0,
-    order: orderOf(bloom, order),
-    flower: bloom.flower,
-    kind: KIND.glow,
-    colorA: color,
-    colorB: other,
-    detail: bloom.grand ? 0.55 : 0.9,
-    glass: 0,
-    sway: size * 0.1,
-  });
-  const white = pale(bloom.base).lerp(new THREE.Color('#fff2c0'), 0.5);
-  for (let n = 1; n <= florets; n++) {
-    const radius = disc * Math.sqrt(n / florets);
+  return {
+    style: (color, other, order) => ({
+      hinge: centre,
+      axis: V3(1, 0, 0),
+      swing: 0,
+      order: orderOf(bloom, order),
+      flower: bloom.flower,
+      kind: KIND.glow,
+      colorA: color,
+      colorB: other,
+      detail: bloom.grand ? 0.55 : 0.9,
+      glass: 0,
+      sway: size * 0.1,
+    }),
+    white: pale(bloom.base).lerp(new THREE.Color('#fff2c0'), 0.5),
+    colorB: bloom.base.clone().offsetHSL(g.hueSpan, 0, 0.1),
+    disc: size * g.shape.disc,
+  };
+}
+
+/** A Vogel-spiral disc of florets (r = c sqrt(n), n x the golden angle), domed, with a soft light under the great bloom's. */
+function florets(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4, low: boolean, kit: CentreKit) {
+  const { genome: g, size } = bloom;
+  const { style, white, colorB, disc } = kit;
+  const count = low ? Math.min(g.florets, 21) : g.florets;
+  const dome = disc * 0.5 + size * 0.08;
+  for (let n = 1; n <= count; n++) {
+    const radius = disc * Math.sqrt(n / count);
     const phi = n * GOLDEN_ANGLE;
     const height = dome * (1 - (radius / disc) ** 2) + size * 0.03;
     const position = V3(Math.cos(phi) * radius, height, Math.sin(phi) * radius).applyMatrix4(frame);
@@ -226,12 +80,12 @@ function centre(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4, low: boolean
       1,
       Math.sin(phi) * (radius / disc) * 0.6,
     ).normalize();
-    const spacing = (disc / Math.sqrt(florets)) * 1.25;
+    const spacing = (disc / Math.sqrt(count)) * 1.25;
     b.glowQuad(
       position,
       slope.transformDirection(frame),
       spacing,
-      style(white.clone().lerp(colorB, n / florets), colorB, 0.3),
+      style(white.clone().lerp(colorB, n / count), colorB, 0.3),
     );
   }
   // The great bloom's heart: a soft disc of light under the florets, so the middle is never a dark hole.
@@ -242,8 +96,15 @@ function centre(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4, low: boolean
       disc * 2.8,
       { ...style(colorB.clone().lerp(white, 0.3), colorB, 0.25), detail: 1.1 },
     );
-  const stamens = low ? Math.min(g.filaments, 6) : g.filaments;
-  for (let n = 0; n < stamens; n++) {
+}
+
+/** Glowing stamens, each an arched thread ending in a bead. */
+function stamens(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4, low: boolean, kit: CentreKit) {
+  const { genome: g, size } = bloom;
+  const { style, white, colorB } = kit;
+  const random = seeded(`centre:${g.code}`);
+  const count = low ? Math.min(g.filaments, 6) : g.filaments;
+  for (let n = 0; n < count; n++) {
     const phi = n * GOLDEN_ANGLE;
     const lean = 0.15 + 0.5 * random();
     const length = size * (0.35 + 0.35 * random());
@@ -268,12 +129,19 @@ function centre(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4, low: boolean
     };
     b.tube(path, (t) => size * 0.012 * (1 - 0.5 * t), 3, tube);
     b.glowQuad(
-      path[3]!,
+      itemAt(path, 3),
       dir.clone().transformDirection(frame),
       size * 0.05,
       style(white, colorB, 0.55),
     );
   }
+}
+
+/** The centre: a disc of florets and glowing stamens ending in beads. */
+function centre(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4, low: boolean) {
+  const kit = centreKit(bloom, frame);
+  florets(b, bloom, frame, low, kit);
+  stamens(b, bloom, frame, low, kit);
 }
 
 /** The great bloom's pistil: a tall glowing column with a bead of light at its tip, rising out of the stamens. */
@@ -284,7 +152,7 @@ function pistil(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4) {
     V3(Math.sin(t * 0.9) * size * 0.015, (height * t) / 4 + size * 0.04, 0).applyMatrix4(frame),
   );
   const style: Style = {
-    hinge: path[0]!,
+    hinge: itemAt(path, 0),
     axis: V3(1, 0, 0),
     swing: 0,
     order: orderOf(bloom, 0.6),
@@ -297,7 +165,7 @@ function pistil(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4) {
     sway: size * 0.1,
   };
   b.tube(path, (t) => size * 0.022 * (1 - 0.6 * t), 4, style);
-  b.glowQuad(path[4]!, V3(0, 1, 0).transformDirection(frame), size * 0.09, {
+  b.glowQuad(itemAt(path, 4), V3(0, 1, 0).transformDirection(frame), size * 0.09, {
     ...style,
     kind: KIND.glow,
     order: orderOf(bloom, 0.7),

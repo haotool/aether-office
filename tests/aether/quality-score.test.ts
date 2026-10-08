@@ -380,11 +380,13 @@ describe('accessibility and i18n rules', () => {
     expect(rules.find((r: { id: string }) => r.id === 'inline-i18n-regression').value).toBe(1);
   });
 
-  it('finds a disabled control that gives no reason, but accepts title and whyNot', () => {
+  it('finds a disabled control that gives no reason, but accepts title, whyNot and a spread why object', () => {
     const jsx = [
       '<button disabled={!ok} onClick={() => go()}>A</button>',
       '<button disabled={!ok} title="why">B</button>',
-      '<button disabled={!ok} {...whyNot(ok, t("x"))}>C</button>',
+      '<button disabled={!ok} {...whyNot(t, [ok, "needOwner"])}>C</button>',
+      '<button disabled={!ok} {...why}>E</button>',
+      '<AllowButton disabled={!ok} why={why} />',
       '<button onClick={() => go()}>D</button>',
     ].join('\n');
     expect(disabledWithoutReason(jsx)).toEqual([1]);

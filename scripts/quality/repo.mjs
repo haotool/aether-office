@@ -11,14 +11,18 @@ const EXCLUDED =
 export const isExcluded = (file) => EXCLUDED.test(file);
 
 export function gitFiles(root) {
-  const out = execFileSync('git', ['-C', root, 'ls-files', '-co', '--exclude-standard', '-z'], {
-    encoding: 'utf8',
-    maxBuffer: 1 << 28,
-  });
-  return out
-    .split('\0')
-    .filter(Boolean)
-    .filter((file) => existsSync(path.join(root, file)));
+  try {
+    const out = execFileSync('git', ['-C', root, 'ls-files', '-co', '--exclude-standard', '-z'], {
+      encoding: 'utf8',
+      maxBuffer: 1 << 28,
+    });
+    return out
+      .split('\0')
+      .filter(Boolean)
+      .filter((file) => existsSync(path.join(root, file)));
+  } catch {
+    return [];
+  }
 }
 
 /** A repository on disk: `files` are repo-relative posix paths, `read` returns UTF-8 text ('' when unreadable). */

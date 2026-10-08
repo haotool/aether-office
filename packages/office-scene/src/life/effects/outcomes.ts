@@ -1,5 +1,6 @@
 import { clamp01, draw, envelope, lerp, SPOT } from './shared.js';
 import type { Effect, Rgb, Sprite } from './types.js';
+import { itemAt } from '../../checked.js';
 
 // Effects that show how a test, a CI watch or a build really ended. Each one is only ever started by a rule that read a real
 // `ok` (see ../registry.ts); the pictures here are decorative and say nothing beyond that exit status.
@@ -110,7 +111,7 @@ export const ciStack: Effect = (t, d, _seed, value) => {
     alpha: fade * 0.8,
     tint: [0.6, 0.62, 0.7],
   }));
-  const [y, tint] = lens[lit]!;
+  const [y, tint] = itemAt(lens, lit);
   sprites.push({
     cell: 'glow',
     at: [0.62, y, -0.3],

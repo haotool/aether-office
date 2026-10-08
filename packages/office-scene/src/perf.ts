@@ -1,3 +1,4 @@
+import { itemAt } from './checked.js';
 // Frame-time statistics from real measurements. Never estimates: callers pass measured deltas.
 export type FrameStats = {
   frames: number;
@@ -9,7 +10,7 @@ export type FrameStats = {
 };
 
 const percentile = (sorted: readonly number[], p: number) =>
-  sorted[Math.min(sorted.length - 1, Math.ceil(p * sorted.length) - 1)]!;
+  itemAt(sorted, Math.min(sorted.length - 1, Math.ceil(p * sorted.length) - 1));
 
 export function summarizeFrames(deltasMs: readonly number[]): FrameStats | null {
   if (deltasMs.length === 0) return null;

@@ -160,6 +160,23 @@
   --lh-tight: 1.25;
   --lh-snug: 1.45;
   --lh-body: 1.6;
+  --lh-none: 1; /* a wordmark or an icon glyph, not running text */
+  /* Marks: a hairline bar and two icon sizes off the spacing grid (a dot or a small icon takes --space-N for both sides). */
+  --bar: 3px;
+  --icon-md: 18px;
+  --icon-xl: 28px;
+  /* Rings and glows: only the geometry; the color is the call site's. */
+  --ring-inset: inset 0 0 0 1px;
+  --edge-top: inset 0 1px 0; /* a one-pixel highlight along the top edge */
+  --glow-6: 0 0 6px;
+  --glow-8: 0 0 8px;
+  --glow-12: 0 0 12px;
+  /* Loops and one-shot motion, by role. The loops are slow on purpose: they are not transitions. */
+  --dur-pulse: 1.4s;
+  --dur-rec: 1.6s;
+  --dur-breathe: 1.8s;
+  --dur-pop: 0.3s;
+  --dur-hold: 3s; /* how long a hint or a chip stays before it leaves */
   /* One focus look for every control (base.css): a 2px ring, 2px clear of the edge. */
   --focus-ring: 2px solid var(--mint);
   --focus-offset: 2px;

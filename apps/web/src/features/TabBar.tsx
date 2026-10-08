@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import type { Key } from '../i18n.js';
 import { nav, pageLink, tabPages } from '../nav.js';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 
 const icons = new Map<string, (typeof nav)[number][1]>(nav);
 

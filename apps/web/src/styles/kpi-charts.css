@@ -222,7 +222,7 @@
   position: absolute;
   left: 0;
   bottom: 0;
-  height: 2px; /* token-lint: geometry */
+  height: var(--space-2);
   width: calc(var(--share) * 100%);
   background: color-mix(in srgb, var(--mint) 60%, transparent);
 }
@@ -246,7 +246,7 @@
 .slab-kpi u {
   position: relative;
   flex: 1;
-  height: 3px; /* token-lint: geometry */
+  height: var(--bar);
   background: color-mix(in srgb, var(--accent) 22%, transparent);
 }
 .slab-kpi u::after {

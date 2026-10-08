@@ -2,14 +2,22 @@ import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import type { AttributedSession } from '@aether/contracts';
 import { DEPARTMENTS } from '@aether/kernel';
-import { usePreferences } from '../state.js';
-import { useT } from '../ui.js';
+import { useT, useLocale } from '../ui/useT.js';
 import { KpiScopeView } from './KpiScopeView.js';
 import { RANGES, type Range } from './kpi-model.js';
 import { useGitKpi, useUsage } from './use-kpi.js';
 import type { KpiPanel } from './use-kpi-panel.js';
 
 const RANGE_WORD = { today: 'kpiRangeToday', '7d': 'kpiRange7', '30d': 'kpiRange30' } as const;
+
+type KpiDashboardProps = {
+  office: number | null;
+  range: Range;
+  sessions: readonly AttributedSession[];
+  onOffice: (office: number | null) => void;
+  onRange: (range: Range) => void;
+  onClose: () => void;
+};
 
 /** The dashboard bound to the page's KPI state (see use-kpi-panel.ts). */
 export function KpiDashboardHost({ kpi }: { kpi: KpiPanel }) {
@@ -80,7 +88,7 @@ function OfficeTabs({
   onOffice: (office: number | null) => void;
 }) {
   const t = useT();
-  const zh = usePreferences((s) => s.locale) === 'zh-TW';
+  const zh = useLocale() === 'zh-TW';
   return (
     <nav className="kpi-offices" aria-label={t('kpiOffices')}>
       <button className="u-chip" aria-pressed={office === null} onClick={() => onOffice(null)}>
@@ -114,14 +122,7 @@ export function KpiDashboard({
   onOffice,
   onRange,
   onClose,
-}: {
-  office: number | null;
-  range: Range;
-  sessions: readonly AttributedSession[];
-  onOffice: (office: number | null) => void;
-  onRange: (range: Range) => void;
-  onClose: () => void;
-}) {
+}: KpiDashboardProps) {
   const t = useT();
   const dialog = useModalDialog();
   const usage = useUsage(range);

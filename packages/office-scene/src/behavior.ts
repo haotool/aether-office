@@ -1,6 +1,7 @@
 import type { Agent } from '@aether/contracts';
 import { MEMO_LIMIT, memoized } from './memo.js';
-import { between, seeded, weighted } from './random.js';
+import { between, weighted } from './pick.js';
+import { seeded } from './seeded.js';
 import type { ClipName } from './animal-states.js';
 import { currentWork, type WorkFacts } from './screen-layout.js';
 
@@ -96,7 +97,8 @@ export function microAction(input: BehaviorInput): Micro | null {
   const weights: Table = { ...BEHAVIOR_WEIGHTS[key] };
   const bias = SPECIES_BIAS[input.species] ?? {};
   const scale = (clip: ClipName, by: number) => {
-    if (weights[clip] !== undefined) weights[clip] = weights[clip]! * by;
+    const weight = weights[clip];
+    if (weight !== undefined) weights[clip] = weight * by;
   };
   for (const [clip, by] of Object.entries(bias)) scale(clip as ClipName, by);
   if (input.secondMonitor && input.activity === 'working') scale('look_around', 2.8); // a glance at the other screen

@@ -67,14 +67,14 @@
     font: 700 var(--fs-body) var(--mono);
   }
   .chip-active i {
-    width: 9px; /* token-lint: geometry */
-    height: 9px; /* token-lint: geometry */
+    width: var(--space-8);
+    height: var(--space-8);
     border-radius: 50%;
     background: var(--dim);
   }
   .chip-active i.on {
     background: var(--mint);
-    box-shadow: 0 0 8px var(--mint); /* token-lint: glow */
+    box-shadow: var(--glow-8) var(--mint);
   }
   .round {
     width: var(--control-h-sm);
@@ -116,8 +116,8 @@
   .rail-floor,
   .rail-tool {
     position: relative;
-    width: 40px; /* token-lint: geometry */
-    height: 40px; /* token-lint: geometry */
+    width: var(--control-touch);
+    height: var(--control-touch);
     border-radius: 50%;
     display: grid;
     place-items: center;
@@ -134,10 +134,10 @@
   }
   .rail-floor i {
     position: absolute;
-    top: 6px; /* token-lint: geometry */
+    top: var(--space-6);
     right: 7px; /* token-lint: geometry */
-    width: 6px; /* token-lint: geometry */
-    height: 6px; /* token-lint: geometry */
+    width: var(--space-6);
+    height: var(--space-6);
     border-radius: 50%;
     background: var(--accent);
   }

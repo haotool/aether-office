@@ -6162,7 +6162,7 @@ The Apache License 2.0 asks that a package's NOTICE file travel with it. None of
 
 ## Development and build tools (not distributed)
 
-These 151 packages are used to build, test and lint the project. They are not part of the built application and no
+These 163 packages are used to build, test and lint the project. They are not part of the built application and no
 notice is needed for them; they are listed so that every package in `pnpm-lock.yaml` has a reviewed licence. Packages under
 the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform builds) are used unmodified.
 
@@ -6180,6 +6180,11 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | @anthropic-ai/claude-agent-sdk-win32-x64 | 0.3.286 | LicenseRef-Anthropic-Commercial-Terms |
 | @anthropic-ai/claude-agent-sdk | 0.3.286 | LicenseRef-Anthropic-Commercial-Terms |
 | @axe-core/playwright | 4.13.0 | MPL-2.0 |
+| @babel/helper-string-parser | 7.29.7 | MIT |
+| @babel/helper-validator-identifier | 7.29.7 | MIT |
+| @babel/parser | 7.29.9 | MIT |
+| @babel/types | 7.29.8 | MIT |
+| @bcoe/v8-coverage | 1.0.2 | MIT |
 | @dimforge/rapier3d-compat | 0.12.0 | Apache-2.0 |
 | @esbuild/aix-ppc64 | 0.28.2 | MIT |
 | @esbuild/android-arm64 | 0.28.2 | MIT |
@@ -6270,9 +6275,13 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | @typescript/typescript-win32-arm64 | 7.0.2 | Apache-2.0 |
 | @typescript/typescript-win32-x64 | 7.0.2 | Apache-2.0 |
 | @vitejs/plugin-react | 6.1.1 | MIT |
+| @vitest/coverage-v8 | 5.0.3 | MIT |
+| @vitest/istanbul-lib-coverage | 1.0.2 | MIT |
+| @vitest/istanbul-lib-report | 1.0.2 | MIT |
 | @vitest/mocker | 5.0.3 | MIT |
 | @vitest/spy | 5.0.3 | MIT |
 | assertion-error | 2.0.1 | MIT |
+| ast-v8-to-istanbul | 1.0.7 | MIT |
 | axe-core | 4.13.0 | MPL-2.0 |
 | chai | 6.2.2 | MIT |
 | csstype | 3.2.3 | MIT |
@@ -6285,6 +6294,7 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | fdir | 6.5.0 | MIT |
 | fflate | 0.8.3 | MIT |
 | fsevents | 2.3.3 | MIT |
+| js-tokens | 10.0.0 | MIT |
 | lightningcss-android-arm64 | 1.33.0 | MPL-2.0 |
 | lightningcss-darwin-arm64 | 1.33.0 | MPL-2.0 |
 | lightningcss-darwin-x64 | 1.33.0 | MPL-2.0 |
@@ -6298,6 +6308,7 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | lightningcss-win32-x64-msvc | 1.33.0 | MPL-2.0 |
 | lightningcss | 1.33.0 | MPL-2.0 |
 | magic-string | 1.4.2 | MIT |
+| magicast | 0.5.5 | MIT |
 | meshoptimizer | 1.1.1 | MIT |
 | nanoid | 3.3.19 | MIT |
 | obug | 2.2.1 | MIT |
@@ -6313,6 +6324,7 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | tinybench | 6.2.0 | MIT |
 | tinyexec | 1.3.1 | MIT |
 | tinyglobby | 0.2.17 | MIT |
+| tinyrainbow | 3.2.0 | MIT |
 | tsx | 4.23.15 | MIT |
 | typescript | 7.0.2 | Apache-2.0 |
 | undici-types | 8.9.0 | MIT |

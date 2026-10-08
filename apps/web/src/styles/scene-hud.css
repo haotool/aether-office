@@ -44,7 +44,7 @@
 .building-panel {
   position: absolute;
   top: 70px; /* token-lint: geometry */
-  right: 16px; /* token-lint: geometry */
+  right: var(--space-16);
   z-index: var(--z-hud);
   width: 244px; /* token-lint: geometry */
   padding: var(--space-12) var(--space-12) var(--space-12);
@@ -124,7 +124,7 @@
 }
 .pips u {
   width: 100%;
-  height: 3px; /* token-lint: geometry */
+  height: var(--bar);
   background: color-mix(in srgb, var(--accent) 22%, transparent);
 }
 .pips u.on {

@@ -161,6 +161,15 @@ close-up of a screen) and `SceneCamera.tsx` (the per-frame work, one function pe
 a value that is new on every render (a position, an edge list) keys it by value (`use-by-value.ts`) instead of silencing the
 lint rule.
 
+The package holds no non-null assertion (`!`) and no function over 50 lines; a long component or hook is a short one that
+calls named parts (`useStalkParts`, `PanelTools`, `drawEditor` over `drawCode` and `drawTypingMarks`). Indexed reads whose
+index the caller has already proven go through `checked.ts` (`itemAt`, `lastOf`, `valueOf`), which throw a `RangeError`
+instead of handing back `undefined`; the per-frame typed-array loops of `squad/puppet/verlet.ts` read through one local
+`read` that yields 0 for a stray index (measured against the `!` it replaced: the same time within noise). Randomness is
+four small modules and a module imports the one it uses: `hash.ts` (`hashText`), `seeded.ts` (the generator), `pick.ts`
+(`pick`, `weighted`, `between`) and `screen-seed.ts` (the per-member streams of the desk screens). The scene's pure modules are
+pinned by `tests/aether/scene-characterization.test.ts`, whose digests change only when a change of behaviour is meant.
+
 ### The office layout
 
 A saved layout is a list of objects on the building's floors (`layoutSchema` in `packages/contracts`, validated by

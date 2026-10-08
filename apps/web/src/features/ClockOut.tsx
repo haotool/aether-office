@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { DoorOpen } from 'lucide-react';
 import type { AttributedSession, ClockOutItem } from '@aether/contracts';
-import { formatSpan } from '../localSessions.js';
-import { Modal, useT } from '../ui.js';
+import { formatSpan } from '@aether/kernel';
+import { sessionLink } from '../session-names.js';
+import { Modal } from '../ui/Modal.js';
+import { useT, useWhy } from '../ui/useT.js';
 import {
   IDLE_DAYS,
   clockOut,
@@ -21,21 +23,11 @@ type Locale = 'zh-TW' | 'en';
 type Flow = ReturnType<typeof useClockOutFlow>;
 const nameOf = (s: AttributedSession) => s.title ?? s.repo;
 
-/** The state of one clock-out: the threshold, who is picked, the step, and the server's per-session answers. */
-function useClockOutFlow(all: readonly AttributedSession[], only: readonly string[] | undefined) {
-  const client = useQueryClient();
-  const send = useLeaving((s) => s.send);
-  const sessions = useMemo(
-    () => (only ? all.filter((s) => only.includes(s.key)) : all),
-    [all, only],
-  );
+/** The idle threshold and who is picked among the sessions that have been idle that long. */
+function usePicking(sessions: readonly AttributedSession[]) {
   const [days, setDays] = useState<IdleDays>(1);
   const idle = useMemo(() => idleSessions(sessions, days), [sessions, days]);
   const [picked, setPicked] = useState<ReadonlySet<string>>(() => new Set(idle.map((s) => s.key)));
-  const [step, setStep] = useState<Step>('pick');
-  const [asked, setAsked] = useState<AttributedSession[]>([]);
-  const [results, setResults] = useState<ClockOutItem[]>([]);
-  const [error, setError] = useState('');
   const chosen = idle.filter((s) => picked.has(s.key));
   const choose = (keys: Iterable<string>) => setPicked(new Set(keys));
   const toggle = (key: string) =>
@@ -44,6 +36,23 @@ function useClockOutFlow(all: readonly AttributedSession[], only: readonly strin
     setDays(next);
     choose(idleSessions(sessions, next).map((s) => s.key)); // a new threshold starts from "everyone who is idle that long"
   };
+  return { days, idle, picked, chosen, choose, toggle, changeDays };
+}
+
+/** The state of one clock-out: the threshold, who is picked, the step, and the server's per-session answers. */
+function useClockOutFlow(all: readonly AttributedSession[], only: readonly string[] | undefined) {
+  const client = useQueryClient();
+  const send = useLeaving((s) => s.send);
+  const sessions = useMemo(
+    () => (only ? all.filter((s) => only.includes(s.key)) : all),
+    [all, only],
+  );
+  const picking = usePicking(sessions);
+  const { chosen, days } = picking;
+  const [step, setStep] = useState<Step>('pick');
+  const [asked, setAsked] = useState<AttributedSession[]>([]);
+  const [results, setResults] = useState<ClockOutItem[]>([]);
+  const [error, setError] = useState('');
   const go = async () => {
     setStep('busy');
     setError('');
@@ -59,21 +68,59 @@ function useClockOutFlow(all: readonly AttributedSession[], only: readonly strin
       setStep('confirm');
     }
   };
-  return {
-    days,
-    idle,
-    picked,
-    step,
-    setStep,
-    asked,
-    results,
-    error,
-    chosen,
-    choose,
-    toggle,
-    changeDays,
-    go,
-  };
+  return { ...picking, step, setStep, asked, results, error, go };
+}
+
+type Results = Flow['results'];
+
+/** How many left, how many stayed, and how much memory that freed. */
+function ClearedSummary({
+  results,
+  cleared,
+  freed,
+}: {
+  results: Results;
+  cleared: number;
+  freed: number;
+}) {
+  const t = useT();
+  return (
+    <p role="status" className="clock-out-summary">
+      <b>
+        {cleared} {t('clockOutLeft')}
+      </b>
+      {results.length > cleared && (
+        <>
+          {' · '}
+          {results.length - cleared} {t('clockOutStayed')}
+        </>
+      )}
+      {freed > 0 && (
+        <>
+          {' · '}
+          {t('clockOutFreed')} {formatMemory(freed)}
+        </>
+      )}
+    </p>
+  );
+}
+
+function ClockOutResults({ results, names }: { results: Results; names: Map<string, string> }) {
+  const t = useT();
+  return (
+    <ul className="clock-out-list">
+      {results.map((r) => (
+        <li key={r.key} className={`clock-out-row ${r.outcome}`}>
+          <span className="clock-out-main">
+            <strong>{names.get(r.key) ?? r.key}</strong>
+            <small>
+              {r.outcome === 'cleared' ? t('clockOutOk') : t(`clockOutReason_${r.reason}`)}
+            </small>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 function DonePanel({ flow, onClose }: { flow: Flow; onClose: () => void }) {
@@ -89,44 +136,15 @@ function DonePanel({ flow, onClose }: { flow: Flow; onClose: () => void }) {
   const first = asked.find((s) => s.key === cleared[0]?.key);
   return (
     <div className="clock-out">
-      <p role="status" className="clock-out-summary">
-        <b>
-          {cleared.length} {t('clockOutLeft')}
-        </b>
-        {results.length > cleared.length && (
-          <>
-            {' · '}
-            {results.length - cleared.length} {t('clockOutStayed')}
-          </>
-        )}
-        {freed > 0 && (
-          <>
-            {' · '}
-            {t('clockOutFreed')} {formatMemory(freed)}
-          </>
-        )}
-      </p>
-      <ul className="clock-out-list">
-        {results.map((r) => (
-          <li key={r.key} className={`clock-out-row ${r.outcome}`}>
-            <span className="clock-out-main">
-              <strong>{names.get(r.key) ?? r.key}</strong>
-              <small>
-                {r.outcome === 'cleared' ? t('clockOutOk') : t(`clockOutReason_${r.reason}`)}
-              </small>
-            </span>
-          </li>
-        ))}
-      </ul>
+      <ClearedSummary results={results} freed={freed} cleared={cleared.length} />
+      <ClockOutResults results={results} names={names} />
       <div className="button-row">
         {first && (
           <button
             className="primary"
             onClick={() => {
               onClose();
-              navigate(
-                `/office?${first.projectId ? `project=${first.projectId}&` : ''}agent=${encodeURIComponent(`local:${first.key}`)}&focus=1`,
-              );
+              navigate(sessionLink(first));
             }}
           >
             {t('clockOutWatch')}
@@ -140,26 +158,71 @@ function DonePanel({ flow, onClose }: { flow: Flow; onClose: () => void }) {
   );
 }
 
+/** Select all, clear, invert. */
+function PickTools({
+  idle,
+  picked,
+  choose,
+}: {
+  idle: Flow['idle'];
+  picked: Flow['picked'];
+  choose: Flow['choose'];
+}) {
+  const t = useT();
+  return (
+    <div className="clock-out-tools">
+      <button className="secondary" onClick={() => choose(idle.map((s) => s.key))}>
+        {t('clockOutSelectAll')}
+      </button>
+      <button className="secondary" onClick={() => choose([])}>
+        {t('clockOutClear')}
+      </button>
+      <button
+        className="secondary"
+        onClick={() => choose(idle.filter((s) => !picked.has(s.key)).map((s) => s.key))}
+      >
+        {t('clockOutInvert')}
+      </button>
+    </div>
+  );
+}
+
+function PickCount({
+  chosen,
+  total,
+  memory,
+}: {
+  chosen: number;
+  total: number;
+  memory: ReturnType<typeof memoryOf>;
+}) {
+  const t = useT();
+  return (
+    <p className="clock-out-count" aria-live="polite">
+      {t('clockOutSelected')} {chosen} / {total}
+      {memory.known > 0 && (
+        <>
+          {' · '}
+          {t('clockOutMemory')} {formatMemory(memory.bytes)}
+          {memory.known < chosen && (
+            <small>
+              {' '}
+              ({t('clockOutMemoryPartial')} {memory.known})
+            </small>
+          )}
+        </>
+      )}
+    </p>
+  );
+}
+
 function PickList({ flow, locale }: { flow: Flow; locale: Locale }) {
   const t = useT();
   const { idle, picked, chosen, choose, toggle } = flow;
   const memory = memoryOf(chosen);
   return (
     <>
-      <div className="clock-out-tools">
-        <button className="secondary" onClick={() => choose(idle.map((s) => s.key))}>
-          {t('clockOutSelectAll')}
-        </button>
-        <button className="secondary" onClick={() => choose([])}>
-          {t('clockOutClear')}
-        </button>
-        <button
-          className="secondary"
-          onClick={() => choose(idle.filter((s) => !picked.has(s.key)).map((s) => s.key))}
-        >
-          {t('clockOutInvert')}
-        </button>
-      </div>
+      <PickTools idle={idle} picked={picked} choose={choose} />
       <ul className="clock-out-list">
         {idle.map((s) => (
           <li key={s.key}>
@@ -176,27 +239,14 @@ function PickList({ flow, locale }: { flow: Flow; locale: Locale }) {
           </li>
         ))}
       </ul>
-      <p className="clock-out-count" aria-live="polite">
-        {t('clockOutSelected')} {chosen.length} / {idle.length}
-        {memory.known > 0 && (
-          <>
-            {' · '}
-            {t('clockOutMemory')} {formatMemory(memory.bytes)}
-            {memory.known < chosen.length && (
-              <small>
-                {' '}
-                ({t('clockOutMemoryPartial')} {memory.known})
-              </small>
-            )}
-          </>
-        )}
-      </p>
+      <PickCount chosen={chosen.length} total={idle.length} memory={memory} />
     </>
   );
 }
 
 function PickPanel({ flow, locale }: { flow: Flow; locale: Locale }) {
   const t = useT();
+  const whyNot = useWhy();
   const { days, idle, chosen, changeDays, setStep } = flow;
   return (
     <div className="clock-out">
@@ -219,6 +269,7 @@ function PickPanel({ flow, locale }: { flow: Flow; locale: Locale }) {
         <button
           className="primary clock-out-go"
           disabled={chosen.length === 0}
+          {...whyNot([chosen.length > 0, 'whyPickSession'])}
           onClick={() => setStep('confirm')}
         >
           <DoorOpen size={18} aria-hidden="true" />
@@ -232,6 +283,7 @@ function PickPanel({ flow, locale }: { flow: Flow; locale: Locale }) {
 
 function ConfirmPanel({ flow, locale }: { flow: Flow; locale: Locale }) {
   const t = useT();
+  const whyNot = useWhy();
   const { chosen, error, step, setStep, go } = flow;
   return (
     <div className="clock-out">
@@ -260,12 +312,18 @@ function ConfirmPanel({ flow, locale }: { flow: Flow; locale: Locale }) {
         <button
           className="primary clock-out-go"
           disabled={step === 'busy'}
+          {...whyNot([step !== 'busy', 'whyBusy'])}
           onClick={() => void go()}
         >
           <DoorOpen size={18} aria-hidden="true" />
           {step === 'busy' ? t('clockOutBusy') : t('clockOutGo')}
         </button>
-        <button className="secondary" disabled={step === 'busy'} onClick={() => setStep('pick')}>
+        <button
+          className="secondary"
+          disabled={step === 'busy'}
+          {...whyNot([step !== 'busy', 'whyBusy'])}
+          onClick={() => setStep('pick')}
+        >
           {t('clockOutBack')}
         </button>
       </div>

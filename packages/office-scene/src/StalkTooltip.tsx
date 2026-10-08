@@ -28,81 +28,73 @@ function counts(tier: Tier, en: boolean): string {
   ].join(' · ');
 }
 
-/**
- * What the spire says under the pointer. A commit: short hash, subject, author, age, and the branches it carries (or, for a
- * commit in the middle of a branch, the branch it belongs to). A flower of the crown (one for each tier of
- * history): its code name and tier, its species (named from its genome, in the person's language), the dates its commits span and
- * how many commits, merges and authors built it, and the commit that seeded it (a merge commit's flower says what the merge says). A plain overlay that never takes the pointer, so the camera keeps
- * orbiting under it. The scene feeds it through `show`, which this component fills in, so a moving pointer redraws
- * only the tooltip and not the whole scene.
- */
-export function StalkTooltip({
-  show,
+type Hover = NonNullable<StalkHover>;
+type BloomHover = Extract<Hover, { bloom: unknown }>;
+type CommitHover = Exclude<Hover, BloomHover>;
+type Strands = readonly { name: string; color: string }[];
+
+/** The label of a flower: a merge's, the tier's, or the crown's. */
+function bloomLabel({ bloom }: BloomHover, en: boolean): string {
+  if (bloom.merge) return en ? 'Merge flower' : '合併花';
+  if (bloom.tier) return en ? `Tier ${bloom.tier.index + 1}` : `第 ${bloom.tier.index + 1} 層`;
+  return en ? 'Crown bloom' : '頂端大花';
+}
+
+/** A flower of the crown: its code name and tier, its species, the dates and counts of the history that built it, and its seed commit. */
+function BloomTip({
+  hover,
   strands,
   locale,
 }: {
-  show: RefObject<((hover: StalkHover) => void) | null>;
-  strands: readonly { name: string; color: string }[];
+  hover: BloomHover;
+  strands: Strands;
   locale: string;
 }) {
-  const [hover, setHover] = useState<StalkHover>(null);
-  useEffect(() => {
-    show.current = setHover;
-    return () => {
-      show.current = null;
-    };
-  }, [show]);
-  if (!hover) return null;
-  const { x, y, flip } = hover;
-  if ('bloom' in hover) {
-    const { bloom } = hover;
-    const en = locale === 'en';
-    const day = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' });
-    const tier = bloom.tier;
-    const label = bloom.merge
-      ? en
-        ? 'Merge flower'
-        : '合併花'
-      : tier
-        ? en
-          ? `Tier ${tier.index + 1}`
-          : `第 ${tier.index + 1} 層`
-        : en
-          ? 'Crown bloom'
-          : '頂端大花';
-    return (
-      <div
-        className={`stalk-tip ${flip ? 'flip' : ''}`}
-        style={{
-          left: x,
-          top: y,
-          ['--strand' as string]: strands[bloom.merge?.strand ?? tier?.strand ?? 0]?.color,
-        }}
-        role="status"
-      >
-        <span className="stalk-tip-head">
-          <code>{bloom.genome.code}</code>
-          <em>{label}</em>
-        </span>
-        <b>
-          {bloom.merge
-            ? bloom.merge.subject
-            : speciesName(bloom.genome.archetype, bloom.genome.epithet, en)}
-        </b>
-        <small>
-          {bloom.merge
-            ? `${speciesName(bloom.genome.archetype, bloom.genome.epithet, en)} · ${ago(bloom.to, Date.now(), locale)}`
-            : `${day.format(bloom.from)} – ${day.format(bloom.to)} · ${
-                tier ? counts(tier, en) : `${bloom.commits} ${en ? 'commits' : '個提交'}`
-              }`}
-        </small>
-        <span className="stalk-tip-chips">
-          <i>{en ? `seeded by ${bloom.sha.slice(0, 7)}` : `種子 ${bloom.sha.slice(0, 7)}`}</i>
-        </span>
-      </div>
-    );
-  }
-  const { node } = hover;
+  const { bloom, x, y, flip } = hover;
+  const en = locale === 'en';
+  const day = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' });
+  const tier = bloom.tier;
+  const species = speciesName(bloom.genome.archetype, bloom.genome.epithet, en);
+  return (
+    <div
+      className={`stalk-tip ${flip ? 'flip' : ''}`}
+      style={{
+        left: x,
+        top: y,
+        ['--strand' as string]: strands[bloom.merge?.strand ?? tier?.strand ?? 0]?.color,
+      }}
+      role="status"
+    >
+      <span className="stalk-tip-head">
+        <code>{bloom.genome.code}</code>
+        <em>{bloomLabel(hover, en)}</em>
+      </span>
+      <b>{bloom.merge ? bloom.merge.subject : species}</b>
+      <small>
+        {bloom.merge
+          ? `${species} · ${ago(bloom.to, Date.now(), locale)}`
+          : `${day.format(bloom.from)} – ${day.format(bloom.to)} · ${
+              tier ? counts(tier, en) : `${bloom.commits} ${en ? 'commits' : '個提交'}`
+            }`}
+      </small>
+      <span className="stalk-tip-chips">
+        <i>{en ? `seeded by ${bloom.sha.slice(0, 7)}` : `種子 ${bloom.sha.slice(0, 7)}`}</i>
+      </span>
+    </div>
+  );
+}
+
+/** A commit: short hash, subject, author, age, and the branches it carries (or the branch it belongs to). */
+function CommitTip({
+  hover,
+  strands,
+  locale,
+}: {
+  hover: CommitHover;
+  strands: Strands;
+  locale: string;
+}) {
+  const { node, x, y, flip } = hover;
   const strand = strands[node.strand];
   const names = node.refs.length ? node.refs : strand?.name ? [strand.name] : [];
   return (
@@ -127,5 +119,35 @@ export function StalkTooltip({
         </span>
       )}
     </div>
+  );
+}
+
+type TooltipProps = {
+  show: RefObject<((hover: StalkHover) => void) | null>;
+  strands: Strands;
+  locale: string;
+};
+
+/**
+ * What the spire says under the pointer. A commit: short hash, subject, author, age, and the branches it carries (or, for a
+ * commit in the middle of a branch, the branch it belongs to). A flower of the crown (one for each tier of
+ * history): its code name and tier, its species (named from its genome, in the person's language), the dates its commits span and
+ * how many commits, merges and authors built it, and the commit that seeded it (a merge commit's flower says what the merge says). A plain overlay that never takes the pointer, so the camera keeps
+ * orbiting under it. The scene feeds it through `show`, which this component fills in, so a moving pointer redraws
+ * only the tooltip and not the whole scene.
+ */
+export function StalkTooltip({ show, strands, locale }: TooltipProps) {
+  const [hover, setHover] = useState<StalkHover>(null);
+  useEffect(() => {
+    show.current = setHover;
+    return () => {
+      show.current = null;
+    };
+  }, [show]);
+  if (!hover) return null;
+  return 'bloom' in hover ? (
+    <BloomTip hover={hover} strands={strands} locale={locale} />
+  ) : (
+    <CommitTip hover={hover} strands={strands} locale={locale} />
   );
 }

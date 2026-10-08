@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { snapshotOf, squadChange, type SquadChange, type SquadSnapshot } from './feed-squads.js';
 import type { Feed } from './feed-model.js';
 import { fmt } from './squad-text.js';

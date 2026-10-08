@@ -1,5 +1,5 @@
 import type { AttributedSession } from '@aether/contracts';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { CopyCommand } from './settings/kit.js';
 
 const quote = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;

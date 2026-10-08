@@ -1,6 +1,6 @@
 import { CanvasTexture, SRGBColorSpace } from 'three';
 import type { Secondary, Theme } from './desk-profile.js';
-import { seeded } from './random.js';
+import { seeded, type Rng } from './seeded.js';
 import { PALETTES, type Palette } from './screen-theme.js';
 import { polyline, roundRect, textBars, wander } from './screen-ui.js';
 import { context2d } from './canvas-2d.js';
@@ -23,25 +23,21 @@ type Entry = {
 };
 const shared = new Map<string, Entry>();
 
-function paintKind(
+type Paint = (
   g: CanvasRenderingContext2D,
-  kind: Secondary,
+  r: Rng,
   p: Palette,
   accent: string,
   step: number,
-): void {
-  const r = seeded(`secondary:${kind}`);
-  g.fillStyle = p.bg;
-  g.fillRect(0, 0, SECONDARY_W, SECONDARY_H);
-  g.fillStyle = p.panel;
-  g.fillRect(0, 0, SECONDARY_W, 18);
-  g.fillStyle = accent;
-  g.fillRect(0, 17, SECONDARY_W, 2);
-  if (kind === 'docs') {
+) => void;
+
+const PAINTERS: Record<Secondary, Paint> = {
+  docs(g, r, p, _accent, step) {
     g.fillStyle = p.text;
     g.fillRect(16, 32 - step * 3, 120, 10);
     for (let i = 0; i < 6; i++) textBars(g, r, 16, 52 + i * 48 - step * 3, 270, 4, p.line);
-  } else if (kind === 'browser') {
+  },
+  browser(g, r, p, accent, step) {
     g.fillStyle = accent;
     g.globalAlpha = 0.2;
     g.fillRect(0, 22 - step * 2, SECONDARY_W, 44);
@@ -51,14 +47,16 @@ function paintKind(
       g.fillRect(16 + (i % 2) * 150, 80 + Math.floor(i / 2) * 60 - step * 2, 138, 50);
       textBars(g, r, 24 + (i % 2) * 150, 90 + Math.floor(i / 2) * 60 - step * 2, 120, 3, p.line);
     }
-  } else if (kind === 'terminal') {
+  },
+  terminal(g, r, p, accent, step) {
     for (let i = 0; i < 14; i++) {
       g.fillStyle = i % 5 === 0 ? accent : p.dim;
       g.globalAlpha = 0.7;
       g.fillRect(12, 28 + ((i + step) % 14) * 12, 40 + r() * 190, 5);
     }
     g.globalAlpha = 1;
-  } else if (kind === 'chat') {
+  },
+  chat(g, r, p, accent, step) {
     for (let i = 0; i < 5; i++) {
       const own = (i + step) % 2 === 0;
       g.fillStyle = own ? accent : p.panel;
@@ -68,7 +66,8 @@ function paintKind(
       g.globalAlpha = 1;
       textBars(g, r, own ? 132 : 26, 36 + i * 34, 150, 2, p.line);
     }
-  } else
+  },
+  dashboard(g, _r, p, accent, step) {
     for (let i = 0; i < 4; i++) {
       const x = 10 + (i % 2) * 155;
       const y = 26 + Math.floor(i / 2) * 84;
@@ -85,6 +84,24 @@ function paintKind(
         step,
       );
     }
+  },
+};
+
+function paintKind(
+  g: CanvasRenderingContext2D,
+  kind: Secondary,
+  p: Palette,
+  accent: string,
+  step: number,
+): void {
+  const r = seeded(`secondary:${kind}`);
+  g.fillStyle = p.bg;
+  g.fillRect(0, 0, SECONDARY_W, SECONDARY_H);
+  g.fillStyle = p.panel;
+  g.fillRect(0, 0, SECONDARY_W, 18);
+  g.fillStyle = accent;
+  g.fillRect(0, 17, SECONDARY_W, 2);
+  PAINTERS[kind](g, r, p, accent, step);
 }
 
 /** The shared screen for a look; `release` it when the member goes. */

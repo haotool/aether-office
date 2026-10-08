@@ -9,7 +9,7 @@ import { matching } from '../repo.mjs';
 
 const BUDGET_SCRIPT = 'scripts/check-bundle-size.mjs';
 const DIST = 'apps/web/dist';
-/** docs/design-system.md, "Phone budgets": the page, panel and styles without the 3D office are 189 KB transferred. */
+/** docs/design-system.md, "Phone budgets": the page, panel and styles without the 3D office are 186 KB transferred. */
 export const FIRST_LOAD_BUDGET_KB = 200;
 
 export const gzipKb = (buffer) => gzipSync(buffer).length / 1024;
@@ -49,6 +49,13 @@ function measureDist(root) {
     name: ref,
     kb: transferredKb(path.join(dist, ref.replace(/^\//, ''))),
   }));
+  // The language table is fetched right after the entry script (main.tsx awaits it before the first render), so the
+  // larger of the two is part of the first load even though index.html does not preload it.
+  const tables = readdirSync(assets)
+    .filter((n) => /^(en|zh)-[\w-]+\.js$/.test(n))
+    .map((n) => ({ name: `/assets/${n}`, kb: transferredKb(path.join(assets, n)) }))
+    .sort((a, b) => b.kb - a.kb);
+  if (tables[0]) first.push(tables[0]);
   return { js, css, first };
 }
 

@@ -1,5 +1,8 @@
 import type { Snapshot, Work } from '@aether/contracts';
-import { Modal, Badge, Fold, Clamp, useT } from '../ui.js';
+import { Modal } from '../ui/Modal.js';
+import { Badge } from '../ui/Badge.js';
+import { Fold, Clamp } from '../ui/Disclosure.js';
+import { useT } from '../ui/useT.js';
 import { Integration } from './Integration.js';
 import { TaskDiagnostics } from './TaskDiagnostics.js';
 import {
@@ -10,6 +13,15 @@ import {
   RetryControls,
   useTaskCommand,
 } from './TaskActions.js';
+
+type TaskDetailProps = {
+  snapshot: Snapshot;
+  work: Work;
+  onClose: () => void;
+  onSaved: () => void;
+  canWrite: boolean;
+  canExtend: boolean;
+};
 
 /** "Prerequisite (state)" for each dependency of the task, or a dash when it has none. */
 function dependencyLine(snapshot: Snapshot, work: Work, t: ReturnType<typeof useT>): string {
@@ -66,14 +78,7 @@ export function TaskDetail({
   onSaved,
   canWrite,
   canExtend,
-}: {
-  snapshot: Snapshot;
-  work: Work;
-  onClose: () => void;
-  onSaved: () => void;
-  canWrite: boolean;
-  canExtend: boolean;
-}) {
+}: TaskDetailProps) {
   const { error, setError, busy, command } = useTaskCommand(snapshot.project.id, onSaved);
   const action = { snapshot, work, canWrite, busy, command };
   const retryable = ['failed', 'changes_requested'].includes(work.state);

@@ -132,19 +132,7 @@ const rememberedOpen = () => {
     .matches;
 };
 
-/** The floor switcher: one slab per department, the exploded view, the tour and the key help. */
-export function BuildingPanel({
-  zh,
-  floor,
-  exploded,
-  follow,
-  perFloor,
-  kpi,
-  onFloor,
-  onExplode,
-  onFollow,
-  onReplayIntro,
-}: {
+type BuildingPanelProps = {
   zh: boolean;
   floor: number;
   exploded: boolean;
@@ -157,9 +145,76 @@ export function BuildingPanel({
   onFollow: () => void;
   /** Plays the first-visit tour again (absent when the page has no tour). */
   onReplayIntro?: (() => void) | undefined;
-}) {
+};
+
+type DeckSlabProps = {
+  deck: (typeof DEPARTMENTS)[number];
+  zh: boolean;
+  /** The deck the camera is on. */
+  current: boolean;
+  /** The deck is the current one and the building is not exploded. */
+  highlighted: boolean;
+  entry: FloorCount;
+  badge: FloorKpiBadge | null | undefined;
+  onFloor: (floor: number) => void;
+};
+
+/** One deck of the switcher: its floor number, name, member count, a row of pips for how many work, and its KPIs. */
+function DeckSlab({ deck: d, zh, current, highlighted, entry, badge, onFloor }: DeckSlabProps) {
+  const lit = entry.total
+    ? Math.max(entry.working ? 1 : 0, Math.round((entry.working / entry.total) * PIPS))
+    : 0;
+  return (
+    <button
+      className={`slab ${highlighted ? 'current' : ''}`}
+      aria-current={current ? 'true' : undefined}
+      onClick={() => onFloor(d.floor)}
+      style={{ ['--accent' as string]: d.accent }}
+    >
+      <b>{d.floor + 1}F</b>
+      <span>{zh ? d.zh : d.en}</span>
+      <i title={zh ? '成員 · 進行中' : 'members · active'}>{pad(entry.total)}</i>
+      <em className="pips" aria-hidden="true">
+        {Array.from({ length: PIPS }, (_, n) => (
+          <u key={n} className={n < lit ? 'on' : ''} />
+        ))}
+      </em>
+      {badge && <SlabKpi badge={badge} />}
+    </button>
+  );
+}
+
+/** The decks from the top floor down, one slab each. */
+function DeckList({
+  zh,
+  floor,
+  exploded,
+  perFloor,
+  kpi,
+  onFloor,
+}: Pick<BuildingPanelProps, 'zh' | 'floor' | 'exploded' | 'perFloor' | 'kpi' | 'onFloor'>) {
+  return (
+    <ol>
+      {[...DEPARTMENTS].reverse().map((d) => (
+        <li key={d.id}>
+          <DeckSlab
+            deck={d}
+            zh={zh}
+            current={d.floor === floor}
+            highlighted={d.floor === floor && !exploded}
+            entry={perFloor[d.floor] ?? NO_FLOOR}
+            badge={kpi?.[d.floor]}
+            onFloor={onFloor}
+          />
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** Whether the panel is open, remembered between visits (a private window just forgets). */
+function useRememberedOpen(): [boolean, () => void] {
   const [open, setOpen] = useState(rememberedOpen);
-  const [helpOpen, setHelpOpen] = useState(false);
   const toggle = () =>
     setOpen((was) => {
       try {
@@ -169,6 +224,49 @@ export function BuildingPanel({
       }
       return !was;
     });
+  return [open, toggle];
+}
+
+type PanelToolsProps = {
+  zh: boolean;
+  exploded: boolean;
+  follow: boolean;
+  helpOpen: boolean;
+  onExplode: () => void;
+  onFollow: () => void;
+  onHelp: () => void;
+};
+
+/** The panel's three switches: the exploded view, the director, and the key help. */
+function PanelTools({
+  zh,
+  exploded,
+  follow,
+  helpOpen,
+  onExplode,
+  onFollow,
+  onHelp,
+}: PanelToolsProps) {
+  return (
+    <div className="building-tools">
+      <button aria-pressed={exploded} onClick={onExplode}>
+        {zh ? '分層展開' : 'EXPLODE'}
+      </button>
+      <button aria-pressed={follow} onClick={onFollow}>
+        {zh ? '自動' : 'AUTO'}
+      </button>
+      <button aria-expanded={helpOpen} onClick={onHelp}>
+        {zh ? '操作' : 'KEYS'}
+      </button>
+    </div>
+  );
+}
+
+/** The floor switcher: one slab per department, the exploded view, the tour and the key help. */
+export function BuildingPanel(props: BuildingPanelProps) {
+  const { zh, onReplayIntro } = props;
+  const [open, toggle] = useRememberedOpen();
+  const [helpOpen, setHelpOpen] = useState(false);
   return (
     <nav
       className={`building-panel fui ${open ? '' : 'collapsed'}`}
@@ -182,45 +280,8 @@ export function BuildingPanel({
       </div>
       {open && (
         <>
-          <ol>
-            {[...DEPARTMENTS].reverse().map((d) => {
-              const entry = perFloor[d.floor] ?? NO_FLOOR;
-              const lit = entry.total
-                ? Math.max(entry.working ? 1 : 0, Math.round((entry.working / entry.total) * PIPS))
-                : 0;
-              return (
-                <li key={d.id}>
-                  <button
-                    className={`slab ${d.floor === floor && !exploded ? 'current' : ''}`}
-                    aria-current={d.floor === floor ? 'true' : undefined}
-                    onClick={() => onFloor(d.floor)}
-                    style={{ ['--accent' as string]: d.accent }}
-                  >
-                    <b>{d.floor + 1}F</b>
-                    <span>{zh ? d.zh : d.en}</span>
-                    <i title={zh ? '成員 · 進行中' : 'members · active'}>{pad(entry.total)}</i>
-                    <em className="pips" aria-hidden="true">
-                      {Array.from({ length: PIPS }, (_, n) => (
-                        <u key={n} className={n < lit ? 'on' : ''} />
-                      ))}
-                    </em>
-                    {kpi?.[d.floor] && <SlabKpi badge={kpi[d.floor]!} />}
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-          <div className="building-tools">
-            <button aria-pressed={exploded} onClick={onExplode}>
-              {zh ? '分層展開' : 'EXPLODE'}
-            </button>
-            <button aria-pressed={follow} onClick={onFollow}>
-              {zh ? '自動' : 'AUTO'}
-            </button>
-            <button aria-expanded={helpOpen} onClick={() => setHelpOpen((v) => !v)}>
-              {zh ? '操作' : 'KEYS'}
-            </button>
-          </div>
+          <DeckList {...props} />
+          <PanelTools {...props} helpOpen={helpOpen} onHelp={() => setHelpOpen((v) => !v)} />
           {onReplayIntro && (
             <button className="building-replay" onClick={onReplayIntro}>
               {introWords(zh).replay}

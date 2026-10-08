@@ -1,6 +1,8 @@
-import { seeded } from './random.js';
+import type { Rng } from './seeded.js';
+import { viewRng } from './screen-seed.js';
 import { SANS, MONO, SCREEN_W, type ViewCtx } from './screen-theme.js';
 import { fit, roundRect, text } from './screen-ui.js';
+import { pick } from './pick.js';
 
 const STATE_TEXT: Record<string, string> = {
   idle: 'IDLE',
@@ -8,16 +10,9 @@ const STATE_TEXT: Record<string, string> = {
   unknown: '—',
 };
 
-/**
- * A screen that is not working: a wallpaper drawn from the member's id (bubbles, a grid or bands, drifting slowly) with the
- * real title, state, quiet minutes and context share on it.
- */
-export function drawLock(c: ViewCtx): void {
-  const { g, p, box, facts, profile } = c;
-  g.fillStyle = p.bg;
-  g.fillRect(box.x, box.y, SCREEN_W, box.h);
-  const r = seeded(`${c.seed}:wallpaper`);
-  const t = c.moving ? c.now / 4000 : 0;
+/** The wallpaper drawn from the member's id, clipped to the screen and drifting slowly. */
+function drawWallpaper(c: ViewCtx, r: Rng, t: number): void {
+  const { g, box, profile } = c;
   g.save();
   g.beginPath();
   g.rect(box.x, box.y, SCREEN_W, box.h);
@@ -52,6 +47,17 @@ export function drawLock(c: ViewCtx): void {
       g.fill();
     }
   g.restore();
+}
+
+/**
+ * A screen that is not working: a wallpaper drawn from the member's id (bubbles, a grid or bands, drifting slowly) with the
+ * real title, state, quiet minutes and context share on it.
+ */
+export function drawLock(c: ViewCtx): void {
+  const { g, p, box, facts } = c;
+  g.fillStyle = p.bg;
+  g.fillRect(box.x, box.y, SCREEN_W, box.h);
+  drawWallpaper(c, viewRng(c, 'wallpaper'), c.moving ? c.now / 4000 : 0);
   g.fillStyle = p.bg;
   g.globalAlpha = 0.6;
   g.fillRect(box.x, box.y, SCREEN_W, box.h);
@@ -133,7 +139,7 @@ const TOAST_CHANCE = 0.6;
 /** A notification sliding in now and then: when is seeded, what it says is not drawn (it is only the idea of one). */
 export function drawToast(c: ViewCtx): void {
   const bucket = Math.floor(c.now / TOAST_PERIOD_MS);
-  const r = seeded(`${c.seed}:toast:${bucket}`);
+  const r = viewRng(c, `toast:${bucket}`);
   if (r() > TOAST_CHANCE) return;
   const age = c.now - bucket * TOAST_PERIOD_MS - r() * (TOAST_PERIOD_MS - TOAST_MS);
   if (age < 0 || age > TOAST_MS) return;
@@ -146,7 +152,7 @@ export function drawToast(c: ViewCtx): void {
   g.strokeStyle = p.line;
   g.lineWidth = 1;
   g.stroke();
-  g.fillStyle = [c.accent, p.info, p.add, p.warn][Math.floor(r() * 4)]!;
+  g.fillStyle = pick(r, [c.accent, p.info, p.add, p.warn]);
   g.beginPath();
   g.arc(x + 18, 58, 8, 0, Math.PI * 2);
   g.fill();

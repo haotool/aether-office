@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  type Dispatch,
+  type RefObject,
+} from 'react';
 import type { Agent, Layout } from '@aether/contracts';
 import { tierCount } from '../crown-layout.js';
 import { busiestFloor, floorCounts } from '../floor-counts.js';
@@ -57,6 +65,90 @@ const homePose = (floor: number, aspect: number): Pose => {
   };
 };
 
+type IntroOptions = {
+  props: IntroProps | undefined;
+  warm: boolean;
+  reducedMotion: boolean;
+  agents: readonly Agent[];
+  layout: Layout;
+  commits: number;
+  selectedId: string | null;
+  focus: string;
+};
+type IntroDispatch = Dispatch<Parameters<typeof introReducer>[1]>;
+type Latest = RefObject<{
+  state: ReturnType<typeof introReducer>;
+  props: IntroProps | undefined;
+  reducedMotion: boolean;
+}>;
+
+/** Starting by itself: once, when the page allows it and the scene is warm. */
+function useAutoStart(
+  props: IntroProps | undefined,
+  warm: boolean,
+  latest: Latest,
+  dispatch: IntroDispatch,
+) {
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (!props?.auto || !warm || autoStarted.current || document.hidden) return;
+    autoStarted.current = true;
+    dispatch({ type: 'start', reduced: latest.current.reducedMotion });
+  }, [props?.auto, warm, latest, dispatch]);
+}
+
+/** Choosing a member or asking for a place is the person taking over. */
+function useTakeOverOnChoice(selectedId: string | null, focus: string, dispatch: IntroDispatch) {
+  const firstChoice = useRef(true);
+  useEffect(() => {
+    if (firstChoice.current) {
+      firstChoice.current = false;
+      return;
+    }
+    dispatch({ type: 'interrupt' });
+  }, [selectedId, focus, dispatch]);
+}
+
+/** The camera pose for the clock now; the camera's own frames are the clock, so a phase changes the building the moment the pose says so. */
+function usePose(
+  latest: Latest,
+  frame: RefObject<{ homeFloor: number; tiers: number }>,
+  dispatch: IntroDispatch,
+) {
+  return useCallback(
+    (aspect: number): Pose | null => {
+      const { state: s } = latest.current;
+      if (!introActive(s)) return null;
+      const now = performance.now();
+      const t = introElapsed(s, now);
+      if (s.status === 'playing' && introSegmentAt(t, s.reduced)?.phase !== s.phase)
+        dispatch({ type: 'tick', now });
+      const { homeFloor: home, tiers: t6 } = frame.current;
+      return introPoseAt(t, {
+        aspect,
+        tiers: t6,
+        reduced: s.reduced,
+        home: homePose(home, aspect),
+      });
+    },
+    [latest, frame, dispatch],
+  );
+}
+
+function useControls(latest: Latest, dispatch: IntroDispatch) {
+  const interrupt = useCallback(() => dispatch({ type: 'interrupt' }), [dispatch]);
+  const skip = useCallback(() => dispatch({ type: 'skip', now: performance.now() }), [dispatch]);
+  const replay = useCallback(
+    () => dispatch({ type: 'start', reduced: latest.current.reducedMotion }),
+    [latest, dispatch],
+  );
+  const never = useCallback(() => {
+    dispatch({ type: 'interrupt' });
+    latest.current.props?.onNever?.();
+  }, [latest, dispatch]);
+  return { interrupt, skip, replay, never };
+}
+
 /**
  * The first-visit tour, in the scene: the state machine, the clock, the gate (the scene is warm and frames run smoothly),
  * the inputs that interrupt it and the pose it asks the camera for. The page decides whether it may start by itself
@@ -71,16 +163,7 @@ export function useIntroTour({
   commits,
   selectedId,
   focus,
-}: {
-  props: IntroProps | undefined;
-  warm: boolean;
-  reducedMotion: boolean;
-  agents: readonly Agent[];
-  layout: Layout;
-  commits: number;
-  selectedId: string | null;
-  focus: string;
-}): IntroTour {
+}: IntroOptions): IntroTour {
   const [state, dispatch] = useReducer(introReducer, introIdle);
   const latest = useRef({ state, props, reducedMotion });
   latest.current = { state, props, reducedMotion };
@@ -93,58 +176,15 @@ export function useIntroTour({
   const phase: IntroPhase | null = state.status === 'playing' ? state.phase : null;
   const reduced = state.status === 'idle' || state.status === 'done' ? false : state.reduced;
 
-  // Starting by itself: once, when the page allows it and the scene is warm.
-  const autoStarted = useRef(false);
-  useEffect(() => {
-    if (!props?.auto || !warm || autoStarted.current || document.hidden) return;
-    autoStarted.current = true;
-    dispatch({ type: 'start', reduced: latest.current.reducedMotion });
-  }, [props?.auto, warm]);
-
+  useAutoStart(props, warm, latest, dispatch);
   useIntroClock(state.status, dispatch);
   useIntroInterrupts(active, dispatch);
-
-  // Choosing a member or asking for a place is the person taking over.
-  const firstChoice = useRef(true);
-  useEffect(() => {
-    if (firstChoice.current) {
-      firstChoice.current = false;
-      return;
-    }
-    dispatch({ type: 'interrupt' });
-  }, [selectedId, focus]);
-
+  useTakeOverOnChoice(selectedId, focus, dispatch);
   useEffect(() => {
     if (state.status === 'done') latest.current.props?.onDone?.(state.outcome);
   }, [state]);
-
-  const pose = useCallback((aspect: number): Pose | null => {
-    const { state: s } = latest.current;
-    if (!introActive(s)) return null;
-    const now = performance.now();
-    const t = introElapsed(s, now);
-    // The camera's own frames are the clock: a phase changes the building the moment the pose says so.
-    if (s.status === 'playing' && introSegmentAt(t, s.reduced)?.phase !== s.phase)
-      dispatch({ type: 'tick', now });
-    const { homeFloor: home, tiers: t6 } = frame.current;
-    return introPoseAt(t, {
-      aspect,
-      tiers: t6,
-      reduced: s.reduced,
-      home: homePose(home, aspect),
-    });
-  }, []);
-
-  const interrupt = useCallback(() => dispatch({ type: 'interrupt' }), []);
-  const skip = useCallback(() => dispatch({ type: 'skip', now: performance.now() }), []);
-  const replay = useCallback(
-    () => dispatch({ type: 'start', reduced: latest.current.reducedMotion }),
-    [],
-  );
-  const never = useCallback(() => {
-    dispatch({ type: 'interrupt' });
-    latest.current.props?.onNever?.();
-  }, []);
+  const pose = usePose(latest, frame, dispatch);
+  const controls = useControls(latest, dispatch);
 
   const segment = phase ? introSegments(reduced).find((s) => s.phase === phase) : undefined;
   const exploded = segment?.exploded ?? false;
@@ -161,9 +201,6 @@ export function useIntroTour({
     dip: state.status === 'preparing' ? 'prepare' : segment?.dip ? phase : null,
     caption: active ? captionKeyOf(phase ?? 'orbit') : null,
     facts: { commits, tiers },
-    interrupt,
-    skip,
-    replay,
-    never,
+    ...controls,
   };
 }

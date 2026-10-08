@@ -96,7 +96,7 @@
 .snav a[aria-current='location'] {
   background: var(--selected);
   color: var(--text);
-  box-shadow: inset 0 0 0 1px var(--glass-accent-line); /* token-lint: ring */
+  box-shadow: var(--ring-inset) var(--glass-accent-line);
 }
 @media (hover: hover) {
   .snav a:hover {

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { DITHER_END, DITHER_PARS } from './dither.js';
 import type { Stalk, Strand } from './stalk-types.js';
+import { itemAt, lastOf } from './checked.js';
 
 const TAPER = 3; // metres over which a strand swells from its end to full thickness
 const MEETING = 0.5; // how thick a strand still is where it meets another one
@@ -11,22 +12,23 @@ function rings(strand: Strand, sides: number, skip: number) {
   const along = points.map((p) => new THREE.Vector3(...p));
   const length = [0];
   for (let i = 1; i < along.length; i++)
-    length.push(length[i - 1]! + along[i]!.distanceTo(along[i - 1]!));
-  const total = length[length.length - 1]!;
+    length.push(lastOf(length) + itemAt(along, i).distanceTo(itemAt(along, i - 1)));
+  const total = lastOf(length);
   const swell = (distance: number, loose: boolean) =>
     (loose ? 0.1 : MEETING) +
     (loose ? 0.9 : 1 - MEETING) * THREE.MathUtils.smoothstep(distance, 0, TAPER);
   // Parallel transport: the first ring's normal is any one square to the path, each next one is turned only as far as the path turns.
   let normal = new THREE.Vector3(1, 0, 0);
   return along.map((p, i) => {
-    const tangent = along[Math.min(i + 1, along.length - 1)]!.clone()
-      .sub(along[Math.max(i - 1, 0)]!)
+    const tangent = itemAt(along, Math.min(i + 1, along.length - 1))
+      .clone()
+      .sub(itemAt(along, Math.max(i - 1, 0)))
       .normalize();
     normal = normal.clone().addScaledVector(tangent, -normal.dot(tangent)).normalize();
     const binormal = new THREE.Vector3().crossVectors(tangent, normal);
+    const here = itemAt(length, i);
     const scale =
-      strand.radius *
-      Math.min(swell(length[i]!, strand.free[0]), swell(total - length[i]!, strand.free[1]));
+      strand.radius * Math.min(swell(here, strand.free[0]), swell(total - here, strand.free[1]));
     return { p, normal, binormal, scale, sides };
   });
 }

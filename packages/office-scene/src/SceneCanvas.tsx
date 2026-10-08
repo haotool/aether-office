@@ -182,9 +182,53 @@ function SceneMarkers({ m }: { m: SceneModel }) {
   );
 }
 
+/** The camera: where it flies to, what the director and the tour ask of it, and who it follows. */
+function SceneEye({ m }: { m: SceneModel }) {
+  const { props, nav, intro } = m;
+  return (
+    <SceneCamera
+      command={nav.command}
+      reducedMotion={props.reducedMotion}
+      onUserCamera={nav.userCamera}
+      keyboardRef={nav.keys}
+      directed={nav.directed}
+      seats={nav.seats}
+      followPoint={nav.followPoint}
+      introPose={intro.pose}
+    />
+  );
+}
+
+/** What is drawn in the air between members: messages, the lines between desks, and the office's little moments. */
+function SceneRelations({ m }: { m: SceneModel }) {
+  const { props, nav, floor, exploded } = m;
+  return (
+    <>
+      <CommLinks
+        pulses={props.pulses ?? []}
+        seats={nav.seats}
+        heightOf={(f) => floorY(f, exploded)}
+        visible={(f) => exploded || f <= floor}
+      />
+      <RelationLines edges={m.edges} animate={!props.reducedMotion} />
+      <LifeLayer
+        input={props.life}
+        seats={nav.seats}
+        floor={floor}
+        exploded={exploded}
+        quality={props.quality}
+        reducedMotion={props.reducedMotion}
+        zh={m.zh}
+        say={m.ariaLog.say}
+        pose={m.pose.request}
+      />
+    </>
+  );
+}
+
 /** The 3D half of the scene: everything inside the canvas, in the order it is drawn. */
 export function SceneCanvas({ m }: { m: SceneModel }) {
-  const { props, nav, intro, floor, exploded, compact } = m;
+  const { props, exploded, compact } = m;
   return (
     <Canvas
       shadows={m.shadowsOn && 'percentage'} // three has dropped the soft map: "true" would log a warning each load
@@ -209,35 +253,9 @@ export function SceneCanvas({ m }: { m: SceneModel }) {
         />
       </group>
       <SceneProjections m={m} />
-      <SceneCamera
-        command={nav.command}
-        reducedMotion={props.reducedMotion}
-        onUserCamera={nav.userCamera}
-        keyboardRef={nav.keys}
-        directed={nav.directed}
-        seats={nav.seats}
-        followPoint={nav.followPoint}
-        introPose={intro.pose}
-      />
+      <SceneEye m={m} />
       <InteractionProjections ix={m.ix} exploded={exploded} />
-      <CommLinks
-        pulses={props.pulses ?? []}
-        seats={nav.seats}
-        heightOf={(f) => floorY(f, exploded)}
-        visible={(f) => exploded || f <= floor}
-      />
-      <RelationLines edges={m.edges} animate={!props.reducedMotion} />
-      <LifeLayer
-        input={props.life}
-        seats={nav.seats}
-        floor={floor}
-        exploded={exploded}
-        quality={props.quality}
-        reducedMotion={props.reducedMotion}
-        zh={m.zh}
-        say={m.ariaLog.say}
-        pose={m.pose.request}
-      />
+      <SceneRelations m={m} />
       <SceneControllers m={m} />
       <SceneMarkers m={m} />
       <AnimationClock active={m.active || m.filming} smooth={m.filming} slow={compact} />

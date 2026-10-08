@@ -229,8 +229,8 @@ th {
 }
 .toggle-label input {
   accent-color: var(--mint);
-  width: 18px; /* the native checkbox's own size; a finger reaches it through its row token-lint: geometry */
-  height: 18px; /* token-lint: geometry */
+  width: var(--icon-md); /* the native checkbox's own size; a finger reaches it through its row */
+  height: var(--icon-md);
 }
 .preset-buttons {
   display: flex;

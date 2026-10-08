@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../api.js';
-import { useT } from '../../ui.js';
+import { useT } from '../../ui/useT.js';
 import { Row, Skeleton, StatusChip } from './kit.js';
 
 const REPO = 'https://github.com/haotool/aether-office';

@@ -31,50 +31,55 @@ function disposeSource(scene: Object3D): void {
     texture.dispose();
   }
 }
+/** Every skinned mesh must carry the full PBR texture set, and there must be at least one: a bare model is refused. */
+function checkAnimal(scene: Object3D): void {
+  let meshes = 0;
+  scene.traverse((node) => {
+    if (!(node instanceof SkinnedMesh)) return;
+    meshes++;
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    for (const m of materials)
+      if (
+        !(m instanceof MeshStandardMaterial) ||
+        !m.map ||
+        !m.normalMap ||
+        !m.roughnessMap ||
+        !m.aoMap
+      )
+        throw new Error('ANIMAL_PBR_TEXTURE_MISSING');
+  });
+  if (!meshes) throw new Error('ANIMAL_SKIN_MISSING');
+}
+
+function loadEntry(url: string): Entry {
+  const entry: Entry = {
+    references: 0,
+    promise: new GLTFLoader().loadAsync(url).then((gltf) => {
+      try {
+        checkAnimal(gltf.scene);
+        return gltf;
+      } catch (error) {
+        disposeSource(gltf.scene);
+        throw error;
+      }
+    }),
+  };
+  entries.set(url, entry);
+  void entry.promise.then(
+    (model) => {
+      entry.model = model;
+      if (entry.references === 0) scheduleDispose(url, entry);
+    },
+    () => {
+      if (entries.get(url) === entry) entries.delete(url);
+    },
+  );
+  return entry;
+}
+
 /** Geometry/textures are shared; cloned rigs and mixers belong to each actor. */
 export function acquireAnimal(url: string) {
-  let entry = entries.get(url);
-  if (!entry) {
-    entry = {
-      references: 0,
-      promise: new GLTFLoader().loadAsync(url).then((gltf) => {
-        try {
-          let meshes = 0;
-          gltf.scene.traverse((node) => {
-            if (node instanceof SkinnedMesh) {
-              meshes++;
-              const materials = Array.isArray(node.material) ? node.material : [node.material];
-              for (const m of materials)
-                if (
-                  !(m instanceof MeshStandardMaterial) ||
-                  !m.map ||
-                  !m.normalMap ||
-                  !m.roughnessMap ||
-                  !m.aoMap
-                )
-                  throw new Error('ANIMAL_PBR_TEXTURE_MISSING');
-            }
-          });
-          if (!meshes) throw new Error('ANIMAL_SKIN_MISSING');
-          return gltf;
-        } catch (error) {
-          disposeSource(gltf.scene);
-          throw error;
-        }
-      }),
-    };
-    const created = entry;
-    entries.set(url, created);
-    void created.promise.then(
-      (model) => {
-        created.model = model;
-        if (created.references === 0) scheduleDispose(url, created);
-      },
-      () => {
-        if (entries.get(url) === created) entries.delete(url);
-      },
-    );
-  }
+  const entry = entries.get(url) ?? loadEntry(url);
   if (entry.cleanup) clearTimeout(entry.cleanup);
   entry.references++;
   let released = false;

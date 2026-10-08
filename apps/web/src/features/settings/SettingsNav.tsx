@@ -11,7 +11,7 @@ import {
   Smartphone,
   Wrench,
 } from 'lucide-react';
-import { useT } from '../../ui.js';
+import { useT } from '../../ui/useT.js';
 import { SECTIONS, settingsPath, type SectionId } from './sections.js';
 
 const ICONS = {

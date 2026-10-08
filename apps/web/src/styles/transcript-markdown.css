@@ -107,7 +107,7 @@
 
 /* A reply that has just arrived: its words fade in one after another (the delay is set per word) */
 .markdown .w {
-  animation: word-in 0.32s var(--ease) both; /* token-lint: animation */
+  animation: word-in var(--dur-pop) var(--ease) both;
 }
 @keyframes word-in {
   from {

@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react';
 import { Check, Copy, TextWrap } from 'lucide-react';
 import { copyText } from '../browser-compat.js';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { diffKind, isDiff } from './md-parse.js';
 
 /** Longer than this and the lines are numbered: a short snippet reads better without a gutter. */

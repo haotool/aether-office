@@ -1,4 +1,4 @@
-import type { Rng } from './random.js';
+import type { Rng } from './seeded.js';
 import { MONO } from './screen-theme.js';
 
 /** Small drawing helpers shared by the desk views. */
@@ -81,7 +81,7 @@ export function polyline(
   g.beginPath();
   const n = values.length;
   for (let i = 0; i < n; i++) {
-    const v = values[(i + shift) % n]!;
+    const v = values[(i + shift) % n] ?? 0;
     const px = x + (w * i) / (n - 1);
     const py = y + h - v * h;
     if (i) g.lineTo(px, py);

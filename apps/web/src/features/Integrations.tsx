@@ -1,25 +1,25 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { IntegrationConnection } from '@aether/contracts';
-import { api, execute } from '../api.js';
-import { Field, useT, whyNot } from '../ui.js';
+import { api } from '../api.js';
+import { execute } from '../api-commands.js';
+import { Field } from '../ui/Field.js';
+import { useT, useWhy } from '../ui/useT.js';
 import { useCommandRunner } from './panel-kit.js';
 
 type Provider = 'github' | 'linear';
 type Run = (fn: () => Promise<unknown>) => Promise<void>;
 
-function ConnectionRow({
-  connection: c,
-  projectId,
-  canManage,
-  run,
-}: {
+type ConnectionRowProps = {
   connection: IntegrationConnection;
   projectId: string;
   canManage: boolean;
   run: Run;
-}) {
+};
+
+function ConnectionRow({ connection: c, projectId, canManage, run }: ConnectionRowProps) {
   const t = useT();
+  const whyNot = useWhy();
   const sync = () =>
     run(() =>
       api(`/api/projects/${projectId}/integrations/${c.id}/sync`, { method: 'POST', body: '{}' }),
@@ -47,10 +47,14 @@ function ConnectionRow({
           {c.lastError}
         </p>
       )}
-      <button disabled={!canManage || !c.enabled} onClick={sync}>
+      <button
+        disabled={!canManage || !c.enabled}
+        {...whyNot([canManage, 'needOwner'], [c.enabled, 'whyIntegrationOff'])}
+        onClick={sync}
+      >
         {t('integrationSync')}
       </button>{' '}
-      <button disabled={!canManage} {...whyNot(canManage, t('needOwner'))} onClick={toggle}>
+      <button disabled={!canManage} {...whyNot([canManage, 'needOwner'])} onClick={toggle}>
         {c.enabled ? t('scheduleDisable') : t('scheduleEnable')}
       </button>
     </li>

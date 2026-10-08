@@ -1,7 +1,7 @@
 // The hand-over runtime of a scene: plans a hand-over when a subagent finishes, keeps the book, and moves it on with the
 // clock. Plain objects, no React: use-squad.ts owns one and calls `begin` (when a member starts to leave) and `tick`.
 import type { NavGrid, Point } from '@aether/kernel';
-import { hashText } from '../../random.js';
+import { hashText } from '../../hash.js';
 import type { Quality } from '../../scene-types.js';
 import type { DrawSquad } from '../squad-draw.js';
 import {
@@ -14,7 +14,14 @@ import {
   type Live,
   type Told,
 } from './book.js';
-import { deskPlaces, routeHandover, timeline, type HandoverPlan } from './plan.js';
+import {
+  deskPlaces,
+  routeHandover,
+  timeline,
+  type DeskPlaces,
+  type HandoverPlan,
+  type Route,
+} from './plan.js';
 import { stampOf, type HandedResult } from './stamp.js';
 
 /** What the layer that draws the scene says it shows: a hand-over is only walked for a desk that is in view. */
@@ -40,6 +47,40 @@ type HandoverStart = {
 
 const planKey = (id: string, since: number) => `${id}@${since}`;
 
+/** What the book is asked to admit: the walk's length, whether the floor is in view, and the settings that thin it out. */
+function request(s: HandoverStart, route: Route, shown: View | null) {
+  return {
+    id: s.id,
+    supervisor: s.supervisor,
+    floor: s.squad.floor,
+    since: s.since,
+    walkMs: route.walkMs,
+    inView: !shown || shown.exploded || shown.floor === s.squad.floor,
+    quality: s.quality,
+    still: s.reducedMotion || s.calm,
+    relation: s.relation,
+  };
+}
+
+function buildPlan(
+  s: HandoverStart,
+  decision: NonNullable<ReturnType<typeof admit>>,
+  places: DeskPlaces,
+  route: Route,
+): HandoverPlan {
+  return {
+    mode: decision.mode,
+    kind: stampOf(s.result),
+    seed: hashText(planKey(s.id, s.since)),
+    origin: s.chair,
+    frameYaw: s.frameYaw,
+    places,
+    side: s.squad.side,
+    route,
+    t: timeline(decision.mode, decision.wait, route),
+  };
+}
+
 export function createHandover() {
   let book: Book = emptyBook;
   const plans = new Map<string, HandoverPlan>();
@@ -56,34 +97,9 @@ export function createHandover() {
       const desk = { x: s.squad.deskX, z: s.squad.deskZ, rotation: s.squad.deskRotation };
       const places = deskPlaces(desk, s.squad.side);
       const route = routeHandover(s.grid, s.chair, s.frameYaw, places);
-      const shown = view.current;
-      const decision = admit(
-        book,
-        {
-          id: s.id,
-          supervisor: s.supervisor,
-          floor: s.squad.floor,
-          since: s.since,
-          walkMs: route.walkMs,
-          inView: !shown || shown.exploded || shown.floor === s.squad.floor,
-          quality: s.quality,
-          still: s.reducedMotion || s.calm,
-          relation: s.relation,
-        },
-        s.since,
-      );
+      const decision = admit(book, request(s, route, view.current), s.since);
       if (!decision) return null;
-      const plan: HandoverPlan = {
-        mode: decision.mode,
-        kind: stampOf(s.result),
-        seed: hashText(planKey(s.id, s.since)),
-        origin: s.chair,
-        frameYaw: s.frameYaw,
-        places,
-        side: s.squad.side,
-        route,
-        t: timeline(decision.mode, decision.wait, route),
-      };
+      const plan = buildPlan(s, decision, places, route);
       book = register(book, {
         id: s.id,
         supervisor: s.supervisor,

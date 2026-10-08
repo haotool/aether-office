@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { PermissionDecisionInput, PermissionRequestView } from '@aether/contracts';
-import { ApiError, api } from '../api.js';
+import { ApiError } from '../api-error.js';
+import { api } from '../api.js';
 
 const POLL_MS = 2500;
 const KEY = ['permission-requests'];

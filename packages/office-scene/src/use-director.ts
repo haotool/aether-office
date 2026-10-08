@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import type { Agent } from '@aether/contracts';
 import { PULSE_WINDOW_MS, chooseShot, type Pulse, type Seat, type Shot } from './director.js';
 import { chooseEntry } from './shot-camera.js';
@@ -22,6 +22,17 @@ type Stage = {
 };
 
 /**
+ * A glide only between shots that are near each other; anything else is a hard cut (the camera is not asked to fly
+ * across the building). With no shot before it (or the person's hands just off the camera) it is a cut.
+ */
+const directShot = (
+  shot: Shot,
+  previous: Shot | null,
+  seats: ReadonlyMap<string, Seat>,
+  now: number,
+): Directed => ({ shot, startedAt: now, entry: chooseEntry(previous, shot, seats, 1.6) });
+
+/**
  * The director: shot after shot, with no one at the controls. It cuts to whoever is talking, waiting on a person, in
  * error or working, and sweeps a floor when nothing is going on. A touch of the camera, a chosen member or a focus
  * request hands it over to the person (`running` is false); after a quiet spell the page takes it back.
@@ -39,15 +50,7 @@ export function useDirector(inputs: Inputs, running: boolean, { setFloor, setExp
     const now = Date.now();
     const previous = playing.current?.shot ?? null;
     const next = chooseShot({ ...latest.current, now, shown: shown.current, previous });
-    // A glide only between shots that are near each other; anything else is a hard cut (the camera is not asked to
-    // fly across the building). With no shot before it (or the person's hands just off the camera) it is a cut.
-    playing.current = next
-      ? {
-          shot: next,
-          startedAt: now,
-          entry: chooseEntry(previous, next, latest.current.seats, 1.6),
-        }
-      : null;
+    playing.current = next ? directShot(next, previous, latest.current.seats, now) : null;
     setDirected(playing.current);
     if (!next) {
       timer.current = setTimeout(cut, 4000); // nothing to show yet: look again shortly
@@ -71,9 +74,18 @@ export function useDirector(inputs: Inputs, running: boolean, { setFloor, setExp
     return () => clearTimeout(timer.current);
   }, [running, cut]);
 
-  // A message that arrives while something less interesting is on screen is cut to at once (after a beat).
+  useCutOnMessage(inputs.pulses, running, playing, cut);
+  return directed;
+}
+
+/** A message that arrives while something less interesting is on screen is cut to at once (after a beat). */
+function useCutOnMessage(
+  pulses: readonly Pulse[],
+  running: boolean,
+  playing: RefObject<Directed | null>,
+  cut: () => void,
+) {
   const lastPulse = useRef('');
-  const { pulses } = inputs;
   useEffect(() => {
     const newest = [...pulses].sort((a, b) => b.at - a.at)[0];
     if (!newest || newest.id === lastPulse.current) return;
@@ -86,7 +98,5 @@ export function useDirector(inputs: Inputs, running: boolean, { setFloor, setExp
       Date.now() - current.startedAt > MIN_HOLD_MS
     )
       cut();
-  }, [pulses, running, cut]);
-
-  return directed;
+  }, [pulses, running, playing, cut]);
 }

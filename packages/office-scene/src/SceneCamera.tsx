@@ -226,16 +226,7 @@ function useUserTouch(
   }, [controls, flight, onUserCamera]);
 }
 
-export function SceneCamera({
-  command,
-  reducedMotion,
-  onUserCamera,
-  keyboardRef,
-  directed,
-  seats,
-  followPoint,
-  introPose,
-}: {
+type SceneCameraProps = {
   command: FlyTo;
   reducedMotion: boolean;
   onUserCamera?: (() => void) | undefined;
@@ -247,14 +238,39 @@ export function SceneCamera({
   followPoint?: V3 | null;
   /** The first-visit tour's camera: its pose this frame, or null when the tour does not hold the camera (see intro/). */
   introPose?: ((aspect: number) => Pose | null) | undefined;
-}) {
+};
+
+/** Handed back to the person: the lens returns to its usual angle of view. True while it is still moving. */
+function easeLensHome(camera: Camera, delta: number): boolean {
+  if (!(camera instanceof PerspectiveCamera) || Math.abs(camera.fov - HOME_FOV) <= 0.05)
+    return false;
+  camera.fov += (HOME_FOV - camera.fov) * (1 - Math.exp(-delta * 3));
+  camera.updateProjectionMatrix();
+  return true;
+}
+
+/** The canvas's aspect as of the last render, read when a flight starts, not tracked: the browser's own toolbars resizing the page must not move the camera. */
+function useLatestAspect() {
+  const aspect = useThree((s) => s.size.width / Math.max(1, s.size.height));
+  const latest = useRef(aspect);
+  latest.current = aspect;
+  return latest;
+}
+
+export function SceneCamera({
+  command,
+  reducedMotion,
+  onUserCamera,
+  keyboardRef,
+  directed,
+  seats,
+  followPoint,
+  introPose,
+}: SceneCameraProps) {
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
   const camera = useThree((s) => s.camera);
   const invalidate = useThree((s) => s.invalidate);
-  // Read when a flight starts, not tracked: the browser's own toolbars resizing the page must not move the camera.
-  const aspect = useThree((s) => s.size.width / Math.max(1, s.size.height));
-  const latestAspect = useRef(aspect);
-  latestAspect.current = aspect;
+  const latestAspect = useLatestAspect();
   const flight = useRef<Flight>({ goal: null, shot: 0, glide: null });
   useFlyCommand(flight, command, reducedMotion, latestAspect);
   useUserTouch(controls, flight, onUserCamera);
@@ -280,27 +296,29 @@ export function SceneCamera({
       playShot(f, directed, seats, latestAspect.current, c, camera);
       invalidate();
     }
-    // Handed back to the person: the lens returns to its usual angle of view.
-    if (
-      !directed &&
-      camera instanceof PerspectiveCamera &&
-      Math.abs(camera.fov - HOME_FOV) > 0.05
-    ) {
-      camera.fov += (HOME_FOV - camera.fov) * (1 - Math.exp(-delta * 3));
-      camera.updateProjectionMatrix();
-      invalidate();
-    }
+    if (!directed && easeLensHome(camera, delta)) invalidate();
     const keys = keyboardRef.current;
     if (keys && keys.size) {
       flyByKeys(keys, f, c, camera, keyboard.current, delta);
       invalidate();
     }
   });
+  return <CameraControls controls={controls} damping={!reducedMotion} />;
+}
+
+/** The orbit controls: how far in and out, how far down, and how quickly each gesture moves the camera. */
+function CameraControls({
+  controls,
+  damping,
+}: {
+  controls: RefObject<ComponentRef<typeof OrbitControls> | null>;
+  damping: boolean;
+}) {
   return (
     <OrbitControls
       ref={controls}
       makeDefault
-      enableDamping={!reducedMotion}
+      enableDamping={damping}
       dampingFactor={0.07}
       minDistance={MIN_DISTANCE}
       maxDistance={MAX_DISTANCE}

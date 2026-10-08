@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { LocalSessionsResponse } from '@aether/contracts';
-import { api, type Session } from './api.js';
+import { api } from './api.js';
+import { type Session } from './api-session.js';
 import { isOperator } from './roles.js';
 import { useAdoptRepos } from './adoptProjects.js';
 import { pollMs } from './features/live-link.js';

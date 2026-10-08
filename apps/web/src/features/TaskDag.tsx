@@ -12,7 +12,8 @@ import {
 import '@xyflow/react/dist/style.css';
 import type { Snapshot, Work } from '@aether/contracts';
 import { useTheme } from '../state.js';
-import { Badge, useT } from '../ui.js';
+import { Badge } from '../ui/Badge.js';
+import { useT } from '../ui/useT.js';
 import { taskPositions } from './taskGraph.js';
 type TaskNode = Node<{ work: Work; onSelect: (work: Work) => void }, 'task'>;
 function TaskNodeView({ data }: NodeProps<TaskNode>) {
@@ -38,40 +39,44 @@ function TaskNodeView({ data }: NodeProps<TaskNode>) {
   );
 }
 const nodeTypes = { task: TaskNodeView };
-export function TaskDag({
-  snapshot,
-  onSelect,
-}: {
+type TaskDagProps = {
   snapshot: Snapshot;
   onSelect: (work: Work) => void;
-}) {
+};
+
+/** The nodes and edges of the work and its dependencies; null when the dependencies cannot be laid out (a cycle). */
+function taskGraph(snapshot: Snapshot, onSelect: (work: Work) => void) {
+  try {
+    const positions = taskPositions(
+      snapshot.work.map((w) => w.id),
+      snapshot.dependencies,
+    );
+    return {
+      nodes: snapshot.work.map((work) => ({
+        id: work.id,
+        type: 'task' as const,
+        position: positions.get(work.id)!,
+        data: { work, onSelect },
+        style: { width: 240, height: 94 },
+      })),
+      edges: snapshot.dependencies.map((e) => ({
+        id: `${e.dependsOn}:${e.workId}`,
+        source: e.dependsOn,
+        target: e.workId,
+        markerEnd: { type: MarkerType.ArrowClosed },
+        style: { stroke: '#63939b', strokeWidth: 2 },
+      })),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function TaskDag({ snapshot, onSelect }: TaskDagProps) {
   const t = useT();
   const theme = useTheme();
   const graph = useMemo(() => {
-    try {
-      const positions = taskPositions(
-        snapshot.work.map((w) => w.id),
-        snapshot.dependencies,
-      );
-      return {
-        nodes: snapshot.work.map((work) => ({
-          id: work.id,
-          type: 'task' as const,
-          position: positions.get(work.id)!,
-          data: { work, onSelect },
-          style: { width: 240, height: 94 },
-        })),
-        edges: snapshot.dependencies.map((e) => ({
-          id: `${e.dependsOn}:${e.workId}`,
-          source: e.dependsOn,
-          target: e.workId,
-          markerEnd: { type: MarkerType.ArrowClosed },
-          style: { stroke: '#63939b', strokeWidth: 2 },
-        })),
-      };
-    } catch {
-      return null;
-    }
+    return taskGraph(snapshot, onSelect);
   }, [snapshot.work, snapshot.dependencies, onSelect]);
   if (!graph) return <p role="alert">{t('dagInvalid')}</p>;
   return (

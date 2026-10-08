@@ -4,10 +4,18 @@ import { Link } from 'react-router-dom';
 import type { AttributedSession } from '@aether/contracts';
 import { copyText } from '../browser-compat.js';
 import { sessionCommands } from '../localSessions.js';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { Composer } from './Composer.js';
 import { ContinueInAether } from './ContinueInAether.js';
 import { useSessionTerminal } from './use-drive.js';
+
+type SessionFooterProps = {
+  session: AttributedSession | null;
+  projectId: string;
+  /** Is the session working now: the composer offers Stop in place of Send. */
+  working?: boolean;
+  composer?: ReactNode;
+};
 
 /**
  * The foot of a conversation. A session that runs in an AETHER terminal gets the composer (the server says which
@@ -23,13 +31,7 @@ export function SessionFooter({
   projectId,
   working = false,
   composer,
-}: {
-  session: AttributedSession | null;
-  projectId: string;
-  /** Is the session working now: the composer offers Stop in place of Send. */
-  working?: boolean;
-  composer?: ReactNode;
-}) {
+}: SessionFooterProps) {
   const t = useT();
   const [copied, setCopied] = useState('');
   const { drive } = useSessionTerminal(session?.key ?? null);

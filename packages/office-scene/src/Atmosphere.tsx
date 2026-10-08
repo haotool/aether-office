@@ -10,7 +10,7 @@ import {
 } from 'three';
 import { DITHER_END, DITHER_PARS, DITHERED } from './dither.js';
 import { AIR, hourOf, tintAt, type AirQuality } from './air.js';
-import { seeded } from './random.js';
+import { seeded } from './seeded.js';
 import { setUniform } from './uniforms.js';
 
 // The room's air: slow dust motes and a few shafts of light from the rear windows. Each is one draw call, animated by its

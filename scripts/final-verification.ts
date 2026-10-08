@@ -45,7 +45,7 @@ export function validateLedger(
     for (const p of f.codePaths ?? [])
       if (!exists(p)) problems.push(`${f.id}: code path missing: ${p}`);
     for (const t of f.testIds)
-      if (!exists(t.split('#')[0]!)) problems.push(`${f.id}: test missing: ${t}`);
+      if (!exists(t.split('#')[0] ?? t)) problems.push(`${f.id}: test missing: ${t}`);
     if (f.verificationStatus === 'passed' && f.testIds.length === 0)
       problems.push(`${f.id}: passed without any test or script`);
     if (f.implementationStatus !== 'not_started' && !(f.codePaths ?? []).length)

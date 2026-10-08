@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef } from 'react';
 import type { AttributedSession } from '@aether/contracts';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { callsOf, elapsedLabel, type SquadRow, type SquadView } from './feed-squads.js';
 import { Elapsed, SubDot, sameRow } from './SquadParts.js';
 import { STATUS_KEY, rowName, toolsText } from './squad-text.js';

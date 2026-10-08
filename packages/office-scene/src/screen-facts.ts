@@ -86,27 +86,41 @@ const FAST_MS = 300;
 const MAIN_BOX = { x: 0, y: BAR_H + 1, w: SCREEN_W * BAND.from, h: FOOTER_Y - BAR_H - 1 };
 const LOCK_BOX = { x: 0, y: BAR_H + 1, w: SCREEN_W, h: SCREEN_H - BAR_H - 1 };
 
-/**
- * One member's screen: a canvas painted at the pace the scene asks, from the facts, the member's role and its desk
- * profile. Which view it shows follows the real work (screen-layout.ts); a change of view slides over a copy of the
- * old one. Call `paint` every frame, it does nothing until a paint is due. Dispose when the member leaves.
- */
-export function createFactsScreen(
-  accent: string,
-  department: DepartmentId,
-  seed: string,
-  role: string,
-  profile: DeskProfile,
-) {
+function newScreenCanvas() {
   const canvas = document.createElement('canvas');
   canvas.width = SCREEN_W;
   canvas.height = SCREEN_H;
-  const g = context2d(canvas);
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
   texture.anisotropy = 4;
-  const p = PALETTES[profile.theme];
-  const ctx: ViewCtx = {
+  return { canvas, g: context2d(canvas), texture };
+}
+
+/** Points the context at the facts of this paint: the clock, how long the tool has run, the pace and the time since the last paint. */
+function readFacts(
+  ctx: ViewCtx,
+  facts: ScreenFacts,
+  now: number,
+  dt: number,
+  options: PaintOptions,
+) {
+  ctx.facts = facts;
+  ctx.now = now;
+  ctx.elapsed = facts.tool && facts.toolSince !== null ? Math.max(0, now - facts.toolSince) : 0;
+  ctx.dt = dt;
+  ctx.speed = options.speed;
+  ctx.moving = options.moving;
+}
+
+function newViewCtx(
+  g: CanvasRenderingContext2D,
+  p: ViewCtx['p'],
+  accent: string,
+  seed: string,
+  role: string,
+  profile: DeskProfile,
+): ViewCtx {
+  return {
     g,
     box: MAIN_BOX,
     p,
@@ -123,6 +137,53 @@ export function createFactsScreen(
     state: { scroll: 0, secondScroll: 0 },
     moving: true,
   };
+}
+
+/** One frame of the current view with its chrome: title bar, footer, an approval dialog or a toast on top. */
+function drawView(ctx: ViewCtx, view: ViewId, department: DepartmentId): void {
+  const { g, p, accent } = ctx;
+  g.fillStyle = p.bg;
+  g.fillRect(0, 0, SCREEN_W, SCREEN_H);
+  ctx.box = view === 'lock' ? LOCK_BOX : MAIN_BOX;
+  VIEWS[view](ctx);
+  if (view !== 'lock') {
+    if (view !== 'editor') ambient(g, department, accent);
+    drawFooter(ctx);
+  }
+  drawTitleBar(ctx, viewTitle(view, ctx), department);
+  if (ctx.facts.state === 'waiting_permission') drawApproval(ctx);
+  else if (ctx.moving && view !== 'lock') drawToast(ctx);
+}
+
+/** The old view sliding off while it fades; false once it is gone and the copy can be returned. */
+function drawGhost(
+  g: CanvasRenderingContext2D,
+  ghost: HTMLCanvasElement,
+  now: number,
+  since: number,
+) {
+  const k = (now - since) / TRANSITION_MS;
+  if (k >= 1) return false;
+  g.globalAlpha = 1 - k;
+  g.drawImage(ghost, -k * SLIDE_PX, 0);
+  g.globalAlpha = 1;
+  return true;
+}
+
+/**
+ * One member's screen: a canvas painted at the pace the scene asks, from the facts, the member's role and its desk
+ * profile. Which view it shows follows the real work (screen-layout.ts); a change of view slides over a copy of the
+ * old one. Call `paint` every frame, it does nothing until a paint is due. Dispose when the member leaves.
+ */
+export function createFactsScreen(
+  accent: string,
+  department: DepartmentId,
+  seed: string,
+  role: string,
+  profile: DeskProfile,
+) {
+  const { canvas, g, texture } = newScreenCanvas();
+  const ctx = newViewCtx(g, PALETTES[profile.theme], accent, seed, role, profile);
   let view: ViewId | null = null;
   let drawnFacts: ScreenFacts | null = null;
   let lastAt = 0;
@@ -145,34 +206,11 @@ export function createFactsScreen(
         ctx.state.scroll = 0;
         view = next;
       }
-      ctx.facts = facts;
-      ctx.now = now;
-      ctx.elapsed = facts.tool && facts.toolSince !== null ? Math.max(0, now - facts.toolSince) : 0;
-      ctx.dt = drawnFacts ? Math.min(now - lastAt, 1000) : 0;
-      ctx.speed = options.speed;
-      ctx.moving = options.moving;
-
-      g.fillStyle = p.bg;
-      g.fillRect(0, 0, SCREEN_W, SCREEN_H);
-      ctx.box = view === 'lock' ? LOCK_BOX : MAIN_BOX;
-      VIEWS[view](ctx);
-      if (view !== 'lock') {
-        if (view !== 'editor') ambient(g, department, accent);
-        drawFooter(ctx);
-      }
-      drawTitleBar(ctx, viewTitle(view, ctx), department);
-      if (facts.state === 'waiting_permission') drawApproval(ctx);
-      else if (options.moving && view !== 'lock') drawToast(ctx);
-      if (ghost) {
-        const k = (now - ghostAt) / TRANSITION_MS;
-        if (k < 1) {
-          g.globalAlpha = 1 - k;
-          g.drawImage(ghost, -k * SLIDE_PX, 0);
-          g.globalAlpha = 1;
-        } else {
-          returnCanvas(ghost);
-          ghost = null;
-        }
+      readFacts(ctx, facts, now, drawnFacts ? Math.min(now - lastAt, 1000) : 0, options);
+      drawView(ctx, view, department);
+      if (ghost && !drawGhost(g, ghost, now, ghostAt)) {
+        returnCanvas(ghost);
+        ghost = null;
       }
       drawScanlines(g);
       texture.needsUpdate = true;

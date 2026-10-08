@@ -1,4 +1,6 @@
-import { between, pick, seeded } from './random.js';
+import { between, pick } from './pick.js';
+import type { Rng } from './seeded.js';
+import { viewRng } from './screen-seed.js';
 import { VOCAB } from './screen-lang.js';
 import { revealedLines, terminalOutput } from './screen-terminal-gen.js';
 import { termContext } from './screen-view-terminal.js';
@@ -12,7 +14,7 @@ const SPINNER = '◐◓◑◒';
 /** A test runner: the command is real; the suites are made up, and a suite is "finished" or "running", never "passed" or "failed". */
 export function drawTests(c: ViewCtx): void {
   const { g, p, box } = c;
-  const r = seeded(`${c.seed}:${c.work.head}:suites`);
+  const r = viewRng(c, `${c.work.head}:suites`);
   g.fillStyle = p.bg;
   g.fillRect(box.x, box.y, box.w, box.h);
   const running = c.facts.tool !== null;
@@ -28,7 +30,7 @@ export function drawTests(c: ViewCtx): void {
   );
   text(
     g,
-    running ? SPINNER[Math.floor(c.now / 200) % 4]! : '',
+    running ? (SPINNER[Math.floor(c.now / 200) % 4] ?? '') : '',
     box.x + box.w - 24,
     box.y + 22,
     p.text,
@@ -41,27 +43,29 @@ export function drawTests(c: ViewCtx): void {
       ? Math.min(total, 1 + Math.floor(revealedLines(`${c.seed}:suites`, c.elapsed) / 2))
       : total;
   for (let i = 0; i < total; i++) {
-    const y = box.y + 40 + i * 25;
     const name = `${pick(r, VOCAB.nouns)}-${pick(r, VOCAB.nouns)}.test.ts`;
-    const barW = box.w - 250;
     const width = between(r, 0.3, 1);
+    const y = box.y + 40 + i * 25;
     if (i >= arrived) {
       text(g, '·', box.x + 14, y + 12, p.line, 14);
       text(g, name, box.x + 30, y + 12, p.line, 12);
-      continue;
-    }
-    const active = running && i === arrived - 1;
-    text(g, active ? '▸' : '·', box.x + 14, y + 12, active ? c.accent : p.dim, 14);
-    text(g, fit(g, name, 190), box.x + 30, y + 12, active ? p.text : p.dim, 12);
-    g.fillStyle = p.panel;
-    g.fillRect(box.x + 232, y + 3, barW, 11);
-    g.fillStyle = active ? c.accent : p.info;
-    g.globalAlpha = active ? 0.9 : 0.55;
-    if (active)
-      g.fillRect(box.x + 234 + ((c.now / 12) % (barW * 0.7)), y + 5, barW * 0.3, 7); // marches: its outcome is not known
-    else g.fillRect(box.x + 234, y + 5, (barW - 4) * width, 7);
-    g.globalAlpha = 1;
+    } else drawSuite(c, name, y, width, running && i === arrived - 1);
   }
+}
+
+/** A suite that has started: its name and a bar (a marching one while it runs, its outcome being unknown). */
+function drawSuite(c: ViewCtx, name: string, y: number, width: number, active: boolean): void {
+  const { g, p, box } = c;
+  const barW = box.w - 250;
+  text(g, active ? '▸' : '·', box.x + 14, y + 12, active ? c.accent : p.dim, 14);
+  text(g, fit(g, name, 190), box.x + 30, y + 12, active ? p.text : p.dim, 12);
+  g.fillStyle = p.panel;
+  g.fillRect(box.x + 232, y + 3, barW, 11);
+  g.fillStyle = active ? c.accent : p.info;
+  g.globalAlpha = active ? 0.9 : 0.55;
+  if (active) g.fillRect(box.x + 234 + ((c.now / 12) % (barW * 0.7)), y + 5, barW * 0.3, 7);
+  else g.fillRect(box.x + 234, y + 5, (barW - 4) * width, 7);
+  g.globalAlpha = 1;
 }
 
 const TILES = ['load', 'throughput', 'queue', 'memory', 'requests', 'cache'];
@@ -80,7 +84,7 @@ export function drawDashboard(c: ViewCtx): void {
     g.fillStyle = p.panel;
     g.fillRect(x, y, tileW, tileH);
     text(g, name, x + 8, y + 16, p.dim, 11);
-    const values = wander(seeded(`${c.seed}:tile:${name}`), 28);
+    const values = wander(viewRng(c, `tile:${name}`), 28);
     polyline(g, values, x + 8, y + 26, tileW - 16, tileH - 38, i % 2 ? c.accent : p.info, shift);
   });
   text(g, 'overview', box.x + 12, box.y + 20, p.text, 13, MONO, '700');
@@ -96,7 +100,7 @@ const LANES = 3;
 /** The commit graph: the branch, its distance from upstream and the uncommitted files are real; the history is made up. */
 export function drawGitGraph(c: ViewCtx): void {
   const { g, p, box, facts } = c;
-  const r = seeded(`${c.seed}:graph`);
+  const r = viewRng(c, 'graph');
   g.fillStyle = p.bg;
   g.fillRect(box.x, box.y, box.w, box.h);
   text(
@@ -115,36 +119,37 @@ export function drawGitGraph(c: ViewCtx): void {
     facts.uncommitted ? `● ${facts.uncommitted}` : '',
   ].filter(Boolean);
   text(g, chips.join('   '), box.x + 280, box.y + 22, p.warn, 13);
-  const rows = 11;
-  const colors = [c.accent, p.info, p.warn];
-  for (let i = 0; i < rows; i++) {
-    const y = box.y + 44 + i * 24;
-    const lane = i % 5 === 3 ? 1 : i % 7 === 5 ? 2 : 0;
-    const x = box.x + 22 + lane * 18;
-    g.strokeStyle = p.line;
-    g.lineWidth = 2;
-    for (let l = 0; l < LANES; l++) {
-      if (l && i % 5 > 3) continue;
-      g.beginPath();
-      g.moveTo(box.x + 22 + l * 18, y - 12);
-      g.lineTo(box.x + 22 + l * 18, y + 12);
-      g.stroke();
-    }
-    g.fillStyle = i < facts.ahead ? c.accent : colors[lane]!;
+  for (let i = 0; i < 11; i++) drawCommit(c, r, i);
+}
+
+/** One row of the graph: the lanes running through it, its dot on one of them, a made-up hash and message. */
+function drawCommit(c: ViewCtx, r: Rng, i: number): void {
+  const { g, p, box, facts } = c;
+  const y = box.y + 44 + i * 24;
+  const lane = i % 5 === 3 ? 1 : i % 7 === 5 ? 2 : 0;
+  g.strokeStyle = p.line;
+  g.lineWidth = 2;
+  for (let l = 0; l < LANES; l++) {
+    if (l && i % 5 > 3) continue;
     g.beginPath();
-    g.arc(x, y, 5, 0, Math.PI * 2);
-    g.fill();
-    const hash = Array.from({ length: 7 }, () => '0123456789abcdef'[Math.floor(r() * 16)]).join('');
-    text(g, hash, box.x + 90, y + 4, p.dim, 12);
-    text(
-      g,
-      `${pick(r, ['feat', 'fix', 'refactor', 'test'])}: ${pick(r, VOCAB.verbs)} ${pick(r, VOCAB.nouns)}`,
-      box.x + 170,
-      y + 4,
-      i < facts.ahead ? p.text : p.dim,
-      12,
-    );
+    g.moveTo(box.x + 22 + l * 18, y - 12);
+    g.lineTo(box.x + 22 + l * 18, y + 12);
+    g.stroke();
   }
+  g.fillStyle = i < facts.ahead ? c.accent : ([c.accent, p.info, p.warn][lane] ?? c.accent);
+  g.beginPath();
+  g.arc(box.x + 22 + lane * 18, y, 5, 0, Math.PI * 2);
+  g.fill();
+  const hash = Array.from({ length: 7 }, () => '0123456789abcdef'[Math.floor(r() * 16)]).join('');
+  text(g, hash, box.x + 90, y + 4, p.dim, 12);
+  text(
+    g,
+    `${pick(r, ['feat', 'fix', 'refactor', 'test'])}: ${pick(r, VOCAB.verbs)} ${pick(r, VOCAB.nouns)}`,
+    box.x + 170,
+    y + 4,
+    i < facts.ahead ? p.text : p.dim,
+    12,
+  );
 }
 
 /** A diff: the file name is the member's real one; the changed lines are made up. */

@@ -1,12 +1,14 @@
 import * as THREE from 'three';
 import { genomeOf, type Genome } from './flower-genome.js';
-import { addBloom, GOLDEN_ANGLE, type Bloom } from './flower-bloom.js';
+import { addBloom, type Bloom } from './flower-bloom.js';
+import { GOLDEN_ANGLE } from './flower-petals.js';
 import { KIND, MeshBuilder, type Style } from './flower-mesh.js';
 import { growTwigs, twigShare } from './flower-tree.js';
 import { flowerColor, mergeStands } from './merge-flowers.js';
-import { seeded } from './random.js';
+import { seeded } from './seeded.js';
 import { paletteAt } from './stalk-layout.js';
 import type { Stalk, Tier } from './stalk-types.js';
+import { itemAt, lastOf } from './checked.js';
 
 /** What a flower is, for the hover card. */
 export type BloomInfo = {
@@ -115,7 +117,7 @@ function tierBloom(tier: Tier): { bloom: Bloom; stem: THREE.Vector3[] } {
 
 function stemOf(b: MeshBuilder, bloom: Bloom, stem: THREE.Vector3[]) {
   const style: Style = {
-    hinge: stem[0]!,
+    hinge: itemAt(stem, 0),
     axis: up,
     swing: 0,
     order: 0,
@@ -165,21 +167,15 @@ function pollenOf(blooms: Bloom[]): THREE.BufferGeometry | null {
   return g;
 }
 
-/**
- * The garden: one flower per tier, grown from its first commit's hash, and a great bloom on the spire whose size follows the
- * length of the history. A few tiers (those with merges, or with parallel branches) also put out glass twigs ending in buds.
- * One mesh and one points object whatever the number of flowers. Pure given the stalk.
- */
-export function gardenOf(stalk: Stalk, low: boolean): Garden | null {
-  if (!stalk.tiers.length) return null;
-  const b = new MeshBuilder();
+/** One flower per tier on its stem, with the twigs (shared out between the tiers that grow any). */
+function tierFlowers(b: MeshBuilder, stalk: Stalk, low: boolean) {
   const stands = stalk.tiers.map(tierBloom);
   const share = twigShare(stands.filter((s) => s.bloom.genome.twigs > 0).length);
   const twigs = { segments: 0, buds: 0 };
   const blooms: Bloom[] = [];
   const infos: BloomInfo[] = [];
   for (const [index, tier] of stalk.tiers.entries()) {
-    const { bloom, stem } = stands[index]!;
+    const { bloom, stem } = itemAt(stands, index);
     blooms.push(bloom);
     infos.push({
       genome: bloom.genome,
@@ -195,8 +191,17 @@ export function gardenOf(stalk: Stalk, low: boolean): Garden | null {
     twigs.segments += grown.segments;
     twigs.buds += grown.buds;
   }
+  return { blooms, infos, twigs };
+}
+
+/** The great bloom on the spire, seeded by every tier and as big as the history is long. */
+function crownFlower(
+  b: MeshBuilder,
+  stalk: Stalk,
+  low: boolean,
+): { bloom: Bloom; info: BloomInfo } {
   const commits = stalk.tiers.reduce((sum, t) => sum + t.commits, 0);
-  const last = stalk.tiers[stalk.tiers.length - 1]!;
+  const last = lastOf(stalk.tiers);
   const genome = genomeOf({
     seed: `crown:${stalk.tiers.map((t) => t.seed).join('')}`,
     merges: last.merges,
@@ -204,7 +209,7 @@ export function gardenOf(stalk: Stalk, low: boolean): Garden | null {
     branches: last.branches,
     grand: true,
   });
-  const crown: Bloom = {
+  const bloom: Bloom = {
     genome,
     flower: stalk.tiers.length,
     origin: new THREE.Vector3(0, stalk.top + GRAND_RISE, 0),
@@ -213,21 +218,35 @@ export function gardenOf(stalk: Stalk, low: boolean): Garden | null {
     base: flowerColor(tierColor(last)),
     grand: true,
   };
-  blooms.push(crown);
-  infos.push({
+  const info: BloomInfo = {
     genome,
     tier: null,
     sha: last.seed,
     commits,
     from: Math.min(...stalk.tiers.map((t) => t.from)),
     to: Math.max(...stalk.tiers.map((t) => t.to)),
-  });
+  };
   stemOf(
     b,
-    crown,
+    bloom,
     [0, 1, 2, 3, 4].map((i) => new THREE.Vector3(0, stalk.top - 6 + (i * (GRAND_RISE + 6)) / 4, 0)),
   );
-  addBloom(b, crown, { low });
+  addBloom(b, bloom, { low });
+  return { bloom, info };
+}
+
+/**
+ * The garden: one flower per tier, grown from its first commit's hash, and a great bloom on the spire whose size follows the
+ * length of the history. A few tiers (those with merges, or with parallel branches) also put out glass twigs ending in buds.
+ * One mesh and one points object whatever the number of flowers. Pure given the stalk.
+ */
+export function gardenOf(stalk: Stalk, low: boolean): Garden | null {
+  if (!stalk.tiers.length) return null;
+  const b = new MeshBuilder();
+  const { blooms, infos, twigs } = tierFlowers(b, stalk, low);
+  const crown = crownFlower(b, stalk, low);
+  blooms.push(crown.bloom);
+  infos.push(crown.info);
   const climb: (number | null)[] = infos.map(() => null);
   // A small flower for each recent merge, in the strand's own glass; none on low quality.
   for (const { bloom, node } of low ? [] : mergeStands(stalk, infos.length)) {

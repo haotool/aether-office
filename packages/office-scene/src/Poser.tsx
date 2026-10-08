@@ -15,6 +15,17 @@ const DIP = 0.15;
 /** A turn this big (radians) has taken over from the idle sway entirely. */
 const SWAY_YIELD = 0.25;
 
+type PoserProps = {
+  seat: Seat;
+  /** The member's id: its sway is its own. */
+  seed: string;
+  engagements: readonly Engagement[] | undefined;
+  /** A turn of the chair a life effect asked for; a message to a neighbour takes precedence. */
+  turn?: TurnCue | undefined;
+  reducedMotion: boolean;
+  children: ReactNode;
+};
+
 /**
  * Turns a seated member toward the one it is talking with (while a message is current) and nods the receiver when the
  * envelope lands. A rigid turn of the character about its seat, limited to a glance (see interplay.ts); the animation
@@ -28,16 +39,7 @@ export function Poser({
   turn: asked,
   reducedMotion,
   children,
-}: {
-  seat: Seat;
-  /** The member's id: its sway is its own. */
-  seed: string;
-  engagements: readonly Engagement[] | undefined;
-  /** A turn of the chair a life effect asked for; a message to a neighbour takes precedence. */
-  turn?: TurnCue | undefined;
-  reducedMotion: boolean;
-  children: ReactNode;
-}) {
+}: PoserProps) {
   const group = useRef<Group>(null);
   const turn = useRef(0);
   const owed = useRef(0);

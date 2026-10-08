@@ -1,4 +1,5 @@
-import { between, pick, seeded, weighted } from './random.js';
+import { between, pick, weighted } from './pick.js';
+import { seeded } from './seeded.js';
 import { VOCAB, type LangId } from './screen-lang.js';
 import { generateData } from './screen-codegen-data.js';
 import { GO, JAVA, JS, RS, TS, list, type Dialect } from './screen-dialects.js';
@@ -152,7 +153,7 @@ function pythonFile(n: Names, total: number): CodeLine[] {
     line(0, kw('from '), id(snake(n.stem)), kw(' import '), id(snake(nameParts(n, false)))),
     BLANK,
   ];
-  const stmt = () => PY_BODY[Math.floor(n.r() * PY_BODY.length)]!(n);
+  const stmt = () => pick(n.r, PY_BODY)(n);
   for (let first = true; out.length < total; first = false) {
     const args = Array.from({ length: Math.floor(n.r() * 3) }, () => snake(nameParts(n, false)));
     const name = snake(first ? [pick(n.r, VOCAB.verbs), ...n.stem] : nameParts(n, true));
@@ -198,7 +199,11 @@ export function generateFile(
       : lang in dialects
         ? braceFile(dialects[lang as keyof typeof dialects], n, total)
         : generateData(lang, n, total);
-  if (cache.size >= CACHE_LIMIT) cache.delete(cache.keys().next().value!);
+  if (cache.size >= CACHE_LIMIT)
+    for (const oldest of cache.keys()) {
+      cache.delete(oldest);
+      break;
+    }
   cache.set(key, lines);
   return lines;
 }

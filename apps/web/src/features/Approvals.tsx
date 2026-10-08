@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api, execute } from '../api.js';
+import { api } from '../api.js';
+import { execute } from '../api-commands.js';
 import type { RemoteApprovalsState } from '@aether/contracts';
-import { PageHeading, Empty, Badge, useT } from '../ui.js';
+import { PageHeading } from '../ui/PageHeading.js';
+import { Empty } from '../ui/Empty.js';
+import { Badge } from '../ui/Badge.js';
+import { useT, useWhy } from '../ui/useT.js';
 import { PermissionCard } from './PermissionCard.js';
 import { QueryStatus } from './QueryStatus.js';
 import { usePermissionRequests } from './permission-requests.js';
@@ -62,6 +66,7 @@ function ApprovalCard({
   onDecide: (decision: 'approve' | 'deny') => void;
 }) {
   const t = useT();
+  const whyNot = useWhy();
   const expired = a.expiresAt <= Date.now();
   return (
     <article className="panel approval-card">
@@ -80,10 +85,15 @@ function ApprovalCard({
       <p>{new Date(a.expiresAt).toLocaleString()}</p>
       {a.state === 'pending' && !expired && (
         <div className="button-row">
-          <button disabled={busy} className="primary" onClick={() => onDecide('approve')}>
+          <button
+            disabled={busy}
+            {...whyNot([!busy, 'whyBusy'])}
+            className="primary"
+            onClick={() => onDecide('approve')}
+          >
             {t('allowTool')}
           </button>
-          <button disabled={busy} onClick={() => onDecide('deny')}>
+          <button disabled={busy} {...whyNot([!busy, 'whyBusy'])} onClick={() => onDecide('deny')}>
             {t('denyTool')}
           </button>
         </div>
@@ -92,8 +102,8 @@ function ApprovalCard({
   );
 }
 
-export function Approvals({ projectId, live }: { projectId: string; live: boolean }) {
-  const t = useT();
+/** The approvals to decide here: the permission prompts waiting on Claude Code sessions, the remote-approvals setting, and the project's own approvals. */
+function useApprovalData(projectId: string, live: boolean) {
   // The prompts of Claude Code sessions waiting for an answer (Remote approvals), the same ones the feed and the conversation show.
   const prompts = usePermissionRequests().filter((r) => r.state === 'pending');
   const remote = useQuery({
@@ -107,6 +117,12 @@ export function Approvals({ projectId, live }: { projectId: string; live: boolea
     queryFn: () => api<Approval[]>(`/api/projects/${projectId}/approvals`),
     refetchInterval: 1000,
   });
+  return { prompts, remote, query };
+}
+
+export function Approvals({ projectId, live }: { projectId: string; live: boolean }) {
+  const t = useT();
+  const { prompts, remote, query } = useApprovalData(projectId, live);
   const { busy, error, decide } = useDecide(projectId, query.refetch);
   return (
     <>

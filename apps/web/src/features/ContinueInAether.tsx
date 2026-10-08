@@ -1,5 +1,5 @@
 import type { AttributedSession } from '@aether/contracts';
-import { useT } from '../ui.js';
+import { useT, useWhy } from '../ui/useT.js';
 import { useContinue } from './use-continue.js';
 
 /**
@@ -14,6 +14,7 @@ export function ContinueInAether({
   projectId: string;
 }) {
   const t = useT();
+  const whyNot = useWhy();
   const { loaded, allowed, target, busy, message, start } = useContinue(session, projectId);
   if (!loaded) return null;
   if (!target) return <p>{t('continueNoProfile')}</p>;
@@ -23,11 +24,21 @@ export function ContinueInAether({
       <div className="session-footer-actions">
         <button
           disabled={!allowed || busy || session.process === 'running'}
+          {...whyNot(
+            [allowed, 'needOperator'],
+            [!busy, 'whyBusy'],
+            [session.process !== 'running', 'whySessionRunning'],
+          )}
           onClick={() => void start(false)}
         >
           {t('continueHere')}
         </button>
-        <button className="secondary" disabled={!allowed || busy} onClick={() => void start(true)}>
+        <button
+          className="secondary"
+          disabled={!allowed || busy}
+          {...whyNot([allowed, 'needOperator'], [!busy, 'whyBusy'])}
+          onClick={() => void start(true)}
+        >
           {t('forkHere')}
         </button>
       </div>

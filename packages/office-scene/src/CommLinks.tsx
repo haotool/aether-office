@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, type RefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import {
   AdditiveBlending,
@@ -6,6 +6,7 @@ import {
   QuadraticBezierCurve3,
   TubeGeometry,
   Vector3,
+  type Camera,
   type Group,
   type Mesh,
 } from 'three';
@@ -25,17 +26,15 @@ const COLOR: Record<PulseKind, string> = {
 };
 const HEAD = 1.9; // links leave from just above a head
 
-function Link({
-  pulse,
-  from,
-  to,
-  height,
-}: {
+type LinkProps = {
   pulse: Pulse;
   from: V3;
   to: V3;
   height: { from: number; to: number };
-}) {
+};
+
+/** The arc between two heads: its curve, the tube drawn along it and where it peaks. */
+function useLinkCurve(from: V3, to: V3, height: LinkProps['height']) {
   const start = useByValue(from); // the arrays are new on every render
   const end = useByValue(to);
   const curve = useMemo(() => {
@@ -48,48 +47,120 @@ function Link({
   }, [start, end, height.from, height.to]);
   const geometry = useMemo(() => new TubeGeometry(curve, 36, 0.05, 6, false), [curve]);
   useEffect(() => () => geometry.dispose(), [geometry]);
-  const tube = useRef<Mesh>(null);
-  const packets = useRef<(Mesh | null)[]>([]);
-  const ping = useRef<Mesh>(null);
-  const envelope = useRef<Group>(null);
-  const aim = useMemo(() => new Vector3(), []);
   const middle = useMemo(() => curve.getPoint(0.5), [curve]);
-  const hands = pulse.kind !== 'sub'; // a message is handed over in an envelope; subagent work is a stream of light
+  return { curve, geometry, middle };
+}
+
+type LinkRefs = {
+  tube: RefObject<Mesh | null>;
+  packets: RefObject<(Mesh | null)[]>;
+  ping: RefObject<Mesh | null>;
+  envelope: RefObject<Group | null>;
+};
+
+/** One frame of a link: the tube fades, the packets run along it, the ring spreads, the envelope flies and lands. */
+function stepLink(
+  { tube, packets, ping, envelope }: LinkRefs,
+  { pulse, curve, middle, aim, hands }: LinkShape,
+  camera: Camera,
+): number {
+  const age = Date.now() - pulse.at;
+  const fade = distanceFade(camera.position.distanceTo(middle));
+  // Full strength for most of the window, then a fade out over the last six seconds.
+  const strength = Math.min(1, Math.max(0, (PULSE_WINDOW_MS - age) / 6000));
+  const material = tube.current?.material as { opacity: number } | undefined;
+  if (material) material.opacity = 0.55 * strength * fade;
+  const t = age / 1000;
+  packets.current.forEach((mesh, i) => {
+    if (!mesh) return;
+    mesh.position.copy(curve.getPoint((((t * 0.45 + i / 3) % 1) + 1) % 1));
+    mesh.scale.setScalar(0.7 + 0.5 * Math.sin(t * 6 + i));
+    mesh.visible = strength > 0.02 && fade > 0.02;
+  });
+  if (ping.current) {
+    const phase = (t * 0.9) % 1; // a ring that spreads from the receiver, again and again
+    ping.current.scale.setScalar(0.3 + phase * 1.6);
+    (ping.current.material as { opacity: number }).opacity = (1 - phase) * 0.7 * strength * fade;
+  }
+  const post = envelope.current;
+  if (post) {
+    // It leaves the sender's head, arcs to the receiver's and shrinks away once it has landed.
+    const progress = envelopeProgress(age);
+    const landed = Math.max(0, 1 - (age - ENVELOPE_MS) / 500);
+    post.visible = hands && age >= 0 && landed > 0 && fade > 0.02;
+    post.position.copy(curve.getPoint(progress));
+    post.lookAt(aim.copy(curve.getPoint(Math.min(1, progress + 0.03))));
+    post.scale.setScalar(landed * (1 + 0.12 * Math.sin(age / 90)));
+  }
+  return strength;
+}
+
+type LinkShape = {
+  pulse: Pulse;
+  curve: QuadraticBezierCurve3;
+  middle: Vector3;
+  aim: Vector3;
+  /** A message is handed over in an envelope; subagent work is a stream of light. */
+  hands: boolean;
+};
+
+/** The letter that flies along the arc: a pale card inside a soft glow of the link's colour. */
+function Envelope({ color, group }: { color: string; group: RefObject<Group | null> }) {
+  return (
+    <group ref={group} visible={false}>
+      <mesh>
+        <boxGeometry args={[0.36, 0.03, 0.24]} />
+        <meshBasicMaterial color="#fff3cf" toneMapped={false} />
+      </mesh>
+      <mesh scale={2.2}>
+        <boxGeometry args={[0.36, 0.03, 0.24]} />
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={0.35}
+          blending={AdditiveBlending}
+          depthWrite={false}
+          toneMapped={false}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+/** The ring that spreads on the floor where the exchange lands. */
+function PingRing({ ring, at, color }: { ring: RefObject<Mesh | null>; at: V3; color: string }) {
+  return (
+    <mesh ref={ring} position={at} rotation={[-Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[0.7, 0.82, 40]} />
+      <meshBasicMaterial
+        color={color}
+        transparent
+        blending={AdditiveBlending}
+        depthWrite={false}
+        side={DoubleSide}
+        toneMapped={false}
+      />
+    </mesh>
+  );
+}
+
+function Link({ pulse, from, to, height }: LinkProps) {
+  const { curve, geometry, middle } = useLinkCurve(from, to, height);
+  const refs: LinkRefs = {
+    tube: useRef<Mesh>(null),
+    packets: useRef<(Mesh | null)[]>([]),
+    ping: useRef<Mesh>(null),
+    envelope: useRef<Group>(null),
+  };
+  const aim = useMemo(() => new Vector3(), []);
+  const hands = pulse.kind !== 'sub';
   const color = COLOR[pulse.kind];
   useFrame(({ invalidate, camera }) => {
-    const age = Date.now() - pulse.at;
-    const fade = distanceFade(camera.position.distanceTo(middle));
-    // Full strength for most of the window, then a fade out over the last six seconds.
-    const strength = Math.min(1, Math.max(0, (PULSE_WINDOW_MS - age) / 6000));
-    const material = tube.current?.material as { opacity: number } | undefined;
-    if (material) material.opacity = 0.55 * strength * fade;
-    const t = age / 1000;
-    packets.current.forEach((mesh, i) => {
-      if (!mesh) return;
-      mesh.position.copy(curve.getPoint((((t * 0.45 + i / 3) % 1) + 1) % 1));
-      mesh.scale.setScalar(0.7 + 0.5 * Math.sin(t * 6 + i));
-      mesh.visible = strength > 0.02 && fade > 0.02;
-    });
-    if (ping.current) {
-      const phase = (t * 0.9) % 1; // a ring that spreads from the receiver, again and again
-      ping.current.scale.setScalar(0.3 + phase * 1.6);
-      (ping.current.material as { opacity: number }).opacity = (1 - phase) * 0.7 * strength * fade;
-    }
-    const post = envelope.current;
-    if (post) {
-      // It leaves the sender's head, arcs to the receiver's and shrinks away once it has landed.
-      const progress = envelopeProgress(age);
-      const landed = Math.max(0, 1 - (age - ENVELOPE_MS) / 500);
-      post.visible = hands && age >= 0 && landed > 0 && fade > 0.02;
-      post.position.copy(curve.getPoint(progress));
-      post.lookAt(aim.copy(curve.getPoint(Math.min(1, progress + 0.03))));
-      post.scale.setScalar(landed * (1 + 0.12 * Math.sin(age / 90)));
-    }
-    if (strength > 0) invalidate();
+    if (stepLink(refs, { pulse, curve, middle, aim, hands }, camera) > 0) invalidate();
   });
   return (
     <group>
-      <mesh ref={tube} geometry={geometry}>
+      <mesh ref={refs.tube} geometry={geometry}>
         <meshBasicMaterial
           color={color}
           transparent
@@ -99,45 +170,19 @@ function Link({
           toneMapped={false}
         />
       </mesh>
-      <group ref={envelope} visible={false}>
-        <mesh>
-          <boxGeometry args={[0.36, 0.03, 0.24]} />
-          <meshBasicMaterial color="#fff3cf" toneMapped={false} />
-        </mesh>
-        <mesh scale={2.2}>
-          <boxGeometry args={[0.36, 0.03, 0.24]} />
-          <meshBasicMaterial
-            color={color}
-            transparent
-            opacity={0.35}
-            blending={AdditiveBlending}
-            depthWrite={false}
-            toneMapped={false}
-          />
-        </mesh>
-      </group>
+      <Envelope color={color} group={refs.envelope} />
       {(hands ? [] : [0, 1, 2]).map((i) => (
         <mesh
           key={i}
           ref={(node) => {
-            packets.current[i] = node;
+            refs.packets.current[i] = node;
           }}
         >
           <sphereGeometry args={[0.13, 10, 8]} />
           <meshBasicMaterial color={color} toneMapped={false} />
         </mesh>
       ))}
-      <mesh ref={ping} position={[to[0], height.to + 0.06, to[2]]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.7, 0.82, 40]} />
-        <meshBasicMaterial
-          color={color}
-          transparent
-          blending={AdditiveBlending}
-          depthWrite={false}
-          side={DoubleSide}
-          toneMapped={false}
-        />
-      </mesh>
+      <PingRing ring={refs.ping} at={[to[0], height.to + 0.06, to[2]]} color={color} />
     </group>
   );
 }

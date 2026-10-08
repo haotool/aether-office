@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { AttributedSession } from '@aether/contracts';
-import { execute } from './api.js';
+import { execute } from './api-commands.js';
 
 const SCRATCH = ['/tmp/', '/private/tmp/']; // agent scratchpads, never real projects
 

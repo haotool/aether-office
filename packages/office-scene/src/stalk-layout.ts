@@ -6,6 +6,7 @@
  * from history (a recent commit is given more room), thickness and energy from how much happened in the last two weeks.
  * Pure and deterministic: the same commits at the same `now` always give the same spire.
  */
+import { itemAt, lastOf, valueOf } from './checked.js';
 import { crownTop, layoutTiers, SPIRE_HEIGHT } from './crown-layout.js';
 import type { Stalk, StalkCommit, StalkNode, Strand, Vec3 } from './stalk-types.js';
 
@@ -96,12 +97,14 @@ function claimStrands(list: readonly StalkCommit[]): Map<string, number> {
     if (owner.has(tip)) return;
     const id = count++;
     let next: string | undefined = tip;
-    while (next && bySha.has(next) && !owner.has(next)) {
+    while (next && !owner.has(next)) {
+      const commit = bySha.get(next);
+      if (!commit) break;
       owner.set(next, id);
-      next = bySha.get(next)!.parents[0];
+      next = commit.parents[0];
     }
   };
-  claim((list.find((c) => branchNames(c.refs).some(isDefault)) ?? list[0]!).sha);
+  claim((list.find((c) => branchNames(c.refs).some(isDefault)) ?? itemAt(list, 0)).sha);
   for (const c of list) claim(c.sha);
   return owner;
 }
@@ -124,6 +127,116 @@ const centerline = (chain: readonly Sample[]): Sample[] =>
     return Array.from({ length: parts }, (_, j) => (j ? lerp(s, next, j / parts) : s));
   });
 
+/** What the passes share: who owns which commit, each commit's height, and the commits of every strand oldest first. */
+type Plan = {
+  bySha: Map<string, StalkCommit>;
+  owner: Map<string, number>;
+  level: Map<string, number>;
+  members: string[][];
+  strandCount: number;
+};
+
+/** The strand's centre line at `k` of `strandCount`: its phase round the axis and how far it sits off the mean radius. */
+const targetOf = (k: number, strandCount: number): Sample => ({
+  y: 0,
+  phase: (2 * Math.PI * k) / strandCount,
+  spread: k === 0 ? 0 : (k % 2 ? 1 : -1) * (0.1 + 0.04 * (k % 3)),
+});
+
+/** The commit a strand forked from, when it forked from another strand. */
+function anchorOf({ bySha, owner, members }: Plan, k: number): string | undefined {
+  const parent = valueOf(bySha, itemAt(itemAt(members, k), 0)).parents[0];
+  return parent !== undefined && owner.get(parent) !== k ? parent : undefined;
+}
+
+/** Pass 1: every commit's sample, strands taken oldest fork first so a fork finds its parent already placed. */
+function placeCommits(plan: Plan): Map<string, Sample> {
+  const { level, members, strandCount } = plan;
+  const samples = new Map<string, Sample>();
+  const order = members
+    .map((_, k) => k)
+    .sort(
+      (a, b) =>
+        valueOf(level, itemAt(itemAt(members, a), 0)) -
+        valueOf(level, itemAt(itemAt(members, b), 0)),
+    );
+  for (const k of order) {
+    const anchor = anchorOf(plan, k);
+    const from = anchor === undefined ? undefined : samples.get(anchor);
+    const end = from ? nearest(from, targetOf(k, strandCount)) : targetOf(k, strandCount);
+    for (const sha of itemAt(members, k)) {
+      const y = valueOf(level, sha);
+      samples.set(
+        sha,
+        from ? { ...lerp(from, end, smooth((y - from.y) / FORK_RAMP)), y } : { ...end, y },
+      );
+    }
+  }
+  return samples;
+}
+
+/** Pass 2: a merged strand swings back towards the commit that merged it over its last FORK_RAMP metres. Returns who merged whom. */
+function swingMerged(
+  { owner, members }: Plan,
+  oldestFirst: readonly StalkCommit[],
+  samples: Map<string, Sample>,
+): Map<number, string> {
+  const merged = new Map<number, string>();
+  for (const c of oldestFirst)
+    for (const p of c.parents) {
+      const k = owner.get(p);
+      if (k && k < MAX_STRANDS && owner.get(c.sha) !== k && itemAt(members, k).at(-1) === p)
+        if (samples.has(c.sha) && !merged.has(k)) merged.set(k, c.sha);
+    }
+  const first = new Map(samples);
+  for (const [k, into] of merged) {
+    const end = valueOf(first, into);
+    for (const sha of itemAt(members, k)) {
+      const s = valueOf(first, sha);
+      const toward = nearest(s, end);
+      samples.set(sha, { ...lerp(s, toward, smooth(1 - (end.y - s.y) / FORK_RAMP)), y: s.y });
+    }
+  }
+  return merged;
+}
+
+type Geometry = { roof: number; top: number };
+
+/**
+ * The strands: the centerline runs from the fork commit through the strand's commits to the merge commit; the trunk also
+ * reaches down into the lowest floor's slab and up to the tip of the spire.
+ */
+function strandsOf(
+  plan: Plan,
+  samples: ReadonlyMap<string, Sample>,
+  merged: ReadonlyMap<number, string>,
+  recent: readonly StalkCommit[],
+  { roof, top }: Geometry,
+): { strands: Strand[]; energy: number } {
+  const { bySha, owner, members, strandCount } = plan;
+  const energy = clamp(recent.length / 60, 0, 1);
+  const active = new Set(recent.map((c) => valueOf(owner, c.sha)).filter((k) => k < MAX_STRANDS));
+  const thickness = clamp(0.14 + 0.1 * energy + 0.015 * active.size, 0.14, 0.26);
+  const strands = members.map((shas, k): Strand => {
+    const anchor = anchorOf(plan, k);
+    const into = merged.get(k);
+    const chain = [anchor, ...shas, into]
+      .filter((sha): sha is string => sha !== undefined && samples.has(sha))
+      .map((sha) => valueOf(samples, sha));
+    const trunk = targetOf(0, strandCount);
+    const path = k === 0 ? [{ ...trunk, y: BASE_Y }, ...chain, { ...trunk, y: top }] : chain;
+    const name = branchNames(valueOf(bySha, lastOf(shas)).refs);
+    return {
+      name: name.find((n) => !n.startsWith('origin/')) ?? name[0] ?? '',
+      color: paletteAt(k),
+      radius: k === 0 ? thickness : thickness * 0.7,
+      free: [k === 0 || !(anchor && samples.has(anchor)), k === 0 || into === undefined],
+      points: centerline(path).map((s) => braid(s, roof, top)),
+    };
+  });
+  return { strands, energy };
+}
+
 export function layoutStalk(
   commits: readonly StalkCommit[],
   now: number,
@@ -136,82 +249,21 @@ export function layoutStalk(
   const tiers = layoutTiers(oldestFirst, owner, roof, strandCount);
   const top = crownTop(roof, tiers.length);
   const rise = heights(oldestFirst, now, FIRST_COMMIT_Y, top - 1.5);
-  const level = new Map(oldestFirst.map((c, i) => [c.sha, rise[i]!]));
-  const target = (k: number): Sample => ({
-    y: 0,
-    phase: (2 * Math.PI * k) / strandCount,
-    spread: k === 0 ? 0 : (k % 2 ? 1 : -1) * (0.1 + 0.04 * (k % 3)),
-  });
-
-  // Pass 1: every commit's sample, strands taken oldest fork first so a fork finds its parent already placed.
-  const kept = oldestFirst.filter((c) => owner.get(c.sha)! < MAX_STRANDS);
+  const level = new Map(oldestFirst.map((c, i) => [c.sha, itemAt(rise, i)]));
+  const kept = oldestFirst.filter((c) => valueOf(owner, c.sha) < MAX_STRANDS);
   const members: string[][] = Array.from({ length: strandCount }, () => []);
-  for (const c of kept) members[owner.get(c.sha)!]!.push(c.sha);
-  const bySha = new Map(commits.map((c) => [c.sha, c]));
-  const samples = new Map<string, Sample>();
-  const anchorOf = (k: number) => {
-    const parent = bySha.get(members[k]![0]!)!.parents[0];
-    return parent !== undefined && owner.get(parent) !== k ? parent : undefined;
+  for (const c of kept) itemAt(members, valueOf(owner, c.sha)).push(c.sha);
+  const plan: Plan = {
+    bySha: new Map(commits.map((c) => [c.sha, c])),
+    owner,
+    level,
+    members,
+    strandCount,
   };
-  const order = members
-    .map((_, k) => k)
-    .sort((a, b) => level.get(members[a]![0]!)! - level.get(members[b]![0]!)!);
-  for (const k of order) {
-    const anchor = anchorOf(k);
-    const from = anchor === undefined ? undefined : samples.get(anchor);
-    const end = from ? nearest(from, target(k)) : target(k);
-    for (const sha of members[k]!) {
-      const y = level.get(sha)!;
-      samples.set(
-        sha,
-        from ? { ...lerp(from, end, smooth((y - from.y) / FORK_RAMP)), y } : { ...end, y },
-      );
-    }
-  }
-
-  // Pass 2: a merged strand swings back towards the commit that merged it over its last FORK_RAMP metres.
-  const merged = new Map<number, string>();
-  for (const c of oldestFirst)
-    for (const p of c.parents) {
-      const k = owner.get(p);
-      if (k && k < MAX_STRANDS && owner.get(c.sha) !== k && members[k]!.at(-1) === p)
-        if (samples.has(c.sha) && !merged.has(k)) merged.set(k, c.sha);
-    }
-  const first = new Map(samples);
-  for (const [k, into] of merged) {
-    const end = first.get(into)!;
-    for (const sha of members[k]!) {
-      const s = first.get(sha)!;
-      const toward = nearest(s, end);
-      samples.set(sha, { ...lerp(s, toward, smooth(1 - (end.y - s.y) / FORK_RAMP)), y: s.y });
-    }
-  }
-
-  // Strands: the centerline runs from the fork commit through the strand's commits to the merge commit; the trunk also
-  // reaches down into the lowest floor's slab and up to the tip of the spire.
+  const samples = placeCommits(plan);
+  const merged = swingMerged(plan, oldestFirst, samples);
   const recent = commits.filter((c) => now - c.at <= RECENT_DAYS * DAY);
-  const energy = clamp(recent.length / 60, 0, 1);
-  const active = new Set(recent.map((c) => owner.get(c.sha)!).filter((k) => k < MAX_STRANDS));
-  const thickness = clamp(0.14 + 0.1 * energy + 0.015 * active.size, 0.14, 0.26);
-  const strands: Strand[] = members.map((shas, k) => {
-    const anchor = anchorOf(k);
-    const into = merged.get(k);
-    const chain = [anchor, ...shas, into]
-      .filter((sha): sha is string => sha !== undefined && samples.has(sha))
-      .map((sha) => samples.get(sha)!);
-    const path =
-      k === 0 ? [{ ...target(0), y: BASE_Y }, ...chain, { ...target(0), y: top }] : chain;
-    const tip = bySha.get(shas[shas.length - 1]!)!;
-    const name = branchNames(tip.refs);
-    return {
-      name: name.find((n) => !n.startsWith('origin/')) ?? name[0] ?? '',
-      color: paletteAt(k),
-      radius: k === 0 ? thickness : thickness * 0.7,
-      free: [k === 0 || !(anchor && samples.has(anchor)), k === 0 || into === undefined],
-      points: centerline(path).map((s) => braid(s, roof, top)),
-    };
-  });
-
+  const { strands, energy } = strandsOf(plan, samples, merged, recent, { roof, top });
   const nodes = kept
     .map((c): StalkNode => ({
       sha: c.sha,
@@ -219,9 +271,9 @@ export function layoutStalk(
       author: c.author,
       at: c.at,
       refs: branchNames(c.refs),
-      strand: owner.get(c.sha)!,
+      strand: valueOf(owner, c.sha),
       merge: c.parents.length > 1,
-      position: braid(samples.get(c.sha)!, roof, top),
+      position: braid(valueOf(samples, c.sha), roof, top),
     }))
     .reverse();
   return { nodes, strands, tiers, roof, top, energy };

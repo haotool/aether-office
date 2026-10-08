@@ -1,6 +1,9 @@
 import { Server } from 'lucide-react';
 import type { Snapshot } from '@aether/contracts';
-import { useT, PageHeading, Badge, Empty } from '../ui.js';
+import { useT } from '../ui/useT.js';
+import { PageHeading } from '../ui/PageHeading.js';
+import { Badge } from '../ui/Badge.js';
+import { Empty } from '../ui/Empty.js';
 import { MachineInvite } from './MachineInvite.js';
 
 /** The runners that have enrolled, and how to enrol one more. */

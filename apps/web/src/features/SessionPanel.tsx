@@ -1,70 +1,32 @@
-import { useLayoutEffect, useRef, type ReactNode } from 'react';
+import { lazy, Suspense, useLayoutEffect, useRef } from 'react';
 import { PanelRightClose, PanelRightOpen, X } from 'lucide-react';
-import type { Agent, AttributedSession, Snapshot } from '@aether/contracts';
 import { usePreferences } from '../state.js';
-import { useT } from '../ui.js';
-import { attentionCount, feedItems, type Feed } from './feed-model.js';
+import { useT } from '../ui/useT.js';
+import { attentionCount, type Feed } from './feed-model.js';
+import type { PanelProps } from './PanelBody.js';
 import { PanelResizer } from './PanelResizer.js';
 import { usePanelLayout } from './use-panel-layout.js';
-import { SessionConversation } from './SessionConversation.js';
-import { SessionFeed } from './SessionFeed.js';
 
-export type PanelProps = {
-  /** The chosen member; none shows the feed. */
-  agent: Agent | null;
-  session: AttributedSession | null;
-  snapshot: Snapshot;
-  feed: Feed;
-  /** Choosing a row of the feed (selects the member; the camera follows, as with a click in the scene). */
-  onOpen: (agentId: string) => void;
-  onBack: () => void;
-  onFocus: () => void;
-  /** Buttons at the end of the header: close on a desktop, collapse on a phone. */
-  trailing?: ReactNode;
-};
+export type { PanelProps };
 
-/** What the panel shows: the feed, or the chosen member's conversation. Shared by the desktop column and the phone sheet. */
-export function PanelBody({
-  agent,
-  session,
-  snapshot,
-  feed,
-  onOpen,
-  onBack,
-  onFocus,
-  trailing,
-}: PanelProps) {
+const LazyBody = lazy(() => import('./PanelBody.js').then((m) => ({ default: m.PanelBody })));
+
+/** The panel's content is a lazy chunk (the conversation, the feed, the Markdown renderer); its header is there at once. */
+export function PanelBody(props: PanelProps) {
   const t = useT();
-  if (agent)
-    return (
-      <SessionConversation
-        agent={agent}
-        session={session}
-        snapshot={snapshot}
-        attention={attentionCount({
-          ...feed,
-          needs: feed.needs.filter((i) => i.agent.id !== agent.id),
-          finished: feed.finished.filter((i) => i.agent.id !== agent.id),
-        })}
-        trailing={trailing}
-        onBack={onBack}
-        onFocus={onFocus}
-        onOpen={onOpen}
-      />
-    );
-  const count = attentionCount(feed);
   return (
-    <div className="panel-feed">
-      <header className="panel-head">
-        <h2>{t('panelTitle')}</h2>
-        <span className="feed-count">{feedItems(feed).length}</span>
-        {count > 0 && <span className="count-badge">{`${count} ${t('feedUnread')}`}</span>}
-        {trailing}
-      </header>
-      <div className="panel-scroll">
-        <SessionFeed feed={feed} onOpen={onOpen} />
-      </div>
-    </div>
+    <Suspense
+      fallback={
+        <div className="panel-feed">
+          <header className="panel-head">
+            <h2>{t('panelTitle')}</h2>
+            {props.trailing}
+          </header>
+        </div>
+      }
+    >
+      <LazyBody {...props} />
+    </Suspense>
   );
 }
 
@@ -97,6 +59,36 @@ function PanelRail({ feed, onExpand }: { feed: Feed; onExpand: () => void }) {
         </span>
       )}
     </div>
+  );
+}
+
+/** The buttons at the head of the panel: fold it to a rail (where it can be resized) and close it. */
+function PanelControls({
+  resizable,
+  onCollapse,
+  onClose,
+}: {
+  resizable: boolean;
+  onCollapse: () => void;
+  onClose: () => void;
+}) {
+  const t = useT();
+  return (
+    <>
+      {resizable && (
+        <button
+          className="icon-button"
+          aria-label={t('panelCollapse')}
+          title={t('panelCollapse')}
+          onClick={onCollapse}
+        >
+          <PanelRightClose size={17} />
+        </button>
+      )}
+      <button className="icon-button" aria-label={t('close')} title={t('close')} onClick={onClose}>
+        <X size={17} />
+      </button>
+    </>
   );
 }
 
@@ -140,26 +132,11 @@ export function SessionPanel(props: Omit<PanelProps, 'trailing'> & { onClose: ()
           {...body}
           feed={feed}
           trailing={
-            <>
-              {layout.resizable && (
-                <button
-                  className="icon-button"
-                  aria-label={t('panelCollapse')}
-                  title={t('panelCollapse')}
-                  onClick={() => layout.setCollapsed(true)}
-                >
-                  <PanelRightClose size={17} />
-                </button>
-              )}
-              <button
-                className="icon-button"
-                aria-label={t('close')}
-                title={t('close')}
-                onClick={onClose}
-              >
-                <X size={17} />
-              </button>
-            </>
+            <PanelControls
+              resizable={layout.resizable}
+              onCollapse={() => layout.setCollapsed(true)}
+              onClose={onClose}
+            />
           }
         />
       )}

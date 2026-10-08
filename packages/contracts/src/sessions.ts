@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CLOCK_OUT_MAX_SESSIONS } from './session-limits.js';
 
 // The closed vocabulary of command labels (packages/providers/src/command-tags.mjs): what kind of command a tool call was,
 // never its arguments. A test keeps this list and the classifier's the same.
@@ -76,10 +77,7 @@ export const subagentSchema = z.object({
 });
 export type Subagent = z.infer<typeof subagentSchema>;
 
-// How long after its last sign of life a session still counts as at work, and how long a session with no process
-// behind it is kept before it is gone. Server (liveness, child rollouts) and client (activityOf) share these.
-export const SESSION_ACTIVE_MS = 2 * 60 * 1000;
-export const SESSION_GONE_MS = 10 * 60 * 1000;
+export { SESSION_ACTIVE_MS, SESSION_GONE_MS } from './session-limits.js';
 
 export const localSessionSchema = z.object({
   key: z.string(),
@@ -238,7 +236,7 @@ export type ModelsResponse = { catalogs: ModelCatalog[] };
 // the key the scanner gave them and the process start time it saw (never a pid); the server decides for each one.
 const DAY_MS = 24 * 60 * 60 * 1000;
 const CLOCK_OUT_MIN_IDLE_MS = DAY_MS;
-export const CLOCK_OUT_MAX_SESSIONS = 50;
+export { CLOCK_OUT_MAX_SESSIONS };
 export const clockOutRequestSchema = z
   .object({
     sessions: z

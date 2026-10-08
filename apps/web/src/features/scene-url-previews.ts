@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { STAGGER_MS, type PerfReport, type SceneSpeech } from '@aether/office-scene/model';
 import type { Agent } from '@aether/contracts';
 import { introForced } from '../intro-gate.js';
-import { LOCAL_PREFIX } from '../localSessions.js';
+import { LOCAL_PREFIX } from '../session-names.js';
 import type { OfficeModel } from './office-model.js';
 import { standInFacts, standInRole } from './scene-preview.js';
 import { useSpeechBySession } from './use-session-feed.js';
@@ -16,9 +16,14 @@ export const perfRequested = query.has('perf');
 const perfParam = Number(query.get('perf'));
 export const perfFrames = perfParam > 1 ? perfParam : 0;
 export function publishPerf(report: PerfReport) {
-  const w = window as Window & { __aetherPerf?: PerfReport; __aetherPerfHistory?: PerfReport[] };
+  const w = window as Window & {
+    __aetherPerf?: PerfReport;
+    __aetherPerfHistory?: PerfReport[];
+    __aetherFieldPerfHook?: { onProbe: (report: PerfReport) => void };
+  };
   w.__aetherPerf = report;
   (w.__aetherPerfHistory ??= []).push(report); // one report per scene mount
+  w.__aetherFieldPerfHook?.onProbe(report);
 }
 
 // `?intro=force` plays the first-visit camera tour whatever the preference, the session or automation say (the tests' switch).

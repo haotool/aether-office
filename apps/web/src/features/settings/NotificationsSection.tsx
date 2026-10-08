@@ -8,12 +8,12 @@ import {
   requestNotificationPermission,
 } from '../../notifications.js';
 import { usePreferences } from '../../state.js';
-import { useT } from '../../ui.js';
+import { useT } from '../../ui/useT.js';
 import { useSettings } from './context.js';
 import { CopyCommand, InlineHelp, Row, StatusChip, Switch } from './kit.js';
 
 const KEY = ['remote-approvals'];
-export const HOOK_INSTALL = 'pnpm hooks install --remote-approvals';
+const HOOK_INSTALL = 'pnpm hooks install --remote-approvals';
 export const HOOK_STATUS = 'pnpm hooks status';
 
 /** Alerts: whether they are on, and what the browser will let them be. */
@@ -66,8 +66,8 @@ function NotifyRow() {
   );
 }
 
-/** Answering Claude Code permission prompts from the page: the switch, the connection it is allowed on, the hook to install. */
-function RemoteRow({ mode, owner }: { mode: Mode; owner: boolean }) {
+/** The remote-approvals setting: its state from the server, the switch's mutation and the toast with its undo. */
+function useRemoteApprovals(mode: Mode) {
   const t = useT();
   const client = useQueryClient();
   const { notify } = useSettings();
@@ -94,6 +94,13 @@ function RemoteRow({ mode, owner }: { mode: Mode; owner: boolean }) {
           undo: () => toggle.mutate(!next),
         }),
     });
+  return { state, toggle, enabled, change };
+}
+
+/** Answering Claude Code permission prompts from the page: the switch, the connection it is allowed on, the hook to install. */
+function RemoteRow({ mode, owner }: { mode: Mode; owner: boolean }) {
+  const t = useT();
+  const { state, toggle, enabled, change } = useRemoteApprovals(mode);
   const channel = state.data?.channel;
   const lock =
     mode !== 'live' ? t('stLiveOnly') : !owner || state.isError ? t('stOwnerOnly') : undefined;

@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { addBloom, type Bloom } from './flower-bloom.js';
 import { KIND, MeshBuilder, type Style } from './flower-mesh.js';
-import { seeded } from './random.js';
+import { seeded } from './seeded.js';
 import type { Vec3 } from './stalk-types.js';
+import { itemAt, lastOf } from './checked.js';
 
 /** Twig segments and buds one garden may grow in all, so the trees stay a few hundred segments whatever the history. */
 export const MAX_TWIG_SEGMENTS = 300;
@@ -88,7 +89,7 @@ export function colonize(p: ColonyParams): Colony {
   const roots = nodes.length;
   const killed = (a: THREE.Vector3, from: number) => {
     for (let i = from; i < nodes.length; i++)
-      if (nodes[i]!.distanceToSquared(a) < p.kill * p.kill) return true;
+      if (itemAt(nodes, i).distanceToSquared(a) < p.kill * p.kill) return true;
     return false;
   };
   let reached = 0;
@@ -111,7 +112,7 @@ export function colonize(p: ColonyParams): Colony {
         pulls.set(
           nearest,
           (pulls.get(nearest) ?? new THREE.Vector3()).add(
-            a.clone().sub(nodes[nearest]!).normalize(),
+            a.clone().sub(itemAt(nodes, nearest)).normalize(),
           ),
         );
     }
@@ -120,7 +121,7 @@ export function colonize(p: ColonyParams): Colony {
     for (const [i, pull] of pulls) {
       if (nodes.length - roots >= p.maxSegments) break;
       const dir = pull.normalize().addScaledVector(up, TROPISM).normalize();
-      nodes.push(nodes[i]!.clone().addScaledVector(dir, p.step));
+      nodes.push(itemAt(nodes, i).clone().addScaledVector(dir, p.step));
       parent.push(i);
     }
     if (nodes.length - roots >= p.maxSegments) break;
@@ -132,23 +133,27 @@ export function colonize(p: ColonyParams): Colony {
 /** Chains of single-parent nodes, each from the node it grew out of to the next fork or tip. */
 function chainsOf(colony: Colony) {
   const children = colony.nodes.map(() => [] as number[]);
-  colony.parent.forEach((p, i) => p >= 0 && children[p]!.push(i));
+  colony.parent.forEach((p, i) => p >= 0 && itemAt(children, p).push(i));
   // Tips below each node, so a limb is as thick as the number of tips it carries.
   const tips = colony.nodes.map(() => 0);
   for (let i = colony.nodes.length - 1; i >= 0; i--) {
-    if (colony.parent[i]! < 0 && children[i]!.length === 0) continue;
-    if (children[i]!.length === 0) tips[i] = 1;
-    if (colony.parent[i]! >= 0) tips[colony.parent[i]!] = tips[colony.parent[i]!]! + tips[i]!;
+    const parent = itemAt(colony.parent, i);
+    const leaf = itemAt(children, i).length === 0;
+    if (parent < 0 && leaf) continue;
+    if (leaf) tips[i] = 1;
+    if (parent >= 0) tips[parent] = itemAt(tips, parent) + itemAt(tips, i);
   }
   const chains: { path: number[]; depth: number }[] = [];
   const walk = (start: number, depth: number) => {
-    for (const first of children[start]!) {
+    for (const first of itemAt(children, start)) {
       const path = [start, first];
-      while (children[path[path.length - 1]!]!.length === 1)
-        path.push(children[path[path.length - 1]!]![0]!);
+      let end = first;
+      while (itemAt(children, end).length === 1) {
+        end = itemAt(itemAt(children, end), 0);
+        path.push(end);
+      }
       chains.push({ path, depth });
-      const end = path[path.length - 1]!;
-      if (children[end]!.length > 1) walk(end, depth + 1);
+      if (itemAt(children, end).length > 1) walk(end, depth + 1);
     }
   };
   for (let r = 0; r < colony.roots; r++) walk(r, 0);
@@ -156,44 +161,20 @@ function chainsOf(colony: Colony) {
   return { chains, tips, children, total };
 }
 
-/**
- * The glass tree on a flower's stem: a space-colonized crown of twigs in a hemisphere over the deck the flower stands on, each
- * limb a glass tube (the stem's own shader) as thick as the tips it carries, every tip ending in a bud: the flower's own
- * five-petal bloom in miniature. Twigs grow before the buds open. Bounded by `limit` whatever the history; returns what it grew.
- */
-export function growTwigs(
+/** The limbs: each chain of nodes a glass tube as thick as the tips it carries, in the order the tree grew. */
+function twigTubes(
   b: MeshBuilder,
   bloom: Bloom,
-  stem: THREE.Vector3[],
-  limit: TwigLimit,
-  low: boolean,
-): { segments: number; buds: number } {
-  const { genome: g, size } = bloom;
-  if (g.twigs === 0 || limit.segments < 1) return { segments: 0, buds: 0 };
-  const step = size * 0.24;
-  const colony = colonize({
-    seed: g.code,
-    roots: stem.slice(2, 7).map((v) => v.toArray()),
-    envelope: {
-      centre: stem[3]!.toArray(),
-      radius: size * 1.5,
-      avoid: bloom.origin.toArray(),
-      avoidRadius: size * 1.05,
-    },
-    attractors: Math.round(ATTRACTORS_PER_TWIG * g.twigs * (low ? 0.6 : 1)),
-    step,
-    influence: step * 5,
-    kill: step * 1.2,
-    maxSegments: Math.min(limit.segments, SEGMENTS_PER_TWIG * g.twigs),
-  });
-  const { chains, tips, children, total } = chainsOf(colony);
-  const nodes = colony.nodes.map((n) => new THREE.Vector3(...n));
+  nodes: readonly THREE.Vector3[],
+  { chains, tips, total }: ReturnType<typeof chainsOf>,
+) {
+  const { size } = bloom;
   const colorA = bloom.base.clone().lerp(new THREE.Color('#ffffff'), 0.3);
   const thick = (node: number) =>
-    size * (0.008 + 0.016 * Math.sqrt(Math.max(1, tips[node]!) / Math.max(1, total)));
+    size * (0.008 + 0.016 * Math.sqrt(Math.max(1, itemAt(tips, node)) / Math.max(1, total)));
   for (const { path, depth } of chains) {
     const style: Style = {
-      hinge: nodes[path[0]!]!,
+      hinge: itemAt(nodes, itemAt(path, 0)),
       axis: new THREE.Vector3(1, 0, 0),
       swing: 0,
       order: Math.min(0.45, 0.05 + 0.08 * depth),
@@ -205,26 +186,39 @@ export function growTwigs(
       glass: 0,
       sway: size * 0.1,
     };
-    const from = thick(path[0]!);
-    const to = thick(path[path.length - 1]!);
+    const from = thick(itemAt(path, 0));
+    const to = thick(lastOf(path));
     b.tube(
-      path.map((i) => nodes[i]!),
+      path.map((i) => itemAt(nodes, i)),
       (t) => from + (to - from) * t,
       3,
       style,
     );
   }
-  // The farthest tips from the stem carry the buds: that is where the tree reaches out.
+}
+
+/** The farthest tips from the stem carry the buds: that is where the tree reaches out. Returns how many it opened. */
+function twigBuds(
+  b: MeshBuilder,
+  bloom: Bloom,
+  colony: Colony,
+  nodes: readonly THREE.Vector3[],
+  children: readonly number[][],
+  { crown, buds, low }: { crown: THREE.Vector3; buds: number; low: boolean },
+): number {
+  const { genome: g, size } = bloom;
   const tipNodes = nodes
     .map((_, i) => i)
-    .filter((i) => i >= colony.roots && children[i]!.length === 0)
-    .sort((a, c) => nodes[c]!.distanceTo(stem[3]!) - nodes[a]!.distanceTo(stem[3]!) || a - c)
-    .slice(0, limit.buds);
+    .filter((i) => i >= colony.roots && itemAt(children, i).length === 0)
+    .sort(
+      (a, c) => itemAt(nodes, c).distanceTo(crown) - itemAt(nodes, a).distanceTo(crown) || a - c,
+    )
+    .slice(0, buds);
   for (const i of tipNodes) {
-    const tip = nodes[i]!;
+    const tip = itemAt(nodes, i);
     const axis = tip
       .clone()
-      .sub(nodes[colony.parent[i]!]!)
+      .sub(itemAt(nodes, itemAt(colony.parent, i)))
       .normalize()
       .addScaledVector(up, 0.6)
       .normalize();
@@ -246,5 +240,43 @@ export function growTwigs(
       { low, bud: true },
     );
   }
-  return { segments: colony.nodes.length - colony.roots, buds: tipNodes.length };
+  return tipNodes.length;
+}
+
+/**
+ * The glass tree on a flower's stem: a space-colonized crown of twigs in a hemisphere over the deck the flower stands on, each
+ * limb a glass tube (the stem's own shader) as thick as the tips it carries, every tip ending in a bud: the flower's own
+ * five-petal bloom in miniature. Twigs grow before the buds open. Bounded by `limit` whatever the history; returns what it grew.
+ */
+export function growTwigs(
+  b: MeshBuilder,
+  bloom: Bloom,
+  stem: THREE.Vector3[],
+  limit: TwigLimit,
+  low: boolean,
+): { segments: number; buds: number } {
+  const { genome: g, size } = bloom;
+  if (g.twigs === 0 || limit.segments < 1) return { segments: 0, buds: 0 };
+  const step = size * 0.24;
+  const crown = itemAt(stem, 3);
+  const colony = colonize({
+    seed: g.code,
+    roots: stem.slice(2, 7).map((v) => v.toArray()),
+    envelope: {
+      centre: crown.toArray(),
+      radius: size * 1.5,
+      avoid: bloom.origin.toArray(),
+      avoidRadius: size * 1.05,
+    },
+    attractors: Math.round(ATTRACTORS_PER_TWIG * g.twigs * (low ? 0.6 : 1)),
+    step,
+    influence: step * 5,
+    kill: step * 1.2,
+    maxSegments: Math.min(limit.segments, SEGMENTS_PER_TWIG * g.twigs),
+  });
+  const chains = chainsOf(colony);
+  const nodes = colony.nodes.map((n) => new THREE.Vector3(...n));
+  twigTubes(b, bloom, nodes, chains);
+  const buds = twigBuds(b, bloom, colony, nodes, chains.children, { crown, buds: limit.buds, low });
+  return { segments: colony.nodes.length - colony.roots, buds };
 }

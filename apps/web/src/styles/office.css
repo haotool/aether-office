@@ -56,8 +56,8 @@
   color: var(--dim);
 }
 .dot {
-  width: 5px; /* token-lint: geometry */
-  height: 5px; /* token-lint: geometry */
+  width: var(--space-6);
+  height: var(--space-6);
   display: inline-block;
   border-radius: 50%;
   flex-shrink: 0;
@@ -191,7 +191,7 @@
   border: 1px solid var(--glass-accent-line);
   border-radius: var(--r-xs);
   padding: var(--space-2) var(--space-6);
-  text-shadow: 0 0 8px var(--glass-accent-glow); /* token-lint: glow */
+  text-shadow: var(--glow-8) var(--glass-accent-glow);
   cursor: pointer;
 }
 @media (hover: hover) {

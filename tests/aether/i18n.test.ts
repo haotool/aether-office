@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { en, zh } from '../../apps/web/src/i18n.js';
+import { en } from '../../apps/web/src/locales/en.js';
+import { zh } from '../../apps/web/src/locales/zh.js';
 
 const CJK = /[㐀-鿿豈-﫿]/;
 const PLACEHOLDER = /\b(TODO|FIXME|lorem|ipsum|placeholder|xxx|tbd)\b|待補|佔位/i;

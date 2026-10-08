@@ -57,15 +57,17 @@ export function planCarriers(
 /** Position `distance` metres along a polyline, clamped to its end. */
 export function positionAt(points: readonly Point[], distance: number): Point {
   let remaining = Math.max(0, distance);
+  let a = points[0];
   for (let i = 1; i < points.length; i++) {
-    const a = points[i - 1]!;
-    const b = points[i]!;
+    const b = points[i];
+    if (!a || !b) break;
     const segment = Math.hypot(b.x - a.x, b.z - a.z);
     if (remaining <= segment && segment > 0) {
       const t = remaining / segment;
       return { x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t };
     }
     remaining -= segment;
+    a = b;
   }
   return points[points.length - 1] ?? { x: 0, z: 0 };
 }

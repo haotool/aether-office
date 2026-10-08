@@ -29,7 +29,7 @@
   font-size: var(--fs-heading);
   letter-spacing: 3.5px;
   font-weight: 650;
-  line-height: 1; /* a wordmark, not running text token-lint: glyph */
+  line-height: var(--lh-none); /* a wordmark, not running text */
 }
 .brand small {
   display: block;
@@ -40,7 +40,7 @@
   color: var(--muted);
 }
 .top-divider {
-  height: 28px; /* a hairline between the brand and the picker, not a control token-lint: geometry */
+  height: var(--icon-xl); /* a hairline between the brand and the picker, not a control */
   width: 1px;
   background: var(--line);
 }
@@ -138,7 +138,7 @@
 .nav-link.active {
   background: color-mix(in srgb, var(--mint) 11%, transparent);
   color: var(--mint);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mint) 38%, transparent); /* not an outline: the focus ring stays the token's token-lint: ring */
+  box-shadow: var(--ring-inset) color-mix(in srgb, var(--mint) 38%, transparent); /* not an outline: the focus ring stays the token's */
 }
 .nav-link small {
   margin-left: auto;
@@ -168,8 +168,8 @@
   font-size: var(--fs-label);
 }
 .connection > span {
-  width: 5px; /* a status dot token-lint: geometry */
-  height: 5px; /* token-lint: geometry */
+  width: var(--space-6); /* a status dot */
+  height: var(--space-6);
   border-radius: 50%;
   background: var(--mint);
 }

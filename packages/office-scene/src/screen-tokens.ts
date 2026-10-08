@@ -1,4 +1,5 @@
-import { pick, type Rng } from './random.js';
+import { pick } from './pick.js';
+import { type Rng } from './seeded.js';
 import { VOCAB } from './screen-lang.js';
 
 /** Tokens of generated code: what a code line is made of, and the casing helpers that name things. */
@@ -33,7 +34,7 @@ export function wordsOf(file: string): string[] {
   return words.length ? words.slice(0, 3) : ['main'];
 }
 const cap = (w: string) => w.charAt(0).toUpperCase() + w.slice(1);
-export const camel = (ws: readonly string[]) => ws[0]! + ws.slice(1).map(cap).join('');
+export const camel = (ws: readonly string[]) => (ws[0] ?? '') + ws.slice(1).map(cap).join('');
 export const pascal = (ws: readonly string[]) => ws.map(cap).join('');
 export const snake = (ws: readonly string[]) => ws.join('_');
 

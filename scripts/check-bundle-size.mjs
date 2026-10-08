@@ -1,11 +1,11 @@
 // Bundle-size budget for the web build: gzip size of the JavaScript the browser downloads. Run after `pnpm build`.
-// Budgets sit about 20% above today's sizes, so a new heavy dependency or an accidental eager import fails here.
+// Budgets sit about 6% above today's sizes (823 KB total, 374 KB for the 3D engine chunk), so a new heavy dependency or an accidental eager import fails here.
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 
-const TOTAL_BUDGET_KB = 1000;
-const CHUNK_BUDGET_KB = 450;
+const TOTAL_BUDGET_KB = 870;
+const CHUNK_BUDGET_KB = 400;
 const directory = 'apps/web/dist/assets';
 const sizes = readdirSync(directory)
   .filter((name) => name.endsWith('.js'))

@@ -1,4 +1,5 @@
-import { weighted, type Rng } from './random.js';
+import { weighted } from './pick.js';
+import { type Rng } from './seeded.js';
 
 /** The languages a desk's code view can draw. The real file's extension decides; nothing else does. */
 export const LANGUAGES = [
@@ -48,7 +49,7 @@ const EXTENSIONS: Record<string, LangId> = {
 /** The language of a real file name, or null when its extension is not one we draw (or it has none). */
 export function languageOf(file: string | null): LangId | null {
   const ext = file?.split('.').pop()?.toLowerCase();
-  return ext && file!.includes('.') ? (EXTENSIONS[ext] ?? null) : null;
+  return ext && file?.includes('.') ? (EXTENSIONS[ext] ?? null) : null;
 }
 
 /** What a role writes when the real file says nothing (a call without a target): weights, not facts. */

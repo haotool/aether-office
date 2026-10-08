@@ -49,9 +49,27 @@ function useNotice() {
   return [notice, setNotice] as const;
 }
 
+/** Brings the group the address names into view (a link, the back button); a phone's page starts at its top. */
+function useScrollToSection(requested: SectionId | null, phone: boolean, searching: boolean) {
+  const reducedMotion = usePreferences((s) => s.reducedMotion);
+  const scrollTo = useCallback(
+    (id: SectionId) =>
+      document
+        .getElementById(`s-${id}`)
+        ?.scrollIntoView({ block: 'start', behavior: reducedMotion ? 'auto' : 'smooth' }),
+    [reducedMotion],
+  );
+  // An address that names a group (a link, the back button) brings it into view; a phone's page starts at its top.
+  const bring = useLatest({ scrollTo, searching });
+  useEffect(() => {
+    if (phone) document.querySelector('.main-content')?.scrollTo(0, 0);
+    else if (requested && !bring.current.searching) bring.current.scrollTo(requested); // only a change of address moves the page
+  }, [requested, phone, bring]);
+  return scrollTo;
+}
+
 /** The Settings page's state: the search, which groups show, the marked one, and navigation between them. */
 export function useSettingsPage(projectId: string) {
-  const reducedMotion = usePreferences((s) => s.reducedMotion);
   const phone = usePhoneAny();
   const location = useLocation();
   const navigate = useNavigate();
@@ -69,19 +87,7 @@ export function useSettingsPage(projectId: string) {
     withMatches.map((s) => s.id),
     !phone && !searching,
   );
-  const scrollTo = useCallback(
-    (id: SectionId) =>
-      document
-        .getElementById(`s-${id}`)
-        ?.scrollIntoView({ block: 'start', behavior: reducedMotion ? 'auto' : 'smooth' }),
-    [reducedMotion],
-  );
-  // An address that names a group (a link, the back button) brings it into view; a phone's page starts at its top.
-  const bring = useLatest({ scrollTo, searching });
-  useEffect(() => {
-    if (phone) document.querySelector('.main-content')?.scrollTo(0, 0);
-    else if (requested && !bring.current.searching) bring.current.scrollTo(requested); // only a change of address moves the page
-  }, [requested, phone, bring]);
+  const scrollTo = useScrollToSection(requested, phone, searching);
   return {
     query,
     setQuery,

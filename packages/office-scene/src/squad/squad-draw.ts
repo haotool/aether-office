@@ -42,58 +42,63 @@ export type DrawSquad = {
 /** Heads shown as animated characters per squad, by tier: the rest are silhouettes (the spec's character budget). */
 export const CHARACTER_BUDGET = { high: 8, balanced: 6, low: 4 } as const;
 
-export function drawSquads(
-  frame: {
-    zones: readonly PlacedZone[];
-    seats: readonly PodSeat[];
-    members: readonly SquadMemberState[];
-  },
-  base: Layout,
+type SquadFrame = {
+  zones: readonly PlacedZone[];
+  seats: readonly PodSeat[];
+  members: readonly SquadMemberState[];
+};
+
+/** One zone: its pods (a member past the character budget is a silhouette), the chair and desk it faces and who overflows. */
+function drawZone(
+  frame: SquadFrame,
+  zone: PlacedZone,
+  desk: Layout['objects'][number],
   budget: number,
-): DrawSquad[] {
+): DrawSquad {
+  const seated = new Set(frame.seats.map((s) => s.member));
+  const held = new Map(
+    frame.members
+      .filter((m) => seated.has(m.id))
+      .map((m) => [m.seat + ':' + m.supervisor, m] as const),
+  );
+  const pods = zone.pods.map((pod) => {
+    const m = held.get(pod.index + ':' + zone.supervisor);
+    return {
+      x: pod.x,
+      z: pod.z,
+      member: m?.id ?? null,
+      silhouette: !!m && m.seat >= budget,
+      since: m?.since ?? 0,
+    };
+  });
+  const yaw = (desk.rotation * Math.PI) / 2;
+  return {
+    supervisor: zone.supervisor,
+    floor: zone.rect.floor,
+    x: zone.rect.x,
+    z: zone.rect.z,
+    width: zone.rect.width,
+    depth: zone.rect.depth,
+    pods,
+    chairX: desk.x + SEAT_DEPTH * Math.sin(yaw),
+    chairZ: desk.z + SEAT_DEPTH * Math.cos(yaw),
+    deskX: desk.x,
+    deskZ: desk.z,
+    deskRotation: desk.rotation,
+    side: handoverSide(desk, zone.rect),
+    accent: departmentAt(zone.rect.floor).accent,
+    overflow: frame.members.filter(
+      (m) =>
+        m.supervisor === zone.supervisor &&
+        m.phase !== 'leaving' &&
+        (m.seat >= budget || !frame.seats.some((s) => s.member === m.id)),
+    ).length,
+  };
+}
+
+export function drawSquads(frame: SquadFrame, base: Layout, budget: number): DrawSquad[] {
   return frame.zones.flatMap((zone) => {
     const desk = base.objects.find((o) => o.type === 'desk' && o.agentId === zone.supervisor);
-    if (!desk) return [];
-    const seated = new Set(frame.seats.map((s) => s.member));
-    const held = new Map(
-      frame.members
-        .filter((m) => seated.has(m.id))
-        .map((m) => [m.seat + ':' + m.supervisor, m] as const),
-    );
-    const pods = zone.pods.map((pod) => {
-      const m = held.get(pod.index + ':' + zone.supervisor);
-      return {
-        x: pod.x,
-        z: pod.z,
-        member: m?.id ?? null,
-        silhouette: !!m && m.seat >= budget,
-        since: m?.since ?? 0,
-      };
-    });
-    const yaw = (desk.rotation * Math.PI) / 2;
-    return [
-      {
-        supervisor: zone.supervisor,
-        floor: zone.rect.floor,
-        x: zone.rect.x,
-        z: zone.rect.z,
-        width: zone.rect.width,
-        depth: zone.rect.depth,
-        pods,
-        chairX: desk.x + SEAT_DEPTH * Math.sin(yaw),
-        chairZ: desk.z + SEAT_DEPTH * Math.cos(yaw),
-        deskX: desk.x,
-        deskZ: desk.z,
-        deskRotation: desk.rotation,
-        side: handoverSide(desk, zone.rect),
-        accent: departmentAt(zone.rect.floor).accent,
-        overflow: frame.members.filter(
-          (m) =>
-            m.supervisor === zone.supervisor &&
-            m.phase !== 'leaving' &&
-            (m.seat >= budget || !frame.seats.some((s) => s.member === m.id)),
-        ).length,
-      },
-    ];
+    return desk ? [drawZone(frame, zone, desk, budget)] : [];
   });
 }

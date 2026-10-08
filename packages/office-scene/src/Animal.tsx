@@ -34,20 +34,7 @@ const CALM: BehaviorScene = {
   quietMinutes: null,
 };
 
-export function Animal({
-  agent,
-  selected,
-  ring = selected ? 'selected' : null,
-  emote,
-  reducedMotion,
-  quality,
-  apparition,
-  override,
-  pace = 1,
-  light = false,
-  behavior = CALM,
-  onError,
-}: {
+export type AnimalProps = {
   agent: Agent;
   apparition?: Apparition | undefined;
   /** A clip the member is held to whatever it is doing: stand_up and wave play once, the rest loop (a member leaving). */
@@ -64,7 +51,16 @@ export function Animal({
   reducedMotion: boolean;
   quality: 'low' | 'balanced' | 'high';
   onError: () => void;
-}) {
+};
+
+/** Where each apparition stands: a ghost floats just over its seat, a jiangshi stands behind the chair, a sleeping rabbit sits where the member does. */
+const offsetOf = (apparition: Apparition | undefined): [number, number, number] =>
+  apparition === 'ghost' ? [0, 0.18, 0] : apparition === 'zombie' ? [0, 0, 0.95] : [0, 0, 0];
+
+/** The character's model for its species and level of detail, with its one-shots, clip and mixer. */
+function useAnimalRig(props: AnimalProps, ring: Ring | null) {
+  const { agent, selected, emote, reducedMotion, quality, apparition, override, onError } = props;
+  const { light = false, behavior = CALM } = props;
   const lod = quality === 'low' ? 2 : ring ? (light ? 1 : 0) : light ? 2 : 1;
   const species = apparition ? APPARITION_MODEL[apparition] : agent.species;
   const url = `/assets/animals/${species}-lod${lod}.glb`;
@@ -76,6 +72,7 @@ export function Animal({
   const clip = apparition
     ? APPARITION_CLIP[apparition]
     : (override ?? oneShot ?? BASE_CLIP[agent.activity]);
+  const shared = { reducedMotion, mixer, current, onError };
   useOneShots({
     agent,
     held,
@@ -87,28 +84,19 @@ export function Animal({
     setOneShot,
     behavior,
   });
-  useAnimalModel({ agent, url, species, light, setModel, setOneShot, mixer, current, onError });
-  useClipPlayer({
-    model,
-    url,
-    clip,
-    oneShot,
-    apparition,
-    override,
-    reducedMotion,
-    agentId: agent.id,
-    mixer,
-    current,
-    onError,
-  });
+  useAnimalModel({ agent, url, species, light, setModel, setOneShot, ...shared });
+  useClipPlayer({ model, url, clip, oneShot, apparition, override, agentId: agent.id, ...shared });
+  return { model, url, mixer };
+}
+
+export function Animal(props: AnimalProps) {
+  const { selected, reducedMotion, apparition, pace = 1 } = props;
+  const ring = props.ring === undefined ? (selected ? 'selected' : null) : props.ring;
+  const { model, url, mixer } = useAnimalRig(props, ring);
   const root = useRef<Group>(null);
   useMixerUpdates(mixer, root, { reducedMotion, selected, pace });
-  // Where each apparition stands: a ghost floats just over its seat, a jiangshi stands behind the chair, a sleeping
-  // rabbit sits where the member does.
-  const offset: [number, number, number] =
-    apparition === 'ghost' ? [0, 0.18, 0] : apparition === 'zombie' ? [0, 0, 0.95] : [0, 0, 0];
   return (
-    <group ref={root} position={offset}>
+    <group ref={root} position={offsetOf(apparition)}>
       <group rotation={[0, Math.PI, 0]}>
         {model?.url === url && <primitive object={model.scene} dispose={null} />}
         {ring && (

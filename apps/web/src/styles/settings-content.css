@@ -10,7 +10,7 @@
   height: var(--space-16);
   border-radius: var(--r-md);
   background: linear-gradient(90deg, var(--raised), var(--selected), var(--raised)) 0 0 / 200% 100%;
-  animation: sshimmer 1.4s linear infinite; /* token-lint: loop */
+  animation: sshimmer var(--dur-pulse) linear infinite;
 }
 .sskel span:last-child {
   width: 60%;

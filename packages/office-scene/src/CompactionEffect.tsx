@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import {
   BufferAttribute,
@@ -9,7 +9,7 @@ import {
   type PointsMaterial,
 } from 'three';
 import { COMPACTION_SECONDS, CONTEXT_COLOR, easeOut } from './context.js';
-import { seeded } from './random.js';
+import { seeded } from './seeded.js';
 import { context2d } from './canvas-2d.js';
 
 const PAPERS = 40;
@@ -32,6 +32,85 @@ function paperTexture(): CanvasTexture {
   return texture;
 }
 
+/** All the sheets as one Points draw, each tinted by the material and shaped by the paper sprite. */
+function PaperPoints(props: {
+  points: RefObject<Points | null>;
+  material: RefObject<PointsMaterial | null>;
+  map: CanvasTexture;
+  positions: Float32Array;
+}) {
+  return (
+    <points ref={props.points} frustumCulled={false}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[props.positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial
+        ref={props.material}
+        map={props.map}
+        size={0.3}
+        color="#f4fbff"
+        transparent
+        depthWrite={false}
+        toneMapped={false}
+      />
+    </points>
+  );
+}
+
+function GlowRing({ ring }: { ring: RefObject<Mesh | null> }) {
+  return (
+    <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[0.45, 0.5, 48]} />
+      <meshBasicMaterial
+        color={CONTEXT_COLOR.calm}
+        transparent
+        opacity={0}
+        depthWrite={false}
+        toneMapped={false}
+        side={2}
+      />
+    </mesh>
+  );
+}
+
+type Sheet = { x: number; y: number; z: number; delay: number };
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+
+/** Each sheet flies out along its direction, then is drawn into the cube (slow start, quick finish). */
+function flySheets(positions: Float32Array, sheets: readonly Sheet[], t: number) {
+  const gather = clamp01((t - BURST_END) / (GATHER_END - BURST_END));
+  const pull = gather * gather;
+  sheets.forEach((s, i) => {
+    const out = easeOut((t - s.delay) / (BURST_END - s.delay)) * RADIUS;
+    const r = out * (1 - pull);
+    positions[i * 3] = s.x * r;
+    positions[i * 3 + 1] = s.y * r * 0.8 + 0.1 * Math.sin(t * 5 + i) * (1 - pull);
+    positions[i * 3 + 2] = s.z * r;
+  });
+}
+
+/** The sheets shrink as they gather and fade once they are in. */
+function dimPaper(material: PointsMaterial, t: number) {
+  material.opacity = t < GATHER_END ? 0.95 : Math.max(0, 1 - (t - GATHER_END) * 6);
+  material.size = 0.3 * (1 - 0.7 * clamp01((t - BURST_END) / 0.7));
+}
+
+/** The cube grows with a small overshoot, turns, and fades by the end. */
+function turnCube(cube: Mesh, t: number) {
+  const grow = clamp01((t - (GATHER_END - 0.2)) / 0.25);
+  const fade = clamp01((t - CUBE_END) / (COMPACTION_SECONDS - CUBE_END));
+  const pop = easeOut(grow) * (1 + 0.25 * Math.sin(grow * Math.PI));
+  cube.scale.setScalar(Math.max(0.0001, pop * (1 - fade) * 0.17));
+  cube.rotation.set(t * 1.4, t * 2.1, 0);
+}
+
+/** The soft ring that spreads from the cube once the sheets are in. */
+function spreadRing(ring: Mesh, t: number) {
+  const k = clamp01((t - GATHER_END) / 0.8);
+  ring.scale.setScalar(0.1 + easeOut(k) * 1.9);
+  (ring.material as { opacity: number }).opacity = k > 0 && k < 1 ? 0.7 * (1 - k) : 0;
+}
+
 /**
  * The "tidying up" of a compaction, played once above the member's head over COMPACTION_SECONDS: a burst of paper
  * sheets flies out, is drawn into a small glowing cube, and a soft ring spreads from it. All sheets are one Points draw;
@@ -49,7 +128,7 @@ export function CompactionEffect({ position }: { position: [number, number, numb
   // Each sheet's direction and spin are fixed up front: the frame only moves them along it.
   const sheets = useMemo(() => {
     const random = seeded('compaction');
-    return Array.from({ length: PAPERS }, () => {
+    return Array.from({ length: PAPERS }, (): Sheet => {
       const a = random() * Math.PI * 2;
       const lift = random() * 0.8 - 0.1; // mostly up and out, a few sideways
       return { x: Math.cos(a), y: lift, z: Math.sin(a), delay: random() * 0.25 };
@@ -65,70 +144,24 @@ export function CompactionEffect({ position }: { position: [number, number, numb
       setDone(true);
       return;
     }
-    sheets.forEach((s, i) => {
-      const out = easeOut((t - s.delay) / (BURST_END - s.delay)) * RADIUS;
-      const gather = Math.min(1, Math.max(0, (t - BURST_END) / (GATHER_END - BURST_END)));
-      const pull = gather * gather; // slow start, quick finish into the cube
-      const r = out * (1 - pull);
-      positions[i * 3] = s.x * r;
-      positions[i * 3 + 1] = s.y * r * 0.8 + 0.1 * Math.sin(t * 5 + i) * (1 - pull);
-      positions[i * 3 + 2] = s.z * r;
-    });
-    if (points.current) {
+    flySheets(positions, sheets, t);
+    if (points.current)
       (points.current.geometry.getAttribute('position') as BufferAttribute).needsUpdate = true;
-    }
-    const material = paperMaterial.current;
-    if (material) {
-      material.opacity = t < GATHER_END ? 0.95 : Math.max(0, 1 - (t - GATHER_END) * 6);
-      material.size = 0.3 * (1 - 0.7 * Math.min(1, Math.max(0, (t - BURST_END) / 0.7)));
-    }
-    if (cube.current) {
-      const grow = Math.min(1, Math.max(0, (t - (GATHER_END - 0.2)) / 0.25));
-      const fade = Math.min(1, Math.max(0, (t - CUBE_END) / (COMPACTION_SECONDS - CUBE_END)));
-      const pop = easeOut(grow) * (1 + 0.25 * Math.sin(grow * Math.PI)); // a small overshoot
-      cube.current.scale.setScalar(Math.max(0.0001, pop * (1 - fade) * 0.17));
-      cube.current.rotation.set(t * 1.4, t * 2.1, 0);
-    }
-    if (ring.current) {
-      const k = Math.min(1, Math.max(0, (t - GATHER_END) / 0.8));
-      ring.current.scale.setScalar(0.1 + easeOut(k) * 1.9);
-      (ring.current.material as { opacity: number }).opacity = k > 0 && k < 1 ? 0.7 * (1 - k) : 0;
-    }
+    if (paperMaterial.current) dimPaper(paperMaterial.current, t);
+    if (cube.current) turnCube(cube.current, t);
+    if (ring.current) spreadRing(ring.current, t);
     state.invalidate();
   });
 
   if (done) return null;
   return (
     <group position={position}>
-      <points ref={points} frustumCulled={false}>
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-        </bufferGeometry>
-        <pointsMaterial
-          ref={paperMaterial}
-          map={paper}
-          size={0.3}
-          color="#f4fbff"
-          transparent
-          depthWrite={false}
-          toneMapped={false}
-        />
-      </points>
+      <PaperPoints points={points} material={paperMaterial} map={paper} positions={positions} />
       <mesh ref={cube} scale={0.0001}>
         <boxGeometry args={[1, 1, 1]} />
         <meshBasicMaterial color={CONTEXT_COLOR.calm} toneMapped={false} />
       </mesh>
-      <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.45, 0.5, 48]} />
-        <meshBasicMaterial
-          color={CONTEXT_COLOR.calm}
-          transparent
-          opacity={0}
-          depthWrite={false}
-          toneMapped={false}
-          side={2}
-        />
-      </mesh>
+      <GlowRing ring={ring} />
     </group>
   );
 }

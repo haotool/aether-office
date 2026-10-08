@@ -88,9 +88,14 @@ The file list is documented at the top of `index.css`.
 
 ## Components
 
-Shared pieces live in `apps/web/src/ui.tsx`: `Modal`, `Sheet`, `Fold`, `Hint`, `Clamp`, `Field`, `Badge`, `Empty`,
+Shared pieces live in `apps/web/src/ui/` (one module each: `Modal.tsx` holds `Modal` and `Sheet`, `Disclosure.tsx` holds `Fold`, `Hint` and `Clamp`, then `Field.tsx`, `Badge.tsx`, `Empty.tsx`, `PageHeading.tsx`, `whyNot.ts`, `useT.ts`): `Modal`, `Sheet`, `Fold`, `Hint`, `Clamp`, `Field`, `Badge`, `Empty`,
 `PageHeading`. A feature composes them instead of rebuilding a portal, a backdrop or a close button. Buttons are the
 classes `primary`, `secondary`, `icon-button` and `text-button` (the `u-btn` family, see Shared classes); a new variant is added beside them in `controls.css`.
+
+A control that is off says why: `{...whyNot(t, [canWrite, 'needOperator'], [!busy, 'whyBusy'])}` (`ui/whyNot.ts`) sets the first unmet
+reason as the control's `title` and as its `aria-describedby`, which names the text `ReasonDefs` (mounted once, in the application and
+on the login page) keeps in the page. A new reason is a locale key (both languages) added to `REASONS`. `e2e/disabled-reasons.spec.ts`
+walks the main pages as the owner and as a viewer and fails on a disabled control with no description.
 
 ## Responsive and touch rules
 
@@ -160,16 +165,20 @@ gate prints the rule and the file that rose.
 | `viewport-height`         | a `vh` unit (use `dvh` or `svh`)                                                               |
 | `media-breakpoint`        | an `@media` px value off the scale above and not in `MEDIA_EXCEPTIONS`                         |
 | `custom-property-literal` | a `--x: 12px` outside `tokens.css`                                                             |
-| `literal-duration`        | seconds or milliseconds in `transition` or `animation` (use `--dur-fast`, `--dur`, `--dur-slow`) |
-| `literal-shadow`          | a px value in `box-shadow` or `text-shadow` (use `--shadow-sm/md/lg/up`)                       |
+| `literal-duration`        | seconds or milliseconds in `transition` or `animation` (use `--dur-fast`, `--dur`, `--dur-slow`, or a loop or one-shot role such as `--dur-pulse`, `--dur-hold`) |
+| `literal-shadow`          | a px value in `box-shadow` or `text-shadow` (use `--shadow-sm/md/lg/up`, `--ring`, `--glow-*`)         |
 | `literal-line-height`     | a `line-height` that is not `var(--lh-*)`, `inherit` or `normal`                               |
 | `important`               | `!important`                                                                                   |
 
 `0`, `1px` hairlines, `%`, `auto` and a size from a token pass. **The escape hatch** is a comment on the declaration's own
 line, `/* token-lint: <reason> */`, and exempts that line: `geometry` (the size of a dot, a drawing, a plaque over the 3D
-scene or a panel's measure, never a control or bar height, which come from `--control-h-*`, `--bar-h`, `--target-touch`),
-`glow` and `ring` (a shadow that is a glow or a one-pixel ring), `loop` (an endless animation), `animation` (a one-off
-entrance or timer), `glyph` (a single-line glyph's `line-height: 1`) and `preference`. The reason is for the reader; a new hatch is a
+scene or a panel's measure, never a control or bar height, which come from `--control-h-*`, `--bar-h`, `--target-touch`) and
+`preference`, and a one-off ring, glow, shadow, loop or entrance with no sibling to share a token with (`ring`, `glow`,
+`shadow`, `loop`, `animation`, `glyph` reasons). A dot or a small icon takes a `--space-*` step for both sides, a hairline bar `--bar` and a larger icon `--icon-md` or `--icon-xl`; a ring, glow or edge highlight takes `--ring-inset`,
+`--glow-*` or `--edge-top` (the geometry only; the color is the call site's); an endless or one-off animation takes a `--dur-*`
+role (`--dur-pulse`, `--dur-breathe`, `--dur-hold`...); a single-line glyph takes `--lh-none`. The
+`escape-comments` rule of the scorecard budgets the hatch at 100 lines: a growing pile means values are being hidden
+rather than tokenised. The reason is for the reader; a new hatch is a
 review decision (`grep -r "token-lint:"` lists them all). `node scripts/check-design-tokens.mjs --list` prints every counted
 violation and `--update` lowers the baseline to today's counts (it refuses to raise it). The quality scorecard
 (`pnpm run quality -- --area ui`) reads the same rules and baseline, and `e2e/role-variance.spec.ts` writes
@@ -422,7 +431,7 @@ code is `packages/kernel/src/text-*.ts` (no `apps/*` imports): `neutralizeHtml`,
 | --- | --- | --- |
 | Conversation | Markdown body | `Markdown.tsx` over `parseMarkdown`, which neutralizes HTML again (defence in depth) |
 | Speech bubbles, feed reply, member bar, notifications | Plain or inline segments | `toInlineSegments`, `toPlainPreview` |
-| Name tag, member list, PiP captions, team chips | Short label (28 columns) | `shortLabel` via `labelOf` in `localSessions.ts`; the full title is the tooltip and accessible name |
+| Name tag, member list, PiP captions, team chips | Short label (28 columns) | `shortLabel` via `labelOf` in `session-names.ts`; the full title is the tooltip and accessible name |
 | Feed rows, live and attention lists | Row label (44 columns) | `rowLabelOf`; the full title is the `title` attribute |
 | Panel header, sessions list, search | Full clean title | `cleanTitle` on the server; the web normalizes an older server's title in `local-session-compat.ts` |
 | Desk screen header | Short label (40 columns) | `shortLabel` in `screensOf`, then the canvas's own pixel fit |
@@ -572,7 +581,7 @@ subjects and author names are redacted and bounded to 150 commits). Nothing is d
 ### The garden (flowers and glass trees on the crown)
 
 `flower-genome.ts` maps a commit hash to a **genome** deterministically (the same data always grows the same flower, a different
-one a visibly different flower); `flower-bloom.ts`, `flower-tree.ts` and `garden-geometry.ts` turn genomes into geometry;
+one a visibly different flower); `flower-petals.ts`, `flower-bloom.ts`, `flower-tree.ts` and `garden-geometry.ts` turn genomes into geometry;
 `garden-material.ts` and `Garden.tsx` draw and animate them.
 
 - **One flower per tier**, seeded by the tier's first commit: its stem leaves the braid at the tier's height and arcs out and up
@@ -891,7 +900,7 @@ not be run (the installed build does not match this Playwright), so nothing belo
 
 | Budget (phone, first load)                           | Now                                                                  |
 | ---------------------------------------------------- | -------------------------------------------------------------------- |
-| Page, panel and styles (no 3D office)                | 189 KB transferred; entry script 157 KB brotli / 187 KB gzip         |
+| Page and styles (no 3D office, no panel)             | 186 KB transferred (was 251 KB); entry script 83 KB brotli; plus 16 to 18 KB for the language in use and 18 KB for the panel on a desktop |
 | 3D office on top (engine + 8 characters at LOD 2)    | 2.3 MB: engine 266 KB brotli, characters 8 x about 260 KB gzip       |
 | The panel does not wait for the office               | Slow 4G: panel ready at 2.2 s with the office and at 2.2 s without   |
 | Interaction on the panel (sheet open, tap a row)     | 96 ms event with the 3D office off, 240 to 340 ms with it running (4x CPU) |
@@ -906,10 +915,46 @@ main-thread time over 3 s with the conversation open fell from 1.0 to 1.3 s to 0
 the sheet, 20 to 23 had been slow (16 ms or more, worst 54 ms) against 0 to 8 (worst 18 ms). Closing the sheet costs one catch-up
 frame (the event goes from 250 to 330 ms to 450 to 660 ms at 4x CPU), a trade made for the time spent reading.
 
+First-load JavaScript round (build and loading): the language tables are one chunk each and only the active one is fetched (the
+settings search is the one place that loads both); the conversation panel's body (`PanelBody.tsx`: feed, transcript, Markdown) is a
+lazy chunk fetched 1.5 s after load, so a first click on a row does not wait for it; zod is out of the entry again (the session
+limits are in `contracts/src/session-limits.ts`). The first-load total fell from 251 to 186 KB brotli (the `first-load` rule of the
+scorecard; `scripts/check-bundle-size.mjs` budgets are 870 KB total and 400 KB for the largest chunk). Measured on the phone
+profile (390 by 844, 4x CPU, cache off, median of 5) on Slow 4G (1.6 Mbps, 150 ms): first contentful paint 1.85 to 1.67 s, app
+ready 2.63 to 2.28 s; with no network limit the difference is below the run-to-run noise (about 300 ms).
+
 Tried and left out: `content-visibility: auto` on feed rows (150 sessions: opening the sheet takes 180 to 280 ms against 96 ms at 12,
 and the change measured no difference, because the cost is the first render, not layout), and a list library (not needed under
 about 150 rows). Texture compression (KTX2) is not worth a transcoder at 57 MB of GPU memory. The numbers come from
 Playwright with the Chrome DevTools protocol and the `?perf=1` probe; no measuring tool is added to the repository.
+
+### Field performance report (`?fieldperf=1`)
+
+The maintainer-facing JSON report (copy button, schema `aether-field-perf/1`) reuses `PerfProbe` / `perf.ts` for the `scene`
+block and collects rAF frame times, navigation paint entries and `/api` fetch counts in a lazy-loaded chunk. APIs below are
+what the report reads; anything missing is `null` and named in `unsupported` (sources: MDN, WebKit feature status, Chrome
+Platform Status, checked 2026-10-08).
+
+| API | Chrome Android | Safari iOS | In the report |
+| --- | --- | --- | --- |
+| `PerformanceNavigationTiming` | Yes | Yes | `startup.navigationType`, DCL / load |
+| `PerformancePaintTiming` (FCP) | Yes | Yes (16.4+) | `startup.firstContentfulPaintMs` |
+| `Largest Contentful Paint` | Yes | Yes (16.4+) | `startup.largestContentfulPaintMs` |
+| `PerformanceObserver` `longtask` | Yes | Limited / often absent | `longTasks` or `null` |
+| `PerformanceObserver` `long-animation-frame` (LoAF) | Yes (123+) | No | `loaf` or `null` |
+| `performance.memory` | Yes (Chromium) | No | `memory` or `null` |
+| `navigator.deviceMemory` | Yes | No | `device.deviceMemoryGb` or `null` |
+| `navigator.hardwareConcurrency` | Yes | Yes | `device.hardwareConcurrency` |
+| `Network Information` (`navigator.connection`) | Yes | No | `context.connection` or `null` |
+| `navigator.getBattery` / low-power mode | Deprecated / not low-power | No | `context.lowPowerMode` always `null` |
+| `Service Worker` `controller` / registrations | Yes (secure context) | Yes (secure context) | `context.serviceWorker` |
+| `matchMedia('(display-mode: …)')` | Yes | Yes (standalone via Add to Home Screen) | `context.displayMode` |
+
+When a ring buffer fills, the JSON marks `truncated: true` on the affected block and keeps only the newest retained
+entries in `entries` (or `deltasMs` for frames). Session totals (`sampleCount`, `count`, `droppedFrameCount`,
+`totalBlockingMs`, `totalDurationMs`, and similar) still reflect the full capture window; percentiles and maxima use the
+retained slice only (`percentilesFromRetainedWindow: true` on `frames`). Caps: `frames.maxRetainedSamples` (36 000),
+`longTasks.maxRetainedEntries` (600), `loaf.maxRetainedEntries` (3 600).
 
 ## Installable app (PWA)
 

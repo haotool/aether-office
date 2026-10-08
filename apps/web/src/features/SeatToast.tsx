@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import type { SeatToast as Toast } from './seat-move.js';
 
 /** A line over the scene after a seat was saved: what happened and, while it can be taken back, the way to do so. */

@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronUp, Focus, X } from 'lucide-react';
-import { Badge, useT } from '../ui.js';
+import { Badge } from '../ui/Badge.js';
+import { useT } from '../ui/useT.js';
 import { Avatar } from './Avatar.js';
 import { FEED_AVATAR_STATE } from './feed-avatar.js';
 import {
@@ -114,6 +115,33 @@ function FeedPeek({
   );
 }
 
+type SheetBodyProps = Omit<PanelProps, 'trailing'>;
+
+/** The collapsed sheet: the permission peek, and the chosen member's line or the feed's chips. */
+function PeekView({
+  onHeight,
+  ...props
+}: SheetBodyProps & { onHeight: (height: SheetHeight) => void }) {
+  const { agent, feed } = props;
+  const item = agent ? feedItems(feed).find((i) => i.agent.id === agent.id) : undefined;
+  return (
+    <>
+      <PermissionPeek sessionKey={item?.key} />
+      {agent ? (
+        <MemberPeek
+          agent={agent}
+          item={item}
+          onOpen={() => onHeight('full')}
+          onFocus={props.onFocus}
+          onClose={props.onBack}
+        />
+      ) : (
+        <FeedPeek feed={feed} onChip={props.onOpen} onOpen={() => onHeight('half')} />
+      )}
+    </>
+  );
+}
+
 /** The panel on a phone: a sheet over the tab bar at one of three heights. */
 export function SessionSheet({
   height,
@@ -124,26 +152,7 @@ export function SessionSheet({
   onHeight: (height: SheetHeight) => void;
 }) {
   const t = useT();
-  const { agent, feed } = props;
-  if (height === 'peek') {
-    const item = agent ? feedItems(feed).find((i) => i.agent.id === agent.id) : undefined;
-    return (
-      <>
-        <PermissionPeek sessionKey={item?.key} />
-        {agent ? (
-          <MemberPeek
-            agent={agent}
-            item={item}
-            onOpen={() => onHeight('full')}
-            onFocus={props.onFocus}
-            onClose={props.onBack}
-          />
-        ) : (
-          <FeedPeek feed={feed} onChip={props.onOpen} onOpen={() => onHeight('half')} />
-        )}
-      </>
-    );
-  }
+  if (height === 'peek') return <PeekView {...props} onHeight={onHeight} />;
   return (
     <section className={`session-sheet ${height}`} aria-label={t('panelTitle')}>
       <PanelBody

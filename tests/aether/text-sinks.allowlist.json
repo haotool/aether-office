@@ -51,7 +51,7 @@
     "top.reply": "feed-reply",
     "top?.reply": "feed-reply"
   },
-  "apps/web/src/features/Sessions.tsx": {
+  "apps/web/src/features/SessionsTable.tsx": {
     "s.title": "session-title"
   },
   "apps/web/src/features/StopSession.tsx": {

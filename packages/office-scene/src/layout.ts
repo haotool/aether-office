@@ -130,6 +130,35 @@ const PLANTS: readonly (readonly [number, number])[] = [
   [10, -14],
 ];
 const MIN_DESKS = [12, 8, 8, 8, 8]; // a populated look even on a quiet floor; the ground floor keeps its original twelve
+type LayoutObject = Layout['objects'][number];
+
+/** One floor's desks (`here[i]` is the member at desk i, a hole is a free desk) with its racks, sofas and plants. */
+function furnishFloor(floor: number, here: readonly Agent[]): LayoutObject[] {
+  const objects: LayoutObject[] = [];
+  const place = (
+    id: string,
+    type: Exclude<LayoutObject['type'], 'squad'>,
+    x: number,
+    z: number,
+    agentId: string | null = null,
+  ): LayoutObject => ({ id, type, x, z, rotation: 0, agentId, floor });
+  const desks = Math.max(MIN_DESKS[floor] ?? 8, here.length);
+  for (let i = 0; i < desks; i++) {
+    const [x, z] = seatAt(i);
+    objects.push(
+      place(floor === 0 ? `desk-${i}` : `desk-f${floor}-${i}`, 'desk', x, z, here[i]?.id ?? null),
+    );
+  }
+  const tag = floor === 0 ? '' : `f${floor}-`;
+  for (const x of floor === 1 || floor === 3 || floor === 0 ? [-22, -18, -14] : [])
+    objects.push(place(`rack-${tag}${x}`, 'rack', x, -13));
+  if (floor === 0 || floor === 4)
+    for (const x of [-21, -16]) objects.push(place(`sofa-${tag}${x}`, 'sofa', x, 12));
+  for (const [i, [x, z]] of PLANTS.entries())
+    objects.push(place(`plant-${tag}${i}`, 'plant', x, z));
+  return objects;
+}
+
 /**
  * One layout for the whole building. `floorOf` says which floor an agent works on (default: the ground floor); the
  * ground-floor ids stay `desk-<n>` so layouts saved before floors existed keep meaning the same thing. `seats` (see
@@ -140,7 +169,6 @@ export function defaultLayout(
   floorOf: (agent: Agent) => number = () => 0,
   seats: ReadonlyMap<string, Seat> = new Map(),
 ): Layout {
-  const objects: Layout['objects'] = [];
   // A floor holds FLOOR_CAPACITY desks; the members beyond it take the next floor with a free desk. `onFloor[f]` is
   // indexed by slot and has holes where a desk is free.
   const onFloor: Agent[][] = Array.from({ length: FLOORS }, () => []);
@@ -150,53 +178,6 @@ export function defaultLayout(
     const column = seat ? onFloor[seat[0]] : undefined;
     if (seat && column) column[seat[1]] = agent;
   }
-  for (let floor = 0; floor < FLOORS; floor++) {
-    const here = onFloor[floor] ?? [];
-    const desks = Math.max(MIN_DESKS[floor] ?? 8, here.length);
-    for (let i = 0; i < desks; i++) {
-      const [x, z] = seatAt(i);
-      objects.push({
-        id: floor === 0 ? `desk-${i}` : `desk-f${floor}-${i}`,
-        type: 'desk',
-        x,
-        z,
-        rotation: 0,
-        agentId: here[i]?.id ?? null,
-        floor,
-      });
-    }
-    const tag = floor === 0 ? '' : `f${floor}-`;
-    for (const x of floor === 1 || floor === 3 || floor === 0 ? [-22, -18, -14] : [])
-      objects.push({
-        id: `rack-${tag}${x}`,
-        type: 'rack',
-        x,
-        z: -13,
-        rotation: 0,
-        agentId: null,
-        floor,
-      });
-    if (floor === 0 || floor === 4)
-      for (const x of [-21, -16])
-        objects.push({
-          id: `sofa-${tag}${x}`,
-          type: 'sofa',
-          x,
-          z: 12,
-          rotation: 0,
-          agentId: null,
-          floor,
-        });
-    for (const [i, [x, z]] of PLANTS.entries())
-      objects.push({
-        id: `plant-${tag}${i}`,
-        type: 'plant',
-        x,
-        z,
-        rotation: 0,
-        agentId: null,
-        floor,
-      });
-  }
+  const objects = onFloor.flatMap((here, floor) => furnishFloor(floor, here));
   return { schemaVersion: 1, objects, zones: zones.map((z) => ({ id: z.id, name: z.zh })) };
 }

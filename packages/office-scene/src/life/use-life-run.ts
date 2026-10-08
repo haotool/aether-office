@@ -29,13 +29,9 @@ type LifeScene = {
   invalidate: () => void;
 };
 
-/**
- * Runs the office's moments: new signals go to the scheduler, which decides what starts; each started effect is announced
- * (once) and asks for its gesture; settings that no longer allow an effect remove it at once; a contact sheet's preview
- * is held at one moment. Returns what is on show: the live effects, a preview's frozen ones, when a loop began.
- */
-export function useLifeRun(scene: LifeScene) {
-  const { input, seats, env, invalidate } = scene;
+/** The scheduler's state and the helpers its effects share, as of the latest render. */
+function useLifeHelpers(scene: LifeScene) {
+  const { input, seats } = scene;
   const state = useRef(emptyLifeState);
   const held = useRef<readonly LifeCue[]>([]); // a contact sheet's frozen cues
   const loopedAt = useRef(Date.now()); // when a looped preview began
@@ -67,23 +63,44 @@ export function useLifeRun(scene: LifeScene) {
       gestures.current.add(timer);
     }
   };
+  useEffect(
+    () => () => {
+      gestures.current.forEach(clearTimeout);
+    },
+    [],
+  );
+  return { state, held, loopedAt, contextNow, announce, gesture };
+}
 
-  // New signals: the scheduler decides, the log announces, and a frame is asked for when each effect ends.
+type Helpers = ReturnType<typeof useLifeHelpers>;
+
+/** New signals: the scheduler decides, the log announces, and a frame is asked for when each effect ends. */
+function useSignalStarts(scene: LifeScene, h: Helpers) {
+  const { input, env, invalidate } = scene;
   const startFromSignals = useEffectEvent(() => {
     if (!input || input.preview) return;
-    const run = schedule(state.current, input.signals, Date.now(), input.prefs, contextNow(), env);
-    state.current = run.state;
+    const run = schedule(
+      h.state.current,
+      input.signals,
+      Date.now(),
+      input.prefs,
+      h.contextNow(),
+      env,
+    );
+    h.state.current = run.state;
     for (const cue of run.started) {
-      announce(cue);
-      gesture(cue);
+      h.announce(cue);
+      h.gesture(cue);
       window.setTimeout(invalidate, cue.durationMs + 60);
     }
     invalidate();
   });
   const signals = input?.signals;
   useEffect(() => startFromSignals(), [signals]);
+}
 
-  // Settings, tier or motion changed: what is on show and no longer allowed goes at once.
+/** Settings, tier or motion changed: what is on show and no longer allowed goes at once. */
+function usePrefsGate({ input, env, invalidate }: LifeScene, h: Helpers) {
   const prefs = input?.prefs;
   useEffect(() => {
     if (!prefs) return;
@@ -91,33 +108,42 @@ export function useLifeRun(scene: LifeScene) {
       const rule = ruleOf(cue.rule);
       return !!rule && ruleEnabled(rule, prefs, env);
     };
-    state.current = { ...state.current, live: state.current.live.filter(allowed) };
+    h.state.current = { ...h.state.current, live: h.state.current.live.filter(allowed) };
     invalidate();
-  }, [prefs, env, invalidate]);
+  }, [prefs, env, invalidate, h.state]);
+}
 
-  // A contact sheet frame: the named effects held at one moment on the first members.
+/** A contact sheet frame: the named effects held at one moment on the first members. */
+function usePreviewHold(scene: LifeScene, h: Helpers) {
+  const { input, seats, env, invalidate } = scene;
   const preview = input?.preview;
   const holdPreview = useEffectEvent(() => {
-    held.current = [];
+    h.held.current = [];
     if (!input || !preview) return;
-    held.current = previewCues(
+    h.held.current = previewCues(
       preview.effects,
       preview.t,
       preview.members,
       input.prefs,
-      contextNow(),
+      h.contextNow(),
       env,
     );
-    for (const cue of held.current) announce(cue);
+    for (const cue of h.held.current) h.announce(cue);
     invalidate();
   });
+  const prefs = input?.prefs;
   useEffect(() => holdPreview(), [preview, prefs, env, seats, invalidate]);
+}
 
-  useEffect(
-    () => () => {
-      gestures.current.forEach(clearTimeout);
-    },
-    [],
-  );
-  return { state, held, loopedAt };
+/**
+ * Runs the office's moments: new signals go to the scheduler, which decides what starts; each started effect is announced
+ * (once) and asks for its gesture; settings that no longer allow an effect remove it at once; a contact sheet's preview
+ * is held at one moment. Returns what is on show: the live effects, a preview's frozen ones, when a loop began.
+ */
+export function useLifeRun(scene: LifeScene) {
+  const helpers = useLifeHelpers(scene);
+  useSignalStarts(scene, helpers);
+  usePrefsGate(scene, helpers);
+  usePreviewHold(scene, helpers);
+  return { state: helpers.state, held: helpers.held, loopedAt: helpers.loopedAt };
 }

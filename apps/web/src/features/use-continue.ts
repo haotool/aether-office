@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AttributedSession } from '@aether/contracts';
-import { api, execute, type Session } from '../api.js';
-import { useT } from '../ui.js';
+import { api } from '../api.js';
+import { execute } from '../api-commands.js';
+import { type Session } from '../api-session.js';
+import { useT } from '../ui/useT.js';
 import { isOperator } from '../roles.js';
 
 type Profile = { name: string; root: string };

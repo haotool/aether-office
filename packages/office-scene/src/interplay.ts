@@ -89,10 +89,15 @@ export function threadPeers(
   if (!group || !here) return [];
   const distance = (s: Seat) => Math.hypot(s.x - here.x, s.z - here.z);
   return [...groupOf]
-    .filter(([id, g]) => g === group && id !== focus && seats.get(id)?.floor === here.floor)
-    .sort((a, b) => distance(seats.get(a[0])!) - distance(seats.get(b[0])!))
+    .flatMap(([id, g]) => {
+      const seat = seats.get(id);
+      return g === group && id !== focus && seat?.floor === here.floor
+        ? [{ id, away: distance(seat) }]
+        : [];
+    })
+    .sort((a, b) => a.away - b.away)
     .slice(0, limit)
-    .map(([id]) => id);
+    .map((near) => near.id);
 }
 
 /** 1 up close, down to 0 far away: faint lines and links dissolve with distance from the camera instead of cluttering. */

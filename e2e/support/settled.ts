@@ -40,3 +40,17 @@ export const frames = (page: Page, count: number) =>
       }),
     count,
   );
+
+/**
+ * A negative wait ("nothing happens") made deterministic: `check` runs at the start of a window of `count` animation
+ * frames, every `step` frames inside it and at its end, so something that shows up and goes again is caught too. 60 frames
+ * are about a second at most (a display never draws faster), and a loaded machine only stretches the window, never
+ * shortens it. It replaces a fixed sleep followed by one look.
+ */
+export async function throughout(page: Page, check: () => Promise<void>, count: number, step = 30) {
+  for (let left = count; left > 0; left -= step) {
+    await check();
+    await frames(page, Math.min(step, left));
+  }
+  await check();
+}

@@ -1,6 +1,9 @@
 import { useState } from 'react';
-import { execute } from '../api.js';
-import { Field, Modal, useT, Hint } from '../ui.js';
+import { execute } from '../api-commands.js';
+import { Field } from '../ui/Field.js';
+import { Modal } from '../ui/Modal.js';
+import { useT } from '../ui/useT.js';
+import { Hint } from '../ui/Disclosure.js';
 import type { Key } from '../i18n.js';
 
 const TEMPLATES = [
@@ -9,6 +12,33 @@ const TEMPLATES = [
   ['frontend_backend', 'wfFrontendBackend'],
   ['research_design_impl', 'wfResearchDesign'],
 ] as const satisfies readonly (readonly [string, Key])[];
+
+function WorkflowFields() {
+  const t = useT();
+  return (
+    <>
+      <Field label={t('workflowTemplate')}>
+        <select name="template">
+          {TEMPLATES.map(([value, label]) => (
+            <option key={value} value={value}>
+              {t(label)}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Hint>{t('workflowNote')}</Hint>
+      <Field label={t('workTitle')}>
+        <input name="title" required maxLength={160} />
+      </Field>
+      <Field label={t('description')}>
+        <textarea name="description" maxLength={16000} />
+      </Field>
+      <Field label={t('acceptance')}>
+        <textarea name="acceptance" required maxLength={6000} />
+      </Field>
+    </>
+  );
+}
 
 export function WorkflowStart({ projectId, onSaved }: { projectId: string; onSaved: () => void }) {
   const t = useT();
@@ -44,25 +74,7 @@ export function WorkflowStart({ projectId, onSaved }: { projectId: string; onSav
               }
             }}
           >
-            <Field label={t('workflowTemplate')}>
-              <select name="template">
-                {TEMPLATES.map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {t(label)}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Hint>{t('workflowNote')}</Hint>
-            <Field label={t('workTitle')}>
-              <input name="title" required maxLength={160} />
-            </Field>
-            <Field label={t('description')}>
-              <textarea name="description" maxLength={16000} />
-            </Field>
-            <Field label={t('acceptance')}>
-              <textarea name="acceptance" required maxLength={6000} />
-            </Field>
+            <WorkflowFields />
             {error && <p role="alert">{error}</p>}
             <button type="submit" className="primary">
               {t('workflowCreate')}

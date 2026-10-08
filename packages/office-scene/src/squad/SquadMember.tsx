@@ -102,6 +102,32 @@ function LeavingMember({
   );
 }
 
+type SeatedMemberProps = {
+  member: SquadMemberState;
+  seat: PodSeat | undefined;
+  arrival: Arrival | undefined;
+  origin: Origin;
+  baseY: number;
+  yaw: number;
+  podPos: ReadonlyMap<string, Point2>;
+  engagements: readonly Engagement[] | undefined;
+  emote: EmoteCue | undefined;
+  actions: MemberActions;
+  animal: AnimalProps;
+};
+
+/** The seat the member turns about: its desk, or the origin when it has no pod seat. */
+const deskSeat = (seat: PodSeat | undefined, origin: Origin) => ({
+  x: seat?.deskX ?? origin.x,
+  z: seat?.deskZ ?? origin.z,
+  floor: seat?.floor ?? 0,
+  rotation: seat?.rotation ?? 0,
+});
+
+/** How fast the clips play: a walk at the plan's own speed, a working member a little quicker, else as authored. */
+const paceOf = (clip: string | null, arrival: Arrival | undefined, member: SquadMemberState) =>
+  clip === 'walk' ? (arrival?.speed ?? 0) / WALK_STRIDE_SPEED : member.working ? 1.4 : 1;
+
 /** A member in its pod, walking in from the core first when it has just arrived; follows its pod as the zone grows. */
 function SeatedMember({
   member,
@@ -115,19 +141,7 @@ function SeatedMember({
   emote,
   actions,
   animal,
-}: {
-  member: SquadMemberState;
-  seat: PodSeat | undefined;
-  arrival: Arrival | undefined;
-  origin: Origin;
-  baseY: number;
-  yaw: number;
-  podPos: ReadonlyMap<string, Point2>;
-  engagements: readonly Engagement[] | undefined;
-  emote: EmoteCue | undefined;
-  actions: MemberActions;
-  animal: AnimalProps;
-}) {
+}: SeatedMemberProps) {
   const frame = useRef<Group>(null);
   const id = animal.agent.id;
   const press = useMemo(() => createLongPress(() => actions.onMenu(id)), [actions, id]);
@@ -146,12 +160,7 @@ function SeatedMember({
       <Arriving plan={arrival} startAt={member.since} reducedMotion={animal.reducedMotion}>
         {(clip, sit) => (
           <Poser
-            seat={{
-              x: seat?.deskX ?? origin.x,
-              z: seat?.deskZ ?? origin.z,
-              floor: seat?.floor ?? 0,
-              rotation: seat?.rotation ?? 0,
-            }}
+            seat={deskSeat(seat, origin)}
             seed={id}
             engagements={engagements}
             reducedMotion={animal.reducedMotion}
@@ -160,13 +169,7 @@ function SeatedMember({
               {...animal}
               override={clip ?? undefined}
               emote={sit ?? emote}
-              pace={
-                clip === 'walk'
-                  ? (arrival?.speed ?? 0) / WALK_STRIDE_SPEED
-                  : member.working
-                    ? 1.4
-                    : 1
-              }
+              pace={paceOf(clip, arrival, member)}
             />
           </Poser>
         )}
@@ -175,29 +178,7 @@ function SeatedMember({
   );
 }
 
-/**
- * One subagent: seated in its pod (Animal under a Poser, as a member at a desk), walking in from the core, or on its
- * way out through it. Sits in its own group at the pod, turned like a desk, so a seat faces its supervisor.
- */
-export function SquadMember({
-  agent,
-  member,
-  seat,
-  arrival,
-  leave,
-  handover,
-  baseY,
-  podPos,
-  engagements,
-  ring,
-  selected,
-  emote,
-  reducedMotion,
-  quality,
-  light,
-  actions,
-  onFailure,
-}: {
+type SquadMemberProps = {
   agent: Agent;
   member: SquadMemberState;
   /** Its pod seat; a member that is leaving has only its plan. */
@@ -218,28 +199,48 @@ export function SquadMember({
   light: boolean;
   actions: MemberActions;
   onFailure: () => void;
-}) {
-  const drawn = useMemo(() => asSquadAgent(agent, member), [agent, member]);
-  const animal = {
-    agent: drawn,
-    selected,
-    ring,
-    reducedMotion,
-    quality,
-    light,
-    onError: onFailure,
-  };
+};
+
+/** Where the member stands and how its frame is turned: by its way out, its walk in or its pod; null when it has none. */
+function standingOf({
+  leave,
+  handover,
+  arrival,
+  seat,
+}: Pick<SquadMemberProps, 'leave' | 'handover' | 'arrival' | 'seat'>) {
   const origin =
     leave?.origin ??
     handover?.origin ??
     arrival?.origin ??
     (seat ? { x: seat.x, z: seat.z } : null);
-  if (!origin) return null;
   const yaw =
     leave?.frameYaw ??
     handover?.frameYaw ??
     arrival?.frameYaw ??
     ((seat?.rotation ?? 0) * Math.PI) / 2;
+  return origin ? { origin, yaw } : null;
+}
+
+/**
+ * One subagent: seated in its pod (Animal under a Poser, as a member at a desk), walking in from the core, or on its
+ * way out through it. Sits in its own group at the pod, turned like a desk, so a seat faces its supervisor.
+ */
+export function SquadMember(props: SquadMemberProps) {
+  const { agent, member, seat, arrival, leave, handover, baseY, podPos, engagements } = props;
+  const { emote, actions } = props;
+  const drawn = useMemo(() => asSquadAgent(agent, member), [agent, member]);
+  const animal: AnimalProps = {
+    agent: drawn,
+    selected: props.selected,
+    ring: props.ring,
+    reducedMotion: props.reducedMotion,
+    quality: props.quality,
+    light: props.light,
+    onError: props.onFailure,
+  };
+  const standing = standingOf(props);
+  if (!standing) return null;
+  const { origin, yaw } = standing;
   if (handover)
     return <HandingMember {...{ plan: handover, member, origin, baseY, yaw, animal }} />;
   if (leave)

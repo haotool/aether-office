@@ -212,8 +212,8 @@
   display: block;
   margin-top: calc(var(--space-24) * -1);
   font-size: var(--fs-hero);
-  line-height: 1; /* token-lint: glyph */
-  animation: emote-rise 1.8s var(--ease) forwards; /* token-lint: animation */
+  line-height: var(--lh-none);
+  animation: emote-rise var(--dur-breathe) var(--ease) forwards;
 }
 .char-layer.still .emote-sprite {
   animation-name: emote-fade;

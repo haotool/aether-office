@@ -8,15 +8,16 @@ export const EMOTE_IDS = ['wave', 'thumbs_up', 'high_five', 'cheer', 'stretch', 
 export type EmoteId = (typeof EMOTE_IDS)[number];
 export type Emote = { id: EmoteId; clip: ClipName; icon: string };
 
-export const EMOTES: readonly Emote[] = [
-  { id: 'wave', clip: 'wave', icon: '👋' },
-  { id: 'thumbs_up', clip: 'nod', icon: '👍' }, // no thumbs-up clip: a firm nod is the closest
-  { id: 'high_five', clip: 'celebrate', icon: '🙌' },
-  { id: 'cheer', clip: 'cheer', icon: '🎉' },
-  { id: 'stretch', clip: 'stretch', icon: '🙆' },
-  { id: 'pat', clip: 'nod', icon: '💗' },
-];
-export const emoteOf = (id: EmoteId): Emote => EMOTES.find((e) => e.id === id)!;
+const EMOTE_TABLE: Record<EmoteId, Emote> = {
+  wave: { id: 'wave', clip: 'wave', icon: '👋' },
+  thumbs_up: { id: 'thumbs_up', clip: 'nod', icon: '👍' }, // no thumbs-up clip: a firm nod is the closest
+  high_five: { id: 'high_five', clip: 'celebrate', icon: '🙌' },
+  cheer: { id: 'cheer', clip: 'cheer', icon: '🎉' },
+  stretch: { id: 'stretch', clip: 'stretch', icon: '🙆' },
+  pat: { id: 'pat', clip: 'nod', icon: '💗' },
+};
+export const EMOTES: readonly Emote[] = EMOTE_IDS.map((id) => EMOTE_TABLE[id]);
+export const emoteOf = (id: EmoteId): Emote => EMOTE_TABLE[id];
 
 /** A character takes one emote per this long; a second tap inside it is ignored, not queued. */
 export const EMOTE_COOLDOWN_MS = 2500;

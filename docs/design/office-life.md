@@ -1079,7 +1079,7 @@ Edits outside the new folders, and who else is touching those areas:
 | `Animal.tsx` | 2 lines `registerAnchors`; later `layers?` prop | **behavior-director branch** (also `Member.tsx`, `Poser.tsx`, `animal-states.ts`) | **after** that branch merges; until then v1 uses fixed anchors and changes nothing there |
 | `MemberScreen.tsx`, `screen-*.ts` | **none**: the kernel-panic and pane effects are our own quads in front of the pane | **desk-screens branch** | never edit; read `SEATING.screenY` only |
 | `desk-items.ts` | none; our props avoid its `SLOTS` | behavior branch | if they export slots, read them |
-| `random.ts` | none (we import `seeded`) | behavior branch changed it | merge after it, keep imports compatible |
+| `seeded.ts` / `pick.ts` | none (we import `seeded`) | behavior branch changed it | merge after it, keep imports compatible |
 | `apps/web/src/state.ts` | prefs `intro`, `life` | Settings work | additive keys; persisted-store version bump coordinated |
 | `SettingsPage.tsx` | one line mounting `OfficeAnimationsSettings.tsx` | **Settings redesign** | our section is its own component; it merges after theirs |
 | `localSessions.ts`, `office-model.ts` | skip `:sub:` desks; `squadsOf`; `life-signals.ts` new file | text pipeline (labels) | additive |

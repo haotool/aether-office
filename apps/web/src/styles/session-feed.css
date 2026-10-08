@@ -84,7 +84,7 @@
   top: var(--space-8);
   bottom: var(--space-8);
   left: 0;
-  width: 3px; /* token-lint: geometry */
+  width: var(--bar);
   border-radius: 0 var(--r-pill) var(--r-pill) 0;
   background: var(--line);
 }
@@ -93,7 +93,7 @@
 }
 .bucket-working .feed-row::before {
   background: var(--mint);
-  animation: panel-pulse 1.8s ease-in-out infinite; /* token-lint: loop */
+  animation: panel-pulse var(--dur-breathe) ease-in-out infinite;
 }
 .bucket-finished .feed-row::before {
   background: var(--blue);
@@ -138,7 +138,7 @@
 /* How full the session's context window is: a hairline bar under the row's text, in the gauge's steps. */
 .feed-ctx {
   grid-area: ctx;
-  height: 3px; /* token-lint: geometry */
+  height: var(--bar);
   border-radius: var(--r-pill);
   background: var(--line);
   overflow: hidden;
@@ -212,8 +212,8 @@
 .state-dot {
   display: inline-block;
   flex: none;
-  width: 8px; /* token-lint: geometry */
-  height: 8px; /* token-lint: geometry */
+  width: var(--space-8);
+  height: var(--space-8);
   border-radius: 50%;
   background: var(--dim);
 }
@@ -221,7 +221,7 @@
 .tool-live .state-dot,
 .tool-rows .state-dot {
   background: var(--mint);
-  animation: panel-pulse 1.4s ease-in-out infinite; /* token-lint: loop */
+  animation: panel-pulse var(--dur-pulse) ease-in-out infinite;
 }
 .bucket-needs .state-dot {
   background: var(--gold);
@@ -231,8 +231,8 @@
 }
 .unread-dot {
   flex: none;
-  width: 8px; /* token-lint: geometry */
-  height: 8px; /* token-lint: geometry */
+  width: var(--space-8);
+  height: var(--space-8);
   border-radius: 50%;
   background: var(--mint);
   box-shadow: 0 0 0 3px var(--glow); /* token-lint: ring */

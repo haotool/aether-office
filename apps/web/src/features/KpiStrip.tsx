@@ -1,6 +1,6 @@
 import { BarChart3 } from 'lucide-react';
 import type { GitKpiResponse, UsageResponse } from '@aether/contracts';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { CountUp } from './CountUp.js';
 import { Sparkline } from './kpi-charts.js';
 import { lastDay, tokensOf } from './kpi-model.js';
@@ -22,21 +22,18 @@ function Cell({
   );
 }
 
-/**
- * The building's KPIs in one line over the office: tokens today with a week's sparkline, sessions running, commits today
- * and branches merged this week. Every cell opens the dashboard. On a phone the line scrolls sideways.
- */
-export function KpiStrip({
-  usage,
-  git,
-  running,
-  onOpen,
-}: {
+type KpiStripProps = {
   usage: UsageResponse | undefined;
   git: GitKpiResponse | undefined;
   running: number;
   onOpen: () => void;
-}) {
+};
+
+/**
+ * The building's KPIs in one line over the office: tokens today with a week's sparkline, sessions running, commits today
+ * and branches merged this week. Every cell opens the dashboard. On a phone the line scrolls sideways.
+ */
+export function KpiStrip({ usage, git, running, onOpen }: KpiStripProps) {
   const t = useT();
   if (!usage) return null; // not known yet, or this server or role has none: no empty frame
   if (!usage.enabled)

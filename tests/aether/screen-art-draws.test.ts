@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { seeded } from '../../packages/office-scene/src/random.js';
+import { seeded } from '../../packages/office-scene/src/seeded.js';
 import * as art from '../../packages/office-scene/src/screen-art-data.js';
 import * as dev from '../../packages/office-scene/src/screen-art-dev.js';
 import * as plan from '../../packages/office-scene/src/screen-art-plan.js';

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { usePreferences } from '../state.js';
-import { useT } from '../ui.js';
+import { useT, useLocale } from '../ui/useT.js';
 import type { Key } from '../i18n.js';
 import { ageText, type LinkStatus } from './live-link.js';
 import { useLink } from './use-session-stream.js';
@@ -22,7 +21,7 @@ const TICK_MS = 5000;
 /** A dot and a word for the link to the control plane, with how long ago anything last arrived. */
 export function ConnectionStatus({ updatedAt, offline }: { updatedAt: number; offline: boolean }) {
   const t = useT();
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   const link = useLink();
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {

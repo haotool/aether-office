@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { Check, Copy, Info, Lock, Minus, TriangleAlert } from 'lucide-react';
 import { copyText } from '../../browser-compat.js';
-import { useT } from '../../ui.js';
+import { useT } from '../../ui/useT.js';
 import { useSettings } from './context.js';
 import { entryOf, type EntryId } from './entries.js';
 import { highlight } from './search.js';

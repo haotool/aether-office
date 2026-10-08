@@ -1,5 +1,5 @@
 import { CanvasTexture, SRGBColorSpace } from 'three';
-import { seeded } from './random.js';
+import { seeded } from './seeded.js';
 import { SCREEN_H, SCREEN_W, type Draw } from './screen-draw.js';
 import {
   apiLogs,
@@ -23,12 +23,13 @@ import { context2d } from './canvas-2d.js';
  */
 const VARIANTS = 3;
 
+const DEFAULT_DRAWS: Draw[] = [editor, browserUi];
 const BY_ROLE: Record<string, Draw[]> = {
   frontend: [browserUi, editor],
   backend: [apiLogs, editor],
   fullstack: [editor, browserUi, apiLogs],
   mobile: [phones, editor],
-  generalist: [editor, browserUi],
+  generalist: DEFAULT_DRAWS,
   platform: [pipeline, editor],
   sre: [monitoring, apiLogs],
   release: [releases, pipeline],
@@ -47,7 +48,7 @@ const BY_ROLE: Record<string, Draw[]> = {
 const cache = new Map<string, CanvasTexture>();
 /** The screen picture for a role and member, made once and reused. Bounded: roles × VARIANTS pictures at most. */
 export function screenTexture(role: string, member: string, accent: string): CanvasTexture {
-  const draws = BY_ROLE[role] ?? BY_ROLE['generalist']!;
+  const draws = BY_ROLE[role] ?? DEFAULT_DRAWS;
   const variant = Math.floor(seeded(member)() * VARIANTS);
   const key = `${role}:${variant}:${accent}`;
   const hit = cache.get(key);
@@ -57,7 +58,7 @@ export function screenTexture(role: string, member: string, accent: string): Can
   canvas.height = SCREEN_H;
   const g = context2d(canvas);
   const rng = seeded(`${role}:${variant}`);
-  draws[variant % draws.length]!(g, rng, accent);
+  draws[variant % draws.length]?.(g, rng, accent);
   // A faint scanline overlay keeps it reading as a projection rather than a flat monitor.
   g.fillStyle = 'rgba(255,255,255,0.035)';
   for (let y = 0; y < SCREEN_H; y += 3) g.fillRect(0, y, SCREEN_W, 1);

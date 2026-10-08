@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { usePreferences } from '../state.js';
 import { useLatest } from '../use-latest.js';
 import { compact } from './kpi-model.js';
+import { useLocale } from '../ui/useT.js';
 
 const DURATION_MS = 450;
 const easeOut = (p: number) => 1 - (1 - p) ** 3;
@@ -11,7 +12,7 @@ const easeOut = (p: number) => 1 - (1 - p) ** 3;
  * node directly, frame by frame, so React renders once per value, never once per frame.
  */
 export function CountUp({ value, format }: { value: number; format?: (n: number) => string }) {
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   const reduced = usePreferences((s) => s.reducedMotion);
   const show = (n: number) => (format ? format(n) : compact(n, locale));
   const showNow = useLatest(show);

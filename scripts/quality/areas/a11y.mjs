@@ -59,7 +59,7 @@ export function disabledWithoutReason(text) {
     const attrs = m[1];
     if (
       /\bdisabled\b/.test(attrs) &&
-      !/\b(?:title|aria-describedby|aria-label)\s*=|\.\.\.whyNot\(/.test(attrs)
+      !/\b(?:title|aria-describedby|aria-label|why)\s*=|\.\.\.(?:whyNot\(|why\b)/.test(attrs)
     )
       out.push(lineOf(m.index));
   }

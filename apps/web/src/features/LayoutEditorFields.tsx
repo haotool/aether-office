@@ -1,10 +1,17 @@
 import type { Agent, Furniture, Layout, SquadObject } from '@aether/contracts';
 import { squadCapacity } from '@aether/kernel';
-import { Field, useT } from '../ui.js';
+import { Field } from '../ui/Field.js';
+import { useT, useWhy } from '../ui/useT.js';
 import type { PlainFurniture } from './layout-edit.js';
 import { AgentOptions } from './panel-kit.js';
 
 type Patch = (update: Partial<Furniture>) => void;
+
+type SquadFieldsProps = {
+  squad: SquadObject;
+  layout: Layout;
+  patch: Patch;
+};
 
 /** Undo, redo, export and import. */
 export function LayoutFileTools({
@@ -23,12 +30,13 @@ export function LayoutFileTools({
   onImport: (file: File) => void;
 }) {
   const t = useT();
+  const whyNot = useWhy();
   return (
     <div className="view-switch">
-      <button disabled={!canUndo} onClick={onUndo}>
+      <button disabled={!canUndo} {...whyNot([canUndo, 'whyNothingToUndo'])} onClick={onUndo}>
         {t('undo')}
       </button>
-      <button disabled={!canRedo} onClick={onRedo}>
+      <button disabled={!canRedo} {...whyNot([canRedo, 'whyNothingToRedo'])} onClick={onRedo}>
         {t('redo')}
       </button>
       <button onClick={onExport}>{t('export')}</button>
@@ -89,15 +97,7 @@ export function PlacementFields({ object, patch }: { object: Furniture; patch: P
 }
 
 /** A squad zone's desk anchor, width/depth and seats. */
-export function SquadFields({
-  squad,
-  layout,
-  patch,
-}: {
-  squad: SquadObject;
-  layout: Layout;
-  patch: Patch;
-}) {
+export function SquadFields({ squad, layout, patch }: SquadFieldsProps) {
   const t = useT();
   const desks = layout.objects.filter(
     (o) => o.type === 'desk' && (o.floor ?? 0) === (squad.floor ?? 0),

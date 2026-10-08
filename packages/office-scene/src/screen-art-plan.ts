@@ -8,9 +8,8 @@ export const architecture: Draw = (g, r, a) => {
     boxes.push([40 + (i % 4) * 150 + (Math.floor(i / 4) ? 70 : 0), 70 + Math.floor(i / 4) * 160]);
   g.strokeStyle = PALETTE.blue;
   g.lineWidth = 1.5;
-  for (let i = 0; i < boxes.length; i++) {
-    const p = boxes[i]!;
-    const q = boxes[(i + 1 + Math.floor(r() * 3)) % boxes.length]!;
+  for (const [i, p] of boxes.entries()) {
+    const q = boxes[(i + 1 + Math.floor(r() * 3)) % boxes.length] ?? p;
     g.beginPath();
     g.moveTo(p[0] + 55, p[1] + 30);
     g.lineTo(q[0] + 55, q[1] + 30);

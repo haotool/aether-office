@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import type { Key } from '../../i18n.js';
 import { requestIntroReplay } from '../../intro-gate.js';
 import { usePreferences } from '../../state.js';
-import { useT } from '../../ui.js';
+import { useT } from '../../ui/useT.js';
 import { Block, Row, Segmented, StatusChip, Switch } from './kit.js';
 
 const KIND_LABEL: Record<MemeCategory, Key> = {

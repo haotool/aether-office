@@ -123,15 +123,15 @@
     max-height: none;
   }
   .scene-toolbar {
-    top: 8px; /* token-lint: geometry */
-    left: 8px; /* token-lint: geometry */
-    right: 8px; /* token-lint: geometry */
+    top: var(--space-8);
+    left: var(--space-8);
+    right: var(--space-8);
     gap: var(--space-6);
     flex-wrap: wrap;
     justify-content: flex-start;
   }
   .building-panel {
-    right: 8px; /* token-lint: geometry */
+    right: var(--space-8);
     bottom: calc(8px + var(--safe-bottom)); /* token-lint: geometry */
     width: min(260px, calc(100% - 16px)); /* token-lint: geometry */
   }

@@ -7,7 +7,8 @@ import type { FloorCount } from './SceneHud.js';
 export function floorCounts(agents: readonly Agent[], layout: Layout): FloorCount[] {
   const counts = Array.from({ length: FLOORS }, () => ({ total: 0, working: 0 }));
   for (const agent of agents) {
-    const entry = counts[Math.min(FLOORS - 1, floorOfDesk(layout, agent.id))]!;
+    const entry = counts[Math.min(FLOORS - 1, floorOfDesk(layout, agent.id))];
+    if (!entry) continue;
     entry.total++;
     if (['working', 'reviewing'].includes(agent.activity)) entry.working++;
   }

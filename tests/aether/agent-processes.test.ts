@@ -20,6 +20,7 @@ import {
   type AgentProcess,
   type ProcessRow,
 } from '../../apps/control/src/services/agent-processes.js';
+import './process-fixtures.js';
 import { eventually } from './timing.js';
 
 const UUID = '374456c6-9009-4372-ac17-4aa8f7535e70';

@@ -1,4 +1,5 @@
-import { seeded } from './random.js';
+import type { Rng } from './seeded.js';
+import { viewRng } from './screen-seed.js';
 import { generateFile } from './screen-codegen.js';
 import { polyline, roundRect, text, textBars, wander, fit } from './screen-ui.js';
 import { MONO, SANS, type ViewCtx } from './screen-theme.js';
@@ -9,7 +10,7 @@ const AGENT_CALL = /^(Task|Agent|SendMessage|TaskCreate|TeamCreate|Delegate)/;
 export function drawChat(c: ViewCtx): void {
   const { g, p, box } = c;
   const agents = c.facts.recent.filter((call) => AGENT_CALL.test(call.tool)).length;
-  const r = seeded(`${c.seed}:chat`);
+  const r = viewRng(c, 'chat');
   g.fillStyle = p.bg;
   g.fillRect(box.x, box.y, box.w, box.h);
   g.fillStyle = p.panel;
@@ -19,7 +20,7 @@ export function drawChat(c: ViewCtx): void {
     const y = box.y + 38 + i * 30;
     g.fillStyle = i === 0 ? p.bg : p.panel;
     g.fillRect(box.x + 4, y - 4, 122, 26);
-    g.fillStyle = [c.accent, p.info, p.warn, p.add][i % 4]!;
+    g.fillStyle = [c.accent, p.info, p.warn, p.add][i % 4] ?? c.accent;
     g.beginPath();
     g.arc(box.x + 18, y + 9, 7, 0, Math.PI * 2);
     g.fill();
@@ -87,7 +88,7 @@ export function drawNotebook(c: ViewCtx): void {
     if (cell === 0)
       polyline(
         g,
-        wander(seeded(`${c.seed}:nb:a`), 40),
+        wander(viewRng(c, 'nb:a'), 40),
         box.x + 20,
         out + 8,
         box.w - 160,
@@ -106,10 +107,27 @@ export function drawNotebook(c: ViewCtx): void {
   });
 }
 
-/** A design canvas: frames of page-shaped boxes, a selected one with handles, a layers list, a cursor drifting between them. */
-export function drawDesign(c: ViewCtx): void {
+const FRAMES = [
+  { x: 150, y: 28, w: 110, h: 190 },
+  { x: 280, y: 28, w: 110, h: 190 },
+  { x: 150, y: 232, w: 240, h: 70 },
+];
+type Frame = (typeof FRAMES)[number];
+/** The eight handles of a selection, as fractions of its width and height. */
+const HANDLES = [
+  [0, 0],
+  [1, 0],
+  [0, 1],
+  [1, 1],
+  [0.5, 0],
+  [0.5, 1],
+  [0, 0.5],
+  [1, 0.5],
+] as const;
+
+/** The canvas with its dot grid, the layers list on the left and the side bar on the right. */
+function drawDesignChrome(c: ViewCtx, r: Rng): void {
   const { g, p, box } = c;
-  const r = seeded(`${c.seed}:design`);
   g.fillStyle = p.bg;
   g.fillRect(box.x, box.y, box.w, box.h);
   g.fillStyle = p.line;
@@ -125,12 +143,11 @@ export function drawDesign(c: ViewCtx): void {
     g.fillRect(box.x + 14 + (i % 3 === 0 ? 0 : 10), box.y + 32 + i * 18, 40 + r() * 50, 5);
   }
   g.globalAlpha = 1;
-  const frames = [
-    { x: 150, y: 28, w: 110, h: 190 },
-    { x: 280, y: 28, w: 110, h: 190 },
-    { x: 150, y: 232, w: 240, h: 70 },
-  ];
-  frames.forEach((f, i) => {
+}
+
+function drawFrames(c: ViewCtx, r: Rng): void {
+  const { g, p, box } = c;
+  FRAMES.forEach((f, i) => {
     g.fillStyle = p.text;
     g.globalAlpha = 0.9;
     roundRect(g, box.x + f.x, box.y + f.y, f.w, f.h, 6);
@@ -140,34 +157,25 @@ export function drawDesign(c: ViewCtx): void {
     g.fillRect(box.x + f.x + 8, box.y + f.y + 10, f.w * 0.5, 8);
     textBars(g, r, box.x + f.x + 8, box.y + f.y + 28, f.w - 16, 3, p.line);
   });
-  const selected = frames[Math.floor(c.now / 7000) % frames.length]!; // a different one is picked now and then
+}
+
+function drawSelection(c: ViewCtx, selected: Frame): void {
+  const { g, p, box } = c;
   g.strokeStyle = c.accent;
   g.lineWidth = 1.5;
   g.strokeRect(box.x + selected.x, box.y + selected.y, selected.w, selected.h);
   g.fillStyle = p.bg;
-  for (const [hx, hy] of [
-    [0, 0],
-    [1, 0],
-    [0, 1],
-    [1, 1],
-    [0.5, 0],
-    [0.5, 1],
-    [0, 0.5],
-    [1, 0.5],
-  ] as const) {
-    g.fillRect(
-      box.x + selected.x + hx * selected.w - 3,
-      box.y + selected.y + hy * selected.h - 3,
-      6,
-      6,
-    );
-    g.strokeRect(
-      box.x + selected.x + hx * selected.w - 3,
-      box.y + selected.y + hy * selected.h - 3,
-      6,
-      6,
-    );
+  for (const [hx, hy] of HANDLES) {
+    const x = box.x + selected.x + hx * selected.w - 3;
+    const y = box.y + selected.y + hy * selected.h - 3;
+    g.fillRect(x, y, 6, 6);
+    g.strokeRect(x, y, 6, 6);
   }
+}
+
+/** The pointer drifting over the canvas, and the side bar's rows. */
+function drawCursor(c: ViewCtx): void {
+  const { g, p, box } = c;
   const t = c.moving ? c.now / 2300 : 0;
   const cx = box.x + 250 + Math.sin(t) * 120;
   const cy = box.y + 140 + Math.sin(t * 1.7 + 1) * 70;
@@ -181,4 +189,15 @@ export function drawDesign(c: ViewCtx): void {
   g.fill();
   g.fillStyle = c.accent;
   for (let i = 0; i < 5; i++) g.fillRect(box.x + box.w - 78, box.y + 30 + i * 26, 56, 6);
+}
+
+/** A design canvas: frames of page-shaped boxes, a selected one with handles, a layers list, a cursor drifting between them. */
+export function drawDesign(c: ViewCtx): void {
+  const r = viewRng(c, 'design');
+  drawDesignChrome(c, r);
+  drawFrames(c, r);
+  // A different one is picked now and then.
+  const selected = FRAMES[Math.floor(c.now / 7000) % FRAMES.length];
+  if (selected) drawSelection(c, selected);
+  drawCursor(c);
 }

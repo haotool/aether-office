@@ -32,6 +32,8 @@
     "test:integration": "vitest run tests/aether/control.test.ts",
     "test:security": "vitest run tests/aether/security.test.ts",
     "test": "vitest run",
+    "test:host-clis": "AETHER_HOST_CLIS=1 vitest run tests/aether/provider-compat.host-clis.test.ts",
+    "test:coverage": "vitest run --coverage",
     "build": "node scripts/build.mjs",
     "dev": "tsx scripts/dev.ts",
     "demo": "tsx scripts/dev.ts --demo",
@@ -50,6 +52,7 @@
     "verification:report": "tsx scripts/final-verification.ts",
     "verification:check": "tsx scripts/final-verification.ts --check",
     "audit:deps": "pnpm audit --audit-level=high",
+    "audit:gate": "node scripts/oss/audit-gate.mjs",
     "verify:clean": "node scripts/clean-room.mjs",
     "backup": "tsx scripts/backup.ts",
     "smoke:live": "tsx scripts/live-smoke.ts",
@@ -58,6 +61,7 @@
     "quality": "node scripts/quality/score.mjs",
     "quality:report": "node scripts/quality/score.mjs --report",
     "quality:check": "node scripts/quality/score.mjs --check",
+    "quality:release": "node scripts/quality/score.mjs --release",
     "oss:check": "node scripts/oss/third-party-notices.mjs --check && node scripts/oss/reuse-check.mjs && node scripts/oss/readiness-check.mjs"
   },
   "devDependencies": {
@@ -75,6 +79,7 @@
     "prettier": "3.9.9",
     "tsx": "4.23.15",
     "typescript": "7.0.2",
+    "@vitest/coverage-v8": "5.0.3",
     "vitest": "5.0.3"
   }
 }

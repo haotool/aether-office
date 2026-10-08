@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api, execute } from '../api.js';
-import { Field, useT, whyNot } from '../ui.js';
+import { api } from '../api.js';
+import { execute } from '../api-commands.js';
+import { Field } from '../ui/Field.js';
+import { useT, useWhy } from '../ui/useT.js';
 import { useCommandRunner } from './panel-kit.js';
 
 type Client = { id: string; name: string; maxOpen: number; revokedAt: number | null; open: number };
@@ -18,6 +20,7 @@ function ClientRow({
   onRevoke: () => void;
 }) {
   const t = useT();
+  const whyNot = useWhy();
   return (
     <li className="panel">
       <strong>{c.name}</strong> · {t('a2aOpen')}: {c.open}/{c.maxOpen}
@@ -26,7 +29,7 @@ function ClientRow({
       ) : (
         <>
           {' '}
-          <button disabled={!canManage} {...whyNot(canManage, t('needOwner'))} onClick={onRevoke}>
+          <button disabled={!canManage} {...whyNot([canManage, 'needOwner'])} onClick={onRevoke}>
             {t('a2aRevoke')}
           </button>
         </>

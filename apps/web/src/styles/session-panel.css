@@ -222,7 +222,7 @@
   right: 0;
   bottom: 0;
   left: 0;
-  height: 3px; /* token-lint: geometry */
+  height: var(--bar);
   overflow: hidden;
   background: linear-gradient(90deg, var(--mint), var(--blue) 55%, var(--gold) 80%, var(--red));
 }

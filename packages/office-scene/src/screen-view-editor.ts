@@ -1,4 +1,6 @@
-import { hashText, seeded } from './random.js';
+import { itemAt } from './checked.js';
+import { hashText } from './hash.js';
+import { viewRng } from './screen-seed.js';
 import { fallbackLanguage, LANGUAGE_NAME } from './screen-lang.js';
 import { generateFile } from './screen-codegen.js';
 import { lineText, type CodeLine } from './screen-tokens.js';
@@ -85,8 +87,9 @@ function drawMinimap(
   g.globalAlpha = 0.55;
   lines.forEach((line, i) => {
     const y = top + i * MINIMAP_ROW;
-    if (y > top + height - MINIMAP_ROW || line.tokens.length === 0) return;
-    g.fillStyle = hot.has(i) ? p.add : p.syntax[line.tokens[0]![0]];
+    const [firstToken] = line.tokens;
+    if (y > top + height - MINIMAP_ROW || !firstToken) return;
+    g.fillStyle = hot.has(i) ? p.add : p.syntax[firstToken[0]];
     g.globalAlpha = hot.has(i) ? 0.95 : 0.5;
     g.fillRect(x + line.indent * 1.2, y, Math.min(50, lineText(line).length * 0.6), 1.6);
   });
@@ -122,97 +125,120 @@ function statusBar(
   g.textAlign = 'left';
 }
 
-/** An editor over the member's real file: tabs from the real recent files, code made up in the file's own language. */
-export function drawEditor(c: ViewCtx): void {
-  const { g, p, box } = c;
-  const file = c.work.file ?? 'untitled';
-  const lang = c.work.lang ?? fallbackLanguage(c.role, seeded(`${c.seed}:lang`));
-  const lines = generateFile(c.seed, file, lang);
-  const editing = c.work.kind === 'edit';
-  const codeTop = box.y + TAB_H;
-  const codeH = box.h - TAB_H - STATUS_H;
+type Hunk = ReturnType<typeof hunksOf>[number];
+type Typing = { at: EditAt; hunk: Hunk };
+type Pane = { codeTop: number; codeH: number };
 
-  g.fillStyle = p.bg;
-  g.fillRect(box.x, box.y, box.w, box.h);
-  drawTabs(c, openFiles(c, file), file, editing);
+const inHunk = (hunk: Hunk, i: number) => hunk.start <= i && i < hunk.start + hunk.length;
 
-  const hunks = hunksOf(lines, c.seed, file);
-  let at: EditAt | null = null;
-  if (editing) {
-    const toolStart = c.now - c.elapsed;
-    const chars = c.moving
-      ? typedChars(c.seed, c.elapsed, c.speed) + (hashText(`${toolStart}`) % 700)
-      : STILL_CHARS;
-    at = editPosition(lines, hunks, chars);
-  }
+/** Where the typing has got to now (a still frame stops a few lines into the first hunk). */
+function typingAt(c: ViewCtx, lines: readonly CodeLine[], hunks: readonly Hunk[]): Typing {
+  const toolStart = c.now - c.elapsed;
+  const chars = c.moving
+    ? typedChars(c.seed, c.elapsed, c.speed) + (hashText(`${toolStart}`) % 700)
+    : STILL_CHARS;
+  const at = editPosition(lines, hunks, chars);
+  return { at, hunk: itemAt(hunks, at.hunk) };
+}
+
+/** Follows the caret while typing and drifts over the file while reading. */
+function scrollTo(c: ViewCtx, lines: readonly CodeLine[], typing: Typing | null, codeH: number) {
   const maxScroll = Math.max(0, lines.length * LH - codeH);
-  const target = at
-    ? Math.min(maxScroll, Math.max(0, at.line * LH - codeH * 0.45))
+  const target = typing
+    ? Math.min(maxScroll, Math.max(0, typing.at.line * LH - codeH * 0.45))
     : readTarget(c.seed, c.now, maxScroll);
   c.state.scroll = c.moving ? easeToward(c.state.scroll, target, Math.min(c.dt, MAX_DT)) : target;
+}
 
-  const hot = new Set<number>();
-  if (at) {
-    const h = hunks[at.hunk]!;
-    for (let i = h.start; i <= at.line; i++) hot.add(i);
-  }
-  g.save();
-  g.beginPath();
-  g.rect(box.x, codeTop, box.w, codeH);
-  g.clip();
+/** The visible code lines: line numbers, the lines of the hunk being typed marked, a line mid-typing cut at the caret. */
+function drawCode(
+  c: ViewCtx,
+  lines: readonly CodeLine[],
+  typing: Typing | null,
+  hot: ReadonlySet<number>,
+  { codeTop, codeH }: Pane,
+): void {
+  const { g, p, box } = c;
   const first = Math.floor(c.state.scroll / LH);
   for (let i = first; i < Math.min(lines.length, first + Math.ceil(codeH / LH) + 1); i++) {
     const y = codeTop + i * LH - c.state.scroll;
-    const caretHere = at?.line === i;
+    const caretHere = typing !== null && typing.at.line === i;
     if (caretHere) {
       g.fillStyle = p.current;
       g.fillRect(box.x, y, box.w, LH);
     }
-    const inHunk =
-      at !== null &&
-      hunks[at.hunk]!.start <= i &&
-      i < hunks[at.hunk]!.start + hunks[at.hunk]!.length;
-    if (inHunk && i > at!.line) continue; // not typed yet
+    if (typing && inHunk(typing.hunk, i) && i > typing.at.line) continue; // not typed yet
     text(g, String(i + 1).padStart(3, ' '), box.x + 4, y + 11, caretHere ? p.text : p.dim, 11);
     if (hot.has(i)) {
       g.fillStyle = p.add;
       g.fillRect(box.x + 36, y + 1, 3, LH - 2);
     }
-    drawTokens(
-      c,
-      lines[i]!,
-      box.x + CODE_X,
-      y + 11,
-      caretHere ? Math.max(0, at!.column - lines[i]!.indent * 2) : Infinity,
+    const line = itemAt(lines, i);
+    const shown = caretHere ? Math.max(0, typing.at.column - line.indent * 2) : Infinity;
+    drawTokens(c, line, box.x + CODE_X, y + 11, shown);
+  }
+}
+
+/** What the typing leaves around the caret: the cut-out mark above the hunk, a squiggle under the line before, the caret. */
+function drawTypingMarks(
+  c: ViewCtx,
+  lines: readonly CodeLine[],
+  { at, hunk }: Typing,
+  file: string,
+  codeTop: number,
+): void {
+  const { g, p, box } = c;
+  const redY = codeTop + hunk.start * LH - c.state.scroll;
+  g.fillStyle = p.del;
+  g.fillRect(box.x + 36, redY - 4, 3, 7); // lines taken out above the new ones
+  if (viewRng(c, `${file}:wave:${at.hunk}`)() < 0.35 && at.line > hunk.start) {
+    const prev = itemAt(lines, at.line - 1);
+    squiggle(
+      g,
+      box.x + CODE_X + (prev.indent * 2 + 4) * CW,
+      codeTop + (at.line - 1) * LH - c.state.scroll + 14,
+      36,
+      p.del,
     );
   }
-  if (at) {
-    const h = hunks[at.hunk]!;
-    const redY = codeTop + h.start * LH - c.state.scroll;
-    g.fillStyle = p.del;
-    g.fillRect(box.x + 36, redY - 4, 3, 7); // lines taken out above the new ones
-    if (seeded(`${c.seed}:${file}:wave:${at.hunk}`)() < 0.35 && at.line > h.start) {
-      const prev = lines[at.line - 1]!;
-      squiggle(
-        g,
-        box.x + CODE_X + (prev.indent * 2 + 4) * CW,
-        codeTop + (at.line - 1) * LH - c.state.scroll + 14,
-        36,
-        p.del,
-      );
-    }
-    if (!c.moving || caretOn(c.now)) {
-      g.fillStyle = p.text;
-      g.fillRect(
-        box.x + CODE_X + at.column * CW,
-        codeTop + at.line * LH - c.state.scroll + 1,
-        2,
-        LH - 2,
-      );
-    }
+  if (!c.moving || caretOn(c.now)) {
+    g.fillStyle = p.text;
+    g.fillRect(
+      box.x + CODE_X + at.column * CW,
+      codeTop + at.line * LH - c.state.scroll + 1,
+      2,
+      LH - 2,
+    );
   }
+}
+
+/** An editor over the member's real file: tabs from the real recent files, code made up in the file's own language. */
+export function drawEditor(c: ViewCtx): void {
+  const { g, p, box } = c;
+  const file = c.work.file ?? 'untitled';
+  const lang = c.work.lang ?? fallbackLanguage(c.role, viewRng(c, 'lang'));
+  const lines = generateFile(c.seed, file, lang);
+  const editing = c.work.kind === 'edit';
+  const pane = { codeTop: box.y + TAB_H, codeH: box.h - TAB_H - STATUS_H };
+
+  g.fillStyle = p.bg;
+  g.fillRect(box.x, box.y, box.w, box.h);
+  drawTabs(c, openFiles(c, file), file, editing);
+
+  const typing = editing ? typingAt(c, lines, hunksOf(lines, c.seed, file)) : null;
+  scrollTo(c, lines, typing, pane.codeH);
+  const hot = new Set<number>();
+  if (typing) for (let i = typing.hunk.start; i <= typing.at.line; i++) hot.add(i);
+
+  g.save();
+  g.beginPath();
+  g.rect(box.x, pane.codeTop, box.w, pane.codeH);
+  g.clip();
+  drawCode(c, lines, typing, hot, pane);
+  if (typing) drawTypingMarks(c, lines, typing, file, pane.codeTop);
   g.restore();
-  drawMinimap(c, lines, codeTop, codeH, hot);
+  drawMinimap(c, lines, pane.codeTop, pane.codeH, hot);
+  const at = typing?.at;
   statusBar(
     c,
     box.y + box.h - STATUS_H,

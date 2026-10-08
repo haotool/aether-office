@@ -1,10 +1,6 @@
 import { expect, it } from 'vitest';
-import {
-  apparitionsOf,
-  formatSpan,
-  needsAttention,
-  zombiesOf,
-} from '../../apps/web/src/localSessions.js';
+import { apparitionsOf, needsAttention, zombiesOf } from '../../apps/web/src/session-attention.js';
+import { formatSpan } from '../../packages/kernel/src/index.js';
 
 it('writes a span the way a person reads it, rounded down and never zero', () => {
   expect(formatSpan(10_000)).toBe('1 分鐘');

@@ -8,37 +8,7 @@ import { ProviderMark, type MarkProvider } from './provider-marks.js';
 export const tipOf = (agent: Agent, names?: { title: string; tag: string }) =>
   names ? `${names.title} · ${names.tag}` : agent.name;
 
-/**
- * A member's name tag over the scene, a small glass chip: the provider's mark, a status dot that glows in the state's
- * colour, and the short label (`agent.name`, already cut on a meaning boundary by the kernel's `shortLabel`). Hovered or
- * selected it opens into a card with a second line (repository, role, what it is doing) and the share of the context
- * window in use. How much of it shows by distance (far: mark and dot; near: the label) is CSS on `data-density`, which
- * the projection sets each frame. The technical id (`cx·01a1`) is only in the tooltip, with the full title.
- *
- * The tag is also the keyboard's way to the character: Enter or Space on it opens the action menu, a right click or a
- * held finger does too, Shift adds it to a group, and Alt-dragging it carries the desk.
- */
-export function NameTag({
-  agent,
-  provider,
-  context,
-  selected,
-  hovered,
-  grouped,
-  menuOpen,
-  unread,
-  accent,
-  meta,
-  tip,
-  still,
-  label,
-  setElement,
-  onPointerDown,
-  onActivate,
-  onMenu,
-  onGrab,
-  onHover,
-}: {
+type NameTagProps = {
   agent: Agent;
   provider: MarkProvider | undefined;
   /** Share of the context window in use, 0 to 100; null when unknown. */
@@ -66,24 +36,61 @@ export function NameTag({
   /** An Alt press: the start of carrying the desk; true when it began. */
   onGrab: (event: PointerEvent) => boolean;
   onHover: (on: boolean) => void;
-}) {
+};
+
+/** What a tag shows: the provider's mark, the status dot, the name, an unread mark and, open, the context share and the card line. */
+function TagFace({
+  agent,
+  provider,
+  context,
+  open,
+  unread,
+  meta,
+}: Pick<NameTagProps, 'agent' | 'provider' | 'context' | 'unread' | 'meta'> & { open: boolean }) {
+  return (
+    <>
+      {provider && <ProviderMark provider={provider} />}
+      <i className="tag-dot" aria-hidden="true" />
+      <span className="tag-name">{agent.name}</span>
+      {unread && <i className="tag-unread" aria-hidden="true" />}
+      {open && context !== null && (
+        <b className="label-ctx" data-level={contextLevel(context)}>
+          {Math.round(context)}%
+        </b>
+      )}
+      {meta && meta.length > 0 && <small className="tag-meta">{meta.join(' · ')}</small>}
+    </>
+  );
+}
+
+/**
+ * A member's name tag over the scene, a small glass chip: the provider's mark, a status dot that glows in the state's
+ * colour, and the short label (`agent.name`, already cut on a meaning boundary by the kernel's `shortLabel`). Hovered or
+ * selected it opens into a card with a second line (repository, role, what it is doing) and the share of the context
+ * window in use. How much of it shows by distance (far: mark and dot; near: the label) is CSS on `data-density`, which
+ * the projection sets each frame. The technical id (`cx·01a1`) is only in the tooltip, with the full title.
+ *
+ * The tag is also the keyboard's way to the character: Enter or Space on it opens the action menu, a right click or a
+ * held finger does too, Shift adds it to a group, and Alt-dragging it carries the desk.
+ */
+export function NameTag(props: NameTagProps) {
+  const { selected, hovered, grouped, accent, onMenu, onGrab, onHover } = props;
   const menu = useRef(onMenu);
   menu.current = onMenu;
   const press = useMemo(() => createLongPress(() => menu.current()), []);
-  const open = hovered || selected;
   return (
     <button
-      ref={setElement}
+      ref={props.setElement}
       className={`scene-label ${selected ? 'selected' : ''} ${hovered ? 'hovered' : ''} ${grouped ? 'grouped' : ''}`}
-      data-state={agent.activity}
-      data-still={still ? '1' : undefined}
+      data-state={props.agent.activity}
+      data-still={props.still ? '1' : undefined}
       style={{ ['--accent' as string]: accent } as CSSProperties}
-      title={tip}
-      aria-label={label}
+      title={props.tip}
+      aria-label={props.label}
       aria-haspopup="menu"
-      aria-expanded={menuOpen}
+      aria-expanded={props.menuOpen}
       onPointerDown={(e) => {
-        onPointerDown(); // a moving camera would slide the tag out from under the finger
+        props.onPointerDown(); // a moving camera would slide the tag out from under the finger
         if (e.pointerType === 'touch') press.start(e.clientX, e.clientY);
         else if (e.altKey && e.button === 0 && onGrab(e.nativeEvent)) e.preventDefault();
       }}
@@ -96,21 +103,12 @@ export function NameTag({
       }}
       onClick={(e) => {
         if (press.consumeClick()) return;
-        onActivate({ shift: e.shiftKey, keyboard: e.detail === 0 }); // detail is 0 for Enter and Space
+        props.onActivate({ shift: e.shiftKey, keyboard: e.detail === 0 }); // detail is 0 for Enter and Space
       }}
       onPointerEnter={() => onHover(true)}
       onPointerLeave={() => onHover(false)}
     >
-      {provider && <ProviderMark provider={provider} />}
-      <i className="tag-dot" aria-hidden="true" />
-      <span className="tag-name">{agent.name}</span>
-      {unread && <i className="tag-unread" aria-hidden="true" />}
-      {open && context !== null && (
-        <b className="label-ctx" data-level={contextLevel(context)}>
-          {Math.round(context)}%
-        </b>
-      )}
-      {meta && meta.length > 0 && <small className="tag-meta">{meta.join(' · ')}</small>}
+      <TagFace {...props} open={hovered || selected} />
     </button>
   );
 }

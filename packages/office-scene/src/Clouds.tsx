@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Color, InstancedBufferAttribute, PlaneGeometry, ShaderMaterial, Vector3 } from 'three';
 import { DITHER_END, DITHER_PARS, DITHERED } from './dither.js';
-import { seeded } from './random.js';
+import { seeded } from './seeded.js';
 import { setUniform } from './uniforms.js';
 
 const COUNT = 44;
@@ -30,15 +30,7 @@ function cloudSprites() {
   return geometry;
 }
 
-const cloudMaterial = () =>
-  new ShaderMaterial({
-    uniforms: {
-      time: { value: 0 },
-      opacity: { value: 1 },
-      tip: { value: new Vector3() },
-      tint: { value: new Color() },
-    },
-    vertexShader: `
+const CLOUD_VERTEX = `
       attribute vec4 cloud;
       attribute vec2 look;
       uniform float time;
@@ -54,8 +46,9 @@ const cloudMaterial = () =>
         vUv = position.xy * 2.0;
         vSeed = look.y;
         gl_Position = projectionMatrix * viewMatrix * vec4(world, 1.0);
-      }`,
-    fragmentShader: `
+      }`;
+
+const CLOUD_FRAGMENT = `
       ${DITHER_PARS}
       uniform float opacity;
       uniform vec3 tint;
@@ -80,7 +73,18 @@ const cloudMaterial = () =>
         gl_FragColor = vec4(color, alpha);
         #include <colorspace_fragment>
         ${DITHER_END}
-      }`,
+      }`;
+
+const cloudMaterial = () =>
+  new ShaderMaterial({
+    uniforms: {
+      time: { value: 0 },
+      opacity: { value: 1 },
+      tip: { value: new Vector3() },
+      tint: { value: new Color() },
+    },
+    vertexShader: CLOUD_VERTEX,
+    fragmentShader: CLOUD_FRAGMENT,
     ...DITHERED,
     transparent: true,
     depthWrite: false,

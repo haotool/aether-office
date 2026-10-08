@@ -46,21 +46,21 @@ beyond the readiness check: pushing and changing GitHub settings stay manual dec
 - [ ] Create `haotool/aether-office` **private** (no README, no license, no `.gitignore`: the push brings them).
 - [ ] From the rewritten clone: `git remote add origin git@github.com:haotool/aether-office.git`, then
       `git push -u origin main`. Never push this working repository.
-- [ ] Wait for CI (`check` and `commit-messages`) to pass on the pushed `main`.
+- [ ] Wait for CI (`check`, `commit-messages`, and `audit`) to pass on the pushed `main`.
 - [ ] Set the description and topics (`ai-agents`, `claude-code`, `codex`, `mcp`, `threejs`, `local-first`), the website if any,
       and the default branch `main`. Turn off wiki and projects unless used.
 
 ## 4. Protect it
 
 - [ ] Branch ruleset for `main`: require a pull request, one approving review with Code Owners (`.github/CODEOWNERS`),
-      the status checks `check` and `commit-messages`, a linear history; block force pushes and deletion.
+      the status checks `check`, `commit-messages`, and `audit`, a linear history; block force pushes and deletion.
 - [ ] Settings, Code security: enable **private vulnerability reporting** (`SECURITY.md` points reporters there),
       **secret scanning** and **push protection**, **Dependabot alerts** and **security updates**
       (`.github/dependabot.yml` already configures version updates).
 - [ ] Settings, Actions: default workflow permissions read-only (the CI file already declares `contents: read`); require
       approval for workflows from first-time contributors.
-- [ ] Optional: enable code scanning (CodeQL) and a `SECURITY.md` fallback address if you do not want to rely on GitHub
-      alone.
+- [ ] Confirm code scanning runs: `.github/workflows/codeql.yml` is on `main` (advanced CodeQL setup). Add a `SECURITY.md`
+      fallback address if you do not want to rely on GitHub private vulnerability reporting alone.
 
 ## 5. Release
 

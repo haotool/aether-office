@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { OctagonX } from 'lucide-react';
-import { api, execute } from '../api.js';
-import { useT } from '../ui.js';
+import { api } from '../api.js';
+import { execute } from '../api-commands.js';
+import { useT } from '../ui/useT.js';
 type Policy = { liveEnabled: boolean; maxTurns: number; timeoutMs: number; version: number };
 
 /**

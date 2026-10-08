@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api.js';
-import { PageHeading, useT } from '../ui.js';
+import { PageHeading } from '../ui/PageHeading.js';
+import { useT, useWhy } from '../ui/useT.js';
 import type { Key } from '../i18n.js';
 type ObservationPage = {
   sources: {
@@ -37,6 +38,80 @@ const statuses: Record<string, Key> = {
   stale: 'obStale',
   offline: 'obOffline',
 };
+type Source = ObservationPage['sources'][number];
+type ObservationRecord = ObservationPage['records'][number];
+
+function SourceCard({ source }: { source: Source }) {
+  const t = useT();
+  return (
+    <article className="panel">
+      <h2>{source.agentName}</h2>
+      <p>
+        {source.provider} · {source.label}
+      </p>
+      <strong>{t(statuses[source.state] ?? 'obError')}</strong>
+      <dl>
+        <dt>{t('obLastRead')}</dt>
+        <dd>{new Date(source.lastSeen).toLocaleString()}</dd>
+        <dt>{t('obLastNew')}</dt>
+        <dd>
+          {source.lastActivity === null
+            ? t('unavailable')
+            : new Date(source.lastActivity).toLocaleString()}
+        </dd>
+      </dl>
+    </article>
+  );
+}
+
+function RecordCard({ record }: { record: ObservationRecord }) {
+  const t = useT();
+  return (
+    <article className="panel">
+      <p className="muted">
+        {record.provider} · {record.label} · {record.role} · {record.kind} ·{' '}
+        {new Date(record.createdAt).toLocaleString()}
+      </p>
+      <p className="preserve-space observation-text">{record.text}</p>
+      <small>
+        {t('obSession')}: {record.sessionId}
+      </small>
+    </article>
+  );
+}
+
+/** Back to the newest page, or on to the next older one. */
+function PageButtons({
+  before,
+  next,
+  onBefore,
+}: {
+  before: number | undefined;
+  next: number | null;
+  onBefore: (cursor: number | undefined) => void;
+}) {
+  const t = useT();
+  const whyNot = useWhy();
+  return (
+    <div className="form-actions">
+      <button
+        disabled={before === undefined}
+        {...whyNot([before !== undefined, 'whyAtNewest'])}
+        onClick={() => onBefore(undefined)}
+      >
+        {t('obLatest')}
+      </button>
+      <button
+        disabled={!next}
+        {...whyNot([!!next, 'whyNoOlder'])}
+        onClick={() => next && onBefore(next)}
+      >
+        {t('obOlder')}
+      </button>
+    </div>
+  );
+}
+
 export function Observations({ projectId }: { projectId: string }) {
   const t = useT();
   const [before, setBefore] = useState<number | undefined>();
@@ -59,50 +134,15 @@ export function Observations({ projectId }: { projectId: string }) {
       ) : (
         <div className="machine-grid">
           {query.data.sources.map((source) => (
-            <article className="panel" key={source.id}>
-              <h2>{source.agentName}</h2>
-              <p>
-                {source.provider} · {source.label}
-              </p>
-              <strong>{t(statuses[source.state] ?? 'obError')}</strong>
-              <dl>
-                <dt>{t('obLastRead')}</dt>
-                <dd>{new Date(source.lastSeen).toLocaleString()}</dd>
-                <dt>{t('obLastNew')}</dt>
-                <dd>
-                  {source.lastActivity === null
-                    ? t('unavailable')
-                    : new Date(source.lastActivity).toLocaleString()}
-                </dd>
-              </dl>
-            </article>
+            <SourceCard key={source.id} source={source} />
           ))}
         </div>
       )}
       <h2>{t('obHistory')}</h2>
       {query.data?.records.map((record) => (
-        <article className="panel" key={record.seq}>
-          <p className="muted">
-            {record.provider} · {record.label} · {record.role} · {record.kind} ·{' '}
-            {new Date(record.createdAt).toLocaleString()}
-          </p>
-          <p className="preserve-space observation-text">{record.text}</p>
-          <small>
-            {t('obSession')}: {record.sessionId}
-          </small>
-        </article>
+        <RecordCard key={record.seq} record={record} />
       ))}
-      <div className="form-actions">
-        <button disabled={before === undefined} onClick={() => setBefore(undefined)}>
-          {t('obLatest')}
-        </button>
-        <button
-          disabled={!query.data?.nextCursor}
-          onClick={() => setBefore(query.data!.nextCursor!)}
-        >
-          {t('obOlder')}
-        </button>
-      </div>
+      <PageButtons before={before} next={query.data?.nextCursor ?? null} onBefore={setBefore} />
     </>
   );
 }

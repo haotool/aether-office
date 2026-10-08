@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { IntegrationResult, Work } from '@aether/contracts';
-import { api, execute } from '../api.js';
-import { Field, useT } from '../ui.js';
+import { api } from '../api.js';
+import { execute } from '../api-commands.js';
+import { Field } from '../ui/Field.js';
+import { useT } from '../ui/useT.js';
 import type { Key } from '../i18n.js';
 
 type Row = {
@@ -23,6 +25,59 @@ function label(r: Row): Key {
   return 'integrationFailed';
 }
 
+type IntegrateFormProps = {
+  projectId: string;
+  work: Work;
+  queryKey: readonly unknown[];
+  onSaved: () => void;
+};
+
+/** Starts an integration of the work into a base branch, pinned to the commit the person expects it to be at. */
+function IntegrateForm({ projectId, work, queryKey, onSaved }: IntegrateFormProps) {
+  const t = useT();
+  const client = useQueryClient();
+  const [error, setError] = useState('');
+  return (
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        const form = new FormData(e.currentTarget);
+        setError('');
+        try {
+          await execute(
+            'work.integrate',
+            {
+              workId: work.id,
+              baseBranch: form.get('baseBranch'),
+              expectedBase: form.get('expectedBase'),
+            },
+            projectId,
+            work.version,
+          );
+          await client.invalidateQueries({ queryKey });
+          onSaved();
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'REQUEST_FAILED');
+        }
+      }}
+    >
+      <Field label={t('integrationBranch')}>
+        <input name="baseBranch" required defaultValue="main" pattern="[\w.\/\-]{1,100}" />
+      </Field>
+      <Field label={t('integrationBase')}>
+        <input
+          name="expectedBase"
+          required
+          pattern="[0-9a-f]{40}"
+          placeholder="git rev-parse <branch>"
+        />
+      </Field>
+      {error && <p role="alert">{error}</p>}
+      <button type="submit">{t('integrationStart')}</button>
+    </form>
+  );
+}
+
 export function Integration({
   projectId,
   work,
@@ -35,8 +90,6 @@ export function Integration({
   onSaved: () => void;
 }) {
   const t = useT();
-  const client = useQueryClient();
-  const [error, setError] = useState('');
   const key = ['integrations', projectId, work.id];
   const query = useQuery({
     queryKey: key,
@@ -60,43 +113,7 @@ export function Integration({
         ))}
       </ul>
       {canIntegrate && (
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const form = new FormData(e.currentTarget);
-            setError('');
-            try {
-              await execute(
-                'work.integrate',
-                {
-                  workId: work.id,
-                  baseBranch: form.get('baseBranch'),
-                  expectedBase: form.get('expectedBase'),
-                },
-                projectId,
-                work.version,
-              );
-              await client.invalidateQueries({ queryKey: key });
-              onSaved();
-            } catch (err) {
-              setError(err instanceof Error ? err.message : 'REQUEST_FAILED');
-            }
-          }}
-        >
-          <Field label={t('integrationBranch')}>
-            <input name="baseBranch" required defaultValue="main" pattern="[\w.\/\-]{1,100}" />
-          </Field>
-          <Field label={t('integrationBase')}>
-            <input
-              name="expectedBase"
-              required
-              pattern="[0-9a-f]{40}"
-              placeholder="git rev-parse <branch>"
-            />
-          </Field>
-          {error && <p role="alert">{error}</p>}
-          <button type="submit">{t('integrationStart')}</button>
-        </form>
+        <IntegrateForm projectId={projectId} work={work} queryKey={key} onSaved={onSaved} />
       )}
     </section>
   );

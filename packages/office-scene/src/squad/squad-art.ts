@@ -150,12 +150,10 @@ export function writeInstance(
     scaling.set(scale[0], scale[1], scale[2]),
   );
   const held = mesh.instanceMatrix.array;
+  const elements = matrix.elements;
   let changed = false;
-  for (let k = 0; k < 16; k++)
-    if (held[i * 16 + k] !== Math.fround(matrix.elements[k]!)) {
-      changed = true;
-      break;
-    }
+  for (let k = 0; k < 16 && !changed; k++)
+    changed = held[i * 16 + k] !== Math.fround(elements[k] ?? 0);
   if (changed) mesh.setMatrixAt(i, matrix);
   if (color !== null) {
     const c = colorOf(color);

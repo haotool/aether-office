@@ -3,8 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '../api.js';
 import { bytes } from './GitHealth.js';
 import type { LocalSession } from '@aether/contracts';
-import { useT } from '../ui.js';
-import { needsAttention } from '../localSessions.js';
+import { useT } from '../ui/useT.js';
+import { needsAttention } from '../session-attention.js';
 import { ClaudeQuota } from './ClaudeQuota.js';
 
 const TIME_ZONE = 'Asia/Taipei';

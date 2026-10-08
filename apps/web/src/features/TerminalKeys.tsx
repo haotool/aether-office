@@ -1,11 +1,10 @@
 import { TERMINAL_KEYS } from './terminal-keys.js';
-import { useT } from '../ui.js';
-import { usePreferences } from '../state.js';
+import { useT, useLocale } from '../ui/useT.js';
 
 /** Esc, Tab, Ctrl+C and the arrows for a touch screen. Shown only to a finger (see styles/phone-drawer.css). */
 export function TerminalKeys({ onKey }: { onKey: (sequence: string) => void }) {
   const t = useT();
-  const zh = usePreferences((s) => s.locale) === 'zh-TW';
+  const zh = useLocale() === 'zh-TW';
   return (
     <div className="terminal-keys" role="toolbar" aria-label={t('terminalKeys')}>
       {TERMINAL_KEYS.map((key) => (

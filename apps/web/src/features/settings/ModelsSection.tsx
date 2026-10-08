@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { LocalSessionsResponse, Mode, ModelCatalog } from '@aether/contracts';
-import { useT } from '../../ui.js';
+import { useT } from '../../ui/useT.js';
 import { ExecutionSettings } from '../ExecutionSettings.js';
 import { ModelPicker, SOURCE_NOTE } from '../ModelPicker.js';
 import { useModels } from '../useModels.js';

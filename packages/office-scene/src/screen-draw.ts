@@ -1,3 +1,5 @@
+import { pick } from './pick.js';
+
 /** Drawing primitives shared by the role screens: the frame, text lines, charts, bars and tiles on a 640 by 400 canvas. */
 export const SCREEN_W = 640;
 export const SCREEN_H = 400;
@@ -59,7 +61,7 @@ export function codeLines(
     const segments = 2 + Math.floor(r() * 5);
     for (let s = 0; s < segments && cx < x + w; s++) {
       const len = 18 + r() * 90;
-      g.fillStyle = colors[Math.floor(r() * colors.length)]!;
+      g.fillStyle = pick(r, colors);
       g.fillRect(cx, y + i * 17, Math.min(len, x + w - cx), 9);
       cx += len + 7;
     }

@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { api, execute } from '../api.js';
-import { Field, useT } from '../ui.js';
+import { api } from '../api.js';
+import { execute } from '../api-commands.js';
+import { Field } from '../ui/Field.js';
+import { useT } from '../ui/useT.js';
 import { AgentPicker, useCommandRunner, type AgentPanelProps } from './panel-kit.js';
 
 type Meeting = {
@@ -43,17 +45,14 @@ function ConcludeForm({
   );
 }
 
-function StartMeetingForm({
-  projectId,
-  agents,
-  error,
-  run,
-}: {
+type StartMeetingFormProps = {
   projectId: string;
   agents: AgentPanelProps['agents'];
   error: string;
   run: Run;
-}) {
+};
+
+function StartMeetingForm({ projectId, agents, error, run }: StartMeetingFormProps) {
   const t = useT();
   return (
     <form

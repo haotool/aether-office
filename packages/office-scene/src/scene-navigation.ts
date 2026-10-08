@@ -19,25 +19,7 @@ function seatsOf(layout: Layout) {
   return map;
 }
 
-/**
- * Where the camera is and which floor is shown: the floor (the busiest one at first), the exploded view, flights to a
- * desk, a zone or a floor, the close-up tour of active members, and the keyboard. Anything the user does with the camera
- * ends the tour and is reported through `onUserCamera`.
- */
-export function useSceneNavigation({
-  agents,
-  layout,
-  focus,
-  onUserCamera,
-  onToggleAuto,
-  pulses,
-  attention,
-  intensity,
-  directing,
-  resumeMs,
-  selectedId,
-  intro,
-}: {
+type NavigationOptions = {
   agents: readonly Agent[];
   layout: Layout;
   focus: string;
@@ -57,27 +39,27 @@ export function useSceneNavigation({
   selectedId: string | null;
   /** The first-visit tour: while it is active the director waits and the tour sets the floor and the exploded view. */
   intro?: IntroTour | undefined;
-}) {
-  const keys = useRef(new Set<string>());
-  const view = useFloorCamera(agents, layout, intro);
-  const { floor, exploded, following, fly, goToFloor, setFloor, setExploded } = view;
-  const seats = useMemo(() => seatsOf(layout), [layout]);
-  const hands = useTakeOver({
-    resumeMs,
-    selectedId,
-    setFollowing: view.setFollowing,
-    interruptIntro: intro?.interrupt,
-    onUserCamera,
-  });
-  // Following a member is the person's choice of shot: the director yields until it ends.
-  const running = directing && !hands.paused && !following && !intro?.active;
-  const directed = useDirector({ agents, seats, pulses, attention, intensity }, running, view);
-  const { takeOver } = hands;
-  const aim = { seats, exploded, fly, takeOver, setFloor, userChoseFloor: view.userChoseFloor };
-  useFocusCamera({ focus, layout, floor, exploded, fly, takeOver, setFloor });
-  const { follow, followPoint } = useFollow(aim, following, view.setFollowing);
-  const lookAtScreen = useLookAtScreen(aim);
+};
 
+/** The person's hands on the camera: any touch pauses the director, and ends a follow and the first-visit tour. */
+function useHands(o: NavigationOptions, setFollowing: (id: string | null) => void) {
+  return useTakeOver({
+    resumeMs: o.resumeMs,
+    selectedId: o.selectedId,
+    setFollowing,
+    interruptIntro: o.intro?.interrupt,
+    onUserCamera: o.onUserCamera,
+  });
+}
+
+/** The keyboard and the toggles it shares with the panel: follow (the director) and the exploded view. */
+function useNavigationKeys(
+  view: ReturnType<typeof useFloorCamera>,
+  hands: ReturnType<typeof useTakeOver>,
+  onToggleAuto: (() => void) | undefined,
+) {
+  const keys = useRef(new Set<string>());
+  const { floor, exploded, goToFloor, setExploded } = view;
   const { setPaused } = hands;
   const toggleFollow = useCallback(() => {
     setPaused(false);
@@ -95,6 +77,31 @@ export function useSceneNavigation({
     onToggleExploded: toggleExploded,
     onCamera: hands.userCamera,
   });
+  return { keys, toggleFollow, toggleExploded };
+}
+
+/**
+ * Where the camera is and which floor is shown: the floor (the busiest one at first), the exploded view, flights to a
+ * desk, a zone or a floor, the close-up tour of active members, and the keyboard. Anything the user does with the camera
+ * ends the tour and is reported through `onUserCamera`.
+ */
+export function useSceneNavigation(o: NavigationOptions) {
+  const { agents, layout, focus, intro } = o;
+  const view = useFloorCamera(agents, layout, intro);
+  const { floor, exploded, following, fly, goToFloor, setFloor, setExploded } = view;
+  const seats = useMemo(() => seatsOf(layout), [layout]);
+  const hands = useHands(o, view.setFollowing);
+  // Following a member is the person's choice of shot: the director yields until it ends.
+  const running = o.directing && !hands.paused && !following && !intro?.active;
+  const { pulses, attention, intensity } = o;
+  const directed = useDirector({ agents, seats, pulses, attention, intensity }, running, view);
+  const { takeOver } = hands;
+  const aim = { seats, exploded, fly, takeOver, setFloor, userChoseFloor: view.userChoseFloor };
+  useFocusCamera({ focus, layout, floor, exploded, fly, takeOver, setFloor });
+  const { follow, followPoint } = useFollow(aim, following, view.setFollowing);
+  const lookAtScreen = useLookAtScreen(aim);
+
+  const { keys, toggleFollow, toggleExploded } = useNavigationKeys(view, hands, o.onToggleAuto);
 
   return {
     keys,

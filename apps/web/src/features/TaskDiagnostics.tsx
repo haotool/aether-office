@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api.js';
-import { usePreferences } from '../state.js';
-import { useT } from '../ui.js';
+import { useT, useLocale } from '../ui/useT.js';
 type Diagnosis = {
   reason: string;
   runId: string | null;
@@ -47,7 +46,7 @@ export function TaskDiagnostics({
   version: number;
 }) {
   const t = useT();
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   const query = useQuery({
     queryKey: ['diagnostics', projectId, workId, version],
     queryFn: () => api<Diagnosis>(`/api/projects/${projectId}/work/${workId}/diagnostics`),

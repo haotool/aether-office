@@ -3,7 +3,7 @@
 .pip-wall {
   position: absolute;
   z-index: var(--z-hud-chip);
-  right: 16px; /* token-lint: geometry */
+  right: var(--space-16);
   bottom: 44px; /* token-lint: geometry */
   display: flex;
   flex-direction: column;
@@ -33,11 +33,11 @@
 .pip-bar i,
 .pip-cam::before {
   flex: none;
-  width: 6px; /* token-lint: geometry */
-  height: 6px; /* token-lint: geometry */
+  width: var(--space-6);
+  height: var(--space-6);
   border-radius: 50%;
   background: var(--red);
-  animation: rec 1.6s ease-in-out infinite; /* token-lint: loop */
+  animation: rec var(--dur-rec) ease-in-out infinite;
 }
 .pip {
   position: relative;
@@ -52,7 +52,7 @@
   border: 1px solid var(--glass-accent-line);
   border-radius: var(--r-sm);
   background: linear-gradient(to top, var(--glass-strong), transparent 55%);
-  box-shadow: 0 0 12px var(--glow); /* token-lint: glow */
+  box-shadow: var(--glow-12) var(--glow);
   color: var(--on-glass);
   text-align: left;
   pointer-events: auto;
@@ -137,7 +137,7 @@
   font-size: var(--fs-label);
 }
 .pip-load i {
-  width: 4px; /* token-lint: geometry */
+  width: var(--space-4);
   height: 10px; /* token-lint: geometry */
   border-radius: var(--r-xs);
   background: var(--glass-line);
@@ -148,8 +148,8 @@
 .pip-close {
   display: grid;
   place-items: center;
-  width: 20px; /* token-lint: geometry */
-  height: 20px; /* token-lint: geometry */
+  width: var(--space-20);
+  height: var(--space-20);
   margin-left: auto;
   border: 1px solid var(--glass-line);
   border-radius: var(--r-pill);

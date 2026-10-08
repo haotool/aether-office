@@ -12,7 +12,8 @@ import {
 } from '../../packages/kernel/src/index.js';
 import { claudeActions, codexActions } from '../../apps/control/src/services/session-work.js';
 import { roleOf, resetRoles } from '../../apps/control/src/services/session-role.js';
-import { mergeLayout, roleResolver } from '../../apps/web/src/localSessions.js';
+import { mergeLayout } from '../../apps/web/src/layout-merge.js';
+import { roleResolver } from '../../apps/web/src/localSessions.js';
 import { roleWhy } from '../../apps/web/src/features/role-why.js';
 import { translate } from '../../apps/web/src/i18n.js';
 import { CORPUS } from './fixtures/session-corpus.js';

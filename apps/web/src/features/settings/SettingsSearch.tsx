@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import { Search, X } from 'lucide-react';
-import { useT } from '../../ui.js';
+import { useT } from '../../ui/useT.js';
 
 /** The box that narrows Settings to the rows that match; Escape empties it, "/" brings the focus here. */
 export const SettingsSearch = forwardRef<

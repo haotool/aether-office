@@ -4,7 +4,8 @@ import type { Agent, LocalSession, Snapshot } from '@aether/contracts';
 import { ROLE_LABELS } from '@aether/kernel';
 import { classificationOf } from '../localSessions.js';
 import { roleWhy } from './role-why.js';
-import { Badge, useT } from '../ui.js';
+import { Badge } from '../ui/Badge.js';
+import { useT } from '../ui/useT.js';
 
 const Row = ({
   label,

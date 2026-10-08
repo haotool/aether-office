@@ -29,26 +29,20 @@ const callKey = (c: Call) => `${c.tool}|${c.at}`;
 
 type Event = { kind: 'edit'; at: number } | { kind: 'test'; at: number; ok: boolean };
 
-/**
- * The outcome signals one session's change between two scans makes. A call whose real outcome (`ok`) is newly known gives
- * a `tool.end`; a test outcome also feeds two patterns that are made only of real calls: the same repo failing in one session
- * while another passed (`tests.machine`, on the failing member), and a failed run followed by an edit to a test file and then a
- * pass (`tests.edited`). A call whose outcome is not known gives nothing here. Pure.
- */
-export function outcomeSignals(input: {
-  member: string;
-  repo: string;
-  old: AttributedSession | undefined;
-  next: AttributedSession;
-  at: number;
-  /** The newest call time of the previous scan (or, for a session not seen before, just before the fresh window). */
-  seenUntil: number;
-  memory: OutcomeMemory;
-}): { signals: LifeSignal[]; memory: OutcomeMemory } {
-  const { member, repo, old, next, at, seenUntil } = input;
+/** The calls that settled since the earlier scan, as signals (`tool.end`) and as the test and edit events the patterns are made of. */
+function settledEvents(
+  input: {
+    member: string;
+    old: AttributedSession | undefined;
+    next: AttributedSession;
+    at: number;
+    seenUntil: number;
+  },
+  signals: LifeSignal[],
+): Event[] {
+  const { member, old, next, at, seenUntil } = input;
   const own = (s: AttributedSession) => (s.hook?.recent ?? []).filter((c) => !c.agentId);
   const known = new Map((old ? own(old) : []).map((c) => [callKey(c), c.ok]));
-  const signals: LifeSignal[] = [];
   const events: Event[] = [];
   for (const c of own(next)) {
     const before = known.get(callKey(c));
@@ -68,6 +62,28 @@ export function outcomeSignals(input: {
     if (c.at > seenUntil && EDITS.has(c.tool) && TEST_FILE.test(c.target ?? ''))
       events.push({ kind: 'edit', at: c.at });
   }
+  return events;
+}
+
+/**
+ * The outcome signals one session's change between two scans makes. A call whose real outcome (`ok`) is newly known gives
+ * a `tool.end`; a test outcome also feeds two patterns that are made only of real calls: the same repo failing in one session
+ * while another passed (`tests.machine`, on the failing member), and a failed run followed by an edit to a test file and then a
+ * pass (`tests.edited`). A call whose outcome is not known gives nothing here. Pure.
+ */
+export function outcomeSignals(input: {
+  member: string;
+  repo: string;
+  old: AttributedSession | undefined;
+  next: AttributedSession;
+  at: number;
+  /** The newest call time of the previous scan (or, for a session not seen before, just before the fresh window). */
+  seenUntil: number;
+  memory: OutcomeMemory;
+}): { signals: LifeSignal[]; memory: OutcomeMemory } {
+  const { member, repo, at } = input;
+  const signals: LifeSignal[] = [];
+  const events = settledEvents(input, signals);
   let tests = input.memory.tests.filter((t) => at - t.at < MACHINE_MS);
   const fixing = { ...input.memory.fixing };
   for (const e of events.sort((a, b) => a.at - b.at)) {

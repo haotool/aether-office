@@ -205,25 +205,15 @@ function useDomRegistry() {
   return { elements, speechElements, chipElements, bubbles };
 }
 
-/** Everything the scene's canvas and its page overlay draw from, computed once per render of `OfficeScene`. */
-export function useSceneModel(props: OfficeSceneProps) {
-  const core = useSceneCore(props);
-  const { layout, nav, pose, compact, zh, intro } = core;
+/** Who is turned toward whom (a message in the air), and the faint lines between desks of one repository or session. */
+function relationsOf(
+  props: OfficeSceneProps,
+  nav: ReturnType<typeof useSceneCore>['nav'],
+  sceneAgents: readonly Agent[],
+  hovered: string | null,
+) {
   const { floor, exploded } = nav;
-  const { hovered, hoverStart, hoverEnd } = useHover();
-  const [namesOn, setNamesOn] = useState(!compact); // on a phone only the member in hand has a name, until asked for all
-  const dom = useDomRegistry();
-  const stalk = useStalk(props.beanstalk, exploded);
-  const frame = useFloorFrame(layout, floor, exploded);
-  const departures = useMemo(
-    () => planDepartures(layout, Object.keys(props.leaving ?? {})),
-    [layout, props.leaving],
-  );
-  const { visibleFloors, sceneAgents } = floorsInView(props.agents, layout, floor, exploded);
-  const ix = useInteraction(props, core, sceneAgents, hovered, dom.elements);
-  const onShot = (id: string) => nav.directed?.shot.subjects.includes(id) ?? false;
-  // Who is turned toward whom (a message in the air), and the faint lines between desks of one repository or session.
-  const { engagements, edges } = sceneRelations({
+  return sceneRelations({
     pulses: props.pulses ?? [],
     seats: nav.seats,
     agents: sceneAgents,
@@ -233,7 +223,21 @@ export function useSceneModel(props: OfficeSceneProps) {
     heightOf: (f) => floorY(f, exploded),
     visible: (f) => exploded || f === floor,
   });
-  const speakers = pickSpeakers({
+}
+
+/** The members on their way out, planned over the layout; replanned only when the layout or who is leaving changes. */
+function useDepartures(layout: Layout, leaving: OfficeSceneProps['leaving']) {
+  return useMemo(() => planDepartures(layout, Object.keys(leaving ?? {})), [layout, leaving]);
+}
+
+/** Who gets a speech bubble: the selected member and the camera's subjects first, then the busiest working ones (not on a phone). */
+const speakersOf = (
+  props: OfficeSceneProps,
+  sceneAgents: readonly Agent[],
+  onShot: (id: string) => boolean,
+  compact: boolean,
+) =>
+  pickSpeakers({
     agents: sceneAgents,
     speech: props.speech,
     intensity: props.intensity,
@@ -241,6 +245,50 @@ export function useSceneModel(props: OfficeSceneProps) {
     onShot,
     compact,
   });
+
+/** The members in view and what passes between them: who leaves, who is heard, who is turned toward whom, and the person's hands on them. */
+function useCrowd(
+  props: OfficeSceneProps,
+  core: ReturnType<typeof useSceneCore>,
+  elements: ReturnType<typeof useDomRegistry>['elements'],
+  hovered: string | null,
+) {
+  const { layout, nav, compact, zh } = core;
+  const { floor, exploded } = nav;
+  const [namesOn, setNamesOn] = useState(!compact); // on a phone only the member in hand has a name, until asked for all
+  const departures = useDepartures(layout, props.leaving);
+  const { visibleFloors, sceneAgents } = floorsInView(props.agents, layout, floor, exploded);
+  const ix = useInteraction(props, core, sceneAgents, hovered, elements);
+  const onShot = (id: string) => nav.directed?.shot.subjects.includes(id) ?? false;
+  const { engagements, edges } = relationsOf(props, nav, sceneAgents, hovered);
+  const speakers = speakersOf(props, sceneAgents, onShot, compact);
+  const marks = ix.marks;
+  return {
+    ...labelling({ props, zh, compact, namesOn, hovered, marks, onShot, sceneAgents }),
+    namesOn,
+    setNamesOn,
+    departures,
+    visibleFloors,
+    sceneAgents,
+    ix,
+    onShot,
+    engagements,
+    edges,
+    speakers,
+  };
+}
+
+/** Everything the scene's canvas and its page overlay draw from, computed once per render of `OfficeScene`. */
+export function useSceneModel(props: OfficeSceneProps) {
+  const core = useSceneCore(props);
+  const { layout, nav, pose, compact, zh, intro } = core;
+  const { floor, exploded } = nav;
+  const { hovered, hoverStart, hoverEnd } = useHover();
+  const dom = useDomRegistry();
+  const stalk = useStalk(props.beanstalk, exploded);
+  const frame = useFloorFrame(layout, floor, exploded);
+  const crowd = useCrowd(props, core, dom.elements, hovered);
+  const { ix, engagements } = crowd;
   return {
     props,
     ...core,
@@ -248,31 +296,12 @@ export function useSceneModel(props: OfficeSceneProps) {
     ...renderSettings(props, compact),
     ...stalk,
     ...frame,
-    ...labelling({
-      props,
-      zh,
-      compact,
-      namesOn,
-      hovered,
-      marks: ix.marks,
-      onShot,
-      sceneAgents,
-    }),
-    ix,
     floor,
     exploded,
     hovered,
     hoverStart,
     hoverEnd,
-    namesOn,
-    setNamesOn,
-    departures,
-    visibleFloors,
-    sceneAgents,
-    onShot,
-    engagements,
-    edges,
-    speakers,
+    ...crowd,
     filming: nav.directed !== null || intro.active, // the camera runs itself: full-rate frames
     auto: (props.autoCamera ?? true) && !props.reducedMotion,
     squadScene: {

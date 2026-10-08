@@ -1,10 +1,17 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { Plus, BookOpen } from 'lucide-react';
 import type { Work } from '@aether/contracts';
-import { api, execute } from '../api.js';
+import { api } from '../api.js';
+import { execute } from '../api-commands.js';
 import { useFormCheck } from './use-form-check.js';
-import { Modal, Field, Fold, PageHeading, Empty, Badge, useT, whyNot } from '../ui.js';
+import { Modal } from '../ui/Modal.js';
+import { Field } from '../ui/Field.js';
+import { Fold } from '../ui/Disclosure.js';
+import { PageHeading } from '../ui/PageHeading.js';
+import { Empty } from '../ui/Empty.js';
+import { Badge } from '../ui/Badge.js';
+import { useT, useWhy } from '../ui/useT.js';
 type Entry = {
   id: string;
   title: string;
@@ -109,6 +116,7 @@ function ApprovalForm({
   onDecide: (decision: string, reason: FormDataEntryValue | null) => void;
 }) {
   const t = useT();
+  const whyNot = useWhy();
   return (
     <Fold title={t('knowledgeReviewReason')}>
       <form
@@ -122,10 +130,20 @@ function ApprovalForm({
           <textarea name="reason" required maxLength={2000} />
         </Field>
         <div className="form-actions">
-          <button value="reject" className="secondary" disabled={busy}>
+          <button
+            value="reject"
+            className="secondary"
+            disabled={busy}
+            {...whyNot([!busy, 'whyBusy'])}
+          >
             {t('knowledgeReject')}
           </button>
-          <button value="approve" className="primary" disabled={busy}>
+          <button
+            value="approve"
+            className="primary"
+            disabled={busy}
+            {...whyNot([!busy, 'whyBusy'])}
+          >
             {t('knowledgeApprove')}
           </button>
         </div>
@@ -171,6 +189,34 @@ function EntryCard({
   );
 }
 
+type Problem = ReturnType<typeof useFormCheck>['problem'];
+
+/** The optional links of a proposal: the work, the artifact and the commit it came from. */
+function ReferenceFields({ workItems, problem }: { workItems: Work[]; problem: Problem }) {
+  const t = useT();
+  return (
+    <details>
+      <summary>{t('knowledgeReferences')}</summary>
+      <Field label={t('currentWork')}>
+        <select name="workId">
+          <option value="">—</option>
+          {workItems.map((work) => (
+            <option key={work.id} value={work.id}>
+              {work.title}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field label={t('artifactReference')} error={problem('artifactId')}>
+        <input name="artifactId" pattern="[0-9a-fA-F-]{36}" />
+      </Field>
+      <Field label={t('commitReference')} error={problem('commitSha')}>
+        <input name="commitSha" pattern="[a-f0-9]{40}([a-f0-9]{24})?" maxLength={64} />
+      </Field>
+    </details>
+  );
+}
+
 function ProposeModal({
   workItems,
   error,
@@ -185,6 +231,7 @@ function ProposeModal({
   onClose: () => void;
 }) {
   const t = useT();
+  const whyNot = useWhy();
   const { problem, check } = useFormCheck();
   return (
     <Modal title={t('proposeKnowledge')} onClose={onClose}>
@@ -205,31 +252,13 @@ function ProposeModal({
         <Field label={t('source')} error={problem('source')}>
           <input name="source" required maxLength={2048} />
         </Field>
-        <details>
-          <summary>{t('knowledgeReferences')}</summary>
-          <Field label={t('currentWork')}>
-            <select name="workId">
-              <option value="">—</option>
-              {workItems.map((work) => (
-                <option key={work.id} value={work.id}>
-                  {work.title}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label={t('artifactReference')} error={problem('artifactId')}>
-            <input name="artifactId" pattern="[0-9a-fA-F-]{36}" />
-          </Field>
-          <Field label={t('commitReference')} error={problem('commitSha')}>
-            <input name="commitSha" pattern="[a-f0-9]{40}([a-f0-9]{24})?" maxLength={64} />
-          </Field>
-        </details>
+        <ReferenceFields workItems={workItems} problem={problem} />
         {error && (
           <p role="alert" className="error-text">
             {error}
           </p>
         )}
-        <button className="primary full-width" disabled={busy}>
+        <button className="primary full-width" disabled={busy} {...whyNot([!busy, 'whyBusy'])}>
           {t('save')}
         </button>
       </form>
@@ -237,17 +266,81 @@ function ProposeModal({
   );
 }
 
-export function Knowledge({
-  projectId,
-  canWrite,
+/** The entries that match the search: loading, the error, the cards or the empty state. */
+function EntryList({
+  query,
   canApprove,
-  workItems,
+  busy,
+  onDecide,
 }: {
+  query: UseQueryResult<Entry[]>;
+  canApprove: boolean;
+  busy: boolean;
+  onDecide: (entry: Entry, decision: string, reason: FormDataEntryValue | null) => void;
+}) {
+  const t = useT();
+  if (query.isPending) return <p>{t('loading')}</p>;
+  if (query.error)
+    return (
+      <p role="alert" className="error-text">
+        {query.error.message}
+      </p>
+    );
+  if (!query.data?.length) return <Empty title={t('empty')} />;
+  return (
+    <div className="knowledge-grid">
+      {query.data.map((entry) => (
+        <EntryCard
+          key={entry.id}
+          entry={entry}
+          canApprove={canApprove}
+          busy={busy}
+          onDecide={(decision, reason) => onDecide(entry, decision, reason)}
+        />
+      ))}
+    </div>
+  );
+}
+
+function SearchBox({ value, onChange }: { value: string; onChange: (next: string) => void }) {
+  const t = useT();
+  return (
+    <div className="search-box">
+      <BookOpen size={16} />
+      <input
+        aria-label={t('search')}
+        placeholder={t('search')}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
+  );
+}
+
+function ProposeButton({ canWrite, onClick }: { canWrite: boolean; onClick: () => void }) {
+  const t = useT();
+  const whyNot = useWhy();
+  return (
+    <button
+      className="primary"
+      onClick={onClick}
+      disabled={!canWrite}
+      {...whyNot([canWrite, 'needOperator'])}
+    >
+      <Plus size={16} />
+      {t('proposeKnowledge')}
+    </button>
+  );
+}
+
+type KnowledgeProps = {
   projectId: string;
   canWrite: boolean;
   canApprove: boolean;
   workItems: Work[];
-}) {
+};
+
+export function Knowledge({ projectId, canWrite, canApprove, workItems }: KnowledgeProps) {
   const t = useT();
   const [search, setSearch] = useState('');
   const [adding, setAdding] = useState(false);
@@ -266,50 +359,22 @@ export function Knowledge({
         title={t('knowledgeTitle')}
         subtitle={t('knowledgeTrustNote')}
         action={
-          <button
-            className="primary"
+          <ProposeButton
+            canWrite={canWrite}
             onClick={() => {
               setError('');
               setAdding(true);
             }}
-            disabled={!canWrite}
-            {...whyNot(canWrite, t('needOperator'))}
-          >
-            <Plus size={16} />
-            {t('proposeKnowledge')}
-          </button>
+          />
         }
       />
-      <div className="search-box">
-        <BookOpen size={16} />
-        <input
-          aria-label={t('search')}
-          placeholder={t('search')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
-      {entries.isPending ? (
-        <p>{t('loading')}</p>
-      ) : entries.error ? (
-        <p role="alert" className="error-text">
-          {entries.error.message}
-        </p>
-      ) : entries.data?.length ? (
-        <div className="knowledge-grid">
-          {entries.data.map((entry) => (
-            <EntryCard
-              key={entry.id}
-              entry={entry}
-              canApprove={canApprove}
-              busy={busy}
-              onDecide={(decision, reason) => void decide(entry, decision, reason)}
-            />
-          ))}
-        </div>
-      ) : (
-        <Empty title={t('empty')} />
-      )}
+      <SearchBox value={search} onChange={setSearch} />
+      <EntryList
+        query={entries}
+        canApprove={canApprove}
+        busy={busy}
+        onDecide={(entry, decision, reason) => void decide(entry, decision, reason)}
+      />
       {!adding && error && <p role="alert">{error}</p>}
       {adding && (
         <ProposeModal

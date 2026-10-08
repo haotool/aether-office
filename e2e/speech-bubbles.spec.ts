@@ -1,5 +1,6 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
 import { signIn } from './support/sign-in.js';
+import { throughout } from './support/settled.js';
 import AxeBuilder from '@axe-core/playwright';
 
 // `?speech=1` gives every member a stand-in prompt and a Markdown reply (bold, code, bullets, a heading, Chinese text), to
@@ -67,8 +68,8 @@ test('a tall reply scrolls by itself, and the pointer holds it', async ({ page }
   // Hovering holds it where it is (and shows more of it).
   await bubble.hover();
   const held = await scrolled(bubble);
-  await page.waitForTimeout(900); // a negative wait: a held bubble must not move, so there is nothing to wait for
-  expect(await scrolled(bubble)).toBe(held);
+  // A held bubble must not move in the frames that follow.
+  await throughout(page, async () => expect(await scrolled(bubble)).toBe(held), 54);
 });
 
 test('with reduced motion it does not scroll: a clamped preview with a fade, and it expands on hover', async ({
@@ -78,8 +79,8 @@ test('with reduced motion it does not scroll: a clamped preview with a fade, and
   const bubble = reply(page);
   await expect(bubble).toBeVisible({ timeout: 30_000 });
   await expect(bubble).toHaveAttribute('data-overflow', 'true');
-  await page.waitForTimeout(3500); // a negative wait: the auto-scroll starts after a short pause, and must not under reduced motion
-  expect(await scrolled(bubble)).toBe(0);
+  // The auto-scroll starts after a short pause, and must not under reduced motion.
+  await throughout(page, async () => expect(await scrolled(bubble)).toBe(0), 210);
   expect(
     await bubble.locator('.speech-scroll').evaluate((el) => getComputedStyle(el).maskImage),
   ).not.toBe('none');

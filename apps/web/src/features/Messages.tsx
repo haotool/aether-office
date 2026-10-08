@@ -2,25 +2,28 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Send, MessageSquare, ArrowUpRight } from 'lucide-react';
 import type { MessageWait, Snapshot } from '@aether/contracts';
-import { api, execute } from '../api.js';
-import { Empty, Field, Badge, PageHeading, useT, whyNot } from '../ui.js';
+import { api } from '../api.js';
+import { execute } from '../api-commands.js';
+import { Empty } from '../ui/Empty.js';
+import { Field } from '../ui/Field.js';
+import { Badge } from '../ui/Badge.js';
+import { PageHeading } from '../ui/PageHeading.js';
+import { useT, useWhy } from '../ui/useT.js';
 import { Avatar } from './Avatar.js';
 import { useRooms } from './Rooms.js';
 
 type Message = Snapshot['messages'][number];
 
-function MessageItem({
-  message,
-  snapshot,
-  canWrite,
-  onReply,
-}: {
+type MessageItemProps = {
   message: Message;
   snapshot: Snapshot;
   canWrite: boolean;
   onReply: (id: string) => void;
-}) {
+};
+
+function MessageItem({ message, snapshot, canWrite, onReply }: MessageItemProps) {
   const t = useT();
+  const whyNot = useWhy();
   const sender = snapshot.agents.find((a) => a.id === message.senderId);
   return (
     <article className="message">
@@ -47,7 +50,7 @@ function MessageItem({
           <button
             className="text-button"
             disabled={!canWrite}
-            {...whyNot(canWrite, t('needOperator'))}
+            {...whyNot([canWrite, 'needOperator'])}
             onClick={() => onReply(message.id)}
           >
             {t('reply')}
@@ -138,6 +141,7 @@ function RoomPicker({
 /** Who the message goes to (unless it goes to a room) and what kind of message it is. */
 function RecipientFields({ agents, toRoom }: { agents: Snapshot['agents']; toRoom: boolean }) {
   const t = useT();
+  const whyNot = useWhy();
   return (
     <>
       <Field label={t('recipients')}>
@@ -146,6 +150,7 @@ function RecipientFields({ agents, toRoom }: { agents: Snapshot['agents']; toRoo
           multiple
           required={!toRoom}
           disabled={toRoom}
+          {...whyNot([!toRoom, 'whySendToRoom'])}
           size={Math.min(6, Math.max(2, agents.length))}
         >
           {agents.map((a) => (
@@ -202,19 +207,50 @@ function useSendMessage(
   return { send, busy, error };
 }
 
-function ComposePanel({
-  snapshot,
+function SendButton({
   canWrite,
-  replyTo,
-  onReplyDone,
-  onSaved,
+  busy,
+  hasAgents,
 }: {
+  canWrite: boolean;
+  busy: boolean;
+  hasAgents: boolean;
+}) {
+  const t = useT();
+  const whyNot = useWhy();
+  return (
+    <button
+      className="primary full-width"
+      disabled={!canWrite || busy || !hasAgents}
+      {...whyNot([canWrite, 'needOperator'], [!busy, 'whyBusy'], [hasAgents, 'whyNoAgents'])}
+    >
+      {t('send')}
+      <Send size={15} />
+    </button>
+  );
+}
+
+function ReplyStrip({ quoted, onCancel }: { quoted: string | undefined; onCancel: () => void }) {
+  const t = useT();
+  return (
+    <div className="reply-strip">
+      {t('reply')} · {quoted}
+      <button type="button" onClick={onCancel}>
+        {t('cancel')}
+      </button>
+    </div>
+  );
+}
+
+type ComposePanelProps = {
   snapshot: Snapshot;
   canWrite: boolean;
   replyTo: string | null;
   onReplyDone: () => void;
   onSaved: () => void;
-}) {
+};
+
+function ComposePanel({ snapshot, canWrite, replyTo, onReplyDone, onSaved }: ComposePanelProps) {
   const t = useT();
   const [roomId, setRoomId] = useState('');
   const { send, busy, error } = useSendMessage(snapshot.project.id, roomId, replyTo, () => {
@@ -236,12 +272,10 @@ function ComposePanel({
         <RoomPicker projectId={snapshot.project.id} roomId={roomId} onChange={setRoomId} />
         <RecipientFields agents={snapshot.agents} toRoom={!!roomId} />
         {replyTo && (
-          <div className="reply-strip">
-            {t('reply')} · {snapshot.messages.find((m) => m.id === replyTo)?.body.slice(0, 30)}
-            <button type="button" onClick={onReplyDone}>
-              {t('cancel')}
-            </button>
-          </div>
+          <ReplyStrip
+            quoted={snapshot.messages.find((m) => m.id === replyTo)?.body.slice(0, 30)}
+            onCancel={onReplyDone}
+          />
         )}
         <Field label={t('messageBody')}>
           <textarea required name="body" rows={6} maxLength={16000} />
@@ -251,13 +285,7 @@ function ComposePanel({
             {error}
           </p>
         )}
-        <button
-          className="primary full-width"
-          disabled={!canWrite || busy || !snapshot.agents.length}
-        >
-          {t('send')}
-          <Send size={15} />
-        </button>
+        <SendButton canWrite={canWrite} busy={busy} hasAgents={snapshot.agents.length > 0} />
       </form>
     </aside>
   );

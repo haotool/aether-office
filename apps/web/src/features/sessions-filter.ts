@@ -31,3 +31,12 @@ export function filterSessions(
         Number(b.process === 'running') - Number(a.process === 'running') || b.mtime - a.mtime,
     );
 }
+
+export const LIVENESS_LABEL = {
+  active: 'livenessActive',
+  idle: 'livenessIdle',
+  dormant: 'livenessDormant',
+  orphaned: 'livenessOrphaned',
+  ended: 'livenessEnded',
+  unknown: 'livenessUnknown',
+} as const;

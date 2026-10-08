@@ -1,4 +1,4 @@
-import { seeded } from './random.js';
+import { memberRng } from './screen-seed.js';
 import { languageOf, type LangId } from './screen-lang.js';
 import { kindOf, type ToolCall, type WorkKind } from './screen-work.js';
 
@@ -117,7 +117,7 @@ export function chooseView(
   if (state !== 'working' && state !== 'waiting_permission') return 'lock';
   if (
     work.thinking &&
-    seeded(`${seed}:glance:${Math.floor(nowMs / GLANCE_BUCKET_MS)}`)() < GLANCE_CHANCE
+    memberRng(seed, `glance:${Math.floor(nowMs / GLANCE_BUCKET_MS)}`)() < GLANCE_CHANCE
   )
     return ROLE_REFERENCE[role] ?? 'browser';
   switch (work.kind) {

@@ -44,18 +44,22 @@ function useMemberActions({ props, fly, hover, ix }: SquadSceneContext): MemberA
   );
 }
 
-/** The squads in view: each zone with its pods, the supervisor's dressing, the hand-over, the strings, the beam and the zone labels. */
-function SquadEffects({
-  squad,
-  scene,
-  squads,
-  podPos,
-}: {
+/** Every agent seen so far by id: a leaver is no longer listed, but its last look stays. */
+function useKnownAgents(agents: readonly Agent[]): ReadonlyMap<string, Agent> {
+  const known = useRef(new Map<string, Agent>());
+  for (const agent of agents) known.current.set(agent.id, agent);
+  return known.current;
+}
+
+type SquadEffectsProps = {
   squad: SquadFrame;
   scene: SquadSceneContext;
   squads: readonly DrawSquad[];
   podPos: Map<string, Point2>;
-}) {
+};
+
+/** The squads in view: each zone with its pods, the supervisor's dressing, the hand-over, the strings, the beam and the zone labels. */
+function SquadEffects({ squad, scene, squads, podPos }: SquadEffectsProps) {
   const { props, exploded, compact } = scene;
   const { quality, reducedMotion } = props;
   const prefs = props.squadPrefs;
@@ -102,17 +106,58 @@ function SquadEffects({
   );
 }
 
+type MembersProps = {
+  squad: SquadFrame;
+  scene: SquadSceneContext;
+  known: ReadonlyMap<string, Agent>;
+  podPos: Map<string, Point2>;
+};
+
+/** The subagents of the squads in view: seated, arriving or leaving, each at its own floor. */
+function SquadMembers({ squad, scene, known, podPos }: MembersProps) {
+  const { props, floor, exploded, compact, hover, ix, engagements, pose } = scene;
+  const { quality, reducedMotion, selectedId } = props;
+  const actions = useMemberActions(scene);
+  const floorOfSquad = new Map(squad.squads.map((s) => [s.supervisor, s.floor]));
+  const budget = CHARACTER_BUDGET[quality];
+  return squad.members.map((m) => {
+    const agent = known.get(m.id);
+    const memberFloor = floorOfSquad.get(m.supervisor);
+    if (!agent || memberFloor === undefined || (!exploded && memberFloor !== floor)) return null;
+    if (m.phase !== 'leaving' && m.seat >= budget) return null; // a silhouette: drawn by the zone
+    return (
+      <SquadMember
+        key={m.id}
+        agent={agent}
+        member={m}
+        seat={squad.seats.find((s) => s.member === m.id)}
+        arrival={squad.arrivals.get(m.id)}
+        leave={squad.leaves.get(m.id)}
+        handover={squad.handovers.get(m.id)}
+        baseY={floorY(memberFloor, exploded)}
+        podPos={podPos}
+        engagements={engagements.get(m.id)}
+        ring={ringFor(m.id, { group: ix.marks.group, selectedId, hoveredId: hover.id })}
+        selected={m.id === selectedId}
+        emote={pose.cues[m.id]}
+        reducedMotion={reducedMotion}
+        quality={quality}
+        light={compact}
+        actions={actions}
+        onFailure={props.onFailure}
+      />
+    );
+  });
+}
+
 /**
  * Everything drawn for the squads of the scene: each zone with its pods, the supervisor's dressing, the beam into the
  * core, the subagents (seated, arriving, leaving), the zone labels and the activity log. A sibling of the members,
  * mounted by the scene next to them; the subagents are seated in the frame's layout (see use-squad.ts).
  */
 export function SquadLayer({ squad, scene }: { squad: SquadFrame; scene: SquadSceneContext }) {
-  const { props, floor, exploded, compact, hover, ix, engagements, pose } = scene;
-  const { agents, quality, reducedMotion, selectedId } = props;
-  const actions = useMemberActions(scene);
-  const known = useRef(new Map<string, Agent>());
-  for (const agent of agents) known.current.set(agent.id, agent); // a leaver is no longer listed: its last look stays
+  const { floor, exploded } = scene;
+  const known = useKnownAgents(scene.props.agents);
   const podPos = useRef(new Map<string, Point2>());
   const all = squad.squads;
   const squads = useMemo(
@@ -120,43 +165,12 @@ export function SquadLayer({ squad, scene }: { squad: SquadFrame; scene: SquadSc
     [all, exploded, floor],
   );
   squad.handover.view.current = { floor, exploded }; // a hand-over is walked only for a desk that is in view
-  const floorOfSquad = new Map(all.map((s) => [s.supervisor, s.floor]));
-  const budget = CHARACTER_BUDGET[quality];
-
   return (
     <>
       {squads.length > 0 && (
         <SquadEffects squad={squad} scene={scene} squads={squads} podPos={podPos.current} />
       )}
-      {squad.members.map((m) => {
-        const agent = known.current.get(m.id);
-        const memberFloor = floorOfSquad.get(m.supervisor);
-        if (!agent || memberFloor === undefined || (!exploded && memberFloor !== floor))
-          return null;
-        if (m.phase !== 'leaving' && m.seat >= budget) return null; // a silhouette: drawn by the zone
-        return (
-          <SquadMember
-            key={m.id}
-            agent={agent}
-            member={m}
-            seat={squad.seats.find((s) => s.member === m.id)}
-            arrival={squad.arrivals.get(m.id)}
-            leave={squad.leaves.get(m.id)}
-            handover={squad.handovers.get(m.id)}
-            baseY={floorY(memberFloor, exploded)}
-            podPos={podPos.current}
-            engagements={engagements.get(m.id)}
-            ring={ringFor(m.id, { group: ix.marks.group, selectedId, hoveredId: hover.id })}
-            selected={m.id === selectedId}
-            emote={pose.cues[m.id]}
-            reducedMotion={reducedMotion}
-            quality={quality}
-            light={compact}
-            actions={actions}
-            onFailure={props.onFailure}
-          />
-        );
-      })}
+      <SquadMembers squad={squad} scene={scene} known={known} podPos={podPos.current} />
     </>
   );
 }

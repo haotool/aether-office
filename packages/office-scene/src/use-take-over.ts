@@ -40,18 +40,16 @@ export function useTakeOver({
     [resumeMs],
   );
   useEffect(() => () => clearTimeout(resume.current), []);
-  const userCamera = useCallback(() => {
-    setFollowing(null); // a drag, a wheel turn or a key press ends the follow
-    interruptIntro?.();
-    takeOver();
-    onUserCamera?.();
-  }, [takeOver, onUserCamera, interruptIntro, setFollowing]);
   // A press on a name tag: the director steps back and a tour yields, but a follow is kept (nothing moved the camera).
   const pause = useCallback(() => {
     interruptIntro?.();
     takeOver();
     onUserCamera?.();
   }, [takeOver, onUserCamera, interruptIntro]);
+  const userCamera = useCallback(() => {
+    setFollowing(null); // a drag, a wheel turn or a key press ends the follow
+    pause();
+  }, [pause, setFollowing]);
   // Choosing a member is the person's doing too; only a change of choice counts, not the one the page starts with.
   const firstSelection = useRef(true);
   const takeOverNow = useRef(takeOver);

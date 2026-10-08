@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ModelCatalog } from '@aether/contracts';
-import { Field, useT } from '../ui.js';
+import { Field } from '../ui/Field.js';
+import { useT, useWhy } from '../ui/useT.js';
 import { when } from './ClaudeQuota.js';
 import { chipText } from './model-chip.js';
 
@@ -58,6 +59,7 @@ function ModelGroup({
   onChange: OnChange;
 }) {
   const t = useT();
+  const whyNot = useWhy();
   return (
     <section className="model-group" aria-label={catalog.provider}>
       <h3>{catalog.provider === 'claude' ? 'Claude' : 'Codex'}</h3>
@@ -72,6 +74,7 @@ function ModelGroup({
                   className={selected ? 'model-chip u-chip selected' : 'model-chip u-chip'}
                   aria-pressed={onChange ? selected : undefined}
                   disabled={!onChange}
+                  {...whyNot([!!onChange, 'whyReadOnly'])}
                   title={model.isAlias ? t('modelsAlias') : model.id}
                   onClick={() => onChange?.({ provider: catalog.provider, id: model.id })}
                 >
@@ -125,12 +128,14 @@ function EffortField({
 
 function RefreshButton({ onRefresh }: { onRefresh: () => Promise<void> }) {
   const t = useT();
+  const whyNot = useWhy();
   const [busy, setBusy] = useState(false);
   return (
     <button
       type="button"
       className="secondary"
       disabled={busy}
+      {...whyNot([!busy, 'whyBusy'])}
       onClick={async () => {
         setBusy(true);
         try {

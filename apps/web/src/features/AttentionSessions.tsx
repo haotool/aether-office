@@ -3,13 +3,21 @@ import { useQueryClient } from '@tanstack/react-query';
 import { DoorOpen } from 'lucide-react';
 import type { AttributedSession } from '@aether/contracts';
 import type { Locale } from '../i18n.js';
-import { attentionReason, needsAttention, rowLabelOf } from '../localSessions.js';
+import { attentionReason, needsAttention } from '../session-attention.js';
+import { rowLabelOf } from '../session-names.js';
 import { sessionsWaiting } from './needs-you.js';
-import { usePreferences } from '../state.js';
-import { Sheet, useT } from '../ui.js';
+import { Sheet } from '../ui/Modal.js';
+import { useT, useLocale, useWhy } from '../ui/useT.js';
 import { reapZombies } from './reap.js';
 import { SessionDialogs } from './SessionDialogs.js';
 import { idleSessions } from './clock-out.js';
+
+type AttentionSessionsProps = {
+  sessions: readonly AttributedSession[];
+  /** Stopping and reaping are an owner's: anyone else sees the list and can look. */
+  owner: boolean;
+  onOpen: (session: AttributedSession) => void;
+};
 
 /** Reaps the zombie processes under a session and says what is left, per session. */
 function useReap() {
@@ -49,6 +57,7 @@ type RowProps = {
 
 function AttentionRow({ s, waiting, owner, locale, note, reaping, ...on }: RowProps) {
   const t = useT();
+  const whyNot = useWhy();
   const running = owner && s.process === 'running';
   return (
     <li className="attention-row">
@@ -66,7 +75,12 @@ function AttentionRow({ s, waiting, owner, locale, note, reaping, ...on }: RowPr
           {t('focus')}
         </button>
         {running && s.liveness.zombies.length > 0 && (
-          <button className="secondary" disabled={reaping} onClick={on.onReap}>
+          <button
+            className="secondary"
+            disabled={reaping}
+            {...whyNot([!reaping, 'whyBusy'])}
+            onClick={on.onReap}
+          >
             {t('reapZombies')}
           </button>
         )}
@@ -80,59 +94,77 @@ function AttentionRow({ s, waiting, owner, locale, note, reaping, ...on }: RowPr
   );
 }
 
+/** First what only a person can move on (an approval, a question), then what is merely forgotten or ownerless. */
+function attentionList(sessions: readonly AttributedSession[]) {
+  const waiting = sessionsWaiting(sessions, Date.now());
+  const list = [...waiting, ...sessions.filter((s) => needsAttention(s) && !waiting.includes(s))];
+  return { waiting, list };
+}
+
+function ClockOutOffer({ count, onClick }: { count: number; onClick: () => void }) {
+  const t = useT();
+  return (
+    <li className="attention-row clock-out-offer">
+      <button className="primary clock-out-go" onClick={onClick}>
+        <DoorOpen size={18} aria-hidden="true" />
+        {t('clockOut')} ({count})
+      </button>
+    </li>
+  );
+}
+
+function AttentionChip({
+  count,
+  open,
+  onClick,
+}: {
+  count: number;
+  open: boolean;
+  onClick: () => void;
+}) {
+  const t = useT();
+  return (
+    <button
+      className="chip-attention"
+      aria-expanded={open}
+      aria-label={`${t('needsAttention')}: ${count}`}
+      onClick={onClick}
+    >
+      <span aria-hidden="true">!</span>
+      <span className="chip-label">{t('chipNeedsYou')}</span>
+      {count}
+    </button>
+  );
+}
+
 /**
  * The sessions that want a person for how they are alive (forgotten for hours, left without an owner, zombies under
  * them): a chip with the count and a sheet with the reason and what can be done, one tap each. Shown only when there is
  * something to do.
  */
-export function AttentionSessions({
-  sessions,
-  owner,
-  onOpen,
-}: {
-  sessions: readonly AttributedSession[];
-  /** Stopping and reaping are an owner's: anyone else sees the list and can look. */
-  owner: boolean;
-  onOpen: (session: AttributedSession) => void;
-}) {
+export function AttentionSessions({ sessions, owner, onOpen }: AttentionSessionsProps) {
   const t = useT();
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [stopping, setStopping] = useState<AttributedSession | null>(null);
   const [clockingOut, setClockingOut] = useState(false);
   const { result, busy, reap } = useReap();
-  // First what only a person can move on (an approval, a question), then what is merely forgotten or ownerless.
-  const waiting = sessionsWaiting(sessions, Date.now());
-  const list = [...waiting, ...sessions.filter((s) => needsAttention(s) && !waiting.includes(s))];
+  const { waiting, list } = attentionList(sessions);
   const idle = idleSessions(sessions, 1);
   if (!list.length && !open && !clockingOut) return null;
   return (
     <>
-      <button
-        className="chip-attention"
-        aria-expanded={open}
-        aria-label={`${t('needsAttention')}: ${list.length}`}
-        onClick={() => setOpen(true)}
-      >
-        <span aria-hidden="true">!</span>
-        <span className="chip-label">{t('chipNeedsYou')}</span>
-        {list.length}
-      </button>
+      <AttentionChip count={list.length} open={open} onClick={() => setOpen(true)} />
       {open && (
         <Sheet title={t('needsAttention')} count={list.length} onClose={() => setOpen(false)}>
           {owner && idle.length > 0 && (
-            <li className="attention-row clock-out-offer">
-              <button
-                className="primary clock-out-go"
-                onClick={() => {
-                  setOpen(false);
-                  setClockingOut(true);
-                }}
-              >
-                <DoorOpen size={18} aria-hidden="true" />
-                {t('clockOut')} ({idle.length})
-              </button>
-            </li>
+            <ClockOutOffer
+              count={idle.length}
+              onClick={() => {
+                setOpen(false);
+                setClockingOut(true);
+              }}
+            />
           )}
           {list.map((s) => (
             <AttentionRow

@@ -1,8 +1,10 @@
+import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Orbit } from 'lucide-react';
-import type { Session } from './api.js';
-import { usePreferences, useTheme } from './state.js';
-import { useT } from './ui.js';
+import type { Session } from './api-session.js';
+import { useTheme } from './state.js';
+import { useT, useLocale } from './ui/useT.js';
+import { ReasonDefs } from './ui/ReasonDefs.js';
 import { usePhone } from './phone.js';
 import { useApplication } from './app-state.js';
 import { useAuthSession, useDocumentChrome, useSignedOutTitle } from './app-hooks.js';
@@ -10,25 +12,42 @@ import { AppMain, AppNavigation, AppPanel, AppTopbar } from './features/AppFrame
 import { Login } from './features/Login.js';
 import { ProjectForm } from './features/ProjectForm.js';
 import { TabBar } from './features/TabBar.js';
+import { isFieldPerfRequested } from './features/field-perf/is-field-perf-requested.js';
+
+const fieldPerfOverlay =
+  typeof window !== 'undefined' && isFieldPerfRequested(window.location.search);
+
+function FieldPerfOverlay() {
+  const [Panel, setPanel] = useState<ComponentType | null>(null);
+  useEffect(() => {
+    if (!fieldPerfOverlay) return;
+    void import('./features/field-perf/FieldPerfPanel.js').then((m) =>
+      setPanel(() => m.FieldPerfPanel),
+    );
+  }, []);
+  if (!Panel) return null;
+  return <Panel />;
+}
 
 /** Signed out: the login; signed in: the application. */
 export function App() {
   const t = useT();
   const theme = useTheme();
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   const client = useQueryClient();
   const { session, setSession, checked, logout } = useAuthSession();
   useDocumentChrome(theme, locale);
   useSignedOutTitle(!!session);
+  let body: ReactNode;
   if (!checked)
-    return (
+    body = (
       <div className="boot-screen">
         <Orbit size={38} />
         <p>{t('loading')}</p>
       </div>
     );
-  if (!session)
-    return (
+  else if (!session)
+    body = (
       <Login
         onLogin={(s) => {
           setSession(s);
@@ -36,7 +55,13 @@ export function App() {
         }}
       />
     );
-  return <Application session={session} onLogout={logout} />;
+  else body = <Application session={session} onLogout={logout} />;
+  return (
+    <>
+      {body}
+      {fieldPerfOverlay ? <FieldPerfOverlay /> : null}
+    </>
+  );
 }
 
 function Application({ session, onLogout }: { session: Session; onLogout: () => void }) {
@@ -46,6 +71,7 @@ function Application({ session, onLogout }: { session: Session; onLogout: () => 
   const phone = usePhone(); // portrait: tab bar
   return (
     <div className="application">
+      <ReasonDefs />
       <a
         className="skip-link"
         href="#main-content"

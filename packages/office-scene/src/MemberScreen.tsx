@@ -1,7 +1,14 @@
 import { SEATING } from './seating.js';
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { CanvasTexture, RepeatWrapping, SRGBColorSpace, Vector3, type Group } from 'three';
+import {
+  CanvasTexture,
+  RepeatWrapping,
+  SRGBColorSpace,
+  Vector3,
+  type Group,
+  type Texture,
+} from 'three';
 import type { Agent } from '@aether/contracts';
 import type { DepartmentId } from '@aether/kernel';
 import type { DeskProfile } from './desk-profile.js';
@@ -43,19 +50,7 @@ function streamTexture(accent: string): CanvasTexture {
   return texture;
 }
 
-/** A member's own screen (and second monitor): what the session is really doing, or role-themed art; its brightness follows the real activity. */
-export function MemberScreen({
-  role,
-  member,
-  accent,
-  activity,
-  facts,
-  theme,
-  intensity,
-  profile,
-  reducedMotion,
-  rich,
-}: {
+type MemberScreenProps = {
   role: string;
   member: string;
   accent: string;
@@ -71,7 +66,18 @@ export function MemberScreen({
   reducedMotion: boolean;
   /** Room for the extras of a desk: the second monitor (not on a phone or at low quality). */
   rich: boolean;
-}) {
+};
+
+/** The textures a screen is made of: its live painter (or the role's art), the shared second monitor and the work stream. */
+function useScreenTextures({
+  role,
+  member,
+  accent,
+  facts,
+  theme,
+  profile,
+  rich,
+}: MemberScreenProps) {
   const real = facts !== undefined;
   const live = useMemo(
     () => (real ? createFactsScreen(accent, theme, member, role, profile) : null),
@@ -91,6 +97,20 @@ export function MemberScreen({
     [live, role, member, accent],
   );
   const stream = useMemo(() => (real ? streamTexture(accent) : null), [real, accent]);
+  return { live, second, texture, stream };
+}
+
+type Textures = ReturnType<typeof useScreenTextures>;
+
+/** Repaints the screens at the pace the camera's distance deserves, scrolls the stream and shakes a machine at its limit. */
+function useScreenLoop(
+  { live, second, stream }: Textures,
+  {
+    facts,
+    intensity,
+    reducedMotion,
+  }: Pick<MemberScreenProps, 'facts' | 'intensity' | 'reducedMotion'>,
+) {
   const shake = useRef<Group>(null);
   const here = useRef(new Vector3());
   const paintOptions = useRef<PaintOptions>({ interval: 0, moving: true, speed: 1 }); // reused, so a frame allocates nothing
@@ -113,15 +133,61 @@ export function MemberScreen({
       shake.current.position.x =
         intensity === 3 ? Math.sin(state.clock.elapsedTime * 60) * 0.0016 : 0; // a machine at its limit hums
   });
-  const opacity =
-    activity === 'offline' || activity === 'unknown'
-      ? 0.12
-      : ['working', 'reviewing', 'waiting_permission', 'waiting_peer'].includes(activity)
-        ? 1
-        : 0.5;
-  const bandWidth = (BAND.to - BAND.from) * WIDTH;
-  const bandCentre = ((BAND.from + BAND.to) / 2 - 0.5) * WIDTH;
-  const sideSign = profile.side === 'left' ? -1 : 1;
+  return shake;
+}
+
+const SEEN: readonly Agent['activity'][] = [
+  'working',
+  'reviewing',
+  'waiting_permission',
+  'waiting_peer',
+];
+const opacityOf = (activity: Agent['activity']) =>
+  activity === 'offline' || activity === 'unknown' ? 0.12 : SEEN.includes(activity) ? 1 : 0.5;
+
+/** The second monitor, turned in toward the member on the side the desk dresses it. */
+function SecondMonitor({
+  texture,
+  side,
+  opacity,
+}: {
+  texture: Texture;
+  side: DeskProfile['side'];
+  opacity: number;
+}) {
+  const sign = side === 'left' ? -1 : 1;
+  return (
+    <mesh position={[sign * 0.62, -0.035, 0.178]} rotation={[0, -sign * 0.42, 0]}>
+      <planeGeometry args={[SECOND_WIDTH, SECOND_HEIGHT]} />
+      <meshBasicMaterial map={texture} transparent opacity={opacity} toneMapped={false} />
+    </mesh>
+  );
+}
+
+/** The scrolling work stream laid over the ambient column of the main screen. */
+function StreamBand({ texture }: { texture: Texture }) {
+  return (
+    <mesh position={[((BAND.from + BAND.to) / 2 - 0.5) * WIDTH, 0, 0.002]}>
+      <planeGeometry args={[(BAND.to - BAND.from) * WIDTH, HEIGHT * 0.86]} />
+      <meshBasicMaterial
+        map={texture}
+        transparent
+        opacity={0.9}
+        toneMapped={false}
+        depthWrite={false}
+        side={2}
+      />
+    </mesh>
+  );
+}
+
+/** A member's own screen (and second monitor): what the session is really doing, or role-themed art; its brightness follows the real activity. */
+export function MemberScreen(props: MemberScreenProps) {
+  const { activity, intensity, profile } = props;
+  const textures = useScreenTextures(props);
+  const shake = useScreenLoop(textures, props);
+  const { texture, second, stream } = textures;
+  const opacity = opacityOf(activity);
   return (
     <group ref={shake} position={[0, SEATING.screenY, -0.3]}>
       <mesh>
@@ -135,30 +201,8 @@ export function MemberScreen({
           side={2}
         />
       </mesh>
-      {second && (
-        <mesh position={[sideSign * 0.62, -0.035, 0.178]} rotation={[0, -sideSign * 0.42, 0]}>
-          <planeGeometry args={[SECOND_WIDTH, SECOND_HEIGHT]} />
-          <meshBasicMaterial
-            map={second.texture}
-            transparent
-            opacity={opacity}
-            toneMapped={false}
-          />
-        </mesh>
-      )}
-      {stream && intensity > 0 && (
-        <mesh position={[bandCentre, 0, 0.002]}>
-          <planeGeometry args={[bandWidth, HEIGHT * 0.86]} />
-          <meshBasicMaterial
-            map={stream}
-            transparent
-            opacity={0.9}
-            toneMapped={false}
-            depthWrite={false}
-            side={2}
-          />
-        </mesh>
-      )}
+      {second && <SecondMonitor texture={second.texture} side={profile.side} opacity={opacity} />}
+      {stream && intensity > 0 && <StreamBand texture={stream} />}
     </group>
   );
 }

@@ -1,6 +1,13 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type RefObject } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
-import { useT } from '../ui.js';
+import { useT, useWhy } from '../ui/useT.js';
 import { canHighlight, findRanges, paintMatches } from './conv-find.js';
 
 /**
@@ -56,6 +63,34 @@ export function useConvFind(root: RefObject<HTMLElement | null>, content: unknow
 
 type ConvFindState = ReturnType<typeof useConvFind>;
 
+/** An icon button of the find row; `off` is a step with no match to go to. */
+function FindStep({
+  label,
+  off = false,
+  onClick,
+  children,
+}: {
+  label: string;
+  off?: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  const whyNot = useWhy();
+  return (
+    <button
+      type="button"
+      className="icon-button"
+      aria-label={label}
+      title={label}
+      disabled={off}
+      {...whyNot([!off, 'whyNoMatch'])}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
+}
+
 /** The find row: a field, "3 / 12", previous and next, close. Enter goes on, Shift+Enter back, Escape closes. */
 export function FindBar({ find, onClose }: { find: ConvFindState; onClose: () => void }) {
   const t = useT();
@@ -84,35 +119,15 @@ export function FindBar({ find, onClose }: { find: ConvFindState; onClose: () =>
       <span className={`find-count ${none ? 'none' : ''}`} role="status">
         {none ? t('convFindNone') : find.count ? `${find.index + 1} / ${find.count}` : ''}
       </span>
-      <button
-        type="button"
-        className="icon-button"
-        aria-label={t('convFindPrev')}
-        title={t('convFindPrev')}
-        disabled={!find.count}
-        onClick={find.prev}
-      >
+      <FindStep label={t('convFindPrev')} off={!find.count} onClick={find.prev}>
         <ChevronUp size={15} aria-hidden />
-      </button>
-      <button
-        type="button"
-        className="icon-button"
-        aria-label={t('convFindNext')}
-        title={t('convFindNext')}
-        disabled={!find.count}
-        onClick={find.next}
-      >
+      </FindStep>
+      <FindStep label={t('convFindNext')} off={!find.count} onClick={find.next}>
         <ChevronDown size={15} aria-hidden />
-      </button>
-      <button
-        type="button"
-        className="icon-button"
-        aria-label={t('convFindClose')}
-        title={t('convFindClose')}
-        onClick={onClose}
-      >
+      </FindStep>
+      <FindStep label={t('convFindClose')} onClick={onClose}>
         <X size={15} aria-hidden />
-      </button>
+      </FindStep>
     </div>
   );
 }

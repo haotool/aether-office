@@ -1,6 +1,8 @@
 import { MEMO_LIMIT, memoized } from './memo.js';
-import { between, seeded } from './random.js';
+import { between } from './pick.js';
+import { memberRng } from './screen-seed.js';
 import { lineText, type CodeLine } from './screen-tokens.js';
+import { itemAt } from './checked.js';
 
 /**
  * Time on a desk screen, as pure functions of (seed, time): how fast a member types and when it stops, which lines of the
@@ -14,7 +16,7 @@ type Segment = { ms: number; cps: number };
  * breath, a word at a slightly different speed), each followed by a pause to look at the screen.
  */
 const typingCycleOf = (seed: string) => {
-  const r = seeded(`${seed}:typing`);
+  const r = memberRng(seed, 'typing');
   const base = between(r, 5, 8); // this member's own speed, characters per second
   const segments: Segment[] = [];
   for (let burst = 0; burst < 7; burst++) {
@@ -55,7 +57,7 @@ type Hunk = { start: number; length: number };
 
 /** The few places in a file a member edits, in order and apart from each other. */
 export function hunksOf(lines: readonly CodeLine[], seed: string, file: string): Hunk[] {
-  const r = seeded(`${seed}:${file}:hunks`);
+  const r = memberRng(seed, `${file}:hunks`);
   const count = 3 + Math.floor(r() * 2);
   const slot = Math.floor(lines.length / count);
   return Array.from({ length: count }, (_, i) => {
@@ -82,14 +84,14 @@ export function editPosition(
       rest -= size;
       continue;
     }
-    const h = hunks[hunk]!;
+    const h = itemAt(hunks, hunk);
     for (let done = 0; done < h.length; done++) {
-      const width = lineText(lines[h.start + done]!).length + 1;
+      const width = lineText(itemAt(lines, h.start + done)).length + 1;
       if (rest < width) return { hunk, line: h.start + done, column: rest, done };
       rest -= width;
     }
   }
-  return { hunk: 0, line: hunks[0]!.start, column: 0, done: 0 };
+  return { hunk: 0, line: itemAt(hunks, 0).start, column: 0, done: 0 };
 }
 
 /** One step of easing toward a target: a fraction of the distance, so a scroll starts fast and settles (and never overshoots). */
@@ -101,6 +103,6 @@ const READ_BUCKET_MS = 4200;
 /** Where a reader's view rests (0 to `max`): it moves on every few seconds, by a different amount each time. */
 export function readTarget(seed: string, ms: number, max: number): number {
   const bucket = Math.floor(ms / READ_BUCKET_MS);
-  const r = seeded(`${seed}:read:${bucket}`);
+  const r = memberRng(seed, `read:${bucket}`);
   return Math.floor(((bucket * 0.23 + r() * 0.4) % 1) * max);
 }

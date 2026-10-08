@@ -1,4 +1,4 @@
-import { useT } from '../ui.js';
+import { useT, useWhy } from '../ui/useT.js';
 
 /** A confirm dialog's failure line and its two buttons: the confirmation (busy while it runs) and Cancel. */
 export function ConfirmButtons({
@@ -15,6 +15,7 @@ export function ConfirmButtons({
   onCancel: () => void;
 }) {
   const t = useT();
+  const whyNot = useWhy();
   return (
     <>
       {error && (
@@ -23,10 +24,20 @@ export function ConfirmButtons({
         </p>
       )}
       <div className="button-row">
-        <button className="primary" disabled={busy} onClick={onConfirm}>
+        <button
+          className="primary"
+          disabled={busy}
+          {...whyNot([!busy, 'whyBusy'])}
+          onClick={onConfirm}
+        >
           {busy ? t('loading') : confirmLabel}
         </button>
-        <button className="secondary" disabled={busy} onClick={onCancel}>
+        <button
+          className="secondary"
+          disabled={busy}
+          {...whyNot([!busy, 'whyBusy'])}
+          onClick={onCancel}
+        >
           {t('cancel')}
         </button>
       </div>

@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import { useInstallHint } from '../install-prompt.js';
 import { applyUpdate, useUpdateReady } from '../pwa.js';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 
 /** A new version of the page is waiting, and the install offer: both are asked of the person, never forced. */
 export function PwaNotices() {

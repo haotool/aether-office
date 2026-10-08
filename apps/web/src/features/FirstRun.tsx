@@ -1,4 +1,4 @@
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { CopyCommand } from './settings/kit.js';
 
 const HOOKS = 'pnpm hooks install --project /path/to/repo';

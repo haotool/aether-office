@@ -59,7 +59,8 @@ export function introReducer(state: IntroState, action: IntroAction): IntroState
     }
     case 'skip': {
       if (!introActive(state)) return state;
-      const last = introSegments(state.reduced).at(-1)!;
+      const last = introSegments(state.reduced).at(-1);
+      if (!last) return state;
       if (state.status === 'playing' && state.phase === last.phase) return state; // already closing
       // Wind the clock to the start of the closing cut: the tour ends through the same dip it always ends with.
       return {

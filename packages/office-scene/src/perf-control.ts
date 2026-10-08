@@ -1,5 +1,6 @@
 // Pure rules the scene's performance controllers follow; the components in PerfControllers.tsx feed them real timings.
 import type { Quality } from './scene-types.js';
+import { itemAt } from './checked.js';
 /**
  * The most the scene may render at (device pixels per CSS pixel), by tier. `AdaptiveRatio` lowers it while frames run slow
  * (never under `PIXEL_RATIO_FLOOR`) and the screen's own ratio caps it, so these are ceilings, not promises. One constant per
@@ -94,7 +95,10 @@ export const startRatio = (ratio: number, nowMs: number): RatioState => ({
 });
 
 const median = (values: readonly number[]) =>
-  [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)]!;
+  itemAt(
+    [...values].sort((a, b) => a - b),
+    Math.floor(values.length / 2),
+  );
 
 /**
  * Dynamic resolution: step the pixel ratio down while frames run well over the target time, and back up when they have

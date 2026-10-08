@@ -1,6 +1,6 @@
 import { Globe2, Moon, Sprout, Sun, Wind } from 'lucide-react';
 import { usePreferences } from '../state.js';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { PairPhoneButton } from './ConnectPhone.js';
 import { QualitySelect, useLocaleToggle, useThemeToggle } from './PreferenceControls.js';
 
