@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Send } from 'lucide-react';
 import type { AttributedSession } from '@aether/contracts';
 import { uuid } from '../browser-compat.js';
-import { useT } from '../ui.js';
+import { useT, useWhy } from '../ui/useT.js';
 import { ESC, sequenceFor } from './composer-model.js';
 import { useOutbox } from './outbox.js';
 import { writeSteps } from './terminal-driver.js';
@@ -68,6 +68,7 @@ export function MessageBubble({
   error: string;
 }) {
   const t = useT();
+  const whyNot = useWhy();
   const [text, setText] = useState('');
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -89,7 +90,12 @@ export function MessageBubble({
           }
         }}
       />
-      <button type="submit" className="primary" disabled={busy || !text.trim()}>
+      <button
+        type="submit"
+        className="primary"
+        disabled={busy || !text.trim()}
+        {...whyNot([!busy, 'whyBusy'], [!!text.trim(), 'whyNoText'])}
+      >
         <Send size={15} aria-hidden="true" />
         {t('send')}
       </button>

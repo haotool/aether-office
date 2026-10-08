@@ -5,19 +5,10 @@ import type { Pulse, ScreenFacts } from '@aether/office-scene/model';
 import { intensityOf, type Intensity } from './activity-rate.js';
 import type { ContextReading } from './compaction.js';
 import { stillGone } from './clock-out.js';
-import {
-  LOCAL_PREFIX,
-  SUBAGENT_INFIX,
-  activityOf,
-  apparitionsOf,
-  attentionOf,
-  branchResolver,
-  floorResolver,
-  roleResolver,
-  sessionsToAgents,
-  tagOf,
-  zombiesOf,
-} from '../localSessions.js';
+import { LOCAL_PREFIX, tagOf } from '../session-names.js';
+import { SUBAGENT_INFIX } from '../subagent-id.js';
+import { activityOf, apparitionsOf, attentionOf, zombiesOf } from '../session-attention.js';
+import { branchResolver, floorResolver, roleResolver, sessionsToAgents } from '../localSessions.js';
 
 type Sessions = LocalSessionsResponse['sessions'];
 

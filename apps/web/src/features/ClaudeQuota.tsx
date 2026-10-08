@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ClaudeLimits, ClaudeLimitsResponse } from '@aether/contracts';
 import { api } from '../api.js';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { quotaNearLimit, quotaText } from './quota.js';
 
 /** A moment as day, month and time in `timeZone` (the top bar, which knows no usage answer, reads Taipei). */

@@ -82,25 +82,40 @@ export function stopRoute(f: CharacterFacts): 'terminal' | 'process' | null {
   return forgotten && f.role === 'owner' ? 'process' : null;
 }
 
+const sessionlessReason = (f: CharacterFacts): Reason | null =>
+  f.kind === 'subagent' ? 'reasonSubagent' : f.kind === 'managed' ? 'reasonManaged' : null;
+const hasEnded = (f: CharacterFacts) => f.process === 'none' || f.liveness === 'ended';
+
+/** Why a terminal cannot be typed into right now. */
+function typingReason(f: CharacterFacts, sessionless: Reason | null): Reason | null {
+  if (sessionless) return sessionless;
+  if (!isOperator(f.role)) return 'reasonViewer';
+  if (f.drive === 'none') return hasEnded(f) ? 'reasonEnded' : 'reasonReadOnly';
+  if (f.drive === 'held') return 'reasonHeld';
+  return f.drive === 'stopped' ? 'reasonTerminalStopped' : null;
+}
+
+/** Why a session AETHER only watches cannot be continued where AETHER can type. */
+function continueReason(f: CharacterFacts): Reason | null {
+  if (!isOperator(f.role)) return 'reasonViewer';
+  if (!f.profile) return 'reasonNoProfile';
+  return f.process === 'running' ? 'reasonRunningElsewhere' : null;
+}
+
+function stopReason(f: CharacterFacts, sessionless: Reason | null): Reason | null {
+  if (sessionless) return sessionless;
+  if (hasEnded(f)) return 'reasonEnded';
+  if (stopRoute(f)) return null;
+  if (!isOperator(f.role)) return 'reasonViewer';
+  if (f.drive === 'held') return 'reasonHeld';
+  const forgotten =
+    f.process === 'running' && (f.liveness === 'dormant' || f.liveness === 'orphaned');
+  return forgotten ? 'reasonOwner' : 'reasonActive';
+}
+
 export function actionsFor(f: CharacterFacts): CharacterAction[] {
-  const sessionless: Reason | null =
-    f.kind === 'subagent' ? 'reasonSubagent' : f.kind === 'managed' ? 'reasonManaged' : null;
-  const ended = f.process === 'none' || f.liveness === 'ended';
-  const writer = isOperator(f.role);
-  /** Why a terminal cannot be typed into right now. */
-  const typing: Reason | null =
-    sessionless ??
-    (!writer
-      ? 'reasonViewer'
-      : f.drive === 'none'
-        ? ended
-          ? 'reasonEnded'
-          : 'reasonReadOnly'
-        : f.drive === 'held'
-          ? 'reasonHeld'
-          : f.drive === 'stopped'
-            ? 'reasonTerminalStopped'
-            : null);
+  const sessionless = sessionlessReason(f);
+  const typing = typingReason(f, sessionless);
   const result = (id: ActionId, reason: Reason | null, on?: boolean): CharacterAction => ({
     id,
     enabled: reason === null,
@@ -115,48 +130,18 @@ export function actionsFor(f: CharacterFacts): CharacterAction[] {
   // A session AETHER runs gets a message box; one it only watches gets the way to continue it where AETHER can type.
   if (f.kind !== 'observed' || f.drive !== 'none')
     actions.push(result('message', typing ?? (f.working ? 'reasonWorking' : null)));
-  else
-    actions.push(
-      result(
-        'continue',
-        !writer
-          ? 'reasonViewer'
-          : !f.profile
-            ? 'reasonNoProfile'
-            : f.process === 'running'
-              ? 'reasonRunningElsewhere'
-              : null,
-      ),
-    );
+  else actions.push(result('continue', continueReason(f)));
   actions.push(
     result('replies', typing ?? (f.working ? 'reasonWorking' : null)),
     result('copy_resume', sessionless),
     result(
       'fork',
-      sessionless ?? (!writer ? 'reasonViewer' : !f.profile ? 'reasonNoProfile' : null),
+      sessionless ?? (!isOperator(f.role) ? 'reasonViewer' : !f.profile ? 'reasonNoProfile' : null),
     ),
     result('interrupt', typing ?? (f.working ? null : 'reasonIdle')),
   );
   if (f.clockOut) actions.push(result('send_home', f.role === 'owner' ? null : 'reasonOwner'));
-  else
-    actions.push(
-      result(
-        'stop',
-        sessionless ??
-          (ended
-            ? 'reasonEnded'
-            : stopRoute(f)
-              ? null
-              : !writer
-                ? 'reasonViewer'
-                : f.drive === 'held'
-                  ? 'reasonHeld'
-                  : f.process === 'running' &&
-                      (f.liveness === 'dormant' || f.liveness === 'orphaned')
-                    ? 'reasonOwner'
-                    : 'reasonActive'),
-      ),
-    );
+  else actions.push(result('stop', stopReason(f, sessionless)));
   actions.push(
     result('pin', f.pinned || f.wall ? null : 'reasonNoWall', f.pinned),
     result('feed', null),

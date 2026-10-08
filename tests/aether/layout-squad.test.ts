@@ -22,7 +22,7 @@ import {
   squadLayout,
   squadObjectOf,
 } from '../../packages/office-scene/src/squad/squad-layout.js';
-import { mergeLayout } from '../../apps/web/src/localSessions.js';
+import { mergeLayout } from '../../apps/web/src/layout-merge.js';
 
 const desk = (
   id: string,

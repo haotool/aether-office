@@ -104,8 +104,8 @@
   opacity: 0.4;
 }
 .empty-orbit span {
-  width: 17px; /* token-lint: geometry */
-  height: 17px; /* token-lint: geometry */
+  width: var(--icon-md);
+  height: var(--icon-md);
   border-radius: 50%;
   background: var(--selected);
   border: 1px solid var(--mint);

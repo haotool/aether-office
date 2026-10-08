@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import {
   Copy,
   Crosshair,
@@ -20,7 +20,8 @@ import { EMOTES, type EmoteId } from '@aether/office-scene/model';
 import { copyText } from '../browser-compat.js';
 import type { Key } from '../i18n.js';
 import { sessionCommands } from '../localSessions.js';
-import { Sheet, useT } from '../ui.js';
+import { Sheet } from '../ui/Modal.js';
+import { useT, useWhy } from '../ui/useT.js';
 import {
   actionsFor,
   stopRoute,
@@ -176,6 +177,7 @@ function QuickReplyButtons({
   done: (notice?: string) => void;
 }) {
   const t = useT();
+  const whyNot = useWhy();
   return (
     <div className="char-replies">
       {QUICK_REPLIES.filter((r) => r.send !== null).map((r) => (
@@ -183,6 +185,7 @@ function QuickReplyButtons({
           key={r.id}
           type="button"
           disabled={send.busy}
+          {...whyNot([!send.busy, 'whyBusy'])}
           onClick={async () => {
             if (r.send && (await send.message(r.send))) done(t('charMessageSent'));
           }}
@@ -213,6 +216,7 @@ function ActionItem({
   done: (notice?: string) => void;
 }) {
   const t = useT();
+  const reasonId = useId();
   return (
     <li role="none" data-action={a.id}>
       <button
@@ -220,6 +224,7 @@ function ActionItem({
         role="menuitem"
         className={`char-item ${a.id === 'stop' || a.id === 'send_home' ? 'danger' : ''}`}
         aria-disabled={!a.enabled}
+        aria-describedby={a.reason ? reasonId : undefined}
         aria-expanded={a.id === 'message' || a.id === 'replies' ? panel === a.id : undefined}
         data-on={a.on || undefined}
         onClick={() => a.enabled && void run()}
@@ -227,7 +232,7 @@ function ActionItem({
         {ICON[a.id]}
         <span>
           {a.id === 'pin' && a.on ? t('charUnpin') : t(LABEL[a.id])}
-          {a.reason && <small>{t(a.reason)}</small>}
+          {a.reason && <small id={reasonId}>{t(a.reason)}</small>}
         </span>
       </button>
       {a.id === 'message' && panel === 'message' && a.enabled && (

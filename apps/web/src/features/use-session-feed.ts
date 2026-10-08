@@ -4,13 +4,13 @@ import type { AttributedSession } from '@aether/contracts';
 import { api } from '../api.js';
 import { useLatest } from '../use-latest.js';
 import { sessionsToAgents } from '../localSessions.js';
-import { usePreferences } from '../state.js';
 import { buildFeed, feedItems, type Feed, type Speech } from './feed-model.js';
 import { groupFeed } from './feed-squads.js';
 import { pollMs } from './live-link.js';
 import { askingKeys, usePermissionRequests } from './permission-requests.js';
 import { useLinkLive } from './use-session-stream.js';
 import { holdBaseline, releaseBaseline, useSeen } from './session-seen.js';
+import { useLocale } from '../ui/useT.js';
 
 const SPEECH_POLL_MS = 6000;
 
@@ -41,7 +41,7 @@ export function useSessionFeed(
   all: readonly AttributedSession[] | undefined,
   selectedKey: string | null,
 ): Feed {
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   // Every session that belongs to a project: the office cannot show one that does not.
   const sessions = useMemo(() => (all ?? []).filter((s) => s.projectId !== null), [all]);
   const speech = useSpeechBySession(sessions.length > 0);

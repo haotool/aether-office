@@ -13,15 +13,24 @@ import {
   Square,
 } from 'lucide-react';
 import type { Snapshot } from '@aether/contracts';
-import type { Session } from '../api.js';
+import type { Session } from '../api-session.js';
 import { usePreferences } from '../state.js';
 import type { TourAction, TourState } from '../tour.js';
-import { useT, whyNot } from '../ui.js';
+import { useT, useWhy } from '../ui/useT.js';
 import { avatarState } from '../avatar/state.js';
 import { Avatar } from './Avatar.js';
 import { squadAccentOf } from './feed-squads.js';
 import type { OfficeModel } from './office-model.js';
 import { QualitySelect } from './PreferenceControls.js';
+
+type SceneToolbarProps = {
+  tour: TourState;
+  focus: string;
+  canWrite: boolean;
+  onTour: (action: TourAction) => void;
+  onFocus: (focus: string) => void;
+  onEditLayout: () => void;
+};
 
 /** The page title and the actions beside it: fold the side panel, add work. */
 export function OfficeHeading({
@@ -34,6 +43,7 @@ export function OfficeHeading({
   onNewTask: () => void;
 }) {
   const t = useT();
+  const whyNot = useWhy();
   const prefs = usePreferences();
   return (
     <div className="office-heading">
@@ -53,7 +63,7 @@ export function OfficeHeading({
             className="primary"
             disabled={!canWrite}
             onClick={onNewTask}
-            {...whyNot(canWrite, t('needOperator'))}
+            {...whyNot([canWrite, 'needOperator'])}
           >
             <Plus size={16} />
             {t('newWork')}
@@ -145,6 +155,25 @@ function TourControls({
   );
 }
 
+/** 3D or 2D. */
+function ViewSwitch() {
+  const t = useT();
+  const prefs = usePreferences();
+  return (
+    <div className="segmented">
+      {(['3d', '2d'] as const).map((view) => (
+        <button
+          key={view}
+          className={prefs.view === view ? 'selected' : ''}
+          onClick={() => prefs.set({ view })}
+        >
+          {t(view === '3d' ? 'view3d' : 'view2d')}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /** The scene's toolbar: 3D/2D, quality, beanstalk, the tour, the camera reset and the layout editor. */
 export function SceneToolbar({
   tour,
@@ -153,29 +182,13 @@ export function SceneToolbar({
   onTour,
   onFocus,
   onEditLayout,
-}: {
-  tour: TourState;
-  focus: string;
-  canWrite: boolean;
-  onTour: (action: TourAction) => void;
-  onFocus: (focus: string) => void;
-  onEditLayout: () => void;
-}) {
+}: SceneToolbarProps) {
   const t = useT();
+  const whyNot = useWhy();
   const prefs = usePreferences();
   return (
     <div className="scene-toolbar">
-      <div className="segmented">
-        {(['3d', '2d'] as const).map((view) => (
-          <button
-            key={view}
-            className={prefs.view === view ? 'selected' : ''}
-            onClick={() => prefs.set({ view })}
-          >
-            {t(view === '3d' ? 'view3d' : 'view2d')}
-          </button>
-        ))}
-      </div>
+      <ViewSwitch />
       <div className="scene-options">
         <QualitySelect label={t('quality')} />
         <button
@@ -199,6 +212,7 @@ export function SceneToolbar({
             aria-label={t('editLayoutExperimental')}
             title={t('editLayoutExperimental')}
             disabled={!canWrite}
+            {...whyNot([canWrite, 'needOperator'])}
             onClick={onEditLayout}
           >
             <PencilRuler size={16} />

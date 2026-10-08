@@ -3,21 +3,7 @@ import type { Agent } from '@aether/contracts';
 import type { Seat } from './director.js';
 import { chooseFeeds, feedCapacity, type Feed, type Rect } from './multi-view.js';
 
-/**
- * The control-room wall: which members get a small live view beside the main camera (the busiest ones the main shot is
- * not on, and the ones the person pinned), how much room the canvas has for them, and the canvas's size.
- */
-export function useWallFeeds({
-  allowed,
-  agents,
-  seats,
-  intensity,
-  taken,
-  pinned,
-  floor,
-  exploded,
-  stage,
-}: {
+type WallOptions = {
   /** Not on a phone, not on low quality, not with reduced motion, and the person has not closed the wall. */
   allowed: boolean;
   agents: readonly Agent[];
@@ -30,10 +16,10 @@ export function useWallFeeds({
   exploded: boolean;
   /** Set to the scene's box, which is measured here (one stable ref callback: a new one every render would measure forever). */
   stage: { current: HTMLDivElement | null };
-}) {
-  const feedsRef = useRef<Feed[]>([]);
-  /** Where the small views are on the canvas (MultiCam writes it). */
-  const wall = useRef<ReadonlyMap<string, Rect>>(new Map());
+};
+
+/** The scene box's size, kept as the box resizes; `container` is the one stable ref callback that measures it. */
+function useCanvasSize(stage: WallOptions['stage']) {
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const container = useCallback(
     (node: HTMLDivElement | null) => {
@@ -52,6 +38,28 @@ export function useWallFeeds({
     },
     [stage],
   );
+  return { canvasSize, container };
+}
+
+/**
+ * The control-room wall: which members get a small live view beside the main camera (the busiest ones the main shot is
+ * not on, and the ones the person pinned), how much room the canvas has for them, and the canvas's size.
+ */
+export function useWallFeeds({
+  allowed,
+  agents,
+  seats,
+  intensity,
+  taken,
+  pinned,
+  floor,
+  exploded,
+  stage,
+}: WallOptions) {
+  const feedsRef = useRef<Feed[]>([]);
+  /** Where the small views are on the canvas (MultiCam writes it). */
+  const wall = useRef<ReadonlyMap<string, Rect>>(new Map());
+  const { canvasSize, container } = useCanvasSize(stage);
   const capacity = allowed ? feedCapacity(canvasSize.width, canvasSize.height) : 0;
   const takenKey = [...taken].join('|');
   const feeds = useMemo(() => {

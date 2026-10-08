@@ -1,26 +1,23 @@
 import type { UsageResponse } from '@aether/contracts';
-import { usePreferences } from '../state.js';
-import { useT } from '../ui.js';
-import { formatSpan } from '../localSessions.js';
+import { useT, useLocale } from '../ui/useT.js';
+import { formatSpan } from '@aether/kernel';
 import { when } from './ClaudeQuota.js';
 import { Ring } from './kpi-charts.js';
 import { LIMIT_STALE_MS, limitWindows, resetsIn, windowName } from './kpi-model.js';
+
+type KpiLimitsProps = {
+  limits: UsageResponse['limits'];
+  now: number;
+  timeZone: string;
+};
 
 /**
  * Claude's and Codex's rate-limit windows as rings: percent used, the reset as a countdown and a clock time. Account-wide,
  * not per office. A provider with no reading says so rather than showing a figure it does not have.
  */
-export function KpiLimits({
-  limits,
-  now,
-  timeZone,
-}: {
-  limits: UsageResponse['limits'];
-  now: number;
-  timeZone: string;
-}) {
+export function KpiLimits({ limits, now, timeZone }: KpiLimitsProps) {
   const t = useT();
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   const windows = limitWindows(limits);
   const known = new Set(windows.map((w) => w.provider));
   return (

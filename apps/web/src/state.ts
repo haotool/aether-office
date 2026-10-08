@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { DEFAULT_LIFE_PREFS, type LifePrefs } from '@aether/office-scene/model';
-import { resolveLocale, type Locale } from './i18n.js';
+import { hasLocale, loadLocale, resolveLocale, type Locale } from './i18n.js';
 import { migratePreferences, normalizeLife, PREFS_VERSION } from './prefs-migrate.js';
 import { resolveTheme, useSystemDark, type Theme, type ThemePreference } from './theme.js';
-type Preferences = {
+export type Preferences = {
   locale: Locale;
   /** `system` follows the operating system's scheme; the two older stored values keep meaning what they did. */
   theme: ThemePreference;
@@ -54,7 +54,12 @@ export const usePreferences = create<Preferences>()(
       panelWidth: null,
       panelCollapsed: false,
       view: '3d', // a phone gets the 3D office too; the 2D list is one tap away and the fallback when WebGL fails
-      set: (next) => set(next),
+      // A language that is not downloaded yet is shown once its table has arrived, so no text flashes as a key.
+      set: (next) => {
+        if (next.locale && !hasLocale(next.locale))
+          void loadLocale(next.locale).then(() => set(next));
+        else set(next);
+      },
     }),
     {
       name: 'aether-ui-preferences',

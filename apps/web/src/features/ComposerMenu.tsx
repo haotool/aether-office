@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 
 export type MenuRow = { id: string; label: string; hint?: string; badge?: string };
 

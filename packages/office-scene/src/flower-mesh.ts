@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { itemAt } from './checked.js';
 
 /** What a vertex is, so one shader can draw all of it. */
 export const KIND = { petal: 0, tube: 1, glow: 3 } as const;
@@ -92,8 +93,9 @@ export class MeshBuilder {
     const first = this.position.length / 3;
     let normal = new THREE.Vector3(0, 1, 0);
     path.forEach((p, i) => {
-      const tangent = path[Math.min(i + 1, path.length - 1)]!.clone()
-        .sub(path[Math.max(i - 1, 0)]!)
+      const tangent = itemAt(path, Math.min(i + 1, path.length - 1))
+        .clone()
+        .sub(itemAt(path, Math.max(i - 1, 0)))
         .normalize();
       if (Math.abs(normal.dot(tangent)) > 0.95) normal = new THREE.Vector3(1, 0, 0);
       normal = normal.clone().addScaledVector(tangent, -normal.dot(tangent)).normalize();

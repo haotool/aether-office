@@ -1,5 +1,5 @@
 import type { Seat } from '../director.js';
-import { hashText } from '../random.js';
+import { hashText } from '../hash.js';
 import { toWorld } from '../shot-camera.js';
 import { EFFECTS } from './effects/index.js';
 import type { PlacedSprite, Sprite } from './effects/types.js';
@@ -51,19 +51,20 @@ export function cueSprites(cue: LifeCue, now: number, stage: Stage): PlacedSprit
   };
   if (rule.anchor === 'desk') return cue.member ? onDesk(cue.member, cue.seed) : [];
   if (rule.anchor === 'each-desk')
-    return [...stage.seats.keys()]
-      .filter((id) => inView(stage, stage.seats.get(id)!))
+    return [...stage.seats]
+      .filter(([, seat]) => inView(stage, seat))
       .slice(0, EACH_DESK_MAX)
-      .flatMap((id) => onDesk(id, cue.seed ^ hashText(id)));
+      .flatMap(([id]) => onDesk(id, cue.seed ^ hashText(id)));
   const seats = cue.group
     .flatMap((id) => stage.seats.get(id) ?? [])
     .filter((s) => inView(stage, s));
-  if (!seats.length) return [];
+  const [first] = seats;
+  if (!first) return [];
   const centre = {
     x: seats.reduce((sum, s) => sum + s.x, 0) / seats.length,
     z: seats.reduce((sum, s) => sum + s.z, 0) / seats.length,
   };
-  const base = stage.floorY(seats[0]!.floor, stage.exploded);
+  const base = stage.floorY(first.floor, stage.exploded);
   return effect(t, cue.durationMs, cue.seed, cue.value).map((s) =>
     placed(s, [centre.x + s.at[0], base + s.at[1], centre.z + s.at[2]]),
   );

@@ -1,6 +1,11 @@
-import { en, zh } from '../../i18n.js';
 import { ENTRIES, type EntryId } from './entries.js';
 import { SECTIONS } from './sections.js';
+
+// Settings are found in either language, so this page (a lazy chunk) is the one place that downloads both tables.
+const [{ en }, { zh }] = await Promise.all([
+  import('../../locales/en.js'),
+  import('../../locales/zh.js'),
+]);
 
 const normalize = (text: string) => text.normalize('NFKC').toLowerCase();
 const tokens = (query: string) => normalize(query).split(/\s+/).filter(Boolean);

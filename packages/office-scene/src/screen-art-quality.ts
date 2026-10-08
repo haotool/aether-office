@@ -1,4 +1,5 @@
 import { PALETTE, SCREEN_W, frame, label, tile, Draw } from './screen-draw.js';
+import { pick } from './pick.js';
 
 /** Quality and review screens: a test run, a security scan and a diff. */
 export const tests: Draw = (g, r, a) => {
@@ -45,7 +46,7 @@ export const security: Draw = (g, r, a) => {
   }
   const levels = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
   for (let i = 0; i < 10; i++) {
-    const level = levels[Math.min(3, Math.floor(r() * 4))]!;
+    const level = pick(r, levels);
     const y = 56 + i * 32;
     const c =
       level === 'CRITICAL'

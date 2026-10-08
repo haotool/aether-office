@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import type { Group } from 'three';
 import type { Layout } from '@aether/contracts';
 import { gridFor, planCarriers, positionAt, type Carrier, type SceneMessage } from './carriers.js';
+import { itemAt } from './checked.js';
 
 const SPEED = 4; // metres per second
 const HEIGHT = 1.5;
@@ -19,7 +20,7 @@ function Envelope({ carrier, onDone }: { carrier: Live; onDone: (key: string) =>
     if (travelled >= carrier.length) onDone(carrier.key);
     else invalidate();
   });
-  const start = carrier.points[0]!;
+  const start = itemAt(carrier.points, 0);
   return (
     <group ref={group} position={[start.x, HEIGHT, start.z]}>
       <mesh>

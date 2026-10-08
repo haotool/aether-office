@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { isUnconfirmed, seenIn, type Pending } from './composer-model.js';
 import { useOutbox, usePending } from './outbox.js';
 
@@ -13,18 +13,17 @@ const LABEL = {
 const clock = (at: number) =>
   new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+type PendingBubblesProps = {
+  sessionKey: string;
+  prompts: readonly { text: string; at: number | null }[];
+};
+
 /**
  * What was typed in the composer and the transcript has not shown yet, as the person's own bubbles at the end of the
  * conversation. Each gives way to the real prompt when the transcript has it (matched by text, see `seenIn`), so a
  * message is never shown twice.
  */
-export function PendingBubbles({
-  sessionKey,
-  prompts,
-}: {
-  sessionKey: string;
-  prompts: readonly { text: string; at: number | null }[];
-}) {
+export function PendingBubbles({ sessionKey, prompts }: PendingBubblesProps) {
   const t = useT();
   const items = usePending(sessionKey);
   const update = useOutbox((s) => s.update);

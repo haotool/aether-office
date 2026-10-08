@@ -1,4 +1,4 @@
-import { pick } from './random.js';
+import { pick } from './pick.js';
 import { VOCAB, type LangId } from './screen-lang.js';
 import {
   BLANK,
@@ -19,6 +19,7 @@ import {
   type CodeToken,
   type Names,
 } from './screen-tokens.js';
+import { lastOf } from './checked.js';
 
 /** Generators for the languages that are not statements in braces: stylesheets, data files, SQL, shell and prose. */
 const word = (n: Names) => pick(n.r, VOCAB.nouns);
@@ -74,7 +75,7 @@ function json(n: Names, total: number): CodeLine[] {
       ]);
   }
   entries.forEach((entry, i) => {
-    const last = entry[entry.length - 1]!;
+    const last = lastOf(entry);
     const comma = i < entries.length - 1 ? [pun(',')] : [];
     out.push(...entry.slice(0, -1), { ...last, tokens: [...last.tokens, ...comma] });
   });
@@ -209,5 +210,7 @@ const GENERATORS: Partial<Record<LangId, (n: Names, total: number) => CodeLine[]
 };
 
 export function generateData(lang: LangId, n: Names, total: number): CodeLine[] {
-  return GENERATORS[lang]!(n, total);
+  const generate = GENERATORS[lang];
+  if (!generate) throw new RangeError(`no data generator for ${lang}`);
+  return generate(n, total);
 }

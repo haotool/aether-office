@@ -60,13 +60,17 @@ export function createStrings(capacity: number): Strings {
 
 export type Vec3 = readonly [number, number, number];
 
+/** A float of a pooled array. Every index used below lies inside its array by construction; a stray one reads 0, never undefined. */
+const read = (a: Float32Array, i: number): number => a[i] ?? 0;
+
 /** Lays string `i` straight between its pins, at rest. */
 export function straighten(s: Strings, i: number): void {
   const base = i * POINTS * 3;
   for (let p = 0; p < POINTS; p++) {
     const t = p / SEGMENTS;
     for (let k = 0; k < 3; k++) {
-      const v = s.pins[i * 6 + k]! + (s.pins[i * 6 + 3 + k]! - s.pins[i * 6 + k]!) * t;
+      const top = read(s.pins, i * 6 + k);
+      const v = top + (read(s.pins, i * 6 + 3 + k) - top) * t;
       s.pos[base + p * 3 + k] = v;
       s.prev[base + p * 3 + k] = v;
     }
@@ -93,13 +97,18 @@ export function pinString(
 ): void {
   if (i < 0 || i >= s.capacity || !finite(top) || !finite(bottom)) return;
   const at = i * 6;
+  const { pins } = s;
   const jumped =
     !s.started[i] ||
-    norm(top[0] - s.pins[at]!, top[1] - s.pins[at + 1]!, top[2] - s.pins[at + 2]!) > TELEPORT_M ||
-    norm(bottom[0] - s.pins[at + 3]!, bottom[1] - s.pins[at + 4]!, bottom[2] - s.pins[at + 5]!) >
-      TELEPORT_M;
-  s.pins.set(top, at);
-  s.pins.set(bottom, at + 3);
+    norm(top[0] - read(pins, at), top[1] - read(pins, at + 1), top[2] - read(pins, at + 2)) >
+      TELEPORT_M ||
+    norm(
+      bottom[0] - read(pins, at + 3),
+      bottom[1] - read(pins, at + 4),
+      bottom[2] - read(pins, at + 5),
+    ) > TELEPORT_M;
+  pins.set(top, at);
+  pins.set(bottom, at + 3);
   s.slack[i] = Math.min(1, Math.max(0, Number.isFinite(slack) ? slack : 1));
   s.frozen[i] = frozen ? 1 : 0;
   if (jumped) {
@@ -109,26 +118,24 @@ export function pinString(
   if (i >= s.count) s.count = i + 1;
 }
 
-/** One fixed step of `h` seconds on string `i`. */
-function stepOne(s: Strings, i: number, h: number): void {
-  const base = i * POINTS * 3;
-  const pos = s.pos;
-  const prev = s.prev;
-  const at = i * 6;
-  if (s.frozen[i]) {
-    // Held: the ends follow their pins, the rest keeps its shape, shifted with them.
-    for (let k = 0; k < 3; k++) {
-      pos[base + k] = s.pins[at + k]!;
-      prev[base + k] = s.pins[at + k]!;
-      pos[base + SEGMENTS * 3 + k] = s.pins[at + 3 + k]!;
-      prev[base + SEGMENTS * 3 + k] = s.pins[at + 3 + k]!;
+/** Puts the first and last points of string `i` on its pins (and, for a held string, stills them there). */
+function pinEnds(s: Strings, base: number, at: number, still: boolean): void {
+  const { pos, prev, pins } = s;
+  for (let k = 0; k < 3; k++) {
+    pos[base + k] = read(pins, at + k);
+    pos[base + SEGMENTS * 3 + k] = read(pins, at + 3 + k);
+    if (still) {
+      prev[base + k] = read(pins, at + k);
+      prev[base + SEGMENTS * 3 + k] = read(pins, at + 3 + k);
     }
-    return;
   }
-  const dx = s.pins[at + 3]! - s.pins[at]!;
-  const dy = s.pins[at + 4]! - s.pins[at + 1]!;
-  const dz = s.pins[at + 5]! - s.pins[at + 2]!;
-  const rest = (norm(dx, dy, dz) / SEGMENTS) * (TAUT + (SLACK - TAUT) * s.slack[i]!);
+}
+
+/** Moves the free points: velocity with damping, gravity and a sway across the string, a step never longer than MAX_STEP_M. */
+function integrate(s: Strings, base: number, at: number, i: number, h: number): void {
+  const { pos, prev, pins } = s;
+  const dx = read(pins, at + 3) - read(pins, at);
+  const dz = read(pins, at + 5) - read(pins, at + 2);
   const sway = SWAY_ACCEL * Math.sin(2 * Math.PI * SWAY_HZ * s.time + i * 1.7);
   const lateralX = -dz;
   const lateralZ = dx;
@@ -137,12 +144,12 @@ function stepOne(s: Strings, i: number, h: number): void {
   const swayZ = (lateralZ / lateral) * sway;
   for (let p = 1; p < SEGMENTS; p++) {
     const o = base + p * 3;
-    const ax = swayX;
-    const ay = GRAVITY;
-    const az = swayZ;
-    let mx = (pos[o]! - prev[o]!) * DAMPING + ax * h * h;
-    let my = (pos[o + 1]! - prev[o + 1]!) * DAMPING + ay * h * h;
-    let mz = (pos[o + 2]! - prev[o + 2]!) * DAMPING + az * h * h;
+    const x = read(pos, o);
+    const y = read(pos, o + 1);
+    const z = read(pos, o + 2);
+    let mx = (x - read(prev, o)) * DAMPING + swayX * h * h;
+    let my = (y - read(prev, o + 1)) * DAMPING + GRAVITY * h * h;
+    let mz = (z - read(prev, o + 2)) * DAMPING + swayZ * h * h;
     const m = norm(mx, my, mz);
     if (m > MAX_STEP_M) {
       const k = MAX_STEP_M / m;
@@ -150,44 +157,63 @@ function stepOne(s: Strings, i: number, h: number): void {
       my *= k;
       mz *= k;
     }
-    prev[o] = pos[o]!;
-    prev[o + 1] = pos[o + 1]!;
-    prev[o + 2] = pos[o + 2]!;
-    pos[o] = pos[o]! + mx;
-    pos[o + 1] = pos[o + 1]! + my;
-    pos[o + 2] = pos[o + 2]! + mz;
+    prev[o] = x;
+    prev[o + 1] = y;
+    prev[o + 2] = z;
+    pos[o] = x + mx;
+    pos[o + 1] = y + my;
+    pos[o + 2] = z + mz;
   }
+}
+
+/** Pulls each segment towards `rest` long, ITERATIONS times over, the pinned ends staying where they are. */
+function relax(s: Strings, base: number, at: number, rest: number): void {
+  const pos = s.pos;
   for (let it = 0; it < ITERATIONS; it++) {
-    for (let k = 0; k < 3; k++) {
-      pos[base + k] = s.pins[at + k]!;
-      pos[base + SEGMENTS * 3 + k] = s.pins[at + 3 + k]!;
-    }
+    pinEnds(s, base, at, false);
     for (let p = 0; p < SEGMENTS; p++) {
       const a = base + p * 3;
       const b = a + 3;
-      const ex = pos[b]! - pos[a]!;
-      const ey = pos[b + 1]! - pos[a + 1]!;
-      const ez = pos[b + 2]! - pos[a + 2]!;
+      const ex = read(pos, b) - read(pos, a);
+      const ey = read(pos, b + 1) - read(pos, a + 1);
+      const ez = read(pos, b + 2) - read(pos, a + 2);
       const length = norm(ex, ey, ez) || 1e-6;
       // A taut string is shorter than the way between its pins: the pins hold it, the free points share the error.
       const error = (length - rest) / length;
       const wa = p === 0 ? 0 : 1;
       const wb = p === SEGMENTS - 1 ? 0 : 1;
       const total = wa + wb;
-      pos[a] = pos[a]! + (ex * error * wa) / total;
-      pos[a + 1] = pos[a + 1]! + (ey * error * wa) / total;
-      pos[a + 2] = pos[a + 2]! + (ez * error * wa) / total;
-      pos[b] = pos[b]! - (ex * error * wb) / total;
-      pos[b + 1] = pos[b + 1]! - (ey * error * wb) / total;
-      pos[b + 2] = pos[b + 2]! - (ez * error * wb) / total;
+      pos[a] = read(pos, a) + (ex * error * wa) / total;
+      pos[a + 1] = read(pos, a + 1) + (ey * error * wa) / total;
+      pos[a + 2] = read(pos, a + 2) + (ez * error * wa) / total;
+      pos[b] = read(pos, b) - (ex * error * wb) / total;
+      pos[b + 1] = read(pos, b + 1) - (ey * error * wb) / total;
+      pos[b + 2] = read(pos, b + 2) - (ez * error * wb) / total;
     }
   }
-  for (let k = 0; k < 3; k++) {
-    pos[base + k] = s.pins[at + k]!;
-    pos[base + SEGMENTS * 3 + k] = s.pins[at + 3 + k]!;
+}
+
+/** One fixed step of `h` seconds on string `i`. */
+function stepOne(s: Strings, i: number, h: number): void {
+  const base = i * POINTS * 3;
+  const at = i * 6;
+  if (s.frozen[i]) {
+    // Held: the ends follow their pins, the rest keeps its shape, shifted with them.
+    pinEnds(s, base, at, true);
+    return;
   }
+  const { pins } = s;
+  const length = norm(
+    read(pins, at + 3) - read(pins, at),
+    read(pins, at + 4) - read(pins, at + 1),
+    read(pins, at + 5) - read(pins, at + 2),
+  );
+  const rest = (length / SEGMENTS) * (TAUT + (SLACK - TAUT) * read(s.slack, i));
+  integrate(s, base, at, i, h);
+  relax(s, base, at, rest);
+  pinEnds(s, base, at, false);
   for (let n = 0; n < POINTS * 3; n++)
-    if (!Number.isFinite(pos[base + n]!) || !Number.isFinite(prev[base + n]!)) {
+    if (!Number.isFinite(read(s.pos, base + n)) || !Number.isFinite(read(s.prev, base + n))) {
       straighten(s, i);
       return;
     }
@@ -216,6 +242,6 @@ export function stepStrings(s: Strings, dt: number, hz: number): number {
 export function checksum(s: Strings): number {
   let h = 2166136261;
   const n = s.count * POINTS * 3;
-  for (let i = 0; i < n; i++) h = Math.imul(h ^ Math.round(s.pos[i]! * 1000), 16777619);
+  for (let i = 0; i < n; i++) h = Math.imul(h ^ Math.round(read(s.pos, i) * 1000), 16777619);
   return h >>> 0;
 }

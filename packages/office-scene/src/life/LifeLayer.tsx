@@ -6,12 +6,41 @@ import type { PoseApi } from '../use-pose-cues.js';
 import type { Quality } from '../scene-types.js';
 import { cueSprites, type Stage } from './place.js';
 import { createSpritePool } from './pools/sprite-pool.js';
-import type { ScheduleEnv } from './schedule.js';
+import type { LifeCue, ScheduleEnv } from './schedule.js';
 import type { LifeInput } from './signals.js';
 import { useLifeRun } from './use-life-run.js';
 
 /** The pace pictures animate at: about 30 a second is plenty for small props, and half what a full-rate frame costs. */
 const FRAME_MS = 33;
+
+type LifeLayerProps = {
+  input: LifeInput | undefined;
+  seats: ReadonlyMap<string, Seat>;
+  floor: number;
+  exploded: boolean;
+  quality: Quality;
+  reducedMotion: boolean;
+  zh: boolean;
+  /** The scene's shared aria log (see use-aria-log.ts). */
+  say: (text: string) => void;
+  /** The pose registry: an effect's gesture is asked of it (see poses.ts). */
+  pose: PoseApi['request'];
+};
+
+/** The cues on show now: a preview's frozen ones (a looped one plays on from `t`), else the live ones that have not ended. */
+function cuesOnShow(
+  preview: NonNullable<LifeInput['preview']> | undefined,
+  held: readonly LifeCue[],
+  live: readonly LifeCue[],
+  now: number,
+  loopedAt: number,
+): readonly LifeCue[] {
+  if (!preview) return live.filter((c) => now < c.startedAt + c.durationMs);
+  // A looped preview plays on from `t`: the measurement of what motion costs.
+  return preview.loop
+    ? held.map((c) => ({ ...c, frozenT: (preview.t + now - loopedAt) % c.durationMs }))
+    : held;
+}
 
 /**
  * The office's little moments: reads the signals the page derived, lets the scheduler decide which effects start, and
@@ -28,19 +57,7 @@ export function LifeLayer({
   zh,
   say,
   pose,
-}: {
-  input: LifeInput | undefined;
-  seats: ReadonlyMap<string, Seat>;
-  floor: number;
-  exploded: boolean;
-  quality: Quality;
-  reducedMotion: boolean;
-  zh: boolean;
-  /** The scene's shared aria log (see use-aria-log.ts). */
-  say: (text: string) => void;
-  /** The pose registry: an effect's gesture is asked of it (see poses.ts). */
-  pose: PoseApi['request'];
-}) {
+}: LifeLayerProps) {
   const { invalidate } = useThree();
   const pool = useMemo(createSpritePool, []);
   useEffect(() => () => pool.dispose(), [pool]);
@@ -62,13 +79,9 @@ export function LifeLayer({
 
   useFrame(() => {
     const now = Date.now();
-    const cues = preview ? held.current : state.current.live;
-    const live = preview
-      ? preview.loop // a looped preview plays on from `t`, the measurement of what motion costs
-        ? cues.map((c) => ({ ...c, frozenT: (preview.t + now - loopedAt.current) % c.durationMs }))
-        : cues
-      : cues.filter((c) => now < c.startedAt + c.durationMs);
-    if (!preview && live.length !== cues.length) state.current = { ...state.current, live };
+    const live = cuesOnShow(preview, held.current, state.current.live, now, loopedAt.current);
+    if (!preview && live.length !== state.current.live.length)
+      state.current = { ...state.current, live };
     const stage: Stage = { seats, floor, exploded, floorY, reducedMotion };
     pool.write(live.flatMap((cue) => cueSprites(cue, now, stage)));
     const moving = (!preview || preview.loop) && !reducedMotion && live.length > 0;

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Check, Eye, ShieldQuestion, X } from 'lucide-react';
 import type { PermissionRequestView } from '@aether/contracts';
-import { useT } from '../ui.js';
+import { useT, useWhy } from '../ui/useT.js';
+import type { Why } from '../ui/whyNot.js';
 import {
   decideError,
   mustReview,
@@ -10,6 +11,11 @@ import {
   useDecide,
   usePermissionRequests,
 } from './permission-requests.js';
+
+type PermissionCardProps = {
+  request: PermissionRequestView;
+  compact?: boolean;
+};
 
 /** Counts down to the moment the hook gives up and Claude asks in the terminal. */
 function useSecondsLeft(expiresAt: number) {
@@ -28,26 +34,22 @@ function useSecondsLeft(expiresAt: number) {
  * Deny; the full card also has the preview, the session option and the reason. A compact card offers Allow only when its
  * one line is the whole call: otherwise it shows Review, which opens the full card, so nobody allows what they have not read.
  */
-export function PermissionCard({
-  request,
-  compact = false,
-}: {
-  request: PermissionRequestView;
-  compact?: boolean;
-}) {
+export function PermissionCard({ request, compact = false }: PermissionCardProps) {
   const t = useT();
+  const whyNot = useWhy();
   const decide = useDecide(request.id);
   const [message, setMessage] = useState('');
   const [reviewed, setReviewed] = useState(false);
   const left = useSecondsLeft(request.expiresAt);
   const closed = left === 0;
   const total = Math.max(1, (request.expiresAt - request.createdAt) / 1000);
-  const answer = (decision: 'allow' | 'deny' | 'allow_session') =>
+  const answer = (decision: Answer) =>
     decide.mutate({
       decision,
       ...(decision === 'deny' && message.trim() ? { message: message.trim() } : {}),
     });
   const disabled = closed || decide.isPending;
+  const why = whyNot([!closed, 'whyNotDecidable'], [!decide.isPending, 'whyBusy']);
   const full = !compact || reviewed;
   const review = mustReview(request, compact, reviewed);
   return (
@@ -67,49 +69,105 @@ export function PermissionCard({
           {closed ? t('reqTerminal') : `${t('reqCountdown')} ${left}s`}
         </time>
       </header>
-      {full && request.preview && (
+      {full && <PermissionDetails request={request} message={message} onMessage={setMessage} />}
+      <PermissionActions
+        request={request}
+        full={full}
+        review={review}
+        disabled={disabled}
+        why={why}
+        onReview={() => setReviewed(true)}
+        onAnswer={answer}
+      />
+      {decide.isError && <DecideError error={decide.error} />}
+    </section>
+  );
+}
+
+/** What the call is: its preview, the rules a session grant would add, and the reason a denial carries. */
+function PermissionDetails({
+  request,
+  message,
+  onMessage,
+}: {
+  request: PermissionRequestView;
+  message: string;
+  onMessage: (next: string) => void;
+}) {
+  const t = useT();
+  return (
+    <>
+      {request.preview && (
         <pre className="permission-preview" tabIndex={0}>
           {request.preview}
         </pre>
       )}
-      {full && request.sessionRules.length > 0 && (
+      {request.sessionRules.length > 0 && (
         <p className="muted permission-rules">
           {`${t('reqSessionRules')} ${request.sessionRules.join(', ')}`}
         </p>
       )}
-      {full && (
-        <input
-          className="permission-reason"
-          value={message}
-          maxLength={300}
-          placeholder={t('reqReason')}
-          aria-label={t('reqReason')}
-          onChange={(e) => setMessage(e.target.value)}
-        />
-      )}
-      <div className="permission-actions">
-        <AllowButton
-          review={review}
-          disabled={disabled}
-          onReview={() => setReviewed(true)}
-          onAllow={() => answer('allow')}
-        />
-        {full && request.sessionRules.length > 0 && (
-          <button className="secondary" disabled={disabled} onClick={() => answer('allow_session')}>
-            {t('reqAllowSession')}
-          </button>
-        )}
+      <input
+        className="permission-reason"
+        value={message}
+        maxLength={300}
+        placeholder={t('reqReason')}
+        aria-label={t('reqReason')}
+        onChange={(e) => onMessage(e.target.value)}
+      />
+    </>
+  );
+}
+
+type Answer = 'allow' | 'deny' | 'allow_session';
+
+function PermissionActions({
+  request,
+  full,
+  review,
+  disabled,
+  why,
+  onReview,
+  onAnswer,
+}: {
+  request: PermissionRequestView;
+  full: boolean;
+  review: boolean;
+  disabled: boolean;
+  why: Why;
+  onReview: () => void;
+  onAnswer: (decision: Answer) => void;
+}) {
+  const t = useT();
+  return (
+    <div className="permission-actions">
+      <AllowButton
+        review={review}
+        disabled={disabled}
+        why={why}
+        onReview={onReview}
+        onAllow={() => onAnswer('allow')}
+      />
+      {full && request.sessionRules.length > 0 && (
         <button
-          className="secondary permission-deny"
+          className="secondary"
           disabled={disabled}
-          onClick={() => answer('deny')}
+          {...why}
+          onClick={() => onAnswer('allow_session')}
         >
-          <X size={16} aria-hidden />
-          {t('reqDeny')}
+          {t('reqAllowSession')}
         </button>
-      </div>
-      {decide.isError && <DecideError error={decide.error} />}
-    </section>
+      )}
+      <button
+        className="secondary permission-deny"
+        disabled={disabled}
+        {...why}
+        onClick={() => onAnswer('deny')}
+      >
+        <X size={16} aria-hidden />
+        {t('reqDeny')}
+      </button>
+    </div>
   );
 }
 
@@ -117,11 +175,13 @@ export function PermissionCard({
 function AllowButton({
   review,
   disabled,
+  why,
   onReview,
   onAllow,
 }: {
   review: boolean;
   disabled: boolean;
+  why: Why;
   onReview: () => void;
   onAllow: () => void;
 }) {
@@ -132,7 +192,7 @@ function AllowButton({
       {t('reqReview')}
     </button>
   ) : (
-    <button className="primary" disabled={disabled} onClick={onAllow}>
+    <button className="primary" disabled={disabled} {...why} onClick={onAllow}>
       <Check size={16} aria-hidden />
       {t('reqAllowOnce')}
     </button>

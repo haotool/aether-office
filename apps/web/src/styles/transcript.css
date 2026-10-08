@@ -67,7 +67,7 @@
   border: 1px solid var(--line);
   border-radius: var(--r-xl) var(--r-xl) var(--r-xs) var(--r-xl);
   background: var(--selected);
-  box-shadow: inset 0 1px 0 var(--glass-line-faint); /* token-lint: ring */
+  box-shadow: var(--edge-top) var(--glass-line-faint);
 }
 .msg.user p {
   margin: 0;

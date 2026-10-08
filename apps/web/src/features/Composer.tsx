@@ -6,30 +6,22 @@ import {
   type KeyboardEvent,
   type RefObject,
 } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { SendHorizontal, Square } from 'lucide-react';
-import type { AttributedSession, CustomCommand } from '@aether/contracts';
-import { api } from '../api.js';
+import type { AttributedSession } from '@aether/contracts';
 import { usePhoneAny } from '../phone.js';
-import { usePreferences } from '../state.js';
-import { Modal, useT } from '../ui.js';
-import {
-  ESC,
-  atToken,
-  complete,
-  rankSlash,
-  slashToken,
-  type SlashItem,
-  type Token,
-} from './composer-model.js';
+import { Modal } from '../ui/Modal.js';
+import { useT, useWhy } from '../ui/useT.js';
+import { ESC, complete } from './composer-model.js';
 import { ModelChip, QuickReplies } from './ComposerChips.js';
 import { ComposerMenu, type MenuRow } from './ComposerMenu.js';
-import { slashItems } from './slash-commands.js';
+import { useCompletion, type Completion } from './use-completion.js';
 import { useDrive, type Drive } from './use-drive.js';
 
-const MENU_ROWS = 8;
-
-type SlashRow = MenuRow & { item: SlashItem };
+type ComposerProps = {
+  session: AttributedSession;
+  drive: Drive;
+  working: boolean;
+};
 
 /** The box grows with what is typed (CSS caps it at eight lines) and shrinks back when it is sent. */
 function useAutoGrow(field: RefObject<HTMLTextAreaElement | null>, text: string) {
@@ -40,85 +32,6 @@ function useAutoGrow(field: RefObject<HTMLTextAreaElement | null>, text: string)
     el.style.height = `${el.scrollHeight}px`;
   }, [field, text]);
 }
-
-/** The rows of the slash menu: built-ins, skills and the project's own commands, ranked by what was typed. */
-function useSlashRows(session: AttributedSession, slash: Token | null): SlashRow[] {
-  const t = useT();
-  const locale = usePreferences((s) => s.locale);
-  const commands = useQuery({
-    queryKey: ['session-commands', session.key],
-    queryFn: () =>
-      api<{ commands: CustomCommand[] }>(
-        `/api/local-sessions/${encodeURIComponent(session.key)}/commands`,
-      ),
-    enabled: !!slash,
-    staleTime: 60_000,
-    retry: false,
-  });
-  if (!slash) return [];
-  return rankSlash(
-    slashItems(session.provider, commands.data?.commands ?? []),
-    slash.query,
-    MENU_ROWS,
-  ).map((item) => ({
-    id: item.id,
-    item,
-    label: `/${item.name}`,
-    badge:
-      item.kind === 'skill'
-        ? t('composerSkill')
-        : item.source === 'builtin'
-          ? undefined
-          : t('composerCustom'),
-    hint: [
-      typeof item.description === 'string' ? item.description : item.description[locale],
-      item.kind === 'picker' ? t('composerPicker') : '',
-    ]
-      .filter(Boolean)
-      .join(' · '),
-  }));
-}
-
-/** The rows of the `@` menu: the project's files that match what was typed. */
-function useFileRows(session: AttributedSession, at: Token | null): MenuRow[] {
-  const files = useQuery({
-    queryKey: ['session-files', session.key, at?.query ?? ''],
-    queryFn: () =>
-      api<{ files: string[] }>(
-        `/api/local-sessions/${encodeURIComponent(session.key)}/files?q=${encodeURIComponent(at?.query ?? '')}`,
-      ),
-    enabled: !!at,
-    placeholderData: (previous) => previous,
-    retry: false,
-  });
-  return at ? (files.data?.files ?? []).map((f) => ({ id: f, label: f })) : [];
-}
-
-/** The completion menu under the box: which token is being completed, its rows, and the highlighted one. */
-function useCompletion(session: AttributedSession, text: string, caret: number) {
-  const [active, setActive] = useState(0);
-  const [dismissed, setDismissed] = useState('');
-  const slash = slashToken(text, caret);
-  const at = slash ? null : atToken(text, caret);
-  const token: Token | null = slash ?? at;
-  const slashRows = useSlashRows(session, slash);
-  const fileRows = useFileRows(session, at);
-  const rows: MenuRow[] = slash ? slashRows : fileRows;
-  const here = token ? `${token.start}:${text.slice(0, caret)}` : '';
-  return {
-    token,
-    isSlash: !!slash,
-    rows,
-    open: !!token && dismissed !== here,
-    current: Math.min(active, Math.max(rows.length - 1, 0)),
-    setActive,
-    dismiss: () => setDismissed(here),
-    /** The text a chosen row inserts: `/name ` for a command, `@path ` for a file. */
-    insertion: (row: MenuRow) => (slash ? `/${(row as SlashRow).item.name} ` : `@${row.id} `),
-  };
-}
-
-type Completion = ReturnType<typeof useCompletion>;
 
 /** Arrows move in the open menu, Tab/Enter choose, Escape closes it; otherwise Enter sends on a desktop. */
 function handleComposerKey(
@@ -175,18 +88,25 @@ function StopProcessModal({ onClose, onStop }: { onClose: () => void; onStop: ()
   );
 }
 
+/** The status line a blocked box explains itself in: what its disabled input and Send point at. */
+const COMPOSER_STATUS_ID = 'composer-status';
+
 function SendOrStop({
   stoppable,
-  disabled,
+  blocked,
+  empty,
   onStop,
   onSend,
 }: {
   stoppable: boolean;
-  disabled: boolean;
+  blocked: boolean;
+  empty: boolean;
   onStop: () => void;
   onSend: () => void;
 }) {
   const t = useT();
+  const whyNot = useWhy();
+  const why = blocked ? { 'aria-describedby': COMPOSER_STATUS_ID } : whyNot([!empty, 'whyNoText']);
   if (stoppable)
     return (
       <button type="button" className="danger composer-send" onClick={onStop}>
@@ -195,7 +115,13 @@ function SendOrStop({
       </button>
     );
   return (
-    <button type="button" className="composer-send" disabled={disabled} onClick={onSend}>
+    <button
+      type="button"
+      className="composer-send"
+      disabled={blocked || empty}
+      {...why}
+      onClick={onSend}
+    >
       <SendHorizontal size={15} aria-hidden />
       <span className="composer-send-label">{t('composerSend')}</span>
     </button>
@@ -220,7 +146,7 @@ function ComposerNotes({
     <>
       {working && waiting && <p className="composer-note">{t('composerBusyNote')}</p>}
       {status && (
-        <p className="composer-note" role="status">
+        <p id={COMPOSER_STATUS_ID} className="composer-note" role="status">
           {status}
         </p>
       )}
@@ -307,6 +233,7 @@ function ComposerBox({
         aria-label={t('composerLabel')}
         placeholder={t('composerPlaceholder')}
         disabled={!!blocked}
+        aria-describedby={blocked ? COMPOSER_STATUS_ID : undefined}
         enterKeyHint={phone ? 'enter' : 'send'}
         onChange={(e) => edit(e.target.value, e.target.selectionStart)}
         onSelect={(e) => setCaret(e.currentTarget.selectionStart)}
@@ -314,10 +241,33 @@ function ComposerBox({
       />
       <SendOrStop
         stoppable={stoppable}
-        disabled={!!blocked || !text.trim()}
+        blocked={!!blocked}
+        empty={!text.trim()}
         onStop={onStop}
         onSend={() => submit()}
       />
+    </div>
+  );
+}
+
+/** The model chip and, on a phone, the quick replies. */
+function ComposerBar({
+  session,
+  d,
+  phone,
+}: {
+  session: AttributedSession;
+  d: Driven;
+  phone: boolean;
+}) {
+  return (
+    <div className="composer-bar">
+      <ModelChip session={session} onCommand={(command) => d.send(command)} />
+      {phone && (
+        <div className="composer-scroll">
+          <QuickReplies onReply={(word) => d.send(word)} onEsc={() => void d.sendKey(ESC)} />
+        </div>
+      )}
     </div>
   );
 }
@@ -328,15 +278,7 @@ function ComposerBox({
  * session works, Stop (an interrupt) takes the place of Send. Nothing here claims more than the terminal does: what a
  * command opens in the terminal itself is labelled, not answered.
  */
-export function Composer({
-  session,
-  drive,
-  working,
-}: {
-  session: AttributedSession;
-  drive: Drive;
-  working: boolean;
-}) {
+export function Composer({ session, drive, working }: ComposerProps) {
   const t = useT();
   const phone = usePhoneAny();
   const d = useDrive(session.key, drive, working);
@@ -354,14 +296,7 @@ export function Composer({
   const status = blocked || (!d.online ? t('composerOffline') : '') || editor.note || d.error;
   return (
     <div className="composer">
-      <div className="composer-bar">
-        <ModelChip session={session} onCommand={(command) => d.send(command)} />
-        {phone && (
-          <div className="composer-scroll">
-            <QuickReplies onReply={(word) => d.send(word)} onEsc={() => void d.sendKey(ESC)} />
-          </div>
-        )}
-      </div>
+      <ComposerBar session={session} d={d} phone={phone} />
       <ComposerBox
         field={field}
         editor={editor}

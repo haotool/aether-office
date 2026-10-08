@@ -4,9 +4,9 @@ import { layoutSchema } from '@aether/contracts';
 import { defaultLayout, squadLayout, squadObjectOf } from '@aether/office-scene/model';
 import { layoutVersionOf } from '@aether/kernel';
 import { uuid } from '../browser-compat.js';
-import { execute } from '../api.js';
+import { execute } from '../api-commands.js';
 import { floorResolver } from '../localSessions.js';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { withoutObject, withPatchedObject, type PlainFurniture } from './layout-edit.js';
 
 const MAX_LAYOUT_FILE_BYTES = 128000;
@@ -84,27 +84,15 @@ function useSaveLayout(
   return { busy, save };
 }
 
-/** The layout editor's state and actions: the undo history, the selection, and save/import/export. */
-export function useLayoutEditor({
-  snapshot,
-  onClose,
-  onSaved,
-  onPreview,
-  liveSquads,
-}: EditorProps) {
+/** Adds a piece of furniture, or a squad zone beside a desk (or selects the one that is already there). */
+function useAddObjects(
+  draft: Layout,
+  change: (layout: Layout) => void,
+  floor: number,
+  setSelected: (id: string) => void,
+  setError: (message: string) => void,
+) {
   const t = useT();
-  const [initial] = useState(
-    () => snapshot.layout?.data ?? defaultLayout(snapshot.agents, floorResolver([])),
-  );
-  const [floor, setFloor] = useState(0);
-  const { draft, index, change, canUndo, canRedo, goTo } = useLayoutHistory(initial, onPreview);
-  const [selected, setSelected] = useState(initial.objects.find((o) => !o.floor)?.id ?? '');
-  const [error, setError] = useState('');
-  const object = draft.objects.find((o) => o.id === selected);
-  const finish = () => {
-    onPreview(null);
-    onClose();
-  };
   const addObject = (type: PlainFurniture) => {
     const id = `${type}-${uuid().slice(0, 6)}`;
     const added = { id, type, x: 5, z: 5, rotation: 0, agentId: null, floor };
@@ -124,7 +112,12 @@ export function useLayoutEditor({
     change({ ...draft, objects: [...draft.objects, squadObjectOf(rect, id)] });
     setSelected(id);
   };
-  const importFile = async (file: File) => {
+  return { addObject, addSquad };
+}
+
+/** Reads a layout file into the draft as a new history entry; the error says why a file was refused. */
+function useImportFile(change: (layout: Layout) => void, setError: (message: string) => void) {
+  return async (file: File) => {
     try {
       change(await readLayoutFile(file));
       setError('');
@@ -132,6 +125,25 @@ export function useLayoutEditor({
       setError(e instanceof Error ? e.message : 'INVALID_LAYOUT');
     }
   };
+}
+
+/** The layout editor's state and actions: the undo history, the selection, and save/import/export. */
+export function useLayoutEditor(props: EditorProps) {
+  const { snapshot, onClose, onSaved, onPreview, liveSquads } = props;
+  const [initial] = useState(
+    () => snapshot.layout?.data ?? defaultLayout(snapshot.agents, floorResolver([])),
+  );
+  const [floor, setFloor] = useState(0);
+  const { draft, index, change, canUndo, canRedo, goTo } = useLayoutHistory(initial, onPreview);
+  const [selected, setSelected] = useState(initial.objects.find((o) => !o.floor)?.id ?? '');
+  const [error, setError] = useState('');
+  const object = draft.objects.find((o) => o.id === selected);
+  const finish = () => {
+    onPreview(null);
+    onClose();
+  };
+  const importFile = useImportFile(change, setError);
+  const { addObject, addSquad } = useAddObjects(draft, change, floor, setSelected, setError);
   const { busy, save } = useSaveLayout(snapshot, draft, setError, () => {
     onSaved();
     finish();

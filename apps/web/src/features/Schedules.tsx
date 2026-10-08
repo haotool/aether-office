@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import type { Schedule } from '@aether/contracts';
-import { api, execute } from '../api.js';
+import { api } from '../api.js';
+import { execute } from '../api-commands.js';
 import type { Key } from '../i18n.js';
-import { usePreferences } from '../state.js';
-import { Field, useT } from '../ui.js';
+import { Field } from '../ui/Field.js';
+import { useT, useLocale } from '../ui/useT.js';
 import { EnableToggle, useCommandRunner } from './panel-kit.js';
 
 /** Short weekday names (Sunday first, as the schedule numbers them) in the person's language. */
@@ -20,47 +21,34 @@ function describe(s: Schedule, t: (key: Key) => string, days: string[]): string 
 
 type Run = (fn: () => Promise<unknown>) => Promise<void>;
 
-function CreateScheduleForm({
-  projectId,
-  days,
-  error,
-  run,
-}: {
+type CreateScheduleFormProps = {
   projectId: string;
   days: string[];
   error: string;
   run: Run;
-}) {
+};
+
+/** The schedule.create payload a filled-in form describes: weekly on the days ticked, daily when none is. */
+function scheduleOf(form: FormData) {
+  const picked = form.getAll('day').map(Number);
+  const time = String(form.get('time'));
+  return {
+    name: form.get('name'),
+    spec: picked.length ? { kind: 'weekly', days: picked, time } : { kind: 'daily', time },
+    timezone: form.get('timezone'),
+    missed: form.get('missed'),
+    template: {
+      title: form.get('title'),
+      description: '',
+      acceptance: form.get('acceptance'),
+    },
+  };
+}
+
+function ScheduleFields({ days }: { days: string[] }) {
   const t = useT();
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        const form = new FormData(e.currentTarget);
-        const picked = form.getAll('day').map(Number);
-        const time = String(form.get('time'));
-        const spec = picked.length
-          ? { kind: 'weekly', days: picked, time }
-          : { kind: 'daily', time };
-        void run(() =>
-          execute(
-            'schedule.create',
-            {
-              name: form.get('name'),
-              spec,
-              timezone: form.get('timezone'),
-              missed: form.get('missed'),
-              template: {
-                title: form.get('title'),
-                description: '',
-                acceptance: form.get('acceptance'),
-              },
-            },
-            projectId,
-          ),
-        );
-      }}
-    >
+    <>
       <Field label={t('scheduleName')}>
         <input name="name" required maxLength={160} />
       </Field>
@@ -90,6 +78,21 @@ function CreateScheduleForm({
       <Field label={t('scheduleAcceptance')}>
         <textarea name="acceptance" required maxLength={8000} rows={2} />
       </Field>
+    </>
+  );
+}
+
+function CreateScheduleForm({ projectId, days, error, run }: CreateScheduleFormProps) {
+  const t = useT();
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const form = new FormData(e.currentTarget);
+        void run(() => execute('schedule.create', scheduleOf(form), projectId));
+      }}
+    >
+      <ScheduleFields days={days} />
       {error && <p role="alert">{error}</p>}
       <button type="submit">{t('scheduleCreate')}</button>
     </form>
@@ -125,7 +128,7 @@ function ScheduleRow({
 
 export function Schedules({ projectId, canManage }: { projectId: string; canManage: boolean }) {
   const t = useT();
-  const days = weekdays(usePreferences((s) => s.locale));
+  const days = weekdays(useLocale());
   const key = ['schedules', projectId];
   const { error, run } = useCommandRunner([key], false);
   const query = useQuery({

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, type RefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import {
   AdditiveBlending,
@@ -32,25 +32,16 @@ function dashTexture() {
   return texture;
 }
 
-/**
- * Each member's branch as a beam of light from the desk into the elevator core, which stands for the default branch.
- * A linked worktree is cyan, the main checkout white, uncommitted work amber; while the member works the beam flows
- * toward the core; an idle member's beam is thin, cool and dashed, and only breathes. Only real Git state is drawn: no
- * beam without a branch.
- */
-function BranchBeam({
-  from,
-  to,
-  color,
-  flowing,
-  animate,
-}: {
+type BeamProps = {
   from: [number, number, number];
   to: [number, number, number];
   color: string;
   flowing: boolean;
   animate: boolean;
-}) {
+};
+
+/** The arc from the desk up and into the core, and the tube drawn along it (thicker while the member works). */
+function useBeamCurve(from: BeamProps['from'], to: BeamProps['to'], flowing: boolean) {
   const start = useByValue(from);
   const end = useByValue(to);
   const curve = useMemo(
@@ -71,6 +62,41 @@ function BranchBeam({
     [curve, flowing],
   );
   useEffect(() => () => geometry.dispose(), [geometry]);
+  return { curve, geometry };
+}
+
+/** Three beads of light spaced along the beam; the frame loop moves them toward the core. */
+function Packets({
+  curve,
+  color,
+  meshes,
+}: {
+  curve: QuadraticBezierCurve3;
+  color: string;
+  meshes: RefObject<(Mesh | null)[]>;
+}) {
+  return [0, 1, 2].map((i) => (
+    <mesh
+      key={i}
+      ref={(node) => {
+        meshes.current[i] = node;
+      }}
+      position={curve.getPoint(i / 3)}
+    >
+      <sphereGeometry args={[0.11, 10, 8]} />
+      <meshBasicMaterial color={color} toneMapped={false} />
+    </mesh>
+  ));
+}
+
+/**
+ * Each member's branch as a beam of light from the desk into the elevator core, which stands for the default branch.
+ * A linked worktree is cyan, the main checkout white, uncommitted work amber; while the member works the beam flows
+ * toward the core; an idle member's beam is thin, cool and dashed, and only breathes. Only real Git state is drawn: no
+ * beam without a branch.
+ */
+function BranchBeam({ from, to, color, flowing, animate }: BeamProps) {
+  const { curve, geometry } = useBeamCurve(from, to, flowing);
   const dashes = useMemo(() => (flowing ? null : dashTexture()), [flowing]);
   useEffect(() => () => dashes?.dispose(), [dashes]);
   const tint = useMemo(
@@ -108,22 +134,12 @@ function BranchBeam({
           toneMapped={false}
         />
       </mesh>
-      {flowing &&
-        [0, 1, 2].map((i) => (
-          <mesh
-            key={i}
-            ref={(node) => {
-              packets.current[i] = node;
-            }}
-            position={curve.getPoint(i / 3)}
-          >
-            <sphereGeometry args={[0.11, 10, 8]} />
-            <meshBasicMaterial color={color} toneMapped={false} />
-          </mesh>
-        ))}
+      {flowing && <Packets curve={curve} color={color} meshes={packets} />}
     </group>
   );
 }
+
+type Beam = Omit<BeamProps, 'animate'> & { id: string };
 
 /**
  * Each member's branch as a tube of light from the desk into the elevator core, which stands for the default branch.
@@ -131,19 +147,7 @@ function BranchBeam({
  * member works, packets travel
  * along it into the core. Only real Git state is drawn: no beam outside a repository.
  */
-export function BranchBeams({
-  beams,
-  animate,
-}: {
-  beams: {
-    id: string;
-    from: [number, number, number];
-    to: [number, number, number];
-    color: string;
-    flowing: boolean;
-  }[];
-  animate: boolean;
-}) {
+export function BranchBeams({ beams, animate }: { beams: Beam[]; animate: boolean }) {
   return (
     <>
       {beams.map((beam) => (

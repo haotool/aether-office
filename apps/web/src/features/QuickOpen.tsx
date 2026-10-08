@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Modal, useT } from '../ui.js';
+import { Modal } from '../ui/Modal.js';
+import { useT } from '../ui/useT.js';
 import { matchItems, type QuickItem } from './quick-match.js';
 
 /** ⌘K / Ctrl+K: jump to a page, a project or a local session by typing part of its name. */

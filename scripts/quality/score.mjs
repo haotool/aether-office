@@ -4,14 +4,17 @@
 //   node scripts/quality/score.mjs [--area <name>]... [--json] [--target <n>] [--details <n>]   print the scores
 //   node scripts/quality/score.mjs --report        write docs/quality/scorecard.{md,json} and raise the floors
 //   node scripts/quality/score.mjs --check         fail on a stale scorecard or an area below its floor
+//   node scripts/quality/score.mjs --release       CHARTER §5 release score (unmeasured = 0)
 //
 // Local only: no network, no browser, no new dependency. Run `pnpm build` first to include the bundle budgets.
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { floorProblems, parseFloors, raiseFloors, serializeFloors, staleness } from './floors.mjs';
 import { renderMarkdown, renderTable } from './render.mjs';
+import { renderReleaseTable } from './release/render.mjs';
+import { scoreRelease } from './release/run.mjs';
 import { scoreRepository } from './run.mjs';
 
 const root = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
@@ -48,10 +51,38 @@ async function main() {
       json: { type: 'boolean', default: false },
       report: { type: 'boolean', default: false },
       check: { type: 'boolean', default: false },
+      release: { type: 'boolean', default: false },
+      out: { type: 'string' },
       target: { type: 'string' },
       details: { type: 'string', default: '5' },
     },
   });
+  if (values.release) {
+    if (values.report || values.check || values.json)
+      throw new Error('--release cannot be combined with --report, --check, or --json');
+    const report = await scoreRelease(root);
+    const table = renderReleaseTable(report);
+    if (values.out) {
+      const outPath = path.resolve(root, values.out);
+      try {
+        mkdirSync(path.dirname(outPath), { recursive: true });
+        writeFileSync(outPath, `${JSON.stringify(report, null, 2)}\n`);
+      } catch (err) {
+        const code = err && typeof err === 'object' && 'code' in err ? err.code : '';
+        const msg =
+          code === 'EEXIST' || code === 'EACCES' || code === 'EROFS'
+            ? `cannot write release report to ${values.out}: ${code}`
+            : `cannot write release report to ${values.out}: ${err instanceof Error ? err.message : err}`;
+        console.error(msg);
+        process.exitCode = 2;
+        return;
+      }
+    }
+    if (report.evidenceError) console.error(report.evidenceError);
+    console.log(table);
+    if (!report.pass) process.exitCode = 1;
+    return;
+  }
   if ((values.report || values.check) && values.area.length)
     throw new Error('--report and --check always cover every area: drop --area');
   const floors = parseFloors(read(files.floors));

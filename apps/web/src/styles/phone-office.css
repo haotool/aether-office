@@ -79,7 +79,7 @@
     display: grid;
     place-items: center;
     width: 52px; /* token-lint: geometry */
-    height: 28px; /* token-lint: geometry */
+    height: var(--icon-xl);
     border-radius: var(--r-pill);
     transition: background var(--dur-fast) var(--ease);
   }
@@ -105,8 +105,8 @@
     position: absolute;
     top: var(--space-4);
     left: calc(50% + var(--space-6));
-    min-width: 16px; /* token-lint: geometry */
-    height: 16px; /* token-lint: geometry */
+    min-width: var(--space-16);
+    height: var(--space-16);
     padding: 0 var(--space-4);
     border-radius: var(--r-pill);
     background: var(--mint);

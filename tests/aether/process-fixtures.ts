@@ -1,5 +1,17 @@
 import { spawn, type ChildProcess, type SpawnOptions } from 'node:child_process';
+import { delimiter } from 'node:path';
 import { inspectProcess, processIdentity } from '../../packages/providers/src/index.js';
+
+/** macOS keeps `lsof` in `/usr/sbin`; stripped PATHs (e.g. `env -i`) omit it and process scans never resolve cwd. */
+export function ensureProcessToolPath(): void {
+  if (process.platform === 'win32') return;
+  const extras = process.platform === 'darwin' ? ['/usr/sbin', '/sbin'] : [];
+  const parts = (process.env['PATH'] ?? '').split(delimiter).filter(Boolean);
+  const have = new Set(parts);
+  const add = extras.filter((p) => !have.has(p));
+  if (add.length) process.env['PATH'] = [...add, ...parts].join(delimiter);
+}
+ensureProcessToolPath();
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export const until = async (check: () => boolean, ms = 4000) => {

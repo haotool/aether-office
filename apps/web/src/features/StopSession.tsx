@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { LocalSession } from '@aether/contracts';
 import { api } from '../api.js';
-import { formatSpan } from '../localSessions.js';
-import { Modal, useT } from '../ui.js';
+import { formatSpan } from '@aether/kernel';
+import { Modal } from '../ui/Modal.js';
+import { useT } from '../ui/useT.js';
 import { ConfirmButtons } from './ConfirmButtons.js';
 
 const OUTCOME = {
@@ -13,16 +14,14 @@ const OUTCOME = {
   zombie: 'stopZombie',
 } as const;
 
-/** Confirms, then asks the server to end the process behind a dormant or orphaned session (see stop-session.ts). */
-export function StopSession({
-  session,
-  locale,
-  onClose,
-}: {
+type StopSessionProps = {
   session: LocalSession;
   locale: 'zh-TW' | 'en';
   onClose: () => void;
-}) {
+};
+
+/** Confirms, then asks the server to end the process behind a dormant or orphaned session (see stop-session.ts). */
+export function StopSession({ session, locale, onClose }: StopSessionProps) {
   const t = useT();
   const client = useQueryClient();
   const [busy, setBusy] = useState(false);

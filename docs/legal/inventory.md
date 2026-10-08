@@ -103,8 +103,8 @@ it is used and how it was verified.
 
 <!-- BEGIN GENERATED: npm-inventory (scripts/oss/third-party-notices.mjs) -->
 
-425 packages in `pnpm-lock.yaml` (274 shipped). By scope and
-licence: shipped MIT: 218; dev MIT: 96; dev Apache-2.0: 29; shipped ISC: 27; dev MPL-2.0: 14; dev LicenseRef-Anthropic-Commercial-Terms: 9; shipped LicenseRef-Anthropic-Commercial-Terms: 9; shipped BSD-3-Clause: 7; shipped Apache-2.0: 6; shipped BlueOak-1.0.0: 5; dev BSD-3-Clause: 2; dev ISC: 1; shipped BSD-2-Clause: 1; shipped Unlicense: 1.
+437 packages in `pnpm-lock.yaml` (274 shipped). By scope and
+licence: shipped MIT: 218; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; dev MPL-2.0: 14; dev LicenseRef-Anthropic-Commercial-Terms: 9; shipped LicenseRef-Anthropic-Commercial-Terms: 9; shipped BSD-3-Clause: 7; shipped Apache-2.0: 6; shipped BlueOak-1.0.0: 5; dev BSD-3-Clause: 2; dev ISC: 1; shipped BSD-2-Clause: 1; shipped Unlicense: 1.
 
 | Package | Version | Declared (package.json) | Applies | Used in | Verified against |
 | --- | --- | --- | --- | --- | --- |
@@ -132,7 +132,12 @@ licence: shipped MIT: 218; dev MIT: 96; dev Apache-2.0: 29; shipped ISC: 27; dev
 | @anthropic-ai/claude-agent-sdk | 0.3.287 | SEE LICENSE IN README.md | LicenseRef-Anthropic-Commercial-Terms | server runtime | recorded decision |
 | @anthropic-ai/sdk | 0.131.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @axe-core/playwright | 4.13.0 | MPL-2.0 | MPL-2.0 | dev/build | LICENSE reads as MPL-2.0 |
+| @babel/helper-string-parser | 7.29.7 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| @babel/helper-validator-identifier | 7.29.7 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| @babel/parser | 7.29.9 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @babel/runtime | 7.29.7 | MIT | MIT | web bundle, server runtime | LICENSE reads as MIT |
+| @babel/types | 7.29.8 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| @bcoe/v8-coverage | 1.0.2 | MIT | MIT | dev/build | LICENSE.md reads as MIT |
 | @dimforge/rapier3d-compat | 0.12.0 | Apache-2.0 | Apache-2.0 | dev/build | LICENSE reads as Apache-2.0 |
 | @esbuild/aix-ppc64 | 0.28.2 | (platform build) | MIT | dev/build | platform build (family licence) |
 | @esbuild/android-arm64 | 0.28.2 | (platform build) | MIT | dev/build | platform build (family licence) |
@@ -247,6 +252,9 @@ licence: shipped MIT: 218; dev MIT: 96; dev Apache-2.0: 29; shipped ISC: 27; dev
 | @use-gesture/core | 10.3.1 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | @use-gesture/react | 10.3.1 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | @vitejs/plugin-react | 6.1.1 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| @vitest/coverage-v8 | 5.0.3 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| @vitest/istanbul-lib-coverage | 1.0.2 | MIT | MIT | dev/build | LICENSE reads as MIT + BSD-3-Clause |
+| @vitest/istanbul-lib-report | 1.0.2 | MIT | MIT | dev/build | LICENSE reads as MIT + BSD-3-Clause |
 | @vitest/mocker | 5.0.3 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @vitest/spy | 5.0.3 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @xterm/xterm | 6.0.0 | MIT | MIT | web bundle | LICENSE reads as MIT |
@@ -259,6 +267,7 @@ licence: shipped MIT: 218; dev MIT: 96; dev Apache-2.0: 29; shipped ISC: 27; dev
 | ansi-regex | 5.0.1 | MIT | MIT | server runtime | license reads as MIT |
 | ansi-styles | 4.3.0 | MIT | MIT | server runtime | license reads as MIT |
 | assertion-error | 2.0.1 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| ast-v8-to-istanbul | 1.0.7 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | atomic-sleep | 1.0.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | avvio | 9.3.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | axe-core | 4.13.0 | MPL-2.0 | MPL-2.0 | dev/build | LICENSE reads as MPL-2.0 |
@@ -372,6 +381,7 @@ licence: shipped MIT: 218; dev MIT: 96; dev Apache-2.0: 29; shipped ISC: 27; dev
 | isexe | 2.0.0 | ISC | ISC | web bundle, server runtime | LICENSE reads as ISC |
 | its-fine | 2.1.1 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | jose | 6.2.12 | MIT | MIT | server runtime | LICENSE.md reads as MIT |
+| js-tokens | 10.0.0 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | json-schema-ref-resolver | 3.0.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | json-schema-to-ts | 3.1.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | json-schema-traverse | 1.0.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
@@ -395,6 +405,7 @@ licence: shipped MIT: 218; dev MIT: 96; dev Apache-2.0: 29; shipped ISC: 27; dev
 | lucide-react | 1.50.0 | ISC | ISC | web bundle | LICENSE reads as MIT + ISC |
 | maath | 0.10.8 | MIT | MIT | web bundle | no licence file; package.json only |
 | magic-string | 1.4.2 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| magicast | 0.5.5 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | math-intrinsics | 1.1.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | media-typer | 1.1.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | merge-descriptors | 2.0.0 | MIT | MIT | server runtime | license reads as MIT |
@@ -500,6 +511,7 @@ licence: shipped MIT: 218; dev MIT: 96; dev Apache-2.0: 29; shipped ISC: 27; dev
 | tinybench | 6.2.0 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | tinyexec | 1.3.1 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | tinyglobby | 0.2.17 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| tinyrainbow | 3.2.0 | MIT | MIT | dev/build | LICENCE reads as MIT |
 | toad-cache | 3.7.4 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | toidentifier | 1.0.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | troika-three-text | 0.52.5 | MIT | MIT | web bundle | LICENSE reads as MIT |

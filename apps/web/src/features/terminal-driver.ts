@@ -1,4 +1,5 @@
-import { api, execute } from '../api.js';
+import { api } from '../api.js';
+import { execute } from '../api-commands.js';
 import type { Step } from './composer-model.js';
 
 export type TerminalControl = {

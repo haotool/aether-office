@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import type { Mode } from '@aether/contracts';
-import { Empty, PageHeading, useT } from '../../ui.js';
+import { Empty } from '../../ui/Empty.js';
+import { PageHeading } from '../../ui/PageHeading.js';
+import { useT } from '../../ui/useT.js';
 import { SettingsContext, type Notice } from './context.js';
 import { SECTIONS, settingsPath } from './sections.js';
 import { Section, type SettingsScope } from './SectionBody.js';

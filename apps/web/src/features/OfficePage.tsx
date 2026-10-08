@@ -1,5 +1,5 @@
 import type { Layout, Snapshot } from '@aether/contracts';
-import type { Session } from '../api.js';
+import type { Session } from '../api-session.js';
 import type { TourAction, TourState } from '../tour.js';
 import type { OfficeModel } from './office-model.js';
 import {

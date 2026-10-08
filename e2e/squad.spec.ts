@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { frames } from './support/settled.js';
+import { frames, throughout } from './support/settled.js';
 import { signIn } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -131,8 +131,8 @@ test.describe('hand-over', () => {
   test('with the relation effects off a finished subagent just leaves', async ({ page }) => {
     await enter(page, 'squad=1&leave=3000&relation=0');
     await expect(LOG(page)).toContainText('left the squad', { timeout: 45000 });
-    await page.waitForTimeout(8000); // a negative wait: with the relation effects off the hand-over must never be announced
-    await expect(LOG(page)).not.toContainText('handed over');
+    // With the relation effects off the hand-over must never be announced.
+    await throughout(page, () => expect(LOG(page)).not.toContainText('handed over'), 480);
   });
 
   test('the Chinese interface says it in Chinese', async ({ page }) => {

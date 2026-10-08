@@ -1,5 +1,4 @@
-import { usePreferences } from '../state.js';
-import { useT } from '../ui.js';
+import { useT, useLocale } from '../ui/useT.js';
 import { useMoments } from './life-moments.js';
 
 /**
@@ -9,7 +8,7 @@ import { useMoments } from './life-moments.js';
  */
 export function RecentMoments({ member }: { member: string }) {
   const t = useT();
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   const moments = useMoments(member);
   if (!moments.length) return null;
   return (

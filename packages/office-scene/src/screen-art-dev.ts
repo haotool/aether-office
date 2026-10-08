@@ -9,6 +9,7 @@ import {
   tile,
   Draw,
 } from './screen-draw.js';
+import { pick } from './pick.js';
 
 /** Engineering screens: an editor, a browser, API logs, phones, a pipeline, monitoring and releases. */
 export const editor: Draw = (g, r, a) => {
@@ -39,7 +40,7 @@ export const browserUi: Draw = (g, r, a) => {
   for (let c = 0; c < 3; c++) {
     const x = 20 + c * 204;
     tile(g, x, 104, 192, 170);
-    g.fillStyle = [PALETTE.violet, PALETTE.blue, PALETTE.green][Math.floor(r() * 3)]!;
+    g.fillStyle = pick(r, [PALETTE.violet, PALETTE.blue, PALETTE.green]);
     g.globalAlpha = 0.35;
     g.fillRect(x + 10, 114, 172, 80);
     g.globalAlpha = 1;
@@ -69,8 +70,8 @@ export const apiLogs: Draw = (g, r, a) => {
   for (let i = 0; i < 18; i++) {
     const status = r() > 0.88 ? 500 : r() > 0.8 ? 404 : 200;
     const y = 52 + i * 19;
-    label(g, verbs[Math.floor(r() * verbs.length)]!.padEnd(6), 18, y, PALETTE.blue);
-    label(g, paths[Math.floor(r() * paths.length)]!, 76, y, PALETTE.text);
+    label(g, pick(r, verbs).padEnd(6), 18, y, PALETTE.blue);
+    label(g, pick(r, paths), 76, y, PALETTE.text);
     label(
       g,
       String(status),
@@ -150,8 +151,7 @@ export const monitoring: Draw = (g, r, a) => {
   g.globalAlpha = 1;
   tile(g, 14, 214, SCREEN_W - 28, 170);
   lineChart(g, r, 24, 224, SCREEN_W - 48, 70, PALETTE.violet);
-  for (let i = 0; i < 4; i++) {
-    const c = [PALETTE.green, PALETTE.amber, PALETTE.red, PALETTE.green][i]!;
+  for (const [i, c] of [PALETTE.green, PALETTE.amber, PALETTE.red, PALETTE.green].entries()) {
     g.fillStyle = c;
     g.fillRect(24, 312 + i * 18, 8, 8);
     g.fillStyle = PALETTE.dim;

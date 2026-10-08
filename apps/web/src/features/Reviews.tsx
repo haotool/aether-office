@@ -1,10 +1,16 @@
-import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import type { Snapshot } from '@aether/contracts';
-import { api, execute } from '../api.js';
-import { PageHeading, Empty, Badge, Field, useT, Clamp } from '../ui.js';
+import { execute } from '../api-commands.js';
+import { PageHeading } from '../ui/PageHeading.js';
+import { Empty } from '../ui/Empty.js';
+import { Badge } from '../ui/Badge.js';
+import { Field } from '../ui/Field.js';
+import { useT, useWhy } from '../ui/useT.js';
+import type { Why } from '../ui/whyNot.js';
+import { Clamp } from '../ui/Disclosure.js';
 import { useWorkspaces, JobEvidence } from './Workspace.js';
 import { HunkComments } from './HunkComments.js';
+import { NativeReview } from './NativeReview.js';
 import {
   parseVerifiers,
   parseVerifyOutcome,
@@ -40,11 +46,13 @@ function DecisionForm({
   work,
   projectId,
   disabled,
+  why,
   perform,
 }: {
   work: Work;
   projectId: string;
   disabled: boolean;
+  why: Why;
   perform: Perform;
 }) {
   const t = useT();
@@ -68,10 +76,16 @@ function DecisionForm({
         <textarea required name="body" rows={3} />
       </Field>
       <div className="form-actions">
-        <button name="decision" value="changes_requested" className="secondary" disabled={disabled}>
+        <button
+          name="decision"
+          value="changes_requested"
+          className="secondary"
+          disabled={disabled}
+          {...why}
+        >
           {t('requestChanges')}
         </button>
-        <button name="decision" value="approve" className="primary" disabled={disabled}>
+        <button name="decision" value="approve" className="primary" disabled={disabled} {...why}>
           {t('approve')}
         </button>
       </div>
@@ -84,12 +98,14 @@ function VerifyForm({
   projectId,
   verifiers,
   disabled,
+  why,
   perform,
 }: {
   work: Work;
   projectId: string;
   verifiers: Verifier[];
   disabled: boolean;
+  why: Why;
   perform: Perform;
 }) {
   const t = useT();
@@ -118,7 +134,9 @@ function VerifyForm({
           ))}
         </select>
       </Field>
-      <button disabled={disabled}>{t('runVerification')}</button>
+      <button disabled={disabled} {...why}>
+        {t('runVerification')}
+      </button>
     </form>
   );
 }
@@ -155,15 +173,81 @@ function VerifyEvidence({
 
 type Permissions = { canReview: boolean; canAccept: boolean; canRequestReview: boolean };
 
-function ReviewCard({
+/** What the reviewer can do at this state: decide, or run a verifier. */
+function ReviewForms({
   work,
-  snapshot,
-  workspaces,
+  projectId,
+  can,
+  busy,
+  verifying,
+  verifiers,
+  perform,
+}: {
+  work: Work;
+  projectId: string;
+  can: Permissions;
+  busy: boolean;
+  verifying: boolean;
+  /** The workspace's verifiers as the server sent them; read only when the verify form is drawn. */
+  verifiers: string | undefined;
+  perform: Perform;
+}) {
+  const whyNot = useWhy();
+  return (
+    <>
+      {work.state === 'reviewing' && !work.reviewBy && (
+        <DecisionForm
+          work={work}
+          projectId={projectId}
+          disabled={!can.canReview || busy}
+          why={whyNot([can.canReview, 'needOperator'], [!busy, 'whyBusy'])}
+          perform={perform}
+        />
+      )}
+      {work.state === 'reviewing' && work.reviewBy && can.canAccept && (
+        <VerifyForm
+          work={work}
+          projectId={projectId}
+          verifiers={parseVerifiers(verifiers)}
+          disabled={busy || verifying}
+          why={whyNot([!busy && !verifying, 'whyBusy'])}
+          perform={perform}
+        />
+      )}
+    </>
+  );
+}
+
+function AcceptButton({
+  work,
+  projectId,
   can,
   busy,
   perform,
-  onSaved,
 }: {
+  work: Work;
+  projectId: string;
+  can: Permissions;
+  busy: boolean;
+  perform: Perform;
+}) {
+  const t = useT();
+  const whyNot = useWhy();
+  return (
+    <button
+      className="primary"
+      disabled={!can.canAccept || busy}
+      {...whyNot([can.canAccept, 'needOperator'], [!busy, 'whyBusy'])}
+      onClick={() =>
+        void perform(() => execute('work.accept', { workId: work.id }, projectId, work.version))
+      }
+    >
+      {t('acceptWork')}
+    </button>
+  );
+}
+
+type ReviewCardProps = {
   work: Work;
   snapshot: Snapshot;
   workspaces: WorkspaceData | undefined;
@@ -171,7 +255,9 @@ function ReviewCard({
   busy: boolean;
   perform: Perform;
   onSaved: () => void;
-}) {
+};
+
+function ReviewCard({ work, snapshot, workspaces, can, busy, perform, onSaved }: ReviewCardProps) {
   const t = useT();
   const projectId = snapshot.project.id;
   const workspace = workspaces?.workspaces.find(
@@ -198,34 +284,18 @@ function ReviewCard({
           onSaved={onSaved}
         />
       )}
-      {work.state === 'reviewing' && !work.reviewBy && (
-        <DecisionForm
-          work={work}
-          projectId={projectId}
-          disabled={!can.canReview || busy}
-          perform={perform}
-        />
-      )}
-      {work.state === 'reviewing' && work.reviewBy && can.canAccept && (
-        <VerifyForm
-          work={work}
-          projectId={projectId}
-          verifiers={parseVerifiers(workspace?.verifiers)}
-          disabled={busy || verifying}
-          perform={perform}
-        />
-      )}
+      <ReviewForms
+        work={work}
+        projectId={projectId}
+        can={can}
+        busy={busy}
+        verifying={verifying}
+        verifiers={workspace?.verifiers}
+        perform={perform}
+      />
       <VerifyEvidence job={job} work={work} outcome={parseVerifyOutcome(job?.result)} />
       {work.state === 'verified' && (
-        <button
-          className="primary"
-          disabled={!can.canAccept || busy}
-          onClick={() =>
-            void perform(() => execute('work.accept', { workId: work.id }, projectId, work.version))
-          }
-        >
-          {t('acceptWork')}
-        </button>
+        <AcceptButton work={work} projectId={projectId} can={can} busy={busy} perform={perform} />
       )}
     </article>
   );
@@ -277,123 +347,5 @@ export function Reviews({
         </p>
       )}
     </>
-  );
-}
-
-type ReviewRuns = {
-  runs: {
-    id: string;
-    agentId: string;
-    provider: string;
-    state: string;
-    reviewHead: string;
-    result: string | null;
-  }[];
-  reviews: { reviewerId: string; decision: string; body: string; headSha: string }[];
-};
-
-const ACTIVE_RUN_STATES = ['queued', 'claimed', 'running', 'cancel_requested', 'indeterminate'];
-
-function RequestReviewForm({
-  work,
-  snapshot,
-  disabled,
-  onSend,
-}: {
-  work: Work;
-  snapshot: Snapshot;
-  disabled: boolean;
-  onSend: (agentId: FormDataEntryValue | null) => void;
-}) {
-  const t = useT();
-  const candidates = snapshot.agents.filter(
-    (a) => a.id !== work.assignee && a.mode === 'live' && ['codex', 'claude'].includes(a.provider),
-  );
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSend(new FormData(e.currentTarget).get('agentId'));
-      }}
-    >
-      <Field label={t('reviewAgent')}>
-        <select required name="agentId">
-          {candidates.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name} · {a.provider}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <button disabled={disabled || !candidates.length}>{t('startNativeReview')}</button>
-    </form>
-  );
-}
-
-function NativeReview({
-  work,
-  snapshot,
-  canRequest,
-  onSaved,
-}: {
-  work: Work;
-  snapshot: Snapshot;
-  canRequest: boolean;
-  onSaved: () => void;
-}) {
-  const t = useT();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const query = useQuery({
-    queryKey: ['review-runs', work.id, work.version],
-    queryFn: () => api<ReviewRuns>(`/api/projects/${snapshot.project.id}/work/${work.id}/reviews`),
-    refetchInterval: 2000,
-  });
-  const active = query.data?.runs.some((r) => ACTIVE_RUN_STATES.includes(r.state));
-  const request = async (agentId: FormDataEntryValue | null) => {
-    setBusy(true);
-    setError('');
-    try {
-      await execute(
-        'work.request_review',
-        { workId: work.id, agentId },
-        snapshot.project.id,
-        work.version,
-      );
-      onSaved();
-      await query.refetch();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'REQUEST_FAILED');
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <section>
-      <h3>{t('nativeReview')}</h3>
-      <p className="muted">{t('nativeReviewHint')}</p>
-      {work.state === 'reviewing' && !work.reviewBy && canRequest && (
-        <RequestReviewForm
-          work={work}
-          snapshot={snapshot}
-          disabled={busy || !!active || query.isPending}
-          onSend={(agentId) => void request(agentId)}
-        />
-      )}
-      {(error || query.error) && <p role="alert">{error || query.error?.message}</p>}
-      {query.data?.runs.map((run) => (
-        <p key={run.id}>
-          {snapshot.agents.find((a) => a.id === run.agentId)?.name ?? run.agentId} ·{' '}
-          <Badge state={run.state} /> · <code>{run.reviewHead.slice(0, 12)}</code>
-        </p>
-      ))}
-      {query.data?.reviews.map((review, i) => (
-        <div key={i}>
-          <Badge state={review.decision} />
-          <p className="preserve-space">{review.body}</p>
-          <code>{review.headSha}</code>
-        </div>
-      ))}
-    </section>
   );
 }

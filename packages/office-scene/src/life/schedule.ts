@@ -1,4 +1,5 @@
-import { hashText, seeded } from '../random.js';
+import { hashText } from '../hash.js';
+import { seeded } from '../seeded.js';
 import type { Quality } from '../scene-types.js';
 import { LIFE_RULES, type LifeRule } from './registry.js';
 import { TIER, type LifeContext, type LifePrefs, type LifeSignal } from './signals.js';
@@ -82,6 +83,29 @@ const cooldownKey = (rule: LifeRule, member: string | null, floor: number | null
       ? `${rule.id}:f${floor}`
       : rule.id;
 
+/** The cue a rule starts for a signal: where, for how long, its seed and value, who is in a group effect, and what is announced. */
+function cueOf(
+  rule: LifeRule,
+  signal: LifeSignal,
+  { floor, n, now }: { floor: number | null; n: number; now: number },
+  ctx: LifeContext,
+): LifeCue {
+  const member = signal.member;
+  return {
+    key: `${rule.id}:${member}:${signal.at}`,
+    rule: rule.id,
+    category: rule.category,
+    member,
+    floor,
+    startedAt: now,
+    durationMs: rule.durationMs,
+    seed: hashText(`${rule.id}:${member}:${n}`),
+    value: signal.value ?? (signal.ok ? 1 : 0),
+    group: rule.anchor === 'group' && floor !== null ? ctx.idleOn(floor).slice(0, 8) : [],
+    aria: rule.aria(member === null ? '' : ctx.nameOf(member), ctx.zh, signal),
+  };
+}
+
 /**
  * Takes the signals the page saw and decides which effects start now. Pure: the same state, signals, time, settings and
  * office always give the same cues. A cue is held back by its settings and tier, by the honesty rule (an effect that
@@ -125,19 +149,7 @@ export function schedule(
       if (seeded(`${draw}:${n}`)() >= chanceOf(rule, prefs, ctx, member)) continue;
       const bound = !rule.direct && rule.category !== 'relation';
       if (bound && !admitted(live, starts, member, floor)) continue;
-      const cue: LifeCue = {
-        key: `${rule.id}:${member}:${signal.at}`,
-        rule: rule.id,
-        category: rule.category,
-        member,
-        floor,
-        startedAt: now,
-        durationMs: rule.durationMs,
-        seed: hashText(`${rule.id}:${member}:${n}`),
-        value: signal.value ?? (signal.ok ? 1 : 0),
-        group: rule.anchor === 'group' && floor !== null ? ctx.idleOn(floor).slice(0, 8) : [],
-        aria: rule.aria(member === null ? '' : ctx.nameOf(member), ctx.zh, signal),
-      };
+      const cue = cueOf(rule, signal, { floor, n, now }, ctx);
       live = [...live, cue];
       if (bound) starts = [...starts, now];
       last[key] = now;

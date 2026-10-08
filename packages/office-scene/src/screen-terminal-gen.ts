@@ -1,8 +1,10 @@
 import { MEMO_LIMIT, memoized } from './memo.js';
-import { between, pick, seeded, type Rng } from './random.js';
+import { between, pick } from './pick.js';
+import { seeded, type Rng } from './seeded.js';
 import { VOCAB } from './screen-lang.js';
 import { generateFile } from './screen-codegen.js';
 import { lineText } from './screen-tokens.js';
+import { itemAt } from './checked.js';
 
 /**
  * What a desk's terminal prints under a real command: invented lines in the style of that command's output. Real facts
@@ -114,7 +116,7 @@ const MAKERS: Record<CommandKind, (r: Rng, c: TermContext, head: string, n: numb
         t(`diff --git a/${name} b/${name}`, 'dim'),
         t(`@@ -${start + 1},6 +${start + 1},9 @@`, 'accent'),
         ...Array.from({ length: n }, (_, i) => {
-          const text = lineText(code[(start + i) % code.length]!);
+          const text = lineText(itemAt(code, (start + i) % code.length));
           return i % 4 === 1
             ? t(`-${text}`, 'del')
             : i % 4 === 2
@@ -181,7 +183,11 @@ export function terminalOutput(
   if (!lines) {
     const r = seeded(`${seed}|${head}`); // not the context: a changed count must not reshuffle the lines
     lines = MAKERS[commandKind(head)](r, context, head ?? '', STREAM);
-    if (cache.size >= 24) cache.delete(cache.keys().next().value!);
+    if (cache.size >= 24)
+      for (const oldest of cache.keys()) {
+        cache.delete(oldest);
+        break;
+      }
     cache.set(key, lines);
   }
   return lines.slice(0, count);
@@ -206,6 +212,6 @@ const arrivalTimes = memoized(new Map<string, number[]>(), MEMO_LIMIT, (seed: st
 export function revealedLines(seed: string, ms: number): number {
   const times = arrivalTimes(seed);
   let n = 0;
-  while (n < times.length && times[n]! <= ms) n++;
+  while (n < times.length && itemAt(times, n) <= ms) n++;
   return n;
 }

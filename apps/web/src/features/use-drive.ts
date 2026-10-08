@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api, type Session } from '../api.js';
+import { api } from '../api.js';
+import { type Session } from '../api-session.js';
 import { uuid } from '../browser-compat.js';
 import {
   CTRL_C,
@@ -136,19 +137,17 @@ function useDirectWrites(
 
 type Way = { online: boolean; free: boolean; working: boolean; canWrite: boolean; userId: string };
 
-/** Flush: the oldest waiting message, whenever the way is clear. A timer re-looks while one waits (the settle gap). */
-function useFlushQueue(
+/** Sends one queued message: marks it sending, then sent, back to queued when the network dropped, or failed. */
+function useDeliver(
   sessionKey: string,
   drive: Drive,
-  pending: readonly Pending[],
-  way: Way,
+  userId: string,
   guarded: (task: () => Promise<void>) => Promise<void>,
 ) {
   const update = useOutbox((s) => s.update);
   const [, tick] = useState(0);
   const hold = useRef(0);
   const sending = useRef(false);
-  const { online, free, working, canWrite, userId } = way;
   const mark = useCallback(
     (localId: string, change: Partial<Pending>) =>
       update(sessionKey, (list) =>
@@ -181,6 +180,19 @@ function useFlushQueue(
     },
     [drive, userId, guarded, mark],
   );
+  return { deliver, sending, hold, tick };
+}
+
+/** Flush: the oldest waiting message, whenever the way is clear. A timer re-looks while one waits (the settle gap). */
+function useFlushQueue(
+  sessionKey: string,
+  drive: Drive,
+  pending: readonly Pending[],
+  way: Way,
+  guarded: (task: () => Promise<void>) => Promise<void>,
+) {
+  const { online, free, working, canWrite, userId } = way;
+  const { deliver, sending, hold, tick } = useDeliver(sessionKey, drive, userId, guarded);
   const waiting = nextQueued(pending);
   useEffect(() => {
     if (!waiting || !canWrite) return;

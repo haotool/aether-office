@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
-import { seeded } from '../../packages/office-scene/src/random.js';
+import { seeded } from '../../packages/office-scene/src/seeded.js';
 import { SCREEN_H, SCREEN_W } from '../../packages/office-scene/src/screen-draw.js';
 import { borrowCanvas, returnCanvas } from '../../packages/office-scene/src/screen-pool.js';
 import {

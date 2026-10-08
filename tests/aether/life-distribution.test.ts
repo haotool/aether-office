@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { CommandTag } from '../../packages/contracts/src/index.js';
 import { LIFE_RULES } from '../../packages/office-scene/src/life/registry.js';
-import { seeded, weighted } from '../../packages/office-scene/src/random.js';
+import { seeded } from '../../packages/office-scene/src/seeded.js';
+import { weighted } from '../../packages/office-scene/src/pick.js';
 import {
   emptyLifeState,
   PER_FLOOR,

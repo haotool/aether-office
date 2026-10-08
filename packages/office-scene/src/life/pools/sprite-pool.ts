@@ -50,18 +50,19 @@ const FRAGMENT = `
     #include <colorspace_fragment>
   }`;
 
-/**
- * All of the office-life pictures in one draw call: instanced quads (camera-facing, or flat on a surface) that read
- * their picture from one small atlas. One shader program, one texture of 1024 x 512, no geometry per effect.
- */
-export function createSpritePool() {
+/** The atlas every picture is read from, painted once. */
+function atlasTexture() {
   const canvas = document.createElement('canvas');
   drawAtlas(canvas);
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
   texture.minFilter = LinearMipmapLinearFilter;
   texture.anisotropy = 4;
+  return texture;
+}
 
+/** One quad, instanced `POOL_CAPACITY` times, with a place, a look and a tint for each instance. */
+function instancedQuads() {
   const quad = new PlaneGeometry(1, 1);
   const geometry = new InstancedBufferGeometry();
   geometry.index = quad.index;
@@ -75,7 +76,16 @@ export function createSpritePool() {
   geometry.setAttribute('aLook', look);
   geometry.setAttribute('aTint', tint);
   geometry.instanceCount = 0;
+  return { quad, geometry, place, look, tint };
+}
 
+/**
+ * All of the office-life pictures in one draw call: instanced quads (camera-facing, or flat on a surface) that read
+ * their picture from one small atlas. One shader program, one texture of 1024 x 512, no geometry per effect.
+ */
+export function createSpritePool() {
+  const texture = atlasTexture();
+  const { quad, geometry, place, look, tint } = instancedQuads();
   const material = new ShaderMaterial({
     uniforms: {
       map: { value: texture },
@@ -98,7 +108,8 @@ export function createSpritePool() {
     write(sprites: readonly PlacedSprite[]): number {
       const count = Math.min(sprites.length, POOL_CAPACITY);
       for (let i = 0; i < count; i += 1) {
-        const s = sprites[i]!;
+        const s = sprites[i];
+        if (!s) break;
         place.setXYZW(i, s.x, s.y, s.z, s.size);
         look.setXYZW(i, CELLS.indexOf(s.cell), s.rot, s.flat ? 1 : 0, s.alpha);
         tint.setXYZ(i, s.tint[0], s.tint[1], s.tint[2]);

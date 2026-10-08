@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { Plus, RotateCcw } from 'lucide-react';
 import type { AttributedSession, Layout, Snapshot } from '@aether/contracts';
-import { sessionLink } from '../localSessions.js';
+import { sessionLink } from '../session-names.js';
 import { usePreferences } from '../state.js';
 import type { TourAction } from '../tour.js';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { ActiveSessions } from './ActiveSessions.js';
 import { AttentionSessions } from './AttentionSessions.js';
 import type { OfficeModel } from './office-model.js';
@@ -13,30 +13,7 @@ import { KpiDashboardLazy } from './KpiDashboardLazy.js';
 import { KpiStrip } from './KpiStrip.js';
 import { useKpiPanel } from './use-kpi-panel.js';
 
-/**
- * The office on a portrait phone: the scene fills the screen and everything else is a small control floating over it
- * (view switch and active sessions on top, a new-task button at the thumb). No heading, no stats, no team strip.
- */
-export function PhoneOffice({
-  data,
-  model,
-  selectedId,
-  focus,
-  preview,
-  unread,
-  canWrite,
-  sessions,
-  owner,
-  covered,
-  onSelect,
-  onOpen,
-  onFeed,
-  onFocus,
-  onTour,
-  onNewTask,
-  onNotice,
-  onRefresh,
-}: {
+type PhoneOfficeProps = {
   data: Snapshot;
   model: OfficeModel;
   selectedId: string | null;
@@ -56,37 +33,25 @@ export function PhoneOffice({
   onNewTask: () => void;
   onNotice: (message: string) => void;
   onRefresh: () => void;
-}) {
+};
+
+/**
+ * The office on a portrait phone: the scene fills the screen and everything else is a small control floating over it
+ * (view switch and active sessions on top, a new-task button at the thumb). No heading, no stats, no team strip.
+ */
+export function PhoneOffice({ sessions, owner, onFocus, onNewTask, ...scene }: PhoneOfficeProps) {
   const t = useT();
   const advanced = usePreferences((s) => s.advanced);
   const kpi = useKpiPanel();
   return (
     <div className="phone-office">
-      <SceneView
-        compact
-        covered={covered}
-        floorKpi={kpi.badges}
-        onOpenFloorKpi={kpi.open}
-        data={data}
-        model={model}
-        selectedId={selectedId}
-        focus={focus}
-        preview={preview}
-        unread={unread}
-        canWrite={canWrite}
-        onSelect={onSelect}
-        onOpen={onOpen}
-        onFeed={onFeed}
-        onTour={onTour}
-        onNotice={onNotice}
-        onRefresh={onRefresh}
-      />
-      <PhoneTop sessions={sessions} owner={owner} focus={focus} onFocus={onFocus} />
+      <SceneView compact floorKpi={kpi.badges} onOpenFloorKpi={kpi.open} {...scene} />
+      <PhoneTop sessions={sessions} owner={owner} focus={scene.focus} onFocus={onFocus} />
       <div className="phone-kpi">
         <KpiStrip usage={kpi.usage} git={kpi.git} running={kpi.running} onOpen={() => kpi.open()} />
       </div>
       {kpi.isOpen && <KpiDashboardLazy kpi={kpi} />}
-      {canWrite && advanced && (
+      {scene.canWrite && advanced && (
         <button className="fab" aria-label={t('newWork')} onClick={onNewTask}>
           <Plus size={24} />
         </button>

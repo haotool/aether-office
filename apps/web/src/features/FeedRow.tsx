@@ -1,17 +1,36 @@
 import { memo, type ReactNode } from 'react';
 import { formatAgo } from '@aether/kernel';
 import { ProviderMark, contextLevel } from '@aether/office-scene/model';
-import { usePreferences } from '../state.js';
-import { useT } from '../ui.js';
+import { useT, useLocale } from '../ui/useT.js';
 import { Avatar } from './Avatar.js';
 import { FEED_AVATAR_STATE } from './feed-avatar.js';
 import { contextLabel } from './context-label.js';
 import { noReplyKey, type FeedItem } from './feed-model.js';
 
+/** The thin bar under a row: how full the context window is. */
+function ContextMeter({ session, context }: { session: FeedItem['session']; context: number }) {
+  const t = useT();
+  const locale = useLocale();
+  return (
+    <span
+      className="feed-ctx"
+      role="meter"
+      aria-label={t('convContext')}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={Math.round(context)}
+      data-level={contextLevel(context)}
+      title={contextLabel(session.usage, t, locale) ?? undefined}
+    >
+      <i style={{ width: `${context}%` }} />
+    </span>
+  );
+}
+
 /** What a session's row says: who, the newest thing it said, what it is doing, how long ago. `extra` goes under the meta line. */
 export function FeedRowBody({ item, extra }: { item: FeedItem; extra?: ReactNode }) {
   const t = useT();
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   const context = item.session.usage.contextPct;
   const state =
     item.reason === 'permission'
@@ -52,20 +71,7 @@ export function FeedRowBody({ item, extra }: { item: FeedItem; extra?: ReactNode
         <span className={`feed-reply ${item.reply ? '' : 'none'}`}>
           {item.reply ?? t(noReplyKey(item))}
         </span>
-        {context !== null && (
-          <span
-            className="feed-ctx"
-            role="meter"
-            aria-label={t('convContext')}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(context)}
-            data-level={contextLevel(context)}
-            title={contextLabel(item.session.usage, t, locale) ?? undefined}
-          >
-            <i style={{ width: `${context}%` }} />
-          </span>
-        )}
+        {context !== null && <ContextMeter session={item.session} context={context} />}
       </span>
     </>
   );

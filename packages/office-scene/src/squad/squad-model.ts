@@ -80,27 +80,34 @@ function lowestFree(taken: ReadonlySet<number>): number {
   return seat;
 }
 
-/** The next state of the squads, given the page's facts. */
-export function stepSquad(prev: SquadState, input: SquadStep, now: number): SquadState {
-  const members: Record<string, SquadMemberState> = {};
-  const seenIds = new Set<string>();
-  const taken = new Map<string, Set<number>>();
-  const hold = (m: SquadMemberState) => {
-    if (!occupies(m, now)) return;
-    const set = taken.get(m.supervisor) ?? new Set<number>();
-    set.add(m.seat);
-    taken.set(m.supervisor, set);
-  };
-  const events = new Map<string, number[]>();
-  const push = (supervisor: string, at: number) => {
-    const list = events.get(supervisor) ?? [...(prev.zones[supervisor]?.events ?? [])];
-    list.push(at);
-    events.set(supervisor, list);
-  };
+/** What one step collects while it runs: the new members, the pods they hold and the tool starts it saw. */
+type Ledger = {
+  members: Record<string, SquadMemberState>;
+  taken: Map<string, Set<number>>;
+  events: Map<string, number[]>;
+};
 
-  // Members the page still reports, then (below) those that vanished.
-  const facts = new Map<string, SquadMemberInput>();
-  for (const squad of input.squads) for (const m of squad.members) facts.set(m.id, m);
+function hold(ledger: Ledger, m: SquadMemberState, now: number) {
+  if (!occupies(m, now)) return;
+  const set = ledger.taken.get(m.supervisor) ?? new Set<number>();
+  set.add(m.seat);
+  ledger.taken.set(m.supervisor, set);
+}
+
+function pushEvent(ledger: Ledger, prev: SquadState, supervisor: string, at: number) {
+  const list = ledger.events.get(supervisor) ?? [...(prev.zones[supervisor]?.events ?? [])];
+  list.push(at);
+  ledger.events.set(supervisor, list);
+}
+
+/** Members the page still reports keep their phase (or start leaving); those that vanished leave. */
+function settleMembers(
+  prev: SquadState,
+  input: SquadStep,
+  now: number,
+  facts: ReadonlyMap<string, SquadMemberInput>,
+  ledger: Ledger,
+) {
   const leave = (m: SquadMemberState): SquadMemberState => ({
     ...m,
     phase: 'leaving',
@@ -109,9 +116,7 @@ export function stepSquad(prev: SquadState, input: SquadStep, now: number): Squa
     working: false,
     waiting: false,
   });
-
   for (const old of Object.values(prev.members)) {
-    seenIds.add(old.id);
     const fact = facts.get(old.id);
     let next = old;
     if (old.phase === 'leaving') {
@@ -119,7 +124,7 @@ export function stepSquad(prev: SquadState, input: SquadStep, now: number): Squa
     } else if (!fact || fact.status === 'finished') {
       next = leave(old);
     } else {
-      if (fact.toolCount > old.toolCount) push(old.supervisor, now);
+      if (fact.toolCount > old.toolCount) pushEvent(ledger, prev, old.supervisor, now);
       next = {
         ...old,
         phase: old.phase === 'arriving' && now - old.since >= ARRIVE_MS ? 'seated' : old.phase,
@@ -129,15 +134,17 @@ export function stepSquad(prev: SquadState, input: SquadStep, now: number): Squa
         toolAt: fact.toolAt ?? null,
       };
     }
-    members[old.id] = next;
-    hold(next);
+    ledger.members[old.id] = next;
+    hold(ledger, next, now);
   }
+}
 
-  // New members take the lowest free seat of their squad. The first look at the page seats everyone where they are.
+/** New members take the lowest free seat of their squad. The first look at the page seats everyone where they are. */
+function seatNewcomers(prev: SquadState, input: SquadStep, now: number, ledger: Ledger) {
   for (const squad of input.squads)
     for (const fact of squad.members) {
-      if (seenIds.has(fact.id) || fact.status === 'finished') continue;
-      const set = taken.get(squad.supervisor) ?? new Set<number>();
+      if (prev.members[fact.id] || fact.status === 'finished') continue;
+      const set = ledger.taken.get(squad.supervisor) ?? new Set<number>();
       const recent = fact.startedAt === null || now - fact.startedAt < FRESH_MS;
       const arriving = prev.ready && recent;
       const member: SquadMemberState = {
@@ -153,11 +160,19 @@ export function stepSquad(prev: SquadState, input: SquadStep, now: number): Squa
         toolCount: fact.toolCount,
         toolAt: fact.toolAt ?? null,
       };
-      members[member.id] = member;
-      hold(member);
+      ledger.members[member.id] = member;
+      hold(ledger, member, now);
     }
+}
 
-  // Zones: sized by the highest held seat, grown at once, shrunk after a quiet spell with no walk in flight.
+/** Zones: sized by the highest held seat, grown at once, shrunk after a quiet spell with no walk in flight. */
+function sizeZones(
+  prev: SquadState,
+  input: SquadStep,
+  now: number,
+  ledger: Ledger,
+): Record<string, SquadZoneState> {
+  const { members, taken, events } = ledger;
   const zones: Record<string, SquadZoneState> = {};
   const supervisors = new Set([
     ...Object.keys(prev.zones),
@@ -192,7 +207,17 @@ export function stepSquad(prev: SquadState, input: SquadStep, now: number): Squa
       ),
     };
   }
-  return { ready: true, members, zones };
+  return zones;
+}
+
+/** The next state of the squads, given the page's facts. */
+export function stepSquad(prev: SquadState, input: SquadStep, now: number): SquadState {
+  const ledger: Ledger = { members: {}, taken: new Map(), events: new Map() };
+  const facts = new Map<string, SquadMemberInput>();
+  for (const squad of input.squads) for (const m of squad.members) facts.set(m.id, m);
+  settleMembers(prev, input, now, facts, ledger);
+  seatNewcomers(prev, input, now, ledger);
+  return { ready: true, members: ledger.members, zones: sizeZones(prev, input, now, ledger) };
 }
 
 /** The members of one squad, in seat order. */

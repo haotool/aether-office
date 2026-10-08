@@ -1,7 +1,6 @@
 import { Fragment, memo, useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { usePreferences } from '../state.js';
-import { useT } from '../ui.js';
+import { useT, useLocale } from '../ui/useT.js';
 import { Ago } from './ConvTime.js';
 import { LongText } from './LongText.js';
 import { Markdown } from './Markdown.js';
@@ -21,7 +20,7 @@ import {
 /** Consecutive tool calls as one line ("read 4 files · edited 2"); a tap lists each call with its target. */
 function ToolGroup({ calls, fresh }: { calls: ToolCall[]; fresh: boolean }) {
   const t = useT();
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const { running, failed } = countCalls(calls);
   const [now, setNow] = useState(() => Date.now());
@@ -74,6 +73,55 @@ function UnreadDivider() {
   );
 }
 
+function UserMessage({
+  turn,
+  user,
+  isFresh,
+  unreadId,
+}: {
+  turn: Turn;
+  user: NonNullable<Turn['user']>;
+  isFresh: (id: string) => boolean;
+  unreadId: string | null;
+}) {
+  const t = useT();
+  return (
+    <>
+      {unreadId === promptId(turn) && <UnreadDivider />}
+      <div className={`msg user ${isFresh(promptId(turn)) ? 'enter' : ''}`} tabIndex={-1}>
+        <span className="msg-who">
+          {t('role_user')} <Ago at={user.at} />
+          <MessageActions text={user.text} />
+        </span>
+        <p>{user.text}</p>
+      </div>
+    </>
+  );
+}
+
+function AssistantMessage({
+  block,
+  fresh,
+  foldable,
+}: {
+  block: Extract<Turn['blocks'][number], { type: 'assistant' }>;
+  fresh: boolean;
+  foldable: boolean;
+}) {
+  const t = useT();
+  return (
+    <div className={`msg assistant ${fresh ? 'enter' : ''}`} tabIndex={-1}>
+      <span className="msg-who">
+        {t('role_assistant')} <Ago at={block.at} />
+        <MessageActions text={block.text} />
+      </span>
+      <LongText foldable={foldable}>
+        <Markdown text={block.text} reveal={fresh} />
+      </LongText>
+    </div>
+  );
+}
+
 /**
  * A prompt, then what the agent said and did about it. What `isFresh` says arrived while the conversation was open
  * enters with a short rise, and a fresh reply fades in word by word. Every assistant message but the newest folds when tall.
@@ -90,21 +138,11 @@ export const TurnView = memo(function TurnView({
   newest: boolean;
   unreadId: string | null;
 }) {
-  const t = useT();
   const lastReply = newest ? turn.blocks.findLastIndex((b) => b.type === 'assistant') : -1;
   return (
     <article className="turn" data-turn tabIndex={-1}>
       {turn.user && (
-        <>
-          {unreadId === promptId(turn) && <UnreadDivider />}
-          <div className={`msg user ${isFresh(promptId(turn)) ? 'enter' : ''}`} tabIndex={-1}>
-            <span className="msg-who">
-              {t('role_user')} <Ago at={turn.user.at} />
-              <MessageActions text={turn.user.text} />
-            </span>
-            <p>{turn.user.text}</p>
-          </div>
-        </>
+        <UserMessage turn={turn} user={turn.user} isFresh={isFresh} unreadId={unreadId} />
       )}
       {turn.blocks.map((block, i) => {
         const id = blockId(turn, i);
@@ -120,15 +158,7 @@ export const TurnView = memo(function TurnView({
         return block.type === 'assistant' ? (
           <Fragment key={i}>
             {divider}
-            <div className={`msg assistant ${fresh ? 'enter' : ''}`} tabIndex={-1}>
-              <span className="msg-who">
-                {t('role_assistant')} <Ago at={block.at} />
-                <MessageActions text={block.text} />
-              </span>
-              <LongText foldable={i !== lastReply}>
-                <Markdown text={block.text} reveal={fresh} />
-              </LongText>
-            </div>
+            <AssistantMessage block={block} fresh={fresh} foldable={i !== lastReply} />
           </Fragment>
         ) : (
           <Fragment key={i}>

@@ -1,13 +1,14 @@
 import { lazy, Suspense, useState } from 'react';
 import { Orbit } from 'lucide-react';
 import { usePreferences } from '../state.js';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { Agents } from './Agents.js';
 import { useCachedSessions } from './character-session.js';
 import { CharacterCommands } from './CharacterCommands.js';
 import type { CharacterCommand } from './CharacterMenu.js';
 import { SceneSummary } from './SceneSummary.js';
 import { sceneSummary } from './scene-summary.js';
+import { fieldPerfOfficeSceneHandlers } from './field-perf/field-perf-scene-handlers.js';
 import { useSceneProps, type SceneViewProps } from './use-scene-props.js';
 
 const OfficeScene = lazy(() =>
@@ -33,9 +34,18 @@ function ContextLostCard({ onReload }: { onReload: () => void }) {
 }
 
 /** The office itself: the 3D scene (loaded when first shown) or, by choice or when WebGL fails, the 2D list. */
+function SceneLoading() {
+  const t = useT();
+  return (
+    <div className="scene-loading">
+      <Orbit size={32} />
+      {t('loading')}
+    </div>
+  );
+}
+
 export function SceneView(props: SceneViewProps) {
   const { data, model, canWrite, onSelect, onRefresh } = props;
-  const t = useT();
   const sessions = useCachedSessions();
   const prefs = usePreferences();
   const [command, setCommand] = useState<CharacterCommand | null>(null);
@@ -65,15 +75,12 @@ export function SceneView(props: SceneViewProps) {
       />
     );
   return (
-    <Suspense
-      fallback={
-        <div className="scene-loading">
-          <Orbit size={32} />
-          {t('loading')}
-        </div>
-      }
-    >
-      <OfficeScene key={epoch} {...sceneProps} onContextLost={() => setContextLost(true)} />
+    <Suspense fallback={<SceneLoading />}>
+      <OfficeScene
+        key={epoch}
+        {...sceneProps}
+        {...fieldPerfOfficeSceneHandlers(() => setContextLost(true))}
+      />
       <SceneSummary text={sceneSummary(model.agents, model.floorOf, prefs.locale)} />
       <CharacterCommands
         command={command}

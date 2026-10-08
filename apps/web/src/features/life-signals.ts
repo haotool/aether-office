@@ -1,6 +1,6 @@
 import type { AttributedSession } from '@aether/contracts';
 import type { LifeSignal } from '@aether/office-scene/model';
-import { LOCAL_PREFIX } from '../localSessions.js';
+import { LOCAL_PREFIX } from '../session-names.js';
 import { emptyOutcomes, outcomeSignals, type OutcomeMemory } from './life-outcomes.js';
 
 /** What one scan of the machine's sessions showed, and the members' states at that moment. */
@@ -57,6 +57,67 @@ function repeats(s: AttributedSession, at: number): { count: number; target: str
 const idleLong = (s: AttributedSession) =>
   s.liveness.state === 'idle' && (s.liveness.quietMs ?? 0) >= IDLE_MS;
 
+/** What one scan accumulates while its sessions are read: the signals, the debt clocks and the outcome memory. */
+type Scan = {
+  prev: LifeSnapshot | null;
+  at: number;
+  memory: LifeMemory;
+  signals: LifeSignal[];
+  dirtySince: Record<string, number>;
+  debtAt: Record<string, number>;
+  outcomes: LifeMemory['outcomes'];
+};
+
+/** The signals one session makes between the earlier scan and this one. */
+function scanSession(scan: Scan, s: AttributedSession, old: AttributedSession | undefined) {
+  const { prev, at, memory, signals, dirtySince, debtAt } = scan;
+  const member = `${LOCAL_PREFIX}${s.key}`;
+  const edge = (now: boolean, was: boolean | undefined) => now && prev !== null && was === false;
+  const made = (kind: LifeSignal['kind'], extra: Partial<LifeSignal> = {}) =>
+    signals.push({ kind, member, at, ...extra });
+  const seenUntil = old ? Math.max(0, ...(old.hook?.recent ?? []).map((c) => c.at)) : at - FRESH_MS;
+  for (const c of ownCalls(s).filter((call) => call.at > seenUntil))
+    signals.push({
+      kind: 'tool.start',
+      member,
+      at: c.at,
+      tool: c.tool,
+      target: c.target,
+      ...(c.tags.length ? { tags: c.tags } : {}),
+    });
+  const ended = outcomeSignals({
+    member,
+    repo: s.worktree?.project ?? s.repo,
+    old,
+    next: s,
+    at,
+    seenUntil,
+    memory: scan.outcomes,
+  });
+  signals.push(...ended.signals);
+  scan.outcomes = ended.memory;
+
+  if (edge(thinking(s, at), old ? thinking(old, prev!.at) : false)) made('think.long');
+  if (edge(longWorking(s, at), old ? longWorking(old, prev!.at) : false)) made('work.long');
+  const loop = repeats(s, at);
+  if (edge(loop.count >= RETRY_COUNT, old ? repeats(old, prev!.at).count >= RETRY_COUNT : false))
+    made('retry.loop', { tool: 'Bash', target: loop.target, value: loop.count });
+  if (edge(idleLong(s), old ? idleLong(old) : false)) made('idle.long');
+  const conflicts = s.git?.conflicts ?? 0;
+  if (edge(conflicts > 0, old ? (old.git?.conflicts ?? 0) > 0 : false))
+    made('git.conflicts', { value: conflicts });
+
+  const files = s.git?.uncommitted ?? 0;
+  if (files >= DEBT_FILES) {
+    const since = memory.dirtySince[member] ?? at;
+    dirtySince[member] = since;
+    if (at - since >= DEBT_SUSTAIN_MS && at - (debtAt[member] ?? -Infinity) >= DEBT_REPEAT_MS) {
+      made('debt.sustained', { value: files });
+      debtAt[member] = at;
+    }
+  }
+}
+
 /**
  * The office-life signals the change between two scans makes: a new tool call, a state that began holding, a pattern that
  * appeared. Pure, and cautious: with no earlier scan nothing that merely "holds" is news (a page load replays no history),
@@ -69,67 +130,28 @@ export function deriveLifeSignals(
   memory: LifeMemory = emptyLifeMemory,
 ): { signals: LifeSignal[]; memory: LifeMemory } {
   const before = new Map((prev?.sessions ?? []).map((s) => [s.key, s]));
-  const signals: LifeSignal[] = [];
-  const dirtySince: Record<string, number> = {};
-  const debtAt = { ...memory.debtAt };
-  let outcomes = memory.outcomes;
-  const at = next.at;
+  const scan: Scan = {
+    prev,
+    at: next.at,
+    memory,
+    signals: [],
+    dirtySince: {},
+    debtAt: { ...memory.debtAt },
+    outcomes: memory.outcomes,
+  };
+  const { at, signals, dirtySince, debtAt } = scan;
   for (const s of next.sessions) {
-    const member = `${LOCAL_PREFIX}${s.key}`;
-    const old = before.get(s.key);
-    const edge = (now: boolean, was: boolean | undefined) => now && prev !== null && was === false;
-    const made = (kind: LifeSignal['kind'], extra: Partial<LifeSignal> = {}) =>
-      signals.push({ kind, member, at, ...extra });
-    const seenUntil = old
-      ? Math.max(0, ...(old.hook?.recent ?? []).map((c) => c.at))
-      : at - FRESH_MS;
-    for (const c of ownCalls(s).filter((call) => call.at > seenUntil))
-      signals.push({
-        kind: 'tool.start',
-        member,
-        at: c.at,
-        tool: c.tool,
-        target: c.target,
-        ...(c.tags.length ? { tags: c.tags } : {}),
-      });
-    const ended = outcomeSignals({
-      member,
-      repo: s.worktree?.project ?? s.repo,
-      old,
-      next: s,
-      at,
-      seenUntil,
-      memory: outcomes,
-    });
-    signals.push(...ended.signals);
-    outcomes = ended.memory;
-
-    if (edge(thinking(s, at), old ? thinking(old, prev!.at) : false)) made('think.long');
-    if (edge(longWorking(s, at), old ? longWorking(old, prev!.at) : false)) made('work.long');
-    const loop = repeats(s, at);
-    if (edge(loop.count >= RETRY_COUNT, old ? repeats(old, prev!.at).count >= RETRY_COUNT : false))
-      made('retry.loop', { tool: 'Bash', target: loop.target, value: loop.count });
-    if (edge(idleLong(s), old ? idleLong(old) : false)) made('idle.long');
-    const conflicts = s.git?.conflicts ?? 0;
-    if (edge(conflicts > 0, old ? (old.git?.conflicts ?? 0) > 0 : false))
-      made('git.conflicts', { value: conflicts });
-
-    const files = s.git?.uncommitted ?? 0;
-    if (files >= DEBT_FILES) {
-      const since = memory.dirtySince[member] ?? at;
-      dirtySince[member] = since;
-      if (at - since >= DEBT_SUSTAIN_MS && at - (debtAt[member] ?? -Infinity) >= DEBT_REPEAT_MS) {
-        made('debt.sustained', { value: files });
-        debtAt[member] = at;
-      }
-    }
+    scanSession(scan, s, before.get(s.key));
   }
   const was = new Map((prev?.agents ?? []).map((a) => [a.id, a.activity]));
   for (const a of next.agents)
     if (a.activity === 'error' && prev !== null && was.has(a.id) && was.get(a.id) !== 'error')
       signals.push({ kind: 'activity.error', member: a.id, at });
   const stillDirty = Object.entries(debtAt).filter(([member]) => member in dirtySince);
-  return { signals, memory: { dirtySince, debtAt: Object.fromEntries(stillDirty), outcomes } };
+  return {
+    signals,
+    memory: { dirtySince, debtAt: Object.fromEntries(stillDirty), outcomes: scan.outcomes },
+  };
 }
 
 /** The Konami code, as `KeyboardEvent.key` values (letters in lower case). */

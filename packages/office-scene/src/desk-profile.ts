@@ -1,4 +1,5 @@
-import { seeded, weighted } from './random.js';
+import { weighted } from './pick.js';
+import { seeded } from './seeded.js';
 
 /**
  * How one member's desk is dressed: the editor theme, the window chrome, whether there is a second monitor and what is
@@ -34,7 +35,7 @@ export const DESK_WEIGHTS = {
 } as const;
 
 /** The chance a role has a second monitor. */
-export const MONITOR_CHANCE: Record<string, number> = {
+export const MONITOR_CHANCE: Record<string, number> & { default: number } = {
   backend: 0.55,
   platform: 0.6,
   sre: 0.65,
@@ -78,14 +79,15 @@ export function deskProfile(seed: string, role: string): DeskProfile {
   const r = seeded(`${seed}:desk`);
   const theme = weighted(r, DESK_WEIGHTS.theme);
   const chrome = weighted(r, DESK_WEIGHTS.chrome);
-  const monitors = r() < (MONITOR_CHANCE[role] ?? MONITOR_CHANCE['default']!) ? 2 : 1;
+  const monitors = r() < (MONITOR_CHANCE[role] ?? MONITOR_CHANCE.default) ? 2 : 1;
   const secondary =
     monitors === 2
       ? weighted(r, (SECONDARY[role] ?? SECONDARY_DEFAULT) as Record<Secondary, number>)
       : null;
   const side = r() < 0.5 ? 'left' : 'right';
   const pool: Record<string, number> = { ...DESK_WEIGHTS.items };
-  for (const [item, extra] of Object.entries(ITEM_BIAS[role] ?? {})) pool[item]! += extra!;
+  for (const [item, extra] of Object.entries(ITEM_BIAS[role] ?? {}))
+    pool[item] = (pool[item] ?? 0) + (extra ?? 0);
   const items: DeskItem[] = [];
   for (let n = 1 + Math.floor(r() * 3); n > 0; n--) {
     const item = weighted(r, pool) as DeskItem;

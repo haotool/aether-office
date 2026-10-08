@@ -189,6 +189,28 @@ are over, GitHub delivery ids older than 30 days and expired browser sessions. T
 6. Leave Remote approvals off unless you want to answer prompts from a browser; if you answer from a phone, use HTTPS rather
    than `AETHER_REMOTE_APPROVALS_LAN=1`.
 
+## Continuous integration and supply chain
+
+GitHub Actions workflows declare the smallest permission each job needs. The main CI workflow (`.github/workflows/ci.yml`)
+sets `permissions: contents: read` at the top level; jobs that need nothing else inherit that read-only token. Third-party
+actions are pinned to a full 40-character commit SHA with the release tag in a comment. `actions/checkout` uses
+`persist-credentials: false` so the job token is not left in git config for later steps.
+
+**Dependency audit gate.** After `pnpm install`, the `audit` job runs `pnpm audit:gate` (`scripts/oss/audit-gate.mjs`), which
+reads `pnpm audit --json` and fails on unexempted **high** or **critical** advisories. If the registry audit endpoint is
+unreachable or returns unusable output, the job fails (fail-closed); re-run the job after connectivity is restored—there is
+no silent pass. Time-boxed waivers live in `docs/security/audit-exceptions.json`: each entry must include a stable `advisory`
+id (for example a GHSA id), a `package` name, a written `reason`, and an `expires` date (`YYYY-MM-DD`). An expired waiver
+fails like a new finding. Add or renew an entry only with maintainer approval; prefer upgrading the dependency.
+
+**CodeQL.** `.github/workflows/codeql.yml` analyzes JavaScript and TypeScript with `build-mode: none` on pushes to `main`,
+pull requests, and a weekly schedule. That job alone carries `security-events: write` (to upload results) and `contents: read`.
+
+**Dependabot.** `.github/dependabot.yml` opens weekly pull requests for npm (pnpm lockfile) and GitHub Actions, groups updates
+to reduce noise, prefixes commits with `chore(deps)`, and uses a one-day **cooldown** on version updates so proposed releases
+are at least a day old—the same idea as `minimumReleaseAge` in `pnpm-workspace.yaml`. Security updates from Dependabot are
+not delayed by that cooldown.
+
 ## Verification
 
 The authorization matrix, host policy, CSRF, secret hygiene, SSRF guard and unsafe-HTML rules each have tests

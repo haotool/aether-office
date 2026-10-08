@@ -5,7 +5,35 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # Align with pnpm minimumReleaseAge (1440 minutes): wait a day before proposing new releases.
+    cooldown:
+      default-days: 1
+    groups:
+      npm-production-minor-patch:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+      npm-development:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      npm-major:
+        update-types:
+          - major
+    commit-message:
+      prefix: chore(deps)
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 1
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+    commit-message:
+      prefix: chore(deps)

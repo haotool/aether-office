@@ -1,4 +1,5 @@
 import type { StalkCommit, Tier, TierShape } from './stalk-types.js';
+import { itemAt } from './checked.js';
 
 /** Commits that make one tier, until the history is long enough that MAX_TIERS tiers share it. */
 export const COMMITS_PER_TIER = 12;
@@ -41,7 +42,10 @@ export function layoutTiers(
   const size = runSize(oldestFirst.length);
   return Array.from({ length: count }, (_, index): Tier => {
     const run = oldestFirst.slice(index * size, (index + 1) * size);
-    const strandOf = run.map((c) => owner.get(c.sha)!).filter((k) => k < strands);
+    const strandOf = run.flatMap((c) => {
+      const k = owner.get(c.sha);
+      return k !== undefined && k < strands ? [k] : [];
+    });
     const counts = new Map<number, number>();
     for (const k of strandOf) counts.set(k, (counts.get(k) ?? 0) + 1);
     const stats = {
@@ -60,7 +64,7 @@ export function layoutTiers(
       commits: run.length,
       ...stats,
       strand: dominant,
-      seed: run[0]!.sha,
+      seed: itemAt(run, 0).sha,
     };
   });
 }

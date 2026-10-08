@@ -1,8 +1,8 @@
 import { lazy, Suspense } from 'react';
 import type { LocalSessionsResponse, Project } from '@aether/contracts';
 import { pageLink, visibleNav } from '../nav.js';
-import { sessionLink } from '../localSessions.js';
-import { useT } from '../ui.js';
+import { sessionLink } from '../session-names.js';
+import { useT } from '../ui/useT.js';
 
 const QuickOpen = lazy(() => import('./QuickOpen.js').then((m) => ({ default: m.QuickOpen })));
 

@@ -1,19 +1,18 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import type { AttributedSession } from '@aether/contracts';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { effortCommand, modelCommand, QUICK_REPLIES } from './composer-model.js';
 import { ModelPicker, type ModelChoice } from './ModelPicker.js';
 import { useModels } from './useModels.js';
 
-/** The model chip: what the session runs now, and a list to change it for the next message. */
-export function ModelChip({
-  session,
-  onCommand,
-}: {
+type ModelChipProps = {
   session: AttributedSession;
   onCommand: (text: string) => void;
-}) {
+};
+
+/** The model chip: what the session runs now, and a list to change it for the next message. */
+export function ModelChip({ session, onCommand }: ModelChipProps) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const { catalogs, refresh } = useModels();

@@ -32,7 +32,9 @@ docs/             This documentation, ADRs and the verification ledger
 | `pnpm typecheck`              | `tsc --noEmit` over apps, packages, tests and scripts                                    |
 | `pnpm lint`                   | Module boundaries (`scripts/check-boundaries.mjs`) and design tokens (`scripts/check-design-tokens.mjs`) |
 | `pnpm format` / `format:check`| Prettier                                                                                 |
-| `pnpm test`                   | Vitest (`tests/aether`); `test:unit`, `test:integration` and `test:security` run one file each |
+| `pnpm test`                   | Vitest (`tests/aether`); default run excludes host CLI drift checks (see [Provider CLI version tests](#provider-cli-version-tests)); `test:unit`, `test:integration` and `test:security` run one file each |
+| `pnpm test:host-clis`         | Host CLI drift alarm: version checks against **installed** `codex` and `claude` on `PATH` (requires `AETHER_HOST_CLIS=1`; not part of default `pnpm test`); fails when a CLI is present but its version is not on the verified list |
+| `pnpm test:coverage`          | Vitest with the v8 coverage provider; writes `coverage/coverage-summary.json` for the quality scorecard |
 | `pnpm exec playwright test`   | End-to-end suite in Chrome                                                               |
 | `pnpm run setup`              | Creates the data directory and the owner token (`--demo` for the demo's)                   |
 | `pnpm hooks <install\|remove\|status>` | Installs, removes or reports the Claude Code or Codex hooks (see [getting started](getting-started.md#exact-activity-with-hooks-optional)) |
@@ -51,6 +53,12 @@ docs/             This documentation, ADRs and the verification ledger
 
 ## Testing
 
+### Provider CLI version tests
+
+- **Host drift alarm** — `pnpm test:host-clis` runs only when `AETHER_HOST_CLIS=1` is set; it is not part of default `pnpm test`. It exercises **installed** `codex` and `claude` binaries on `PATH` and fails when a present CLI’s version is not on the verified list.
+- **Real Codex integration** — `tests/aether/codex-real.test.ts` and `tests/aether/codex-schema.test.ts` run only when a real `codex` CLI is installed on the machine (`describe.skipIf(!installed)`); `codex-schema` additionally requires that version to be on the verified list. CI does not install Codex, so these suites are skipped there. Maintainer machines use them to validate new CLI releases.
+- **Hermetic policy** — `tests/aether/provider-compat.test.ts` (and `provider-compat.host-clis.test.ts` when opted in) uses fixture `--version` binaries; default `provider-compat` behavior does not depend on host CLI versions.
+
 - **Real systems, not mocks.** Integration tests use real SQLite, real Git repositories, real HTTP and a real browser.
   Providers are replaced by clearly labeled synthetic processes (`fixtures/processes`), and a synthetic provider is never
   reported as live evidence.
@@ -60,7 +68,7 @@ docs/             This documentation, ADRs and the verification ledger
 - **Layers.** Static: `pnpm typecheck` and `pnpm lint` (module boundaries, design tokens). Vitest in `tests/aether` (more than 200
   files): kernel rules, services against real SQLite, HTTP routes, the security matrix and the text pipeline; text sinks and the
   verification ledger are checked here too. Playwright in `e2e/` (about 50 specs): real control plane and runner on ports 4320 and
-  4330 with a **fixture home** (`playwright.config.ts` points `AETHER_LOCAL_SESSIONS_HOME`, `AETHER_HOOK_SPOOL` and
+  4330 (`AETHER_E2E_PORT` and `AETHER_E2E_NATIVE_PORT` give a second checkout or run its own pair; no spec names a port) with a **fixture home** (`playwright.config.ts` points `AETHER_LOCAL_SESSIONS_HOME`, `AETHER_HOOK_SPOOL` and
   `AETHER_CLAUDE_USAGE_FILE` at a temporary directory, so no test reads your real `~/.claude` or `~/.codex`). The e2e specs drive
   Chrome (`channel: 'chrome'`; in CI, where `CI` is set, Playwright's own Chromium); WebKit is opt-in with `AETHER_WEBKIT=1`. GPU measurements (`PERF_GPU=1`) and `pnpm smoke:live`
   are never part of the default run: a skipped check is "not run", never "passed".

@@ -2069,7 +2069,7 @@
     "verificationStatus": "partial",
     "codePaths": [
       "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx"
+      "apps/web/src/ui/PageHeading.tsx"
     ],
     "testIds": [
       "e2e/workbench.spec.ts",
@@ -2091,7 +2091,7 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx"
+      "apps/web/src/ui/Badge.tsx"
     ],
     "testIds": [
       "e2e/workbench.spec.ts",
@@ -2111,7 +2111,7 @@
     "verificationStatus": "partial",
     "codePaths": [
       "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx"
+      "apps/web/src/ui/whyNot.ts"
     ],
     "testIds": [
       "e2e/ui-sweep.spec.ts"
@@ -2131,7 +2131,7 @@
     "verificationStatus": "partial",
     "codePaths": [
       "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx",
+      "apps/web/src/ui/Empty.tsx",
       "apps/web/src/features/FirstRun.tsx",
       "apps/web/src/features/NotFound.tsx"
     ],
@@ -2199,7 +2199,7 @@
     "verificationStatus": "passed",
     "codePaths": [
       "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx"
+      "apps/web/src/ui/PageHeading.tsx"
     ],
     "testIds": [
       "e2e/navigation.spec.ts",
@@ -2217,7 +2217,7 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/ui.tsx"
+      "apps/web/src/ui/Badge.tsx"
     ],
     "testIds": [
       "e2e/navigation.spec.ts",
@@ -2599,7 +2599,7 @@
     "verificationStatus": "partial",
     "codePaths": [
       "apps/web/src/App.tsx",
-      "apps/web/src/ui.tsx"
+      "apps/web/src/ui/Field.tsx"
     ],
     "testIds": [
       "e2e/accessibility.spec.ts",
@@ -2620,7 +2620,7 @@
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
     "codePaths": [
-      "apps/web/src/ui.tsx"
+      "apps/web/src/ui/Modal.tsx"
     ],
     "testIds": [
       "e2e/accessibility.spec.ts"

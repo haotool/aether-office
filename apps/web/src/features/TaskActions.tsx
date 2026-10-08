@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import type { Snapshot, Work } from '@aether/contracts';
-import { execute } from '../api.js';
-import { Field, useT } from '../ui.js';
+import { execute } from '../api-commands.js';
+import { Field } from '../ui/Field.js';
+import { useT, useWhy } from '../ui/useT.js';
 import { useCapabilities } from './CapabilityMatrix.js';
 
 /** What the action forms of one task share: its command runner and who may do what. */
-export type TaskActionProps = {
+type TaskActionProps = {
   snapshot: Snapshot;
   work: Work;
   canWrite: boolean;
@@ -14,7 +15,7 @@ export type TaskActionProps = {
   command: TaskCommand;
 };
 
-export type TaskCommand = (
+type TaskCommand = (
   type: 'work.dependencies' | 'work.assign' | 'work.retry' | 'work.extend' | 'work.cancel',
   data: Record<string, unknown>,
   work: Work,
@@ -42,6 +43,7 @@ export function useTaskCommand(projectId: string, onSaved: () => void) {
 
 export function DependencyEditor({ snapshot, work, canWrite, busy, command }: TaskActionProps) {
   const t = useT();
+  const whyNot = useWhy();
   return (
     <form
       key={`dependencies-${work.id}-${work.version}`}
@@ -68,7 +70,11 @@ export function DependencyEditor({ snapshot, work, canWrite, busy, command }: Ta
             ))}
         </select>
       </Field>
-      <button className="secondary" disabled={!canWrite || busy}>
+      <button
+        className="secondary"
+        disabled={!canWrite || busy}
+        {...whyNot([canWrite, 'needOperator'], [!busy, 'whyBusy'])}
+      >
         {t('saveDependencies')}
       </button>
     </form>
@@ -77,6 +83,7 @@ export function DependencyEditor({ snapshot, work, canWrite, busy, command }: Ta
 
 export function AssignForm({ snapshot, work, canWrite, busy, command }: TaskActionProps) {
   const t = useT();
+  const whyNot = useWhy();
   return (
     <form
       onSubmit={(e) => {
@@ -99,7 +106,15 @@ export function AssignForm({ snapshot, work, canWrite, busy, command }: TaskActi
             ))}
         </select>
       </Field>
-      <button className="primary" disabled={!canWrite || busy || !snapshot.agents.length}>
+      <button
+        className="primary"
+        disabled={!canWrite || busy || !snapshot.agents.length}
+        {...whyNot(
+          [canWrite, 'needOperator'],
+          [!busy, 'whyBusy'],
+          [snapshot.agents.length > 0, 'whyNoAgents'],
+        )}
+      >
         {t('assign')}
         <ArrowRight size={16} />
       </button>
@@ -110,6 +125,7 @@ export function AssignForm({ snapshot, work, canWrite, busy, command }: TaskActi
 /** Retry a failed or change-requested task, optionally resuming its session when the provider can. */
 export function RetryControls({ snapshot, work, canWrite, busy, command }: TaskActionProps) {
   const t = useT();
+  const whyNot = useWhy();
   const [resume, setResume] = useState(false);
   const capabilities = useCapabilities();
   const provider = snapshot.agents.find((a) => a.id === work.assignee)?.provider;
@@ -122,6 +138,7 @@ export function RetryControls({ snapshot, work, canWrite, busy, command }: TaskA
             type="checkbox"
             checked={resume && canResume}
             disabled={!canResume}
+            {...whyNot([canResume, 'resumeUnsupported'])}
             onChange={(e) => setResume(e.target.checked)}
           />
           {t('resumeSession')}
@@ -130,6 +147,11 @@ export function RetryControls({ snapshot, work, canWrite, busy, command }: TaskA
       <button
         className="primary"
         disabled={!canWrite || busy || work.attempt >= work.maxAttempts}
+        {...whyNot(
+          [canWrite, 'needOperator'],
+          [!busy, 'whyBusy'],
+          [work.attempt < work.maxAttempts, 'whyNoAttempts'],
+        )}
         onClick={() => void command('work.retry', { resume }, work)}
       >
         {t('retry')} ({work.attempt}/{work.maxAttempts})
@@ -146,6 +168,7 @@ export function AttemptLimit({
   command,
 }: Pick<TaskActionProps, 'work' | 'busy' | 'command'> & { canExtend: boolean }) {
   const t = useT();
+  const whyNot = useWhy();
   return (
     <>
       <p role="status">{t('attemptLimit')}</p>
@@ -163,7 +186,7 @@ export function AttemptLimit({
           <Field label={t('extensionReason')}>
             <textarea name="reason" required maxLength={2000} />
           </Field>
-          <button className="secondary" disabled={busy}>
+          <button className="secondary" disabled={busy} {...whyNot([!busy, 'whyBusy'])}>
             {t('extendAttempt')}
           </button>
         </form>
@@ -179,12 +202,14 @@ export function CancelControls({
   command,
 }: Omit<TaskActionProps, 'snapshot'>) {
   const t = useT();
+  const whyNot = useWhy();
   return (
     <>
       <p className="muted">{t('cancelDependencyNote')}</p>
       <button
         className="secondary danger"
         disabled={!canWrite || busy}
+        {...whyNot([canWrite, 'needOperator'], [!busy, 'whyBusy'])}
         onClick={() => void command('work.cancel', {}, work, false)}
       >
         {t('cancel')}

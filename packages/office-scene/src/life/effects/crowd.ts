@@ -1,5 +1,6 @@
 import { draw, envelope } from './shared.js';
 import type { Effect, Rgb, Sprite } from './types.js';
+import { itemAt } from '../../checked.js';
 
 /**
  * A pile of boxes beside the desk for a session with many uncommitted files: one box more each time the count doubles,
@@ -68,7 +69,7 @@ export const konami: Effect = (t, d, seed) => {
       size: 0.17,
       alpha: fade * (t < start ? 0 : 1),
       rot: p * 12 + i,
-      tint: CONFETTI[Math.floor(draw(seed, i + 9) * CONFETTI.length)]!,
+      tint: itemAt(CONFETTI, Math.floor(draw(seed, i + 9) * CONFETTI.length)),
     };
   });
 };

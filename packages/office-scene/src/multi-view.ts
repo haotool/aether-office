@@ -1,6 +1,7 @@
 import type { Agent } from '@aether/contracts';
 import type { Seat, Shot } from './director.js';
-import { hashText } from './random.js';
+import { hashText } from './hash.js';
+import { valueOf } from './checked.js';
 
 /**
  * The control-room wall: when several members are busy at once the main camera can only be on one of them, so the
@@ -47,16 +48,7 @@ const WEIGHT: Partial<Record<Agent['activity'], number>> = {
 export type Feed = { id: string; shot: Shot };
 const NONE: ReadonlySet<string> = new Set();
 
-export function chooseFeeds({
-  agents,
-  seats,
-  intensity,
-  taken,
-  previous,
-  floor,
-  max = MAX_FEEDS,
-  pinned = NONE,
-}: {
+type FeedInput = {
   agents: readonly Agent[];
   seats: ReadonlyMap<string, Seat>;
   intensity: ReadonlyMap<string, number>;
@@ -68,11 +60,13 @@ export function chooseFeeds({
   max?: number;
   /** Members the person pinned to the wall: they always get a view (busy or not), before any other, as far as `max` allows. */
   pinned?: ReadonlySet<string>;
-}): Feed[] {
-  const drawn = (id: string) =>
-    seats.has(id) && (floor === undefined || seats.get(id)!.floor === floor);
-  // A pinned member gets its view even when the main camera is on it: the person asked for that view.
-  const pins = agents.filter((a) => pinned.has(a.id) && drawn(a.id)).map((a) => a.id);
+};
+
+/** The busy members who need a view of their own, busiest first (ties by id). */
+function busyIds(
+  { agents, intensity, taken, pinned = NONE }: FeedInput,
+  drawn: (id: string) => boolean,
+): string[] {
   const busy = agents
     .filter(
       (a) =>
@@ -82,28 +76,39 @@ export function chooseFeeds({
         !pinned.has(a.id),
     )
     .map((a) => ({
-      agent: a,
+      id: a.id,
       score: (WEIGHT[a.activity] ?? 0) * 10 + (intensity.get(a.id) ?? 0) * 6,
     }))
-    .sort((a, b) => b.score - a.score || (a.agent.id < b.agent.id ? -1 : 1));
+    .sort((a, b) => b.score - a.score || (a.id < b.id ? -1 : 1));
   // A single busy member is the main shot's business, not a wall's: it takes at least two to need one.
-  const wanted = busy.length + taken.size >= 2 ? busy : [];
+  return busy.length + taken.size >= 2 ? busy.map((b) => b.id) : [];
+}
+
+/** Each view stays in its slot and a newcomer takes a vacated one: a frame that moves in the page restarts its
+ * power-on dip (see scene-pips.css), which blanks the picture for as long as the dip lasts. */
+function inSlots(chosen: readonly string[], previous: readonly Feed[]): string[] {
+  const chosenIds = new Set(chosen);
+  const fresh = chosen.filter((id) => !previous.some((f) => f.id === id));
+  const slots = previous.map((f) => (chosenIds.has(f.id) ? f.id : fresh.shift()));
+  return [...slots, ...fresh].filter((id): id is string => !!id);
+}
+
+export function chooseFeeds(input: FeedInput): Feed[] {
+  const { agents, seats, previous, floor, max = MAX_FEEDS, pinned = NONE } = input;
+  const drawn = (id: string) =>
+    seats.has(id) && (floor === undefined || seats.get(id)?.floor === floor);
+  // A pinned member gets its view even when the main camera is on it: the person asked for that view.
+  const pins = agents.filter((a) => pinned.has(a.id) && drawn(a.id)).map((a) => a.id);
   const keep = new Set(previous.map((f) => f.id));
+  const wanted = busyIds(input, drawn);
   const chosen = [
     ...pins.filter((id) => keep.has(id)),
     ...pins.filter((id) => !keep.has(id)),
-    ...wanted.filter((b) => keep.has(b.agent.id)).map((b) => b.agent.id),
-    ...wanted.filter((b) => !keep.has(b.agent.id)).map((b) => b.agent.id),
+    ...wanted.filter((id) => keep.has(id)),
+    ...wanted.filter((id) => !keep.has(id)),
   ].slice(0, max);
-  if (chosen.length === 0) return [];
-  // Each view stays in its slot and a newcomer takes a vacated one: a frame that moves in the page restarts its
-  // power-on dip (see scene-pips.css), which blanks the picture for as long as the dip lasts.
-  const chosenIds = new Set(chosen);
-  const fresh = chosen.filter((id) => !keep.has(id));
-  const slots = previous.map((f) => (chosenIds.has(f.id) ? f.id : fresh.shift()));
-  const order = [...slots, ...fresh].filter((id): id is string => !!id);
-  return order.map((id) => {
-    const seat = seats.get(id)!;
+  return inSlots(chosen, previous).map((id) => {
+    const seat = valueOf(seats, id);
     return {
       id,
       shot: {

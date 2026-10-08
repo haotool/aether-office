@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { signIn as signInTo } from './support/sign-in.js';
+import { throughout } from './support/settled.js';
 
 // The installable app: manifest, iOS and theme meta tags, safe areas, the install offer, and the service worker
 // (registered only in a secure context, never storing API answers, asking before it updates). 127.0.0.1 is a secure
@@ -182,9 +183,15 @@ test.describe('install offer', () => {
 
   test('Chromium: no offer, no banner', async ({ page }) => {
     await signIn(page);
-    await page.waitForTimeout(1200); // nothing is offered, so there is nothing to wait for: this only gives a banner time to wrongly appear
-    await expect(page.getByText('把 AETHER 安裝到這台裝置。')).toHaveCount(0);
-    await expect(page.getByText(/加入主畫面/)).toHaveCount(0);
+    // Nothing is offered, so there is nothing to wait for: the banner must not appear in the frames that follow.
+    await throughout(
+      page,
+      async () => {
+        await expect(page.getByText('把 AETHER 安裝到這台裝置。')).toHaveCount(0);
+        await expect(page.getByText(/加入主畫面/)).toHaveCount(0);
+      },
+      72,
+    );
   });
 });
 

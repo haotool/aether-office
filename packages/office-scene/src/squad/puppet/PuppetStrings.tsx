@@ -160,36 +160,19 @@ function writeStrings(
   return segment;
 }
 
-/**
- * Puppet strings: light strings from a control cross over each live subagent to its head and two hands, and a master
- * thread from the cross to the supervisor. Every string of the scene is one `LineSegments2` (one draw) plus one instanced
- * mesh for the crosses. The strings follow the subagent and never pull it. `simulate` off (reduced motion, Calm) draws
- * straight, still lines; the layer is not mounted at all on the low tier or when the person turned the strings off.
- */
-export function PuppetStrings({
-  squads,
-  frame,
-  exploded,
-  simulate,
-  quality,
-  podPos,
-}: {
+type PuppetStringsProps = {
   squads: readonly DrawSquad[];
   frame: SquadFrame;
   exploded: boolean;
   simulate: boolean;
   quality: Quality;
   podPos: ReadonlyMap<string, Point2>;
-}) {
-  const invalidate = useThree((s) => s.invalidate);
-  const rig = useMemo(() => createRig(), []);
-  const { glow } = squadMaterials();
-  const crosses = useRef<InstancedMesh>(null);
-  const colors = useMemo(() => new Map<string, Color>(), []);
-  const probe = useMemo(() => new Vector3(), []);
-  const seatOf = useMemo(() => new Map(frame.seats.map((s) => [s.member, s])), [frame.seats]);
-  const squadOf = useMemo(() => new Map(squads.map((s) => [s.supervisor, s])), [squads]);
-  const { lines, material, geometry } = useMemo(createStringLines, []);
+};
+
+/** The one `LineSegments2` that holds every string of the scene, disposed with the layer. */
+function useStringLines() {
+  const lines = useMemo(createStringLines, []);
+  const { geometry, material } = lines;
   useEffect(
     () => () => {
       geometry.dispose();
@@ -197,14 +180,76 @@ export function PuppetStrings({
     },
     [geometry, material],
   );
-  useLayoutEffect(() => withColors(crosses.current), []);
-  useEffect(() => invalidate(), [squads, simulate, quality, invalidate]);
-  const tone = (hex: string) => {
+  return lines;
+}
+
+/** What `gather` looks members up in: the seat of each, the squad of each supervisor, and a scratch vector. */
+function useGatherInputs(frame: SquadFrame, squads: readonly DrawSquad[]) {
+  const probe = useMemo(() => new Vector3(), []);
+  const seatOf = useMemo(() => new Map(frame.seats.map((s) => [s.member, s])), [frame.seats]);
+  const squadOf = useMemo(() => new Map(squads.map((s) => [s.supervisor, s])), [squads]);
+  return { seatOf, squadOf, probe };
+}
+
+/** The lines are a fixed number of CSS pixels wide, so their material is told the canvas's size in device pixels. */
+function fitToCanvas(
+  material: ReturnType<typeof createStringLines>['material'],
+  ratio: number,
+  size: { width: number; height: number },
+) {
+  material.resolution.set(size.width * ratio, size.height * ratio);
+  material.linewidth = STRING_WIDTH * ratio;
+}
+
+/** A colour by hex, made once and kept. */
+function useTone() {
+  const colors = useMemo(() => new Map<string, Color>(), []);
+  return (hex: string) => {
     const known = colors.get(hex) ?? new Color(hex);
     colors.set(hex, known);
     return known;
   };
+}
 
+/** Writes the strings of this step into the line buffers and returns the control crosses to draw. */
+function writeLines(
+  rig: Rig,
+  { lines, geometry }: ReturnType<typeof createStringLines>,
+  gathered: Gathered,
+  tone: (hex: string) => Color,
+): Instance[] {
+  const start = geometry.getAttribute('instanceStart') as InterleavedBufferAttribute;
+  const colorStart = geometry.getAttribute('instanceColorStart') as InterleavedBufferAttribute;
+  const buffers = {
+    positions: start.data.array as Float32Array,
+    rgb: colorStart.data.array as Float32Array,
+  };
+  const crossItems: Instance[] = [];
+  const segment = writeStrings(rig, buffers, gathered, tone, crossItems);
+  geometry.instanceCount = segment;
+  start.data.needsUpdate = true;
+  colorStart.data.needsUpdate = true;
+  lines.visible = segment > 0;
+  return crossItems;
+}
+
+/**
+ * Puppet strings: light strings from a control cross over each live subagent to its head and two hands, and a master
+ * thread from the cross to the supervisor. Every string of the scene is one `LineSegments2` (one draw) plus one instanced
+ * mesh for the crosses. The strings follow the subagent and never pull it. `simulate` off (reduced motion, Calm) draws
+ * straight, still lines; the layer is not mounted at all on the low tier or when the person turned the strings off.
+ */
+export function PuppetStrings(props: PuppetStringsProps) {
+  const { squads, frame, exploded, simulate, quality, podPos } = props;
+  const invalidate = useThree((s) => s.invalidate);
+  const rig = useMemo(() => createRig(), []);
+  const { glow } = squadMaterials();
+  const crosses = useRef<InstancedMesh>(null);
+  const { seatOf, squadOf, probe } = useGatherInputs(frame, squads);
+  const stringLines = useStringLines();
+  useLayoutEffect(() => withColors(crosses.current), []);
+  useEffect(() => invalidate(), [squads, simulate, quality, invalidate]);
+  const tone = useTone();
   // The simulation runs at its own rate (30 Hz, less far away): frames between two steps change nothing, so they cost nothing.
   const pace = useRef({ wait: Infinity, hz: HZ[quality] || FAR_HZ });
   useEffect(() => {
@@ -215,41 +260,20 @@ export function PuppetStrings({
     if (pace.current.wait < (simulate ? 1 / pace.current.hz : STILL_EVERY_S)) return;
     const dt = Math.min(pace.current.wait, MAX_WAIT_S);
     pace.current.wait = 0;
-    const ratio = gl.getPixelRatio();
-    material.resolution.set(size.width * ratio, size.height * ratio);
-    material.linewidth = STRING_WIDTH * ratio;
-    const gathered = gather(
-      frame.state.current.members,
-      seatOf,
-      squadOf,
-      podPos,
-      exploded,
-      camera,
-      probe,
-    );
+    fitToCanvas(stringLines.material, gl.getPixelRatio(), size);
+    const members = frame.state.current.members;
+    const gathered = gather(members, seatOf, squadOf, podPos, exploded, camera, probe);
     // The nearest subagent sets the pace: far from the camera the simulation slows, and then holds.
     const hz = gathered.nearest > FAR_M ? FAR_HZ : HZ[quality] || FAR_HZ;
     pace.current.hz = hz;
     updateRig(rig, gathered.members, gathered.nearest > FROZEN_M ? 0 : dt, { simulate, hz });
-
-    const start = geometry.getAttribute('instanceStart') as InterleavedBufferAttribute;
-    const colorStart = geometry.getAttribute('instanceColorStart') as InterleavedBufferAttribute;
-    const buffers = {
-      positions: start.data.array as Float32Array,
-      rgb: colorStart.data.array as Float32Array,
-    };
-    const crossItems: Instance[] = [];
-    const segment = writeStrings(rig, buffers, gathered, tone, crossItems);
-    geometry.instanceCount = segment;
-    start.data.needsUpdate = true;
-    colorStart.data.needsUpdate = true;
-    lines.visible = segment > 0;
+    const crossItems = writeLines(rig, stringLines, gathered, tone);
     if (crosses.current) writeInstances(crosses.current, crossItems);
   });
 
   return (
     <>
-      <primitive object={lines} dispose={null} />
+      <primitive object={stringLines.lines} dispose={null} />
       <instancedMesh
         ref={crosses}
         args={[crossGeometry(), glow, MEMBER_CAPACITY]}

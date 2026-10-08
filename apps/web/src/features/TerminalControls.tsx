@@ -1,0 +1,89 @@
+import { Field } from '../ui/Field.js';
+import { useT, useWhy } from '../ui/useT.js';
+import type { TerminalAct, TerminalDetail } from './terminal-model.js';
+
+type Props = {
+  canWrite: boolean;
+  /** This person holds the terminal's control and the terminal is running. */
+  writable: boolean;
+  data: TerminalDetail | undefined;
+  act: TerminalAct;
+};
+
+function TerminalButtons({ canWrite, writable, data, act }: Props) {
+  const t = useT();
+  const whyNot = useWhy();
+  return (
+    <div className="form-actions">
+      <button
+        disabled={!canWrite || data?.state !== 'running'}
+        {...whyNot(
+          [canWrite, 'needOperator'],
+          [data?.state === 'running', 'whyTerminalNotRunning'],
+        )}
+        onClick={() => void act('terminal.takeover')}
+      >
+        {t('terminalTakeover')}
+      </button>
+      <button
+        disabled={!writable}
+        {...whyNot([canWrite, 'needOperator'], [writable, 'whyTerminalNotHeld'])}
+        onClick={() => void act('terminal.release')}
+      >
+        {t('terminalRelease')}
+      </button>
+      <button
+        className="danger"
+        disabled={!canWrite || !data || data.state === 'exited'}
+        {...whyNot(
+          [canWrite, 'needOperator'],
+          [!!data && data.state !== 'exited', 'whyTerminalNotRunning'],
+        )}
+        onClick={() => void act('terminal.stop')}
+      >
+        {t('terminalStop')}
+      </button>
+    </div>
+  );
+}
+
+function ResizeForm({ canWrite, writable, act }: Omit<Props, 'data'>) {
+  const t = useT();
+  const whyNot = useWhy();
+  return (
+    <form
+      className="field-row"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const form = new FormData(e.currentTarget);
+        void act('terminal.resize', {
+          cols: Number(form.get('cols')),
+          rows: Number(form.get('rows')),
+        });
+      }}
+    >
+      <Field label={t('terminalCols')}>
+        <input name="cols" type="number" defaultValue={80} min={10} max={400} required />
+      </Field>
+      <Field label={t('terminalRows')}>
+        <input name="rows" type="number" defaultValue={24} min={2} max={200} required />
+      </Field>
+      <button
+        disabled={!writable}
+        {...whyNot([canWrite, 'needOperator'], [writable, 'whyTerminalNotHeld'])}
+      >
+        {t('terminalResize')}
+      </button>
+    </form>
+  );
+}
+
+/** Take over, release, stop, and resize one terminal. */
+export function TerminalControls(props: Props) {
+  return (
+    <>
+      <TerminalButtons {...props} />
+      <ResizeForm canWrite={props.canWrite} writable={props.writable} act={props.act} />
+    </>
+  );
+}

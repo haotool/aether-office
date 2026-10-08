@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import type { Room } from '@aether/contracts';
-import { api, execute } from '../api.js';
-import { Field, useT } from '../ui.js';
+import { api } from '../api.js';
+import { execute } from '../api-commands.js';
+import { Field } from '../ui/Field.js';
+import { useT } from '../ui/useT.js';
 import { AgentPicker, useCommandRunner, type AgentPanelProps } from './panel-kit.js';
 
 export function useRooms(projectId: string) {

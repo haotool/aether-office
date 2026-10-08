@@ -2,7 +2,8 @@
 // to be said and what the supervisors do. Pure and immutable (each operation returns a new book): the runtime keeps one in
 // a ref and the renderer reads it with the clock. The throttle lives here: one hand-over per member, two walkers per floor,
 // one stamp at a time per desk, and a lower tier (or no motion) shows the same receipt with less.
-import { between, seeded } from '../../random.js';
+import { between } from '../../pick.js';
+import { seeded } from '../../seeded.js';
 import type { Quality } from '../../scene-types.js';
 import { STAND_MS } from '../../departure.js';
 import { TURN_MS } from '../errand.js';

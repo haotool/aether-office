@@ -1,5 +1,5 @@
 import type { LocalSession, Snapshot } from '@aether/contracts';
-import { activityOf } from '../localSessions.js';
+import { activityOf } from '../session-attention.js';
 
 /** A task in one of these states waits for a person: a review, an acceptance, or a failure to look at. */
 const WORK_NEEDING_A_PERSON = ['reviewing', 'verified', 'failed', 'indeterminate', 'blocked'];

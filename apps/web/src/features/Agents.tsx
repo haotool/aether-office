@@ -1,10 +1,15 @@
 import { useState } from 'react';
 import { Plus, ArrowUpRight } from 'lucide-react';
 import type { Snapshot } from '@aether/contracts';
-import { execute } from '../api.js';
+import { execute } from '../api-commands.js';
 import { avatarState } from '../avatar/state.js';
 import { Avatar } from './Avatar.js';
-import { PageHeading, Badge, Modal, Field, Empty, useT, whyNot } from '../ui.js';
+import { PageHeading } from '../ui/PageHeading.js';
+import { Badge } from '../ui/Badge.js';
+import { Modal } from '../ui/Modal.js';
+import { Field } from '../ui/Field.js';
+import { Empty } from '../ui/Empty.js';
+import { useT, useWhy } from '../ui/useT.js';
 
 function AgentCard({
   agent,
@@ -82,16 +87,15 @@ function AgentFields({ mode }: { mode: Snapshot['project']['mode'] }) {
   );
 }
 
-function AddAgentModal({
-  snapshot,
-  onSaved,
-  onClose,
-}: {
+type AddAgentModalProps = {
   snapshot: Snapshot;
   onSaved: () => void;
   onClose: () => void;
-}) {
+};
+
+function AddAgentModal({ snapshot, onSaved, onClose }: AddAgentModalProps) {
   const t = useT();
+  const whyNot = useWhy();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const submit = async (data: FormData) => {
@@ -131,7 +135,7 @@ function AddAgentModal({
             {error}
           </p>
         )}
-        <button className="primary full-width" disabled={busy}>
+        <button className="primary full-width" disabled={busy} {...whyNot([!busy, 'whyBusy'])}>
           {t('create')}
         </button>
       </form>
@@ -151,6 +155,7 @@ export function Agents({
   canWrite: boolean;
 }) {
   const t = useT();
+  const whyNot = useWhy();
   const [adding, setAdding] = useState(false);
   return (
     <>
@@ -162,7 +167,7 @@ export function Agents({
             className="primary"
             onClick={() => setAdding(true)}
             disabled={!canWrite}
-            {...whyNot(canWrite, t('needOperator'))}
+            {...whyNot([canWrite, 'needOperator'])}
           >
             <Plus size={16} />
             {t('addAgent')}

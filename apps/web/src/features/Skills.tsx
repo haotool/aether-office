@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import type { Skill } from '@aether/contracts';
-import { api, execute } from '../api.js';
-import { Field, useT } from '../ui.js';
+import { api } from '../api.js';
+import { execute } from '../api-commands.js';
+import { Field } from '../ui/Field.js';
+import { useT } from '../ui/useT.js';
 import { EnableToggle, useCommandRunner } from './panel-kit.js';
 
 function SkillRow({
@@ -29,6 +31,39 @@ function SkillRow({
       </details>
       <EnableToggle enabled={s.enabled} canManage={canManage} onToggle={onToggle} />
     </li>
+  );
+}
+
+type Run = ReturnType<typeof useCommandRunner>['run'];
+
+/** Imports a skill from its pasted content. */
+function SkillImportForm({
+  projectId,
+  error,
+  run,
+}: {
+  projectId: string;
+  error: string;
+  run: Run;
+}) {
+  const t = useT();
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const form = e.currentTarget;
+        void run(async () => {
+          await execute('skill.import', { content: new FormData(form).get('content') }, projectId);
+          form.reset();
+        });
+      }}
+    >
+      <Field label={t('skillContent')}>
+        <textarea name="content" required rows={8} maxLength={70000} spellCheck={false} />
+      </Field>
+      {error && <p role="alert">{error}</p>}
+      <button type="submit">{t('skillImport')}</button>
+    </form>
   );
 }
 
@@ -65,28 +100,7 @@ export function Skills({ projectId, canManage }: { projectId: string; canManage:
           />
         ))}
       </ul>
-      {canManage && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            const form = e.currentTarget;
-            void run(async () => {
-              await execute(
-                'skill.import',
-                { content: new FormData(form).get('content') },
-                projectId,
-              );
-              form.reset();
-            });
-          }}
-        >
-          <Field label={t('skillContent')}>
-            <textarea name="content" required rows={8} maxLength={70000} spellCheck={false} />
-          </Field>
-          {error && <p role="alert">{error}</p>}
-          <button type="submit">{t('skillImport')}</button>
-        </form>
-      )}
+      {canManage && <SkillImportForm projectId={projectId} error={error} run={run} />}
     </section>
   );
 }

@@ -1,56 +1,16 @@
-import {
-  appendFileSync,
-  chmodSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  truncateSync,
-  utimesSync,
-  writeFileSync,
-} from 'node:fs';
-import { tmpdir } from 'node:os';
+import { appendFileSync, readFileSync, rmSync, truncateSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { usageResponseSchema } from '../../packages/contracts/src/index.js';
-import { windowDays, type Attribution } from '../../apps/control/src/services/usage-aggregate.js';
-import { listTranscripts } from '../../apps/control/src/services/usage-files.js';
-import { createUsageStats } from '../../apps/control/src/services/usage-stats.js';
-import {
-  claudeFile,
-  claudeLine,
-  codexContext,
-  codexCount,
-  codexFile,
-  codexMeta,
-  writeLines,
-} from './usage-fixtures.js';
+import { windowDays } from '../../apps/control/src/services/usage-aggregate.js';
+import { claudeFile, claudeLine, writeLines } from './usage-fixtures.js';
+import { A, NOW, touch, usageEnv } from './usage-stats-env.js';
 
-const NOW = Date.parse('2026-10-07T12:00:00Z');
-let home: string;
-let clock: number;
-beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), 'aether-usage-'));
-  clock = NOW;
-});
-afterEach(() => rmSync(home, { recursive: true, force: true }));
-
-const touch = (file: string, at = NOW - 60_000) => utimesSync(file, at / 1000, at / 1000);
-const stats = (extra: Partial<Parameters<typeof createUsageStats>[0]> = {}) =>
-  createUsageStats({ home, timeZone: 'UTC', now: () => clock, ...extra });
-/** One full look: time moves on so the next scan is allowed, and the whole scan is awaited. */
-async function look(
-  s: ReturnType<typeof createUsageStats>,
-  attributions = new Map<string, Attribution>(),
-) {
-  clock += 10_000;
-  await s.refresh(10_000);
-  return s.snapshot('30d', attributions, null);
-}
-const A = (department: string | null, repo = 'repo'): Attribution => ({ department, repo });
+const { env, stats, look } = usageEnv();
 
 describe('incremental reading', () => {
   it('reads only appended bytes, and never counts a re-read twice', async () => {
-    const file = claudeFile(home, 'sess-1');
+    const file = claudeFile(env.home, 'sess-1');
     writeLines(file, [claudeLine('m1', '2026-10-07T01:00:00.000Z', { i: 10, o: 20 })]);
     touch(file);
     const s = stats();
@@ -66,7 +26,7 @@ describe('incremental reading', () => {
   });
 
   it('waits for the rest of a line cut in half and counts it once complete', async () => {
-    const file = claudeFile(home, 'sess-cut');
+    const file = claudeFile(env.home, 'sess-cut');
     const full = claudeLine('m1', '2026-10-07T01:00:00.000Z', { i: 5, o: 5 });
     writeLines(file, [claudeLine('m0', '2026-10-07T00:59:00.000Z', { i: 1, o: 1 })]);
     appendFileSync(file, full.slice(0, 200)); // the writer is mid-line
@@ -79,7 +39,7 @@ describe('incremental reading', () => {
   });
 
   it('starts over when a file is rewritten or truncated, instead of adding to stale numbers', async () => {
-    const file = claudeFile(home, 'sess-2');
+    const file = claudeFile(env.home, 'sess-2');
     writeLines(file, [
       claudeLine('m1', '2026-10-07T01:00:00.000Z', { i: 10, o: 10 }),
       claudeLine('m2', '2026-10-07T01:01:00.000Z', { i: 10, o: 10 }),
@@ -100,15 +60,15 @@ describe('incremental reading', () => {
   });
 
   it('counts a transcript that appears right after a pass on the very next request, not a gap later', async () => {
-    const first = claudeFile(home, 'sess-a');
+    const first = claudeFile(env.home, 'sess-a');
     writeLines(first, [claudeLine('m1', '2026-10-07T01:00:00.000Z', { i: 10, o: 1 })]);
     touch(first);
     const s = stats();
     expect((await look(s)).scan).toMatchObject({ complete: true, files: 1 });
-    const second = claudeFile(home, 'sess-b');
+    const second = claudeFile(env.home, 'sess-b');
     writeLines(second, [claudeLine('m2', '2026-10-07T01:01:00.000Z', { i: 5, o: 1 })]);
     touch(second);
-    clock += 50; // the request comes 50 ms after the pass: a cheap pass does not make it wait for a time gap
+    env.clock += 50; // the request comes 50 ms after the pass: a cheap pass does not make it wait for a time gap
     await s.refresh(400);
     const answer = await s.snapshot('30d', new Map(), null);
     expect(answer.scan).toMatchObject({ complete: true, files: 2 });
@@ -116,7 +76,7 @@ describe('incremental reading', () => {
   });
 
   it('forgets a transcript that is gone', async () => {
-    const file = claudeFile(home, 'sess-3');
+    const file = claudeFile(env.home, 'sess-3');
     writeLines(file, [claudeLine('m', '2026-10-07T01:00:00.000Z', { i: 9, o: 1 })]);
     touch(file);
     const s = stats();
@@ -127,9 +87,9 @@ describe('incremental reading', () => {
 });
 
 describe('the rollup on disk', () => {
-  const cacheFile = () => join(home, 'usage-rollup.json');
+  const cacheFile = () => join(env.home, 'usage-rollup.json');
   const seed = () => {
-    const file = claudeFile(home, 'sess-4');
+    const file = claudeFile(env.home, 'sess-4');
     writeLines(file, [claudeLine('m', '2026-10-07T01:00:00.000Z', { i: 9, o: 1 }, { tools: 1 })]);
     touch(file);
   };
@@ -140,7 +100,7 @@ describe('the rollup on disk', () => {
     await look(first);
     await first.flush();
     const text = readFileSync(cacheFile(), 'utf8');
-    expect(text).not.toContain(home); // no path
+    expect(text).not.toContain(env.home); // no path
     expect(text).not.toContain('sess-4');
     const second = stats({ cacheFile: cacheFile() });
     const snapshot = await look(second);
@@ -167,21 +127,21 @@ describe('the rollup on disk', () => {
 
 describe('grouping', () => {
   it('assigns usage to the office of its session, the rest to "unplaced", and a sub-agent to its parent', async () => {
-    writeLines(claudeFile(home, 'dev'), [
+    writeLines(claudeFile(env.home, 'dev'), [
       claudeLine('a', '2026-10-07T01:00:00.000Z', { i: 100, o: 50 }),
     ]);
-    writeLines(claudeFile(home, 'qa'), [
+    writeLines(claudeFile(env.home, 'qa'), [
       claudeLine('b', '2026-10-07T01:00:00.000Z', { i: 10, o: 5 }),
     ]);
-    writeLines(claudeFile(home, 'old'), [
+    writeLines(claudeFile(env.home, 'old'), [
       claudeLine('c', '2026-10-07T01:00:00.000Z', { i: 1, o: 1 }),
     ]);
     // a sub-agent's own transcript belongs to the session folder it sits in
-    writeLines(join(home, '.claude/projects/-work-repo/dev/subagents/agent-x.jsonl'), [
+    writeLines(join(env.home, '.claude/projects/-work-repo/dev/subagents/agent-x.jsonl'), [
       claudeLine('d', '2026-10-07T01:05:00.000Z', { i: 7, o: 3 }),
     ]);
-    for (const f of ['dev', 'qa', 'old']) touch(claudeFile(home, f));
-    touch(join(home, '.claude/projects/-work-repo/dev/subagents/agent-x.jsonl'));
+    for (const f of ['dev', 'qa', 'old']) touch(claudeFile(env.home, f));
+    touch(join(env.home, '.claude/projects/-work-repo/dev/subagents/agent-x.jsonl'));
     const snapshot = await look(
       stats(),
       new Map([
@@ -209,7 +169,7 @@ describe('grouping', () => {
   });
 
   it('buckets by the local day, the same event on different days in different zones', async () => {
-    const file = claudeFile(home, 'late');
+    const file = claudeFile(env.home, 'late');
     writeLines(file, [claudeLine('a', '2026-10-06T17:30:00.000Z', { i: 5, o: 5 })]);
     touch(file);
     const inUtc = await look(stats());
@@ -222,7 +182,7 @@ describe('grouping', () => {
   });
 
   it('answers a range from the same days: today is the last of the window, 7d its last seven', async () => {
-    const file = claudeFile(home, 'range');
+    const file = claudeFile(env.home, 'range');
     writeLines(file, [
       claudeLine('a', '2026-10-07T01:00:00.000Z', { i: 1, o: 0 }),
       claudeLine('b', '2026-10-03T01:00:00.000Z', { i: 10, o: 0 }),
@@ -235,214 +195,5 @@ describe('grouping', () => {
       (await s.snapshot(range, new Map(), null)).building.totals.input;
     expect([await input('today'), await input('7d'), await input('30d')]).toEqual([1, 11, 111]);
     expect(windowDays('2026-03-01').at(-2)).toBe('2026-02-28'); // calendar arithmetic, not 24-hour steps
-  });
-});
-
-describe('Codex subagents', () => {
-  it('counts a spawned rollout as part of its parent session, in the parent’s office', async () => {
-    const parentId = '019d0000-0000-7000-8000-0000000000aa';
-    const childId = '019d0000-0000-7000-8000-0000000000bb';
-    const count = (at: string) =>
-      codexCount(at, { input: 100, output: 10 }, { input: 100, output: 10 });
-    const parent = codexFile(home, parentId);
-    const child = codexFile(home, childId);
-    writeLines(parent, [codexMeta('2026-10-07T01:00:00.000Z'), count('2026-10-07T01:00:10.000Z')]);
-    writeLines(child, [
-      JSON.stringify({
-        timestamp: '2026-10-07T01:00:00.000Z',
-        type: 'session_meta',
-        payload: {
-          id: childId,
-          cwd: '/work/repo',
-          source: { subagent: { thread_spawn: { parent_thread_id: parentId, agent_role: 'x' } } },
-        },
-      }),
-      count('2026-10-07T01:00:20.000Z'),
-    ]);
-    touch(parent);
-    touch(child);
-    const snapshot = await look(stats(), new Map([[`codex:${parentId}`, A('data')]]));
-    expect(snapshot.building.totals.sessions).toBe(1);
-    expect(snapshot.offices.find((o) => o.department === 'data')!.scope.totals).toMatchObject({
-      input: 200,
-      output: 20,
-      sessions: 1,
-    });
-    expect(snapshot.unplaced.totals.input).toBe(0);
-  });
-});
-
-describe('Codex sessions and limits', () => {
-  it('reads a rollout, its tokens and the freshest rate-limit windows', async () => {
-    const file = codexFile(home, '019d0000-0000-7000-8000-000000000001');
-    writeLines(file, [
-      codexMeta('2026-10-07T01:00:00.000Z'),
-      codexContext('2026-10-07T01:00:01.000Z', 'gpt-5.5'),
-      codexCount(
-        '2026-10-07T01:00:10.000Z',
-        { input: 1000, cached: 600, output: 100, reasoning: 40 },
-        { input: 1000, cached: 600, output: 100, reasoning: 40 },
-        true,
-      ),
-    ]);
-    touch(file);
-    const snapshot = await look(
-      stats(),
-      new Map([['codex:019d0000-0000-7000-8000-000000000001', A('data')]]),
-    );
-    expect(snapshot.offices.find((o) => o.department === 'data')!.scope.totals).toMatchObject({
-      input: 400,
-      cacheRead: 600,
-      output: 60,
-      reasoning: 40,
-    });
-    expect(snapshot.limits.codex).toMatchObject({
-      plan: 'pro',
-      windows: [
-        { minutes: 300, usedPercent: 41.5 },
-        { minutes: 10080, usedPercent: 12 },
-      ],
-    });
-    expect(snapshot.providers.find((p) => p.provider === 'codex')!.totals.reasoning).toBe(40);
-  });
-});
-
-describe('what the numbers may be missing', () => {
-  const T = '2026-10-07T01:00:00.000Z';
-  const line = (id: string, input = 1) => claudeLine(id, T, { i: input, o: 1 });
-
-  it('counts one message once across two copies of a transcript (a resume), whichever is newer', async () => {
-    const original = claudeFile(home, 'orig');
-    const copy = claudeFile(home, 'copy');
-    writeLines(original, [line('a', 10), line('b', 10)]);
-    writeLines(copy, [line('a', 10), line('b', 10), line('c', 10)]);
-    touch(original, NOW - 120_000);
-    touch(copy, NOW - 60_000);
-    const snapshot = await look(stats());
-    expect(snapshot.building.totals).toMatchObject({ input: 30, requests: 3 });
-  });
-
-  it('reports truncation when the file cap is hit, with the real count, dropping the oldest', async () => {
-    for (let n = 0; n < 6; n++) {
-      const file = claudeFile(home, `cap-${n}`);
-      writeLines(file, [line(`m${n}`, n + 1)]);
-      touch(file, NOW - 60_000 - n * 1000);
-    }
-    const snapshot = await look(stats({ maxFiles: 4 }));
-    expect(snapshot.scan).toMatchObject({ files: 4, found: 6, truncated: true });
-    expect(snapshot.building.totals.input).toBe(1 + 2 + 3 + 4); // the two oldest are the ones left out
-    expect((await look(stats())).scan).toMatchObject({ found: 6, truncated: false });
-  });
-
-  it('lists claude projects newest first under a spent budget, not by folder name', async () => {
-    const old = claudeFile(home, 'old', '-zzz-oldest-project');
-    const fresh = claudeFile(home, 'new', '-aaa-newest-project');
-    writeLines(old, [line('o')]);
-    writeLines(fresh, [line('n')]);
-    touch(old, NOW - 20 * 86_400_000);
-    touch(fresh, NOW - 60_000);
-    utimesSync(
-      join(home, '.claude/projects/-zzz-oldest-project'),
-      (NOW - 20 * 86_400_000) / 1000,
-      (NOW - 20 * 86_400_000) / 1000,
-    );
-    utimesSync(
-      join(home, '.claude/projects/-aaa-newest-project'),
-      (NOW - 60_000) / 1000,
-      (NOW - 60_000) / 1000,
-    );
-    // Entries: the project folder, then its file. A budget of two visits the newest folder and its file only.
-    const listing = await listTranscripts(home, NOW, 30 * 86_400_000, 100, 2);
-    expect(listing.truncated).toBe(true);
-    expect(listing.transcripts.map((t) => t.sessionKey)).toEqual(['claude:new']);
-    expect((await listTranscripts(home, NOW, 30 * 86_400_000, 100)).truncated).toBe(false);
-  });
-
-  it('reports unreadable files and skipped lines in the scan', async () => {
-    const bad = claudeFile(home, 'bad');
-    writeLines(bad, [line('a').replace('"timestamp"', '"stamp"')]);
-    touch(bad);
-    expect((await look(stats())).scan).toMatchObject({ skippedLines: 1, failedFiles: 0 });
-    const locked = claudeFile(home, 'locked');
-    writeLines(locked, [line('l')]);
-    touch(locked);
-    chmodSync(locked, 0); // listed, but cannot be opened
-    expect((await look(stats())).scan).toMatchObject({ skippedLines: 1, failedFiles: 1 });
-  });
-
-  it('reads a file replaced in place with the same start and a larger size again, not as an append', async () => {
-    const file = claudeFile(home, 'swap');
-    const head = line('h', 5);
-    writeLines(file, [head, line('x1', 100)]);
-    touch(file);
-    const s = stats();
-    expect((await look(s)).building.totals.input).toBe(105);
-    // Same first line, different content after it, and longer than before.
-    writeLines(file, [head, line('y1', 7), line('y2', 7)]);
-    touch(file, NOW - 30_000);
-    expect((await look(s)).building.totals.input).toBe(5 + 7 + 7);
-  });
-});
-
-describe('bounds', () => {
-  it('cold-scans 500 files within budget without starving the event loop', async () => {
-    for (let n = 0; n < 500; n++) {
-      const file = claudeFile(home, `perf-${n}`, `-p${n % 20}`);
-      writeLines(
-        file,
-        Array.from({ length: 40 }, (_, k) =>
-          claudeLine(
-            `m${n}-${k}`,
-            `2026-10-07T01:${String(k).padStart(2, '0')}:00.000Z`,
-            { i: 3, cr: 900, o: 7 },
-            { tools: 1 },
-          ),
-        ),
-      );
-      touch(file);
-    }
-    const s = stats();
-    let worstGap = 0;
-    let last = performance.now();
-    const timer = setInterval(() => {
-      const now = performance.now();
-      worstGap = Math.max(worstGap, now - last);
-      last = now;
-    }, 5);
-    const started = performance.now();
-    clock += 10_000;
-    await s.refresh(60_000);
-    const took = performance.now() - started;
-    clearInterval(timer);
-    const snapshot = await s.snapshot('30d', new Map(), null);
-    expect(snapshot.scan).toMatchObject({ complete: true, files: 500, pending: 0 });
-    expect(snapshot.building.totals).toMatchObject({ input: 500 * 40 * 3, requests: 500 * 40 });
-    expect(took).toBeLessThan(8000);
-    // The loop kept turning while the scan ran (a scan that never yielded would hold it for the whole of `took`).
-    expect(worstGap).toBeLessThan(Math.max(500, took / 2));
-  }, 30_000);
-
-  it('answers at once with a partial result while a slow scan is still reading, and says so', async () => {
-    for (let n = 0; n < 200; n++) {
-      const file = claudeFile(home, `slow-${n}`);
-      writeLines(file, [claudeLine(`m${n}`, '2026-10-07T01:00:00.000Z', { i: 1, o: 1 })]);
-      touch(file);
-    }
-    const s = stats();
-    clock += 10_000;
-    await s.refresh(0);
-    const early = await s.snapshot('30d', new Map(), null);
-    expect(early.scan.complete).toBe(false);
-    await s.refresh(10_000);
-    expect((await s.snapshot('30d', new Map(), null)).scan.complete).toBe(true);
-  });
-
-  it('keeps no more files than its cap', async () => {
-    for (let n = 0; n < 12; n++) {
-      const file = claudeFile(home, `cap-${n}`);
-      writeLines(file, [claudeLine(`m${n}`, '2026-10-07T01:00:00.000Z', { i: 1, o: 1 })]);
-      touch(file, NOW - 60_000 - n * 1000);
-    }
-    expect((await look(stats({ maxFiles: 5 }))).scan.files).toBe(5);
   });
 });

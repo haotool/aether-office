@@ -53,7 +53,7 @@ const TRAY_TOP_M = 0.08;
 
 type Desk = { x: number; z: number; rotation: number };
 /** The desk's hand-over places, in the floor's frame. */
-type DeskPlaces = {
+export type DeskPlaces = {
   spot: Point;
   tray: readonly [number, number, number];
   stamp: readonly [number, number, number];
@@ -76,7 +76,7 @@ export function deskPlaces(desk: Desk, side: 1 | -1): DeskPlaces {
   };
 }
 
-type Route = {
+export type Route = {
   /** The chair, then the way to the desk's side; in the seat's frame. */
   toSpot: Point[];
   /** From the desk's side to the core. */
@@ -196,40 +196,21 @@ export type MemberPose = {
 
 const ORIGIN: Point = { x: 0, z: 0 };
 
-/** Where the carrier is, `elapsed` ms after it finished (a `walk` plan only). */
-export function memberAt(plan: HandoverPlan, elapsed: number): MemberPose {
-  const { route, t } = plan;
-  const pose = (at: Point, facing: number, over: Partial<MemberPose> = {}): MemberPose => ({
-    clip: null,
-    x: at.x,
-    z: at.z,
-    yaw: facing - SEATED_HEADING,
-    scale: 1,
-    pace: 1,
-    carrying: true,
-    gone: false,
-    ...over,
-  });
-  const [chair = ORIGIN] = route.toSpot;
-  const spot = route.toSpot.at(-1) ?? chair;
-  if (elapsed < t.wait) return pose(chair, SEATED_HEADING);
-  if (elapsed < t.standEnd) return pose(chair, SEATED_HEADING, { clip: 'stand_up' });
-  if (elapsed < t.walkEnd) {
-    const walked = ((elapsed - t.standEnd) / 1000) * route.speed;
-    const at = positionAt(route.toSpot, walked);
-    return pose(at, heading(at, positionAt(route.toSpot, walked + 0.4), SEATED_HEADING), {
-      clip: 'walk',
-      pace: route.speed / WALK_STRIDE_SPEED,
-    });
-  }
-  const arrived = heading(route.toSpot[route.toSpot.length - 2] ?? chair, spot, SEATED_HEADING);
-  if (elapsed < t.turnEnd) {
-    const k = (elapsed - t.walkEnd) / TURN_MS;
-    return pose(spot, arrived + shortest(arrived, route.face) * k, { clip: 'idle' });
-  }
-  if (elapsed < t.stampAt)
-    return pose(spot, route.face, { clip: 'idle', carrying: elapsed < t.placeAt });
-  // Leaving: a wave (turning to the way out), the walk into the core, the sink.
+const pose = (at: Point, facing: number, over: Partial<MemberPose> = {}): MemberPose => ({
+  clip: null,
+  x: at.x,
+  z: at.z,
+  yaw: facing - SEATED_HEADING,
+  scale: 1,
+  pace: 1,
+  carrying: true,
+  gone: false,
+  ...over,
+});
+
+/** Leaving, `elapsed` ms in: a wave (turning to the way out), the walk into the core, the sink. */
+function leavingPose({ route, t }: HandoverPlan, elapsed: number): MemberPose {
+  const spot = route.toSpot.at(-1) ?? route.toSpot[0] ?? ORIGIN;
   const out = heading(spot, positionAt(route.exit, 0.6), SEATED_HEADING);
   const waved = elapsed - t.stampAt;
   if (waved < WAVE_MS)
@@ -251,6 +232,31 @@ export function memberAt(plan: HandoverPlan, elapsed: number): MemberPose {
         scale: 1 - sunk / SINK_MS,
       })
     : pose(at, facing, { carrying: false, gone: true, scale: 0 });
+}
+
+/** Where the carrier is, `elapsed` ms after it finished (a `walk` plan only). */
+export function memberAt(plan: HandoverPlan, elapsed: number): MemberPose {
+  const { route, t } = plan;
+  const [chair = ORIGIN] = route.toSpot;
+  const spot = route.toSpot.at(-1) ?? chair;
+  if (elapsed < t.wait) return pose(chair, SEATED_HEADING);
+  if (elapsed < t.standEnd) return pose(chair, SEATED_HEADING, { clip: 'stand_up' });
+  if (elapsed < t.walkEnd) {
+    const walked = ((elapsed - t.standEnd) / 1000) * route.speed;
+    const at = positionAt(route.toSpot, walked);
+    return pose(at, heading(at, positionAt(route.toSpot, walked + 0.4), SEATED_HEADING), {
+      clip: 'walk',
+      pace: route.speed / WALK_STRIDE_SPEED,
+    });
+  }
+  const arrived = heading(route.toSpot[route.toSpot.length - 2] ?? chair, spot, SEATED_HEADING);
+  if (elapsed < t.turnEnd) {
+    const k = (elapsed - t.walkEnd) / TURN_MS;
+    return pose(spot, arrived + shortest(arrived, route.face) * k, { clip: 'idle' });
+  }
+  if (elapsed < t.stampAt)
+    return pose(spot, route.face, { clip: 'idle', carrying: elapsed < t.placeAt });
+  return leavingPose(plan, elapsed);
 }
 
 /** A folder's place in the floor's frame (y is the height over the floor), how big and which way it lies. */

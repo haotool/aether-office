@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef } from 'react';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 
 /**
  * Gives the 3D canvas an accessible name and a text equivalent: the canvas is an image of the office (`role="img"`) described

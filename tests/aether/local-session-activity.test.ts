@@ -4,7 +4,7 @@ import {
   SESSION_GONE_MS,
   type LocalSession,
 } from '../../packages/contracts/src/index.js';
-import { activityOf } from '../../apps/web/src/localSessions.js';
+import { activityOf } from '../../apps/web/src/session-attention.js';
 
 const NOW = 10_000_000;
 const session = (over: Partial<LocalSession>): LocalSession => ({

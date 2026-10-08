@@ -1,14 +1,15 @@
 import { SEATING } from './seating.js';
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, type RefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import {
   AdditiveBlending,
   BufferAttribute,
   CanvasTexture,
   NormalBlending,
+  type Blending,
   type Points,
 } from 'three';
-import { seeded } from './random.js';
+import { seeded } from './seeded.js';
 import { context2d } from './canvas-2d.js';
 
 const PUFFS = 16;
@@ -27,6 +28,63 @@ function softDot(): CanvasTexture {
   g.fillStyle = fill;
   g.fillRect(0, 0, 64, 64);
   return new CanvasTexture(canvas);
+}
+
+/** Smoke puffs curl up from behind the screen, each on its own phase of the rise. */
+function curlSmoke(smoke: Float32Array, phase: Float32Array, t: number, rise: number, top: number) {
+  for (let i = 0; i < PUFFS; i++) {
+    const life = (t * 0.35 + phaseAt(phase, i)) % 1;
+    smoke[i * 3] = (phaseAt(phase, (i + 3) % PUFFS) - 0.5) * 0.5 + Math.sin(t + i) * 0.04 * life;
+    smoke[i * 3 + 1] = top + life * rise;
+    smoke[i * 3 + 2] = -0.32 + Math.cos(t * 0.7 + i) * 0.05 * life;
+  }
+}
+
+/** Sparks jump off the desk in short arcs. */
+function jumpSparks(sparks: Float32Array, phase: Float32Array, t: number) {
+  for (let i = 0; i < SPARKS; i++) {
+    const life = (t * 1.6 + phaseAt(phase, PUFFS + i)) % 1;
+    sparks[i * 3] =
+      (phaseAt(phase, (i + 5) % SPARKS) - 0.5) * 0.7 + (phaseAt(phase, i) - 0.5) * life * 0.5;
+    sparks[i * 3 + 1] = SEATING.slab.at[1] + 0.05 + Math.sin(life * Math.PI) * 0.35;
+    sparks[i * 3 + 2] = -0.1 + (phaseAt(phase, (i + 2) % SPARKS) - 0.5) * 0.3;
+  }
+}
+
+/** A cloud of soft dots whose positions the frame loop rewrites. */
+function Dots({
+  innerRef,
+  positions,
+  map,
+  size,
+  color,
+  opacity,
+  blending,
+}: {
+  innerRef: RefObject<Points | null>;
+  positions: Float32Array;
+  map: CanvasTexture;
+  size: number;
+  color: string;
+  opacity: number;
+  blending: Blending;
+}) {
+  return (
+    <points ref={innerRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial
+        map={map}
+        size={size}
+        color={color}
+        transparent
+        opacity={opacity}
+        depthWrite={false}
+        blending={blending}
+      />
+    </points>
+  );
 }
 
 /**
@@ -50,56 +108,33 @@ export function DeskEffects({ intensity, seed }: { intensity: 0 | 1 | 2 | 3; see
   useFrame((state) => {
     if (intensity < 2) return;
     const t = state.clock.elapsedTime;
-    const rise = intensity === 3 ? 0.9 : 0.5;
-    for (let i = 0; i < PUFFS; i++) {
-      const life = (t * 0.35 + phaseAt(phase, i)) % 1;
-      base.smoke[i * 3] =
-        (phaseAt(phase, (i + 3) % PUFFS) - 0.5) * 0.5 + Math.sin(t + i) * 0.04 * life;
-      base.smoke[i * 3 + 1] = top + life * rise;
-      base.smoke[i * 3 + 2] = -0.32 + Math.cos(t * 0.7 + i) * 0.05 * life;
-    }
-    for (let i = 0; i < SPARKS; i++) {
-      const life = (t * 1.6 + phaseAt(phase, PUFFS + i)) % 1;
-      base.sparks[i * 3] =
-        (phaseAt(phase, (i + 5) % SPARKS) - 0.5) * 0.7 + (phaseAt(phase, i) - 0.5) * life * 0.5;
-      base.sparks[i * 3 + 1] = SEATING.slab.at[1] + 0.05 + Math.sin(life * Math.PI) * 0.35;
-      base.sparks[i * 3 + 2] = -0.1 + (phaseAt(phase, (i + 2) % SPARKS) - 0.5) * 0.3;
-    }
+    curlSmoke(base.smoke, phase, t, intensity === 3 ? 0.9 : 0.5, top);
+    jumpSparks(base.sparks, phase, t);
     for (const points of [smoke.current, sparks.current])
       if (points) (points.geometry.getAttribute('position') as BufferAttribute).needsUpdate = true;
   });
   if (intensity < 2) return null;
   return (
     <>
-      <points ref={smoke}>
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" args={[base.smoke, 3]} />
-        </bufferGeometry>
-        <pointsMaterial
-          map={dot}
-          size={intensity === 3 ? 0.34 : 0.2}
-          color={intensity === 3 ? '#6b7076' : '#9aa6b2'}
-          transparent
-          opacity={intensity === 3 ? 0.5 : 0.28}
-          depthWrite={false}
-          blending={NormalBlending}
-        />
-      </points>
+      <Dots
+        innerRef={smoke}
+        positions={base.smoke}
+        map={dot}
+        size={intensity === 3 ? 0.34 : 0.2}
+        color={intensity === 3 ? '#6b7076' : '#9aa6b2'}
+        opacity={intensity === 3 ? 0.5 : 0.28}
+        blending={NormalBlending}
+      />
       {intensity === 3 && (
-        <points ref={sparks}>
-          <bufferGeometry>
-            <bufferAttribute attach="attributes-position" args={[base.sparks, 3]} />
-          </bufferGeometry>
-          <pointsMaterial
-            map={dot}
-            size={0.07}
-            color="#ffb347"
-            transparent
-            opacity={0.95}
-            depthWrite={false}
-            blending={AdditiveBlending}
-          />
-        </points>
+        <Dots
+          innerRef={sparks}
+          positions={base.sparks}
+          map={dot}
+          size={0.07}
+          color="#ffb347"
+          opacity={0.95}
+          blending={AdditiveBlending}
+        />
       )}
     </>
   );

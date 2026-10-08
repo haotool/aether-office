@@ -1,5 +1,5 @@
 import { CornerDownRight } from 'lucide-react';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import type { SquadView } from './feed-squads.js';
 import { SubDot } from './SquadParts.js';
 import { rowName, squadSummary } from './squad-text.js';

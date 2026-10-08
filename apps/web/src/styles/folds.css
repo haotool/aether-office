@@ -17,8 +17,8 @@
 }
 .fold > summary::after {
   content: '';
-  width: 8px; /* token-lint: geometry */
-  height: 8px; /* token-lint: geometry */
+  width: var(--space-8);
+  height: var(--space-8);
   margin-left: auto;
   border-right: 2px solid var(--dim);
   border-bottom: 2px solid var(--dim);

@@ -61,25 +61,8 @@ const standIn = (parent: Agent, n: number): Agent => ({
   lastSeen: null,
 });
 
-/** The stand-in squad of the first member: its agents (the live ones) and its facts, advancing with the clock. */
-export function useSquadPreview(
-  agents: readonly Agent[],
-): { agents: Agent[]; squads: Squad[]; look: string } | null {
-  const [opened] = useState(() => Date.now());
-  // The camera needs the pods to exist before it can fly to one: it is told where to look a moment after the squad is seated.
-  const [seated, setSeated] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setSeated(true), 1200);
-    return () => clearTimeout(timer);
-  }, []);
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!count || !(afterMs || arriveMs || leaveMs || toolMs)) return;
-    const every = setInterval(() => setNow(Date.now()), 500);
-    return () => clearInterval(every);
-  }, []);
-  const parent = agents.find((a) => !a.id.includes(SUBAGENT_INFIX));
-  if (!count || !parent) return null;
+/** The stand-in subagents that have joined by `now`: their facts, and the ones still working as members. */
+function previewMembers(parent: Agent, opened: number, now: number) {
   const facts: SquadMemberFacts[] = [];
   const live: Agent[] = [];
   for (let n = 0; n < count; n++) {
@@ -106,6 +89,29 @@ export function useSquadPreview(
     });
     if (!finished) live.push(member);
   }
+  return { facts, live };
+}
+
+/** The stand-in squad of the first member: its agents (the live ones) and its facts, advancing with the clock. */
+export function useSquadPreview(
+  agents: readonly Agent[],
+): { agents: Agent[]; squads: Squad[]; look: string } | null {
+  const [opened] = useState(() => Date.now());
+  // The camera needs the pods to exist before it can fly to one: it is told where to look a moment after the squad is seated.
+  const [seated, setSeated] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setSeated(true), 1200);
+    return () => clearTimeout(timer);
+  }, []);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!count || !(afterMs || arriveMs || leaveMs || toolMs)) return;
+    const every = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(every);
+  }, []);
+  const parent = agents.find((a) => !a.id.includes(SUBAGENT_INFIX));
+  if (!count || !parent) return null;
+  const { facts, live } = previewMembers(parent, opened, now);
   // The camera goes to the middle of the squad once it is there, else to the supervisor.
   const middle = live.find((a) => a.id.endsWith(`preview-${Math.floor(count / 2)}`));
   return {

@@ -182,87 +182,63 @@ const NEBULAE = [
   { position: [60, 260, -640], scale: 520, color: 'rgba(255,90,170,.28)' },
 ] as const;
 
-export function OrbitalBackdrop({ low }: { low: boolean }) {
-  const texture = useMemo(() => earthTexture(low), [low]);
-  const glows = useMemo(() => NEBULAE.map((n) => glowTexture(n.color, 'rgba(0,0,0,0)')), []);
-  const stars = useMemo(() => {
-    const geometry = new BufferGeometry();
-    const points: number[] = [];
-    const colors: number[] = [];
-    const count = low ? 400 : 1600;
-    const tint = new Color();
-    for (let i = 0; i < count; i++) {
-      const angle = i * 2.399963,
-        y = 1 - (2 * (i + 0.5)) / count,
-        r = Math.sqrt(1 - y * y),
-        radius = 900 + (i % 5) * 60;
-      points.push(Math.cos(angle) * r * radius, y * radius, Math.sin(angle) * r * radius);
-      tint.setHSL(0.5 + ((i * 7) % 20) / 100, 0.6, 0.78 + ((i * 13) % 10) / 60);
-      colors.push(tint.r, tint.g, tint.b);
-    }
-    geometry.setAttribute('position', new Float32BufferAttribute(points, 3));
-    geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
-    return geometry;
-  }, [low]);
-  useEffect(
-    () => () => {
-      texture.dispose();
-      for (const glow of glows) glow.dispose();
-    },
-    [texture, glows],
-  );
-  useEffect(() => () => stars.dispose(), [stars]);
+/** The stars: points spread evenly over a sphere (a golden-angle spiral), tinted from teal to pale. */
+function starField(low: boolean): BufferGeometry {
+  const geometry = new BufferGeometry();
+  const points: number[] = [];
+  const colors: number[] = [];
+  const count = low ? 400 : 1600;
+  const tint = new Color();
+  for (let i = 0; i < count; i++) {
+    const angle = i * 2.399963,
+      y = 1 - (2 * (i + 0.5)) / count,
+      r = Math.sqrt(1 - y * y),
+      radius = 900 + (i % 5) * 60;
+    points.push(Math.cos(angle) * r * radius, y * radius, Math.sin(angle) * r * radius);
+    tint.setHSL(0.5 + ((i * 7) % 20) / 100, 0.6, 0.78 + ((i * 13) % 10) / 60);
+    colors.push(tint.r, tint.g, tint.b);
+  }
+  geometry.setAttribute('position', new Float32BufferAttribute(points, 3));
+  geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
+  return geometry;
+}
+
+/** The planet with its thin atmosphere and the glow round it. */
+function Planet({ texture, low }: { texture: CanvasTexture; low: boolean }) {
   return (
-    <group>
-      <points geometry={stars}>
-        <pointsMaterial
-          vertexColors
-          size={1.7}
-          sizeAttenuation={false}
-          transparent
-          opacity={0.9}
-          fog={false}
+    <group position={[-70, 30, -190]} rotation={[0.06, 1.6, -0.2]}>
+      <mesh>
+        <sphereGeometry args={[62, low ? 40 : 96, low ? 24 : 64]} />
+        <meshStandardMaterial
+          map={texture}
+          roughness={1}
+          emissive={new Color('#245368')}
+          emissiveIntensity={0.18}
         />
-      </points>
-      {!low &&
-        NEBULAE.map((n, i) => (
-          <sprite key={i} position={[...n.position]} scale={[n.scale, n.scale, 1]}>
-            <spriteMaterial
-              map={glows[i]!}
-              transparent
-              depthWrite={false}
-              blending={AdditiveBlending}
-              fog={false}
-            />
-          </sprite>
-        ))}
-      <group position={[-70, 30, -190]} rotation={[0.06, 1.6, -0.2]}>
-        <mesh>
-          <sphereGeometry args={[62, low ? 40 : 96, low ? 24 : 64]} />
-          <meshStandardMaterial
-            map={texture}
-            roughness={1}
-            emissive={new Color('#245368')}
-            emissiveIntensity={0.18}
-          />
-        </mesh>
-        <mesh scale={1.025}>
-          <sphereGeometry args={[62, 48, 32]} />
-          <meshBasicMaterial color="#6fd9ff" transparent opacity={0.1} depthWrite={false} />
-        </mesh>
-        <mesh scale={1.07}>
-          <sphereGeometry args={[62, 48, 32]} />
-          <meshBasicMaterial
-            color="#4bd8ff"
-            transparent
-            opacity={0.05}
-            depthWrite={false}
-            side={BackSide}
-            blending={AdditiveBlending}
-          />
-        </mesh>
-      </group>
-      {/* An orbital ring and a distant station give the sky scale and depth. */}
+      </mesh>
+      <mesh scale={1.025}>
+        <sphereGeometry args={[62, 48, 32]} />
+        <meshBasicMaterial color="#6fd9ff" transparent opacity={0.1} depthWrite={false} />
+      </mesh>
+      <mesh scale={1.07}>
+        <sphereGeometry args={[62, 48, 32]} />
+        <meshBasicMaterial
+          color="#4bd8ff"
+          transparent
+          opacity={0.05}
+          depthWrite={false}
+          side={BackSide}
+          blending={AdditiveBlending}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+/** An orbital ring round the planet and a distant station give the sky scale and depth. */
+function Orbits() {
+  return (
+    <>
       <mesh position={[-70, 30, -190]} rotation={[1.2, 0.2, 0.15]}>
         <torusGeometry args={[88, 0.35, 8, 160]} />
         <meshBasicMaterial color="#5ee7e7" transparent opacity={0.55} fog={false} />
@@ -293,6 +269,51 @@ export function OrbitalBackdrop({ low }: { low: boolean }) {
           />
         </mesh>
       </group>
+    </>
+  );
+}
+
+export function OrbitalBackdrop({ low }: { low: boolean }) {
+  const texture = useMemo(() => earthTexture(low), [low]);
+  const nebulae = useMemo(
+    () => NEBULAE.map((n) => ({ ...n, glow: glowTexture(n.color, 'rgba(0,0,0,0)') })),
+    [],
+  );
+  const stars = useMemo(() => starField(low), [low]);
+  useEffect(
+    () => () => {
+      texture.dispose();
+      for (const n of nebulae) n.glow.dispose();
+    },
+    [texture, nebulae],
+  );
+  useEffect(() => () => stars.dispose(), [stars]);
+  return (
+    <group>
+      <points geometry={stars}>
+        <pointsMaterial
+          vertexColors
+          size={1.7}
+          sizeAttenuation={false}
+          transparent
+          opacity={0.9}
+          fog={false}
+        />
+      </points>
+      {!low &&
+        nebulae.map((n, i) => (
+          <sprite key={i} position={[...n.position]} scale={[n.scale, n.scale, 1]}>
+            <spriteMaterial
+              map={n.glow}
+              transparent
+              depthWrite={false}
+              blending={AdditiveBlending}
+              fog={false}
+            />
+          </sprite>
+        ))}
+      <Planet texture={texture} low={low} />
+      <Orbits />
     </group>
   );
 }

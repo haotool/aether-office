@@ -1,5 +1,6 @@
 import { test, expect, type Browser, type Page } from '@playwright/test';
 import { signIn } from './support/sign-in.js';
+import { throughout } from './support/settled.js';
 import AxeBuilder from '@axe-core/playwright';
 import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -68,8 +69,8 @@ test.describe('the aria log', () => {
     await expect(page.locator(LOG)).toHaveAttribute('aria-label', /Office activity \(decorative\)/);
     await expect(page.locator(`${LOG} p`)).toHaveCount(1, { timeout: 30_000 });
     expect((await logText(page)).join(' ')).toMatch(heard);
-    await page.waitForTimeout(1500); // seats and camera settle: it is not announced again
-    await expect(page.locator(`${LOG} p`)).toHaveCount(1);
+    // Seats and camera settle: it is not announced again.
+    await throughout(page, () => expect(page.locator(`${LOG} p`)).toHaveCount(1), 90);
   });
 
   test('speaks Traditional Chinese for a Chinese page', async ({ page }) => {
@@ -83,8 +84,8 @@ test.describe('the aria log', () => {
     const { page, close } = await scenario(browser, path, seed);
     await page.locator('canvas').first().waitFor({ timeout: 30_000 });
     await expect(page.locator('.scene-warming')).toHaveCount(0, { timeout: 30_000 });
-    await page.waitForTimeout(4000); // long enough for an effect that was going to show to have been announced
-    await expect(page.locator(`${LOG} p`)).toHaveCount(0);
+    // Long enough for an effect that was going to show to have been announced.
+    await throughout(page, () => expect(page.locator(`${LOG} p`)).toHaveCount(0), 240);
     await close();
   };
 
@@ -144,8 +145,12 @@ test.describe('real signals', () => {
   test('Calm mode silences the Konami code', async ({ page }) => {
     await open(page, '/office', { life: { calm: true } });
     await konami(page);
-    await page.waitForTimeout(1500); // awaits nothing: gives an announcement that wrongly came time to show
-    await expect(page.locator(`${LOG} p`, { hasText: 'Konami' })).toHaveCount(0); // a squad's join is not Calm's to silence
+    // Awaits nothing: the frames that follow must not carry an announcement (a squad's join is not Calm's to silence).
+    await throughout(
+      page,
+      () => expect(page.locator(`${LOG} p`, { hasText: 'Konami' })).toHaveCount(0),
+      90,
+    );
   });
 });
 
@@ -208,11 +213,13 @@ test('a real test run is shown as the provider stated it: an unknown outcome say
   spool('PreToolUse', { tool: 'Edit', target: 'app.test.ts' });
   bash('u1', 'make check', ['test']);
   spool('PostToolUse', { tool: 'Bash', toolUseId: 'u1' });
-  await page.waitForTimeout(6000); // a negative wait: nothing is claimed, so there is nothing to wait for
-  await expect(heardLines(page, claimed)).toHaveCount(0);
+  const nothingClaimed = () => expect(heardLines(page, claimed)).toHaveCount(0);
+  await throughout(page, nothingClaimed, 360);
 
   // The same pass, now with its real exit status: the sign flips from BUG to FEATURE (said, never claimed as a fix).
-  await page.waitForTimeout(4000); // a negative wait (no event marks the end of a moment): a failure's own moment, if it was drawn, is over: one effect per member at a time
+  // No event marks the end of a moment, so the scene lets one go by (frames, so a loaded machine waits longer): a failure's
+  // own moment, if it was drawn, is over, and only one effect per member shows at a time.
+  await throughout(page, nothingClaimed, 240);
   bash('p1', 'make check', ['test']);
   spool('PostToolUse', { tool: 'Bash', toolUseId: 'p1', ok: true });
   await expect(heardLines(page, /The tests were changed, then passed/)).toHaveCount(1, {
@@ -235,8 +242,8 @@ test('a push is "pushed" only once it exited successfully', async ({ page }) => 
   await open(page, '/office', { life: { calm: false } });
   await watchFixtureRepo(page);
   bash('g1', 'git push', ['git.push']);
-  await page.waitForTimeout(5000); // a negative wait: a push that has not exited has nothing to announce
-  await expect(heardLines(page, /pushed/)).toHaveCount(0); // started: nothing to say about the end
+  // A push that has not exited has nothing to announce: started, nothing to say about the end.
+  await throughout(page, () => expect(heardLines(page, /pushed/)).toHaveCount(0), 300);
   spool('PostToolUse', { tool: 'Bash', toolUseId: 'g1', ok: true });
   await expect(heardLines(page, /pushed/)).toHaveCount(1, { timeout: 30_000 });
 });

@@ -8,7 +8,7 @@ import { DAY_MS } from '@aether/kernel';
 import { STAGGER_MS } from '@aether/office-scene/model';
 import { api } from '../api.js';
 import { uuid } from '../browser-compat.js';
-import { LOCAL_PREFIX } from '../localSessions.js';
+import { LOCAL_PREFIX } from '../session-names.js';
 
 /** How long a session must have been idle to be offered for clocking out. */
 export const IDLE_DAYS = [1, 3, 7] as const;

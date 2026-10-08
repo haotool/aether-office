@@ -1,5 +1,5 @@
 import type { AttributedSession } from '@aether/contracts';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { callsOf, type SquadRow } from './feed-squads.js';
 import { RelationChip } from './SquadParts.js';
 import { fmt } from './squad-text.js';

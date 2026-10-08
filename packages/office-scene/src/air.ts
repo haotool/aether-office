@@ -11,8 +11,12 @@ export const AIR = {
 
 const NIGHT = [0.45, 0.68, 1.0] as const; // a cool blue
 const DAY = [1.0, 0.86, 0.62] as const; // a warm gold
-const mix = (a: readonly number[], b: readonly number[], t: number) =>
-  a.map((v, i) => v + (b[i]! - v) * t) as [number, number, number];
+type Rgb = readonly [number, number, number];
+const mix = (a: Rgb, b: Rgb, t: number): [number, number, number] => [
+  a[0] + (b[0] - a[0]) * t,
+  a[1] + (b[1] - a[1]) * t,
+  a[2] + (b[2] - a[2]) * t,
+];
 
 /**
  * How day-like the light is at `hour` (0 to 24, local): 0 at night, 1 around midday, easing through dawn (5 to 8) and

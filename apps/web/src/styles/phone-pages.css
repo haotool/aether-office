@@ -87,8 +87,8 @@
   .chip-attention span {
     display: grid;
     place-items: center;
-    width: 18px; /* token-lint: geometry */
-    height: 18px; /* token-lint: geometry */
+    width: var(--icon-md);
+    height: var(--icon-md);
     border-radius: 50%;
     background: var(--scene-gold);
     color: var(--on-gold);

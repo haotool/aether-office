@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 import type { ListItem, MdBlock } from '@aether/kernel';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { CodeBlock } from './CodeBlock.js';
 import { Inline } from './MdInline.js';
 import { parseMarkdown } from './md-parse.js';

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Agent } from '@aether/contracts';
-import { Field, useT, whyNot } from '../ui.js';
+import { Field } from '../ui/Field.js';
+import { useT, useWhy } from '../ui/useT.js';
 
 /** Props of the project panels that list agents (rooms, meetings). */
 export type AgentPanelProps = {
@@ -47,8 +48,9 @@ export function EnableToggle({
   onToggle: () => void;
 }) {
   const t = useT();
+  const whyNot = useWhy();
   return (
-    <button disabled={!canManage} {...whyNot(canManage, t('needOwner'))} onClick={onToggle}>
+    <button disabled={!canManage} {...whyNot([canManage, 'needOwner'])} onClick={onToggle}>
       {enabled ? t('scheduleDisable') : t('scheduleEnable')}
     </button>
   );

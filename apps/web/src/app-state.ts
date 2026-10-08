@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Layout } from '@aether/contracts';
-import type { Session } from './api.js';
-import { useT } from './ui.js';
+import type { Session } from './api-session.js';
+import { useT, useLocale } from './ui/useT.js';
 import { usePreferences } from './state.js';
 import { usePhoneAny } from './phone.js';
 import { useLocalSessions } from './app-data.js';
 import { isOperator } from './roles.js';
-import { sessionIdOf } from './localSessions.js';
+import { sessionIdOf } from './session-names.js';
 import { useDocumentTitle, useFocusRequest, useProjectStream, useTour } from './app-hooks.js';
 import { useAttention, useOfficeSelection, useProjectSelection } from './app-selection.js';
 import type { SheetHeight } from './features/SessionSheet.js';
@@ -40,7 +40,7 @@ function useOfficeView(
   sel: ReturnType<typeof useProjectSelection>,
   local: ReturnType<typeof useLocalSessions>['data'],
 ) {
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   const beats = useBeats(local?.sessions);
   const leaving = useLeaving((s) => s.leaving);
   const model = officeModel(

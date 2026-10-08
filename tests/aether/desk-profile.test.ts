@@ -32,7 +32,7 @@ describe('desk profile', () => {
           share(
             seeds.map((s) => deskProfile(s, role)),
             (p) => p.monitors === 2,
-          ) - (MONITOR_CHANCE[role] ?? MONITOR_CHANCE['default']!),
+          ) - (MONITOR_CHANCE[role] ?? MONITOR_CHANCE.default),
         ),
       ).toBeLessThan(0.1);
     for (const s of seeds) {

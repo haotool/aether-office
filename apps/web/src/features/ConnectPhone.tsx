@@ -3,7 +3,9 @@ import { Smartphone } from 'lucide-react';
 import { api } from '../api.js';
 import { copyText } from '../browser-compat.js';
 import { useLatest } from '../use-latest.js';
-import { Field, Modal, useT } from '../ui.js';
+import { Field } from '../ui/Field.js';
+import { Modal } from '../ui/Modal.js';
+import { useT } from '../ui/useT.js';
 
 type Pairing = {
   id: string;
@@ -103,7 +105,7 @@ function PairCodes({ links, seconds }: { links: Pairing['links']; seconds: numbe
  * Signs a phone in without typing the token: a QR code that works once and expires in five minutes (the server enforces
  * both). The person sees when the phone has used it.
  */
-export function ConnectPhone() {
+function ConnectPhone() {
   const t = useT();
   const { pairing, status, seconds, error, generate } = usePairing();
   const live = pairing && status === 'pending' && seconds > 0;

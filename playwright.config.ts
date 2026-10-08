@@ -3,6 +3,9 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+// The two e2e servers listen on the maintainer's ports unless a second checkout or run sets its own pair (scripts/e2e-*.ts read the same variables).
+const port = process.env['AETHER_E2E_PORT'] ?? '4320';
+const nativePort = process.env['AETHER_E2E_NATIVE_PORT'] ?? '4330';
 // Fixture home so e2e never reads the developer's real ~/.claude or ~/.codex.
 const fixtureHome =
   process.env['AETHER_LOCAL_SESSIONS_HOME'] ?? mkdtempSync(join(tmpdir(), 'aether-e2e-home-'));
@@ -46,7 +49,7 @@ const advancedOn = {
 };
 const storageState = {
   cookies: [],
-  origins: ['http://127.0.0.1:4320', 'http://127.0.0.1:4330'].map((origin) => ({
+  origins: [`http://127.0.0.1:${port}`, `http://127.0.0.1:${nativePort}`].map((origin) => ({
     origin,
     localStorage: [advancedOn],
   })),
@@ -59,7 +62,7 @@ export default defineConfig({
   retries: 0,
   reporter: [['list'], ['json', { outputFile: 'evidence/e2e-results.json' }]],
   use: {
-    baseURL: 'http://127.0.0.1:4320',
+    baseURL: `http://127.0.0.1:${port}`,
     // CI installs Playwright's own Chromium; a developer machine uses the installed Chrome.
     channel: process.env['CI'] ? undefined : 'chrome',
     headless: true,
@@ -88,13 +91,13 @@ export default defineConfig({
   webServer: [
     {
       command: 'node --import tsx scripts/e2e-server.ts',
-      url: 'http://127.0.0.1:4320/health',
+      url: `http://127.0.0.1:${port}/health`,
       reuseExistingServer: false,
       timeout: 20000,
     },
     {
       command: 'node --import tsx scripts/e2e-native-server.ts',
-      url: 'http://127.0.0.1:4330/health',
+      url: `http://127.0.0.1:${nativePort}/health`,
       reuseExistingServer: false,
       timeout: 20000,
     },

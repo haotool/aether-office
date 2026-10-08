@@ -85,8 +85,7 @@ export function useOneShots(o: {
   });
 }
 
-/** Loads the character's model for `url`, links its shaders before it appears and tears it down when the url changes. */
-export function useAnimalModel(o: {
+type AnimalModelOptions = {
   agent: Agent;
   url: string;
   species: string;
@@ -96,7 +95,21 @@ export function useAnimalModel(o: {
   mixer: RefObject<AnimationMixer | null>;
   current: RefObject<AnimationAction | null>;
   onError: () => void;
-}) {
+};
+
+/** Casts and receives shadows; a ghost is see-through, anyone else not on the light tier gets a rim light. */
+function styleCharacter(scene: Object3D, species: string, light: boolean) {
+  scene.traverse((node) => {
+    if (!(node instanceof SkinnedMesh)) return;
+    node.castShadow = true;
+    node.receiveShadow = true;
+    if (species === 'ghost') ghostly(node);
+    else if (!light) rimLit(node);
+  });
+}
+
+/** Loads the character's model for `url`, links its shaders before it appears and tears it down when the url changes. */
+export function useAnimalModel(o: AnimalModelOptions) {
   const { agent, url, species, light, setModel, setOneShot, mixer, current } = o;
   const invalidate = useThree((s) => s.invalidate);
   const gl = useThree((s) => s.gl);
@@ -116,14 +129,7 @@ export function useAnimalModel(o: {
         await gl.compileAsync(loaded.scene, camera, stage).catch(() => undefined);
         if (disposed) return;
         instance = { ...loaded, url };
-        loaded.scene.traverse((node) => {
-          if (node instanceof SkinnedMesh) {
-            node.castShadow = true;
-            node.receiveShadow = true;
-            if (species === 'ghost') ghostly(node);
-            else if (!light) rimLit(node);
-          }
-        });
+        styleCharacter(loaded.scene, species, light);
         mixer.current = new AnimationMixer(loaded.scene);
         mixer.current.addEventListener('finished', () => setOneShot(null));
         forgetAnchors = registerAnchors(agent.id, loaded.scene); // the squad's puppet strings tie to its head and hands

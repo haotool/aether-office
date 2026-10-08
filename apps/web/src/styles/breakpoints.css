@@ -93,8 +93,8 @@
     letter-spacing: 4px;
   }
   .brand img {
-    width: 28px; /* token-lint: geometry */
-    height: 28px; /* token-lint: geometry */
+    width: var(--icon-xl);
+    height: var(--icon-xl);
   }
   .top-divider,
   .project-picker,
@@ -171,8 +171,8 @@
   .scene-footer {
     font-size: var(--fs-label);
     letter-spacing: 0.5px;
-    left: 12px; /* token-lint: geometry */
-    right: 12px; /* token-lint: geometry */
+    left: var(--space-12);
+    right: var(--space-12);
   }
   .team-chip {
     min-width: 140px; /* token-lint: geometry */

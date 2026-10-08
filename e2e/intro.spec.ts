@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { signIn } from './support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
 import { mockGitGraph } from './support/git-graph.js';
-import { frames } from './support/settled.js';
+import { frames, throughout } from './support/settled.js';
 
 // The first-visit camera tour. Browser automation never starts it by itself, so every test asks for it with
 // `?intro=force`; `?perf=1` leaves the scene's camera on `window.__aetherPerfRig` so the tests can see where it is.
@@ -90,10 +90,16 @@ test('any input interrupts the tour and leaves the camera exactly where it is', 
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   await expect(caption(page)).toHaveCount(0);
   const stopped = await camera(page);
-  await page.waitForTimeout(900); // awaits nothing: gives a camera that wrongly kept moving time to show it
-  const later = await camera(page);
-  for (const key of ['radius', 'y', 'bearing'] as const)
-    expect(later[key]).toBeCloseTo(stopped[key], 6); // the controls' own rounding is all that may differ
+  // Awaits nothing: every look at the camera over the next frames must be the one it stopped at.
+  await throughout(
+    page,
+    async () => {
+      const later = await camera(page);
+      for (const key of ['radius', 'y', 'bearing'] as const)
+        expect(later[key]).toBeCloseTo(stopped[key], 6); // the controls' own rounding is all that may differ
+    },
+    54,
+  );
   expect(stopped.y).toBeCloseTo(38, 1); // still on the orbit, not flung to a start view
   const stored = await page.evaluate(() => window.localStorage.getItem('aether-ui-preferences')!);
   expect(JSON.parse(stored).state.intro ?? 'auto').toBe('auto'); // an interruption is not "don't show again"

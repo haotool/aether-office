@@ -1,9 +1,16 @@
-import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import {
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowDown, MessageSquareText, Rows2, Rows3, Search } from 'lucide-react';
 import { api } from '../api.js';
 import { usePreferences } from '../state.js';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { sameDay } from './conv-time.js';
 import { DaySeparator, NowProvider } from './ConvTime.js';
 import { FindBar, useConvFind } from './ConvFind.js';
@@ -18,6 +25,12 @@ import { useConvScroll } from './use-conv-scroll.js';
 import { firstUnreadId, turnIds, useFreshIds } from './use-fresh-ids.js';
 import { useLinkLive } from './use-session-stream.js';
 import { groupTurns, reuseTurns, type Entry, type Turn } from './turn-groups.js';
+
+type TranscriptViewProps = {
+  sessionKey: string;
+  working: boolean;
+  children?: ReactNode;
+};
 
 /** Rows where the messages will be, while the first fetch is out: no spinner, no jump when they arrive. */
 function TranscriptSkeleton() {
@@ -164,6 +177,43 @@ function EmptyConversation() {
   );
 }
 
+/** A running tool group has its own live state; otherwise a working session shows the "working" line. */
+function hasRunningTools(turns: readonly Turn[]) {
+  const last = turns.at(-1)?.blocks.at(-1);
+  return last?.type === 'tools' && last.calls.some((c) => c.result === null);
+}
+
+/**
+ * The conversation's own find. Ctrl/Cmd+F opens it only for a reader whose focus is inside the conversation, and only
+ * where matches can be painted; anywhere else the browser's find is left alone.
+ */
+function useTranscriptFind(scroller: RefObject<HTMLElement | null>, entries: unknown) {
+  const find = useConvFind(scroller, entries);
+  const closeFind = () => {
+    find.setOpen(false);
+    find.setQuery('');
+    scroller.current?.focus();
+  };
+  const onBodyKey = (e: KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f' && find.supported) {
+      e.preventDefault();
+      find.setOpen(true);
+    }
+  };
+  return { find, closeFind, onBodyKey };
+}
+
+/** "N new" (or "latest") while the reader is scrolled up: one press goes to the newest message. */
+function NewPill({ unseen, onClick }: { unseen: number; onClick: () => void }) {
+  const t = useT();
+  return (
+    <button className="new-pill" onClick={onClick}>
+      <ArrowDown size={14} aria-hidden />
+      {unseen > 0 ? `${unseen} ${t('convNew')}` : t('convLatest')}
+    </button>
+  );
+}
+
 /**
  * What a session is saying and doing, as turns. It follows the newest message while you are at the bottom; if you have
  * scrolled up to read, it leaves you there and offers a "N new" pill instead. Refetched when the change stream says it
@@ -171,15 +221,7 @@ function EmptyConversation() {
  * session's details). With focus inside: j and k move between turns, `g g` and `G` go to the ends, and Ctrl or Cmd+F opens
  * a find that searches the loaded messages.
  */
-export function TranscriptView({
-  sessionKey,
-  working,
-  children,
-}: {
-  sessionKey: string;
-  working: boolean;
-  children?: ReactNode;
-}) {
+export function TranscriptView({ sessionKey, working, children }: TranscriptViewProps) {
   const t = useT();
   const still = usePreferences((s) => s.reducedMotion);
   const { query, entries, turns, prompts } = useTranscript(sessionKey, working);
@@ -188,27 +230,11 @@ export function TranscriptView({
   // When the person last looked is read as the conversation opens: what happened after is "new since you looked".
   const [seenAt] = useState(() => seenBaseline(sessionKey));
   const unreadId = useMemo(() => firstUnreadId(turns, seenAt), [turns, seenAt]);
-  const last = turns.at(-1)?.blocks.at(-1);
-  // A running tool group has its own live state; otherwise a working session shows the "working" line.
-  const showThinking =
-    working && !(last?.type === 'tools' && last.calls.some((c) => c.result === null));
+  const showThinking = working && !hasRunningTools(turns);
   const { scroller, onScroll, toBottom, stopGliding, unseen, away } = useConvScroll(entries, still);
   const [density, toggleDensity] = useConvDensity();
-  const find = useConvFind(scroller, entries);
   const onKeys = useConvKeys(scroller, toBottom, stopGliding, still);
-  const closeFind = () => {
-    find.setOpen(false);
-    find.setQuery('');
-    scroller.current?.focus();
-  };
-  // Ctrl/Cmd+F opens the conversation's own find only for a reader whose focus is inside it, and only where matches can be
-  // painted; anywhere else the browser's find is left alone.
-  const onBodyKey = (e: KeyboardEvent) => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f' && find.supported) {
-      e.preventDefault();
-      find.setOpen(true);
-    }
-  };
+  const { find, closeFind, onBodyKey } = useTranscriptFind(scroller, entries);
 
   if (query.error)
     return <TranscriptError message={query.error.message} onRetry={() => void query.refetch()} />;
@@ -240,12 +266,7 @@ export function TranscriptView({
           {!turns.length && <EmptyConversation />}
           {children}
         </div>
-        {(unseen > 0 || away) && (
-          <button className="new-pill" onClick={toBottom}>
-            <ArrowDown size={14} aria-hidden />
-            {unseen > 0 ? `${unseen} ${t('convNew')}` : t('convLatest')}
-          </button>
-        )}
+        {(unseen > 0 || away) && <NewPill unseen={unseen} onClick={toBottom} />}
       </div>
     </NowProvider>
   );

@@ -14,7 +14,7 @@ import {
   sessionsWaiting,
 } from '../../apps/web/src/features/needs-you.js';
 import { heldByOther, isNetworkError } from '../../apps/web/src/features/terminal-driver.js';
-import { sessionIdOf, sessionLink, tagOf } from '../../apps/web/src/localSessions.js';
+import { sessionIdOf, sessionLink, tagOf } from '../../apps/web/src/session-names.js';
 import { pageLink } from '../../apps/web/src/nav.js';
 
 const NOW = 50 * DAY_MS;

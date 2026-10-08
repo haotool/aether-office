@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api.js';
-import { useT } from '../ui.js';
+import { useT, useWhy } from '../ui/useT.js';
 
 type Worktree = {
   path: string;
@@ -122,18 +122,16 @@ function Readouts({
   );
 }
 
-function CleanBar({
-  cleanup,
-  removable,
-  sizeOf,
-  reclaimable,
-}: {
+type CleanBarProps = {
   cleanup: ReturnType<typeof useCleanup>;
   removable: readonly Worktree[];
   sizeOf: (path: string) => string;
   reclaimable: number | null;
-}) {
+};
+
+function CleanBar({ cleanup, removable, sizeOf, reclaimable }: CleanBarProps) {
   const t = useT();
+  const whyNot = useWhy();
   const { confirming, setConfirming, busy, clean } = cleanup;
   if (removable.length === 0) return null;
   if (!confirming)
@@ -154,10 +152,20 @@ function CleanBar({
         {removable.length > 12 && <li>… +{removable.length - 12}</li>}
       </ul>
       <div className="button-row">
-        <button className="primary" disabled={busy} onClick={() => void clean()}>
+        <button
+          className="primary"
+          disabled={busy}
+          {...whyNot([!busy, 'whyBusy'])}
+          onClick={() => void clean()}
+        >
           {busy ? t('loading') : `${t('gitCleanConfirm')} (${removable.length})`}
         </button>
-        <button className="secondary" disabled={busy} onClick={() => setConfirming(false)}>
+        <button
+          className="secondary"
+          disabled={busy}
+          {...whyNot([!busy, 'whyBusy'])}
+          onClick={() => setConfirming(false)}
+        >
           {t('cancel')}
         </button>
       </div>
@@ -186,15 +194,13 @@ function CleanOutcome({ outcome }: { outcome: readonly CleanResult[] }) {
   );
 }
 
-function WorktreeTable({
-  worktrees,
-  sizes,
-  sizeOf,
-}: {
+type WorktreeTableProps = {
   worktrees: readonly Worktree[];
   sizes: Sizes;
   sizeOf: (path: string) => string;
-}) {
+};
+
+function WorktreeTable({ worktrees, sizes, sizeOf }: WorktreeTableProps) {
   const t = useT();
   const state = (w: Worktree) =>
     w.prunable

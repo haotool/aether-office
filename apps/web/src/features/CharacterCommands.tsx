@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { AttributedSession } from '@aether/contracts';
-import { Modal, useT } from '../ui.js';
+import { Modal } from '../ui/Modal.js';
+import { useT } from '../ui/useT.js';
 import { ConfirmButtons } from './ConfirmButtons.js';
 import type { CharacterCommand } from './CharacterMenu.js';
 import { ClockOut } from './ClockOut.js';

@@ -14,8 +14,9 @@ export const announce = (log: LogQueue, text: string): LogQueue => ({
 
 /** The next line to announce now (null when none is due), with the queue after it. */
 export function drain(log: LogQueue, now: number): { log: LogQueue; line: string | null } {
-  if (!log.queue.length || now - log.lastAt < LOG_GAP_MS) return { log, line: null };
-  return { log: { queue: log.queue.slice(1), lastAt: now }, line: log.queue[0]! };
+  const [line, ...queue] = log.queue;
+  if (line === undefined || now - log.lastAt < LOG_GAP_MS) return { log, line: null };
+  return { log: { queue, lastAt: now }, line };
 }
 
 /** How long until the next queued line may be announced; null when nothing waits. */

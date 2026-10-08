@@ -3,7 +3,10 @@ import { Plus, ArrowRight, CheckCircle2 } from 'lucide-react';
 import type { Snapshot, Work } from '@aether/contracts';
 import { WorkflowStart } from './WorkflowStart.js';
 import { BOARD } from './board.js';
-import { Empty, Badge, PageHeading, useT, whyNot } from '../ui.js';
+import { Empty } from '../ui/Empty.js';
+import { Badge } from '../ui/Badge.js';
+import { PageHeading } from '../ui/PageHeading.js';
+import { useT, useWhy } from '../ui/useT.js';
 import { TaskDetail } from './TaskDetail.js';
 const TaskDag = lazy(() => import('./TaskDag.js').then((m) => ({ default: m.TaskDag })));
 
@@ -84,20 +87,17 @@ function TaskView({
   return <TaskBoard work={snapshot.work} onSelect={onSelect} />;
 }
 
-export function Tasks({
-  snapshot,
-  onNew,
-  onSaved,
-  canWrite,
-  canExtend,
-}: {
+type TasksProps = {
   snapshot: Snapshot;
   onNew: () => void;
   onSaved: () => void;
   canWrite: boolean;
   canExtend: boolean;
-}) {
+};
+
+export function Tasks({ snapshot, onNew, onSaved, canWrite, canExtend }: TasksProps) {
   const t = useT();
+  const whyNot = useWhy();
   const [mode, setMode] = useState<ViewMode>('list');
   const [selected, setSelected] = useState<Work | null>(null);
   const current = snapshot.work.find((w) => w.id === selected?.id) ?? selected;
@@ -113,7 +113,7 @@ export function Tasks({
               className="primary"
               onClick={onNew}
               disabled={!canWrite}
-              {...whyNot(canWrite, t('needOperator'))}
+              {...whyNot([canWrite, 'needOperator'])}
             >
               <Plus size={16} />
               {t('newWork')}

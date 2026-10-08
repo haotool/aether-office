@@ -25,6 +25,55 @@ const typing = (target: EventTarget | null) =>
   target instanceof HTMLElement &&
   (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
 
+/** The Konami code typed anywhere outside a field is a signal of its own. */
+function useKonami(push: (more: readonly LifeSignal[]) => void) {
+  useEffect(() => {
+    let progress = 0;
+    const onKey = (event: KeyboardEvent) => {
+      if (typing(event.target) || event.metaKey || event.ctrlKey || event.altKey) return;
+      progress = konamiStep(progress, event.key);
+      if (progress < KONAMI.length) return;
+      progress = 0;
+      push([{ kind: 'ui.konami', member: null, at: Date.now() }]);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [push]);
+}
+
+/** The names the screen reader says for each member, and the members that are idle. */
+function useMemberNames(model: OfficeModel) {
+  const names = useMemo(
+    () => Object.fromEntries(model.agents.map((a) => [a.id, model.names[a.id]?.title ?? a.name])),
+    [model.agents, model.names],
+  );
+  const idle = useMemo(
+    () => model.agents.filter((a) => a.activity === 'idle').map((a) => a.id),
+    [model.agents],
+  );
+  return { names, idle };
+}
+
+/** The contact-sheet preview the address asks for, over the first few members. */
+function usePreviewInput(model: OfficeModel) {
+  const memberKey = model.agents
+    .slice(0, PREVIEW_MEMBERS)
+    .map((a) => a.id)
+    .join('|');
+  return useMemo(
+    () =>
+      previewAsked
+        ? {
+            effects: previewAsked.effect.split(','),
+            t: previewAsked.t,
+            ...(previewAsked.loop ? { loop: true as const } : {}),
+            members: memberKey ? memberKey.split('|') : [],
+          }
+        : undefined,
+    [memberKey],
+  );
+}
+
 /**
  * What the 3D office needs for its little moments: the signals the change between scans makes, plus the viewer's own
  * (the Konami code), the settings, the names for the screen reader and, when the address asks, a contact sheet preview.
@@ -53,43 +102,10 @@ export function useLifeInput(
     if (next.signals.length) push(next.signals);
   }, [sessions, states, agentsNow, push]); // a new scan, or a member's state changed
 
-  useEffect(() => {
-    let progress = 0;
-    const onKey = (event: KeyboardEvent) => {
-      if (typing(event.target) || event.metaKey || event.ctrlKey || event.altKey) return;
-      progress = konamiStep(progress, event.key);
-      if (progress < KONAMI.length) return;
-      progress = 0;
-      push([{ kind: 'ui.konami', member: null, at: Date.now() }]);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [push]);
+  useKonami(push);
 
-  const names = useMemo(
-    () => Object.fromEntries(model.agents.map((a) => [a.id, model.names[a.id]?.title ?? a.name])),
-    [model.agents, model.names],
-  );
-  const idle = useMemo(
-    () => model.agents.filter((a) => a.activity === 'idle').map((a) => a.id),
-    [model.agents],
-  );
-  const memberKey = model.agents
-    .slice(0, PREVIEW_MEMBERS)
-    .map((a) => a.id)
-    .join('|');
-  const preview = useMemo(
-    () =>
-      previewAsked
-        ? {
-            effects: previewAsked.effect.split(','),
-            t: previewAsked.t,
-            ...(previewAsked.loop ? { loop: true as const } : {}),
-            members: memberKey ? memberKey.split('|') : [],
-          }
-        : undefined,
-    [memberKey],
-  );
+  const { names, idle } = useMemberNames(model);
+  const preview = usePreviewInput(model);
   return {
     signals,
     prefs,

@@ -49,14 +49,18 @@ export function placeZones(
   state: SquadState,
   order: readonly string[],
 ): PlacedZone[] {
-  const desks = new Map(
-    layout.objects.filter((o) => o.type === 'desk' && o.agentId).map((o) => [o.agentId!, o]),
+  const desks = new Map<string, PlacedObject>();
+  for (const o of layout.objects) if (o.type === 'desk' && o.agentId) desks.set(o.agentId, o);
+  const wanted = order.flatMap((supervisor) => {
+    const desk = desks.get(supervisor);
+    const zone = state.zones[supervisor];
+    return desk && zone ? [{ supervisor, desk, seats: zone.seats }] : [];
+  });
+  const placed = placeSquads(
+    layout,
+    wanted.map((w) => ({ deskId: w.desk.id, count: w.seats })),
   );
-  const wanted = order.filter((s) => state.zones[s] && desks.has(s));
-  const requests = wanted.map((s) => ({ deskId: desks.get(s)!.id, count: state.zones[s]!.seats }));
-  const placed = placeSquads(layout, requests);
-  return wanted.flatMap((supervisor) => {
-    const desk = desks.get(supervisor)!;
+  return wanted.flatMap(({ supervisor, desk }) => {
     const rect = placed.get(desk.id);
     return rect ? [{ supervisor, rect, pods: podsOf(rect), rotation: facingOf(rect, desk) }] : [];
   });

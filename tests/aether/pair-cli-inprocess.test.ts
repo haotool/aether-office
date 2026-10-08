@@ -55,10 +55,14 @@ beforeEach(() => {
   vi.spyOn(process, 'exit').mockImplementation(((code?: number) => {
     throw new Exit(code);
   }) as never);
-  vi.spyOn(console, 'log').mockImplementation((text: string) => void printed.push(String(text)));
-  vi.spyOn(console, 'error').mockImplementation(
-    (text: string) => void complained.push(String(text)),
-  );
+  // The CLI writes through the stdio helpers, so the words are read from the two streams (one line per write).
+  const capture = (into: string[]) =>
+    ((text: string) => {
+      into.push(String(text).replace(/\n$/, ''));
+      return true;
+    }) as never;
+  vi.spyOn(process.stdout, 'write').mockImplementation(capture(printed));
+  vi.spyOn(process.stderr, 'write').mockImplementation(capture(complained));
 });
 afterEach(() => {
   vi.restoreAllMocks();

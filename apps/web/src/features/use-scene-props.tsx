@@ -2,7 +2,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { Layout, Snapshot } from '@aether/contracts';
 import type { OfficeSceneProps } from '@aether/office-scene';
 import type { FloorKpiBadge } from '@aether/office-scene/model';
-import { mergeLayout } from '../localSessions.js';
+import { mergeLayout } from '../layout-merge.js';
 import {
   clearIntroReplayRequest,
   introPlayedThisSession,
@@ -14,7 +14,7 @@ import {
 import { usePreferences } from '../state.js';
 import { SUBAGENT_INFIX } from '../subagent-id.js';
 import type { TourAction } from '../tour.js';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import type { AttributedSession } from '@aether/contracts';
 import { CharacterMenu, type CharacterCommand } from './CharacterMenu.js';
 import { GroupBar } from './GroupBar.js';

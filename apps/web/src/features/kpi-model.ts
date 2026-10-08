@@ -6,7 +6,7 @@ import type {
   UsageTotals,
 } from '@aether/contracts';
 import type { FloorKpiBadge } from '@aether/office-scene/model';
-import { formatSpan } from '../localSessions.js';
+import { formatSpan } from '@aether/kernel';
 import { WARN_AT } from './quota.js';
 
 // The numbers behind the KPI strip, the floor cards and the dashboard. Pure: formatting, shares, windows and paths.

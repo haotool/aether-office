@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
 import type { Key } from '../i18n.js';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { FeedRow } from './FeedRow.js';
 import { FeedSquad } from './FeedSquad.js';
 import { PermissionCards } from './PermissionCard.js';

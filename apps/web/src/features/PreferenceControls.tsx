@@ -1,5 +1,5 @@
 import { usePreferences, useTheme } from '../state.js';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 
 const OTHER_LOCALE = { 'zh-TW': 'en', en: 'zh-TW' } as const;
 /** A language's own name: the button offers the language it would switch to. */

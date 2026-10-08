@@ -13,9 +13,14 @@ import { cylinder } from './building-parts.js';
  * characters against (tools/blender/audit_animals.py): change them there, not here.
  */
 function desk(group: THREE.Group, m: Materials) {
-  const { slab, bar, pedestal, seat, cushion, back } = SEATING;
-  const top = slab.at[1] + slab.size[1] / 2; // the desk's working surface
-  const glass = top + 0.065; // what stands on it: the emitter bar, the panes
+  const top = SEATING.slab.at[1] + SEATING.slab.size[1] / 2; // the desk's working surface
+  deskSlab(group, m, top);
+  deskPanes(group, m, top);
+  hoverSeat(group, m);
+}
+
+function deskSlab(group: THREE.Group, m: Materials, top: number) {
+  const { slab, bar, pedestal } = SEATING;
   // Floating slab on one pedestal, lit from underneath.
   box(group, m.shell, slab.size, slab.at, 0.12);
   box(group, m.accent, [1.6, 0.012, 0.04], [0, top - 0.08, 0.4], 0);
@@ -26,6 +31,10 @@ function desk(group: THREE.Group, m: Materials) {
   // Emitter bar and the three panes it projects.
   box(group, m.graphite, bar.size, bar.at, 0.02);
   box(group, m.accent, [1.3, 0.012, 0.085], [0, bar.at[1] + 0.028, bar.at[2]], 0);
+}
+
+function deskPanes(group: THREE.Group, m: Materials, top: number) {
+  const glass = top + 0.065; // what stands on it: the emitter bar, the panes
   // The centre pane is the member's own screen, drawn per member by the scene (see Member); the side panes belong to the desk.
   for (const [x, angle, w] of [
     [-0.62, 0.42, 0.52],
@@ -48,6 +57,10 @@ function desk(group: THREE.Group, m: Materials) {
   keys.rotation.x = -Math.PI / 2;
   keys.position.set(0, top + 0.007, 0.24);
   group.add(keys);
+}
+
+function hoverSeat(group: THREE.Group, m: Materials) {
+  const { seat, cushion, back } = SEATING;
   // Hover seat: a shell over a ring of light, no legs.
   box(group, m.shell, seat.size, seat.at, 0.14);
   box(group, m.shell, back.size, back.at, 0.12);

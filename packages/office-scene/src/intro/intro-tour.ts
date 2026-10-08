@@ -74,7 +74,7 @@ const REDUCED: readonly IntroSegment[] = [
 export const INTRO_TIMELINE = { full: FULL, reduced: REDUCED } as const;
 export const introSegments = (reduced: boolean) => (reduced ? REDUCED : FULL);
 /** How long the tour lasts, in seconds. */
-export const introLength = (reduced: boolean) => introSegments(reduced).at(-1)!.to;
+export const introLength = (reduced: boolean) => introSegments(reduced).at(-1)?.to ?? 0;
 
 /** The segment playing `t` seconds in, or null once the tour is over. */
 export function introSegmentAt(t: number, reduced: boolean): IntroSegment | null {

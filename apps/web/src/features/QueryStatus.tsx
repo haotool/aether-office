@@ -1,4 +1,4 @@
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 
 /** The loading line, or the error, of a page's query; nothing once the data is there. */
 export function QueryStatus({ query }: { query: { isPending: boolean; error: Error | null } }) {

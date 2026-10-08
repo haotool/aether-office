@@ -1,72 +1,19 @@
-import {
-  SESSION_ACTIVE_MS,
-  SESSION_GONE_MS,
-  type Agent,
-  type AttributedSession,
-  type LocalSession,
-} from '@aether/contracts';
-import { translate } from './i18n.js';
+import { type Agent, type LocalSession } from '@aether/contracts';
 import { SUBAGENT_INFIX } from './subagent-id.js';
-import { apparitionOf, type Apparition } from '@aether/office-scene/model';
 import {
   DEPARTMENTS,
   ROLE_LABELS,
   classifySession,
-  formatSpan,
   roleOfSubagent,
   shortLabel,
   type Classification,
 } from '@aether/kernel';
+import { activityOf, noteOf } from './session-attention.js';
+import { LOCAL_PREFIX, NAME_WIDTH, labelOf, sessionIdOf } from './session-names.js';
 
 const SPECIES = ['fox', 'cat', 'rabbit', 'bear', 'otter', 'raccoon', 'panda', 'dog'] as const;
-export const LOCAL_PREFIX = 'local:';
-export { SUBAGENT_INFIX } from './subagent-id.js';
-export { formatSpan };
-export { mergeLayout } from './layout-merge.js';
 
-const basename = (path: string) => path.split('/').filter(Boolean).pop() ?? '';
-// An untitled session in a worktree named after its repository is named by what sets the worktree apart
-// (`ledger-api-w1119` → `w1119`); the repository is the project it is shown in.
-const place = (s: Pick<LocalSession, 'cwd' | 'repo'>) => {
-  const dir = basename(s.cwd) || s.repo;
-  return dir.startsWith(`${s.repo}-`) ? dir.slice(s.repo.length + 1) : dir;
-};
-/** The technical id of a session (`cx·01a1`): only ever shown in a tooltip, never as its name. */
-export const tagOf = (s: Pick<LocalSession, 'provider' | 'sessionId'>) =>
-  `${s.provider === 'codex' ? 'cx' : 'cl'}·${s.sessionId.slice(0, 4)}`;
-/** Widest name, in columns (CJK counts two): what a name tag has room for. */
-const NAME_WIDTH = 28;
-/** The short display label of a session: its title on a meaning boundary, brackets balanced, no id prefix. */
-export const labelOf = (s: Pick<LocalSession, 'cwd' | 'repo' | 'title'>) =>
-  shortLabel(s.title ?? place(s), { maxWidth: NAME_WIDTH, repo: s.repo });
-/** Widest title in a list row, in columns; the row's own ellipsis is only a backstop, the cut is made on a boundary. */
-const ROW_WIDTH = 44;
-export const rowLabelOf = (s: Pick<LocalSession, 'title' | 'repo'>) =>
-  shortLabel(s.title ?? s.repo, { maxWidth: ROW_WIDTH });
 const hue = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 360;
-
-export const sessionIdOf = (agentId: string): string | null =>
-  agentId.startsWith(LOCAL_PREFIX)
-    ? agentId.slice(LOCAL_PREFIX.length).split(SUBAGENT_INFIX)[0]!
-    : null;
-
-/** The address that shows a session in the office, focused: what a tap on its alert or its row opens. */
-export const sessionLink = (s: Pick<AttributedSession, 'key' | 'projectId'>) =>
-  `/office?${s.projectId ? `project=${s.projectId}&` : ''}agent=${encodeURIComponent(`${LOCAL_PREFIX}${s.key}`)}&focus=1`;
-
-export function activityOf(session: LocalSession, now: number): Agent['activity'] {
-  // Hook events are authoritative when installed; otherwise the process table, then a file-mtime heuristic.
-  if (session.hook?.activity === 'ended') return 'offline';
-  // A hook state is only as fresh as its last event: with no process behind it, a long-silent one is stale.
-  if (session.hook && session.process === 'none' && now - session.hook.at > SESSION_GONE_MS)
-    return 'offline';
-  if (session.hook?.activity === 'waiting_permission') return 'waiting_permission';
-  if (session.hook) return session.hook.activity === 'working' ? 'working' : 'idle';
-  // No process: a recently written file is a finished session, not work, and a long-quiet one is gone.
-  if (session.process === 'none') return now - session.mtime < SESSION_GONE_MS ? 'idle' : 'offline';
-  return now - session.mtime < SESSION_ACTIVE_MS ? 'working' : 'idle';
-}
-
 function observed(
   id: string,
   name: string,
@@ -98,19 +45,6 @@ export const classificationOf = (s: LocalSession): Classification =>
   s.classification as Classification;
 
 const KERNEL_LANGUAGE = { 'zh-TW': 'zh', en: 'en' } as const;
-const NOTE = {
-  dormant: { 'zh-TW': '休眠', en: 'dormant' },
-  orphaned: { 'zh-TW': '孤兒', en: 'orphaned' },
-} as const;
-/** How the member is alive, when that is worth saying: appended to its role line. */
-const noteOf = (s: Pick<LocalSession, 'liveness'>, locale: 'zh-TW' | 'en') => {
-  const state =
-    s.liveness.state in NOTE ? ` · ${NOTE[s.liveness.state as keyof typeof NOTE][locale]}` : '';
-  const zombies = s.liveness.zombies.length
-    ? ` · ${translate(locale, 'zombiesWord')} ×${s.liveness.zombies.length}`
-    : '';
-  return state + zombies;
-};
 
 export function sessionsToAgents(
   sessions: readonly LocalSession[],
@@ -229,67 +163,4 @@ export function tokensByDepartment(
   return [...totals]
     .map(([department, t]) => ({ department, ...t }))
     .sort((a, b) => b.tokens - a.tokens);
-}
-
-/** Sessions worth a person's attention for how they are alive: forgotten, ownerless, or with zombies under them. */
-export const needsAttention = (s: Pick<LocalSession, 'liveness'>) =>
-  ['dormant', 'orphaned'].includes(s.liveness.state) || s.liveness.zombies.length > 0;
-
-/** Which sessions are drawn as a sleeping rabbit or a ghost in place of the member, by the id of that member. */
-export function apparitionsOf(
-  sessions: readonly LocalSession[],
-): Record<string, Exclude<Apparition, 'zombie'>> {
-  return Object.fromEntries(
-    sessions.flatMap((s) => {
-      const form = apparitionOf(s.liveness.state);
-      return form ? [[`${LOCAL_PREFIX}${s.key}`, form] as const] : [];
-    }),
-  );
-}
-
-/** Which members have zombie processes under them, and how many. */
-export function zombiesOf(sessions: readonly LocalSession[]): Record<string, number> {
-  return Object.fromEntries(
-    sessions.flatMap((s) =>
-      s.liveness.zombies.length
-        ? [[`${LOCAL_PREFIX}${s.key}`, s.liveness.zombies.length] as const]
-        : [],
-    ),
-  );
-}
-
-/**
- * Why a session wants a person, in a few words: "休眠 27 小時", "孤兒", "殭屍 ×2 (node, sh)". Null when it does not.
- * Pure; the same words label the director's shot of it and the row in the attention list.
- */
-export function attentionReason(
-  s: Pick<LocalSession, 'liveness'>,
-  locale: 'zh-TW' | 'en' = 'zh-TW',
-): string | null {
-  const parts: string[] = [];
-  const { state, quietMs, zombies } = s.liveness;
-  if (state === 'dormant' || state === 'orphaned') {
-    const name = NOTE[state][locale];
-    parts.push(quietMs !== null ? `${name} ${formatSpan(quietMs, locale)}` : name);
-  }
-  if (zombies.length) {
-    const programs = [...new Set(zombies.map((z) => z.program).filter(Boolean))].slice(0, 3);
-    parts.push(
-      `${translate(locale, 'zombiesWord')} ×${zombies.length}${programs.length ? ` (${programs.join(', ')})` : ''}`,
-    );
-  }
-  return parts.length ? parts.join(' · ') : null;
-}
-
-/** The members that want a person, by id, with the reason: what the director's attention shots are made of. */
-export function attentionOf(
-  sessions: readonly LocalSession[],
-  locale: 'zh-TW' | 'en',
-): Record<string, string> {
-  return Object.fromEntries(
-    sessions.flatMap((s) => {
-      const reason = attentionReason(s, locale);
-      return reason ? [[`${LOCAL_PREFIX}${s.key}`, reason] as const] : [];
-    }),
-  );
 }

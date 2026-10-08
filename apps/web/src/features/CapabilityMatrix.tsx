@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api.js';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 
 type Matrix = Record<string, Record<string, boolean | string>>;
 

@@ -22,8 +22,11 @@ playwright-report/
 # The animals' Blender sources are rebuilt by tools/blender/build_animals.py (they embed the builder's local paths)
 assets-source/animals/*.blend
 
-# Agent worktrees and local agent settings
+# Agent worktrees and local agent settings (see MAINTAINERS.md; never commit secrets or session data)
 /.claude/
+/.cursor/
+/.codex/
+/.omc/
 
 # Maintainer-private strings checked by scripts/oss (see .oss-private-patterns.example)
 .oss-private-patterns

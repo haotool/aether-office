@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Check, Copy, FileText } from 'lucide-react';
 import { toPlainPreview } from '@aether/kernel';
 import { copyText } from '../browser-compat.js';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 
 const COPIED_MS = 1500;
 

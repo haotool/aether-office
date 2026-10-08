@@ -15,7 +15,11 @@ const { translate } = await import('../../apps/web/src/i18n.js');
 const { App } = await import('../../apps/web/src/App.js');
 const { Login } = await import('../../apps/web/src/features/Login.js');
 const { RootBoundary } = await import('../../apps/web/src/RootBoundary.js');
-const { Empty, PageHeading, Badge, whyNot } = await import('../../apps/web/src/ui.js');
+const { Empty } = await import('../../apps/web/src/ui/Empty.js');
+const { PageHeading } = await import('../../apps/web/src/ui/PageHeading.js');
+const { Badge } = await import('../../apps/web/src/ui/Badge.js');
+const { whyNot, REASONS, reasonId } = await import('../../apps/web/src/ui/whyNot.js');
+const { ReasonDefs } = await import('../../apps/web/src/ui/ReasonDefs.js');
 
 afterAll(removeBrowserEnv);
 const en = (key: Parameters<typeof translate>[1]) => translate('en', key);
@@ -76,8 +80,20 @@ describe('shared page pieces', () => {
     expect(textOf(renderHtml(h(Badge, { state: 'zz-unknown' })))).toBe('zz-unknown');
   });
 
-  it('whyNot explains a disabled control only while it is disabled', () => {
-    expect(whyNot(true, 'because')).toEqual({});
-    expect(whyNot(false, 'because')).toEqual({ title: 'because' });
+  it('whyNot explains a control only while a need is unmet, with the first unmet need', () => {
+    expect(whyNot(en, [true, 'needOwner'], [true, 'whyBusy'])).toEqual({});
+    expect(whyNot(en)).toEqual({});
+    expect(whyNot(en, [true, 'needOwner'], [false, 'whyBusy'], [false, 'whyNoText'])).toEqual({
+      title: en('whyBusy'),
+      'aria-describedby': 'why-whyBusy',
+    });
+  });
+
+  it('ReasonDefs renders every reason once under the id whyNot points at', () => {
+    const html = renderHtml(h(ReasonDefs));
+    for (const reason of REASONS) {
+      expect(html).toContain(`id="${reasonId(reason)}"`);
+      expect(textOf(html)).toContain(en(reason));
+    }
   });
 });

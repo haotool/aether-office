@@ -56,9 +56,9 @@ export const training: Draw = (g, r, a) => {
   );
   g.strokeStyle = PALETTE.line;
   g.lineWidth = 1;
-  for (let l = 0; l < nodes.length - 1; l++)
-    for (const p of nodes[l]!)
-      for (const q of nodes[l + 1]!) {
+  for (const [l, layer] of nodes.slice(0, -1).entries())
+    for (const p of layer)
+      for (const q of nodes[l + 1] ?? []) {
         g.globalAlpha = 0.2 + r() * 0.6;
         g.beginPath();
         g.moveTo(...p);
@@ -79,12 +79,12 @@ export const training: Draw = (g, r, a) => {
 
 export const kpis: Draw = (g, r, a) => {
   frame(g, 'analytics · dashboard', a);
-  for (let i = 0; i < 4; i++) {
+  for (const [i, color] of [a, PALETTE.green, PALETTE.amber, PALETTE.violet].entries()) {
     const x = 14 + i * 156;
     tile(g, x, 44, 146, 76, i === 0 ? a : undefined);
     g.fillStyle = PALETTE.dim;
     g.fillRect(x + 12, 58, 70, 7);
-    g.fillStyle = [a, PALETTE.green, PALETTE.amber, PALETTE.violet][i]!;
+    g.fillStyle = color;
     g.fillRect(x + 12, 76, 60 + r() * 50, 24);
   }
   tile(g, 14, 130, 400, 252);

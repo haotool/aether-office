@@ -4,7 +4,8 @@
  * of continuous shape parameters; a genome blends two of them by weight and jitters the result inside curated ranges, so the
  * variety is wide but every flower stays a believable flower. Pure: the same input always gives the same genome.
  */
-import { seeded } from './random.js';
+import { seeded } from './seeded.js';
+import { itemAt } from './checked.js';
 
 export const ARCHETYPES = [
   'lotus',
@@ -64,7 +65,7 @@ export const SHAPE_RANGE: Record<ShapeKey, [number, number]> = {
 };
 
 const row = (...v: number[]): Shape =>
-  Object.fromEntries(SHAPE_KEYS.map((k, i) => [k, v[i]!])) as Shape;
+  Object.fromEntries(SHAPE_KEYS.map((k, i) => [k, itemAt(v, i)])) as Shape;
 
 //                      pitch step  curl   cup  ruffle len  width taper belly twist spir  bil  float glass facet disc fil  veins
 const TABLE: Record<Archetype, Shape> = {
@@ -254,58 +255,71 @@ function blend(random: () => number): { weights: number[]; primary: number } {
   return { weights, primary: mix > 0.5 ? secondary : primary };
 }
 
-export function genomeOf(input: GenomeInput): Genome {
-  const random = seeded(`flower:${input.seed}`);
-  const { weights, primary } = blend(random);
-  const archetype = ARCHETYPES[primary]!;
-  const shape = Object.fromEntries(
+/** The shape: each key the weighted mix of the archetypes' values, plus a jitter of its own. */
+function mixShape(weights: readonly number[], random: () => number): Shape {
+  return Object.fromEntries(
     SHAPE_KEYS.map((key) => {
-      const mixed = ARCHETYPES.reduce((sum, a, i) => sum + weights[i]! * TABLE[a][key], 0);
+      const mixed = ARCHETYPES.reduce((sum, a, i) => sum + itemAt(weights, i) * TABLE[a][key], 0);
       const range = SHAPE_RANGE[key];
       const jitter = (random() - 0.5) * 0.3 * (range[1] - range[0]);
       return [key, clamp(mixed + jitter, range)];
     }),
   ) as Shape;
+}
 
+/** Opens a shape that would be a closed bud, and bends the great bloom's to its own. */
+function openShape(shape: Shape, grand: boolean): void {
   // No flower stays a closed bud: open the petals until the tips stand clear of the axis.
   while (spreadOf(shape) < MIN_SPREAD && shape.pitch < SHAPE_RANGE.pitch[1])
     shape.pitch = Math.min(SHAPE_RANGE.pitch[1], shape.pitch + 0.05);
-
   // The great bloom always opens wide, radially, with glassy veined petals and a firm step between its whorls.
-  if (input.grand) {
-    shape.pitch = Math.max(shape.pitch, 0.85);
-    shape.curl = Math.max(shape.curl, -0.2);
-    shape.bilateral = Math.min(shape.bilateral, 0.25);
-    shape.pitchStep = Math.max(shape.pitchStep, 0.22);
-    shape.glass = Math.max(shape.glass, 0.55);
-    shape.veins = Math.max(shape.veins, 0.85);
-    shape.length = Math.max(shape.length, 0.9);
-    shape.disc = Math.min(shape.disc, 0.3);
-  }
+  if (!grand) return;
+  shape.pitch = Math.max(shape.pitch, 0.85);
+  shape.curl = Math.max(shape.curl, -0.2);
+  shape.bilateral = Math.min(shape.bilateral, 0.25);
+  shape.pitchStep = Math.max(shape.pitchStep, 0.22);
+  shape.glass = Math.max(shape.glass, 0.55);
+  shape.veins = Math.max(shape.veins, 0.85);
+  shape.length = Math.max(shape.length, 0.9);
+  shape.disc = Math.min(shape.disc, 0.3);
+}
+
+/** The florets a disc of this size holds: a bigger disc, more of them. */
+function floretsFor(disc: number): number {
+  const [low, high] = SHAPE_RANGE.disc;
+  return itemAt(
+    FLORETS,
+    Math.min(FLORETS.length - 1, Math.floor(((disc - low) / (high - low)) * FLORETS.length)),
+  );
+}
+
+/** The flower's code name: its archetype's initial and four hex digits, "L-3F9A". */
+const codeOf = (archetype: Archetype, random: () => number) =>
+  `${archetype.charAt(0).toUpperCase()}-${Math.floor(random() * 65536)
+    .toString(16)
+    .toUpperCase()
+    .padStart(4, '0')}`;
+
+export function genomeOf(input: GenomeInput): Genome {
+  const random = seeded(`flower:${input.seed}`);
+  const { weights, primary } = blend(random);
+  const archetype = itemAt(ARCHETYPES, primary);
+  const shape = mixShape(weights, random);
+  openShape(shape, !!input.grand);
   const counts = input.grand ? GRAND_PETALS : PETALS[archetype];
-  const petals =
-    counts[
-      Math.min(
-        counts.length - 1,
-        Math.floor(random() * counts.length) + (input.authors >= 3 ? 1 : 0),
-      )
-    ]!;
+  const petals = itemAt(
+    counts,
+    Math.min(
+      counts.length - 1,
+      Math.floor(random() * counts.length) + (input.authors >= 3 ? 1 : 0),
+    ),
+  );
   const wanted = 1 + Math.floor(random() * 3) + (input.merges >= 2 ? 1 : 0) + (input.grand ? 1 : 0);
   const whorls = input.grand
     ? GRAND_WHORLS
     : Math.max(1, Math.min(wanted, 4, Math.floor(MAX_PETALS / petals)));
-  const [discLow, discHigh] = SHAPE_RANGE.disc;
-  const florets =
-    FLORETS[
-      Math.min(
-        FLORETS.length - 1,
-        Math.floor(((shape.disc - discLow) / (discHigh - discLow)) * FLORETS.length),
-      )
-    ]!;
-  const code = `${archetype[0]!.toUpperCase()}-${Math.floor(random() * 65536)
-    .toString(16)
-    .toUpperCase()
-    .padStart(4, '0')}`;
+  const florets = floretsFor(shape.disc);
+  const code = codeOf(archetype, random);
   const ringed = input.grand || input.branches >= 4 || random() < 0.1;
   return {
     code,

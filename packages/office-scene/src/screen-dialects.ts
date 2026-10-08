@@ -1,4 +1,4 @@
-import { pick } from './random.js';
+import { pick } from './pick.js';
 import { VOCAB } from './screen-lang.js';
 import {
   BLANK,
@@ -132,7 +132,7 @@ export const GO: Dialect = {
   fnCase: pascal,
   varCase: camel,
   header: (n) => [
-    line(0, kw('package '), id(n.stem[0]!.replace(/[^a-z]/g, '') || 'main')),
+    line(0, kw('package '), id(n.stem[0]?.replace(/[^a-z]/g, '') || 'main')),
     BLANK,
     line(0, kw('import '), pun('(')),
     line(1, str('"context"')),
@@ -218,7 +218,7 @@ export const JAVA: Dialect = {
   fnCase: camel,
   varCase: camel,
   header: (n) => [
-    line(0, kw('package '), id(`app.${n.stem[0]!.replace(/[^a-z]/g, '') || 'main'}`), pun(';')),
+    line(0, kw('package '), id(`app.${n.stem[0]?.replace(/[^a-z]/g, '') || 'main'}`), pun(';')),
     line(0, kw('import '), id('java.util.List'), pun(';')),
   ],
   fnOpen: (name, args, n) => [

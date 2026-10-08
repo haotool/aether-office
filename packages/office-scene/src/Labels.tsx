@@ -12,13 +12,7 @@ const NEAR_DISTANCE = 30;
 const FAR_DISTANCE = 85;
 const FAR_WIDTH = 44;
 
-export function ProjectedLabels({
-  labels,
-  elements,
-  selected,
-  avoid,
-  covered,
-}: {
+type LabelsProps = {
   labels: { id: string; x: number; y: number; z: number; width: number }[];
   elements: Map<string, HTMLElement>;
   selected: string | null;
@@ -26,10 +20,38 @@ export function ProjectedLabels({
   avoid?: RefObject<ReadonlyMap<string, Rect>>;
   /** Rectangles drawn over the canvas this frame by the speech bubbles (see ProjectedSpeech): a tag under one is hidden too, except the selected one's. */
   covered?: RefObject<ReadonlyMap<string, Rect>>;
-}) {
+};
+type Occupied = { x: number; y: number; width: number };
+
+/** Whether a tag of `width` centred at (x, y) fits in view, clear of the rectangles drawn over the canvas and the tags placed before it. */
+function tagFits(
+  x: number,
+  y: number,
+  width: number,
+  size: { width: number; height: number },
+  covers: readonly Rect[],
+  occupied: readonly Occupied[],
+): boolean {
+  return (
+    x - width / 2 > 0 && // the whole tag fits, not just its centre
+    x + width / 2 < size.width &&
+    y > 55 &&
+    y < size.height - 30 &&
+    !covers.some(
+      (r) =>
+        x + width / 2 > r.x &&
+        x - width / 2 < r.x + r.width &&
+        y + 12 > r.y &&
+        y - 12 < r.y + r.height,
+    ) &&
+    !occupied.some((p) => Math.abs(p.x - x) < (p.width + width) / 2 + 5 && Math.abs(p.y - y) < 30)
+  );
+}
+
+export function ProjectedLabels({ labels, elements, selected, avoid, covered }: LabelsProps) {
   const point = useRef(new Vector3());
   useFrame(({ camera, size }) => {
-    const occupied: { x: number; y: number; width: number }[] = [];
+    const occupied: Occupied[] = [];
     for (const label of [...labels].sort(
       (a, b) => Number(b.id === selected) - Number(a.id === selected),
     )) {
@@ -45,27 +67,15 @@ export function ProjectedLabels({
       point.current.project(camera);
       const x = ((point.current.x + 1) * size.width) / 2,
         y = ((1 - point.current.y) * size.height) / 2;
+      // The selected member's own tag stays: it names who is chosen and opens the menu, so it outranks a bubble.
+      const covers = [
+        ...(avoid?.current.values() ?? []),
+        ...(label.id === selected ? [] : (covered?.current.values() ?? [])),
+      ];
       const visible =
         point.current.z >= -1 &&
         point.current.z <= 1 &&
-        x - width / 2 > 0 && // the whole tag fits, not just its centre
-        x + width / 2 < size.width &&
-        y > 55 &&
-        y < size.height - 30 &&
-        // The selected member's own tag stays: it names who is chosen and opens the menu, so it outranks a bubble.
-        ![
-          ...(avoid?.current.values() ?? []),
-          ...(label.id === selected ? [] : (covered?.current.values() ?? [])),
-        ].some(
-          (r) =>
-            x + width / 2 > r.x &&
-            x - width / 2 < r.x + r.width &&
-            y + 12 > r.y &&
-            y - 12 < r.y + r.height,
-        ) &&
-        !occupied.some(
-          (p) => Math.abs(p.x - x) < (p.width + width) / 2 + 5 && Math.abs(p.y - y) < 30,
-        );
+        tagFits(x, y, width, size, covers, occupied);
       element.style.visibility = visible ? 'visible' : 'hidden';
       element.style.transform = `translate(${x}px,${y}px) translate(-50%,-50%)`;
       if (visible) occupied.push({ x, y, width });

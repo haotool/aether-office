@@ -1,8 +1,50 @@
 import { useState } from 'react';
-import { execute } from '../api.js';
-import { Field, useT } from '../ui.js';
+import { execute } from '../api-commands.js';
+import { Field } from '../ui/Field.js';
+import { useT } from '../ui/useT.js';
 
 type Invitation = { token: string; expiresAt: number };
+
+/** The machine's name, where it may work, how many jobs at once, and which providers it offers. */
+function InviteFields() {
+  const t = useT();
+  return (
+    <>
+      <Field label={t('machineName')}>
+        <input name="name" required maxLength={160} />
+      </Field>
+      <Field label={t('machineRoot')}>
+        <input name="root" required placeholder="/srv/aether" />
+      </Field>
+      <Field label={t('machineConcurrency')}>
+        <input name="concurrency" type="number" min={1} max={4} defaultValue={1} />
+      </Field>
+      <fieldset>
+        <legend>{t('machineProviders')}</legend>
+        {['demo', 'claude', 'codex'].map((p) => (
+          <label key={p}>
+            <input type="checkbox" name="provider" value={p} defaultChecked={p === 'demo'} /> {p}
+          </label>
+        ))}
+      </fieldset>
+    </>
+  );
+}
+
+function InvitationReceipt({ invitation }: { invitation: Invitation }) {
+  const t = useT();
+  return (
+    <div role="status" className="panel">
+      <p>{t('machineInviteShown')}</p>
+      <code>
+        AETHER_INVITATION={invitation.token} pnpm runner:enroll --url {window.location.origin}
+      </code>
+      <p>
+        <small>{new Date(invitation.expiresAt).toLocaleTimeString()}</small>
+      </p>
+    </div>
+  );
+}
 
 /** The invitation token is shown once, held only in component state, and never persisted. */
 export function MachineInvite({ projectId, canInvite }: { projectId: string; canInvite: boolean }) {
@@ -39,37 +81,11 @@ export function MachineInvite({ projectId, canInvite }: { projectId: string; can
           }
         }}
       >
-        <Field label={t('machineName')}>
-          <input name="name" required maxLength={160} />
-        </Field>
-        <Field label={t('machineRoot')}>
-          <input name="root" required placeholder="/srv/aether" />
-        </Field>
-        <Field label={t('machineConcurrency')}>
-          <input name="concurrency" type="number" min={1} max={4} defaultValue={1} />
-        </Field>
-        <fieldset>
-          <legend>{t('machineProviders')}</legend>
-          {['demo', 'claude', 'codex'].map((p) => (
-            <label key={p}>
-              <input type="checkbox" name="provider" value={p} defaultChecked={p === 'demo'} /> {p}
-            </label>
-          ))}
-        </fieldset>
+        <InviteFields />
         {error && <p role="alert">{error}</p>}
         <button type="submit">{t('machineInviteCreate')}</button>
       </form>
-      {invitation && (
-        <div role="status" className="panel">
-          <p>{t('machineInviteShown')}</p>
-          <code>
-            AETHER_INVITATION={invitation.token} pnpm runner:enroll --url {window.location.origin}
-          </code>
-          <p>
-            <small>{new Date(invitation.expiresAt).toLocaleTimeString()}</small>
-          </p>
-        </div>
-      )}
+      {invitation && <InvitationReceipt invitation={invitation} />}
     </section>
   );
 }

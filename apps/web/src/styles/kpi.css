@@ -9,7 +9,7 @@
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   background: var(--surface);
-  box-shadow: inset 0 1px 0 var(--glass-accent-line); /* token-lint: ring */
+  box-shadow: var(--edge-top) var(--glass-accent-line);
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -224,7 +224,7 @@
 }
 .kpi-tile dd .spark {
   width: 48px; /* token-lint: geometry */
-  height: 18px; /* token-lint: geometry */
+  height: var(--icon-md);
 }
 .kpi-tile small {
   color: var(--muted);

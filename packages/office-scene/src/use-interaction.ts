@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type RefObject,
+  type SetStateAction,
+} from 'react';
 import type { Words } from './interaction-text.js';
 
 const HOVER_CARD_MS = 300;
@@ -27,30 +35,33 @@ export function useAnnouncer() {
   return { line, announce };
 }
 
-/**
- * What the person has open or marked in the scene: the action menu of one character, the group of characters picked
- * with Shift or a rectangle, and the members pinned to the wall of small views. Each change is announced.
- */
-export function useCharacterMarks({
-  words,
-  selectedId,
-  onSelect,
-  focusTag,
-  announce,
-}: {
+type MarksOptions = {
   words: Words;
   selectedId: string | null;
   onSelect: (id: string) => void;
   /** Moves keyboard focus to a character's name tag (the menu gives it back there when it closes). */
   focusTag: (id: string) => void;
   announce: (text: string) => void;
-}) {
-  const [menuId, setMenuId] = useState<string | null>(null);
-  const [group, setGroup] = useState<ReadonlySet<string>>(new Set());
-  const [pinned, setPinned] = useState<ReadonlySet<string>>(new Set());
-  const latest = useRef({ menuId, selectedId, group, pinned });
-  latest.current = { menuId, selectedId, group, pinned };
+};
+type Ids = ReadonlySet<string>;
+/** What the callbacks read when they run, so they need not change with every render. */
+type Latest = RefObject<{
+  menuId: string | null;
+  selectedId: string | null;
+  group: Ids;
+  pinned: Ids;
+}>;
+type Setters = {
+  setMenuId: Dispatch<SetStateAction<string | null>>;
+  setGroup: Dispatch<SetStateAction<Ids>>;
+};
 
+/** The action menu of one character: opening it chooses the character and drops the group; closing hands focus back to its tag. */
+function useMenu(
+  { words, onSelect, focusTag, announce }: MarksOptions,
+  latest: Latest,
+  { setMenuId, setGroup }: Setters,
+) {
   const closeMenu = useCallback(
     (returnFocus = true, say = false) => {
       const id = latest.current.menuId;
@@ -59,7 +70,7 @@ export function useCharacterMarks({
       if (say) announce(words.menuClosed); // an action that closes the menu has its own words to say
       if (returnFocus) setTimeout(() => focusTag(id), 0);
     },
-    [announce, words.menuClosed, focusTag],
+    [latest, setMenuId, announce, words.menuClosed, focusTag],
   );
   const openMenu = useCallback(
     (id: string) => {
@@ -68,33 +79,34 @@ export function useCharacterMarks({
       setMenuId(id);
       announce(words.menuOpened);
     },
-    [onSelect, announce, words.menuOpened],
+    [latest, setGroup, setMenuId, onSelect, announce, words.menuOpened],
   );
-  /** A click or tap: the first chooses, the second (on the chosen one) opens the menu, Shift adds to the group. */
-  const activate = useCallback(
-    (id: string, how: { shift: boolean; keyboard: boolean }) => {
-      const { menuId: open, selectedId: chosen } = latest.current;
-      if (how.shift) {
-        const g = latest.current.group;
-        const next = new Set(g.size === 0 && chosen && chosen !== id ? [chosen] : g);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
-        setMenuId(null);
-        setGroup(next);
-        announce(`${words.grouped} ${next.size}`);
-        return;
-      }
-      setGroup(new Set());
-      if (open === id) return closeMenu(true, true);
-      if (how.keyboard || chosen === id) return openMenu(id);
-      onSelect(id);
+  return { closeMenu, openMenu };
+}
+
+/** The group picked with Shift or a rectangle, and the members pinned to the wall. */
+function useGroup(
+  { words, announce }: MarksOptions,
+  latest: Latest,
+  { setMenuId, setGroup }: Setters,
+  setPinned: Dispatch<SetStateAction<Ids>>,
+) {
+  const toggle = useCallback(
+    (id: string) => {
+      const { selectedId: chosen, group } = latest.current;
+      const next = new Set(group.size === 0 && chosen && chosen !== id ? [chosen] : group);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      setMenuId(null);
+      setGroup(next);
+      announce(`${words.grouped} ${next.size}`);
     },
-    [announce, closeMenu, onSelect, openMenu, words.grouped],
+    [latest, setMenuId, setGroup, announce, words.grouped],
   );
   const clearGroup = useCallback(() => {
     if (latest.current.group.size) announce(words.groupCleared);
     setGroup(new Set());
-  }, [announce, words.groupCleared]);
+  }, [latest, setGroup, announce, words.groupCleared]);
   const pick = useCallback(
     (ids: readonly string[]) => {
       const next = new Set([...latest.current.group, ...ids]);
@@ -102,7 +114,7 @@ export function useCharacterMarks({
       setGroup(next);
       announce(`${words.grouped} ${next.size}`);
     },
-    [announce, words.grouped],
+    [latest, setMenuId, setGroup, announce, words.grouped],
   );
   const pin = useCallback(
     (ids: readonly string[], on: boolean) => {
@@ -114,21 +126,55 @@ export function useCharacterMarks({
       setPinned(next);
       announce(on ? words.pinned : words.unpinned);
     },
-    [announce, words.pinned, words.unpinned],
+    [latest, setPinned, announce, words.pinned, words.unpinned],
   );
+  return { toggle, clearGroup, pick, pin };
+}
 
-  // Esc closes the menu, or else the group; a press on the empty scene closes the menu.
+/** Esc closes the menu, or else the group; a press on the empty scene closes the menu. */
+function useEscape(open: boolean, close: () => void) {
   useEffect(() => {
-    if (!menuId && group.size === 0) return;
+    if (!open) return;
     const key = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.defaultPrevented || document.querySelector('dialog[open]'))
         return; // a dialog's own Esc
-      if (menuId) closeMenu(true, true);
-      else clearGroup();
+      close();
     };
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
-  }, [menuId, group.size, closeMenu, clearGroup]);
+  }, [open, close]);
+}
 
+/**
+ * What the person has open or marked in the scene: the action menu of one character, the group of characters picked
+ * with Shift or a rectangle, and the members pinned to the wall of small views. Each change is announced.
+ */
+export function useCharacterMarks(o: MarksOptions) {
+  const { selectedId, onSelect } = o;
+  const [menuId, setMenuId] = useState<string | null>(null);
+  const [group, setGroup] = useState<Ids>(new Set());
+  const [pinned, setPinned] = useState<Ids>(new Set());
+  const latest = useRef({ menuId, selectedId, group, pinned });
+  latest.current = { menuId, selectedId, group, pinned };
+  const setters = { setMenuId, setGroup };
+  const { closeMenu, openMenu } = useMenu(o, latest, setters);
+  const { toggle, clearGroup, pick, pin } = useGroup(o, latest, setters, setPinned);
+  /** A click or tap: the first chooses, the second (on the chosen one) opens the menu, Shift adds to the group. */
+  const activate = useCallback(
+    (id: string, how: { shift: boolean; keyboard: boolean }) => {
+      const { menuId: open, selectedId: chosen } = latest.current;
+      if (how.shift) return toggle(id);
+      setGroup(new Set());
+      if (open === id) return closeMenu(true, true);
+      if (how.keyboard || chosen === id) return openMenu(id);
+      onSelect(id);
+    },
+    [toggle, closeMenu, openMenu, onSelect],
+  );
+  const dismiss = useCallback(() => {
+    if (menuId) closeMenu(true, true);
+    else clearGroup();
+  }, [menuId, closeMenu, clearGroup]);
+  useEscape(menuId !== null || group.size > 0, dismiss);
   return { menuId, group, pinned, openMenu, closeMenu, activate, clearGroup, pick, pin };
 }

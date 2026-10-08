@@ -104,19 +104,27 @@ export function SpeechLayer({
   );
 }
 
-export function ProjectedSpeech({
-  anchors,
-  elements,
-  drawn,
-}: {
+type SpeechProps = {
   anchors: { id: string; x: number; y: number; z: number }[];
   elements: Map<string, HTMLElement>;
   /** Filled each frame with the bubbles that are shown, for the name tags to keep clear of. */
   drawn: RefObject<Map<string, Rect>>;
-}) {
+};
+type Box = { left: number; right: number; top: number; bottom: number };
+
+/** Whether `box` is whole in view and clear of every bubble already placed. */
+const bubbleFits = (box: Box, width: number, taken: readonly Box[]) =>
+  box.left > 0 &&
+  box.right < width &&
+  box.top > 0 &&
+  !taken.some(
+    (t) => box.left < t.right && box.right > t.left && box.top < t.bottom && box.bottom > t.top,
+  );
+
+export function ProjectedSpeech({ anchors, elements, drawn }: SpeechProps) {
   const point = useRef(new Vector3());
   useFrame(({ camera, size }) => {
-    const taken: { left: number; right: number; top: number; bottom: number }[] = [];
+    const taken: Box[] = [];
     drawn.current.clear();
     for (const a of anchors) {
       const element = elements.get(a.id);
@@ -135,15 +143,7 @@ export function ProjectedSpeech({
       };
       // In priority order: a pair that would cover one already shown stays hidden until the camera is closer.
       const visible =
-        point.current.z >= -1 &&
-        point.current.z <= 1 &&
-        box.left > 0 &&
-        box.right < size.width &&
-        box.top > 0 &&
-        !taken.some(
-          (t) =>
-            box.left < t.right && box.right > t.left && box.top < t.bottom && box.bottom > t.top,
-        );
+        point.current.z >= -1 && point.current.z <= 1 && bubbleFits(box, size.width, taken);
       element.style.visibility = visible ? 'visible' : 'hidden';
       element.style.transform = `translate(${x}px,${y}px) translate(-50%,-100%)`;
       if (visible) {

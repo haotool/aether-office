@@ -3,10 +3,12 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Orbit } from 'lucide-react';
 import type { AttributedSession, Layout, Project, Snapshot } from '@aether/contracts';
-import { ApiError, type Session } from '../api.js';
+import { ApiError } from '../api-error.js';
+import { type Session } from '../api-session.js';
 import type { Key } from '../i18n.js';
 import { pageLink } from '../nav.js';
-import { useT, Empty } from '../ui.js';
+import { useT } from '../ui/useT.js';
+import { Empty } from '../ui/Empty.js';
 import type { OfficeModel } from './office-model.js';
 import { NotFound } from './NotFound.js';
 import { OfficePage } from './OfficePage.js';
@@ -56,25 +58,29 @@ type Props = {
   onRefresh: () => void;
 };
 
+/** What stands in the main area while data or a page's code arrives, so the page never flashes empty. */
+function PageLoading() {
+  const t = useT();
+  return (
+    <div className="boot-screen">
+      <Orbit size={30} />
+      {t('loading')}
+    </div>
+  );
+}
+
 /** The body of the main area: loading, the error, an unknown page, first-run help, or the page itself with its dialogs. */
 export function AppContent(props: Props) {
-  const t = useT();
   const { projects, snapshot, projectId, session } = props;
   const data = snapshot.data;
-  if (projects.isPending || (!data && snapshot.isPending && projectId))
-    return (
-      <div className="boot-screen">
-        <Orbit size={30} />
-        {t('loading')}
-      </div>
-    );
+  if (projects.isPending || (!data && snapshot.isPending && projectId)) return <PageLoading />;
   if (projects.error || snapshot.error)
     return <LoadFailure projects={projects} snapshot={snapshot} onRefresh={props.onRefresh} />;
   if (props.unknownPage) return <NotFound home={pageLink('office', projectId)} />;
   if (!projectId || (props.quiet && data))
     return (
       <div className="page-padding">
-        <Suspense fallback={null}>
+        <Suspense fallback={<PageLoading />}>
           <FirstRun
             onNewProject={session.actor.role === 'owner' ? props.onNewProject : undefined}
           />
@@ -119,6 +125,73 @@ function LoadFailure({
   );
 }
 
+/** The office page: the phone's, or the desktop's. */
+type BodyProps = Props & {
+  data: Snapshot;
+  projectId: string;
+  onNewTask: () => void;
+  onEditLayout: () => void;
+};
+
+function PhoneBody(props: BodyProps) {
+  const { data, session, model } = props;
+  return (
+    <PhoneOffice
+      data={data}
+      model={model}
+      selectedId={props.selectedId}
+      focus={props.focus}
+      preview={props.preview}
+      unread={props.unread}
+      canWrite={props.canWrite}
+      sessions={props.sessions}
+      owner={session.actor.role === 'owner'}
+      covered={props.covered}
+      onSelect={props.onSelect}
+      onOpen={props.onOpen}
+      onFeed={props.onFeed}
+      onFocus={props.onFocus}
+      onTour={props.onTour}
+      onNewTask={props.onNewTask}
+      onNotice={props.onNotice}
+      onRefresh={props.onRefresh}
+    />
+  );
+}
+
+function DesktopBody(props: BodyProps) {
+  const { data, session, model } = props;
+  return (
+    <OfficePage
+      data={data}
+      session={session}
+      model={model}
+      projectId={props.projectId}
+      selectedId={props.selectedId}
+      focus={props.focus}
+      tour={props.tour}
+      preview={props.preview}
+      unread={props.unread}
+      canWrite={props.canWrite}
+      onSelect={props.onSelect}
+      onOpen={props.onOpen}
+      onFeed={props.onFeed}
+      onFocus={props.onFocus}
+      onTour={props.onTour}
+      onTogglePanel={props.onTogglePanel}
+      onNewTask={props.onNewTask}
+      onEditLayout={props.onEditLayout}
+      onNotice={props.onNotice}
+      onRefresh={props.onRefresh}
+    />
+  );
+}
+
+/** The office page: the phone's, or the desktop's. */
+function OfficeBody(props: BodyProps) {
+  return props.compact ? <PhoneBody {...props} /> : <DesktopBody {...props} />;
+}
+
 function ProjectBody(props: Props & { data: Snapshot; projectId: string }) {
   const { data, page, session, model, onRefresh } = props;
   const [newTask, setNewTask] = useState(false);
@@ -126,52 +199,10 @@ function ProjectBody(props: Props & { data: Snapshot; projectId: string }) {
   const openTaskForm = () => setNewTask(true);
   return (
     <>
-      {page === 'office' && props.compact ? (
-        <PhoneOffice
-          data={data}
-          model={model}
-          selectedId={props.selectedId}
-          focus={props.focus}
-          preview={props.preview}
-          unread={props.unread}
-          canWrite={props.canWrite}
-          sessions={props.sessions}
-          owner={session.actor.role === 'owner'}
-          covered={props.covered}
-          onSelect={props.onSelect}
-          onOpen={props.onOpen}
-          onFeed={props.onFeed}
-          onFocus={props.onFocus}
-          onTour={props.onTour}
-          onNewTask={openTaskForm}
-          onNotice={props.onNotice}
-          onRefresh={onRefresh}
-        />
-      ) : page === 'office' ? (
-        <OfficePage
-          data={data}
-          session={session}
-          model={model}
-          projectId={props.projectId}
-          selectedId={props.selectedId}
-          focus={props.focus}
-          tour={props.tour}
-          preview={props.preview}
-          unread={props.unread}
-          canWrite={props.canWrite}
-          onSelect={props.onSelect}
-          onOpen={props.onOpen}
-          onFeed={props.onFeed}
-          onFocus={props.onFocus}
-          onTour={props.onTour}
-          onTogglePanel={props.onTogglePanel}
-          onNewTask={openTaskForm}
-          onEditLayout={() => setEditor(true)}
-          onNotice={props.onNotice}
-          onRefresh={onRefresh}
-        />
+      {page === 'office' ? (
+        <OfficeBody {...props} onNewTask={openTaskForm} onEditLayout={() => setEditor(true)} />
       ) : (
-        <Suspense fallback={null}>
+        <Suspense fallback={<PageLoading />}>
           <ProjectPage
             page={page}
             data={data}

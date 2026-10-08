@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { attentionOf, attentionReason } from '../../apps/web/src/localSessions.js';
+import { attentionOf, attentionReason } from '../../apps/web/src/session-attention.js';
 import type { LocalSession } from '../../packages/contracts/src/index.js';
 
 const HOUR = 3_600_000;

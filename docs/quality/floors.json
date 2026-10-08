@@ -1,14 +1,14 @@
 {
   "target": 95,
   "floors": {
-    "structure": 74.5,
+    "structure": 81.2,
     "types": 85,
-    "tests": 94,
-    "ui": 92.3,
+    "tests": 100,
+    "ui": 97.5,
     "a11y": 77.2,
-    "perf": 84.7,
+    "perf": 98.8,
     "docs": 100,
-    "security": 90.8,
+    "security": 100,
     "oss": 95,
     "maturity": 80.6
   }

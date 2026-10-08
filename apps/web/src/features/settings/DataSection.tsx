@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { api, forgetCsrf } from '../../api.js';
-import { useT } from '../../ui.js';
+import { api } from '../../api.js';
+import { forgetCsrf } from '../../api-csrf.js';
+import { useT } from '../../ui/useT.js';
 import { DangerZone, InlineHelp, Row } from './kit.js';
 
 /** Where the browser keeps the preferences (state.ts). */

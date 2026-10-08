@@ -1,6 +1,6 @@
 import type { Agent, Layout } from '@aether/contracts';
 import { useMemo, useRef } from 'react';
-import { Animal, type EmoteCue, type Ring } from './Animal.js';
+import { Animal, type AnimalProps, type EmoteCue, type Ring } from './Animal.js';
 import { createLongPress } from './long-press.js';
 import { characterEvents } from './character-events.js';
 import type { Apparition } from './animal-states.js';
@@ -130,9 +130,66 @@ function DeskFurnishings({ p, profile }: { p: MemberProps; profile: Profile }) {
   );
 }
 
+type BodyProps = { p: MemberProps; animal: BodyAnimal };
+type BodyAnimal = Pick<
+  AnimalProps,
+  'selected' | 'ring' | 'emote' | 'reducedMotion' | 'quality' | 'light' | 'onError'
+>;
+
+/** Walking out with its bag (or a ghost's own way of going), then gone. */
+function LeavingBody({
+  p,
+  animal,
+  departure,
+}: BodyProps & { departure: NonNullable<MemberProps['departure']> }) {
+  const { agent, apparition } = p;
+  return (
+    <Departing
+      plan={departure.plan}
+      startAt={departure.startAt}
+      reducedMotion={p.reducedMotion}
+      bag={apparition !== 'ghost'}
+      bagColor={agent.color}
+    >
+      {(clip) => (
+        <Animal
+          agent={agent}
+          {...animal}
+          // A sleeping rabbit wakes as the member it is; a ghost has only its own way of going.
+          apparition={clip && apparition === 'sleeping_rabbit' ? undefined : apparition}
+          override={clip ?? undefined}
+          pace={clip === 'walk' ? WALK_PACE : 1}
+        />
+      )}
+    </Departing>
+  );
+}
+
+/** Seated at the desk, turning toward whoever it talks to. */
+function SeatedBody({ p, animal, behavior }: BodyProps & { behavior: BehaviorScene }) {
+  const { agent, desk } = p;
+  return (
+    <Poser
+      seat={{ x: desk.x, z: desk.z, floor: desk.floor ?? 0, rotation: desk.rotation }}
+      seed={agent.id}
+      engagements={p.engagements}
+      turn={p.turn}
+      reducedMotion={p.reducedMotion}
+    >
+      <Animal
+        agent={agent}
+        {...animal}
+        apparition={p.apparition}
+        pace={1 + p.intensity * 0.4}
+        behavior={behavior}
+      />
+    </Poser>
+  );
+}
+
 /** The character at its desk: leaving with its bag, or seated and turning toward whoever it talks to; a jiangshi behind the chair when zombies are under it. */
 function MemberBody({ p, behavior }: { p: MemberProps; behavior: BehaviorScene }) {
-  const { agent, desk, apparition, departure, reducedMotion, quality, light } = p;
+  const { agent, departure, reducedMotion, quality, light } = p;
   const animal = {
     selected: p.selected,
     ring: p.ring,
@@ -145,40 +202,9 @@ function MemberBody({ p, behavior }: { p: MemberProps; behavior: BehaviorScene }
   return (
     <>
       {departure ? (
-        <Departing
-          plan={departure.plan}
-          startAt={departure.startAt}
-          reducedMotion={reducedMotion}
-          bag={apparition !== 'ghost'}
-          bagColor={agent.color}
-        >
-          {(clip) => (
-            <Animal
-              agent={agent}
-              {...animal}
-              // A sleeping rabbit wakes as the member it is; a ghost has only its own way of going.
-              apparition={clip && apparition === 'sleeping_rabbit' ? undefined : apparition}
-              override={clip ?? undefined}
-              pace={clip === 'walk' ? WALK_PACE : 1}
-            />
-          )}
-        </Departing>
+        <LeavingBody p={p} animal={animal} departure={departure} />
       ) : (
-        <Poser
-          seat={{ x: desk.x, z: desk.z, floor: desk.floor ?? 0, rotation: desk.rotation }}
-          seed={agent.id}
-          engagements={p.engagements}
-          turn={p.turn}
-          reducedMotion={reducedMotion}
-        >
-          <Animal
-            agent={agent}
-            {...animal}
-            apparition={apparition}
-            pace={1 + p.intensity * 0.4}
-            behavior={behavior}
-          />
-        </Poser>
+        <SeatedBody p={p} animal={animal} behavior={behavior} />
       )}
       {p.zombie && !departure && (
         <Animal

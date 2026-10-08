@@ -3,8 +3,12 @@ import { GitHealth } from './GitHealth.js';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { Snapshot, Work } from '@aether/contracts';
-import { api, execute } from '../api.js';
-import { PageHeading, Empty, Badge, useT } from '../ui.js';
+import { api } from '../api.js';
+import { execute } from '../api-commands.js';
+import { PageHeading } from '../ui/PageHeading.js';
+import { Empty } from '../ui/Empty.js';
+import { Badge } from '../ui/Badge.js';
+import { useT, useWhy } from '../ui/useT.js';
 import { Reservations } from './Reservations.js';
 type WorkspaceData = {
   workspaces: {
@@ -110,20 +114,17 @@ function DiffView({ result }: { result: DiffResult }) {
   );
 }
 
-function WorkspaceCard({
-  workspace: w,
-  work,
-  job,
-  busy,
-  onLoadDiff,
-}: {
+type WorkspaceCardProps = {
   workspace: WorkspaceRow;
   work: Work | undefined;
   job: WorkspaceJob | undefined;
   busy: boolean;
   onLoadDiff: (work: Work) => void;
-}) {
+};
+
+function WorkspaceCard({ workspace: w, work, job, busy, onLoadDiff }: WorkspaceCardProps) {
   const t = useT();
+  const whyNot = useWhy();
   const result = job?.result ? (JSON.parse(job.result) as DiffResult) : null;
   const running = job?.state === 'queued' || job?.state === 'running';
   return (
@@ -141,6 +142,11 @@ function WorkspaceCard({
       </dl>
       <button
         disabled={w.purpose === 'review' || busy || !work?.headSha || running}
+        {...whyNot(
+          [w.purpose !== 'review', 'whyNoDiff'],
+          [!busy && !running, 'whyBusy'],
+          [!!work?.headSha, 'whyNoCommit'],
+        )}
         onClick={() => work && onLoadDiff(work)}
       >
         {t('loadDiff')}

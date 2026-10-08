@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react';
 import type { AttributedSession, GitKpiResponse, UsageResponse } from '@aether/contracts';
 import { DEPARTMENTS } from '@aether/kernel';
-import { usePreferences } from '../state.js';
-import { useT } from '../ui.js';
+import { useT, useLocale } from '../ui/useT.js';
 import { emptyScope } from '../usage-compat.js';
 import { CountUp } from './CountUp.js';
 import { DailyBars, ShareRow, StackedBar } from './kpi-charts.js';
@@ -52,10 +51,28 @@ function ScanWarning({ scan }: { scan: UsageResponse['scan'] }) {
   );
 }
 
+type ShareSectionsProps = {
+  scope: Scope;
+  usage: UsageResponse;
+  office: number | null;
+  top: UsageResponse['sessions'];
+  titles: ReadonlyMap<string, string | null>;
+};
+
+type KpiScopeViewProps = {
+  usage: UsageResponse;
+  git: GitKpiResponse | undefined;
+  gitLoading: boolean;
+  office: number | null;
+  range: Range;
+  sessions: readonly AttributedSession[];
+  now: number;
+};
+
 /** The five headline figures, and the notes under them when there is nothing to count or some of it has no office. */
 function HeadlineSection({ totals, unplaced }: { totals: Scope['totals']; unplaced: number }) {
   const t = useT();
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   const empty = tokensOf(totals) === 0 && totals.cacheRead === 0;
   return (
     <section className="kpi-section">
@@ -96,21 +113,9 @@ function ShareSection({ id, title, children }: { id: string; title: string; chil
 }
 
 /** Tokens by model, by project (the whole building only) and by the heaviest sessions. */
-function ShareSections({
-  scope,
-  usage,
-  office,
-  top,
-  titles,
-}: {
-  scope: Scope;
-  usage: UsageResponse;
-  office: number | null;
-  top: UsageResponse['sessions'];
-  titles: ReadonlyMap<string, string | null>;
-}) {
+function ShareSections({ scope, usage, office, top, titles }: ShareSectionsProps) {
   const t = useT();
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   const heaviestProject = Math.max(tokensOf(usage.projects[0]?.scope.totals ?? scope.totals), 1);
   return (
     <>
@@ -168,15 +173,7 @@ export function KpiScopeView({
   range,
   sessions,
   now,
-}: {
-  usage: UsageResponse;
-  git: GitKpiResponse | undefined;
-  gitLoading: boolean;
-  office: number | null;
-  range: Range;
-  sessions: readonly AttributedSession[];
-  now: number;
-}) {
+}: KpiScopeViewProps) {
   const t = useT();
   const department = office === null ? null : (DEPARTMENTS[office] ?? null);
   // An office that is not in the answer is an empty one: never the building's numbers under the office's name.

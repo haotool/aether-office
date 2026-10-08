@@ -7,12 +7,13 @@ import {
   type SetURLSearchParams,
 } from 'react-router-dom';
 import type { AttributedSession, Project, Snapshot } from '@aether/contracts';
-import { api, type Session } from './api.js';
+import { api } from './api.js';
+import { type Session } from './api-session.js';
 import { fill, type Key } from './i18n.js';
 import { isPage } from './nav.js';
 import { isOperator } from './roles.js';
-import { useT } from './ui.js';
-import { sessionIdOf } from './localSessions.js';
+import { useT } from './ui/useT.js';
+import { sessionIdOf } from './session-names.js';
 import { focusFeedRow, useSessionNotices } from './app-hooks.js';
 import { usePendingApprovals } from './app-data.js';
 import { askingKeys, usePermissionRequests } from './features/permission-requests.js';
@@ -24,6 +25,27 @@ import {
 } from './notifications.js';
 import { usePreferences } from './state.js';
 
+/** Drops a project the address names but this person cannot open from the address, and says which one is shown instead. */
+function useProjectFallback(
+  requestedGone: boolean,
+  fallbackName: string | undefined,
+  setParams: ReturnType<typeof useSearchParams>[1],
+  setNotice: (message: string) => void,
+) {
+  const t = useT();
+  useEffect(() => {
+    if (!requestedGone) return;
+    if (fallbackName) setNotice(fill(t('projectFallback'), fallbackName));
+    setParams(
+      (p) => {
+        p.delete('project');
+        return p;
+      },
+      { replace: true },
+    );
+  }, [requestedGone, fallbackName, setParams, setNotice, t]);
+}
+
 /**
  * Where the address points: the page, the project (a stale or mistyped one falls back to the first the person can
  * open, with a notice) and the selected member, plus the project list and the snapshot of that project.
@@ -33,7 +55,6 @@ export function useProjectSelection(
   offline: boolean,
   setNotice: (message: string) => void,
 ) {
-  const t = useT();
   const [params, setParams] = useSearchParams();
   const location = useLocation();
   // `/settings/<group>` is still the settings page: the page is the first segment.
@@ -58,18 +79,7 @@ export function useProjectSelection(
     refetchInterval: offline ? 5000 : 30000,
     retry: 1,
   });
-  const fallbackName = projects.data?.[0]?.name;
-  useEffect(() => {
-    if (!requestedGone) return;
-    if (fallbackName) setNotice(fill(t('projectFallback'), fallbackName));
-    setParams(
-      (p) => {
-        p.delete('project');
-        return p;
-      },
-      { replace: true },
-    );
-  }, [requestedGone, fallbackName, setParams, setNotice, t]);
+  useProjectFallback(requestedGone, projects.data?.[0]?.name, setParams, setNotice);
   return {
     page,
     unknownPage,

@@ -3,10 +3,10 @@ import { Focus } from 'lucide-react';
 import { ProviderMark } from '@aether/office-scene/model';
 import type { Agent, AttributedSession, Snapshot } from '@aether/contracts';
 import { avatarState } from '../avatar/state.js';
-import { labelOf } from '../localSessions.js';
-import { usePreferences } from '../state.js';
+import { labelOf } from '../session-names.js';
 import { SUBAGENT_INFIX, parentOf } from '../subagent-id.js';
-import { Badge, useT } from '../ui.js';
+import { Badge } from '../ui/Badge.js';
+import { useT, useLocale } from '../ui/useT.js';
 import { Avatar } from './Avatar.js';
 import { contextLabel } from './context-label.js';
 import { squadViewOf } from './feed-squads.js';
@@ -100,10 +100,26 @@ function ConvIdentity({
   );
 }
 
+type SessionConversationProps = {
+  agent: Agent;
+  session: AttributedSession | null;
+  snapshot: Snapshot;
+  /** Sessions other than this one that want a look: shown on the way back to the feed. */
+  attention: number;
+  /** An input to use in place of the one the foot chooses for the session. */
+  composer?: ReactNode;
+  /** Buttons at the end of the header (close, or collapse to a peek on a phone). */
+  trailing?: ReactNode;
+  onBack: () => void;
+  onFocus: () => void;
+  /** Select a member: the supervisor of a subagent, from its "spawned by" link. */
+  onOpen: (agentId: string) => void;
+};
+
 /** The model chip, the context percentage and the thin meter under it. */
 function ConvContext({ session }: { session: AttributedSession | null }) {
   const t = useT();
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   const percent = session ? contextPercent(session) : null;
   const contextText = session ? contextLabel(session.usage, t, locale) : null;
   const model = session?.usage.model;
@@ -129,7 +145,7 @@ function ConvContext({ session }: { session: AttributedSession | null }) {
 
 function ContextMeter({ session }: { session: AttributedSession | null }) {
   const t = useT();
-  const locale = usePreferences((s) => s.locale);
+  const locale = useLocale();
   const percent = session ? contextPercent(session) : null;
   if (percent === null || !session) return null;
   const contextText = contextLabel(session.usage, t, locale);
@@ -197,6 +213,36 @@ function ConvMain({
   );
 }
 
+/** What stands between the header and the messages: the hook note, permission requests, and the wait for one. */
+function ConvNotices({
+  session,
+  agent,
+  isSub,
+  squad,
+  asking,
+}: {
+  session: AttributedSession | null;
+  agent: Agent;
+  isSub: boolean;
+  squad: Squad;
+  asking: boolean;
+}) {
+  const t = useT();
+  return (
+    <>
+      {session && !isSub && !squad && needsHook(session, agent.activity === 'working') && (
+        <HookNote session={session} />
+      )}
+      {session && <PermissionCards sessionKey={session.key} />}
+      {agent.activity === 'waiting_permission' && !asking && (
+        <p className="conv-waiting" role="status">
+          {t('convWaiting')}
+        </p>
+      )}
+    </>
+  );
+}
+
 /**
  * The selected member as a conversation: who and in what state, then the transcript (newest at the bottom), then one
  * closed fold of details, then the foot (read-only actions, or a composer where AETHER can drive the session).
@@ -211,22 +257,7 @@ export function SessionConversation({
   onBack,
   onFocus,
   onOpen,
-}: {
-  agent: Agent;
-  session: AttributedSession | null;
-  snapshot: Snapshot;
-  /** Sessions other than this one that want a look: shown on the way back to the feed. */
-  attention: number;
-  /** An input to use in place of the one the foot chooses for the session. */
-  composer?: ReactNode;
-  /** Buttons at the end of the header (close, or collapse to a peek on a phone). */
-  trailing?: ReactNode;
-  onBack: () => void;
-  onFocus: () => void;
-  /** Select a member: the supervisor of a subagent, from its "spawned by" link. */
-  onOpen: (agentId: string) => void;
-}) {
-  const t = useT();
+}: SessionConversationProps) {
   const asking = !!session && requestsFor(usePermissionRequests(), session.key).length > 0;
   const isSub = agent.id.includes(SUBAGENT_INFIX);
   // The squad as it stands now; a subagent's own view and a supervisor's strip and cards both read it.
@@ -243,15 +274,7 @@ export function SessionConversation({
         <ContextMeter session={session} />
         {!isSub && squad && <SquadStrip view={squad} picked={picked} onPick={setPicked} />}
       </header>
-      {session && !isSub && !squad && needsHook(session, agent.activity === 'working') && (
-        <HookNote session={session} />
-      )}
-      {session && <PermissionCards sessionKey={session.key} />}
-      {agent.activity === 'waiting_permission' && !asking && (
-        <p className="conv-waiting" role="status">
-          {t('convWaiting')}
-        </p>
-      )}
+      <ConvNotices session={session} agent={agent} isSub={isSub} squad={squad} asking={asking} />
       <ConvMain
         agent={agent}
         session={session}

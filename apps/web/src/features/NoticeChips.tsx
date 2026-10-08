@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from 'react';
+import { useId, useState, type ComponentProps, type ReactNode } from 'react';
 import {
   ChevronDown,
   CircleCheck,
@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import type { Notice } from '@aether/kernel';
 import type { Key } from '../i18n.js';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { groupNotices, noticeTone, type NoticeGroup, type Tone } from './notice-model.js';
 
 const CONTEXT_LABELS: Record<string, Key> = {
@@ -28,16 +28,7 @@ const CONTEXT_LABELS: Record<string, Key> = {
 
 const firstLine = (text: string) => text.split('\n').find((l) => l.trim()) ?? '';
 
-/** One slim system row between messages: an icon, a label, an optional one-line gist, and details behind a toggle. */
-function Chip({
-  tone,
-  icon,
-  label,
-  gist,
-  mono = false,
-  fresh,
-  children,
-}: {
+type ChipProps = {
   tone: Tone;
   icon: ReactNode;
   label: ReactNode;
@@ -45,7 +36,10 @@ function Chip({
   mono?: boolean;
   fresh: boolean;
   children?: ReactNode;
-}) {
+};
+
+/** One slim system row between messages: an icon, a label, an optional one-line gist, and details behind a toggle. */
+function Chip({ tone, icon, label, gist, mono = false, fresh, children }: ChipProps) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const panel = useId();
@@ -149,6 +143,29 @@ function Contexts({
   );
 }
 
+type TextGroup = Extract<NoticeGroup, { kind: 'output' | 'hook' }>;
+
+/** A notice that is a block of text: its first line as the gist, the whole of it when opened. */
+function TextNotice({
+  group,
+  tone,
+  icon,
+  label,
+  fresh,
+}: {
+  group: TextGroup;
+  tone: ComponentProps<typeof Chip>['tone'];
+  icon: ReactNode;
+  label: string;
+  fresh: boolean;
+}) {
+  return (
+    <Chip tone={tone} icon={icon} label={label} gist={firstLine(group.text)} fresh={fresh}>
+      <pre className="notice-text">{group.text}</pre>
+    </Chip>
+  );
+}
+
 function One({ group, fresh }: { group: NoticeGroup; fresh: boolean }) {
   const t = useT();
   switch (group.kind) {
@@ -169,27 +186,23 @@ function One({ group, fresh }: { group: NoticeGroup; fresh: boolean }) {
       );
     case 'output':
       return (
-        <Chip
+        <TextNotice
+          group={group}
           tone={noticeTone(group)}
           icon={<SquareTerminal size={14} />}
           label={t('noticeOutput')}
-          gist={firstLine(group.text)}
           fresh={fresh}
-        >
-          <pre className="notice-text">{group.text}</pre>
-        </Chip>
+        />
       );
     case 'hook':
       return (
-        <Chip
+        <TextNotice
+          group={group}
           tone="neutral"
           icon={<Webhook size={14} />}
           label={t('noticeHook')}
-          gist={firstLine(group.text)}
           fresh={fresh}
-        >
-          <pre className="notice-text">{group.text}</pre>
-        </Chip>
+        />
       );
     case 'interrupted':
       return (

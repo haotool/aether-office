@@ -11,21 +11,7 @@ const START = 0.6;
 /** Metres of braid a merge flower waits beyond its commit's height before it opens, so it never opens ahead of its strand. */
 const MERGE_LEAD = 0.5;
 
-/**
- * The flowers on the crown: one per tier and a great bloom on the spire, and a small one for each recent merge commit on the
- * braid, all in one mesh and one points object (two draw calls). Each flower opens from a bud once its tier has risen (`built`
- * is read every frame) or the braid has climbed past its merge commit (`reach`), in its own time, so one that arrives later
- * blooms later. With motion off or reduced every flower is simply open. Pointing at one names its species.
- */
-export function Garden({
-  stalk,
-  animate,
-  low,
-  built,
-  reach,
-  onBloom,
-  onLeave,
-}: {
+type GardenProps = {
   stalk: Stalk;
   animate: boolean;
   low: boolean;
@@ -34,12 +20,32 @@ export function Garden({
   reach: { current: number };
   onBloom: (info: BloomInfo, event: ThreeEvent<PointerEvent | MouseEvent>) => void;
   onLeave: () => void;
-}) {
+};
+type Garden = NonNullable<ReturnType<typeof gardenOf>>;
+
+/** Opens each flower whose time has come (its tier has risen or the braid has passed its merge); the rest keep their bud. */
+function openFlowers(
+  opened: number[],
+  garden: Garden | null,
+  { animate, built, reach }: Pick<GardenProps, 'animate' | 'built' | 'reach'>,
+  step: number,
+) {
+  const flowers = garden?.blooms.length ?? 0;
+  for (let i = 0; i < MAX_FLOWERS; i++) {
+    const waits = garden?.climb[i] ?? null;
+    const ready =
+      !animate ||
+      (waits === null ? built.current > i + START : reach.current >= waits + MERGE_LEAD);
+    const was = opened[i] ?? 0;
+    opened[i] = i >= flowers ? 0 : ready ? Math.min(1, was + step) : was;
+  }
+}
+
+/** The flowers' geometry and the two materials that draw it, each disposed when it is replaced or the garden goes. */
+function useGardenParts(stalk: Stalk, low: boolean) {
   const garden = useMemo(() => gardenOf(stalk, low), [stalk, low]);
   const skin = useMemo(gardenMaterial, []);
   const dust = useMemo(pollenMaterial, []);
-  const height = useThree((s) => s.size.height * s.viewport.dpr);
-  const opened = useRef<number[]>(new Array<number>(MAX_FLOWERS).fill(animate ? 0 : 1));
   useEffect(
     () => () => {
       garden?.mesh.dispose();
@@ -54,17 +60,22 @@ export function Garden({
     },
     [skin, dust],
   );
+  return { garden, skin, dust };
+}
+
+/**
+ * The flowers on the crown: one per tier and a great bloom on the spire, and a small one for each recent merge commit on the
+ * braid, all in one mesh and one points object (two draw calls). Each flower opens from a bud once its tier has risen (`built`
+ * is read every frame) or the braid has climbed past its merge commit (`reach`), in its own time, so one that arrives later
+ * blooms later. With motion off or reduced every flower is simply open. Pointing at one names its species.
+ */
+export function Garden(props: GardenProps) {
+  const { stalk, animate, low, onBloom, onLeave } = props;
+  const { garden, skin, dust } = useGardenParts(stalk, low);
+  const height = useThree((s) => s.size.height * s.viewport.dpr);
+  const opened = useRef<number[]>(new Array<number>(MAX_FLOWERS).fill(animate ? 0 : 1));
   useFrame((state, delta) => {
-    const flowers = garden?.blooms.length ?? 0;
-    const step = animate ? delta / BLOOM_SECONDS : 1;
-    for (let i = 0; i < MAX_FLOWERS; i++) {
-      const waits = garden?.climb[i] ?? null;
-      const ready =
-        !animate ||
-        (waits === null ? built.current > i + START : reach.current >= waits + MERGE_LEAD);
-      const was = opened.current[i] ?? 0;
-      opened.current[i] = i >= flowers ? 0 : ready ? Math.min(1, was + step) : was;
-    }
+    openFlowers(opened.current, garden, props, animate ? delta / BLOOM_SECONDS : 1);
     const time = animate ? state.clock.elapsedTime : 0;
     for (const material of [skin, dust]) {
       setUniform(material, 'time', time);

@@ -6,7 +6,7 @@ import {
   type LangId,
 } from '../../packages/office-scene/src/screen-lang.js';
 import { generateFile, lineText } from '../../packages/office-scene/src/screen-codegen.js';
-import { seeded } from '../../packages/office-scene/src/random.js';
+import { seeded } from '../../packages/office-scene/src/seeded.js';
 
 const SAMPLE: Record<LangId, string> = {
   ts: 'session-store.ts',

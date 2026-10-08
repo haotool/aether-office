@@ -11,6 +11,7 @@ import { useEmotes, type EmoteResult } from './use-emotes.js';
 import type { PoseApi } from './use-pose-cues.js';
 import { useAnnouncer, useCharacterMarks, useHoverCard } from './use-interaction.js';
 import { useMarquee } from './use-marquee.js';
+import type { SeatCheck } from './seat-drag.js';
 import { useSeatDrag, type SeatMove } from './use-seat-drag.js';
 import { useWallFeeds } from './use-wall-feeds.js';
 
@@ -159,6 +160,82 @@ function characterActions(o: {
   return { pinnable, pinIds, actionsFor };
 }
 
+/** The boxes the scene places each frame, by member id (an emote icon by "s" and its key): one registry for each kind. */
+function useElementRegistries() {
+  const cardElements = useRef(new Map<string, HTMLElement>()).current;
+  const menuElements = useRef(new Map<string, HTMLElement>()).current;
+  const spriteElements = useRef(new Map<string, HTMLElement>()).current;
+  return { cardElements, menuElements, spriteElements };
+}
+
+/** The menu closes when the person chooses someone else; opening it chooses its character first, so only a change counts. */
+function useCloseStaleMenu(selectedId: string | null, marks: ReturnType<typeof useCharacterMarks>) {
+  const closeStaleMenu = useEffectEvent(() => {
+    if (marks.menuId && selectedId !== marks.menuId) marks.closeMenu(false);
+  });
+  useEffect(() => closeStaleMenu(), [selectedId]);
+}
+
+/** Carrying a desk to another seat, and the rectangle that picks a group: both take the pointer, so orbit is off meanwhile. */
+function useDragAndMarquee(
+  p: Params,
+  o: {
+    stage: RefObject<HTMLDivElement | null>;
+    bridge: RefObject<SceneBridge | null>;
+    words: Words;
+    announce: (text: string) => void;
+    marks: ReturnType<typeof useCharacterMarks>;
+  },
+) {
+  const seatDrag = useSeatDrag({
+    layout: p.layout,
+    exploded: p.nav.exploded,
+    bridge: o.bridge,
+    allowed: p.canArrange && !p.compact,
+    onMove: p.onMoveSeat,
+    onEnd: (outcome) => o.announce(dragLine(o.words, outcome)),
+  });
+  const marquee = useMarquee({
+    container: o.stage,
+    bridge: o.bridge,
+    points: headsOf(p.sceneAgents, p.layout, p.nav.exploded),
+    enabled: !p.compact && p.hasGroupBar,
+    onSelect: o.marks.pick,
+  });
+  return { seatDrag, marquee };
+}
+
+/** What is said when a carried desk is dropped or the drag is given up. */
+const dragLine = (words: Words, outcome: 'moved' | 'cancelled' | SeatCheck) =>
+  outcome === 'moved'
+    ? words.dragMoved
+    : outcome === 'cancelled' || outcome.ok
+      ? words.dragCancelled
+      : words.dragBlocked[outcome.reason];
+
+/** The control-room wall: the members it shows (not the ones the main shot or the person's choice is on), and whether the person closed it. */
+function useWall(
+  p: Params,
+  pinned: ReadonlySet<string>,
+  stage: Parameters<typeof useWallFeeds>[0]['stage'],
+) {
+  const [wallClosed, setWallClosed] = useState(false);
+  const taken = new Set(p.nav.directed?.shot.subjects ?? []);
+  if (p.selectedId) taken.add(p.selectedId);
+  const wall = useWallFeeds({
+    allowed: !p.compact && p.quality !== 'low' && !p.reducedMotion && !wallClosed,
+    agents: p.agents,
+    seats: p.nav.seats,
+    intensity: p.intensity,
+    taken,
+    pinned,
+    floor: p.nav.floor,
+    exploded: p.nav.exploded,
+    stage,
+  });
+  return { wall, setWallClosed };
+}
+
 /**
  * Everything the person can do to the characters directly: the hover card, the action menu, emotes, the group picked
  * with Shift or a rectangle, pins on the wall of small views, carrying a desk to another seat. The state lives here so
@@ -175,55 +252,14 @@ export function useSceneInteraction(p: Params) {
     focusTag,
     announce,
   });
-  const [wallClosed, setWallClosed] = useState(false);
   const stage = useRef<HTMLDivElement | null>(null);
-  // The boxes the scene places each frame, by member id (an emote icon by "s" and its key): one registry for each kind.
-  const cardElements = useRef(new Map<string, HTMLElement>()).current;
-  const menuElements = useRef(new Map<string, HTMLElement>()).current;
-  const spriteElements = useRef(new Map<string, HTMLElement>()).current;
-  const taken = new Set(p.nav.directed?.shot.subjects ?? []);
-  if (p.selectedId) taken.add(p.selectedId);
-  const wall = useWallFeeds({
-    allowed: !p.compact && p.quality !== 'low' && !p.reducedMotion && !wallClosed,
-    agents: p.agents,
-    seats: p.nav.seats,
-    intensity: p.intensity,
-    taken,
-    pinned: marks.pinned,
-    floor: p.nav.floor,
-    exploded: p.nav.exploded,
-    stage,
-  });
+  const { cardElements, menuElements, spriteElements } = useElementRegistries();
+  const { wall, setWallClosed } = useWall(p, marks.pinned, stage);
   const bridge = useRef<SceneBridge | null>(null);
   const emotes = useEmotes(p.pose);
   const hoverId = useHoverCard(p.hovered);
-  const seatDrag = useSeatDrag({
-    layout: p.layout,
-    exploded: p.nav.exploded,
-    bridge,
-    allowed: p.canArrange && !p.compact,
-    onMove: p.onMoveSeat,
-    onEnd: (outcome) =>
-      announce(
-        outcome === 'moved'
-          ? words.dragMoved
-          : outcome === 'cancelled' || outcome.ok
-            ? words.dragCancelled
-            : words.dragBlocked[outcome.reason],
-      ),
-  });
-  const marquee = useMarquee({
-    container: stage,
-    bridge,
-    points: headsOf(p.sceneAgents, p.layout, p.nav.exploded),
-    enabled: !p.compact && p.hasGroupBar,
-    onSelect: marks.pick,
-  });
-  // The menu closes when the person chooses someone else; opening it chooses its character first, so only a change counts.
-  const closeStaleMenu = useEffectEvent(() => {
-    if (marks.menuId && p.selectedId !== marks.menuId) marks.closeMenu(false);
-  });
-  useEffect(() => closeStaleMenu(), [p.selectedId]);
+  const { seatDrag, marquee } = useDragAndMarquee(p, { stage, bridge, words, announce, marks });
+  useCloseStaleMenu(p.selectedId, marks);
 
   const actions = characterActions({ p, marks, wall, emotes, words, announce, setWallClosed });
   const anchorsOf = anchorsFor(p);

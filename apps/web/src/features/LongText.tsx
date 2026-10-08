@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 
 /** A message taller than this is folded behind "show more", with a fade at the cut. */
 const FOLD_PX = 420;

@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import type { Application } from '../app-state.js';
 import { useQuickOpen } from '../app-hooks.js';
 import { AppContent } from './AppContent.js';
@@ -34,10 +34,23 @@ export function AppTopbar({ app }: { app: Application }) {
   );
 }
 
+/** Above the sign-out row: the quick preferences, and (on a phone) the top bar's numbers. */
+function SidebarFooter({ app }: { app: Application }) {
+  const { local, view } = app;
+  return (
+    <>
+      <QuickPrefs canPair={app.canWrite} />
+      {local.data?.enabled ? (
+        <Telemetry sessions={local.data.sessions} unread={view.unread.size} />
+      ) : null}
+    </>
+  );
+}
+
 /** The navigation: the sidebar, the backdrop that closes it on a narrow screen, and the quick-open palette. */
 export function AppNavigation({ app, onLogout }: { app: Application; onLogout: () => void }) {
   const t = useT();
-  const { prefs, sel, local, shell, view, needs } = app;
+  const { prefs, sel, local, shell, needs } = app;
   const quick = useQuickOpen();
   const projects = sel.projects.data ?? [];
   return (
@@ -59,14 +72,7 @@ export function AppNavigation({ app, onLogout }: { app: Application; onLogout: (
           shell.setFocus('overview');
           shell.setMenu(false);
         }}
-        footer={
-          <>
-            <QuickPrefs canPair={app.canWrite} />
-            {local.data?.enabled ? (
-              <Telemetry sessions={local.data.sessions} unread={view.unread.size} />
-            ) : null}
-          </>
-        }
+        footer={<SidebarFooter app={app} />}
       />
       {shell.menu && (
         <button

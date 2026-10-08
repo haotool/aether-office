@@ -190,6 +190,12 @@ export function SquadZones(props: ZoneProps) {
   const { glow } = squadMaterials();
   const rig = useZoneRig(squads);
   const { decal, last, meshes } = rig;
+  const pods = [
+    ['rings', parts.ring],
+    ['stools', parts.stool],
+    ['panes', parts.pane],
+    ['figures', parts.silhouette],
+  ] as const;
   useLayoutEffect(() => {
     for (const mesh of [meshes.rings, meshes.stools, meshes.panes, meshes.figures])
       withColors(mesh.current);
@@ -210,30 +216,15 @@ export function SquadZones(props: ZoneProps) {
         frustumCulled={false}
         renderOrder={1}
       />
-      <instancedMesh
-        ref={meshes.rings}
-        args={[parts.ring, glow, POD_CAPACITY]}
-        frustumCulled={false}
-        renderOrder={2}
-      />
-      <instancedMesh
-        ref={meshes.stools}
-        args={[parts.stool, glow, POD_CAPACITY]}
-        frustumCulled={false}
-        renderOrder={2}
-      />
-      <instancedMesh
-        ref={meshes.panes}
-        args={[parts.pane, glow, POD_CAPACITY]}
-        frustumCulled={false}
-        renderOrder={2}
-      />
-      <instancedMesh
-        ref={meshes.figures}
-        args={[parts.silhouette, glow, POD_CAPACITY]}
-        frustumCulled={false}
-        renderOrder={2}
-      />
+      {pods.map(([name, geometry]) => (
+        <instancedMesh
+          key={name}
+          ref={meshes[name]}
+          args={[geometry, glow, POD_CAPACITY]}
+          frustumCulled={false}
+          renderOrder={2}
+        />
+      ))}
     </group>
   );
 }

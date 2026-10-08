@@ -6,6 +6,13 @@ export default defineConfig({
     testTimeout: 10000,
     hookTimeout: 20000,
     maxWorkers: 4,
-    setupFiles: ['tests/aether/setup-aether-home.ts'],
+    setupFiles: ['tests/aether/setup-aether-home.ts', 'tests/aether/setup-locales.ts'],
+    coverage: {
+      provider: 'v8',
+      reportsDirectory: 'coverage',
+      reporter: ['text', 'json-summary'],
+      include: ['apps/**/*.ts', 'packages/**/*.ts'],
+      exclude: ['**/*.d.ts', '**/dist/**', 'tests/**', 'e2e/**', 'scripts/**'],
+    },
   },
 });

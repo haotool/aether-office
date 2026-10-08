@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Agent } from '../../packages/contracts/src/index.js';
 import { FLOORS, FLOOR_CAPACITY } from '../../packages/office-scene/src/layout.js';
-import { mergeLayout } from '../../apps/web/src/localSessions.js';
+import { mergeLayout } from '../../apps/web/src/layout-merge.js';
 
 const agents = (n: number): Agent[] =>
   Array.from({ length: n }, (_, i) => ({ id: `local:a${i}` }) as Agent);

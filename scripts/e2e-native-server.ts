@@ -191,16 +191,17 @@ writeFileSync(
   }),
   { mode: 0o600 },
 );
+const port = process.env['AETHER_E2E_NATIVE_PORT'] ?? '4330'; // playwright.config.ts reads the same variable
 mkdirSync('.data', { recursive: true, mode: 0o700 });
-writeFileSync('.data/e2e-native-session.json', JSON.stringify({ directory, port: 4330 }), {
+writeFileSync('.data/e2e-native-session.json', JSON.stringify({ directory, port: Number(port) }), {
   mode: 0o600,
 });
 const env = {
   ...process.env,
-  PORT: '4330',
+  PORT: port,
   AETHER_MODE: 'live',
   AETHER_DATA_DIR: directory,
-  AETHER_CONTROL_URL: 'http://127.0.0.1:4330',
+  AETHER_CONTROL_URL: `http://127.0.0.1:${port}`,
   AETHER_NATIVE_CONFIG: config,
   AETHER_LOCAL_SESSIONS_HOME: home,
   AETHER_HOOK_SPOOL: spool,

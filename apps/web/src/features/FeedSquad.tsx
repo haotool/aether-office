@@ -7,7 +7,7 @@ import {
   type MouseEvent,
 } from 'react';
 import { ChevronDown, CornerDownRight } from 'lucide-react';
-import { useT } from '../ui.js';
+import { useT } from '../ui/useT.js';
 import { FeedRowBody } from './FeedRow.js';
 import type { FeedItem } from './feed-model.js';
 import type { SquadRow } from './feed-squads.js';
@@ -18,25 +18,43 @@ import { treeNav } from './tree-nav.js';
 type Open = (agentId: string) => void;
 type Toggle = (sessionKey: string, open: boolean) => void;
 
+type SupervisorRowProps = {
+  item: FeedItem;
+  squad: NonNullable<FeedItem['squad']>;
+  open: boolean;
+  tabIndex: 0 | -1;
+  onToggle: Toggle;
+  onOpen: Open;
+};
+
+type SquadRowProps = {
+  row: SquadRow;
+  index: number;
+  size: number;
+  supervisorLabel: string;
+  tabIndex: 0 | -1;
+  onOpen: Open;
+};
+
+/** The status of a subagent, the tools it has used and the one it uses now. */
+function SubMeta({ row }: { row: SquadRow }) {
+  const t = useT();
+  const tools = toolsText(t, row);
+  return (
+    <span className="sub-meta">
+      <span className="sub-status">{t(STATUS_KEY[row.status])}</span>
+      {tools && <span>{tools}</span>}
+      {row.lastTool && row.status !== 'finished' && (
+        <span className="sub-last">{row.lastTool}</span>
+      )}
+    </span>
+  );
+}
+
 /** One subagent under its supervisor: status dot, type, how long it has run, tool calls; a button-like tree item. */
 const SquadRowView = memo(
-  function SquadRowView({
-    row,
-    index,
-    size,
-    supervisorLabel,
-    tabIndex,
-    onOpen,
-  }: {
-    row: SquadRow;
-    index: number;
-    size: number;
-    supervisorLabel: string;
-    tabIndex: 0 | -1;
-    onOpen: Open;
-  }) {
+  function SquadRowView({ row, index, size, supervisorLabel, tabIndex, onOpen }: SquadRowProps) {
     const t = useT();
-    const tools = toolsText(t, row);
     const detail = row.result ?? row.task;
     // A finished subagent has left the office, so there is no member to open: its supervisor holds the record.
     const target = row.status === 'finished' ? row.supervisor : row.id;
@@ -59,13 +77,7 @@ const SquadRowView = memo(
             <strong title={rowName(row)}>{rowName(row)}</strong>
             <Elapsed row={row} />
           </span>
-          <span className="sub-meta">
-            <span className="sub-status">{t(STATUS_KEY[row.status])}</span>
-            {tools && <span>{tools}</span>}
-            {row.lastTool && row.status !== 'finished' && (
-              <span className="sub-last">{row.lastTool}</span>
-            )}
-          </span>
+          <SubMeta row={row} />
           {detail && <span className="sub-text">{detail}</span>}
           <span className="visually-hidden">{fmt(t('subOfName'), { name: supervisorLabel })}</span>
         </span>
@@ -119,21 +131,7 @@ function useSquadTree(item: FeedItem, open: boolean, onToggle: Toggle) {
 }
 
 /** The supervisor's own row (level 1): opens the supervisor; its chevron folds or unfolds the subagents. */
-function SupervisorRow({
-  item,
-  squad,
-  open,
-  tabIndex,
-  onToggle,
-  onOpen,
-}: {
-  item: FeedItem;
-  squad: NonNullable<FeedItem['squad']>;
-  open: boolean;
-  tabIndex: 0 | -1;
-  onToggle: Toggle;
-  onOpen: Open;
-}) {
+function SupervisorRow({ item, squad, open, tabIndex, onToggle, onOpen }: SupervisorRowProps) {
   const t = useT();
   const toggle = (e: MouseEvent) => {
     e.stopPropagation();

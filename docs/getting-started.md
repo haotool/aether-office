@@ -160,6 +160,25 @@ server keeps the code it started with, so until it is restarted it answers an up
 Remote approvals, switch it off and on again in Settings and reinstall the hook (`pnpm hooks install --remote-approvals`); the
 configuration file gained a `verifyKey`, and the hook falls back to the terminal prompt until it has one.
 
+## Capture a phone performance report
+
+When investigating mobile PWA stutter, maintainers need numbers from a real phone. The app can build a JSON report locally
+(nothing is uploaded). Opt in with `?fieldperf=1` on the address (exact value `1`; the scene frame probe still uses `?perf=N`
+separately). Without `fieldperf=1` the report code is not loaded.
+
+1. On your Mac, start the control plane so the phone can reach it: `AETHER_HOST=0.0.0.0 pnpm start` (same as
+   [Open it from a phone or tablet](#open-it-from-a-phone-or-tablet) below).
+2. On the phone (Safari or Chrome, or the home-screen icon after **Add to Home Screen**), open the printed address with
+   `/?fieldperf=1` appended (for example `http://192.0.2.20:4310/?fieldperf=1`). Use the office for about two minutes: scroll the feed,
+   open a session, change floors. For a cold start, force-quit the browser or the installed app, open the same link again and
+   use it for about one minute.
+3. Tap **Copy report** on the small panel (after a few seconds of collection). Paste the JSON into an issue or audit evidence.
+   Fields the browser cannot measure are `null` and listed under `unsupported`.
+
+The JSON includes a full **User-Agent** string (for device and browser identification), timing and WebGL probe
+fields, and `/api` fetch counts. It does **not** include project names, conversation text, URL paths, or account
+identifiers.
+
 ## Install it on a phone
 
 The office is an installable web app: opened from the home screen it runs full screen, with its own icon, and the shortcuts

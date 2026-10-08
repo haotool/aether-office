@@ -1,10 +1,18 @@
 import { useEffect, useState } from 'react';
 import { ArrowUpRight, Globe2 } from 'lucide-react';
-import { login, pair, type Session } from '../api.js';
+import { login, pair, type Session } from '../api-session.js';
 import { checkForm, type FieldErrors } from '../form-errors.js';
 import { useLocaleToggle } from './PreferenceControls.js';
 import { useLatest } from '../use-latest.js';
-import { useT, Field } from '../ui.js';
+import { ReasonDefs } from '../ui/ReasonDefs.js';
+import { useT, useWhy } from '../ui/useT.js';
+import { Field } from '../ui/Field.js';
+
+type LoginFormProps = {
+  error: string;
+  setError: (message: string) => void;
+  onLogin: (session: Session) => void;
+};
 
 /**
  * Opened from a pairing QR code: the code is in the address's fragment. It is taken out of the address bar before
@@ -31,17 +39,36 @@ function usePairingArrival(
   return pairing;
 }
 
-/** The access token form: checks the fields, then signs in. */
-function LoginForm({
-  error,
-  setError,
-  onLogin,
-}: {
-  error: string;
-  setError: (message: string) => void;
-  onLogin: (session: Session) => void;
-}) {
+/** The token field (and its problem, when the check found one) and the remember-this-device choice. */
+function TokenFields({ invalid }: { invalid: FieldErrors }) {
   const t = useT();
+  return (
+    <>
+      <Field label={t('token')} error={invalid['token'] && t(invalid['token'])}>
+        <input
+          autoFocus
+          name="token"
+          type="password"
+          autoComplete="off"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          required
+          minLength={32}
+        />
+      </Field>
+      <label className="toggle-label remember">
+        <input type="checkbox" name="remember" />
+        <span>{t('rememberDevice')}</span>
+      </label>
+    </>
+  );
+}
+
+/** The access token form: checks the fields, then signs in. */
+function LoginForm({ error, setError, onLogin }: LoginFormProps) {
+  const t = useT();
+  const whyNot = useWhy();
   const [busy, setBusy] = useState(false);
   const [invalid, setInvalid] = useState<FieldErrors>({});
   return (
@@ -64,29 +91,13 @@ function LoginForm({
         }
       }}
     >
-      <Field label={t('token')} error={invalid['token'] && t(invalid['token'])}>
-        <input
-          autoFocus
-          name="token"
-          type="password"
-          autoComplete="off"
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
-          required
-          minLength={32}
-        />
-      </Field>
-      <label className="toggle-label remember">
-        <input type="checkbox" name="remember" />
-        <span>{t('rememberDevice')}</span>
-      </label>
+      <TokenFields invalid={invalid} />
       {error && (
         <p role="alert" className="error-text">
           {error}
         </p>
       )}
-      <button className="primary full-width" disabled={busy}>
+      <button className="primary full-width" disabled={busy} {...whyNot([!busy, 'whyBusy'])}>
         {busy ? t('loading') : t('login')}
         <ArrowUpRight size={17} />
       </button>
@@ -110,6 +121,7 @@ export function Login({ onLogin }: { onLogin: (session: Session) => void }) {
     );
   return (
     <main className="login-page">
+      <ReasonDefs />
       <div className="login-art" aria-hidden="true">
         <div className="orbital-ring r1" />
         <div className="orbital-ring r2" />

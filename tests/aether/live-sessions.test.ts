@@ -21,6 +21,7 @@ import {
   scanLocalSessions,
 } from '../../apps/control/src/services/local-sessions.js';
 import type { AgentProcess } from '../../apps/control/src/services/agent-processes.js';
+import './process-fixtures.js';
 import { eventually } from './timing.js';
 
 const DAY = 86400_000;

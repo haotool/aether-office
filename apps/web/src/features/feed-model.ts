@@ -1,6 +1,7 @@
 import type { Agent, AttributedSession } from '@aether/contracts';
 import { toPlainPreview } from '@aether/kernel';
-import { LOCAL_PREFIX, activityOf, rowLabelOf } from '../localSessions.js';
+import { LOCAL_PREFIX, rowLabelOf } from '../session-names.js';
+import { activityOf } from '../session-attention.js';
 import type { SquadView } from './feed-squads.js';
 import { sessionWaiting } from './needs-you.js';
 
@@ -47,6 +48,55 @@ const MAX_IDLE_ROWS = 30;
 /** A reply is previewed in a line or two: this many characters is more than any row shows. */
 const REPLY_CHARS = 200;
 
+type RowInput = {
+  session: AttributedSession;
+  agent: Agent;
+  activity: ReturnType<typeof activityOf>;
+  speech: Readonly<Record<string, Speech>> | undefined;
+  seen: Readonly<Record<string, number>>;
+  now: number;
+  /** A permission request of this session waits for an answer here. */
+  requested: boolean;
+};
+
+/** The row of one session: which bucket it belongs to, what it said last, what it is doing and whether it is news. */
+function feedRow({ session, agent, activity, speech, seen, now, requested }: RowInput): FeedItem {
+  const said = speech?.[session.key]?.assistant ?? null;
+  const at = Math.max(session.mtime, session.hook?.at ?? 0, said?.at ?? 0);
+  const waiting = requested || sessionWaiting(session, now);
+  const bucket: FeedBucket = waiting
+    ? 'needs'
+    : activity === 'working'
+      ? 'working'
+      : now - at < FINISHED_MS
+        ? 'finished'
+        : 'idle';
+  const last = session.hook?.recent?.filter((r) => !r.agentId).at(-1);
+  const tool =
+    bucket === 'working' || bucket === 'needs' ? (session.hook?.tool ?? last?.tool ?? null) : null;
+  const target = tool && last?.tool === tool ? last.target : null;
+  const branch = session.git?.branch;
+  return {
+    key: session.key,
+    agent,
+    session,
+    bucket,
+    label: rowLabelOf(session),
+    where: [session.title ? session.repo : null, branch].filter(Boolean).join(' · '),
+    reply: said ? toPlainPreview(said.text, { maxChars: REPLY_CHARS }) || null : null,
+    replyLoaded: speech !== undefined,
+    tool: tool ? (target ? `${tool} ${target}` : tool) : null,
+    reason: !waiting
+      ? null
+      : requested || session.hook?.lastEvent === 'PermissionRequest'
+        ? 'permission'
+        : 'attention',
+    at,
+    unread: (bucket === 'needs' || bucket === 'finished') && at > (seen[session.key] ?? 0),
+    stale: bucket === 'idle' && now - at > STALE_MS,
+  };
+}
+
 export function buildFeed({
   sessions,
   agents,
@@ -71,43 +121,16 @@ export function buildFeed({
     const agent = byId.get(`${LOCAL_PREFIX}${session.key}`);
     const activity = activityOf(session, now);
     if (!agent || activity === 'offline') continue;
-    const said = speech?.[session.key]?.assistant ?? null;
-    const at = Math.max(session.mtime, session.hook?.at ?? 0, said?.at ?? 0);
-    const requested = asking.has(session.key);
-    const waiting = requested || sessionWaiting(session, now);
-    const bucket: FeedBucket = waiting
-      ? 'needs'
-      : activity === 'working'
-        ? 'working'
-        : now - at < FINISHED_MS
-          ? 'finished'
-          : 'idle';
-    const last = session.hook?.recent?.filter((r) => !r.agentId).at(-1);
-    const tool =
-      bucket === 'working' || bucket === 'needs'
-        ? (session.hook?.tool ?? last?.tool ?? null)
-        : null;
-    const target = tool && last?.tool === tool ? last.target : null;
-    const branch = session.git?.branch;
-    feed[bucket].push({
-      key: session.key,
-      agent,
+    const row = feedRow({
       session,
-      bucket,
-      label: rowLabelOf(session),
-      where: [session.title ? session.repo : null, branch].filter(Boolean).join(' · '),
-      reply: said ? toPlainPreview(said.text, { maxChars: REPLY_CHARS }) || null : null,
-      replyLoaded: speech !== undefined,
-      tool: tool ? (target ? `${tool} ${target}` : tool) : null,
-      reason: !waiting
-        ? null
-        : requested || session.hook?.lastEvent === 'PermissionRequest'
-          ? 'permission'
-          : 'attention',
-      at,
-      unread: (bucket === 'needs' || bucket === 'finished') && at > (seen[session.key] ?? 0),
-      stale: bucket === 'idle' && now - at > STALE_MS,
+      agent,
+      activity,
+      speech,
+      seen,
+      now,
+      requested: asking.has(session.key),
     });
+    feed[row.bucket].push(row);
   }
   for (const bucket of BUCKETS) feed[bucket].sort((a, b) => b.at - a.at);
   feed.idle.length = Math.min(feed.idle.length, MAX_IDLE_ROWS);

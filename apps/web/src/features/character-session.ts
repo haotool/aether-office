@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import type { Agent, AttributedSession, LocalSessionsResponse } from '@aether/contracts';
-import { api, type Session } from '../api.js';
-import { LOCAL_PREFIX, SUBAGENT_INFIX, sessionIdOf } from '../localSessions.js';
+import { api } from '../api.js';
+import { type Session } from '../api-session.js';
+import { LOCAL_PREFIX, sessionIdOf } from '../session-names.js';
+import { SUBAGENT_INFIX } from '../subagent-id.js';
 import type { CharacterFacts, CharacterKind } from './character-actions.js';
 import { idleSessions } from './clock-out.js';
 import { heldByOther, type TerminalControl } from './terminal-driver.js';

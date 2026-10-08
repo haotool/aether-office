@@ -32,17 +32,13 @@ export function termContext(c: ViewCtx): TermContext {
   };
 }
 
-/** A shell: the commands the member really ran (their first words) with made-up output under them, the current one streaming. */
-export function drawTerminal(c: ViewCtx): void {
-  const { g, p, box, facts } = c;
-  g.fillStyle = p.bg;
-  g.fillRect(box.x, box.y, box.w, box.h);
+/** The rows of output: the earlier commands with a few lines each, then the running one streaming (or the last one's head). */
+function terminalRows(c: ViewCtx, running: boolean): Row[] {
+  const { facts } = c;
   const context = termContext(c);
   const commands = facts.recent.filter((call) => SHELL_KINDS.has(kindOf(call)) && call.target);
-  const running = c.work.head !== null && facts.tool !== null;
   const current = running ? commands[commands.length - 1] : undefined;
   const earlier = commands.slice(running ? -4 : -3, running ? -1 : undefined);
-
   const rows: Row[] = [];
   for (const call of earlier) {
     rows.push({ text: `$ ${call.target}`, tone: 'accent' });
@@ -57,6 +53,16 @@ export function drawTerminal(c: ViewCtx): void {
     rows.push({ text: `$ ${c.work.head}`, tone: 'accent' });
     for (const l of terminalOutput(c.seed, c.work.head, context, 10)) rows.push(l);
   }
+  return rows;
+}
+
+/** A shell: the commands the member really ran (their first words) with made-up output under them, the current one streaming. */
+export function drawTerminal(c: ViewCtx): void {
+  const { g, p, box, facts } = c;
+  g.fillStyle = p.bg;
+  g.fillRect(box.x, box.y, box.w, box.h);
+  const running = c.work.head !== null && facts.tool !== null;
+  const rows = terminalRows(c, running);
 
   const room = Math.floor((box.h - PAD * 2 - ROW) / ROW);
   const shown = rows.slice(-room);
@@ -77,7 +83,11 @@ export function drawTerminal(c: ViewCtx): void {
   g.fillText(fit(g, where, box.w - 60), box.x + PAD, promptY);
   const promptX = box.x + PAD + g.measureText(`${where} `).width;
   g.fillStyle = p.text;
-  g.fillText(running ? SPINNER[Math.floor(c.now / 100) % SPINNER.length]! : '$', promptX, promptY);
+  g.fillText(
+    running ? (SPINNER[Math.floor(c.now / 100) % SPINNER.length] ?? '$') : '$',
+    promptX,
+    promptY,
+  );
   if (!running && (!c.moving || caretOn(c.now))) g.fillRect(promptX + 10, promptY - 10, 7, 12);
   g.restore();
 }

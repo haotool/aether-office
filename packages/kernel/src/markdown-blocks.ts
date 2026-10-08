@@ -175,14 +175,11 @@ function parseBlocks(lines: string[]): MdBlock[] {
       continue;
     }
     const read = readBlock(lines, i);
-    if (!read) {
-      paragraph.push(line.trim());
-      i++;
-      continue;
-    }
-    flush();
-    blocks.push(read.block);
-    i = read.next;
+    if (read) {
+      flush();
+      blocks.push(read.block);
+    } else paragraph.push(line.trim());
+    i = read ? read.next : i + 1;
   }
   flush();
   return blocks;

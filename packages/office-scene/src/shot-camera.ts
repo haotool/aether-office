@@ -46,6 +46,65 @@ const FOV = { closeup: 32, pair: 36, sweep: 38 } as const;
 export const FLY_MAX = 6;
 export const FLY_MS = 1400;
 
+/** How far through a shot, with the framing the screen's shape and the building's state ask for. */
+type Framing = { e: number; back: number; exploded: boolean };
+
+function closeupPose(shot: Shot, subject: Seat, { e, back, exploded }: Framing): Pose {
+  const base = floorY(subject.floor, exploded);
+  const framed: V3 = [
+    CLOSEUP[shot.style][0] * back,
+    CLOSEUP[shot.style][1] * (0.9 + back * 0.1),
+    CLOSEUP[shot.style][2] * back,
+  ];
+  // Pushing in ends where the controls allow, on the line the shot is framed along.
+  const away = sub(framed, WATCH);
+  const from = add(WATCH, unit(away), Math.max(length(away), MIN_DISTANCE + DOLLY.closeup));
+  return {
+    position: toWorld(subject, add(from, unit(sub(WATCH, from)), DOLLY.closeup * e), base),
+    target: toWorld(subject, WATCH, base),
+    fov: FOV.closeup,
+  };
+}
+
+function pairPose(shot: Shot, first: Seat, second: Seat, { e, back, exploded }: Framing): Pose {
+  // The same two members are always framed from the same side whoever wrote to whom, so a pair never flips on the
+  // screen (the 180 degree rule); the camera trucks along the line between them in one direction.
+  const [lo, hi] =
+    (shot.subjects[0] ?? '') < (shot.subjects[1] ?? '') ? [first, second] : [second, first];
+  const a = toWorld(lo, WATCH, floorY(lo.floor, exploded));
+  const b = toWorld(hi, WATCH, floorY(hi.floor, exploded));
+  const mid: V3 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
+  const dx = b[0] - a[0];
+  const dz = b[2] - a[2];
+  const span = Math.hypot(dx, dz) || 1;
+  const distance = Math.max(4.6, span * 0.85 + 3.2) * back;
+  const slide: V3 = [(dx / span) * (e - 0.5) * DOLLY.pair, 0, (dz / span) * (e - 0.5) * DOLLY.pair];
+  const centre = add(mid, slide);
+  return {
+    position: [
+      centre[0] + (-dz / span) * distance,
+      mid[1] + 1.1 + span * 0.14,
+      centre[2] + (dx / span) * distance,
+    ],
+    target: [centre[0], mid[1] + 0.1, centre[2]],
+    fov: FOV.pair,
+  };
+}
+
+/** A sweep: the floor from a height, from a fixed bearing, easing in along the line of sight towards its middle. */
+function sweepPose(shot: Shot, { e, back, exploded }: Framing): Pose {
+  const bearing = shot.style * 1.1;
+  const radius = 34 * back;
+  const base = floorY(shot.floor, exploded);
+  const from: V3 = [
+    Math.sin(bearing) * radius,
+    base + 24 + shot.style * 3,
+    Math.cos(bearing) * radius,
+  ];
+  const target: V3 = [0, base + 0.5, 0];
+  return { position: add(from, unit(sub(target, from)), DOLLY.sweep * e), target, fov: FOV.sweep };
+}
+
 /**
  * Where the camera is, and what it looks at, `t` (0 to 1) of the way through a shot. `exploded` is the building spread
  * apart: the floors are higher, and the shot follows its floor.
@@ -57,68 +116,17 @@ export function poseAt(
   aspect: number,
   exploded = false,
 ): Pose {
-  const e = smoother(Math.min(1, Math.max(0, t)));
   // A portrait screen needs more distance for the same subject width.
-  const back = Math.min(1.9, Math.max(1, 1.1 / aspect));
+  const framing = {
+    e: smoother(Math.min(1, Math.max(0, t))),
+    back: Math.min(1.9, Math.max(1, 1.1 / aspect)),
+    exploded,
+  };
   const first = shot.subjects[0] ? seats.get(shot.subjects[0]) : undefined;
   const second = shot.subjects[1] ? seats.get(shot.subjects[1]) : undefined;
-
-  if (shot.kind === 'closeup' && first) {
-    const base = floorY(first.floor, exploded);
-    const framed: V3 = [
-      CLOSEUP[shot.style][0] * back,
-      CLOSEUP[shot.style][1] * (0.9 + back * 0.1),
-      CLOSEUP[shot.style][2] * back,
-    ];
-    // Pushing in ends where the controls allow, on the line the shot is framed along.
-    const away = sub(framed, WATCH);
-    const from = add(WATCH, unit(away), Math.max(length(away), MIN_DISTANCE + DOLLY.closeup));
-    return {
-      position: toWorld(first, add(from, unit(sub(WATCH, from)), DOLLY.closeup * e), base),
-      target: toWorld(first, WATCH, base),
-      fov: FOV.closeup,
-    };
-  }
-
-  if (shot.kind === 'pair' && first && second) {
-    // The same two members are always framed from the same side whoever wrote to whom, so a pair never flips on the
-    // screen (the 180 degree rule); the camera trucks along the line between them in one direction.
-    const [lo, hi] = shot.subjects[0]! < shot.subjects[1]! ? [first, second] : [second, first];
-    const a = toWorld(lo, WATCH, floorY(lo.floor, exploded));
-    const b = toWorld(hi, WATCH, floorY(hi.floor, exploded));
-    const mid: V3 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
-    const dx = b[0] - a[0];
-    const dz = b[2] - a[2];
-    const span = Math.hypot(dx, dz) || 1;
-    const distance = Math.max(4.6, span * 0.85 + 3.2) * back;
-    const slide: V3 = [
-      (dx / span) * (e - 0.5) * DOLLY.pair,
-      0,
-      (dz / span) * (e - 0.5) * DOLLY.pair,
-    ];
-    const centre = add(mid, slide);
-    return {
-      position: [
-        centre[0] + (-dz / span) * distance,
-        mid[1] + 1.1 + span * 0.14,
-        centre[2] + (dx / span) * distance,
-      ],
-      target: [centre[0], mid[1] + 0.1, centre[2]],
-      fov: FOV.pair,
-    };
-  }
-
-  // A sweep: the floor from a height, from a fixed bearing, easing in along the line of sight towards its middle.
-  const bearing = shot.style * 1.1;
-  const radius = 34 * back;
-  const base = floorY(shot.floor, exploded);
-  const from: V3 = [
-    Math.sin(bearing) * radius,
-    base + 24 + shot.style * 3,
-    Math.cos(bearing) * radius,
-  ];
-  const target: V3 = [0, base + 0.5, 0];
-  return { position: add(from, unit(sub(target, from)), DOLLY.sweep * e), target, fov: FOV.sweep };
+  if (shot.kind === 'closeup' && first) return closeupPose(shot, first, framing);
+  if (shot.kind === 'pair' && first && second) return pairPose(shot, first, second, framing);
+  return sweepPose(shot, framing);
 }
 
 /**
@@ -138,7 +146,7 @@ export function chooseEntry(
   const arrives = poseAt(next, seats, 0, aspect);
   const gap = sub(arrives.position, ended.position);
   const reverses =
-    gap.reduce((s, v, i) => s + v * (ended.position[i]! - began.position[i]!), 0) < 0;
+    gap.reduce((s, v, i) => s + v * ((ended.position[i] ?? 0) - (began.position[i] ?? 0)), 0) < 0;
   const near = length(gap) <= FLY_MAX && length(sub(arrives.target, ended.target)) <= FLY_MAX;
   return near && !reverses ? 'fly' : 'cut';
 }
