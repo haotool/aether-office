@@ -42,6 +42,7 @@ body {
   .round,
   .sheet-chip,
   .tool-summary,
+  summary,
   .auto-pill {
     position: relative;
   }
@@ -56,6 +57,7 @@ body {
   .round::before,
   .sheet-chip::before,
   .tool-summary::before,
+  summary::before,
   .auto-pill::before {
     content: '';
     position: absolute;

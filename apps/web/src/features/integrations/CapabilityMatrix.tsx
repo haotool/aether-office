@@ -17,7 +17,9 @@ export function CapabilityMatrix() {
   const { data } = useCapabilities();
   if (!data) return null;
   const providers = Object.keys(data.providers);
-  const flags = Object.keys(data.providers[providers[0]!]!);
+  const leadRow = providers[0] ? data.providers[providers[0]] : undefined;
+  if (!leadRow) return null;
+  const flags = Object.keys(leadRow);
   return (
     <section aria-labelledby="capabilities-title">
       <h2 id="capabilities-title">{t('capabilities')}</h2>
@@ -39,7 +41,9 @@ export function CapabilityMatrix() {
               <tr key={flag}>
                 <th scope="row">{flag}</th>
                 {providers.map((p) => {
-                  const value = data.providers[p]![flag]!;
+                  const row = data.providers[p];
+                  const value = row?.[flag];
+                  if (value === undefined) return <td key={p} />;
                   return (
                     <td key={p}>
                       {typeof value === 'boolean'

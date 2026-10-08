@@ -10,6 +10,7 @@ import { SceneBoundary } from './SceneRuntime.js';
 import { SceneCanvas } from './SceneCanvas.js';
 import { HudPanels, SceneCaptions, SpeechBubbles, WorldLabels } from './SceneOverlay.js';
 import { useSceneModel } from '../core/use-scene-model.js';
+import { sceneText } from '../i18n/scene-text.js';
 
 export type { OfficeSceneProps } from '../scene/scene-props.js';
 export type { CharacterMenuContext, GroupBarContext, SceneActions };
@@ -27,7 +28,7 @@ export function OfficeScene(props: OfficeSceneProps) {
         <SceneCanvas m={m} />
         {!m.warm && (
           <div className="scene-warming" role="status">
-            {m.zh ? '準備場景…' : 'Preparing the scene…'}
+            {sceneText(m.zh, 'scene.preparing')}
           </div>
         )}
         {wall.feeds.length > 0 && (

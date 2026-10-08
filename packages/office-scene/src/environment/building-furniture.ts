@@ -82,45 +82,54 @@ function hoverSeat(group: THREE.Group, m: Materials) {
   group.add(glowPad);
 }
 
+function rack(group: THREE.Group, m: Materials) {
+  cylinder(group, m.graphite, 0.62, 0.62, 0.16, [0, 0.08, 0], 6);
+  cylinder(group, m.graphite, 0.62, 0.62, 0.16, [0, 2.5, 0], 6);
+  cylinder(group, m.glass, 0.56, 0.56, 2.3, [0, 1.3, 0], 6, true);
+  for (let y = 0.35; y < 2.3; y += 0.3)
+    cylinder(group, y % 0.6 < 0.3 ? m.accent : m.cyan, 0.3, 0.3, 0.12, [0, y, 0], 6);
+  cylinder(group, m.hologramCyan, 0.42, 0.42, 2.25, [0, 1.3, 0], 6, true);
+}
+
+function sofa(group: THREE.Group, m: Materials) {
+  box(group, m.graphite, [3.1, 0.25, 1.12], [0, 0.25, 0], 0.15);
+  box(group, m.fabric, [3.0, 0.3, 1.05], [0, 0.52, 0], 0.18);
+  box(group, m.fabric, [3.1, 0.7, 0.25], [0, 0.78, -0.48], 0.12);
+  box(group, m.accentSoft, [3.0, 0.02, 0.02], [0, 0.12, 0.56], 0);
+  for (const x of [-1.44, 1.44]) box(group, m.fabric, [0.25, 0.45, 1.1], [x, 0.68, 0], 0.12);
+}
+
+function plant(group: THREE.Group, m: Materials) {
+  cylinder(group, m.white, 0.3, 0.22, 0.52, [0, 0.27, 0], 14);
+  cylinder(group, m.wood, 0.025, 0.035, 0.8, [0, 0.88, 0], 7);
+  for (let i = 0; i < 9; i++) {
+    const a = i * 2.399;
+    const leaf = new THREE.Mesh(
+      new THREE.SphereGeometry(0.25, 8, 6),
+      i % 2 ? m.green : m.darkgreen,
+    );
+    leaf.scale.set(0.48, 1.45, 0.75);
+    leaf.rotation.set(0.3, a, 0.7);
+    leaf.position.set(Math.sin(a) * 0.19, 0.85 + i * 0.085, Math.cos(a) * 0.19);
+    group.add(leaf);
+  }
+}
+
+function holoTable(group: THREE.Group, m: Materials) {
+  cylinder(group, m.shell, 1.25, 1.25, 0.1, [0, 0.76, 0], 48);
+  cylinder(group, m.graphite, 0.35, 0.5, 0.72, [0, 0.36, 0], 20);
+  cylinder(group, m.accent, 1.27, 1.27, 0.02, [0, 0.7, 0], 48, true);
+  cylinder(group, m.hologram, 0.9, 0.9, 0.9, [0, 1.3, 0], 32, true);
+}
+
 export function furniture(
   group: THREE.Group,
   type: Layout['objects'][number]['type'],
   m: Materials,
 ) {
   if (type === 'desk') return desk(group, m);
-  if (type === 'rack') {
-    // Data pillar: a glass column with lit storage blocks, instead of a cabinet.
-    cylinder(group, m.graphite, 0.62, 0.62, 0.16, [0, 0.08, 0], 6);
-    cylinder(group, m.graphite, 0.62, 0.62, 0.16, [0, 2.5, 0], 6);
-    cylinder(group, m.glass, 0.56, 0.56, 2.3, [0, 1.3, 0], 6, true);
-    for (let y = 0.35; y < 2.3; y += 0.3)
-      cylinder(group, y % 0.6 < 0.3 ? m.accent : m.cyan, 0.3, 0.3, 0.12, [0, y, 0], 6);
-    cylinder(group, m.hologramCyan, 0.42, 0.42, 2.25, [0, 1.3, 0], 6, true);
-  } else if (type === 'sofa') {
-    box(group, m.graphite, [3.1, 0.25, 1.12], [0, 0.25, 0], 0.15);
-    box(group, m.fabric, [3.0, 0.3, 1.05], [0, 0.52, 0], 0.18);
-    box(group, m.fabric, [3.1, 0.7, 0.25], [0, 0.78, -0.48], 0.12);
-    box(group, m.accentSoft, [3.0, 0.02, 0.02], [0, 0.12, 0.56], 0);
-    for (const x of [-1.44, 1.44]) box(group, m.fabric, [0.25, 0.45, 1.1], [x, 0.68, 0], 0.12);
-  } else if (type === 'plant') {
-    cylinder(group, m.white, 0.3, 0.22, 0.52, [0, 0.27, 0], 14);
-    cylinder(group, m.wood, 0.025, 0.035, 0.8, [0, 0.88, 0], 7);
-    for (let i = 0; i < 9; i++) {
-      const a = i * 2.399;
-      const leaf = new THREE.Mesh(
-        new THREE.SphereGeometry(0.25, 8, 6),
-        i % 2 ? m.green : m.darkgreen,
-      );
-      leaf.scale.set(0.48, 1.45, 0.75);
-      leaf.rotation.set(0.3, a, 0.7);
-      leaf.position.set(Math.sin(a) * 0.19, 0.85 + i * 0.085, Math.cos(a) * 0.19);
-      group.add(leaf);
-    }
-  } else {
-    // Holo table: a ring of light with a projected volume above it.
-    cylinder(group, m.shell, 1.25, 1.25, 0.1, [0, 0.76, 0], 48);
-    cylinder(group, m.graphite, 0.35, 0.5, 0.72, [0, 0.36, 0], 20);
-    cylinder(group, m.accent, 1.27, 1.27, 0.02, [0, 0.7, 0], 48, true);
-    cylinder(group, m.hologram, 0.9, 0.9, 0.9, [0, 1.3, 0], 32, true);
-  }
+  if (type === 'rack') return rack(group, m);
+  if (type === 'sofa') return sofa(group, m);
+  if (type === 'plant') return plant(group, m);
+  return holoTable(group, m);
 }

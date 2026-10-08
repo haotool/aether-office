@@ -44,14 +44,16 @@ function go(action: KeyAction, root: HTMLElement, toBottom: () => void, still: b
   const behavior = still ? 'auto' : 'smooth';
   if (action === 'bottom') {
     toBottom();
-    turns.at(-1)!.focus({ preventScroll: true });
+    turns.at(-1)?.focus({ preventScroll: true });
     return;
   }
   const to =
     action === 'top'
       ? 0
       : Math.max(0, Math.min(turns.length - 1, at + (action === 'next' ? 1 : -1)));
-  turns[to]!.focus({ preventScroll: true });
+  const turn = turns[to];
+  if (!turn) return;
+  turn.focus({ preventScroll: true });
   if (action === 'top') root.scrollTo({ top: 0, behavior });
-  else turns[to]!.scrollIntoView({ block: 'start', behavior });
+  else turn.scrollIntoView({ block: 'start', behavior });
 }

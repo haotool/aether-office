@@ -14,7 +14,9 @@ export function withSeen(seen: Seen, key: string, at: number): Seen {
   const next = { ...seen, [key]: at };
   const keys = Object.keys(next);
   if (keys.length <= MAX_KEPT) return next;
-  const oldest = keys.sort((a, b) => next[a]! - next[b]!).slice(0, keys.length - MAX_KEPT);
+  const oldest = keys
+    .sort((a, b) => (next[a] ?? 0) - (next[b] ?? 0))
+    .slice(0, keys.length - MAX_KEPT);
   return Object.fromEntries(Object.entries(next).filter(([k]) => !oldest.includes(k)));
 }
 

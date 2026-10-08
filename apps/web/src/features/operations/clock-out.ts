@@ -32,7 +32,7 @@ export function idleSessions(
         s.liveness.startedAt !== null &&
         (s.liveness.quietMs ?? 0) >= idleMs(days),
     )
-    .sort((a, b) => b.liveness.quietMs! - a.liveness.quietMs!)
+    .sort((a, b) => (b.liveness.quietMs ?? 0) - (a.liveness.quietMs ?? 0))
     .slice(0, CLOCK_OUT_MAX_SESSIONS);
 }
 

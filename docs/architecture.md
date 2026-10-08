@@ -120,7 +120,9 @@ A heartbeat comment goes out after 20 s of silence, at most 16 streams are open 
 than 64 KB unsent is dropped (it resumes), and each stream re-checks its credential every two seconds, so a logout, a
 revocation or a role change ends it with `event: fault`. The web app (`features/use-session-stream.ts`, pure parts in
 `features/live-link.ts`) turns events into react-query invalidations, batched for 120 ms; the queries poll only as a 30 s
-safety net while the stream is live and at their old intervals while it is not. It reconnects with exponential backoff and
+safety net while the stream is live and at their old intervals while it is not. Every interval the web app polls on is one entry,
+with its reason, in `lib/app/polling.ts`. The project's own event stream refreshes the snapshot and the approvals count in the
+same way, and permission prompts are asked for every 2.5 s only while Remote approvals is on. It reconnects with exponential backoff and
 jitter (1 s doubling to 30 s), closes while the tab is hidden and, on becoming visible, regaining the network or restoring
 from the back-forward cache, reconnects and refetches at once. The top bar shows live, connecting, reconnecting or offline
 with the age of the last update. The heavy reads (`/api/local-sessions`, `/speech`, one transcript) carry a weak `ETag` and

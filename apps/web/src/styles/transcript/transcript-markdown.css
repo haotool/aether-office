@@ -112,7 +112,6 @@
 @keyframes word-in {
   from {
     opacity: 0;
-    filter: blur(2px);
   }
 }
 /* A message that arrives while you watch: a short rise and fade, never for what was there when it opened */

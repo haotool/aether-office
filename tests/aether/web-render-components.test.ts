@@ -123,15 +123,14 @@ describe('PermissionCard', () => {
   it('draws nothing for a session with no pending request, and the oldest first for one with several', () => {
     const client = new QueryClient();
     expect(renderHtml(h(PermissionCards, { sessionKey: 'claude:s1' }), client)).toBe('');
-    client.setQueryData(
-      ['permission-requests'],
-      [
+    client.setQueryData(['permission-requests'], {
+      requests: [
         request({ id: 'late', summary: 'second', createdAt: 2 }),
         request({ id: 'early', summary: 'first', createdAt: 1 }),
         request({ id: 'other', summary: 'elsewhere', sessionKey: 'claude:other' }),
         request({ id: 'done', summary: 'answered', state: 'allowed' as never }),
       ],
-    );
+    });
     const text = textOf(
       renderHtml(h(PermissionCards, { sessionKey: 'claude:s1', compact: true }), client),
     );
@@ -143,13 +142,12 @@ describe('PermissionCard', () => {
 
   it('peeks at the member’s own request first, otherwise the oldest of all', () => {
     const client = new QueryClient();
-    client.setQueryData(
-      ['permission-requests'],
-      [
+    client.setQueryData(['permission-requests'], {
+      requests: [
         request({ id: 'a', summary: 'newer', sessionKey: 'claude:x', createdAt: 9 }),
         request({ id: 'b', summary: 'older', sessionKey: 'claude:y', createdAt: 1 }),
       ],
-    );
+    });
     expect(textOf(renderHtml(h(PermissionPeek, { sessionKey: 'claude:x' }), client))).toContain(
       'newer',
     );

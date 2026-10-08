@@ -32,6 +32,32 @@ export function termContext(c: ViewCtx): TermContext {
   };
 }
 
+function appendShellHistory(
+  rows: Row[],
+  seed: string,
+  context: TermContext,
+  calls: ReadonlyArray<{ target: string | null | undefined }>,
+  lineCount: number,
+) {
+  for (const call of calls) {
+    if (!call.target) continue;
+    rows.push({ text: `$ ${call.target}`, tone: 'accent' });
+    for (const l of terminalOutput(seed, call.target, context, lineCount))
+      rows.push({ text: l.text, tone: l.tone === 'text' ? 'dim' : l.tone });
+  }
+}
+
+function appendActiveCommand(
+  rows: Row[],
+  c: ViewCtx,
+  context: TermContext,
+  target: string,
+  count: number,
+) {
+  rows.push({ text: `$ ${target}`, tone: 'accent' });
+  for (const l of terminalOutput(c.seed, target, context, count)) rows.push(l);
+}
+
 /** The rows of output: the earlier commands with a few lines each, then the running one streaming (or the last one's head). */
 function terminalRows(c: ViewCtx, running: boolean): Row[] {
   const { facts } = c;
@@ -40,19 +66,11 @@ function terminalRows(c: ViewCtx, running: boolean): Row[] {
   const current = running ? commands[commands.length - 1] : undefined;
   const earlier = commands.slice(running ? -4 : -3, running ? -1 : undefined);
   const rows: Row[] = [];
-  for (const call of earlier) {
-    rows.push({ text: `$ ${call.target}`, tone: 'accent' });
-    for (const l of terminalOutput(c.seed, call.target, context, 3))
-      rows.push({ text: l.text, tone: l.tone === 'text' ? 'dim' : l.tone });
-  }
-  if (current) {
-    rows.push({ text: `$ ${current.target}`, tone: 'accent' });
+  appendShellHistory(rows, c.seed, context, earlier, 3);
+  if (current?.target) {
     const count = c.moving ? revealedLines(`${c.seed}:${current.target}`, c.elapsed) : 12;
-    for (const l of terminalOutput(c.seed, current.target, context, count)) rows.push(l);
-  } else if (c.work.head) {
-    rows.push({ text: `$ ${c.work.head}`, tone: 'accent' });
-    for (const l of terminalOutput(c.seed, c.work.head, context, 10)) rows.push(l);
-  }
+    appendActiveCommand(rows, c, context, current.target, count);
+  } else if (c.work.head) appendActiveCommand(rows, c, context, c.work.head, 10);
   return rows;
 }
 

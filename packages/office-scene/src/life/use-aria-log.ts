@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { mountLog } from './aria-log.js';
+import { sceneText } from '../i18n/scene-text.js';
 
 /**
  * The scene's one `role="log"` region, mounted into the element `host` is put on. Everything the office announces (the
@@ -10,10 +11,7 @@ export function useAriaLog(zh: boolean) {
   const log = useRef<ReturnType<typeof mountLog> | null>(null);
   useEffect(() => {
     if (!host.current) return;
-    log.current = mountLog(
-      host.current,
-      zh ? '辦公室動態（裝飾）' : 'Office activity (decorative)',
-    );
+    log.current = mountLog(host.current, sceneText(zh, 'life.logLabel'));
     return () => {
       log.current?.dispose();
       log.current = null;

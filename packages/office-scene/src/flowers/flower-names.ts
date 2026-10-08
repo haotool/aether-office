@@ -44,5 +44,6 @@ const EPITHET: [string, string][] = [
 export function speciesName(archetype: Archetype, epithet: number, en: boolean): string {
   const [genusEn, genusZh] = GENUS[archetype];
   const [epithetEn, epithetZh] = itemAt(EPITHET, epithet % EPITHET.length);
-  return en ? `${genusEn} ${epithetEn}` : `${epithetZh}${genusZh}`;
+  if (en) return `${genusEn} ${epithetEn}`;
+  return `${epithetZh}${genusZh}`;
 }

@@ -5,7 +5,7 @@ import { Modal } from '../../ui/Modal.js';
 import { useT } from '../../ui/useT.js';
 import { ConfirmButtons } from '../shell-chrome/ConfirmButtons.js';
 import type { CharacterCommand } from './CharacterMenu.js';
-import { ClockOut } from '../operations/ClockOut.js';
+import { ClockOutLazy } from '../operations/ClockOutLazy.js';
 import { StopSession } from '../operations/StopSession.js';
 import { stopTerminal } from '../terminal/terminal-driver.js';
 
@@ -70,5 +70,5 @@ export function CharacterCommands({
   if (command.type === 'stop-terminal') return <StopTerminal command={command} onClose={onClose} />;
   if (command.type === 'stop-process')
     return <StopSession session={command.session} locale={locale} onClose={onClose} />;
-  return <ClockOut sessions={sessions} only={command.keys} locale={locale} onClose={onClose} />;
+  return <ClockOutLazy sessions={sessions} only={command.keys} locale={locale} onClose={onClose} />;
 }

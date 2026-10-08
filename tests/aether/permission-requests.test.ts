@@ -249,7 +249,9 @@ it('is off by default; the hook token only creates and reads; only a human owner
     expect((await list(viewer.token)).statusCode).toBe(403);
     const seen = (await list(operator.token)).json() as {
       requests: { id: string; summary: string; sessionRules: string[] }[];
+      enabled: boolean;
     };
+    expect(seen.enabled).toBe(true); // the page asks less often when this is off
     expect(seen.requests).toHaveLength(1);
     expect(seen.requests[0]).toMatchObject({
       summary: 'pnpm test',
@@ -302,6 +304,7 @@ it('is off by default; the hook token only creates and reads; only a human owner
     ).toBe(200);
     expect(existsSync(f.configFile)).toBe(false);
     expect((await polled()).statusCode).toBe(401);
+    expect(((await list(operator.token)).json() as { enabled: boolean }).enabled).toBe(false);
   } finally {
     await f.app.close();
     f.control.close();

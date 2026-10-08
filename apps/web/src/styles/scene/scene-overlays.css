@@ -13,8 +13,6 @@
   border-radius: var(--r-2xl);
   border: 1px solid var(--glass-line);
   background: var(--glass-soft);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
   color: var(--on-glass);
   font: 600 var(--fs-small) var(--mono);
   pointer-events: none;
@@ -62,8 +60,6 @@
     border-radius: var(--r-3xl);
     border: 1px solid var(--glass-line);
     background: var(--glass);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
     color: var(--on-glass-muted);
     font: 700 var(--fs-meta) var(--mono);
     letter-spacing: 1px;
@@ -158,8 +154,6 @@
   border-radius: var(--r-lg);
   border: 1px solid color-mix(in srgb, var(--strand) 55%, var(--glass-line));
   background: var(--glass);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
   color: var(--on-glass);
   font-size: var(--fs-small);
   pointer-events: none;

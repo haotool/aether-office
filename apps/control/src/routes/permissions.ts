@@ -145,7 +145,7 @@ function humanRoutes({ app, control, actor, origin }: RouteContext) {
   const requests = control.permissionRequests;
   app.get('/api/permission-requests', async (request) => {
     humanOf(actor, request);
-    return { requests: requests.list() };
+    return { requests: requests.list(), ...remoteApprovals(control.ctx) };
   });
   // A human's answer. Idempotent by nature: the same answer twice is the same answer; a different one after the first
   // is refused (409), as is any answer once the hook has stopped waiting.

@@ -26,7 +26,7 @@ export const rowLabelOf = (s: Pick<LocalSession, 'title' | 'repo'>) =>
 
 export const sessionIdOf = (agentId: string): string | null =>
   agentId.startsWith(LOCAL_PREFIX)
-    ? agentId.slice(LOCAL_PREFIX.length).split(SUBAGENT_INFIX)[0]!
+    ? (agentId.slice(LOCAL_PREFIX.length).split(SUBAGENT_INFIX)[0] ?? null)
     : null;
 
 /** The address that shows a session in the office, focused: what a tap on its alert or its row opens. */

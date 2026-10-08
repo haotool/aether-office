@@ -13,7 +13,8 @@ const tokens = (query: string) => normalize(query).split(/\s+/).filter(Boolean);
 /** What a setting is found by: its label and description in both languages, its extra words and its group's name. */
 const haystacks = new Map<EntryId, string>(
   ENTRIES.map((entry) => {
-    const group = SECTIONS.find((section) => section.id === entry.section)!;
+    const group = SECTIONS.find((section) => section.id === entry.section);
+    if (!group) throw new Error(`settings section missing: ${entry.section}`);
     const parts = [zh[entry.label], zh[entry.desc], en[entry.label], en[entry.desc], entry.words];
     return [entry.id, normalize([...parts, zh[group.label], en[group.label]].join(' '))];
   }),
@@ -24,9 +25,10 @@ export function searchSettings(query: string): ReadonlySet<EntryId> | null {
   const words = tokens(query);
   if (!words.length) return null;
   return new Set(
-    ENTRIES.filter((entry) => words.every((w) => haystacks.get(entry.id)!.includes(w))).map(
-      (entry) => entry.id,
-    ),
+    ENTRIES.filter((entry) => {
+      const haystack = haystacks.get(entry.id);
+      return haystack !== undefined && words.every((w) => haystack.includes(w));
+    }).map((entry) => entry.id),
   );
 }
 
@@ -46,7 +48,7 @@ export function highlight(text: string, query: string): Piece[] {
   for (let i = 0; i < text.length; i++) {
     const last = pieces[pieces.length - 1];
     if (last && last.hit === marked[i]) last.text += text[i];
-    else pieces.push({ text: text[i]!, hit: marked[i]! });
+    else pieces.push({ text: text.charAt(i), hit: marked[i] ?? false });
   }
   return pieces;
 }

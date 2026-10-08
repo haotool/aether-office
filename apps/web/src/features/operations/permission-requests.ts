@@ -2,9 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { PermissionDecisionInput, PermissionRequestView } from '@aether/contracts';
 import { ApiError } from '../../lib/api/api-error.js';
 import { api } from '../../lib/api/api.js';
+import { POLL, pollBy } from '../../lib/app/polling.js';
 
-const POLL_MS = 2500;
 const KEY = ['permission-requests'];
+type Listed = { requests: PermissionRequestView[]; enabled?: boolean };
 const NONE: PermissionRequestView[] = [];
 
 /**
@@ -17,11 +18,12 @@ export function usePermissionRequests(enabled = false): PermissionRequestView[] 
   const query = useQuery({
     queryKey: KEY,
     enabled,
-    queryFn: () =>
-      api<{ requests: PermissionRequestView[] }>('/api/permission-requests').then(
-        (r) => r.requests,
-      ),
-    refetchInterval: (q) => (q.state.error ? false : POLL_MS),
+    queryFn: () => api<Listed>('/api/permission-requests'),
+    select: (listed) => listed.requests,
+    // The server says when Remote approvals is off: nothing can be asked then, so only look now and then.
+    ...pollBy((listed: Listed | undefined, failed) =>
+      failed ? false : listed?.enabled === false ? POLL.slow : POLL.prompt,
+    ),
     refetchIntervalInBackground: false,
     retry: false,
   });

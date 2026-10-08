@@ -4,6 +4,7 @@ import type { EffectId } from './effects/index.js';
 import { isInstall, isQaSite, isTestRun, isVim, pushed } from './matchers.js';
 import { COMMAND_OUTCOME_RULES } from './registry-command-outcomes.js';
 import type { LifeCategory, LifeContext, LifeSignal } from './signals.js';
+import { sceneText } from '../i18n/scene-text.js';
 
 /**
  * What a member does while the effect plays, asked of the pose registry (pose-cues.ts) `atMs` into it: a clip the model
@@ -70,8 +71,7 @@ const WAVE_1_RULES: readonly LifeRule[] = [
     reduced: 'static',
     anchor: 'desk',
     pose: { turn: -0.45, holdMs: 7000, atMs: 1200 },
-    aria: (who, zh) =>
-      zh ? `${who} 正在跟橡皮鴨一起想` : `${who} is thinking it through with the rubber duck`,
+    aria: (who, zh) => sceneText(zh, 'life.rubberDuck', { who }),
   },
   {
     id: 'ci-lamp',
@@ -87,7 +87,7 @@ const WAVE_1_RULES: readonly LifeRule[] = [
     minTier: 'balanced',
     reduced: 'static',
     anchor: 'desk',
-    aria: (who, zh) => (zh ? `${who} 正在跑測試` : `${who} is running tests`),
+    aria: (who, zh) => sceneText(zh, 'life.tests', { who }),
   },
   {
     id: 'install-hole',
@@ -103,7 +103,7 @@ const WAVE_1_RULES: readonly LifeRule[] = [
     minTier: 'balanced',
     reduced: 'static',
     anchor: 'desk',
-    aria: (who, zh) => (zh ? `${who} 正在安裝套件` : `${who} is installing dependencies`),
+    aria: (who, zh) => sceneText(zh, 'life.install', { who }),
   },
   {
     id: 'ship-it',
@@ -119,7 +119,7 @@ const WAVE_1_RULES: readonly LifeRule[] = [
     minTier: 'balanced',
     reduced: 'static',
     anchor: 'desk',
-    aria: (who, zh) => (zh ? `${who} 推送了程式碼` : `${who} pushed`),
+    aria: (who, zh) => sceneText(zh, 'life.push', { who }),
   },
   {
     id: 'pager',
@@ -135,7 +135,7 @@ const WAVE_1_RULES: readonly LifeRule[] = [
     minTier: 'balanced',
     reduced: 'static',
     anchor: 'desk',
-    aria: (who, zh) => (zh ? `${who} 遇到錯誤` : `${who} hit an error`),
+    aria: (who, zh) => sceneText(zh, 'life.error', { who }),
   },
   {
     id: 'coffee-refill',
@@ -151,7 +151,7 @@ const WAVE_1_RULES: readonly LifeRule[] = [
     minTier: 'balanced',
     reduced: 'none',
     anchor: 'desk',
-    aria: (who, zh) => (zh ? `${who} 續了一杯咖啡` : `${who} refilled the coffee`),
+    aria: (who, zh) => sceneText(zh, 'life.coffee', { who }),
   },
   {
     id: 'retry-loop',
@@ -167,10 +167,7 @@ const WAVE_1_RULES: readonly LifeRule[] = [
     minTier: 'balanced',
     reduced: 'static',
     anchor: 'desk',
-    aria: (who, zh, s) =>
-      zh
-        ? `${who} 在短時間內重複執行同一個指令 ${s.value ?? 4} 次`
-        : `${who} ran the same command ${s.value ?? 4} times in a short while`,
+    aria: (who, zh, s) => sceneText(zh, 'life.repeat', { who, n: s.value ?? 4 }),
   },
   {
     id: 'ctrl-cv',
@@ -186,8 +183,7 @@ const WAVE_1_RULES: readonly LifeRule[] = [
     minTier: 'balanced',
     reduced: 'static',
     anchor: 'desk',
-    aria: (who, zh) =>
-      zh ? `${who} 上 Stack Overflow 查了資料` : `${who} looked something up on Stack Overflow`,
+    aria: (who, zh) => sceneText(zh, 'life.stackOverflow', { who }),
   },
   {
     id: 'vim-trap',
@@ -203,7 +199,7 @@ const WAVE_1_RULES: readonly LifeRule[] = [
     minTier: 'balanced',
     reduced: 'static',
     anchor: 'desk',
-    aria: (who, zh) => (zh ? `${who} 開了 vim` : `${who} opened vim`),
+    aria: (who, zh) => sceneText(zh, 'life.vim', { who }),
   },
   {
     id: 'tech-debt',
@@ -219,10 +215,7 @@ const WAVE_1_RULES: readonly LifeRule[] = [
     minTier: 'balanced',
     reduced: 'static',
     anchor: 'desk',
-    aria: (who, zh, s) =>
-      zh
-        ? `${who} 有 ${s.value ?? 20} 個未提交的檔案`
-        : `${who} has ${s.value ?? 20} uncommitted files`,
+    aria: (who, zh, s) => sceneText(zh, 'life.uncommitted', { who, n: s.value ?? 20 }),
   },
   {
     id: 'standup',
@@ -243,7 +236,7 @@ const WAVE_1_RULES: readonly LifeRule[] = [
     reduced: 'none',
     anchor: 'group',
     pose: { clip: 'stretch', atMs: 1500 },
-    aria: (_who, zh) => (zh ? '好幾個工作階段正在閒置' : 'Several sessions are idle'),
+    aria: (_who, zh) => sceneText(zh, 'life.idle'),
   },
   {
     id: 'konami',
@@ -261,7 +254,7 @@ const WAVE_1_RULES: readonly LifeRule[] = [
     anchor: 'each-desk',
     direct: true,
     pose: { clip: 'celebrate', atMs: 400 },
-    aria: (_who, zh) => (zh ? 'Konami 密技！' : 'Konami code!'),
+    aria: (_who, zh) => sceneText(zh, 'life.konami'),
   },
 ];
 

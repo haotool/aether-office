@@ -52,13 +52,17 @@ function taskGraph(snapshot: Snapshot, onSelect: (work: Work) => void) {
       snapshot.dependencies,
     );
     return {
-      nodes: snapshot.work.map((work) => ({
-        id: work.id,
-        type: 'task' as const,
-        position: positions.get(work.id)!,
-        data: { work, onSelect },
-        style: { width: 240, height: 94 },
-      })),
+      nodes: snapshot.work.map((work) => {
+        const position = positions.get(work.id);
+        if (!position) throw new Error('task layout missing node');
+        return {
+          id: work.id,
+          type: 'task' as const,
+          position,
+          data: { work, onSelect },
+          style: { width: 240, height: 94 },
+        };
+      }),
       edges: snapshot.dependencies.map((e) => ({
         id: `${e.dependsOn}:${e.workId}`,
         source: e.dependsOn,

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api/api.js';
 import { useT } from '../../ui/useT.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 
 type Commit = {
   sha: string;
@@ -19,7 +20,7 @@ export function useGitGraph(projectId: string, enabled = true) {
     queryKey: ['git-graph', projectId],
     queryFn: () =>
       api<{ commits: Commit[]; lanes: number }>(`/api/projects/${projectId}/git-graph`),
-    refetchInterval: 30000,
+    ...poll(POLL.slow),
     retry: false,
     enabled,
   });

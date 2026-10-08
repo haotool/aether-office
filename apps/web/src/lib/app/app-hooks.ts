@@ -102,8 +102,8 @@ export function useQuickOpen() {
 }
 
 /**
- * The project's event stream: every domain event refreshes the snapshot, a fault or a malformed event marks the page
- * offline. Reopens from the snapshot's sequence number when it changes.
+ * The project's event stream: every domain event refreshes the snapshot and the approvals count, a fault or a malformed
+ * event marks the page offline. Reopens from the snapshot's sequence number when it changes.
  */
 export function useProjectStream(
   projectId: string | undefined,
@@ -120,9 +120,10 @@ export function useProjectStream(
     stream.onopen = () => setOffline(false);
     stream.onerror = () => setOffline(true);
     stream.addEventListener('domain', (e) => {
-      if (isDomainEvent(String((e as MessageEvent).data)))
+      if (isDomainEvent(String((e as MessageEvent).data))) {
         void client.invalidateQueries({ queryKey: ['snapshot', projectId] });
-      else setOffline(true);
+        void client.invalidateQueries({ queryKey: ['approvals', projectId] });
+      } else setOffline(true);
     });
     stream.addEventListener('fault', () => {
       setOffline(true);

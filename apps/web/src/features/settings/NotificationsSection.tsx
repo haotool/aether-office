@@ -83,7 +83,11 @@ function useRemoteApprovals(mode: Mode) {
         method: 'PUT',
         body: JSON.stringify({ enabled }),
       }),
-    onSuccess: (next) => client.setQueryData(KEY, next),
+    onSuccess: (next) => {
+      client.setQueryData(KEY, next);
+      // The prompts list is asked for slowly while this is off: ask it now that the switch moved.
+      void client.invalidateQueries({ queryKey: ['permission-requests'] });
+    },
   });
   const enabled = state.data?.enabled ?? false;
   const change = (next: boolean) =>

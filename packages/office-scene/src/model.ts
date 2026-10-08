@@ -32,9 +32,9 @@ export type { FloorKpiBadge } from './components/FloorKpi.js';
 export type { PerfReport } from './perf/perf.js';
 export type { Pulse, PulseKind } from './environment/director.js';
 export type { SceneSpeech, Utterance } from './components/Speech.js';
+export { compactionLabel } from './environment/compaction-label.js';
 export {
   COMPACTION_LIVE_MS,
-  compactionLabel,
   contextLevel,
   type ContextLevel,
   type SceneCompaction,

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api/api.js';
 import { useT, useLocale } from '../../ui/useT.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 type Diagnosis = {
   reason: string;
   runId: string | null;
@@ -52,7 +53,7 @@ export function TaskDiagnostics({
     queryFn: () => api<Diagnosis>(`/api/projects/${projectId}/work/${workId}/diagnostics`),
     staleTime: 0,
     refetchOnMount: 'always',
-    refetchInterval: 5000,
+    ...poll(POLL.list),
   });
   const format = (value: number | null) =>
     value === null ? t('unavailable') : new Date(value).toLocaleString();

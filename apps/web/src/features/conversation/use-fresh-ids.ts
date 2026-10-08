@@ -40,5 +40,6 @@ export function firstUnreadId(turns: readonly Turn[], seenAt: number): string | 
     ...turn.blocks.map((block, i) => ({ id: blockId(turn, i), at: block.at })),
   ]);
   const at = items.findIndex((item) => item.at !== null && item.at > seenAt);
-  return at > 0 ? items[at]!.id : null;
+  if (at <= 0) return null;
+  return items[at]?.id ?? null;
 }

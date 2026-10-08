@@ -22,12 +22,13 @@ vi.mock('../../apps/web/src/lib/preferences/state.js', () => ({ usePreferences: 
 const { useModels } = await import('../../apps/web/src/features/settings/useModels.js');
 const { useGitKpi, useUsage } = await import('../../apps/web/src/features/kpi/use-kpi.js');
 const { useKpiPanel } = await import('../../apps/web/src/features/kpi/use-kpi-panel.js');
-const { useLocalSessions, usePendingApprovals } =
-  await import('../../apps/web/src/lib/app/app-data.js');
+const { useApprovals, useLocalSessions } = await import('../../apps/web/src/lib/app/app-data.js');
 const { useActor, useCachedSessions, useTerminalState } =
   await import('../../apps/web/src/features/sessions/character-session.js');
 const { useContinue } = await import('../../apps/web/src/features/shell-chrome/use-continue.js');
 const { useLink } = await import('../../apps/web/src/hooks/use-session-stream.js');
+const { usePermissionRequests } =
+  await import('../../apps/web/src/features/operations/permission-requests.js');
 const { useAdoptRepos } = await import('../../apps/web/src/features/integrations/adoptProjects.js');
 
 afterAll(removeBrowserEnv);
@@ -103,8 +104,8 @@ describe('usage hooks', () => {
 
   it('git KPIs wait longer once a building is known', () => {
     renderHook(useGitKpi);
-    expect(interval(['usage-git'], undefined)).toBe(8_000);
-    expect(interval(['usage-git'], { building: null })).toBe(8_000);
+    expect(interval(['usage-git'], undefined)).toBe(10_000);
+    expect(interval(['usage-git'], { building: null })).toBe(10_000);
     expect(interval(['usage-git'], { building: { merged: 1 } })).toBe(60_000);
   });
 });
@@ -136,7 +137,7 @@ describe('useKpiPanel', () => {
   });
 });
 
-describe('useLocalSessions and usePendingApprovals', () => {
+describe('useLocalSessions and useApprovals', () => {
   it('looks only for an owner or operator', () => {
     renderHook(useLocalSessions, null);
     expect(optionsFor(['local-sessions']).enabled).toBe(false);
@@ -168,14 +169,32 @@ describe('useLocalSessions and usePendingApprovals', () => {
   });
 
   it('counts only the approvals that wait, and only once there is a project', () => {
-    renderHook(usePendingApprovals, operator as never, undefined);
+    renderHook(useApprovals, operator as never, undefined, false);
     expect(optionsFor(['approvals', undefined]).enabled).toBe(false);
     seed(['approvals', 'p1'], [{ state: 'pending' }, { state: 'approved' }, { state: 'pending' }]);
-    const hook = renderHook(usePendingApprovals, operator as never, 'p1');
-    expect(hook.current).toBe(2);
-    expect(optionsFor(['approvals', 'p1'])).toMatchObject({ enabled: true, refetchInterval: 5000 });
-    expect(renderHook(usePendingApprovals, null, 'p1').current).toBe(2);
+    const hook = renderHook(useApprovals, operator as never, 'p1', false);
+    expect(hook.current.pending).toBe(2);
+    // the project's stream refreshes it: asked for every few seconds only while that stream is down
+    expect(optionsFor(['approvals', 'p1'])).toMatchObject({
+      enabled: true,
+      refetchInterval: 30_000,
+    });
+    renderHook(useApprovals, operator as never, 'p1', true);
+    expect(optionsFor(['approvals', 'p1'])).toMatchObject({ refetchInterval: 5000 });
+    expect(renderHook(useApprovals, null, 'p1', false).current.pending).toBe(2);
     expect(optionsFor(['approvals', 'p1']).enabled).toBe(false);
+  });
+});
+
+describe('usePermissionRequests', () => {
+  it('asks every few seconds, and only now and then once the server says Remote approvals is off', () => {
+    renderHook(usePermissionRequests, true);
+    expect(optionsFor(['permission-requests']).enabled).toBe(true);
+    expect(interval(['permission-requests'], undefined)).toBe(2_500);
+    expect(interval(['permission-requests'], { requests: [], enabled: true })).toBe(2_500);
+    expect(interval(['permission-requests'], { requests: [], enabled: false })).toBe(30_000);
+    expect(interval(['permission-requests'], { requests: [] })).toBe(2_500); // an older server does not say
+    expect(interval(['permission-requests'], undefined, new Error('forbidden'))).toBe(false);
   });
 });
 

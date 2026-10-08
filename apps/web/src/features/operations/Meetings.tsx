@@ -4,6 +4,7 @@ import { execute } from '../../lib/api/api-commands.js';
 import { Field } from '../../ui/Field.js';
 import { useT } from '../../ui/useT.js';
 import { AgentPicker, useCommandRunner, type AgentPanelProps } from '../shell-chrome/panel-kit.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 
 type Meeting = {
   threadId: string;
@@ -102,7 +103,7 @@ export function Meetings({ projectId, agents, canManage }: AgentPanelProps) {
   const query = useQuery({
     queryKey: key,
     queryFn: () => api<{ meetings: Meeting[] }>(`/api/projects/${projectId}/meetings`),
-    refetchInterval: 5000,
+    ...poll(POLL.list),
   });
   return (
     <section aria-labelledby="meetings-title">

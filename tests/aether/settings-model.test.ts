@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { en } from '../../apps/web/src/locales/en.js';
 import { zh } from '../../apps/web/src/locales/zh.js';
 import { resolveTheme } from '../../apps/web/src/lib/preferences/theme.js';
-import { ENTRIES } from '../../apps/web/src/features/settings/entries.js';
+import { ENTRIES, entryOf } from '../../apps/web/src/features/settings/entries.js';
 import { highlight, searchSettings } from '../../apps/web/src/features/settings/search.js';
 import {
   SECTIONS,
@@ -71,6 +71,13 @@ describe('settings search', () => {
     expect(searchSettings('')).toBeNull();
     expect(searchSettings('   ')).toBeNull();
     expect(found('qqqqqq')).toEqual([]);
+  });
+
+  it('entryOf returns a known row and throws for an unknown id', () => {
+    expect(entryOf(ENTRIES[0].id).id).toBe(ENTRIES[0].id);
+    expect(() => entryOf('not-a-settings-entry' as (typeof ENTRIES)[number]['id'])).toThrow(
+      /unknown settings entry/,
+    );
   });
 });
 

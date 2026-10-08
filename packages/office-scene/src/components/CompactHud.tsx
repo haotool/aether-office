@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FLOORS } from '../environment/layout.js';
 import { introWords } from '../intro/intro-text.js';
 import { departmentAt } from '../scene/scene-geometry.js';
+import { sceneT } from '../i18n/scene-text.js';
 import type { FloorCount } from './SceneHud.js';
 
 const icon = {
@@ -55,12 +56,13 @@ function FloorButtons({ zh, floor, exploded, perFloor, onFloor }: HudProps) {
 
 /** The switches that stay folded until asked for: the exploded view, the names, the tour. */
 function RailTools({ zh, exploded, labels, onExplode, onLabels, onReplayIntro }: HudProps) {
+  const t = sceneT(zh);
   return (
     <>
       <button
         className="rail-tool"
         aria-pressed={exploded}
-        aria-label={zh ? '分層展開' : 'Exploded view'}
+        aria-label={t('hud.explodedView')}
         onClick={onExplode}
       >
         <Svg>
@@ -72,7 +74,7 @@ function RailTools({ zh, exploded, labels, onExplode, onLabels, onReplayIntro }:
       <button
         className="rail-tool"
         aria-pressed={labels}
-        aria-label={zh ? '顯示名稱' : 'Names'}
+        aria-label={t('compact.names')}
         onClick={onLabels}
       >
         <Svg>
@@ -92,6 +94,7 @@ function RailTools({ zh, exploded, labels, onExplode, onLabels, onReplayIntro }:
 
 /** The auto camera switch, and the chip with the floor's name and its head count. */
 function Dock({ zh, floor, exploded, follow, perFloor, onFollow }: HudProps) {
+  const t = sceneT(zh);
   const department = departmentAt(floor);
   const members = perFloor[floor]?.total ?? 0;
   const working = perFloor[floor]?.working ?? 0;
@@ -100,21 +103,19 @@ function Dock({ zh, floor, exploded, follow, perFloor, onFollow }: HudProps) {
       <button
         className="auto-pill"
         aria-pressed={follow}
-        aria-label={zh ? '自動鏡頭' : 'Auto camera'}
+        aria-label={t('compact.autoCamera')}
         onClick={onFollow}
       >
         <i aria-hidden="true" />
-        {zh ? '自動' : 'AUTO'}
+        {t('hud.auto')}
       </button>
       <div
         className="floor-chip"
         style={{ ['--accent' as string]: department.accent }}
         role="status"
       >
-        <b>{exploded ? (zh ? '全棟' : 'ALL') : `${floor + 1}F`}</b>
-        <span>
-          {exploded ? (zh ? '分層展開' : 'Exploded') : zh ? department.zh : department.en}
-        </span>
+        <b>{exploded ? t('compact.all') : `${floor + 1}F`}</b>
+        <span>{exploded ? t('compact.exploded') : zh ? department.zh : department.en}</span>
         {!exploded && (
           <small>
             {members}
@@ -133,15 +134,16 @@ function Dock({ zh, floor, exploded, follow, perFloor, onFollow }: HudProps) {
 export function CompactHud(props: HudProps) {
   // The three switches stay folded until asked for: the rail is five floors and one button.
   const [toolsOpen, setToolsOpen] = useState(false);
+  const t = sceneT(props.zh);
   return (
     <>
-      <nav className="scene-rail" aria-label={props.zh ? '樓層' : 'Floors'}>
+      <nav className="scene-rail" aria-label={t('hud.floors')}>
         <FloorButtons {...props} />
         <span className="rail-gap" aria-hidden="true" />
         <button
           className="rail-tool"
           aria-expanded={toolsOpen}
-          aria-label={props.zh ? '更多控制' : 'More controls'}
+          aria-label={t('compact.moreControls')}
           onClick={() => setToolsOpen((v) => !v)}
         >
           <Svg>

@@ -165,7 +165,9 @@ export class FieldPerfCollector {
       } catch {
         /* ignore malformed URLs */
       }
-      return this.nativeFetch!(input, init);
+      const fetchImpl = this.nativeFetch;
+      if (!fetchImpl) throw new Error('native fetch not saved');
+      return fetchImpl(input, init);
     }) as typeof fetch;
     this.fetchPatched = true;
   }

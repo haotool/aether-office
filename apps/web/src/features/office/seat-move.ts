@@ -32,7 +32,8 @@ export function seatMoveLayout({
     objects = previous.objects.map((o) => (o === existing ? { ...o, ...at } : o));
   else {
     // The desk was seated automatically (or its id is taken by another member's saved desk): write it now, under a free id.
-    const desk = shown.objects.find((o) => o.id === move.deskId)!;
+    const desk = shown.objects.find((o) => o.id === move.deskId);
+    if (!desk) throw new Error('seat move: desk missing from shown layout');
     const used = new Set(previous.objects.map((o) => o.id));
     let id = desk.id;
     for (let n = 2; used.has(id); n++) id = `${desk.id}-${n}`;

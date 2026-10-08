@@ -1,4 +1,4 @@
-import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Orbit } from 'lucide-react';
 import type { Session } from './lib/api/api-session.js';
@@ -9,10 +9,14 @@ import { usePhone } from './lib/preferences/phone.js';
 import { useApplication } from './lib/app/app-state.js';
 import { useAuthSession, useDocumentChrome, useSignedOutTitle } from './lib/app/app-hooks.js';
 import { AppMain, AppNavigation, AppPanel, AppTopbar } from './features/shell-chrome/AppFrame.js';
-import { Login } from './features/shell-chrome/Login.js';
 import { ProjectForm } from './features/integrations/ProjectForm.js';
 import { TabBar } from './features/shell-chrome/TabBar.js';
 import { isFieldPerfRequested } from './features/field-perf/is-field-perf-requested.js';
+
+// The sign-in page is only for a visitor who is not signed in: everyone else never loads it.
+const Login = lazy(() =>
+  import('./features/shell-chrome/Login.js').then((m) => ({ default: m.Login })),
+);
 
 const fieldPerfOverlay =
   typeof window !== 'undefined' && isFieldPerfRequested(window.location.search);
@@ -38,22 +42,24 @@ export function App() {
   const { session, setSession, checked, logout } = useAuthSession();
   useDocumentChrome(theme, locale);
   useSignedOutTitle(!!session);
+  const booting = (
+    <div className="boot-screen">
+      <Orbit size={38} />
+      <p>{t('loading')}</p>
+    </div>
+  );
   let body: ReactNode;
-  if (!checked)
-    body = (
-      <div className="boot-screen">
-        <Orbit size={38} />
-        <p>{t('loading')}</p>
-      </div>
-    );
+  if (!checked) body = booting;
   else if (!session)
     body = (
-      <Login
-        onLogin={(s) => {
-          setSession(s);
-          void client.invalidateQueries();
-        }}
-      />
+      <Suspense fallback={booting}>
+        <Login
+          onLogin={(s) => {
+            setSession(s);
+            void client.invalidateQueries();
+          }}
+        />
+      </Suspense>
     );
   else body = <Application session={session} onLogout={logout} />;
   return (

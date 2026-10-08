@@ -84,6 +84,7 @@ export function useApplication(session: Session) {
     local.data?.sessions,
     sel.snapshot.data,
     setNotice,
+    shell.offline,
   );
   const view = useOfficeView(sel, local.data);
   const pick = useOfficeSelection({
@@ -97,9 +98,7 @@ export function useApplication(session: Session) {
   useDocumentTitle(sel.unknownPage ? t('notFoundTitle') : t(sel.page), waitingOnYou);
   useProjectStream(sel.projectId, true, sel.snapshot.data?.seq, shell.setOffline);
   useFocusRequest(sel.params, sel.setParams, view.selected?.id, setFocus);
-  const refresh = () => {
-    void client.invalidateQueries({ queryKey: ['snapshot', sel.projectId] });
-  };
+  const refresh = () => void client.invalidateQueries({ queryKey: ['snapshot', sel.projectId] });
   const canWrite = isOperator(session.actor.role);
   return {
     session,

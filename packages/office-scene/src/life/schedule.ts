@@ -106,6 +106,60 @@ function cueOf(
   };
 }
 
+type ScheduleScratch = {
+  live: LifeCue[];
+  starts: number[];
+  seen: Record<string, number>;
+  last: Record<string, number>;
+  eligible: Record<string, number>;
+  started: LifeCue[];
+};
+
+function tryStartRule(
+  signal: LifeSignal,
+  rule: LifeRule,
+  now: number,
+  prefs: LifePrefs,
+  ctx: LifeContext,
+  env: ScheduleEnv,
+  scratch: ScheduleScratch,
+): void {
+  if (!ruleEnabled(rule, prefs, env) || !rule.when(signal, ctx)) return;
+  if (rule.claimsOutcome && (signal.ok === null || signal.ok === undefined)) return;
+  const member = signal.member;
+  const floor = member === null ? null : ctx.floorOf(member);
+  if (!rule.direct && floor === null) return;
+  const key = cooldownKey(rule, member, floor);
+  if (now - (scratch.last[key] ?? Number.NEGATIVE_INFINITY) < rule.cooldownMs) return;
+  const draw = `${member}:${rule.id}`;
+  const n = scratch.eligible[draw] ?? 0;
+  scratch.eligible[draw] = n + 1;
+  if (seeded(`${draw}:${n}`)() >= chanceOf(rule, prefs, ctx, member)) return;
+  const bound = !rule.direct && rule.category !== 'relation';
+  if (bound && !admitted(scratch.live, scratch.starts, member, floor)) return;
+  const cue = cueOf(rule, signal, { floor, n, now }, ctx);
+  scratch.live = [...scratch.live, cue];
+  if (bound) scratch.starts = [...scratch.starts, now];
+  scratch.last[key] = now;
+  scratch.started.push(cue);
+}
+
+function applySignal(
+  signal: LifeSignal,
+  now: number,
+  prefs: LifePrefs,
+  ctx: LifeContext,
+  env: ScheduleEnv,
+  rules: readonly LifeRule[],
+  scratch: ScheduleScratch,
+): void {
+  const id = signalKey(signal);
+  if (scratch.seen[id] !== undefined) return;
+  scratch.seen[id] = now;
+  if (now - signal.at > STALE_MS) return;
+  for (const rule of rules) tryStartRule(signal, rule, now, prefs, ctx, env, scratch);
+}
+
 /**
  * Takes the signals the page saw and decides which effects start now. Pure: the same state, signals, time, settings and
  * office always give the same cues. A cue is held back by its settings and tier, by the honesty rule (an effect that
@@ -120,43 +174,28 @@ export function schedule(
   env: ScheduleEnv,
 ): { state: LifeState; started: readonly LifeCue[] } {
   const rules = env.rules ?? LIFE_RULES;
-  let live = prev.live.filter((c) => now < c.startedAt + c.durationMs);
-  let starts = prev.starts.filter((t) => now - t < WINDOW_MS);
-  const seen = Object.fromEntries(Object.entries(prev.seen).filter(([, at]) => now - at < SEEN_MS));
-  const last = { ...prev.last };
-  const eligible = { ...prev.eligible };
-  const started: LifeCue[] = [];
-
+  const scratch: ScheduleScratch = {
+    live: prev.live.filter((c) => now < c.startedAt + c.durationMs),
+    starts: prev.starts.filter((t) => now - t < WINDOW_MS),
+    seen: Object.fromEntries(Object.entries(prev.seen).filter(([, at]) => now - at < SEEN_MS)),
+    last: { ...prev.last },
+    eligible: { ...prev.eligible },
+    started: [],
+  };
   const ordered = [...signals].sort(
     (a, b) => a.at - b.at || signalKey(a).localeCompare(signalKey(b)),
   );
-  for (const signal of ordered) {
-    const id = signalKey(signal);
-    if (seen[id] !== undefined) continue;
-    seen[id] = now;
-    if (now - signal.at > STALE_MS) continue;
-    for (const rule of rules) {
-      if (!ruleEnabled(rule, prefs, env) || !rule.when(signal, ctx)) continue;
-      if (rule.claimsOutcome && (signal.ok === null || signal.ok === undefined)) continue;
-      const member = signal.member;
-      const floor = member === null ? null : ctx.floorOf(member);
-      if (!rule.direct && floor === null) continue; // not in the scene: nothing to draw it on
-      const key = cooldownKey(rule, member, floor);
-      if (now - (last[key] ?? Number.NEGATIVE_INFINITY) < rule.cooldownMs) continue;
-      const draw = `${member}:${rule.id}`;
-      const n = eligible[draw] ?? 0;
-      eligible[draw] = n + 1;
-      if (seeded(`${draw}:${n}`)() >= chanceOf(rule, prefs, ctx, member)) continue;
-      const bound = !rule.direct && rule.category !== 'relation';
-      if (bound && !admitted(live, starts, member, floor)) continue;
-      const cue = cueOf(rule, signal, { floor, n, now }, ctx);
-      live = [...live, cue];
-      if (bound) starts = [...starts, now];
-      last[key] = now;
-      started.push(cue);
-    }
-  }
-  return { state: { live, seen, last, eligible, starts }, started };
+  for (const signal of ordered) applySignal(signal, now, prefs, ctx, env, rules, scratch);
+  return {
+    state: {
+      live: scratch.live,
+      seen: scratch.seen,
+      last: scratch.last,
+      eligible: scratch.eligible,
+      starts: scratch.starts,
+    },
+    started: scratch.started,
+  };
 }
 
 /** One effect per member, two per floor, three starts a minute in all. Relation and viewer-made cues never come here. */

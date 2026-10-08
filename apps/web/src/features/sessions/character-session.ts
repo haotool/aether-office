@@ -8,6 +8,7 @@ import type { CharacterFacts, CharacterKind } from '../office/character-actions.
 import { idleSessions } from '../operations/clock-out.js';
 import { heldByOther, type TerminalControl } from '../terminal/terminal-driver.js';
 import { useSessionTerminal, type Drive } from '../../hooks/use-drive.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 
 /** A member made of a session, a subagent of one, or an agent AETHER manages. */
 export const kindOf = (agentId: string): CharacterKind =>
@@ -57,10 +58,12 @@ export function useTerminalState(session: AttributedSession | null, userId: stri
   const { drive } = useSessionTerminal(session?.key ?? null);
   const control = useQuery({
     queryKey: ['drive-terminal', drive?.terminalId],
-    queryFn: () =>
-      api<TerminalControl>(`/api/projects/${drive!.projectId}/terminals/${drive!.terminalId}`),
+    queryFn: () => {
+      if (!drive) throw new Error('terminal control query without drive');
+      return api<TerminalControl>(`/api/projects/${drive.projectId}/terminals/${drive.terminalId}`);
+    },
     enabled: !!drive,
-    refetchInterval: 3000,
+    ...poll(POLL.driving),
     retry: false,
   });
   // Until the terminal's state is known it counts as free: a send checks it again and refuses when it is not.

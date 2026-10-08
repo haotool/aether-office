@@ -25,6 +25,8 @@ test('a task can be created with the keyboard alone, the dialog traps focus, and
 }) => {
   await login(page);
   await page.getByRole('link', { name: /^任務/ }).click();
+  // the page is a lazy chunk: a cold start still shows the loading state, and Tab would walk the shell instead
+  await expect(page.getByRole('button', { name: '建立任務', exact: true })).toBeVisible();
   await page.locator('body').click({ position: { x: 1, y: 1 } });
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
 

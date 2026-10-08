@@ -1,6 +1,6 @@
 import type { AttributedSession } from '@aether/contracts';
 import type { Locale } from '../../lib/i18n/i18n.js';
-import { ClockOut } from '../operations/ClockOut.js';
+import { ClockOutLazy } from '../operations/ClockOutLazy.js';
 import { StopSession } from '../operations/StopSession.js';
 
 /** The two dialogs a list of sessions opens: stopping one session, and clocking out the idle ones. */
@@ -22,7 +22,9 @@ export function SessionDialogs({
   return (
     <>
       {stopping && <StopSession session={stopping} locale={locale} onClose={onStopClose} />}
-      {clockingOut && <ClockOut sessions={sessions} locale={locale} onClose={onClockOutClose} />}
+      {clockingOut && (
+        <ClockOutLazy sessions={sessions} locale={locale} onClose={onClockOutClose} />
+      )}
     </>
   );
 }

@@ -93,7 +93,10 @@ const SubagentCard = memo(
     a.picked === b.picked &&
     sameRow(a.row, b.row) &&
     a.calls.length === b.calls.length &&
-    a.calls.every((c, i) => c.at === b.calls[i]!.at && c.tool === b.calls[i]!.tool),
+    a.calls.every((c, i) => {
+      const other = b.calls[i];
+      return other !== undefined && c.at === other.at && c.tool === other.tool;
+    }),
 );
 
 /** "Subagent activity": a card per spawn, under the transcript (the transcript itself is never behind a fold). */

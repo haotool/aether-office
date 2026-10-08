@@ -30,7 +30,8 @@ export function TabBar({
   return (
     <nav className="tabbar" aria-label={t('project')}>
       {tabs.map((key) => {
-        const Icon = icons.get(key)!;
+        const Icon = icons.get(key);
+        if (!Icon) throw new Error(`tab icon missing: ${key}`);
         const count = counts[key as keyof Counts] ?? 0;
         return (
           <NavLink

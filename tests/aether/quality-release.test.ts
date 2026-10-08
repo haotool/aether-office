@@ -150,7 +150,10 @@ describe('ambient env declarations', () => {
       { file: 'apps/web/src/env.d.ts', functions: [], exports: [] },
       { file: 'apps/web/src/app.ts', functions: [], exports: [{ name: 'default', line: 1 }] },
     ];
-    const graph = { uses: [], runtime: new Map([['apps/web/src/main.tsx', ['apps/web/src/app.ts']]]) };
+    const graph = {
+      uses: [],
+      runtime: new Map([['apps/web/src/main.tsx', ['apps/web/src/app.ts']]]),
+    };
     expect(measureDeadCode(repo, facts, graph).violations).toBe(0);
   });
 });

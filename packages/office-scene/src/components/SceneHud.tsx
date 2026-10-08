@@ -6,6 +6,7 @@ import { FLOORS } from '../environment/layout.js';
 import { SlabKpi, type FloorKpiBadge } from './FloorKpi.js';
 import { introWords } from '../intro/intro-text.js';
 import { departmentAt } from '../scene/scene-geometry.js';
+import { sceneT, sceneText } from '../i18n/scene-text.js';
 
 const PIPS = 8;
 const pad = (n: number) => String(n).padStart(3, '0');
@@ -40,39 +41,37 @@ const REASON_EN: Partial<Record<Shot['reason'], string>> = {
   peer: 'waiting for a reply',
 };
 
-/** What the camera is on, in one short line: who, and what they are doing or to whom they are talking. */
-export function ShotCaption({
-  zh,
-  shot,
-  agents,
-  doing,
-  attention,
-}: {
+type CaptionFacts = {
   zh: boolean;
-  shot: Shot;
   agents: readonly Agent[];
   doing: Readonly<Record<string, string>> | undefined;
   attention?: Readonly<Record<string, string>> | undefined;
-}) {
+};
+
+/** What the page says a member is doing, else why the camera is on them. */
+function closeupDoing(shot: Shot, id: string, { zh, doing, attention }: CaptionFacts) {
+  const said = (shot.reason === 'attention' ? attention?.[id] : undefined) ?? doing?.[id];
+  if (said !== undefined) return said;
+  return shot.reason === 'message'
+    ? sceneText(zh, 'hud.sentMessage')
+    : (zh ? REASON_ZH : REASON_EN)[shot.reason];
+}
+
+/** The caption's words: a close-up names the member and what they do, a pair the two and the kind of message, a sweep the floor. */
+function shotText(shot: Shot, facts: CaptionFacts): string {
+  const { zh, agents } = facts;
   const name = (id: string | undefined) => agents.find((a) => a.id === id)?.name ?? '';
   const [first, second] = shot.subjects;
-  const text =
-    shot.kind === 'pair'
-      ? `${name(first)} → ${name(second)} · ${(zh ? KIND_ZH : KIND_EN)[shot.pulse?.kind ?? 'inform']}`
-      : shot.kind === 'closeup'
-        ? [
-            name(first),
-            (shot.reason === 'attention' ? attention?.[first ?? ''] : undefined) ??
-              doing?.[first ?? ''] ??
-              (shot.reason === 'message'
-                ? zh
-                  ? '傳出訊息'
-                  : 'sent a message'
-                : (zh ? REASON_ZH : REASON_EN)[shot.reason]),
-          ]
-            .filter(Boolean)
-            .join(' · ')
-        : `${shot.floor + 1}F · ${zh ? DEPARTMENTS[shot.floor]?.zh : DEPARTMENTS[shot.floor]?.en}`;
+  if (shot.kind === 'pair')
+    return `${name(first)} → ${name(second)} · ${(zh ? KIND_ZH : KIND_EN)[shot.pulse?.kind ?? 'inform']}`;
+  if (shot.kind === 'closeup')
+    return [name(first), closeupDoing(shot, first ?? '', facts)].filter(Boolean).join(' · ');
+  return `${shot.floor + 1}F · ${zh ? DEPARTMENTS[shot.floor]?.zh : DEPARTMENTS[shot.floor]?.en}`;
+}
+
+/** What the camera is on, in one short line: who, and what they are doing or to whom they are talking. */
+export function ShotCaption({ zh, shot, agents, doing, attention }: CaptionFacts & { shot: Shot }) {
+  const text = shotText(shot, { zh, agents, doing, attention });
   return (
     <div className="shot-caption" role="status" data-kind={shot.kind}>
       <i aria-hidden="true" />
@@ -97,22 +96,21 @@ export function FloorHud({
   const here = perFloor[floor] ?? NO_FLOOR;
   const members = exploded ? perFloor.reduce((n, f) => n + f.total, 0) : here.total;
   const working = exploded ? perFloor.reduce((n, f) => n + f.working, 0) : here.working;
+  const t = sceneT(zh);
   return (
     <div className="floor-hud fui" style={{ ['--accent' as string]: department.accent }}>
       <small>
         {exploded
-          ? zh
-            ? '全棟總覽'
-            : 'BUILDING OVERVIEW'
-          : `${zh ? '樓層' : 'FLOOR'} ${String(floor + 1).padStart(2, '0')} / ${String(FLOORS).padStart(2, '0')}`}
+          ? t('hud.buildingOverview')
+          : `${t('hud.floorWord')} ${String(floor + 1).padStart(2, '0')} / ${String(FLOORS).padStart(2, '0')}`}
       </small>
-      <b>{exploded ? (zh ? '分層展開' : 'Exploded view') : zh ? department.zh : department.en}</b>
+      <b>{exploded ? t('hud.explodedView') : zh ? department.zh : department.en}</b>
       <div className="readouts">
         <span>
-          {zh ? '成員' : 'MEM'} <i>{pad(members)}</i>
+          {t('hud.members')} <i>{pad(members)}</i>
         </span>
         <span>
-          {zh ? '進行中' : 'ACT'} <i>{pad(working)}</i>
+          {t('hud.active')} <i>{pad(working)}</i>
         </span>
       </div>
     </div>
@@ -173,7 +171,7 @@ function DeckSlab({ deck: d, zh, current, highlighted, entry, badge, onFloor }: 
     >
       <b>{d.floor + 1}F</b>
       <span>{zh ? d.zh : d.en}</span>
-      <i title={zh ? '成員 · 進行中' : 'members · active'}>{pad(entry.total)}</i>
+      <i title={sceneText(zh, 'hud.membersActive')}>{pad(entry.total)}</i>
       <em className="pips" aria-hidden="true">
         {Array.from({ length: PIPS }, (_, n) => (
           <u key={n} className={n < lit ? 'on' : ''} />
@@ -247,16 +245,17 @@ function PanelTools({
   onFollow,
   onHelp,
 }: PanelToolsProps) {
+  const t = sceneT(zh);
   return (
     <div className="building-tools">
       <button aria-pressed={exploded} onClick={onExplode}>
-        {zh ? '分層展開' : 'EXPLODE'}
+        {t('hud.explode')}
       </button>
       <button aria-pressed={follow} onClick={onFollow}>
-        {zh ? '自動' : 'AUTO'}
+        {t('hud.auto')}
       </button>
       <button aria-expanded={helpOpen} onClick={onHelp}>
-        {zh ? '操作' : 'KEYS'}
+        {t('hud.keys')}
       </button>
     </div>
   );
@@ -265,17 +264,15 @@ function PanelTools({
 /** The floor switcher: one slab per department, the exploded view, the tour and the key help. */
 export function BuildingPanel(props: BuildingPanelProps) {
   const { zh, onReplayIntro } = props;
+  const t = sceneT(zh);
   const [open, toggle] = useRememberedOpen();
   const [helpOpen, setHelpOpen] = useState(false);
   return (
-    <nav
-      className={`building-panel fui ${open ? '' : 'collapsed'}`}
-      aria-label={zh ? '樓層' : 'Floors'}
-    >
+    <nav className={`building-panel fui ${open ? '' : 'collapsed'}`} aria-label={t('hud.floors')}>
       <div className="building-head">
-        <span>{zh ? '樓層' : 'DECKS'}</span>
+        <span>{t('hud.decks')}</span>
         <button aria-expanded={open} onClick={toggle}>
-          {open ? (zh ? '收合' : 'HIDE') : zh ? '展開' : 'SHOW'}
+          {t(open ? 'hud.hide' : 'hud.show')}
         </button>
       </div>
       {open && (
@@ -295,22 +292,23 @@ export function BuildingPanel(props: BuildingPanelProps) {
 }
 
 function KeysHelp({ zh }: { zh: boolean }) {
+  const t = sceneT(zh);
   return (
     <dl className="keys-help">
       <dt>WASD / ←↑↓→</dt>
-      <dd>{zh ? '平移（Shift 加速）' : 'Pan (Shift = faster)'}</dd>
+      <dd>{t('keys.pan')}</dd>
       <dt>Q / E</dt>
-      <dd>{zh ? '旋轉視角' : 'Rotate'}</dd>
-      <dt>+ / − · {zh ? '滾輪' : 'wheel'}</dt>
-      <dd>{zh ? '縮放' : 'Zoom'}</dd>
+      <dd>{t('keys.rotate')}</dd>
+      <dt>+ / − · {t('keys.wheel')}</dt>
+      <dd>{t('keys.zoom')}</dd>
       <dt>1–5 · [ ]</dt>
-      <dd>{zh ? '切換樓層' : 'Change floor'}</dd>
+      <dd>{t('keys.floor')}</dd>
       <dt>F</dt>
-      <dd>{zh ? '近景追蹤活躍成員' : 'Track active members'}</dd>
+      <dd>{t('keys.track')}</dd>
       <dt>X</dt>
-      <dd>{zh ? '分層展開' : 'Exploded view'}</dd>
-      <dt>{zh ? '雙擊角色' : 'Double-click'}</dt>
-      <dd>{zh ? '飛到座位' : 'Fly to desk'}</dd>
+      <dd>{t('hud.explodedView')}</dd>
+      <dt>{t('keys.doubleClick')}</dt>
+      <dd>{t('keys.flyToDesk')}</dd>
     </dl>
   );
 }

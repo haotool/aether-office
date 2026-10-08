@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { FileReservation } from '@aether/contracts';
 import { api } from '../../lib/api/api.js';
 import { useT } from '../../ui/useT.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 
 export function Reservations({ projectId }: { projectId: string }) {
   const t = useT();
@@ -9,7 +10,7 @@ export function Reservations({ projectId }: { projectId: string }) {
     queryKey: ['reservations', projectId],
     queryFn: () =>
       api<{ reservations: FileReservation[] }>(`/api/projects/${projectId}/reservations`),
-    refetchInterval: 5000,
+    ...poll(POLL.list),
   });
   const rows = query.data?.reservations ?? [];
   return (

@@ -4,9 +4,10 @@ import { api } from '../api/api.js';
 import { type Session } from '../api/api-session.js';
 import { isOperator } from '../navigation/roles.js';
 import { useAdoptRepos } from '../../features/integrations/adoptProjects.js';
-import { pollMs } from '../../features/integrations/live-link.js';
 import { normalizeSessions } from '../sessions/local-session-compat.js';
+import type { PendingApproval } from '../notifications/notifications.js';
 import { useLinkLive, useSessionStream } from '../../hooks/use-session-stream.js';
+import { POLL, poll, pollBy, pollMs } from './polling.js';
 
 /**
  * The machine's local sessions for an owner or operator: kept fresh by the change stream, with polling as the net under
@@ -21,11 +22,12 @@ export function useLocalSessions(session: Session | null) {
     queryFn: () => api<LocalSessionsResponse>('/api/local-sessions').then(normalizeSessions),
     enabled: isOperator(session?.actor.role),
     // Looked at more often while something is working, so how hard it works can be told (activity-rate.ts).
-    refetchInterval: (q) =>
+    ...pollBy((data: LocalSessionsResponse | undefined) =>
       pollMs(
         live,
-        q.state.data?.sessions.some((s) => s.hook?.activity === 'working') ? 4000 : 10000,
+        data?.sessions.some((s) => s.hook?.activity === 'working') ? POLL.working : POLL.idle,
       ),
+    ),
     retry: false,
   });
   useSessionStream(isOperator(session?.actor.role) && !!query.data?.enabled);
@@ -40,14 +42,21 @@ export function useLocalSessions(session: Session | null) {
   return query;
 }
 
-/** How many approvals wait for a decision. Shares the approvals page's cache; looked at every few seconds. */
-export function usePendingApprovals(session: Session | null, projectId: string | undefined) {
+/**
+ * The project's approvals: how many wait for a decision, and the list the alerts are raised from. Shares the approvals
+ * page's cache; the project's stream refreshes it, and it is looked at every few seconds only while that stream is down.
+ */
+export function useApprovals(
+  session: Session | null,
+  projectId: string | undefined,
+  offline: boolean,
+) {
   const approvals = useQuery({
     queryKey: ['approvals', projectId],
-    queryFn: () => api<{ state: string }[]>(`/api/projects/${projectId}/approvals`),
+    queryFn: () => api<PendingApproval[]>(`/api/projects/${projectId}/approvals`),
     enabled: !!session && !!projectId,
-    refetchInterval: 5000,
+    ...poll(offline ? POLL.list : POLL.slow),
     retry: false,
-  });
-  return approvals.data?.filter((a) => a.state === 'pending').length ?? 0;
+  }).data;
+  return { approvals, pending: approvals?.filter((a) => a.state === 'pending').length ?? 0 };
 }

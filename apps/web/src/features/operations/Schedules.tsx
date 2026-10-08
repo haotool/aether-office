@@ -6,6 +6,7 @@ import type { Key } from '../../lib/i18n/i18n.js';
 import { Field } from '../../ui/Field.js';
 import { useT, useLocale } from '../../ui/useT.js';
 import { EnableToggle, useCommandRunner } from '../shell-chrome/panel-kit.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 
 /** Short weekday names (Sunday first, as the schedule numbers them) in the person's language. */
 function weekdays(locale: string): string[] {
@@ -134,7 +135,7 @@ export function Schedules({ projectId, canManage }: { projectId: string; canMana
   const query = useQuery({
     queryKey: key,
     queryFn: () => api<{ schedules: Schedule[] }>(`/api/projects/${projectId}/schedules`),
-    refetchInterval: 5000,
+    ...poll(POLL.list),
   });
   return (
     <section aria-labelledby="schedules-title">

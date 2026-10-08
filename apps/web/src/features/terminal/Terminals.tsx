@@ -18,6 +18,7 @@ import {
   type TerminalRow,
 } from './terminal-model.js';
 import { useSnapshotSync, useXterm } from './terminal-screen.js';
+import { POLL, poll, pollBy } from '../../lib/app/polling.js';
 
 type TerminalExit = { exitCode: number; signal: number | null };
 
@@ -26,7 +27,9 @@ function useTerminalDetail(projectId: string, id: string) {
   return useQuery({
     queryKey: ['terminal', projectId, id],
     queryFn: () => api<TerminalDetail>(`/api/projects/${projectId}/terminals/${id}`),
-    refetchInterval: (q) => (q.state.data?.state === 'exited' ? false : 250),
+    ...pollBy((data: TerminalDetail | undefined) =>
+      data?.state === 'exited' ? false : POLL.screen,
+    ),
     retry: false,
   });
 }
@@ -223,7 +226,7 @@ export function Terminals({
   const list = useQuery({
     queryKey: ['terminals', projectId],
     queryFn: () => api<TerminalList>(`/api/projects/${projectId}/terminals`),
-    refetchInterval: 2000,
+    ...poll(POLL.watching),
   });
   const profiles = profilesOf(list.data?.profiles);
   return (

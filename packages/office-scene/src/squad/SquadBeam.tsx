@@ -27,7 +27,7 @@ import {
   writeInstance,
 } from './squad-art.js';
 import type { DrawSquad } from './squad-draw.js';
-import type { SquadMemberState } from './squad-model.js';
+import type { SquadMemberState, SquadZoneState } from './squad-model.js';
 import { beamIntensity, beamRate } from './beam-rate.js';
 import type { SquadFrame } from './use-squad.js';
 
@@ -206,6 +206,15 @@ function useBeamRig(): BeamRig {
   );
 }
 
+/** How bright a squad's beam wants to be: its supervisor's rate when it is on duty, else the idle glow. */
+const targetLevel = (duty: number, zone: SquadZoneState | undefined, now: number) =>
+  duty ? Math.max(IDLE, beamIntensity(beamRate(zone, now))) : IDLE;
+/** The halo's slow breathing (still when the layer is not animated). */
+const breathing = (animate: boolean, time: number) => (animate ? 1 + 0.04 * Math.sin(time * 2) : 1);
+/** How many drifting points a squad shows at a beam level. */
+const pointsFor = (animate: boolean, tier: BeamProps['tier'], level: number) =>
+  animate ? Math.round(tier.points * level) : 0;
+
 /** One frame of the beams: every squad's funnel, filament, halo and points, written only where something changed. */
 function updateBeams(rig: BeamRig, p: BeamProps, time: number, delta: number): boolean {
   const { beam, funnel, filament, halo, dots, lag, dotPositions, dotGeometry } = rig;
@@ -223,7 +232,7 @@ function updateBeams(rig: BeamRig, p: BeamProps, time: number, delta: number): b
     if (!s) break;
     const y = floorY(s.floor, exploded);
     const duty = dutyOf(members, s.supervisor);
-    const target = duty ? Math.max(IDLE, beamIntensity(beamRate(zones[s.supervisor], now))) : IDLE;
+    const target = targetLevel(duty, zones[s.supervisor], now);
     const entry = lag.get(s.supervisor) ?? { level: target, phase: 0 };
     settling = approach(entry, target, delta, animate) || settling;
     lag.set(s.supervisor, entry);
@@ -235,12 +244,10 @@ function updateBeams(rig: BeamRig, p: BeamProps, time: number, delta: number): b
     const brightness = 0.25 + 0.75 * entry.level;
     if (tier.filament)
       filamentsChanged = writeFilament(filament.current, i, tone, brightness) || filamentsChanged;
-    if (tier.halo) {
-      const breathe = animate ? 1 + 0.04 * Math.sin(time * 2) : 1;
-      halosChanged = writeHalo(halo.current, i, s, y, brightness, breathe) || halosChanged;
-    }
-    const points = animate ? Math.round(tier.points * entry.level) : 0;
-    dot = writeDots(dotPositions, dot, points, i, time);
+    if (tier.halo)
+      halosChanged =
+        writeHalo(halo.current, i, s, y, brightness, breathing(animate, time)) || halosChanged;
+    dot = writeDots(dotPositions, dot, pointsFor(animate, tier, entry.level), i, time);
   }
   funnel.current.count = shown;
   for (const a of [beam.start, beam.end, beam.meta, beam.tone]) a.needsUpdate = true;

@@ -74,8 +74,6 @@ select option {
 }
 .modal::backdrop {
   background: var(--scrim);
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
 }
 .modal-heading {
   display: flex;

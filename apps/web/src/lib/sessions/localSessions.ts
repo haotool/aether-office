@@ -23,6 +23,8 @@ function observed(
   at: number,
   projectId: string,
 ): Agent {
+  const species = SPECIES[hue(seed) % SPECIES.length];
+  if (species === undefined) throw new Error('species palette empty');
   return {
     id,
     projectId,
@@ -30,7 +32,7 @@ function observed(
     role: role.slice(0, 80),
     provider: 'observe',
     mode: 'observe',
-    species: SPECIES[hue(seed) % SPECIES.length]!,
+    species,
     color: `hsl(${hue(seed)} 70% 62%)`,
     activity,
     version: 1,

@@ -21,7 +21,11 @@ export function recordMoment(moment: LifeMoment): void {
   const list = withMoment(next.get(moment.member) ?? [], moment);
   next.delete(moment.member); // re-inserted last, so the map's order is "least recently moved first"
   next.set(moment.member, list);
-  while (next.size > MEMBERS_KEPT) next.delete(next.keys().next().value!);
+  while (next.size > MEMBERS_KEPT) {
+    const oldest = next.keys().next().value;
+    if (oldest === undefined) break;
+    next.delete(oldest);
+  }
   byMember = next;
   for (const listener of listeners) listener();
 }

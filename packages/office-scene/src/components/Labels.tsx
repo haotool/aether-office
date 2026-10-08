@@ -23,6 +23,11 @@ type LabelsProps = {
 };
 type Occupied = { x: number; y: number; width: number };
 
+const densityAt = (distance: number) =>
+  distance < NEAR_DISTANCE ? 'near' : distance > FAR_DISTANCE ? 'far' : 'mid';
+/** Whether a projected depth is between the near and far planes. */
+const inDepth = (z: number) => z >= -1 && z <= 1;
+
 /** Whether a tag of `width` centred at (x, y) fits in view, clear of the rectangles drawn over the canvas and the tags placed before it. */
 function tagFits(
   x: number,
@@ -59,7 +64,7 @@ export function ProjectedLabels({ labels, elements, selected, avoid, covered }: 
       if (!element) continue;
       point.current.set(label.x, label.y, label.z);
       const distance = camera.position.distanceTo(point.current);
-      const density = distance < NEAR_DISTANCE ? 'near' : distance > FAR_DISTANCE ? 'far' : 'mid';
+      const density = densityAt(distance);
       element.dataset['density'] = density; // the tag's own CSS decides what each step shows
       const shrunk =
         density === 'far' && label.id !== selected && element.classList.contains('scene-label');
@@ -72,10 +77,7 @@ export function ProjectedLabels({ labels, elements, selected, avoid, covered }: 
         ...(avoid?.current.values() ?? []),
         ...(label.id === selected ? [] : (covered?.current.values() ?? [])),
       ];
-      const visible =
-        point.current.z >= -1 &&
-        point.current.z <= 1 &&
-        tagFits(x, y, width, size, covers, occupied);
+      const visible = inDepth(point.current.z) && tagFits(x, y, width, size, covers, occupied);
       element.style.visibility = visible ? 'visible' : 'hidden';
       element.style.transform = `translate(${x}px,${y}px) translate(-50%,-50%)`;
       if (visible) occupied.push({ x, y, width });

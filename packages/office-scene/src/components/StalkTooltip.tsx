@@ -2,6 +2,7 @@ import { useEffect, useState, type RefObject } from 'react';
 import type { StalkHover } from './Beanstalk.js';
 import { speciesName } from '../flowers/flower-names.js';
 import type { Tier } from '../core/stalk-types.js';
+import { sceneText, type SceneKey } from '../i18n/scene-text.js';
 
 const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ['day', 86_400_000],
@@ -18,13 +19,13 @@ function ago(at: number, now: number, locale: string): string {
 }
 
 /** "12 commits · 2 merges · 3 authors" and the like, in the person's language. */
-function counts(tier: Tier, en: boolean): string {
-  const unit = (n: number, one: string, many: string, zh: string) =>
-    en ? `${n} ${n === 1 ? one : many}` : `${n} ${zh}`;
+function counts(tier: Tier, zh: boolean): string {
+  const unit = (n: number, one: SceneKey, many: SceneKey) =>
+    sceneText(zh, n === 1 ? one : many, { n });
   return [
-    unit(tier.commits, 'commit', 'commits', '個提交'),
-    unit(tier.merges, 'merge', 'merges', '次合併'),
-    unit(tier.authors, 'author', 'authors', '位作者'),
+    unit(tier.commits, 'tip.commitOne', 'tip.commitMany'),
+    unit(tier.merges, 'tip.mergeOne', 'tip.mergeMany'),
+    unit(tier.authors, 'tip.authorOne', 'tip.authorMany'),
   ].join(' · ');
 }
 
@@ -34,10 +35,10 @@ type CommitHover = Exclude<Hover, BloomHover>;
 type Strands = readonly { name: string; color: string }[];
 
 /** The label of a flower: a merge's, the tier's, or the crown's. */
-function bloomLabel({ bloom }: BloomHover, en: boolean): string {
-  if (bloom.merge) return en ? 'Merge flower' : '合併花';
-  if (bloom.tier) return en ? `Tier ${bloom.tier.index + 1}` : `第 ${bloom.tier.index + 1} 層`;
-  return en ? 'Crown bloom' : '頂端大花';
+function bloomLabel({ bloom }: BloomHover, zh: boolean): string {
+  if (bloom.merge) return sceneText(zh, 'tip.mergeFlower');
+  if (bloom.tier) return sceneText(zh, 'tip.tier', { n: bloom.tier.index + 1 });
+  return sceneText(zh, 'tip.crownBloom');
 }
 
 /** A flower of the crown: its code name and tier, its species, the dates and counts of the history that built it, and its seed commit. */
@@ -51,10 +52,10 @@ function BloomTip({
   locale: string;
 }) {
   const { bloom, x, y, flip } = hover;
-  const en = locale === 'en';
+  const zh = locale !== 'en';
   const day = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' });
   const tier = bloom.tier;
-  const species = speciesName(bloom.genome.archetype, bloom.genome.epithet, en);
+  const species = speciesName(bloom.genome.archetype, bloom.genome.epithet, !zh);
   return (
     <div
       className={`stalk-tip ${flip ? 'flip' : ''}`}
@@ -67,18 +68,18 @@ function BloomTip({
     >
       <span className="stalk-tip-head">
         <code>{bloom.genome.code}</code>
-        <em>{bloomLabel(hover, en)}</em>
+        <em>{bloomLabel(hover, zh)}</em>
       </span>
       <b>{bloom.merge ? bloom.merge.subject : species}</b>
       <small>
         {bloom.merge
           ? `${species} · ${ago(bloom.to, Date.now(), locale)}`
           : `${day.format(bloom.from)} – ${day.format(bloom.to)} · ${
-              tier ? counts(tier, en) : `${bloom.commits} ${en ? 'commits' : '個提交'}`
+              tier ? counts(tier, zh) : sceneText(zh, 'tip.commitMany', { n: bloom.commits })
             }`}
       </small>
       <span className="stalk-tip-chips">
-        <i>{en ? `seeded by ${bloom.sha.slice(0, 7)}` : `種子 ${bloom.sha.slice(0, 7)}`}</i>
+        <i>{sceneText(zh, 'tip.seededBy', { sha: bloom.sha.slice(0, 7) })}</i>
       </span>
     </div>
   );
@@ -105,7 +106,7 @@ function CommitTip({
     >
       <span className="stalk-tip-head">
         <code>{node.sha.slice(0, 7)}</code>
-        {node.merge && <em>{locale === 'en' ? 'merge' : '合併'}</em>}
+        {node.merge && <em>{sceneText(locale !== 'en', 'tip.merge')}</em>}
       </span>
       <b>{node.subject}</b>
       <small>

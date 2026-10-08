@@ -75,7 +75,16 @@ function weighted<T>(items: readonly T[], weight: (item: T) => number, r: number
     left -= weight(item);
     if (left < 0) return item;
   }
-  return items[items.length - 1]!;
+  const last = items.at(-1);
+  if (last === undefined) throw new Error('weighted: empty items');
+  return last;
+}
+
+/** One of `items`, chosen by `r` in [0, 1). */
+function pickOf<T>(items: readonly T[], r: number): T {
+  const item = items[Math.floor(r * items.length)];
+  if (item === undefined) throw new Error('pickOf: empty items');
+  return item;
 }
 
 function pickGear(species: Species, rand: () => number): AvatarSpec['gear'] {
@@ -91,10 +100,7 @@ function pickGear(species: Species, rand: () => number): AvatarSpec['gear'] {
     );
     chosen.push(weighted(open, (g) => g.weight, rand()));
   }
-  return chosen.map((gear) => ({
-    gear,
-    color: GEAR_COLORS[Math.floor(rand() * GEAR_COLORS.length)]!,
-  }));
+  return chosen.map((gear) => ({ gear, color: pickOf(GEAR_COLORS, rand()) }));
 }
 
 /** The portrait is a pure function of the seed (a member id or session key) and the species the 3D model uses. */
@@ -121,7 +127,7 @@ export function avatarSpec(seed: string, speciesName: string): AvatarSpec {
     inner: shift(art.inner, hue, sat),
     backdrop: backdropDark ? dark : pale,
     backdropDark,
-    marking: art.markings[Math.floor(rand() * art.markings.length)]!,
+    marking: pickOf(art.markings, rand()),
     eyes: weighted(EYE_STYLES, (s) => EYE_WEIGHTS[s], rand()),
     mouth: weighted(MOUTH_STYLES, (s) => MOUTH_WEIGHTS[s], rand()),
     blush: rand() < 0.4,

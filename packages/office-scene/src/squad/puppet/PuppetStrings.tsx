@@ -127,6 +127,39 @@ function writeString(
   return segment;
 }
 
+/** Writes one visible member's four strings and its cross from `segment` on; returns the segment after them (the same when it is not visible). */
+function writeMember(
+  rig: Rig,
+  b: Buffers,
+  g: Gathered,
+  i: number,
+  tone: (hex: string) => Color,
+  crossItems: Instance[],
+  from: number,
+): number {
+  const m = g.members[i];
+  const squad = g.squadOfMember[i];
+  const slot = m ? rig.slots.get(m.id) : undefined;
+  const motion = m ? rig.motions.get(m.id) : undefined;
+  if (!m || !squad || slot === undefined || !motion) return from;
+  const light = motion.alpha * distanceFade(g.distances[i] ?? Infinity);
+  if (light <= 0.01) return from;
+  const hue = tone(m.phase === 'waiting' ? WAITING_AMBER : squad.accent);
+  const first = slot * STRINGS_PER_MEMBER * POINTS * 3;
+  let segment = from;
+  for (let k = 0; k < STRINGS_PER_MEMBER; k++) {
+    const weight = k === STRINGS_PER_MEMBER - 1 ? MASTER_LIGHT : 1;
+    segment = writeString(rig, b, first + k * POINTS * 3, segment, hue, light * weight);
+  }
+  const pos = rig.strings.pos;
+  crossItems.push({
+    at: [pos[first] ?? 0, pos[first + 1] ?? 0, pos[first + 2] ?? 0],
+    yaw: m.chair.yaw,
+    color: hue.clone().multiplyScalar(0.35 + 0.65 * light),
+  });
+  return segment;
+}
+
 /** Writes every visible member's four strings and its cross; returns how many segments were written. */
 function writeStrings(
   rig: Rig,
@@ -136,27 +169,8 @@ function writeStrings(
   crossItems: Instance[],
 ): number {
   let segment = 0;
-  for (let i = 0; i < g.members.length; i++) {
-    const m = g.members[i];
-    const squad = g.squadOfMember[i];
-    const slot = m ? rig.slots.get(m.id) : undefined;
-    const motion = m ? rig.motions.get(m.id) : undefined;
-    if (!m || !squad || slot === undefined || !motion) continue;
-    const light = motion.alpha * distanceFade(g.distances[i] ?? Infinity);
-    if (light <= 0.01) continue;
-    const hue = tone(m.phase === 'waiting' ? WAITING_AMBER : squad.accent);
-    const first = slot * STRINGS_PER_MEMBER * POINTS * 3;
-    for (let k = 0; k < STRINGS_PER_MEMBER; k++) {
-      const weight = k === STRINGS_PER_MEMBER - 1 ? MASTER_LIGHT : 1;
-      segment = writeString(rig, b, first + k * POINTS * 3, segment, hue, light * weight);
-    }
-    const pos = rig.strings.pos;
-    crossItems.push({
-      at: [pos[first] ?? 0, pos[first + 1] ?? 0, pos[first + 2] ?? 0],
-      yaw: m.chair.yaw,
-      color: hue.clone().multiplyScalar(0.35 + 0.65 * light),
-    });
-  }
+  for (let i = 0; i < g.members.length; i++)
+    segment = writeMember(rig, b, g, i, tone, crossItems, segment);
   return segment;
 }
 

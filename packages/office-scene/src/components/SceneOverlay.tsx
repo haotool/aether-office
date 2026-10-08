@@ -1,6 +1,6 @@
 import type { SceneModel } from '../core/use-scene-model.js';
 import { floorZones } from '../environment/layout.js';
-import { compactionLabel } from '../environment/context.js';
+import { compactionLabel } from '../environment/compaction-label.js';
 import { NameTag, tipOf } from './NameTag.js';
 import { SpeechLayer } from './Speech.js';
 import { StalkTooltip } from './StalkTooltip.js';

@@ -4,6 +4,7 @@ import { api } from '../../lib/api/api.js';
 import { PageHeading } from '../../ui/PageHeading.js';
 import { useT, useWhy } from '../../ui/useT.js';
 import type { Key } from '../../lib/i18n/i18n.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 type ObservationPage = {
   sources: {
     id: string;
@@ -122,7 +123,7 @@ export function Observations({ projectId }: { projectId: string }) {
         `/api/projects/${projectId}/observations${before === undefined ? '' : `?before=${before}`}`,
       ),
     staleTime: 0,
-    refetchInterval: 2000,
+    ...poll(POLL.watching),
   });
   return (
     <>

@@ -6,6 +6,7 @@ import { execute } from '../../lib/api/api-commands.js';
 import { Field } from '../../ui/Field.js';
 import { useT } from '../../ui/useT.js';
 import type { Key } from '../../lib/i18n/i18n.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 
 const statusKey: Record<ReviewComments['comments'][number]['status'], Key> = {
   current: 'commentCurrent',
@@ -54,7 +55,8 @@ function CommentForm({ projectId, work, data, queryKey }: CommentFormProps) {
         e.preventDefault();
         const element = e.currentTarget; // React clears currentTarget after the first await
         const form = new FormData(element);
-        const hunk = data.hunks[Number(form.get('hunk'))]!;
+        const hunk = data.hunks[Number(form.get('hunk'))];
+        if (!hunk) throw new Error('review hunk missing');
         setError('');
         try {
           await execute(
@@ -107,7 +109,7 @@ export function HunkComments({
   const query = useQuery({
     queryKey: key,
     queryFn: () => api<ReviewComments>(`/api/projects/${projectId}/work/${work.id}/comments`),
-    refetchInterval: 4000,
+    ...poll(POLL.working),
   });
   const data = query.data;
   return (
