@@ -205,7 +205,7 @@ is a supervisor:
 | --- | --- | --- | --- |
 | In-tray (two stacked trays) | merged boxes | 1 `InstancedMesh` | 60 |
 | Stamp (handle + base) | merged lathe + box | 1 `InstancedMesh` | 120 |
-| Nameplate "主管 / Lead" | box + one quad with the shared label atlas | 1 (atlas sprite pool, §5.4) | 2 |
+| Nameplate ("Lead" in the viewer's language) | box + one quad with the shared label atlas | 1 (atlas sprite pool, §5.4) | 2 |
 | Halo over the head | ring, additive | 1 `InstancedMesh` | 96 |
 | Desk-edge accent strip (gold, `#ffc65c`, the existing group-ring colour) | thin box | merged into the in-tray instance | — |
 
@@ -285,7 +285,7 @@ slots, we read them instead (§9).
     the median and 7 at the p99 (0.57 to 0.75), so a Codex squad glows less than a Claude one, which is what it is doing.
     Re-run the script and change `BEAM_REFERENCE` (the test names the constants) if the way people work changes.
   - The caption says which rate is shown: the zone label button's tooltip and accessible name read "~12K tokens/min (based
-    on tokens)" or "~8 tool calls/min (based on tool calls)" (`Intl.NumberFormat` compact: "1.2萬" in zh-TW), and nothing
+    on tokens)" or "~8 tool calls/min (based on tool calls)" (`Intl.NumberFormat` compact: a ten-thousand unit in zh-TW), and nothing
     while the squad is idle. A tool-call rate is never worded as tokens. `?squad=N&tokens=12000` makes the stand-in
     subagents report a token rate, to look at it.
 - **Return filament and "absorption"**: one shared `LineSegments2` (the `RelationLines` technique) from the core at
@@ -373,8 +373,8 @@ export function errandAt(plan: ErrandPlan, elapsedMs: number, reduced: boolean):
 
 - **As built (I5).** Everything solid is one unit box (12 triangles) in one `InstancedMesh`: a folder is two boxes (body and tab, 24
   triangles) and the stamp two more, so folders, stamps and the in-tray stack are one draw call. The in-tray's stack shows up to 5
-  folders and clears after 5 minutes without a new one. The stamp's word is drawn on a small canvas texture (RECEIVED, RETURNED, 已收到,
-  已退回: one material per word, an extra draw call only while that word is on show), tinted slate blue or grey. The stamp has
+  folders and clears after 5 minutes without a new one. The stamp's word is drawn on a small canvas texture (RECEIVED and RETURNED, each in en and
+  zh-TW: one material per word, an extra draw call only while that word is on show), tinted slate blue or grey. The stamp has
   its own instances (the dressing no longer holds it): it moves over the tray, presses for 250 ms (100 down, 80 hold, 70 up) and
   returns. No "approved" glyph or word exists; a test greps the sources for it. The seal is placed on the top folder from the moment
   the stamp touches it, with a 150 ms pop; the ink-ring flash of the first draft is not built.

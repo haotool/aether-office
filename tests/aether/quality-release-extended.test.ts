@@ -13,6 +13,7 @@ const {
   measureLocaleCompleteness,
   measureConventionalCommits,
   measureMixedLanguageDocs,
+  measureChangelog,
 } = await load('measure-extended.mjs');
 const { memoryRepo } = await loadRoot('repo.mjs');
 const { creditM } = await load('compute.mjs');
@@ -77,5 +78,38 @@ describe('measureMixedLanguageDocs', () => {
       'docs/development.md': 'Hello world 你好世界\n',
     });
     expect(measureMixedLanguageDocs(repo).violations).toBe(1);
+  });
+});
+
+describe('measureChangelog', () => {
+  const good = [
+    '# Changelog',
+    '',
+    '## [Unreleased]',
+    '',
+    '## [0.4.0] - 2026-10-08',
+    '',
+    '### Added',
+    '- a',
+    '### Fixed',
+    '- b',
+    '',
+  ].join('\n');
+
+  it('accepts the Keep a Changelog layout', () => {
+    expect(measureChangelog(memoryRepo({ 'CHANGELOG.md': good })).violations).toBe(0);
+  });
+
+  it('counts a missing section, odd headings, repeated kinds and working vocabulary', () => {
+    const bad = good
+      .replace('## [Unreleased]\n\n', '')
+      .replace('### Fixed', '### Added')
+      .replace('## [0.4.0] - 2026-10-08', '## 0.4.0')
+      .concat('- fixed in wave 2\n');
+    expect(measureChangelog(memoryRepo({ 'CHANGELOG.md': bad })).violations).toBe(4);
+  });
+
+  it('is unmeasured without a changelog', () => {
+    expect(measureChangelog(memoryRepo({})).unmeasured).toBe(true);
   });
 });

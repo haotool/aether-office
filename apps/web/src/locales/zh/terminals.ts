@@ -13,6 +13,7 @@ export const zhTerminals = {
   terminalStop: '停止終端機',
   terminalStart: '啟動終端機',
   terminalProfile: '本機批准的啟動設定',
+  terminalNoProfileTitle: '還沒有可以開的終端機',
   terminalNoProfile:
     '尚無終端機設定。需要先連上執行主機（pnpm runner:enroll），並在它的 native 設定檔加上 "cliTerminals": true 或 "terminals" 項目，詳見 docs/native-execution.md。',
   terminalCols: '欄數',

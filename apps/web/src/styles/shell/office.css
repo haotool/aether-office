@@ -29,10 +29,6 @@
   letter-spacing: 2px;
   font-weight: 600;
 }
-.eyebrow > span {
-  color: var(--dim);
-  margin-left: var(--space-8);
-}
 .office-heading-actions {
   display: flex;
   gap: var(--space-8);
@@ -169,7 +165,7 @@
   bottom: 14px; /* token-lint: geometry */
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   color: var(--on-glass-muted);
   font-size: var(--fs-label);
   letter-spacing: 1.4px;

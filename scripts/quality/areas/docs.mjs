@@ -1,12 +1,13 @@
 // Area 7: docs truth. Links resolve, the commands, environment variables and files the docs name exist, the required
-// documents are there and the generated ones are fresh. Research notes and the changelog describe history, so they are
+// documents are there and the generated ones are fresh. Research and internal notes and the changelog describe history, so they are
 // not held to the "still exists" rules.
 import path from 'node:path';
 import { SELF, top } from '../lib.mjs';
 import { rule } from '../model.mjs';
 import { matching, runCommand } from '../repo.mjs';
 
-const HISTORY = /^(docs\/research\/|CHANGELOG\.md|docs\/verification\/|docs\/adr\/)/;
+export const HISTORY =
+  /^(docs\/(research|internal)\/|CHANGELOG\.md|docs\/verification\/|docs\/adr\/)/;
 export const PNPM_BUILTINS = new Set([
   'install',
   'i',

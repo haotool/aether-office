@@ -51,7 +51,7 @@ export function Modal({
 /**
  * A list in a bottom sheet over everything (a phone's way to pick from a few things without leaving the scene): a
  * title with a count, an action (the close button unless one is given), and the rows as `<li>`s. Escape and the
- * backdrop close it; focus moves in and returns to what opened it.
+ * backdrop close it; focus moves in, the page behind is inert while it is open, and focus returns to what opened it.
  */
 export function Sheet({
   title,
@@ -72,18 +72,34 @@ export function Sheet({
   close.current = onClose;
   useEffect(() => {
     const opener = document.activeElement;
+    const page = document.getElementById('root'); // the sheet sits beside it, in the body
+    if (page) page.inert = true; // so neither Tab nor a screen reader reaches the page behind
     ref.current?.focus();
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close.current();
     document.addEventListener('keydown', onKey);
     return () => {
       document.removeEventListener('keydown', onKey);
+      if (page) page.inert = false;
       if (opener instanceof HTMLElement) opener.focus();
     };
   }, []);
   return createPortal(
     <>
-      <button className="sheet-backdrop" aria-label={t('close')} onClick={onClose} />
-      <section ref={ref} tabIndex={-1} className="sheet" role="dialog" aria-label={title}>
+      <button
+        className="sheet-backdrop"
+        aria-label={t('close')}
+        aria-hidden="true"
+        tabIndex={-1}
+        onClick={onClose}
+      />
+      <section
+        ref={ref}
+        tabIndex={-1}
+        className="sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+      >
         <header>
           <h2>
             {title} {count !== undefined && <small>{count}</small>}

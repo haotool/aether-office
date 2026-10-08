@@ -13,6 +13,7 @@ export const enTerminals = {
   terminalStop: 'Stop terminal',
   terminalStart: 'Start terminal',
   terminalProfile: 'Locally approved launch profile',
+  terminalNoProfileTitle: 'No terminal to start yet',
   terminalNoProfile:
     'No terminal profiles yet. A runner has to be connected (pnpm runner:enroll) and its native file needs "cliTerminals": true or a "terminals" entry; see docs/native-execution.md.',
   terminalCols: 'Columns',

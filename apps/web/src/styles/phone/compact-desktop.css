@@ -80,6 +80,9 @@
     font-size: var(--fs-label);
     letter-spacing: 0.5px;
   }
+  table.stack td > * {
+    grid-column: 2; /* a part of a value stays in the value column, under the first one */
+  }
   table.stack td:first-child {
     display: block; /* the row's title spans the card */
     font-size: var(--fs-body);
@@ -154,14 +157,19 @@
 @media (max-width: 1500px) {
   .sidebar .telemetry {
     display: grid;
-    grid-template-columns: repeat(
-      2,
-      minmax(0, 1fr)
-    ); /* a label such as 休眠／異常 needs more than a third of the sidebar */
-    gap: var(--space-8) var(--space-12);
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
     padding: var(--space-12) var(--space-12);
     margin-top: auto;
     border-top: 1px solid var(--line);
+  }
+  /* A row is the label and its number; a pair too wide for the sidebar (DISK FREE with a size) puts the number under the label, never over its neighbour. */
+  .sidebar .telemetry div {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    column-gap: var(--space-8);
   }
 }
 @media (max-width: 760px), (pointer: coarse) and (max-height: 500px) {

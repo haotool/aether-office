@@ -775,7 +775,7 @@ text. A made-up line may look like code or a build log; it never says how anythi
   model switch (different window) and a new session are not compactions, and a marker already in the transcript when a session
   first appears counts only if under 30 s old. When one is noticed the page hands it to the scene for 3 s: the member's
   sheets of paper burst out and are drawn into a small glowing cube above its head (one `Points` draw plus a cube and a ring,
-  2.5 s, `CompactionEffect`), the gauge's fill shrinks, and a chip under the name tag says "compacted −N%" / "已壓縮 −N%".
+  2.5 s, `CompactionEffect`), the gauge's fill shrinks, and a chip under the name tag says "compacted −N%" (translated in zh-TW).
   Reduced motion keeps only the chip and the gauge's tween; low quality draws none of it (the gauge still moves).
   `?compact=1` previews it on stand-in members every 8 seconds.
 - **Provider marks** (`provider-marks.tsx`) are small decorative provider indicators: inline SVGs on a 24 by 24 grid, drawn
@@ -1027,7 +1027,7 @@ shadow throttle are aimed at them, and are unproven there.
 
 ### Mobile quality (P1: dithering, textures, pixel ratio, MSAA, context loss)
 
-Evidence and the sources are in [the mobile gradient research](research/mobile-gradient-perf.md). Every number below is one
+Evidence and the sources are in [the mobile gradient research](internal/mobile-gradient-perf.md). Every number below is one
 machine (Apple M4, `--use-angle=metal`, Chrome), phone profile 390x844 at dpr 3 with a 4x CPU throttle, the repository's
 `scripts/perf-matrix.mjs` with interleaved A/B rounds; the display holds 16.7 ms, so p95 stays 18.3 to 18.6 ms in every case and the
 evidence is `jsMs` / `renderMs`, draws, programs and the GPU estimate. **Nothing here was measured on a real phone, on Safari or on another
@@ -1151,8 +1151,8 @@ overlays.
   walks a folder (floating at its chest) to the end of the supervisor's desk that is nearest the zone, turns to the in-tray and glides the
   folder in (0.6 s). The supervisor reads (`reading`, 1.5 s, an existing clip played as a one-shot) and then nods; the stamp goes over the
   tray, presses (250 ms) and a seal blooms on the folder; the subagent waves and walks into the core. The stamp says **RECEIVED**
-  (已收到): a receipt that a result came back, never "approved", and it never says passed or failed. When the parent's own tool
-  result for the call is flagged as an error (`result.error === true`, or `ok === false`) it is a neutral grey **RETURNED** (已退回)
+  (translated in zh-TW): a receipt that a result came back, never "approved", and it never says passed or failed. When the parent's own tool
+  result for the call is flagged as an error (`result.error === true`, or `ok === false`) it is a neutral grey **RETURNED** (also translated)
   and the supervisor scratches its head instead of nodding; no red and no green are used. `plan.ts` is the pure timeline (stand,
   walk of at most 8 s, turn, glide, read, press, leave: the press within 14 s), `book.ts` the throttle and the state machine,
   `items.ts` what is drawn at a moment, `Handover.tsx` the meshes (one instanced mesh of unit boxes for every folder, tab and stamp, and

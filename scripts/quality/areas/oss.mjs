@@ -4,7 +4,7 @@ import { findingLocation, top } from '../lib.mjs';
 import { info, rule } from '../model.mjs';
 import { matching, runCommand } from '../repo.mjs';
 
-const ASSESSMENT = 'docs/research/oss-risk-assessment.md';
+const ASSESSMENT = 'docs/internal/oss-risk-assessment.md';
 const TEMPLATES = [
   '.github/PULL_REQUEST_TEMPLATE.md',
   '.github/CODEOWNERS',
@@ -145,7 +145,7 @@ export function oss(repo, { readiness = [] } = {}) {
     }),
     info(
       'open-decisions',
-      'Maintainer decisions still open (docs/research/oss-risk-assessment.md, not scored)',
+      'Maintainer decisions still open (docs/internal/oss-risk-assessment.md, not scored)',
       decisions.length,
       decisions,
     ),

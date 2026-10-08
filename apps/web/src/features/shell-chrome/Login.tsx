@@ -132,7 +132,6 @@ export function Login({ onLogin }: { onLogin: (session: Session) => void }) {
       </div>
       <section className="login-panel">
         <img src="/favicon.svg" width="44" height="44" alt="" />
-        <span className="eyebrow">YOUR WORK, IN ORBIT</span>
         <h1>{t('loginTitle')}</h1>
         <p>{t('loginHint')}</p>
         <LoginForm error={error} setError={setError} onLogin={onLogin} />

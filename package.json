@@ -63,7 +63,9 @@
     "quality:release": "node scripts/quality/score.mjs --release",
     "quality:gates": "node scripts/quality/release/gates.mjs",
     "oss:check": "node scripts/oss/third-party-notices.mjs --check && node scripts/oss/reuse-check.mjs && node scripts/oss/readiness-check.mjs",
-    "perf:mobile": "node --import tsx scripts/mobile-perf/run.ts"
+    "perf:mobile": "node --import tsx scripts/mobile-perf/run.ts",
+    "ux:matrix": "playwright test --config e2e/ux-matrix/playwright.config.ts",
+    "ux:summary": "node scripts/ux-matrix-summary.mjs"
   },
   "devDependencies": {
     "@a2a-js/sdk": "1.3.0",

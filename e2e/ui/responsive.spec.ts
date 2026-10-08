@@ -2,8 +2,9 @@ import { test, expect, type Page } from '@playwright/test';
 import { signIn } from '../support/sign-in.js';
 import { mkdirSync } from 'node:fs';
 
-// The UI rules (AGENTS.md → "UI rules") as a check, on every page at four widths: nothing sideways, no text under the
-// type floor, and, where the pointer is a finger, every control a finger target.
+// The UI rules (AGENTS.md → "UI rules") as a check, on every page at the widths below (the seven the charter names, 320 to
+// 1920, and a few awkward ones in between): nothing sideways, no control sitting on another, no text under the type floor,
+// and, where the pointer is a finger, every control a finger target.
 const PAGES = [
   'office',
   'agents',
@@ -22,11 +23,15 @@ const PAGES = [
 ] as const;
 const VIEWPORTS = [
   { name: 'phone-small', width: 320, height: 640, touch: true },
+  { name: 'phone-narrow', width: 360, height: 800, touch: true },
   { name: 'phone', width: 390, height: 844, touch: true },
   { name: 'tablet', width: 820, height: 1180, touch: true },
+  { name: 'tablet-air-landscape', width: 1180, height: 820, touch: true },
   { name: 'laptop', width: 1280, height: 800, touch: false },
   { name: 'tablet-landscape', width: 1194, height: 834, touch: true },
   { name: 'laptop-short', width: 1366, height: 620, touch: false },
+  { name: 'desktop', width: 1440, height: 900, touch: false },
+  { name: 'desktop-wide', width: 1920, height: 1080, touch: false },
 ] as const;
 const TYPE_FLOOR = 11;
 const TOUCH_TARGET = 36; // the control itself; a finger's 44px comes from a hit area that extends past it (touch-targets.css)
@@ -121,6 +126,52 @@ function audit({ touch, floor, target }: { touch: boolean; floor: number; target
       }
     }
   }
+  // Two controls sitting on each other: more than a quarter of the smaller one covered, counting only the part of each
+  // that shows (a box that scrolls clips its content). A fixed bar is its own layer: the page scrolls under it by design.
+  const fixed = (el: Element) => {
+    for (let up: Element | null = el; up; up = up.parentElement)
+      if (['fixed', 'sticky'].includes(getComputedStyle(up).position)) return true;
+    return false;
+  };
+  const layers = [
+    ...document.querySelectorAll(
+      'button, select, summary, input:not([type=hidden]), a[href], [role=button], [role=tab]',
+    ),
+  ]
+    .filter(
+      (el) =>
+        shown(el) &&
+        !el.closest('canvas, svg, .world-labels') &&
+        el.checkVisibility({ checkVisibilityCSS: true, contentVisibilityAuto: true }),
+    )
+    .map((el) => {
+      const own = fixed(el);
+      const { left, top, right, bottom } = el.getBoundingClientRect();
+      const seen = { left, top, right, bottom };
+      for (let up = own ? null : el.parentElement; up; up = up.parentElement) {
+        const style = getComputedStyle(up);
+        if (style.overflowX === 'visible' && style.overflowY === 'visible') continue;
+        const frame = up.getBoundingClientRect();
+        seen.left = Math.max(seen.left, frame.left);
+        seen.top = Math.max(seen.top, frame.top);
+        seen.right = Math.min(seen.right, frame.right);
+        seen.bottom = Math.min(seen.bottom, frame.bottom);
+      }
+      return { el, seen, fixed: own };
+    })
+    .filter(({ seen }) => seen.right > seen.left && seen.bottom > seen.top);
+  for (let i = 0; i < layers.length; i += 1)
+    for (let j = i + 1; j < layers.length; j += 1) {
+      const a = layers[i]!;
+      const b = layers[j]!;
+      if (a.fixed !== b.fixed || a.el.contains(b.el) || b.el.contains(a.el)) continue;
+      const w = Math.min(a.seen.right, b.seen.right) - Math.max(a.seen.left, b.seen.left);
+      const h = Math.min(a.seen.bottom, b.seen.bottom) - Math.max(a.seen.top, b.seen.top);
+      if (w <= 0 || h <= 0) continue;
+      const area = (v: typeof a.seen) => (v.right - v.left) * (v.bottom - v.top);
+      if ((w * h) / Math.min(area(a.seen), area(b.seen)) > 0.25)
+        problems.push(`overlap: ${label(a.el)} on ${label(b.el)}`);
+    }
   return problems;
 }
 

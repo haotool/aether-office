@@ -138,6 +138,10 @@
 /* Density by distance: far, only the mark and the dot (a hovered or selected tag always opens) */
 .scene-label[data-density='far']:not(.selected):not(.hovered) {
   padding: var(--space-4);
+  min-width: var(
+    --space-24
+  ); /* the WCAG 2.5.8 minimum target, which the mark and the dot alone do not reach */
+  justify-content: center;
 }
 .scene-label[data-density='far']:not(.selected):not(.hovered) :is(.tag-name, .tag-unread) {
   display: none;

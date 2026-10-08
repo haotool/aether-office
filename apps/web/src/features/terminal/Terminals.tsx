@@ -4,6 +4,7 @@ import { TerminalKeys } from './TerminalKeys.js';
 import { TerminalControls } from './TerminalControls.js';
 import { api } from '../../lib/api/api.js';
 import { execute } from '../../lib/api/api-commands.js';
+import { Empty } from '../../ui/Empty.js';
 import { Field } from '../../ui/Field.js';
 import { PageHeading } from '../../ui/PageHeading.js';
 import { useT, useWhy } from '../../ui/useT.js';
@@ -243,7 +244,7 @@ export function Terminals({
           }}
         />
       ) : (
-        <p>{t('terminalNoProfile')}</p>
+        <Empty title={t('terminalNoProfileTitle')} hint={t('terminalNoProfile')} />
       )}
       <SessionButtons sessions={list.data?.sessions} onSelect={setSelected} />
       {selected && (

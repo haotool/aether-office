@@ -2,7 +2,7 @@
 
 This document describes how AETHER OFFICE measures **relative** mobile PWA performance for A/B experiments. It does not change product behavior. Formal baselines are run by the audit PM in an exclusive window; developers use the same harness locally.
 
-See also [design-system.md](../design-system.md) (performance section), [mobile-gradient-perf.md](../research/mobile-gradient-perf.md) (research), and `scripts/perf-matrix.mjs` (scene GPU matrix).
+See also [design-system.md](../design-system.md) (performance section), [mobile-gradient-perf.md](../internal/mobile-gradient-perf.md) (research), and `scripts/perf-matrix.mjs` (scene GPU matrix).
 
 ## Profiles
 

@@ -6,7 +6,7 @@ Overall: **96.7** (mean of the scored areas; target 95).
 
 | Area | Score | Floor | Measured | Largest penalties |
 | --- | ---: | ---: | ---: | --- |
-| Structure (`structure`) | 95.0 | 95.0 | 100% | fan-in 3 (-5) |
+| Structure (`structure`) | 94.9 | 95.0 | 100% | fan-in 3 (-5), function-length 1 (-0.1) |
 | Types and correctness gates (`types`) | 100.0 | 100.0 | 100% | none |
 | Tests (`tests`) | 100.0 | 100.0 | 100% | none |
 | UI system and design tokens (`ui`) | 97.5 | 97.5 | 100% | escape-comments 149 (-2.45) |
@@ -21,13 +21,13 @@ A score is 100 minus the penalties of the rules that could be measured. A rule t
 
 ## Structure
 
-Score 95.0, floor 95.0, 100% of the rule weight measured.
+Score 94.9, floor 95.0, 100% of the rule weight measured.
 
 | Rule | Id | Value | Limit | Weight | Penalty | State |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
 | Files over 400 lines | `file-size-400` | 0 | 0 | 8 | 0 | pass |
 | Files over 800 lines | `file-size-800` | 0 | 0 | 12 | 0 | pass |
-| Functions over 50 lines | `function-length` | 0 | 0 | 12 | 0 | pass |
+| Functions over 50 lines | `function-length` | 1 | 0 | 12 | -0.1 | fail |
 | Control-flow nesting deeper than 4 | `nesting` | 0 | 0 | 8 | 0 | pass |
 | Import cycles (runtime imports, product source) | `import-cycles` | 0 | 0 | 12 | 0 | pass |
 | Files imported by more than 30 others | `fan-in` | 3 | 0 | 5 | -5 | fail |
@@ -46,6 +46,12 @@ Score 95.0, floor 95.0, 100% of the rule weight measured.
   apps/control/src/server.ts:1 38 importers
   apps/web/src/lib/api/api.ts:1 48 importers
   apps/web/src/ui/useT.ts:1 146 importers
+```
+
+**function-length** (-0.1): Functions over 50 lines
+
+```text
+  apps/web/src/ui/Modal.tsx:56 Sheet 63 lines
 ```
 
 ## Types and correctness gates
@@ -82,7 +88,7 @@ Unit-test lines per product source line: 0.49
 ```text
 apps/control: 15243 source lines
 apps/runner: 3147 source lines
-apps/web: 29485 source lines
+apps/web: 29517 source lines
 packages/contracts: 1717 source lines
 packages/kernel: 3652 source lines
 packages/office-scene: 27967 source lines
@@ -107,7 +113,7 @@ Score 97.5, floor 97.5, 100% of the rule weight measured.
 | token-lint escape comments over the budget of 100 | `escape-comments` | 149 | 100 | 10 | -2.45 | fail |
 | Rules above scripts/design-token-baseline.json | `baseline-regression` | 0 | 0 | 15 | 0 | pass |
 | Roles with more distinct sizes than allowed | `role-variance` | 0 | 0 | 20 | 0 | pass |
-| Physical left/right properties (logical ones are RTL-ready) | `physical-properties` | 175 | - | - | 0 | info |
+| Physical left/right properties (logical ones are RTL-ready) | `physical-properties` | 174 | - | - | 0 | info |
 
 ### What costs points
 
@@ -120,8 +126,8 @@ Score 97.5, floor 97.5, 100% of the rule weight measured.
   apps/web/src/styles/pages/breakpoints.css:17 width: 172px; /* token-lint: geometry */
   apps/web/src/styles/pages/breakpoints.css:23 width: 132px; /* token-lint: geometry */
   apps/web/src/styles/pages/breakpoints.css:38 min-height: 380px; /* token-lint: geometry */
-  apps/web/src/styles/pages/breakpoints.css:124 box-shadow: 30px 0 60px var(--shade); /* token-lint: shadow */
-  apps/web/src/styles/pages/breakpoints.css:158 min-height: 400px; /* token-lint: geometry */
+  apps/web/src/styles/pages/breakpoints.css:128 box-shadow: 30px 0 60px var(--shade); /* token-lint: shadow */
+  apps/web/src/styles/pages/breakpoints.css:162 min-height: 400px; /* token-lint: geometry */
   ... 33 more in scorecard.json
 ```
 
@@ -149,19 +155,19 @@ Score 99.1, floor 99.1, 70% of the rule weight measured.
 | Largest JavaScript chunk, gzip (budget 400 KB) | `bundle-chunk` | 380 KB | 400 | 15 | 0 | pass |
 | First-load JavaScript and CSS, transferred (budget 200 KB) | `first-load` | 203 KB | 200 | 30 | -0.9 | fail |
 | Frame times and draw cost (scripts/perf-matrix.mjs) (not run: needs a real GPU (PERF_GPU=1); the measured numbers in docs/design-system.md are not re-scored) | `perf-matrix` | - | - | 30 | 0 | not run |
-| Stylesheet files in apps/web/src (225 KB source, 3 built file(s) at 32 KB gzip; no CSS budget is documented) | `css-sources` | 52 | - | - | 0 | info |
+| Stylesheet files in apps/web/src (226 KB source, 3 built file(s) at 32 KB gzip; no CSS budget is documented) | `css-sources` | 52 | - | - | 0 | info |
 
 ### What costs points
 
 **first-load** (-0.9): First-load JavaScript and CSS, transferred (budget 200 KB)
 
 ```text
-  apps/web/dist/assets/index-Cb_NT0dz.js:1 80 KB
+  apps/web/dist/assets/index-CjGvcWS7.js:1 79 KB
   apps/web/dist/assets/signals-BiryGzd7.js:1 3 KB
   apps/web/dist/assets/scheduler-CaJXFZeK.js:1 1 KB
   apps/web/dist/assets/react-dom-DkN6JdHT.js:1 1 KB
-  apps/web/dist/assets/useT-S9D4-hG7.js:1 3 KB
-  apps/web/dist/assets/chunk-OB3PAWPO-CJwKuZQY.js:1 12 KB
+  apps/web/dist/assets/useT-BdlE3rj-.js:1 3 KB
+  apps/web/dist/assets/chunk-OB3PAWPO-CjzGAk-C.js:1 12 KB
   apps/web/dist/assets/QueryClientProvider-CR9ma4EU.js:1 0 KB
   apps/web/dist/assets/polling-BNbsgHRr.js:1 7 KB
   ... 35 more in scorecard.json
@@ -210,7 +216,7 @@ Score 95.0, floor 95.0, 100% of the rule weight measured.
 | Local host names and LAN addresses in documentation (confirm each is an example) | `doc-hostnames` | 0 | 0 | 5 | 0 | pass |
 | Workspace versions differing from the root, or the version hard-coded elsewhere | `version-source` | 0 | 0 | 5 | 0 | pass |
 | Version still carries a -dev suffix | `dev-version` | 1 | 0 | 5 | -5 | fail |
-| Maintainer decisions still open (docs/research/oss-risk-assessment.md, not scored) | `open-decisions` | 7 | - | - | 0 | info |
+| Maintainer decisions still open (docs/internal/oss-risk-assessment.md, not scored) | `open-decisions` | 7 | - | - | 0 | info |
 
 ### What costs points
 
@@ -220,16 +226,16 @@ Score 95.0, floor 95.0, 100% of the rule weight measured.
   package.json: 0.4.0-dev.0
 ```
 
-Maintainer decisions still open (docs/research/oss-risk-assessment.md, not scored): 7
+Maintainer decisions still open (docs/internal/oss-risk-assessment.md, not scored): 7
 
 ```text
-docs/research/oss-risk-assessment.md: 1. 完成歷史清理（R1、R2），`history-verify.sh --full` 為 GO；先建立 `.oss-private-patterns` 並重掃。
-docs/research/oss-risk-assessment.md: 2. 修 `.gitleaks.toml` 讓 `oss:check` 全綠（R3）。
-docs/research/oss-risk-assessment.md: 3. 更正 `history-cleanup.md` 的過期數字與「1 個 trailer」錯誤，再重新量測（R4）。
-docs/research/oss-risk-assessment.md: 4. 決定專案名稱（正式商標檢索後；R5）與供應商標誌處置（R6）。
-docs/research/oss-risk-assessment.md: 5. 啟用並實測 Private Vulnerability Reporting，補備用聯絡方式（R8）。
-docs/research/oss-risk-assessment.md: 6. 把版本由 `0.4.0-dev.0` 換成發佈版本並讓版本測試通過；只推 `main`，不推舊標籤、worktree 分支、stash。
-docs/research/oss-risk-assessment.md: 7. 補 AI 輔助聲明（若清除 trailer；R11）與「實驗性、無支援保證」聲明（R9）。
+docs/internal/oss-risk-assessment.md: 1. 完成歷史清理（R1、R2），`history-verify.sh --full` 為 GO；先建立 `.oss-private-patterns` 並重掃。
+docs/internal/oss-risk-assessment.md: 2. 修 `.gitleaks.toml` 讓 `oss:check` 全綠（R3）。
+docs/internal/oss-risk-assessment.md: 3. 更正 `history-cleanup.md` 的過期數字與「1 個 trailer」錯誤，再重新量測（R4）。
+docs/internal/oss-risk-assessment.md: 4. 決定專案名稱（正式商標檢索後；R5）與供應商標誌處置（R6）。
+docs/internal/oss-risk-assessment.md: 5. 啟用並實測 Private Vulnerability Reporting，補備用聯絡方式（R8）。
+docs/internal/oss-risk-assessment.md: 6. 把版本由 `0.4.0-dev.0` 換成發佈版本並讓版本測試通過；只推 `main`，不推舊標籤、worktree 分支、stash。
+docs/internal/oss-risk-assessment.md: 7. 補 AI 輔助聲明（若清除 trailer；R11）與「實驗性、無支援保證」聲明（R9）。
 ```
 
 ## Product maturity

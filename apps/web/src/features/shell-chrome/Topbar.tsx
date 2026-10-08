@@ -91,9 +91,10 @@ export function Topbar({
   onProject,
   onNewProject,
 }: TopbarProps) {
+  const t = useT();
   return (
     <header className="topbar">
-      <button className="icon-button mobile-menu" aria-label="Menu" onClick={onMenu}>
+      <button className="icon-button mobile-menu" aria-label={t('openMenu')} onClick={onMenu}>
         <Menu size={21} />
       </button>
       <NavLink to="/office" className="brand" aria-label="AETHER OFFICE">
@@ -103,15 +104,17 @@ export function Topbar({
         </span>
       </NavLink>
       <span className="top-divider" />
-      <div className="project-picker">
-        <span className="tiny-label">WORKSPACE</span>
-        <ProjectSelect
-          projects={projects}
-          projectId={projectId}
-          onProject={onProject}
-          title={projects.find((p) => p.id === projectId)?.name}
-        />
-      </div>
+      {projects.length > 0 && (
+        <div className="project-picker">
+          <span className="tiny-label">{t('project')}</span>
+          <ProjectSelect
+            projects={projects}
+            projectId={projectId}
+            onProject={onProject}
+            title={projects.find((p) => p.id === projectId)?.name}
+          />
+        </div>
+      )}
       <AddProjectButton owner={session.actor.role === 'owner'} onClick={onNewProject} />
       <TopbarRight
         session={session}

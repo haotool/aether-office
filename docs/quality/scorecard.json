@@ -5,7 +5,7 @@
     {
       "name": "structure",
       "title": "Structure",
-      "score": 95,
+      "score": 94.9,
       "measured": 100,
       "rules": [
         {
@@ -35,14 +35,16 @@
         {
           "id": "function-length",
           "label": "Functions over 50 lines",
-          "status": "pass",
+          "status": "fail",
           "weight": 12,
-          "value": 0,
+          "value": 1,
           "limit": 0,
           "full": 120,
           "unit": "",
-          "penalty": 0,
-          "details": []
+          "penalty": 0.1,
+          "details": [
+            "apps/web/src/ui/Modal.tsx:56 Sheet 63 lines"
+          ]
         },
         {
           "id": "nesting",
@@ -307,7 +309,7 @@
           "details": [
             "apps/control: 66/114 modules, 15243 source lines",
             "apps/runner: 22/24 modules, 3147 source lines",
-            "apps/web: 190/337 modules, 29485 source lines",
+            "apps/web: 190/337 modules, 29517 source lines",
             "packages/contracts: 16/16 modules, 1717 source lines",
             "packages/kernel: 28/28 modules, 3652 source lines",
             "packages/office-scene: 133/244 modules, 27967 source lines",
@@ -377,7 +379,7 @@
           "details": [
             "apps/control: 15243 source lines",
             "apps/runner: 3147 source lines",
-            "apps/web: 29485 source lines",
+            "apps/web: 29517 source lines",
             "packages/contracts: 1717 source lines",
             "packages/kernel: 3652 source lines",
             "packages/office-scene: 27967 source lines",
@@ -517,19 +519,19 @@
             "apps/web/src/styles/pages/breakpoints.css:17 width: 172px; /* token-lint: geometry */",
             "apps/web/src/styles/pages/breakpoints.css:23 width: 132px; /* token-lint: geometry */",
             "apps/web/src/styles/pages/breakpoints.css:38 min-height: 380px; /* token-lint: geometry */",
-            "apps/web/src/styles/pages/breakpoints.css:124 box-shadow: 30px 0 60px var(--shade); /* token-lint: shadow */",
-            "apps/web/src/styles/pages/breakpoints.css:158 min-height: 400px; /* token-lint: geometry */",
-            "apps/web/src/styles/pages/breakpoints.css:163 left: 10px; /* token-lint: geometry */",
-            "apps/web/src/styles/pages/breakpoints.css:164 right: 10px; /* token-lint: geometry */",
-            "apps/web/src/styles/pages/breakpoints.css:165 top: 10px; /* token-lint: geometry */",
-            "apps/web/src/styles/pages/breakpoints.css:178 min-width: 140px; /* token-lint: geometry */",
-            "apps/web/src/styles/pages/breakpoints.css:232 min-width: 170px; /* token-lint: geometry */",
-            "apps/web/src/styles/pages/breakpoints.css:238 max-width: 240px; /* token-lint: geometry */",
-            "apps/web/src/styles/pages/breakpoints.css:257 height: 200px; /* token-lint: geometry */",
-            "apps/web/src/styles/pages/breakpoints.css:279 width: 62px; /* token-lint: geometry */",
-            "apps/web/src/styles/pages/breakpoints.css:290 scroll-behavior: auto !important; /* token-lint: preference */",
-            "apps/web/src/styles/pages/breakpoints.css:291 transition: none !important; /* token-lint: preference */",
-            "apps/web/src/styles/pages/breakpoints.css:292 animation: none !important; /* token-lint: preference */",
+            "apps/web/src/styles/pages/breakpoints.css:128 box-shadow: 30px 0 60px var(--shade); /* token-lint: shadow */",
+            "apps/web/src/styles/pages/breakpoints.css:162 min-height: 400px; /* token-lint: geometry */",
+            "apps/web/src/styles/pages/breakpoints.css:167 left: 10px; /* token-lint: geometry */",
+            "apps/web/src/styles/pages/breakpoints.css:168 right: 10px; /* token-lint: geometry */",
+            "apps/web/src/styles/pages/breakpoints.css:169 top: 10px; /* token-lint: geometry */",
+            "apps/web/src/styles/pages/breakpoints.css:182 min-width: 140px; /* token-lint: geometry */",
+            "apps/web/src/styles/pages/breakpoints.css:236 min-width: 170px; /* token-lint: geometry */",
+            "apps/web/src/styles/pages/breakpoints.css:242 max-width: 240px; /* token-lint: geometry */",
+            "apps/web/src/styles/pages/breakpoints.css:261 height: 200px; /* token-lint: geometry */",
+            "apps/web/src/styles/pages/breakpoints.css:283 width: 62px; /* token-lint: geometry */",
+            "apps/web/src/styles/pages/breakpoints.css:294 scroll-behavior: auto !important; /* token-lint: preference */",
+            "apps/web/src/styles/pages/breakpoints.css:295 transition: none !important; /* token-lint: preference */",
+            "apps/web/src/styles/pages/breakpoints.css:296 animation: none !important; /* token-lint: preference */",
             "apps/web/src/styles/pages/forms.css:66 width: min(560px, calc(100% - 28px)); /* token-lint: geometry */",
             "apps/web/src/styles/pages/forms.css:67 max-height: calc(100dvh - 48px); /* token-lint: geometry */",
             "apps/web/src/styles/pages/login.css:19 width: 580px; /* the login art's rings are geometry, not controls token-lint: geometry */",
@@ -583,7 +585,7 @@
           "label": "Physical left/right properties (logical ones are RTL-ready)",
           "status": "info",
           "weight": 0,
-          "value": 175,
+          "value": 174,
           "limit": null,
           "full": null,
           "unit": "",
@@ -703,13 +705,13 @@
           "penalty": 0,
           "details": [
             "apps/web/dist/assets/src-M2LOfCSO.js:1 380 KB",
-            "apps/web/dist/assets/index-Cb_NT0dz.js:1 92 KB",
-            "apps/web/dist/assets/Terminals-hrATnVjp.js:1 86 KB",
-            "apps/web/dist/assets/TaskDag-IZX7n1eE.js:1 56 KB",
+            "apps/web/dist/assets/index-CjGvcWS7.js:1 91 KB",
+            "apps/web/dist/assets/Terminals-2-RaKbWB.js:1 86 KB",
+            "apps/web/dist/assets/TaskDag-BArL_G0f.js:1 56 KB",
             "apps/web/dist/assets/core-Brz0YP_L.js:1 27 KB",
-            "apps/web/dist/assets/ProjectPage-jczuw2nf.js:1 27 KB",
-            "apps/web/dist/assets/zh-ymwTd3vK.js:1 21 KB",
-            "apps/web/dist/assets/PanelBody-BNN0H5pa.js:1 20 KB"
+            "apps/web/dist/assets/ProjectPage-CCCjm6ZG.js:1 27 KB",
+            "apps/web/dist/assets/zh-DDvmdKuQ.js:1 21 KB",
+            "apps/web/dist/assets/PanelBody-CQM7uVBW.js:1 20 KB"
           ]
         },
         {
@@ -737,49 +739,49 @@
           "unit": "KB",
           "penalty": 0.9,
           "details": [
-            "apps/web/dist/assets/index-Cb_NT0dz.js:1 80 KB",
+            "apps/web/dist/assets/index-CjGvcWS7.js:1 79 KB",
             "apps/web/dist/assets/signals-BiryGzd7.js:1 3 KB",
             "apps/web/dist/assets/scheduler-CaJXFZeK.js:1 1 KB",
             "apps/web/dist/assets/react-dom-DkN6JdHT.js:1 1 KB",
-            "apps/web/dist/assets/useT-S9D4-hG7.js:1 3 KB",
-            "apps/web/dist/assets/chunk-OB3PAWPO-CJwKuZQY.js:1 12 KB",
+            "apps/web/dist/assets/useT-BdlE3rj-.js:1 3 KB",
+            "apps/web/dist/assets/chunk-OB3PAWPO-CjzGAk-C.js:1 12 KB",
             "apps/web/dist/assets/QueryClientProvider-CR9ma4EU.js:1 0 KB",
             "apps/web/dist/assets/polling-BNbsgHRr.js:1 7 KB",
             "apps/web/dist/assets/createLucideIcon-BgbmjCWa.js:1 1 KB",
             "apps/web/dist/assets/check-B9JY3Vq3.js:1 0 KB",
             "apps/web/dist/assets/x-DCinKwPO.js:1 0 KB",
-            "apps/web/dist/assets/api-CPTxhCSv.js:1 1 KB",
-            "apps/web/dist/assets/PermissionCard-CflhnnO3.js:1 8 KB",
+            "apps/web/dist/assets/api-C3EjLzmk.js:1 1 KB",
+            "apps/web/dist/assets/PermissionCard-B3Q7dm7w.js:1 8 KB",
             "apps/web/dist/assets/arrow-up-right-DDxfJXAZ.js:1 0 KB",
             "apps/web/dist/assets/monitor-ND28roRt.js:1 0 KB",
             "apps/web/dist/assets/text-title-CotuO_NR.js:1 10 KB",
             "apps/web/dist/assets/time-CPE8nN5v.js:1 0 KB",
             "apps/web/dist/assets/browser-compat-Cpt3e03-.js:1 0 KB",
-            "apps/web/dist/assets/api-commands-KndiYamA.js:1 0 KB",
+            "apps/web/dist/assets/api-commands-CnTLUqBX.js:1 0 KB",
             "apps/web/dist/assets/phone-Cbeil0BD.js:1 0 KB",
-            "apps/web/dist/assets/PageHeading-D5uss9Cv.js:1 0 KB",
-            "apps/web/dist/assets/Badge-BalIHYJM.js:1 0 KB",
-            "apps/web/dist/assets/Modal-C3s1umeF.js:1 1 KB",
+            "apps/web/dist/assets/PageHeading-CeZGrIk8.js:1 1 KB",
+            "apps/web/dist/assets/Badge-D70rFp_U.js:1 0 KB",
+            "apps/web/dist/assets/Modal-C6CVsM-L.js:1 1 KB",
             "apps/web/dist/assets/Field-B9Dixeel.js:1 0 KB",
-            "apps/web/dist/assets/install-prompt-riM16K_U.js:1 6 KB",
+            "apps/web/dist/assets/install-prompt-BN1_Y9dv.js:1 6 KB",
             "apps/web/dist/assets/departments-CfOr-c1i.js:1 1 KB",
             "apps/web/dist/assets/animal-states-fx34-YW1.js:1 1 KB",
             "apps/web/dist/assets/session-limits-B_8XrkV8.js:1 0 KB",
-            "apps/web/dist/assets/localSessions-CC-9C6hP.js:1 6 KB",
-            "apps/web/dist/assets/clock-out-KBUQyduq.js:1 1 KB",
-            "apps/web/dist/assets/feed-avatar-Cx5NE6N4.js:1 5 KB",
+            "apps/web/dist/assets/localSessions-h5n-J3DZ.js:1 6 KB",
+            "apps/web/dist/assets/clock-out-DM2_Kltu.js:1 1 KB",
+            "apps/web/dist/assets/feed-avatar-DEGW6tI5.js:1 5 KB",
             "apps/web/dist/assets/copy-DAvi4YBU.js:1 0 KB",
             "apps/web/dist/assets/door-open-DeqL-zfI.js:1 0 KB",
-            "apps/web/dist/assets/PreferenceControls-DF6-Q-s3.js:1 1 KB",
-            "apps/web/dist/assets/use-drive-CgrI0hk3.js:1 3 KB",
-            "apps/web/dist/assets/character-actions-B_VKbCY8.js:1 1 KB",
+            "apps/web/dist/assets/PreferenceControls-LhorwD6B.js:1 1 KB",
+            "apps/web/dist/assets/use-drive-D57wGIus.js:1 3 KB",
+            "apps/web/dist/assets/character-actions-DAUAgS_z.js:1 1 KB",
             "apps/web/dist/assets/squad-layout--3e1C2mE.js:1 3 KB",
             "apps/web/dist/assets/context-X44HcWvZ.js:1 0 KB",
             "apps/web/dist/assets/use-latest-Toba1xOl.js:1 0 KB",
-            "apps/web/dist/assets/ClaudeQuota-Dw7F34g9.js:1 1 KB",
-            "apps/web/dist/assets/use-kpi-BQoCqqrT.js:1 2 KB",
-            "apps/web/dist/assets/index-BvHjY-Ug.css:1 24 KB",
-            "apps/web/dist/assets/zh-ymwTd3vK.js:1 18 KB"
+            "apps/web/dist/assets/ClaudeQuota-BJlfamJO.js:1 1 KB",
+            "apps/web/dist/assets/use-kpi-D2zi4Ae3.js:1 2 KB",
+            "apps/web/dist/assets/index-CycXM9e9.css:1 24 KB",
+            "apps/web/dist/assets/zh-DDvmdKuQ.js:1 18 KB"
           ]
         },
         {
@@ -806,7 +808,7 @@
           "unit": "",
           "penalty": 0,
           "details": [],
-          "note": "225 KB source, 3 built file(s) at 32 KB gzip; no CSS budget is documented"
+          "note": "226 KB source, 3 built file(s) at 32 KB gzip; no CSS budget is documented"
         }
       ]
     },
@@ -1113,7 +1115,7 @@
         },
         {
           "id": "open-decisions",
-          "label": "Maintainer decisions still open (docs/research/oss-risk-assessment.md, not scored)",
+          "label": "Maintainer decisions still open (docs/internal/oss-risk-assessment.md, not scored)",
           "status": "info",
           "weight": 0,
           "value": 7,
@@ -1122,13 +1124,13 @@
           "unit": "",
           "penalty": 0,
           "details": [
-            "docs/research/oss-risk-assessment.md: 1. 完成歷史清理（R1、R2），`history-verify.sh --full` 為 GO；先建立 `.oss-private-patterns` 並重掃。",
-            "docs/research/oss-risk-assessment.md: 2. 修 `.gitleaks.toml` 讓 `oss:check` 全綠（R3）。",
-            "docs/research/oss-risk-assessment.md: 3. 更正 `history-cleanup.md` 的過期數字與「1 個 trailer」錯誤，再重新量測（R4）。",
-            "docs/research/oss-risk-assessment.md: 4. 決定專案名稱（正式商標檢索後；R5）與供應商標誌處置（R6）。",
-            "docs/research/oss-risk-assessment.md: 5. 啟用並實測 Private Vulnerability Reporting，補備用聯絡方式（R8）。",
-            "docs/research/oss-risk-assessment.md: 6. 把版本由 `0.4.0-dev.0` 換成發佈版本並讓版本測試通過；只推 `main`，不推舊標籤、worktree 分支、stash。",
-            "docs/research/oss-risk-assessment.md: 7. 補 AI 輔助聲明（若清除 trailer；R11）與「實驗性、無支援保證」聲明（R9）。"
+            "docs/internal/oss-risk-assessment.md: 1. 完成歷史清理（R1、R2），`history-verify.sh --full` 為 GO；先建立 `.oss-private-patterns` 並重掃。",
+            "docs/internal/oss-risk-assessment.md: 2. 修 `.gitleaks.toml` 讓 `oss:check` 全綠（R3）。",
+            "docs/internal/oss-risk-assessment.md: 3. 更正 `history-cleanup.md` 的過期數字與「1 個 trailer」錯誤，再重新量測（R4）。",
+            "docs/internal/oss-risk-assessment.md: 4. 決定專案名稱（正式商標檢索後；R5）與供應商標誌處置（R6）。",
+            "docs/internal/oss-risk-assessment.md: 5. 啟用並實測 Private Vulnerability Reporting，補備用聯絡方式（R8）。",
+            "docs/internal/oss-risk-assessment.md: 6. 把版本由 `0.4.0-dev.0` 換成發佈版本並讓版本測試通過；只推 `main`，不推舊標籤、worktree 分支、stash。",
+            "docs/internal/oss-risk-assessment.md: 7. 補 AI 輔助聲明（若清除 trailer；R11）與「實驗性、無支援保證」聲明（R9）。"
           ]
         }
       ]

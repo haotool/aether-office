@@ -5,10 +5,12 @@ const CJK = /[㐀-鿿]/;
 
 it('says in words, in the chosen language, what a CLI user can run into', () => {
   for (const code of [
+    'REQUEST_FAILED',
     'AUTH_REQUIRED',
     'LOGIN_RATE_LIMIT',
     'LIVE_EXECUTION_NOT_ENABLED',
     'TERMINAL_PROFILE_NOT_GRANTED',
+    'TERMINAL_CAPACITY',
     'SESSION_NOT_FOUND',
     'PROCESS_CHANGED',
     'VERSION_CONFLICT',

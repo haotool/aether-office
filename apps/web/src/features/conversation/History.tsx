@@ -69,7 +69,9 @@ function EventsTable({ events, replayTo }: { events: OfficeEvent[]; replayTo: st
                 <td data-label={t('time')}>{new Date(event.occurredAt).toLocaleString()}</td>
                 <td data-label={t('event')}>{event.type}</td>
                 <td data-label={t('source')}>
-                  <Badge state={event.source === 'simulated' ? 'demo' : 'live'} /> {event.source}
+                  <span>
+                    <Badge state={event.source === 'simulated' ? 'demo' : 'live'} /> {event.source}
+                  </span>
                 </td>
               </tr>
             ))}

@@ -3064,7 +3064,7 @@
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "Documentation is compared with the code by audits (docs/research/design-review.md) and a link check; no automated check compares documented values with the code."
+      "Documentation is compared with the code by audits (docs/internal/design-review.md) and a link check; no automated check compares documented values with the code."
     ]
   },
   {
@@ -3916,7 +3916,7 @@
   {
     "id": "SCENE-PERF-P1",
     "requirement": "3D 場景的手機與低階畫質：柔和的加法漸層抖色（預乘後加雜訊）、手機與低階的行星紋理 1024x512、AdaptiveRatio 以手機自己的 50 ms 閒置節奏判斷（不再掉到 0.75）、手機「高」畫質的像素比上限 2（每個分級一個具名常數）、?msaa=1/0 的 MSAA A/B 開關，以及 WebGL context 遺失時顯示一鍵重新載入場景的卡片（不再默默切到列表）。",
-    "scope": "AETHER target; research in docs/research/mobile-gradient-perf.md",
+    "scope": "AETHER target; research in docs/internal/mobile-gradient-perf.md",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
