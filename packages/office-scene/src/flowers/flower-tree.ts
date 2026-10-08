@@ -74,6 +74,57 @@ function scatter(random: () => number, count: number, e: Envelope): THREE.Vector
   return points;
 }
 
+type ColonizeCtx = {
+  nodes: THREE.Vector3[];
+  parent: number[];
+  roots: number;
+  p: ColonyParams;
+};
+
+const nearestNodeIndex = (nodes: THREE.Vector3[], a: THREE.Vector3) => {
+  let nearest = 0;
+  let best = Infinity;
+  nodes.forEach((n, i) => {
+    const d = n.distanceToSquared(a);
+    if (d < best) [nearest, best] = [i, d];
+  });
+  return { nearest, best };
+};
+
+function colonizePulls(ctx: ColonizeCtx, attractors: THREE.Vector3[]) {
+  const pulls = new Map<number, THREE.Vector3>();
+  const left: THREE.Vector3[] = [];
+  let reachedNow = 0;
+  const kill2 = ctx.p.kill * ctx.p.kill;
+  const influence2 = ctx.p.influence * ctx.p.influence;
+  for (const a of attractors) {
+    const { nearest, best } = nearestNodeIndex(ctx.nodes, a);
+    if (best < kill2) {
+      reachedNow++;
+      continue;
+    }
+    left.push(a);
+    if (best < influence2)
+      pulls.set(
+        nearest,
+        (pulls.get(nearest) ?? new THREE.Vector3()).add(
+          a.clone().sub(itemAt(ctx.nodes, nearest)).normalize(),
+        ),
+      );
+  }
+  return { pulls, left, reachedNow };
+}
+
+function colonizeGrow(ctx: ColonizeCtx, pulls: Map<number, THREE.Vector3>) {
+  for (const [i, pull] of pulls) {
+    if (ctx.nodes.length - ctx.roots >= ctx.p.maxSegments) return true;
+    const dir = pull.normalize().addScaledVector(up, TROPISM).normalize();
+    ctx.nodes.push(itemAt(ctx.nodes, i).clone().addScaledVector(dir, ctx.p.step));
+    ctx.parent.push(i);
+  }
+  return ctx.nodes.length - ctx.roots >= ctx.p.maxSegments;
+}
+
 /**
  * Space colonization (Runions, Lane and Prusinkiewicz 2007), small and bounded: attractor points fill a hemispherical envelope;
  * each iteration every attractor pulls on the node nearest to it (inside the influence distance), every pulled node grows one
@@ -87,6 +138,7 @@ export function colonize(p: ColonyParams): Colony {
   const nodes = p.roots.map((r) => new THREE.Vector3(...r));
   const parent = nodes.map(() => -1);
   const roots = nodes.length;
+  const ctx: ColonizeCtx = { nodes, parent, roots, p };
   const killed = (a: THREE.Vector3, from: number) => {
     for (let i = from; i < nodes.length; i++)
       if (itemAt(nodes, i).distanceToSquared(a) < p.kill * p.kill) return true;
@@ -94,37 +146,11 @@ export function colonize(p: ColonyParams): Colony {
   };
   let reached = 0;
   for (let round = 0; round < MAX_ITERATIONS && live.length > 0; round++) {
-    const pulls = new Map<number, THREE.Vector3>();
-    const left: THREE.Vector3[] = [];
-    for (const a of live) {
-      let nearest = 0;
-      let best = Infinity;
-      nodes.forEach((n, i) => {
-        const d = n.distanceToSquared(a);
-        if (d < best) [nearest, best] = [i, d];
-      });
-      if (best < p.kill * p.kill) {
-        reached++;
-        continue;
-      }
-      left.push(a);
-      if (best < p.influence * p.influence)
-        pulls.set(
-          nearest,
-          (pulls.get(nearest) ?? new THREE.Vector3()).add(
-            a.clone().sub(itemAt(nodes, nearest)).normalize(),
-          ),
-        );
-    }
+    const { pulls, left, reachedNow } = colonizePulls(ctx, live);
+    reached += reachedNow;
     live = left;
     if (pulls.size === 0) break;
-    for (const [i, pull] of pulls) {
-      if (nodes.length - roots >= p.maxSegments) break;
-      const dir = pull.normalize().addScaledVector(up, TROPISM).normalize();
-      nodes.push(itemAt(nodes, i).clone().addScaledVector(dir, p.step));
-      parent.push(i);
-    }
-    if (nodes.length - roots >= p.maxSegments) break;
+    if (colonizeGrow(ctx, pulls)) break;
   }
   reached += live.filter((a) => killed(a, 0)).length;
   return { nodes: nodes.map((n) => n.toArray()), parent, roots, attractors: total, reached };

@@ -76,8 +76,6 @@
     border-radius: var(--r-3xl);
     border: 1px solid color-mix(in srgb, var(--scene-gold) 55%, transparent);
     background: var(--glass);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
     color: var(
       --scene-gold
     ); /* over the night scene: the light theme's dark gold would not read on the glass */

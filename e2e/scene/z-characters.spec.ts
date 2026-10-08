@@ -264,7 +264,7 @@ test('Shift picks a group; Send home asks for confirmation and sends nothing unt
     zombies: [],
   });
   let clockOuts = 0;
-  page.on('request', (r) => r.url().includes('/clock-out') && clockOuts++);
+  page.on('request', (r) => r.url().includes('/api/local-sessions/clock-out') && clockOuts++);
   await enter(page);
   await bringIntoView(page, 1);
   const tags = page.locator('button.scene-label');

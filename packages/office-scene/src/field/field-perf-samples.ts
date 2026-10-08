@@ -38,7 +38,8 @@ export class BoundedRetainBuffer<T> {
     if (!this.truncated) return this.slots.slice(0, this.filled);
     const out: T[] = [];
     for (let i = 0; i < this.maxRetained; i += 1) {
-      out.push(this.slots[(this.writeIndex + i) % this.maxRetained]!);
+      const slot = this.slots[(this.writeIndex + i) % this.maxRetained];
+      if (slot !== undefined) out.push(slot);
     }
     return out;
   }

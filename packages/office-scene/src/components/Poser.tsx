@@ -26,21 +26,32 @@ type PoserProps = {
   children: ReactNode;
 };
 
+type Gaze = { wanted: number; pitch: number };
+
+/** Where a member wants to turn (radians) and how far it nods this frame: toward its partner while a message is current, else where a life effect asked. Written into `out`: a frame allocates nothing. */
+function gazeOf(
+  { seat, engagements, turn: asked, reducedMotion }: PoserProps,
+  now: number,
+  out: Gaze,
+): Gaze {
+  const latest = reducedMotion ? undefined : engagements?.[0];
+  const age = latest ? now - latest.at : Infinity;
+  const posed = asked && !reducedMotion ? asked.yaw * turnWeight(now - asked.at, asked.holdMs) : 0;
+  out.wanted = latest ? turnToward(seat, latest.partner) * engagement(age) : posed;
+  out.pitch = latest?.receives ? nodPitch(age) : 0;
+  return out;
+}
+
 /**
  * Turns a seated member toward the one it is talking with (while a message is current) and nods the receiver when the
  * envelope lands. A rigid turn of the character about its seat, limited to a glance (see interplay.ts); the animation
  * underneath keeps playing. Between messages the member sways a little in its chair (a slow turn of up to 10 degrees and
  * a slight lean, each member's own, see behavior.ts), at the rate its distance from the camera allows.
  */
-export function Poser({
-  seat,
-  seed,
-  engagements,
-  turn: asked,
-  reducedMotion,
-  children,
-}: PoserProps) {
+export function Poser(props: PoserProps) {
+  const { seed, reducedMotion, children } = props;
   const group = useRef<Group>(null);
+  const gaze = useRef<Gaze>({ wanted: 0, pitch: 0 });
   const turn = useRef(0);
   const owed = useRef(0);
   const here = useRef(new Vector3());
@@ -48,12 +59,7 @@ export function Poser({
   useFrame(({ invalidate, clock, camera }, delta) => {
     const target = group.current;
     if (!target) return;
-    const latest = reducedMotion ? undefined : engagements?.[0];
-    const age = latest ? Date.now() - latest.at : Infinity;
-    const posed =
-      asked && !reducedMotion ? asked.yaw * turnWeight(Date.now() - asked.at, asked.holdMs) : 0;
-    const wanted = latest ? turnToward(seat, latest.partner) * engagement(age) : posed;
-    const pitch = latest?.receives ? nodPitch(age) : 0;
+    const { wanted, pitch } = gazeOf(props, Date.now(), gaze.current);
     const calm = wanted === 0 && turn.current === 0 && pitch === 0;
     if (calm && reducedMotion) return;
     owed.current += Math.min(delta, 0.05);

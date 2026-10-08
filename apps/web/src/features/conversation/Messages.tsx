@@ -11,6 +11,7 @@ import { PageHeading } from '../../ui/PageHeading.js';
 import { useT, useWhy } from '../../ui/useT.js';
 import { Avatar } from '../office/Avatar.js';
 import { useRooms } from '../operations/Rooms.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 
 type Message = Snapshot['messages'][number];
 
@@ -335,7 +336,7 @@ function RequestWaits({
     queryFn: () => api<MessageWait[]>(`/api/projects/${projectId}/messages/${messageId}/waits`),
     enabled: open,
     staleTime: 0,
-    refetchInterval: open ? 2000 : false,
+    ...poll(open ? POLL.watching : false),
   });
   return (
     <details onToggle={(e) => setOpen(e.currentTarget.open)}>

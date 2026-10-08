@@ -255,4 +255,8 @@ export const ENTRIES = [
 export type EntryId = (typeof ENTRIES)[number]['id'];
 type Entry = (typeof ENTRIES)[number];
 
-export const entryOf = (id: EntryId): Entry => ENTRIES.find((entry) => entry.id === id)!;
+export const entryOf = (id: EntryId): Entry => {
+  const entry = ENTRIES.find((row) => row.id === id);
+  if (!entry) throw new Error(`unknown settings entry: ${id}`);
+  return entry;
+};

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api/api.js';
 import { useT, useWhy } from '../../ui/useT.js';
+import { bytes } from '../kpi/kpi-model.js';
 
 type Worktree = {
   path: string;
@@ -23,15 +24,6 @@ type Report = {
 };
 type CleanResult = { path: string; outcome: string; reason?: string };
 type Sizes = Record<string, number | null> | undefined;
-
-export const bytes = (n: number | null) =>
-  n === null
-    ? '—'
-    : n >= 1e9
-      ? `${(n / 1e9).toFixed(1)} GB`
-      : n >= 1e6
-        ? `${(n / 1e6).toFixed(0)} MB`
-        : `${Math.round(n / 1e3)} KB`;
 
 const amount = (n: number | null) => (n === null ? '…' : bytes(n));
 

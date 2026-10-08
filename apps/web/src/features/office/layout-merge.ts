@@ -80,7 +80,10 @@ function zoneSquads(
   const zoned = new Set(
     requests
       .filter((r) => placed.get(r.deskId))
-      .map((r) => desks.find((o) => o.id === r.deskId)!.agentId),
+      .flatMap((r) => {
+        const desk = desks.find((o) => o.id === r.deskId);
+        return desk?.agentId ? [desk.agentId] : [];
+      }),
   );
   for (const agent of subs) if (!zoned.has(parentOf(agent.id))) seat(agent);
 }

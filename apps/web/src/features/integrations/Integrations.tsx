@@ -6,6 +6,7 @@ import { execute } from '../../lib/api/api-commands.js';
 import { Field } from '../../ui/Field.js';
 import { useT, useWhy } from '../../ui/useT.js';
 import { useCommandRunner } from '../shell-chrome/panel-kit.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 
 type Provider = 'github' | 'linear';
 type Run = (fn: () => Promise<unknown>) => Promise<void>;
@@ -114,7 +115,7 @@ export function Integrations({ projectId, canManage }: { projectId: string; canM
     queryKey: key,
     queryFn: () =>
       api<{ integrations: IntegrationConnection[] }>(`/api/projects/${projectId}/integrations`),
-    refetchInterval: 5000,
+    ...poll(POLL.list),
   });
   return (
     <section aria-labelledby="integrations-title">

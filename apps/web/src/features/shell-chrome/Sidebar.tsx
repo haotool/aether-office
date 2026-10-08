@@ -25,7 +25,8 @@ function NavGroups({
     <div className="nav-group" key={group}>
       <div className="nav-group-title">{t(group)}</div>
       {pages.map((key) => {
-        const Icon = icons.get(key)!;
+        const Icon = icons.get(key);
+        if (!Icon) throw new Error(`sidebar icon missing: ${key}`);
         return (
           <NavLink
             onClick={onNavigate}

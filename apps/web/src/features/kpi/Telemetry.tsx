@@ -1,11 +1,12 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api/api.js';
-import { bytes } from '../tasks-git/GitHealth.js';
+import { bytes } from './kpi-model.js';
 import type { LocalSession } from '@aether/contracts';
 import { useT } from '../../ui/useT.js';
 import { needsAttention } from '../../lib/sessions/session-attention.js';
 import { ClaudeQuota } from './ClaudeQuota.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 
 const TIME_ZONE = 'Asia/Taipei';
 const format = (now: Date) =>
@@ -78,7 +79,7 @@ function SystemStats() {
   const system = useQuery({
     queryKey: ['system'],
     queryFn: () => api<System>('/api/system'),
-    refetchInterval: 20000,
+    ...poll(POLL.system),
     retry: false,
   }).data;
   const memUsed = system ? 100 - (system.memory.freeBytes / system.memory.totalBytes) * 100 : null;

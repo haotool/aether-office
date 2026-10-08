@@ -146,7 +146,7 @@ with Playwright's media emulation in `e2e/settings/preferences.spec.ts`, which a
   `aria-pressed`, `aria-current`) is outlined with `Highlight`, and the focus ring is a 3px `Highlight` outline.
 - `prefers-contrast: more`: `--line`, `--muted`, `--dim` and the glass lines are one step closer to the text color in both
   themes and the focus ring is 3px.
-- `prefers-reduced-transparency: reduce` (and `prefers-contrast: more`): the glass tokens are opaque and `backdrop-filter` is off.
+- `prefers-reduced-transparency: reduce` (and `prefers-contrast: more`): the glass tokens are opaque.
 - `prefers-reduced-motion: reduce`: no transitions, animations or smooth scrolling.
 
 A preference outranks every component rule, so these blocks may use `!important`; each such line carries the escape hatch
@@ -205,10 +205,10 @@ cut corner) cannot extend a hit area, so it is the 44px itself on touch.
   recalculates style). Move a band across a clipped pseudo-element, fade a glow pseudo-element. Remaining repainting
   exceptions are listed in the changelog (the thinking line's text shimmer needs `background-clip: text`; loading skeletons run
   for seconds; the desktop-only floor plaque scan).
-- **Phone glass rule.** Over the live canvas the glass has no `backdrop-filter` on a phone (`styles/phone-glass.css`): a
-  near-opaque tint of `--glass-base` stands in, because a blur re-runs whenever the canvas changes. Desktop keeps the blur.
-  Surfaces that are not over the canvas (tab bar, top bar, sheets) are unchanged except the member bar. Not measurable on a
-  desktop GPU (frame interval identical within noise); the saving is expected on phone GPUs and Safari and is unverified.
+- **No backdrop blur.** No surface uses `backdrop-filter` or `filter: blur`: a blur behind a surface re-runs whenever what
+  lies behind it changes, and the live canvas changes every frame. The glass tokens (`--glass*`) are near-opaque tints
+  instead (88% to 96%), the same on a phone and on a desktop. The saving is expected on phone GPUs and Safari and is
+  unverified on a real device (a desktop GPU shows no difference within noise).
 - Rendering is lighter on a phone: no shadows, no antialiasing, pixel ratio ≤ 1.5 (2 on the high tier, not yet tried on a real phone), smaller models, about 20 frames a
   second when idle, and no rim light.
 - Dialogs and sheets put what you act on first and fold the explanations (`Fold`, `Hint`, `Clamp`). Sheets stand on the

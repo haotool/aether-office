@@ -1,6 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { NATIVE_SESSION, nativeOrigin, signIn } from '../support/sign-in.js';
+import {
+  NATIVE_RESUMABLE_SESSION_ID,
+  continueNativeSessionIfNeeded,
+  nativeFeedRow,
+} from '../support/native-fixture.js';
 
 /**
  * The session panel (and the phone sheet) keep to the control scale: the chips of the composer are one height, the
@@ -40,14 +45,18 @@ async function openConversation(page: Page, phone: boolean) {
   await page.goto(`${nativeOrigin()}/office?project=${project.id}`);
   if (phone) {
     await page.getByRole('button', { name: '開啟 session 列表' }).tap();
-    await page.locator('.session-sheet.half .feed-row').first().tap();
+    const row = nativeFeedRow(page.locator('.session-sheet.half'), NATIVE_RESUMABLE_SESSION_ID);
+    await expect(row).toBeVisible({ timeout: 45_000 });
+    await row.tap();
     return page.locator('.session-sheet.full');
   }
   const panel = page.locator('.session-panel');
   // below 1000px the panel lies over the office and is closed until asked for
   if (page.viewportSize()!.width <= 1000)
     await page.getByRole('button', { name: '即時 session' }).click();
-  await panel.locator('.feed-row').first().click();
+  const row = nativeFeedRow(panel, NATIVE_RESUMABLE_SESSION_ID);
+  await expect(row).toBeVisible({ timeout: 45_000 });
+  await row.click();
   return panel;
 }
 
@@ -61,12 +70,7 @@ for (const [layout, { viewport, touch }] of Object.entries(LAYOUTS))
     const page = await context.newPage();
     const scope = await openConversation(page, viewport.width < 761);
     // the first run of a server only reads the session; "Continue in AETHER" makes it drivable (the fake CLI)
-    const resume = scope.getByRole('button', { name: '在 AETHER 繼續', exact: true });
-    const composer = scope.getByLabel('傳訊息給 session');
-    await expect(resume.or(composer)).toBeVisible({ timeout: 20000 });
-    // an earlier run may have continued it already: the button can give way to the composer between the check and the click
-    if (await resume.isVisible()) await resume.click({ timeout: 3000 }).catch(() => undefined);
-    await expect(scope.getByLabel('傳訊息給 session')).toBeVisible({ timeout: 45000 });
+    await continueNativeSessionIfNeeded(scope);
     const measured = await scope.evaluate((root) => {
       const heights = (selector: string) =>
         [...root.querySelectorAll<HTMLElement>(selector)]

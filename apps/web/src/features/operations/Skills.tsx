@@ -5,6 +5,7 @@ import { execute } from '../../lib/api/api-commands.js';
 import { Field } from '../../ui/Field.js';
 import { useT } from '../../ui/useT.js';
 import { EnableToggle, useCommandRunner } from '../shell-chrome/panel-kit.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 
 function SkillRow({
   skill: s,
@@ -74,7 +75,7 @@ export function Skills({ projectId, canManage }: { projectId: string; canManage:
   const query = useQuery({
     queryKey: key,
     queryFn: () => api<{ skills: Skill[] }>(`/api/projects/${projectId}/skills`),
-    refetchInterval: 5000,
+    ...poll(POLL.list),
   });
   return (
     <section aria-labelledby="skills-title">

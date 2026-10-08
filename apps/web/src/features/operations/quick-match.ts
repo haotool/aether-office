@@ -9,10 +9,12 @@ export function matchItems(items: readonly QuickItem[], query: string, limit = 1
       const text = `${item.label} ${item.hint}`.toLowerCase();
       return words.every((w) => text.includes(w));
     })
-    .sort(
-      (a, b) =>
-        Number(!a.label.toLowerCase().startsWith(words[0]!)) -
-        Number(!b.label.toLowerCase().startsWith(words[0]!)),
-    )
+    .sort((a, b) => {
+      const head = words[0] ?? '';
+      return (
+        Number(!a.label.toLowerCase().startsWith(head)) -
+        Number(!b.label.toLowerCase().startsWith(head))
+      );
+    })
     .slice(0, limit);
 }

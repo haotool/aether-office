@@ -1,13 +1,11 @@
 import { expect, it } from 'vitest';
 import {
   OFFLINE_AFTER_FAILURES,
-  SAFETY_NET_MS,
   ageText,
   backoffMs,
   initialLink,
   linkReducer,
   parseChange,
-  pollMs,
   queriesFor,
 } from '../../apps/web/src/features/integrations/live-link.js';
 import {
@@ -78,12 +76,6 @@ it('tracks the link: live on open, reconnecting after a loss, offline after repe
   // a message while not live changes nothing; a reset keeps the time of the last word
   expect(linkReducer(state, { type: 'message', at: 400 })).toBe(state);
   expect(linkReducer(live, { type: 'reset' })).toEqual({ ...initialLink, lastAt: 100 });
-});
-
-it('polls only as a safety net while live, and as asked otherwise', () => {
-  expect(pollMs(true, 4000)).toBe(SAFETY_NET_MS);
-  expect(pollMs(false, 4000)).toBe(4000);
-  expect(pollMs(false, false)).toBe(false);
 });
 
 it('words an age in seconds and minutes in both languages', () => {

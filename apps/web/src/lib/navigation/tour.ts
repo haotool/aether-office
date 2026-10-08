@@ -41,8 +41,12 @@ export function tourReducer(state: TourState, action: TourAction): TourState {
 }
 
 /** Focus the tour wants, or null when it should not move the camera. */
-export const tourFocus = (state: TourState): string | null =>
-  state.status === 'idle' ? null : TOUR_STOPS[state.index]!;
+export const tourFocus = (state: TourState): string | null => {
+  if (state.status === 'idle') return null;
+  const stop = TOUR_STOPS[state.index];
+  if (stop === undefined) throw new Error('tour stop index out of range');
+  return stop;
+};
 
 /** Where the camera returns when the tour ends on its own or is stopped explicitly. */
 export const restoreFocus = (

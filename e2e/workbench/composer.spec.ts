@@ -1,10 +1,17 @@
 import { test, expect, type Page } from '@playwright/test';
 import { NATIVE_SESSION, nativeOrigin, signIn } from '../support/sign-in.js';
+import {
+  NATIVE_RESUMABLE_SESSION_ID,
+  continueNativeSessionIfNeeded,
+  openNativeSessionRow,
+  writeNativeTerminalTranscript,
+} from '../support/native-fixture.js';
 import AxeBuilder from '@axe-core/playwright';
 
 // The composer, against a FAKE interactive CLI (fixtures/processes/claude-tui.mjs, started by
-// scripts/e2e-native-server.ts) and never a model. The server has one terminal-started session to resume; everything
-// after "Continue in AETHER" is the fake CLI running in an AETHER terminal.
+// scripts/e2e-native-server.ts) and never a model. The first test seeds its own terminal transcript (it needs a session
+// AETHER does not own yet); the others take the server's shared session and continue it when it is not running yet, so
+// they pass in any order. A continued session is a running terminal and a machine runs four of them at most.
 
 async function login(page: Page) {
   await signIn(page, nativeOrigin(), { session: NATIVE_SESSION });
@@ -35,18 +42,18 @@ async function expectAccessible(page: Page) {
   await page.evaluate(() => (document.documentElement.dataset['theme'] = 'dark'));
 }
 
-async function openObserved(page: Page) {
-  const projects = (await (await page.request.get(`${nativeOrigin()}/api/projects`)).json()) as {
-    id: string;
-    name: string;
-  }[];
-  const project = projects.find((p) => p.name.startsWith('Synthetic browser fixture'))!;
-  await page.goto(`${nativeOrigin()}/office?project=${project.id}`);
-  const panel = page.locator('.session-panel');
-  const row = panel.locator('.feed-row').first();
-  await expect(row).toBeVisible({ timeout: 20000 });
-  await row.click();
-  return panel.locator('.conversation');
+async function openFreshObserved(page: Page, phone = false) {
+  const sessionId = writeNativeTerminalTranscript({
+    answerText: 'Earlier answer from a terminal',
+  });
+  const scope = await openNativeSessionRow(page, sessionId, phone);
+  return { scope, conversation: scope.locator('.conversation') };
+}
+
+async function openSharedDrivable(page: Page, phone = false) {
+  const scope = await openNativeSessionRow(page, NATIVE_RESUMABLE_SESSION_ID, phone);
+  await continueNativeSessionIfNeeded(scope);
+  return { scope, conversation: scope.locator('.conversation') };
 }
 
 test('a session AETHER does not own is read-only; continuing it in AETHER makes it drivable', async ({
@@ -55,7 +62,7 @@ test('a session AETHER does not own is read-only; continuing it in AETHER makes 
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await login(page);
-  const conversation = await openObserved(page);
+  const { conversation } = await openFreshObserved(page);
   await expect(conversation.getByText('Earlier answer from a terminal')).toBeVisible({
     timeout: 15000,
   });
@@ -116,7 +123,7 @@ test('the slash menu and @file completion fill the box; custom commands are list
   page,
 }) => {
   await login(page);
-  const conversation = await openObserved(page);
+  const { conversation } = await openSharedDrivable(page);
   const box = conversation.getByLabel('傳訊息給 session');
   await expect(box).toBeVisible({ timeout: 45000 });
   await box.fill('/co');
@@ -145,7 +152,7 @@ test('offline: a message waits in the conversation and goes in when the connecti
   context,
 }) => {
   await login(page);
-  const conversation = await openObserved(page);
+  const { conversation } = await openSharedDrivable(page);
   const box = conversation.getByLabel('傳訊息給 session');
   await expect(box).toBeVisible({ timeout: 45000 });
   await context.setOffline(true);
@@ -169,15 +176,8 @@ test('phone: Enter is a new line, Send is a button, quick replies are one tap', 
   });
   const page = await context.newPage();
   await login(page);
-  const projects = (await (await page.request.get(`${nativeOrigin()}/api/projects`)).json()) as {
-    id: string;
-    name: string;
-  }[];
-  const project = projects.find((p) => p.name.startsWith('Synthetic browser fixture'))!;
-  await page.goto(`${nativeOrigin()}/office?project=${project.id}`);
-  await page.getByRole('button', { name: '開啟 session 列表' }).tap();
-  await page.locator('.session-sheet.half .feed-row').first().tap();
-  const full = page.locator('.session-sheet.full');
+  const { scope } = await openSharedDrivable(page, true);
+  const full = scope;
   const box = full.getByLabel('傳訊息給 session');
   await expect(box).toBeVisible({ timeout: 45000 });
   await box.tap();

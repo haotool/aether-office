@@ -1,6 +1,4 @@
 import { useEffect, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '../api/api.js';
 import {
   planAlerts,
   sessionTransitions,
@@ -9,7 +7,7 @@ import {
   type Permission,
 } from './alert-rules.js';
 
-type PendingApproval = { id: string; state: string; kind: string };
+export type PendingApproval = { id: string; state: string; kind: string };
 /** Where an alert goes when it cannot be a browser notification, and what a tap on it opens. */
 export type AlertSink = { toast: (text: string) => void; open: (to: string) => void };
 
@@ -66,24 +64,19 @@ function deliver(d: Delivery, sink: AlertSink) {
 
 export function useApprovalNotifications(
   projectId: string | undefined,
+  approvals: readonly PendingApproval[] | undefined,
   enabled: boolean,
   alert: { title: string; project: string },
   sink: AlertSink,
 ) {
   const seen = useRef<Set<string> | null>(null);
-  const query = useQuery({
-    queryKey: ['approvals', projectId],
-    queryFn: () => api<PendingApproval[]>(`/api/projects/${projectId}/approvals`),
-    enabled: enabled && !!projectId,
-    refetchInterval: 5000,
-  });
   useEffect(() => {
     if (!enabled) {
       seen.current = null;
       return;
     }
-    if (!query.data) return;
-    const result = newlyPending(seen.current, query.data);
+    if (!approvals) return;
+    const result = newlyPending(seen.current, approvals);
     seen.current = result.seen;
     for (const approval of result.fresh)
       deliver(
@@ -96,7 +89,7 @@ export function useApprovalNotifications(
         },
         sink,
       );
-  }, [enabled, query.data, alert.title, alert.project, projectId, sink]);
+  }, [enabled, approvals, alert.title, alert.project, projectId, sink]);
 }
 
 /** Raises the alerts planned for what changed in the local sessions. */

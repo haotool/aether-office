@@ -141,5 +141,8 @@ export const SPECIES_LIST = Object.keys(SPECIES) as Species[];
 
 /** A sender that is not one of the office animals (a person) still gets a stable species from its seed. */
 export function speciesOf(value: string, pick: (n: number) => number): Species {
-  return value in SPECIES ? (value as Species) : SPECIES_LIST[pick(SPECIES_LIST.length)]!;
+  if (value in SPECIES) return value as Species;
+  const species = SPECIES_LIST[pick(SPECIES_LIST.length) % SPECIES_LIST.length];
+  if (species === undefined) throw new Error('species list empty');
+  return species;
 }

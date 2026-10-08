@@ -1,18 +1,1 @@
-{
-  "packages/office-scene/src/components/CompactHud.tsx": 8,
-  "packages/office-scene/src/components/OfficeScene.tsx": 1,
-  "packages/office-scene/src/components/PipWall.tsx": 3,
-  "packages/office-scene/src/components/SceneHud.tsx": 23,
-  "packages/office-scene/src/components/StalkTooltip.tsx": 7,
-  "packages/office-scene/src/environment/context.ts": 1,
-  "packages/office-scene/src/flowers/flower-names.ts": 1,
-  "packages/office-scene/src/intro/intro-text.ts": 5,
-  "packages/office-scene/src/life/registry-command-outcomes.ts": 18,
-  "packages/office-scene/src/life/registry.ts": 12,
-  "packages/office-scene/src/life/use-aria-log.ts": 1,
-  "packages/office-scene/src/squad/beam-readout.ts": 5,
-  "packages/office-scene/src/squad/handover/handover-art.ts": 2,
-  "packages/office-scene/src/squad/handover/stamp.ts": 1,
-  "packages/office-scene/src/squad/handover/text.ts": 2,
-  "packages/office-scene/src/squad/squad-text.ts": 6
-}
+{}

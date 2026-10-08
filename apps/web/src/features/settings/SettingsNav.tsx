@@ -48,7 +48,8 @@ export function SideNav({
       <ul>
         {sections.map(({ id }) => {
           const Icon = ICONS[id];
-          const meta = SECTIONS.find((s) => s.id === id)!;
+          const meta = SECTIONS.find((s) => s.id === id);
+          if (!meta) throw new Error(`unknown settings section: ${id}`);
           return (
             <SectionItem
               key={id}
@@ -106,7 +107,8 @@ export function HomeList({ sections, projectId, onGo }: NavProps) {
       <ul>
         {sections.map(({ id }) => {
           const Icon = ICONS[id];
-          const meta = SECTIONS.find((s) => s.id === id)!;
+          const meta = SECTIONS.find((s) => s.id === id);
+          if (!meta) throw new Error(`unknown settings section: ${id}`);
           return (
             <SectionItem key={id} {...{ id, projectId, onGo }}>
               <Icon size={20} aria-hidden="true" />

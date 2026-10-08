@@ -79,6 +79,36 @@ export const floorsFrom = (floor: number) =>
 /** A desk by floor and slot (the index `seatAt` maps to a place). */
 export type Seat = readonly [floor: number, slot: number];
 
+const seatFree = (used: Set<number> | undefined, slot: number) =>
+  used !== undefined &&
+  Number.isInteger(slot) &&
+  slot >= 0 &&
+  slot < FLOOR_CAPACITY &&
+  !used.has(slot);
+
+const firstFreeSlot = (used: Set<number>) => {
+  let slot = 0;
+  while (used.has(slot)) slot++;
+  return slot;
+};
+
+function assignFreshOnFloor(
+  taken: Set<number>[],
+  out: Map<string, Seat>,
+  agent: Agent,
+  floorOf: (agent: Agent) => number,
+) {
+  for (const floor of floorsFrom(floorOf(agent))) {
+    const used = taken[floor];
+    if (!used) continue;
+    const slot = firstFreeSlot(used);
+    if (slot >= FLOOR_CAPACITY) continue;
+    used.add(slot);
+    out.set(agent.id, [floor, slot]);
+    return;
+  }
+}
+
 /**
  * Who sits where. An agent already in `previous` keeps its seat for as long as it is among `agents`, whatever order they
  * come in; every other agent takes the first free slot on its floor (the next floor with room when that one is full), in
@@ -95,29 +125,13 @@ export function assignSeats(
   const fresh: Agent[] = [];
   for (const agent of agents) {
     const [floor, slot] = previous.get(agent.id) ?? [-1, -1];
-    const used = taken[floor]; // none for a floor that does not exist
-    const ok =
-      used !== undefined &&
-      Number.isInteger(slot) &&
-      slot >= 0 &&
-      slot < FLOOR_CAPACITY &&
-      !used.has(slot);
-    if (used && ok) {
+    const used = taken[floor];
+    if (used && seatFree(used, slot)) {
       used.add(slot);
       out.set(agent.id, [floor, slot]);
     } else fresh.push(agent);
   }
-  for (const agent of fresh)
-    for (const floor of floorsFrom(floorOf(agent))) {
-      const used = taken[floor];
-      if (!used) continue;
-      let slot = 0;
-      while (used.has(slot)) slot++;
-      if (slot >= FLOOR_CAPACITY) continue;
-      used.add(slot);
-      out.set(agent.id, [floor, slot]);
-      break;
-    }
+  for (const agent of fresh) assignFreshOnFloor(taken, out, agent, floorOf);
   return out;
 }
 

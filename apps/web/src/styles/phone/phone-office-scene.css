@@ -53,8 +53,6 @@
     justify-content: center;
     border: 1px solid var(--glass-line);
     background: var(--glass);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
     color: var(--on-glass);
     box-shadow: var(--shadow-sm);
   }
@@ -110,8 +108,6 @@
     border-radius: var(--r-3xl);
     border: 1px solid var(--glass-line);
     background: var(--glass);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
   }
   .rail-floor,
   .rail-tool {

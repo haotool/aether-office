@@ -7,6 +7,7 @@ import { Badge } from '../../ui/Badge.js';
 import { Field } from '../../ui/Field.js';
 import { useT, useWhy } from '../../ui/useT.js';
 import type { Why } from '../../ui/whyNot.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 
 type Work = Snapshot['work'][number];
 
@@ -102,7 +103,7 @@ export function NativeReview({ work, snapshot, canRequest, onSaved }: NativeRevi
   const query = useQuery({
     queryKey: ['review-runs', work.id, work.version],
     queryFn: () => api<ReviewRuns>(`/api/projects/${snapshot.project.id}/work/${work.id}/reviews`),
-    refetchInterval: 2000,
+    ...poll(POLL.watching),
   });
   const active = query.data?.runs.some((r) => ACTIVE_RUN_STATES.includes(r.state));
   const request = async (agentId: FormDataEntryValue | null) => {

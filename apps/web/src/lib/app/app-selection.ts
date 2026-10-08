@@ -15,7 +15,7 @@ import { isOperator } from '../navigation/roles.js';
 import { useT } from '../../ui/useT.js';
 import { sessionIdOf } from '../sessions/session-names.js';
 import { focusFeedRow, useSessionNotices } from './app-hooks.js';
-import { usePendingApprovals } from './app-data.js';
+import { useApprovals } from './app-data.js';
 import {
   askingKeys,
   usePermissionRequests,
@@ -31,6 +31,7 @@ import {
   type AlertSink,
 } from '../notifications/notifications.js';
 import { usePreferences } from '../preferences/state.js';
+import { POLL, poll } from './polling.js';
 
 /** Drops a project the address names but this person cannot open from the address, and says which one is shown instead. */
 function useProjectFallback(
@@ -83,7 +84,7 @@ export function useProjectSelection(
     queryFn: () => api<Snapshot>(`/api/projects/${projectId}/snapshot`),
     enabled: !!session && !!projectId && !!projects.data,
     // The event stream refreshes it the moment something changes; polling is only the net under it.
-    refetchInterval: offline ? 5000 : 30000,
+    ...poll(offline ? POLL.list : POLL.slow),
     retry: 1,
   });
   useProjectFallback(requestedGone, projects.data?.[0]?.name, setParams, setNotice);
@@ -110,11 +111,12 @@ export function useAttention(
   sessions: AttributedSession[] | undefined,
   snapshot: Snapshot | undefined,
   setNotice: (message: string) => void,
+  offline: boolean,
 ) {
   const t = useT();
   const notify = usePreferences((s) => s.notify);
   const navigate = useNavigate();
-  const pendingApprovals = usePendingApprovals(session, projectId);
+  const { approvals, pending } = useApprovals(session, projectId, offline);
   // An alert is a browser notification when permitted, otherwise a notice in the page; a tap opens what it is about.
   const sink: AlertSink = useMemo(
     () => ({ toast: setNotice, open: (to: string) => navigate(to) }),
@@ -125,6 +127,7 @@ export function useAttention(
   useNotificationPermission(!!session && notify);
   useApprovalNotifications(
     projectId,
+    approvals,
     !!session && notify,
     {
       title: t('approvalNeeded'),
@@ -141,7 +144,7 @@ export function useAttention(
   );
   const needs = needsYou(
     snapshot,
-    pendingApprovals,
+    pending,
     sessionsNeedingYou(sessionsWaiting(sessions, Date.now()), asking),
   );
   return { needs, asking };

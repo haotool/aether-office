@@ -6,13 +6,8 @@ import { MONO, SANS, type ViewCtx } from './screen-theme.js';
 
 const AGENT_CALL = /^(Task|Agent|SendMessage|TaskCreate|TeamCreate|Delegate)/;
 
-/** Agent coordination as a chat: the number of agents is the count of subagent calls really made; the messages are bubbles, not words. */
-export function drawChat(c: ViewCtx): void {
+function drawChatSidebar(c: ViewCtx, agents: number, r: ReturnType<typeof viewRng>) {
   const { g, p, box } = c;
-  const agents = c.facts.recent.filter((call) => AGENT_CALL.test(call.tool)).length;
-  const r = viewRng(c, 'chat');
-  g.fillStyle = p.bg;
-  g.fillRect(box.x, box.y, box.w, box.h);
   g.fillStyle = p.panel;
   g.fillRect(box.x, box.y, 130, box.h);
   text(g, `agents · ${agents}`, box.x + 10, box.y + 20, c.accent, 12, SANS, '600');
@@ -27,7 +22,10 @@ export function drawChat(c: ViewCtx): void {
     g.fillStyle = p.dim;
     g.fillRect(box.x + 32, y + 6, 50 + r() * 30, 5);
   }
-  const bubbles = c.moving ? Math.min(7, 3 + Math.floor(c.elapsed / 2600)) : 5;
+}
+
+function drawChatBubbles(c: ViewCtx, r: ReturnType<typeof viewRng>, bubbles: number) {
+  const { g, p, box } = c;
   const x0 = box.x + 146;
   const w = box.w - 160;
   let y = box.y + box.h - 40;
@@ -46,15 +44,31 @@ export function drawChat(c: ViewCtx): void {
     g.globalAlpha = 1;
     textBars(g, r, bx + 10, y + 8, bw - 20, lines, own ? p.text : p.dim);
   }
-  if (c.facts.tool) {
-    const phase = Math.floor(c.now / 300) % 3; // someone is typing
-    for (let i = 0; i < 3; i++) {
-      g.fillStyle = i === phase ? p.text : p.dim;
-      g.beginPath();
-      g.arc(x0 + 10 + i * 10, box.y + box.h - 18, 3, 0, Math.PI * 2);
-      g.fill();
-    }
+}
+
+function drawChatTyping(c: ViewCtx) {
+  const { g, p, box } = c;
+  const x0 = box.x + 146;
+  const phase = Math.floor(c.now / 300) % 3;
+  for (let i = 0; i < 3; i++) {
+    g.fillStyle = i === phase ? p.text : p.dim;
+    g.beginPath();
+    g.arc(x0 + 10 + i * 10, box.y + box.h - 18, 3, 0, Math.PI * 2);
+    g.fill();
   }
+}
+
+/** Agent coordination as a chat: the number of agents is the count of subagent calls really made; the messages are bubbles, not words. */
+export function drawChat(c: ViewCtx): void {
+  const { g, p, box } = c;
+  const agents = c.facts.recent.filter((call) => AGENT_CALL.test(call.tool)).length;
+  const r = viewRng(c, 'chat');
+  g.fillStyle = p.bg;
+  g.fillRect(box.x, box.y, box.w, box.h);
+  drawChatSidebar(c, agents, r);
+  const bubbles = c.moving ? Math.min(7, 3 + Math.floor(c.elapsed / 2600)) : 5;
+  drawChatBubbles(c, r, bubbles);
+  if (c.facts.tool) drawChatTyping(c);
 }
 
 /** A notebook: code cells in the file's name over made-up Python, and the chart a cell would draw. */

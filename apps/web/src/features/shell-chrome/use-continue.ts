@@ -6,6 +6,7 @@ import { execute } from '../../lib/api/api-commands.js';
 import { type Session } from '../../lib/api/api-session.js';
 import { useT } from '../../ui/useT.js';
 import { isOperator } from '../../lib/navigation/roles.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 
 type Profile = { name: string; root: string };
 type TerminalList = {
@@ -41,7 +42,7 @@ export function useContinue(session: AttributedSession | null, projectId: string
   const list = useQuery({
     queryKey: ['terminals', projectId],
     queryFn: () => api<TerminalList>(`/api/projects/${projectId}/terminals`),
-    refetchInterval: 10_000,
+    ...poll(POLL.idle),
     retry: false,
     enabled: !!session,
   });

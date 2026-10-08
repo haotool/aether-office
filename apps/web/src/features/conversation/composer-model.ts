@@ -144,14 +144,16 @@ export type Token = { query: string; start: number };
 export function slashToken(text: string, caret: number): Token | null {
   const before = text.slice(0, caret);
   const m = /^\/([A-Za-z0-9._:-]*)$/.exec(before);
-  return m ? { query: m[1]!, start: 0 } : null;
+  if (!m || m[1] === undefined) return null;
+  return { query: m[1], start: 0 };
 }
 
 /** Pure. The `@` file being typed: an `@` at the start of the text or after a space, up to the caret. */
 export function atToken(text: string, caret: number): Token | null {
   const before = text.slice(0, caret);
   const m = /(?:^|\s)@([^\s@]*)$/.exec(before);
-  return m ? { query: m[1]!, start: before.length - m[1]!.length - 1 } : null;
+  if (!m || m[1] === undefined) return null;
+  return { query: m[1], start: before.length - m[1].length - 1 };
 }
 
 /** Pure. The menu of slash commands for what has been typed: fuzzy on the name, builtin before custom on a tie. */

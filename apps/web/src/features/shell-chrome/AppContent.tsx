@@ -13,9 +13,11 @@ import type { OfficeModel } from '../office/office-model.js';
 import { NotFound } from './NotFound.js';
 import { OfficePage } from '../office/OfficePage.js';
 import { PhoneOffice } from '../office/PhoneOffice.js';
-import { TaskForm } from '../tasks-git/TaskForm.js';
 
 const FirstRun = lazy(() => import('./FirstRun.js').then((m) => ({ default: m.FirstRun })));
+const TaskForm = lazy(() =>
+  import('../tasks-git/TaskForm.js').then((m) => ({ default: m.TaskForm })),
+);
 // Every page but the office is loaded on first visit: the first screen is the office.
 const ProjectPage = lazy(() =>
   import('../integrations/ProjectPage.js').then((m) => ({ default: m.ProjectPage })),
@@ -217,7 +219,9 @@ function ProjectBody(props: Props & { data: Snapshot; projectId: string }) {
         </Suspense>
       )}
       {newTask && (
-        <TaskForm snapshot={data} onClose={() => setNewTask(false)} onSaved={onRefresh} />
+        <Suspense fallback={null}>
+          <TaskForm snapshot={data} onClose={() => setNewTask(false)} onSaved={onRefresh} />
+        </Suspense>
       )}
       {editor && (
         <Suspense fallback={null}>

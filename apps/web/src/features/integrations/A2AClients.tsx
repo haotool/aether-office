@@ -5,6 +5,7 @@ import { execute } from '../../lib/api/api-commands.js';
 import { Field } from '../../ui/Field.js';
 import { useT, useWhy } from '../../ui/useT.js';
 import { useCommandRunner } from '../shell-chrome/panel-kit.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 
 type Client = { id: string; name: string; maxOpen: number; revokedAt: number | null; open: number };
 type Status = { enabled: boolean; cardUrl: string | null; clients: Client[] };
@@ -85,7 +86,7 @@ export function A2AClients({ projectId, canManage }: { projectId: string; canMan
   const query = useQuery({
     queryKey: key,
     queryFn: () => api<Status>(`/api/projects/${projectId}/a2a`),
-    refetchInterval: 5000,
+    ...poll(POLL.list),
   });
   if (!query.data) return null;
   return (

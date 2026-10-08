@@ -190,7 +190,8 @@ export function FeedSquad({
   onOpen: Open;
 }) {
   const t = useT();
-  const squad = item.squad!;
+  const squad = item.squad;
+  if (!squad) throw new Error('squad tree row missing squad');
   const { tree, tab, onKeyDown, onFocus } = useSquadTree(item, open, onToggle);
   return (
     <div

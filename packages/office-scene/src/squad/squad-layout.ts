@@ -131,39 +131,54 @@ function room(box: Box, others: readonly Box[]): number {
 type Side = 'east' | 'west' | 'north' | 'south';
 type Candidate = { rect: SquadRect; box: Box; side: Side };
 
+function candidateShapes(size: ReturnType<typeof sizeFor>): [number, number][] {
+  const shapes: [number, number][] = [size.span];
+  const [w, h] = size.span;
+  if (w !== h && h >= 3 && w <= 8) shapes.push([h, w]);
+  return shapes;
+}
+
+function candidateAt(
+  desk: PlacedObject,
+  d: Box,
+  base: Omit<SquadRect, 'x' | 'z' | 'width' | 'depth'>,
+  width: number,
+  depth: number,
+  side: Side,
+  align: -1 | 0 | 1,
+): Candidate {
+  const alongZ = side === 'east' || side === 'west';
+  const edge = alongZ ? (depth - (d.maxZ - d.minZ)) / 2 : (width - (d.maxX - d.minX)) / 2;
+  const shift = -align * edge;
+  const x = alongZ
+    ? side === 'east'
+      ? d.maxX + DESK_GAP + width / 2
+      : d.minX - DESK_GAP - width / 2
+    : desk.x + shift;
+  const z = alongZ
+    ? desk.z + shift
+    : side === 'south'
+      ? d.maxZ + DESK_GAP + depth / 2
+      : d.minZ - DESK_GAP - depth / 2;
+  const rect: SquadRect = { ...base, x, z, width, depth };
+  const box = {
+    minX: x - width / 2,
+    maxX: x + width / 2,
+    minZ: z - depth / 2,
+    maxZ: z + depth / 2,
+  };
+  return { rect, box, side };
+}
+
 // The four sides of the desk, each in two orientations and three alignments along the desk's edge.
 function candidates(desk: PlacedObject, size: ReturnType<typeof sizeFor>): Candidate[] {
   const d = objectBounds(desk);
   const base = { anchor: desk.id, floor: floorOf(desk), seats: size.seats };
   const out: Candidate[] = [];
-  const shapes: [number, number][] = [size.span];
-  const [w, h] = size.span;
-  if (w !== h && h >= 3 && w <= 8) shapes.push([h, w]); // the other way round, when the schema allows it
-  for (const [width, depth] of shapes)
+  for (const [width, depth] of candidateShapes(size))
     for (const side of SIDES)
-      for (const align of [0, -1, 1] as const) {
-        const alongZ = side === 'east' || side === 'west';
-        const edge = alongZ ? (depth - (d.maxZ - d.minZ)) / 2 : (width - (d.maxX - d.minX)) / 2;
-        const shift = -align * edge; // flush with the desk's low edge (-1) or its high edge (1)
-        const x = alongZ
-          ? side === 'east'
-            ? d.maxX + DESK_GAP + width / 2
-            : d.minX - DESK_GAP - width / 2
-          : desk.x + shift;
-        const z = alongZ
-          ? desk.z + shift
-          : side === 'south'
-            ? d.maxZ + DESK_GAP + depth / 2
-            : d.minZ - DESK_GAP - depth / 2;
-        const rect: SquadRect = { ...base, x, z, width, depth };
-        const box = {
-          minX: x - width / 2,
-          maxX: x + width / 2,
-          minZ: z - depth / 2,
-          maxZ: z + depth / 2,
-        };
-        out.push({ rect, box, side });
-      }
+      for (const align of [0, -1, 1] as const)
+        out.push(candidateAt(desk, d, base, width, depth, side, align));
   return out;
 }
 

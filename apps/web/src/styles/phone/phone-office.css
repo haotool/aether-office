@@ -59,8 +59,6 @@
     height: calc(var(--tabbar-h) + var(--safe-bottom));
     padding: 0 var(--safe-right) var(--safe-bottom) var(--safe-left);
     background: color-mix(in srgb, var(--surface) 96%, transparent);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
     border-top: 1px solid var(--line);
     z-index: var(--z-tabbar);
   }

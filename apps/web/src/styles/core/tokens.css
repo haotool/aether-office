@@ -105,10 +105,10 @@
   --z-sheet: 60;
   /* Over the 3D scene: dark glass and light type, the same in both themes (the scene is a night view either way). */
   --scene-bg: #050e15;
-  --glass: #0a141cd9;
-  --glass-soft: #0a141cb8;
-  --glass-strong: #050f16e0;
-  --glass-label: #10232ee6;
+  --glass: #0a141cf0;
+  --glass-soft: #0a141ce0;
+  --glass-strong: #050f16f5;
+  --glass-label: #10232eeb;
   --glass-base: #0a1822;
   --glass-selected: #183f4c;
   --glass-hover: #1c4a5a;
@@ -212,7 +212,7 @@
     --control-h-lg: 44px;
   }
 }
-/* Reduced transparency, or more contrast asked for: the glass over the scene is opaque (the blur is switched off in breakpoints.css). */
+/* Reduced transparency, or more contrast asked for: the glass over the scene is opaque. */
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
   :root {
     --glass: #0a141c;

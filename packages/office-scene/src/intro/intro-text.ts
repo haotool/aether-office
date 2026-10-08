@@ -1,4 +1,5 @@
 import type { IntroPhase } from './intro-tour.js';
+import { sceneT } from '../i18n/scene-text.js';
 
 export type IntroCaptionKey = 'welcome' | 'history' | 'crown';
 
@@ -13,25 +14,16 @@ export function introCaption(
   zh: boolean,
 ): string {
   const repo = facts.tiers > 0;
+  const t = sceneT(zh);
   switch (key) {
     case 'welcome':
-      return zh ? '歡迎來到辦公室' : 'Welcome to the office';
+      return t('intro.welcome');
     case 'history':
-      return repo
-        ? zh
-          ? '你的儲存庫歷史在這裡生長'
-          : "Your repository's history grows here"
-        : zh
-          ? '一層一層看整座辦公室'
-          : 'The office, deck by deck';
+      return t(repo ? 'intro.historyRepo' : 'intro.historyNone');
     case 'crown':
       return repo
-        ? zh
-          ? `${facts.commits} 個提交 · ${facts.tiers} 層`
-          : `${facts.commits} commits · ${facts.tiers} tiers`
-        : zh
-          ? '五層樓，一棟建築'
-          : 'Five decks, one building';
+        ? t('intro.crownRepo', { commits: facts.commits, tiers: facts.tiers })
+        : t('intro.crownNone');
   }
 }
 

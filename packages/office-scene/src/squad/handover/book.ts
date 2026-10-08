@@ -123,6 +123,38 @@ export type Told = { id: string; supervisor: string; type: string; kind: StampKi
 /** What is alive in the scene: a hand-over of a supervisor that is gone, or of a carrier that vanished, is cut short. */
 export type Live = { supervisors: ReadonlySet<string>; members: ReadonlySet<string> };
 
+const handoverDropped = (e: Entry, elapsed: number, live: Live) =>
+  !live.supervisors.has(e.supervisor) ||
+  (e.plan.mode === 'walk' && !live.members.has(e.id) && elapsed < e.plan.t.placeAt);
+
+function advanceStages(e: Entry, elapsed: number, cues: Cue[], told: Told[]): Entry['stage'] {
+  let stage: Entry['stage'] = e.stage;
+  const t = e.plan.t;
+  if (stage < 1 && elapsed >= t.placeAt) {
+    stage = 1;
+    told.push({ id: e.id, supervisor: e.supervisor, type: e.type, kind: e.plan.kind });
+    if (e.plan.mode !== 'tray') cues.push({ supervisor: e.supervisor, clip: 'reading' });
+  }
+  if (stage < 2 && elapsed >= t.stampAt) {
+    stage = 2;
+    if (e.plan.mode !== 'tray')
+      cues.push({
+        supervisor: e.supervisor,
+        clip: e.plan.kind === 'returned' ? 'scratch_head' : 'nod',
+      });
+  }
+  return stage;
+}
+
+function stackFinishedEntry(trays: Record<string, Tray>, e: Entry, now: number) {
+  const tray = trays[e.supervisor] ?? { count: 0, seal: null, lastAt: now };
+  trays[e.supervisor] = {
+    count: Math.min(TRAY_STACK_MAX, tray.count + 1),
+    seal: { kind: e.plan.kind, at: e.since + sealAt(e.plan), seed: e.plan.seed },
+    lastAt: now,
+  };
+}
+
 /**
  * Moves the book on to `now`: the supervisor reads when a folder is placed and nods (or, for a flagged result, scratches
  * its head) when the stamp falls; a finished hand-over folds into its tray. A hand-over whose supervisor is gone is dropped
@@ -143,37 +175,15 @@ export function advance(
   const ordered = active(book).sort((a, b) => a.since - b.since || a.id.localeCompare(b.id));
   for (const e of ordered) {
     const elapsed = now - e.since;
-    const t = e.plan.t;
-    const dropped =
-      !live.supervisors.has(e.supervisor) ||
-      (e.plan.mode === 'walk' && !live.members.has(e.id) && elapsed < t.placeAt);
-    if (dropped) continue;
-    let stage = e.stage;
-    if (stage < 1 && elapsed >= t.placeAt) {
-      stage = 1;
-      told.push({ id: e.id, supervisor: e.supervisor, type: e.type, kind: e.plan.kind });
-      if (e.plan.mode !== 'tray') cues.push({ supervisor: e.supervisor, clip: 'reading' });
-    }
-    if (stage < 2 && elapsed >= t.stampAt) {
-      stage = 2;
-      if (e.plan.mode !== 'tray')
-        cues.push({
-          supervisor: e.supervisor,
-          clip: e.plan.kind === 'returned' ? 'scratch_head' : 'nod',
-        });
-    }
+    if (handoverDropped(e, elapsed, live)) continue;
+    const stage = advanceStages(e, elapsed, cues, told);
     if (now >= end(e)) {
-      const tray = trays[e.supervisor] ?? { count: 0, seal: null, lastAt: now };
-      trays[e.supervisor] = {
-        count: Math.min(TRAY_STACK_MAX, tray.count + 1),
-        seal: { kind: e.plan.kind, at: e.since + sealAt(e.plan), seed: e.plan.seed },
-        lastAt: now,
-      };
+      stackFinishedEntry(trays, e, now);
       continue;
     }
     entries[entryKey(e.id, e.since)] = stage === e.stage ? e : { ...e, stage };
   }
-  const idle = new Set(Object.values(entries).map((e) => e.supervisor));
+  const idle = new Set(Object.values(entries).map((entry) => entry.supervisor));
   for (const [supervisor, tray] of Object.entries(trays))
     if (!idle.has(supervisor) && now - tray.lastAt > TRAY_CLEAR_MS) delete trays[supervisor];
   return { book: { entries, trays }, cues, told };

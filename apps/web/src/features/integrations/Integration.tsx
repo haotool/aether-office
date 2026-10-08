@@ -6,6 +6,7 @@ import { execute } from '../../lib/api/api-commands.js';
 import { Field } from '../../ui/Field.js';
 import { useT } from '../../ui/useT.js';
 import type { Key } from '../../lib/i18n/i18n.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 
 type Row = {
   jobId: string;
@@ -95,7 +96,7 @@ export function Integration({
     queryKey: key,
     queryFn: () =>
       api<{ integrations: Row[] }>(`/api/projects/${projectId}/work/${work.id}/integrations`),
-    refetchInterval: 3000,
+    ...poll(POLL.driving),
   });
   const rows = query.data?.integrations ?? [];
   return (

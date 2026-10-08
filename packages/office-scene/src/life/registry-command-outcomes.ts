@@ -15,6 +15,7 @@ import {
   testsPassed,
 } from './matchers.js';
 import type { LifeRule } from './registry.js';
+import { sceneText } from '../i18n/scene-text.js';
 
 const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
@@ -41,8 +42,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     reduced: 'static',
     anchor: 'desk',
     pose: { clip: 'nod', atMs: 600 },
-    aria: (who, zh) =>
-      zh ? `${who} 的測試指令順利結束` : `${who}'s test command exited successfully`,
+    aria: (who, zh) => sceneText(zh, 'life.testsOk', { who }),
   },
   {
     id: 'ci-fail',
@@ -59,7 +59,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     reduced: 'static',
     anchor: 'desk',
     pose: { clip: 'shrug', atMs: 700 },
-    aria: (who, zh) => (zh ? `${who} 的測試指令失敗了` : `${who}'s test command failed`),
+    aria: (who, zh) => sceneText(zh, 'life.testsFailed', { who }),
   },
   {
     id: 'ci-stack',
@@ -76,14 +76,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     reduced: 'static',
     anchor: 'desk',
     // The command's own exit status: `gh run watch` exits 0 without `--exit-status`, so this never says "CI passed".
-    aria: (who, zh, s) =>
-      s.ok
-        ? zh
-          ? `${who} 的 CI 監看指令順利結束`
-          : `${who}'s CI watch command exited successfully`
-        : zh
-          ? `${who} 的 CI 監看指令以錯誤結束`
-          : `${who}'s CI watch command exited with an error`,
+    aria: (who, zh, s) => sceneText(zh, s.ok ? 'life.ciOk' : 'life.ciFailed', { who }),
   },
   {
     id: 'build-error',
@@ -100,7 +93,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     reduced: 'static',
     anchor: 'desk',
     pose: { clip: 'shrug', atMs: 700 },
-    aria: (who, zh) => (zh ? `${who} 的建置指令失敗了` : `${who}'s build command failed`),
+    aria: (who, zh) => sceneText(zh, 'life.buildFailed', { who }),
   },
   {
     id: 'force-push',
@@ -116,7 +109,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     minTier: 'balanced',
     reduced: 'static',
     anchor: 'desk',
-    aria: (who, zh) => (zh ? `${who} 開始了強制 push` : `${who} started a force push`),
+    aria: (who, zh) => sceneText(zh, 'life.forcePush', { who }),
   },
   {
     id: 'merge-conflict',
@@ -133,13 +126,10 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     reduced: 'static',
     anchor: 'desk',
     aria: (who, zh, s) =>
-      s.kind === 'tool.start'
-        ? zh
-          ? `${who} 正在搜尋合併衝突標記`
-          : `${who} is searching for merge conflict markers`
-        : zh
-          ? `${who} 的儲存庫有 ${s.value ?? 1} 個衝突檔案`
-          : `${who}'s repository has ${s.value ?? 1} conflicted files`,
+      sceneText(zh, s.kind === 'tool.start' ? 'life.conflictSearch' : 'life.conflicts', {
+        who,
+        n: s.value ?? 1,
+      }),
   },
   {
     id: 'friday-deploy',
@@ -156,8 +146,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     reduced: 'static',
     anchor: 'desk',
     pose: { clip: 'shrug', atMs: 1200 },
-    aria: (who, zh) =>
-      zh ? `${who} 在週五下午開始部署` : `${who} started a deploy on a Friday afternoon`,
+    aria: (who, zh) => sceneText(zh, 'life.fridayDeploy', { who }),
   },
   {
     id: 'launch-pad',
@@ -173,7 +162,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     minTier: 'balanced',
     reduced: 'static',
     anchor: 'desk',
-    aria: (who, zh) => (zh ? `${who} 開始了部署` : `${who} started a deploy`),
+    aria: (who, zh) => sceneText(zh, 'life.deploy', { who }),
   },
   {
     id: 'skull-gag',
@@ -189,8 +178,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     minTier: 'balanced',
     reduced: 'static',
     anchor: 'desk',
-    aria: (who, zh) =>
-      zh ? `${who} 開始了遞迴刪除指令` : `${who} started a recursive delete command`,
+    aria: (who, zh) => sceneText(zh, 'life.rmRecursive', { who }),
   },
   {
     id: 'sudo-prompt',
@@ -206,7 +194,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     minTier: 'balanced',
     reduced: 'static',
     anchor: 'desk',
-    aria: (who, zh) => (zh ? `${who} 開始了 sudo 指令` : `${who} started a command with sudo`),
+    aria: (who, zh) => sceneText(zh, 'life.sudo', { who }),
   },
   {
     id: 'curl-pipe',
@@ -222,10 +210,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     minTier: 'balanced',
     reduced: 'static',
     anchor: 'desk',
-    aria: (who, zh) =>
-      zh
-        ? `${who} 開始了把下載內容直接交給 shell 的指令`
-        : `${who} started a command that pipes a download into a shell`,
+    aria: (who, zh) => sceneText(zh, 'life.curlPipe', { who }),
   },
   {
     id: 'works-machine',
@@ -241,8 +226,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     minTier: 'balanced',
     reduced: 'static',
     anchor: 'desk',
-    aria: (_who, zh) =>
-      zh ? '測試在一個工作階段通過、在另一個失敗' : 'Tests pass in one session and fail in another',
+    aria: (_who, zh) => sceneText(zh, 'life.worksMachine'),
   },
   {
     id: 'not-a-bug',
@@ -258,7 +242,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     minTier: 'balanced',
     reduced: 'static',
     anchor: 'desk',
-    aria: (_who, zh) => (zh ? '測試被修改過，然後通過了' : 'The tests were changed, then passed'),
+    aria: (_who, zh) => sceneText(zh, 'life.testsChanged'),
   },
   {
     id: 'lgtm',
@@ -274,7 +258,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     minTier: 'balanced',
     reduced: 'static',
     anchor: 'desk',
-    aria: (who, zh) => (zh ? `${who} 核准了一個 pull request` : `${who} approved a pull request`),
+    aria: (who, zh) => sceneText(zh, 'life.prApproved', { who }),
   },
   {
     id: 'time-machine',
@@ -290,8 +274,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     minTier: 'high',
     reduced: 'none',
     anchor: 'desk',
-    aria: (who, zh) =>
-      zh ? `${who} 開始執行 git reset --hard` : `${who} started a hard reset of the working tree`,
+    aria: (who, zh) => sceneText(zh, 'life.hardReset', { who }),
   },
   {
     id: 'todo-notes',
@@ -307,6 +290,6 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     minTier: 'balanced',
     reduced: 'none',
     anchor: 'desk',
-    aria: (who, zh) => (zh ? `${who} 正在搜尋待辦註記` : `${who} is looking for TODOs`),
+    aria: (who, zh) => sceneText(zh, 'life.todoSearch', { who }),
   },
 ];

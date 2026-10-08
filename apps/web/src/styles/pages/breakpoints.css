@@ -309,14 +309,6 @@
  * User preferences (the viewport queries above are the layout; these are what the person's system asks for). Each is
  * checked with Playwright's emulateMedia in e2e/settings/preferences.spec.ts. Colors for them live in tokens.css.
  */
-/* Reduced transparency or more contrast: no blur behind a surface (the glass tokens are opaque in tokens.css). A person's
-   setting outranks every component rule, hence !important. */
-@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
-  * {
-    -webkit-backdrop-filter: none !important; /* token-lint: preference */
-    backdrop-filter: none !important; /* token-lint: preference */
-  }
-}
 /* Forced colors (Windows high contrast): the system paints colors, so what a border or a fill said must be said by a
    border or an outline: a button without a border gets one, the cut corner goes, a selected control is outlined, the
    focus ring is the system highlight. */

@@ -6,13 +6,11 @@ import { useLatest } from '../../hooks/use-latest.js';
 import { sessionsToAgents } from '../../lib/sessions/localSessions.js';
 import { buildFeed, feedItems, type Feed, type Speech } from '../feed/feed-model.js';
 import { groupFeed } from '../feed/feed-squads.js';
-import { pollMs } from '../integrations/live-link.js';
 import { askingKeys, usePermissionRequests } from '../operations/permission-requests.js';
 import { useLinkLive } from '../../hooks/use-session-stream.js';
 import { holdBaseline, releaseBaseline, useSeen } from '../sessions/session-seen.js';
 import { useLocale } from '../../ui/useT.js';
-
-const SPEECH_POLL_MS = 6000;
+import { POLL, poll, pollMs } from '../../lib/app/polling.js';
 
 /**
  * The last prompt and reply of every running session, by session key. One query shared by the speech bubbles in the
@@ -26,7 +24,7 @@ export function useSpeechBySession(enabled: boolean): Record<string, Speech> | u
     queryFn: () =>
       api<{ speech: Record<string, Speech> }>('/api/local-sessions/speech').then((r) => r.speech),
     enabled,
-    refetchInterval: pollMs(live, SPEECH_POLL_MS),
+    ...poll(pollMs(live, POLL.quiet)),
     refetchIntervalInBackground: false,
     retry: false,
   });

@@ -92,13 +92,6 @@ export function linkReducer(state: LinkState, action: LinkAction): LinkState {
   }
 }
 
-/** While the stream is live the polling is only a slow safety net (CPU and memory are not events). */
-export const SAFETY_NET_MS = 30_000;
-/** The polling interval to use: the stream's safety net while it is live, otherwise the caller's own. */
-export function pollMs<T>(live: boolean, fallback: T): T | number {
-  return live ? SAFETY_NET_MS : fallback;
-}
-
 /** "4s", "3 min": how long ago, for the connection indicator. */
 export function ageText(ms: number, locale: 'zh-TW' | 'en'): string {
   const s = Math.max(0, Math.round(ms / 1000));

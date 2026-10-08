@@ -20,8 +20,6 @@
   border-radius: var(--r-3xl);
   border: 1px solid var(--glass-line);
   background: var(--glass-soft);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
   color: var(--on-glass);
   text-align: center;
 }

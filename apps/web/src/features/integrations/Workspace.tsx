@@ -10,6 +10,7 @@ import { Empty } from '../../ui/Empty.js';
 import { Badge } from '../../ui/Badge.js';
 import { useT, useWhy } from '../../ui/useT.js';
 import { Reservations } from '../operations/Reservations.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 type WorkspaceData = {
   workspaces: {
     id: string;
@@ -63,7 +64,7 @@ export function useWorkspaces(projectId: string) {
   return useQuery({
     queryKey: ['workspaces', projectId],
     queryFn: () => api<WorkspaceData>(`/api/projects/${projectId}/workspaces`),
-    refetchInterval: 2000,
+    ...poll(POLL.watching),
   });
 }
 type WorkspaceRow = WorkspaceData['workspaces'][number];

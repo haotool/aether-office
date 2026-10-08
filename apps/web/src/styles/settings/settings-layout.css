@@ -66,8 +66,6 @@
   margin-inline: calc(-1 * var(--space-16));
   padding: var(--space-4) var(--space-16);
   background: color-mix(in srgb, var(--bg) 92%, transparent);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }
 .snav ul {
@@ -116,8 +114,6 @@
     padding: 0;
     background: none;
     border: 0;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
   }
   .snav ul {
     display: grid;
@@ -189,8 +185,6 @@
   margin: 0 calc(-1 * var(--space-16)) var(--space-12);
   padding: 0 var(--space-16);
   background: color-mix(in srgb, var(--bg) 92%, transparent);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }
 .settings-bar h1 {

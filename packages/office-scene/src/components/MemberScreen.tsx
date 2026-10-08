@@ -107,6 +107,14 @@ function useScreenTextures({
 
 type Textures = ReturnType<typeof useScreenTextures>;
 
+/** Milliseconds between repaints of a screen at a distance: often when near, rarely when far, never with reduced motion. */
+const paintEvery = (distance: number, reducedMotion: boolean) =>
+  reducedMotion ? Infinity : PAINT_MS[distance < NEAR ? 0 : distance < MID ? 1 : 2];
+
+/** The sideways shake of a machine at its limit: it hums. */
+const hum = (intensity: number, seconds: number) =>
+  intensity === 3 ? Math.sin(seconds * 60) * 0.0016 : 0;
+
 /** Repaints the screens at the pace the camera's distance deserves, scrolls the stream and shakes a machine at its limit. */
 function useScreenLoop(
   { live, second, stream }: Textures,
@@ -124,19 +132,14 @@ function useScreenLoop(
       // A screen is repainted at the pace its distance from the camera deserves, and only when a paint is due.
       const at = shake.current ? shake.current.getWorldPosition(here.current) : here.current;
       const distance = state.camera.position.distanceTo(at);
-      const interval = reducedMotion
-        ? Infinity
-        : PAINT_MS[distance < NEAR ? 0 : distance < MID ? 1 : 2];
-      paintOptions.current.interval = interval;
+      paintOptions.current.interval = paintEvery(distance, reducedMotion);
       paintOptions.current.moving = !reducedMotion;
       paintOptions.current.speed = TYPING_SPEED[intensity];
       live.paint(facts, Date.now(), paintOptions.current);
       second?.paint(Date.now(), !reducedMotion);
     }
     if (stream && intensity > 0) stream.offset.y -= delta * STREAM_SPEED[intensity];
-    if (shake.current)
-      shake.current.position.x =
-        intensity === 3 ? Math.sin(state.clock.elapsedTime * 60) * 0.0016 : 0; // a machine at its limit hums
+    if (shake.current) shake.current.position.x = hum(intensity, state.clock.elapsedTime);
   });
   return shake;
 }

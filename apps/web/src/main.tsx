@@ -16,7 +16,9 @@ const client = new QueryClient({
 await loadLocale(usePreferences.getState().locale);
 watchInstall();
 startServiceWorker();
-createRoot(document.getElementById('root')!).render(
+const root = document.getElementById('root');
+if (!root) throw new Error('root element missing');
+createRoot(root).render(
   <React.StrictMode>
     <QueryClientProvider client={client}>
       <BrowserRouter>

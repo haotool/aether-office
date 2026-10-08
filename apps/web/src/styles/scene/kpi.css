@@ -107,8 +107,6 @@
 }
 .kpi-dialog::backdrop {
   background: var(--scrim);
-  -webkit-backdrop-filter: blur(3px);
-  backdrop-filter: blur(3px);
 }
 .kpi-dialog[open] {
   display: flex;
@@ -260,8 +258,6 @@
     border: 1px solid var(--glass-line);
     border-radius: var(--r-3xl);
     background: var(--glass);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
     color: var(--on-glass);
   }
   .phone-kpi .kpi-cell small {

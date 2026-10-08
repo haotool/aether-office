@@ -17,7 +17,7 @@ export const STAMP_WORDS = {
 } as const satisfies Record<'en' | 'zh', Record<StampKind, string>>;
 
 export const stampWord = (zh: boolean, kind: StampKind): string =>
-  STAMP_WORDS[zh ? 'zh' : 'en'][kind];
+  (zh ? STAMP_WORDS.zh : STAMP_WORDS.en)[kind];
 
 /** The ink: a calm slate blue for a receipt, a plain grey for a return. Neither reads as a pass or a fail. */
 export const STAMP_INK = { received: '#5d7fae', returned: '#8b919b' } as const satisfies Record<

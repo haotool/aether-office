@@ -71,6 +71,41 @@ function slotOf(rig: Rig, id: string): number | null {
   return null; // full: this one has no strings
 }
 
+/** Gives back the slots of the members that are no longer listed this round: the next tenant starts straight. */
+function releaseGone(rig: Rig): void {
+  for (const [id, slot] of rig.slots)
+    if (rig.seen.get(id) !== rig.round) {
+      for (let k = 0; k < STRINGS_PER_MEMBER; k++)
+        rig.strings.started[slot * STRINGS_PER_MEMBER + k] = 0;
+      rig.slots.delete(id);
+      rig.seen.delete(id);
+      rig.motions.delete(id);
+    }
+}
+
+/** Advances one member's motion and pins its four strings (head, both hands, the master's) to the cross above it. */
+function tieMember(rig: Rig, m: RigMember, slot: number, dt: number, simulate: boolean): void {
+  const before = rig.motions.get(m.id) ?? calmMotion(m.toolAt);
+  const motion = simulate
+    ? stepMotion(before, { phase: m.phase, toolAt: m.toolAt }, dt)
+    : // Still: no jerk, no sway, no slack: strings are there or not.
+      {
+        ...calmMotion(m.toolAt),
+        slack: 0,
+        alpha: m.phase === 'working' || m.phase === 'waiting' ? 1 : 0,
+      };
+  rig.motions.set(m.id, motion);
+  const a = chooseAnchors(seatedAnchors(m.chair), m.sockets ?? null);
+  const cross: Vec3 = [a.cross[0], a.cross[1] + motion.dip, a.cross[2]];
+  const lift = (v: Vec3): Vec3 => [v[0], v[1] + HAND_LIFT * motion.dip, v[2]];
+  const base = slot * STRINGS_PER_MEMBER;
+  const frozen = m.phase === 'waiting';
+  pinString(rig.strings, base, cross, a.head, motion.slack, frozen);
+  pinString(rig.strings, base + 1, cross, lift(a.handL), motion.slack, frozen);
+  pinString(rig.strings, base + 2, cross, lift(a.handR), motion.slack, frozen);
+  pinString(rig.strings, base + 3, cross, m.master, motion.slack, frozen);
+}
+
 /**
  * Ties the strings of `members` to their pins for this frame and advances the simulation by `dt`. A member that is no
  * longer listed gives its slot back. With `simulate` off (reduced motion, Calm) the strings are laid straight and nothing
@@ -84,39 +119,13 @@ export function updateRig(
 ): number {
   rig.round += 1;
   for (const m of members) rig.seen.set(m.id, rig.round);
-  for (const [id, slot] of rig.slots)
-    if (rig.seen.get(id) !== rig.round) {
-      // Gone: its strings are given back, and the next tenant starts straight.
-      for (let k = 0; k < STRINGS_PER_MEMBER; k++)
-        rig.strings.started[slot * STRINGS_PER_MEMBER + k] = 0;
-      rig.slots.delete(id);
-      rig.seen.delete(id);
-      rig.motions.delete(id);
-    }
+  releaseGone(rig);
   let used = 0;
   for (const m of members) {
     const slot = slotOf(rig, m.id);
     if (slot === null) continue;
     used = Math.max(used, slot + 1);
-    const before = rig.motions.get(m.id) ?? calmMotion(m.toolAt);
-    const motion = options.simulate
-      ? stepMotion(before, { phase: m.phase, toolAt: m.toolAt }, dt)
-      : // Still: no jerk, no sway, no slack: strings are there or not.
-        {
-          ...calmMotion(m.toolAt),
-          slack: 0,
-          alpha: m.phase === 'working' || m.phase === 'waiting' ? 1 : 0,
-        };
-    rig.motions.set(m.id, motion);
-    const a = chooseAnchors(seatedAnchors(m.chair), m.sockets ?? null);
-    const cross: Vec3 = [a.cross[0], a.cross[1] + motion.dip, a.cross[2]];
-    const lift = (v: Vec3): Vec3 => [v[0], v[1] + HAND_LIFT * motion.dip, v[2]];
-    const base = slot * STRINGS_PER_MEMBER;
-    const frozen = m.phase === 'waiting';
-    pinString(rig.strings, base, cross, a.head, motion.slack, frozen);
-    pinString(rig.strings, base + 1, cross, lift(a.handL), motion.slack, frozen);
-    pinString(rig.strings, base + 2, cross, lift(a.handR), motion.slack, frozen);
-    pinString(rig.strings, base + 3, cross, m.master, motion.slack, frozen);
+    tieMember(rig, m, slot, dt, options.simulate);
   }
   rig.strings.count = used * STRINGS_PER_MEMBER;
   if (!options.simulate) {

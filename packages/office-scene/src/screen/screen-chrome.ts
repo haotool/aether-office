@@ -31,6 +31,35 @@ const SCREEN_THEME: Record<
   leadership: { title: 'BOARD', pattern: 'board' },
 };
 
+type Pattern = (typeof SCREEN_THEME)[DepartmentId]['pattern'];
+type Row = (g: CanvasRenderingContext2D, x: number, y: number, w: number, i: number) => void;
+
+/** Row `i` of each pattern: the column is eleven of them. */
+const ROW: Record<Pattern, Row> = {
+  code: (g, x, y, w, i) =>
+    g.fillRect(x + (i % 3) * 6, y, w * (0.4 + ((i * 37) % 50) / 100) - (i % 3) * 6, 6),
+  pipeline: (g, x, y, w, i) => {
+    g.strokeRect(x, y, w, 18);
+    g.fillRect(x, y, w * (i % 4 === 3 ? 0.4 : 1), 18);
+  },
+  checks: (g, x, y, w, i) => {
+    g.strokeRect(x, y, 12, 12);
+    if (i % 5 !== 4) g.fillRect(x + 3, y + 3, 6, 6);
+    g.fillRect(x + 18, y + 3, w * (0.3 + ((i * 29) % 40) / 100) - 18, 6);
+  },
+  chart: (g, x, y, w, i) =>
+    g.fillRect(
+      x + (i % 2) * 4,
+      y + 22 - ((i * 53) % 22),
+      w - 8 - ((i * 17) % 20),
+      22 - ((i * 53) % 22) + 4,
+    ),
+  board: (g, x, y, w, i) => {
+    g.strokeRect(x + (i % 2) * (w / 2), y, w / 2 - 4, 20);
+    if (i % 3 === 0) g.fillRect(x + (i % 2) * (w / 2), y, w / 2 - 4, 20);
+  },
+};
+
 /** The pattern of a department's screen in its right-hand column. Abstract shapes, not data: what is real is the text. */
 export function ambient(
   g: CanvasRenderingContext2D,
@@ -44,30 +73,8 @@ export function ambient(
   g.strokeStyle = accent;
   g.fillStyle = accent;
   g.lineWidth = 2;
-  const pattern = SCREEN_THEME[department].pattern;
-  for (let i = 0; i < 11; i++) {
-    const y = 40 + i * 28;
-    if (pattern === 'code')
-      g.fillRect(x + (i % 3) * 6, y, w * (0.4 + ((i * 37) % 50) / 100) - (i % 3) * 6, 6);
-    else if (pattern === 'pipeline') {
-      g.strokeRect(x, y, w, 18);
-      g.fillRect(x, y, w * (i % 4 === 3 ? 0.4 : 1), 18);
-    } else if (pattern === 'checks') {
-      g.strokeRect(x, y, 12, 12);
-      if (i % 5 !== 4) g.fillRect(x + 3, y + 3, 6, 6);
-      g.fillRect(x + 18, y + 3, w * (0.3 + ((i * 29) % 40) / 100) - 18, 6);
-    } else if (pattern === 'chart')
-      g.fillRect(
-        x + (i % 2) * 4,
-        y + 22 - ((i * 53) % 22),
-        w - 8 - ((i * 17) % 20),
-        22 - ((i * 53) % 22) + 4,
-      );
-    else {
-      g.strokeRect(x + (i % 2) * (w / 2), y, w / 2 - 4, 20);
-      if (i % 3 === 0) g.fillRect(x + (i % 2) * (w / 2), y, w / 2 - 4, 20);
-    }
-  }
+  const row = ROW[SCREEN_THEME[department].pattern];
+  for (let i = 0; i < 11; i++) row(g, x, 40 + i * 28, w, i);
   g.restore();
 }
 

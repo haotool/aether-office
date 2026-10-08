@@ -3,6 +3,7 @@ import type { ClaudeLimits, ClaudeLimitsResponse } from '@aether/contracts';
 import { api } from '../../lib/api/api.js';
 import { useT } from '../../ui/useT.js';
 import { quotaNearLimit, quotaText } from './quota.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 
 /** A moment as day, month and time in `timeZone` (the top bar, which knows no usage answer, reads Taipei). */
 export const when = (ms: number, timeZone = 'Asia/Taipei') =>
@@ -21,7 +22,7 @@ export function ClaudeQuota() {
   const limits = useQuery({
     queryKey: ['claude-limits'],
     queryFn: () => api<ClaudeLimitsResponse>('/api/claude-limits'),
-    refetchInterval: 60_000,
+    ...poll(POLL.rare),
     retry: false,
   }).data?.limits;
   const line = (label: string, w: ClaudeLimits['fiveHour']) =>

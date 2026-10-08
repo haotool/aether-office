@@ -6,9 +6,9 @@ import {
   type ContextReading,
   type Tracker,
 } from '../../apps/web/src/features/conversation/compaction.js';
+import { compactionLabel } from '../../packages/office-scene/src/environment/compaction-label.js';
 import {
   COMPACTION_SECONDS,
-  compactionLabel,
   contextLevel,
   easeOut,
   tweenSeconds,

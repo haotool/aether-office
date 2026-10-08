@@ -4,6 +4,7 @@ import {
   breakdown,
   compact,
   floorBadges,
+  lastDay,
   limitWindows,
   modelShares,
   resetsIn,
@@ -73,6 +74,11 @@ describe('numbers', () => {
       ['reasoning', 0],
     ]);
     expect(breakdown(totals())).toEqual([]);
+  });
+
+  it('lastDay is the final daily row and rejects an empty series', () => {
+    expect(lastDay(scope({ input: 1 })).input).toBe(1);
+    expect(() => lastDay({ ...emptyScope(3), daily: [] })).toThrow(/daily rows/);
   });
 
   it('writes compact figures with Intl in the page language', () => {

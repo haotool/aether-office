@@ -7,6 +7,7 @@ import { PageHeading } from '../../ui/PageHeading.js';
 import { Empty } from '../../ui/Empty.js';
 import { useT } from '../../ui/useT.js';
 import { QueryStatus } from '../shell-chrome/QueryStatus.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 /** Asks for a sequence number to replay up to, or shows the banner that says the history is read-only up to it. */
 function ReplayControl({
   replayTo,
@@ -84,7 +85,7 @@ export function History({ projectId }: { projectId: string }) {
   const query = useQuery({
     queryKey: ['events', projectId],
     queryFn: () => api<{ events: OfficeEvent[] }>(`/api/projects/${projectId}/events?after=0`),
-    refetchInterval: 5000,
+    ...poll(POLL.list),
   });
   return (
     <>

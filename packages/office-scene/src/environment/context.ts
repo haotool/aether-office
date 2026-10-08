@@ -29,10 +29,3 @@ export const tweenSeconds = (from: number, to: number) =>
 
 /** How long the page keeps a compaction in the scene's props: the effect (COMPACTION_SECONDS) and the chip's fade fit in it. */
 export const COMPACTION_LIVE_MS = 3000;
-
-/** The chip's words: "compacted −31%", the fall in the share of the window when both ends are known and it did fall. */
-export function compactionLabel(c: SceneCompaction, zh: boolean): string {
-  const fall = c.fromPct !== null && c.toPct !== null ? Math.round(c.fromPct - c.toPct) : 0;
-  const base = zh ? '已壓縮' : 'compacted';
-  return fall > 0 ? `${base} −${fall}%` : base;
-}

@@ -87,6 +87,4 @@
 }
 .modal.modal-dock::backdrop {
   background: transparent;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
 }

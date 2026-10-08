@@ -300,6 +300,34 @@ const codeOf = (archetype: Archetype, random: () => number) =>
     .toUpperCase()
     .padStart(4, '0')}`;
 
+function petalCount(input: GenomeInput, counts: readonly number[], random: () => number) {
+  return itemAt(
+    counts,
+    Math.min(
+      counts.length - 1,
+      Math.floor(random() * counts.length) + (input.authors >= 3 ? 1 : 0),
+    ),
+  );
+}
+
+function whorlCount(input: GenomeInput, petals: number, random: () => number) {
+  const wanted = 1 + Math.floor(random() * 3) + (input.merges >= 2 ? 1 : 0) + (input.grand ? 1 : 0);
+  return input.grand
+    ? GRAND_WHORLS
+    : Math.max(1, Math.min(wanted, 4, Math.floor(MAX_PETALS / petals)));
+}
+
+function haloLevel(shape: Genome['shape'], ringed: boolean, random: () => number) {
+  if (!ringed) return 0;
+  return shape.float > 0.5 || random() < 0.4 ? 2 : 1;
+}
+
+function twigCount(input: GenomeInput) {
+  if (input.grand) return 0;
+  if (input.merges >= 1) return Math.min(3, 1 + input.merges);
+  return input.branches >= 3 ? 2 : 0;
+}
+
 export function genomeOf(input: GenomeInput): Genome {
   const random = seeded(`flower:${input.seed}`);
   const { weights, primary } = blend(random);
@@ -307,17 +335,8 @@ export function genomeOf(input: GenomeInput): Genome {
   const shape = mixShape(weights, random);
   openShape(shape, !!input.grand);
   const counts = input.grand ? GRAND_PETALS : PETALS[archetype];
-  const petals = itemAt(
-    counts,
-    Math.min(
-      counts.length - 1,
-      Math.floor(random() * counts.length) + (input.authors >= 3 ? 1 : 0),
-    ),
-  );
-  const wanted = 1 + Math.floor(random() * 3) + (input.merges >= 2 ? 1 : 0) + (input.grand ? 1 : 0);
-  const whorls = input.grand
-    ? GRAND_WHORLS
-    : Math.max(1, Math.min(wanted, 4, Math.floor(MAX_PETALS / petals)));
+  const petals = petalCount(input, counts, random);
+  const whorls = whorlCount(input, petals, random);
   const florets = floretsFor(shape.disc);
   const code = codeOf(archetype, random);
   const ringed = input.grand || input.branches >= 4 || random() < 0.1;
@@ -332,15 +351,9 @@ export function genomeOf(input: GenomeInput): Genome {
     florets: input.grand ? 89 : florets,
     filaments: input.grand ? 34 : Math.round(shape.filaments * (6 + 10 * random())),
     pollen: input.grand ? 72 : 6 + Math.floor(random() * 10) + Math.min(10, input.authors * 2),
-    halo: ringed ? (shape.float > 0.5 || random() < 0.4 ? 2 : 1) : 0,
+    halo: haloLevel(shape, ringed, random),
     hueSpan: (random() < 0.5 ? -1 : 1) * (0.04 + 0.2 * random()),
     lean: 0.35 + 0.5 * random(),
-    twigs: input.grand
-      ? 0
-      : input.merges >= 1
-        ? Math.min(3, 1 + input.merges)
-        : input.branches >= 3
-          ? 2
-          : 0,
+    twigs: twigCount(input),
   };
 }

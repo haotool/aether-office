@@ -10,6 +10,7 @@ import { useT, useWhy } from '../../ui/useT.js';
 import { PermissionCard } from './PermissionCard.js';
 import { QueryStatus } from '../shell-chrome/QueryStatus.js';
 import { usePermissionRequests } from './permission-requests.js';
+import { POLL, poll } from '../../lib/app/polling.js';
 type Approval = {
   id: string;
   runId: string;
@@ -115,7 +116,7 @@ function useApprovalData(projectId: string, live: boolean) {
   const query = useQuery({
     queryKey: ['approvals', projectId],
     queryFn: () => api<Approval[]>(`/api/projects/${projectId}/approvals`),
-    refetchInterval: 1000,
+    ...poll(POLL.watching),
   });
   return { prompts, remote, query };
 }

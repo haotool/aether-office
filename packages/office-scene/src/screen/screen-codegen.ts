@@ -61,6 +61,39 @@ function emit(out: CodeLine[], l: CodeLine): void {
   out.push(lineText(l).length > MAX_WIDTH ? line(l.indent, com('// ...')) : l);
 }
 
+function statementDecl(d: Dialect, n: Names, depth: number, out: CodeLine[]) {
+  emit(out, line(depth, ...d.decl(d.varCase(nameParts(n, false)), expr(d, n, true))));
+}
+
+function statementCall(d: Dialect, n: Names, depth: number, out: CodeLine[]) {
+  emit(out, line(depth, ...expr(d, n, true, true), pun(d.semi)));
+}
+
+function statementComment(d: Dialect, n: Names, depth: number, out: CodeLine[]) {
+  out.push(line(depth, com(`${d.comment} ${pick(n.r, VOCAB.comments)}`)));
+}
+
+function statementBlock(
+  d: Dialect,
+  n: Names,
+  depth: number,
+  out: CodeLine[],
+  nest: number,
+  kind: 'if' | 'loop',
+) {
+  const open =
+    kind === 'if'
+      ? d.ifOpen(condition(d, n))
+      : d.forOpen(d.varCase([pick(n.r, VOCAB.nouns)]), d.varCase(nameParts(n, false)));
+  out.push(line(depth, ...open));
+  for (let i = 1 + Math.floor(n.r() * 3); i > 0; i--) statement(d, n, depth + 1, out, nest + 1);
+  if (kind === 'if' && n.r() < 0.3) {
+    out.push(line(depth, pun('}'), kw(' else '), pun('{')));
+    for (let i = 1 + Math.floor(n.r() * 2); i > 0; i--) statement(d, n, depth + 1, out, nest + 1);
+  }
+  out.push(line(depth, pun('}')));
+}
+
 function statement(d: Dialect, n: Names, depth: number, out: CodeLine[], nest: number): void {
   const kind = weighted(n.r, {
     decl: 5,
@@ -69,24 +102,10 @@ function statement(d: Dialect, n: Names, depth: number, out: CodeLine[], nest: n
     if: nest < 2 ? 2 : 0,
     loop: nest < 2 ? 1.2 : 0,
   });
-  if (kind === 'decl')
-    emit(out, line(depth, ...d.decl(d.varCase(nameParts(n, false)), expr(d, n, true))));
-  else if (kind === 'call') emit(out, line(depth, ...expr(d, n, true, true), pun(d.semi)));
-  else if (kind === 'comment')
-    out.push(line(depth, com(`${d.comment} ${pick(n.r, VOCAB.comments)}`)));
-  else {
-    const open =
-      kind === 'if'
-        ? d.ifOpen(condition(d, n))
-        : d.forOpen(d.varCase([pick(n.r, VOCAB.nouns)]), d.varCase(nameParts(n, false)));
-    out.push(line(depth, ...open)); // never swapped for a comment: its closing brace is coming
-    for (let i = 1 + Math.floor(n.r() * 3); i > 0; i--) statement(d, n, depth + 1, out, nest + 1);
-    if (kind === 'if' && n.r() < 0.3) {
-      out.push(line(depth, pun('}'), kw(' else '), pun('{')));
-      for (let i = 1 + Math.floor(n.r() * 2); i > 0; i--) statement(d, n, depth + 1, out, nest + 1);
-    }
-    out.push(line(depth, pun('}')));
-  }
+  if (kind === 'decl') return statementDecl(d, n, depth, out);
+  if (kind === 'call') return statementCall(d, n, depth, out);
+  if (kind === 'comment') return statementComment(d, n, depth, out);
+  return statementBlock(d, n, depth, out, nest, kind);
 }
 
 function braceFile(d: Dialect, n: Names, total: number): CodeLine[] {

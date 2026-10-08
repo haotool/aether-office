@@ -23,6 +23,7 @@ import {
   type TerminalControl,
 } from '../features/terminal/terminal-driver.js';
 import { isOperator } from '../lib/navigation/roles.js';
+import { POLL, poll } from '../lib/app/polling.js';
 
 export type Drive = { terminalId: string; projectId: string };
 
@@ -30,12 +31,14 @@ export type Drive = { terminalId: string; projectId: string };
 export function useSessionTerminal(sessionKey: string | null) {
   const query = useQuery({
     queryKey: ['session-terminal', sessionKey],
-    queryFn: () =>
-      api<{ terminal: Drive | null }>(
-        `/api/local-sessions/${encodeURIComponent(sessionKey!)}/terminal`,
-      ),
+    queryFn: () => {
+      if (!sessionKey) throw new Error('session terminal without key');
+      return api<{ terminal: Drive | null }>(
+        `/api/local-sessions/${encodeURIComponent(sessionKey)}/terminal`,
+      );
+    },
     enabled: !!sessionKey,
-    refetchInterval: 8000,
+    ...poll(POLL.idle),
     retry: false,
   });
   return { drive: query.data?.terminal ?? null, loading: query.isLoading };
@@ -80,7 +83,7 @@ function useDriveAccess(drive: Drive) {
     queryKey: ['drive-terminal', drive.terminalId],
     queryFn: () =>
       api<TerminalControl>(`/api/projects/${drive.projectId}/terminals/${drive.terminalId}`),
-    refetchInterval: 3000,
+    ...poll(POLL.driving),
     retry: false,
   });
   const running = control.data?.state === 'running';

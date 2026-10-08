@@ -136,8 +136,11 @@ const STAND_IN_ROLES = [
   'fullstack',
   'generalist',
 ];
-export const standInRole = (index: number): string =>
-  STAND_IN_ROLES[index % STAND_IN_ROLES.length]!;
+export const standInRole = (index: number): string => {
+  const role = STAND_IN_ROLES[index % STAND_IN_ROLES.length];
+  if (role === undefined) throw new Error('stand-in role index');
+  return role;
+};
 
 const nameHash = (name: string) => [...name].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
 
@@ -181,7 +184,10 @@ export function standInFacts(
   index = 0,
 ): ScreenFacts {
   const hash = nameHash(agent.name);
-  const work = STAND_IN_WORK[index % STAND_IN_WORK.length]!;
+  const work = STAND_IN_WORK[index % STAND_IN_WORK.length];
+  if (!work) throw new Error('stand-in work index');
+  const last = work.recent.at(-1);
+  if (!last) throw new Error('stand-in work missing recent tool');
   return {
     provider,
     title: `${agent.name} · ${agent.role}`,
@@ -193,7 +199,7 @@ export function standInFacts(
     model: null,
     contextPercent,
     state: 'working',
-    tool: work.recent[work.recent.length - 1]!.tool,
+    tool: last.tool,
     toolSince: Date.now() - (hash % 9000),
     recent: work.recent,
     quietMinutes: 0,
@@ -252,6 +258,18 @@ export function useCompactPreview(agents: readonly Agent[], enabled: boolean) {
 const TALK_PERIOD_MS = 7000;
 const KINDS = ['inform', 'request', 'decision', 'handoff'] as const;
 
+const previewAgentAt = (agents: readonly Agent[], i: number): Agent => {
+  const agent = agents[i % agents.length];
+  if (!agent) throw new Error('talk preview agent index');
+  return agent;
+};
+
+const talkPulseKind = (step: number) => {
+  const kind = KINDS[step % KINDS.length];
+  if (kind === undefined) throw new Error('talk preview pulse kind');
+  return kind;
+};
+
 /**
  * `?talk=1`: stand-in traffic to look at how members react to each other without real sessions: a message between the
  * next pair every few seconds (they turn to each other, an envelope crosses, the receiver nods), the first member as the
@@ -269,27 +287,27 @@ export function useTalkPreview(agents: readonly Agent[], enabled: boolean) {
   }, [enabled]);
   if (!enabled || agents.length < 4) return null;
   const pair = (n: number) =>
-    [agents[(2 * n) % agents.length]!, agents[(2 * n + 1) % agents.length]!] as const;
+    [previewAgentAt(agents, 2 * n), previewAgentAt(agents, 2 * n + 1)] as const;
   const pulses: Pulse[] = step
-    ? [
-        (() => {
-          const [from, to] = pair(step - 1);
-          return {
+    ? (() => {
+        const [from, to] = pair(step - 1);
+        return [
+          {
             id: `talk:${step}`,
             from: from.id,
             to: to.id,
-            kind: KINDS[step % KINDS.length]!,
+            kind: talkPulseKind(step),
             at: started + (step - 1) * TALK_PERIOD_MS + 1000,
-          };
-        })(),
-      ]
+          },
+        ];
+      })()
     : [];
   const byId = new Map(agents.map((a, i) => [a.id, i]));
   return {
     pulses,
     tethers: [
-      { parent: agents[0]!.id, child: agents[1]!.id },
-      { parent: agents[0]!.id, child: agents[2]!.id },
+      { parent: previewAgentAt(agents, 0).id, child: previewAgentAt(agents, 1).id },
+      { parent: previewAgentAt(agents, 0).id, child: previewAgentAt(agents, 2).id },
     ],
     branchOf: (agent: Agent): BranchInfo => ({
       repo: (byId.get(agent.id) ?? 0) % 2 ? 'billing-api' : 'aether',
@@ -300,8 +318,8 @@ export function useTalkPreview(agents: readonly Agent[], enabled: boolean) {
       behind: 0,
     }),
     attention: {
-      [agents[4 % agents.length]!.id]: 'preview',
-      [agents[7 % agents.length]!.id]: 'preview',
+      [previewAgentAt(agents, 4).id]: 'preview',
+      [previewAgentAt(agents, 7).id]: 'preview',
     } as Record<string, string>,
   };
 }

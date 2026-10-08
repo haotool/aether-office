@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { lazy, Suspense, type Dispatch, type SetStateAction } from 'react';
 import type { Layout, Snapshot } from '@aether/contracts';
 import type { OfficeSceneProps } from '@aether/office-scene';
 import type { FloorKpiBadge } from '@aether/office-scene/model';
@@ -16,7 +16,7 @@ import { SUBAGENT_INFIX } from '../../lib/sessions/subagent-id.js';
 import type { TourAction } from '../../lib/navigation/tour.js';
 import { useT } from '../../ui/useT.js';
 import type { AttributedSession } from '@aether/contracts';
-import { CharacterMenu, type CharacterCommand } from '../office/CharacterMenu.js';
+import type { CharacterCommand } from '../office/CharacterMenu.js';
 import { GroupBar } from '../shell-chrome/GroupBar.js';
 import { useGitGraph } from '../tasks-git/GitGraph.js';
 import type { OfficeModel } from '../office/office-model.js';
@@ -188,6 +188,11 @@ function useScenePreferenceProps(onNotice: (message: string) => void) {
   };
 }
 
+// The menu is built when a character is first chosen, not with the office.
+const CharacterMenu = lazy(() =>
+  import('../office/CharacterMenu.js').then((m) => ({ default: m.CharacterMenu })),
+);
+
 /** The menu over a character and the bar over a selected group. */
 function sceneMenus(
   props: SceneViewProps,
@@ -198,16 +203,18 @@ function sceneMenus(
   const { onOpen, onFeed, onNotice, data } = props;
   return {
     characterMenu: (ctx) => (
-      <CharacterMenu
-        ctx={ctx}
-        sessions={sessions}
-        projectId={data.project.id}
-        leaving={leaving[ctx.id] !== undefined}
-        onOpen={onOpen}
-        onFeed={onFeed}
-        onCommand={onCommand}
-        onNotice={onNotice}
-      />
+      <Suspense fallback={null}>
+        <CharacterMenu
+          ctx={ctx}
+          sessions={sessions}
+          projectId={data.project.id}
+          leaving={leaving[ctx.id] !== undefined}
+          onOpen={onOpen}
+          onFeed={onFeed}
+          onCommand={onCommand}
+          onNotice={onNotice}
+        />
+      </Suspense>
     ),
     groupBar: (ctx) => (
       <GroupBar ctx={ctx} sessions={sessions} onCommand={onCommand} onNotice={onNotice} />

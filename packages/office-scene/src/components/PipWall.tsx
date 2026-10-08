@@ -1,5 +1,6 @@
 import type { Agent } from '@aether/contracts';
 import type { Feed } from '../core/multi-view.js';
+import { sceneText } from '../i18n/scene-text.js';
 
 type PipWallProps = {
   feeds: readonly Feed[];
@@ -30,7 +31,7 @@ function Pip({ agent, index, pinned, level, caption, zh, onSelect }: PipProps) {
       className={`pip ${pinned ? 'pinned' : ''}`}
       data-feed={agent.id}
       data-pinned={pinned || undefined}
-      aria-label={zh ? `切換到 ${agent.name}` : `Switch to ${agent.name}`}
+      aria-label={sceneText(zh, 'pip.switchTo', { name: agent.name })}
       onClick={() => onSelect(agent.id)}
     >
       <span className="pip-cam" aria-hidden="true">
@@ -68,12 +69,8 @@ export function PipWall({
     <div className="pip-wall">
       <div className="pip-bar">
         <i aria-hidden="true" />
-        <span>{zh ? '即時畫面' : 'LIVE'}</span>
-        <button
-          className="pip-close"
-          aria-label={zh ? '關閉分屏' : 'Close split view'}
-          onClick={onClose}
-        >
+        <span>{sceneText(zh, 'pip.live')}</span>
+        <button className="pip-close" aria-label={sceneText(zh, 'pip.close')} onClick={onClose}>
           <span aria-hidden="true">×</span>
         </button>
       </div>

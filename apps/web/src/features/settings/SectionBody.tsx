@@ -51,7 +51,8 @@ export function Section({
   heading?: boolean;
 }) {
   const t = useT();
-  const meta = SECTIONS.find((section) => section.id === id)!;
+  const meta = SECTIONS.find((section) => section.id === id);
+  if (!meta) throw new Error(`unknown settings section: ${id}`);
   return (
     <section className="ssection" id={`s-${id}`} aria-labelledby={`h-${id}`}>
       <header className={heading ? undefined : 'visually-hidden'}>

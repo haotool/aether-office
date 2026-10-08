@@ -14,7 +14,6 @@ import { useT } from '../../ui/useT.js';
 import { sameDay } from './conv-time.js';
 import { DaySeparator, NowProvider } from './ConvTime.js';
 import { FindBar, useConvFind } from './ConvFind.js';
-import { pollMs } from '../integrations/live-link.js';
 import { PendingBubbles } from './PendingBubbles.js';
 import { seenBaseline } from '../sessions/session-seen.js';
 import { ThinkingLine } from './ThinkingLine.js';
@@ -25,6 +24,7 @@ import { useConvScroll } from './use-conv-scroll.js';
 import { firstUnreadId, turnIds, useFreshIds } from './use-fresh-ids.js';
 import { useLinkLive } from '../../hooks/use-session-stream.js';
 import { groupTurns, reuseTurns, type Entry, type Turn } from './turn-groups.js';
+import { POLL, poll, pollMs } from '../../lib/app/polling.js';
 
 type TranscriptViewProps = {
   sessionKey: string;
@@ -51,9 +51,6 @@ function TranscriptSkeleton() {
 
 type Transcript = { entries: Entry[]; updatedAt: number; truncated: boolean };
 
-const POLL_WORKING_MS = 2000;
-const POLL_QUIET_MS = 6000;
-
 const turnAt = (turn: Turn) => turn.user?.at ?? turn.blocks.find((b) => b.at)?.at ?? null;
 
 /** The transcript of one session, grouped into turns (kept stable between fetches) with the prompts it shows. */
@@ -63,7 +60,7 @@ function useTranscript(sessionKey: string, working: boolean) {
     queryKey: ['transcript', sessionKey],
     queryFn: () =>
       api<Transcript>(`/api/local-sessions/${encodeURIComponent(sessionKey)}/transcript`),
-    refetchInterval: pollMs(live, working ? POLL_WORKING_MS : POLL_QUIET_MS),
+    ...poll(pollMs(live, working ? POLL.watching : POLL.quiet)),
     refetchIntervalInBackground: false,
     retry: false,
   });

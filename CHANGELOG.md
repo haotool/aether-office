@@ -5,6 +5,18 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Changed (performance on a phone)
+
+- No `backdrop-filter` blur anywhere in the web styles: the glass over the scene is a near-opaque tint (88 to 96 %) on phone and
+  desktop alike, so the compositor no longer blurs a moving WebGL canvas. The saving on a real phone is expected, not measured.
+- Every interval the web app polls on is one entry with its reason in `lib/app/polling.ts`. A quiet office page makes about 22
+  `/api` requests a minute instead of 55: the approvals count is refreshed by the project's event stream (polled slowly only while
+  that stream is down) and the permission prompts are asked for every 2.5 s only while Remote approvals is on (`GET
+/api/permission-requests` now also says `enabled`).
+- The first load is about 5 KB smaller (brotli, 208 to 203 KB, measured the way `pnpm run quality:report` does): the clock-out
+  dialog, the new-task form, the phone pairing panel, the character menu and the sign-in page load when they are first used, and
+  `@aether/office-scene` declares that it has no import side effects so unused scene code is dropped from the first chunks.
+
 ### Changed (web structure and accessibility)
 
 - A disabled control names its reason to assistive technology as well as in a tooltip: `whyNot` sets `aria-describedby` to a text kept
@@ -14,6 +26,10 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   `api-error`, `session-names`, `session-attention`) and every importer names the module it uses; no names or behaviour changed. `useLocale`
   reads the interface language without importing the whole preferences store.
 - Every function in `apps/web/src` is under 50 lines, and no web source file is over 400 lines (Terminals, Sessions, Reviews and Composer were split).
+- The 3D scene's own words (HUD, key help, tooltips, life log, squad lines, beam readouts) are two tables, `i18n/en.ts` and
+  `i18n/zh.ts` in `packages/office-scene`; the type requires every key in both languages and `tests/aether/scene-text.test.ts`
+  checks that both say the same values. No inline `zh ? '…' : '…'` pair is left in the web or the scene, so
+  `tests/aether/inline-i18n-baseline.json` is empty.
 
 ### Fixed (frontend, first use and accessibility)
 

@@ -1,5 +1,12 @@
 /** Synthetic-only browser fixture. Never invokes an installed provider binary. */
-import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, realpathSync } from 'node:fs';
+import {
+  mkdtempSync,
+  writeFileSync,
+  readFileSync,
+  mkdirSync,
+  realpathSync,
+  utimesSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -133,8 +140,9 @@ const observedFolder = join(
 mkdirSync(observedFolder, { recursive: true });
 writeFileSync(spool, '');
 const at = (offset: number) => new Date(Date.now() - offset).toISOString();
+const transcriptPath = join(observedFolder, `${resumable}.jsonl`);
 writeFileSync(
-  join(observedFolder, `${resumable}.jsonl`),
+  transcriptPath,
   [
     { type: 'user', cwd: realpathSync(repository) },
     {
@@ -155,6 +163,9 @@ writeFileSync(
     .map((entry) => JSON.stringify(entry))
     .join('\n') + '\n',
 );
+// Far-future mtime (same idea as playwright.config.ts farFuture) so the fixture stays in the feed for long runs.
+const keepAliveAt = new Date(Date.now() + 3_600_000);
+utimesSync(transcriptPath, keepAliveAt, keepAliveAt);
 const claude = join(directory, 'claude');
 writeFileSync(
   claude,

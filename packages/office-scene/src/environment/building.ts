@@ -49,9 +49,7 @@ function zonePads(root: THREE.Group, m: Materials) {
   }
 }
 
-/** The walls and frame: rear facade, side pylons, ceiling rails and the north rooms. */
-function frame(root: THREE.Group, m: Materials) {
-  // Rear facade: framed glass with accent-lit mullions.
+function rearFacade(root: THREE.Group, m: Materials) {
   box(root, m.graphite, [53, 0.3, 0.6], [0, 5.6, -18.3]);
   box(root, m.graphite, [53, 0.4, 0.8], [0, 0.2, -18.3]);
   for (let x = -24; x <= 24; x += 6) {
@@ -59,25 +57,39 @@ function frame(root: THREE.Group, m: Materials) {
     box(root, m.accent, [0.06, 5.0, 0.52], [x + 0.15, 2.9, -18.25], 0.01);
     if (x < 24) box(root, m.glass, [5.6, 5.0, 0.08], [x + 3, 2.9, -18.3]);
   }
-  // Side pylons with light columns; the front and ceiling stay open so the floor reads from above.
+}
+
+function sidePylons(root: THREE.Group, m: Materials) {
   for (const x of [-26.2, 26.2])
     for (const z of [-16, -8, 0, 8, 16]) {
       box(root, m.graphite, [0.6, 5.6, 0.6], [x, 2.8, z]);
       box(root, m.accent, [0.1, 4.2, 0.64], [x + (x < 0 ? 0.3 : -0.3), 2.9, z], 0.01);
     }
-  // Ceiling rails with light strips, so each floor has a defined top without hiding the one below.
+}
+
+function ceilingRails(root: THREE.Group, m: Materials) {
   for (const z of [-12, 0, 12]) {
     box(root, m.graphite, [52, 0.16, 0.3], [0, 5.9, z]);
     box(root, m.cyan, [48, 0.04, 0.1], [0, 5.78, z], 0.01);
   }
   for (const x of [-24, -12, 12, 24]) box(root, m.graphite, [0.3, 0.16, 36], [x, 5.9, 0]);
-  // North rooms: glass-walled with open doorways.
+}
+
+function northRooms(root: THREE.Group, m: Materials) {
   for (const x of [-8.2, 8.2]) {
     for (const z of [-17.2, -10]) box(root, m.graphite, [0.14, 4.2, 0.14], [x, 2.1, z]);
     for (const y of [0.16, 4.2]) box(root, m.graphite, [0.14, 0.14, 7.4], [x, y, -13.6]);
     box(root, m.glass, [0.08, 4.0, 7.2], [x, 2.1, -13.6]);
     box(root, m.accentSoft, [0.05, 0.05, 7.2], [x, 4.2, -13.6]);
   }
+}
+
+/** The walls and frame: rear facade, side pylons, ceiling rails and the north rooms. */
+function frame(root: THREE.Group, m: Materials) {
+  rearFacade(root, m);
+  sidePylons(root, m);
+  ceilingRails(root, m);
+  northRooms(root, m);
 }
 
 function shell(root: THREE.Group, m: Materials) {

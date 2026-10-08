@@ -11,6 +11,7 @@ import {
   type BufferGeometry,
 } from 'three';
 import { STAMP_INK, stampWord, type StampKind } from './stamp.js';
+import { intlLocale } from '../../i18n/scene-text.js';
 
 let box: BufferGeometry | null = null;
 /** A unit cube with white vertex colours: scaled and tinted per instance (the squad layers' solid material). */
@@ -26,6 +27,9 @@ let seal: BufferGeometry | null = null;
 /** The seal's quad: 24 x 12 cm, lying flat (the instance's turn is about the vertical). */
 export const sealGeometry = (): BufferGeometry =>
   (seal ??= new PlaneGeometry(0.24, 0.12).rotateX(-Math.PI / 2));
+
+const ZH_FONT = '"PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
+const EN_FONT = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 
 /** The stamp's word on a transparent ring, in white: the material tints it with the ink. */
 function drawSeal(zh: boolean, kind: StampKind): HTMLCanvasElement {
@@ -43,9 +47,7 @@ function drawSeal(zh: boolean, kind: StampKind): HTMLCanvasElement {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   const word = stampWord(zh, kind);
-  const family = zh
-    ? '"PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif'
-    : 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
+  const family = zh ? ZH_FONT : EN_FONT;
   for (let size = zh ? 150 : 92; size > 24; size -= 2) {
     ctx.font = `700 ${size}px ${family}`;
     if (ctx.measureText(word).width <= 410) break;
@@ -57,7 +59,7 @@ function drawSeal(zh: boolean, kind: StampKind): HTMLCanvasElement {
 const seals = new Map<string, MeshBasicMaterial>();
 /** The seal's material for a word in a language: one per word, made when first shown. */
 export function sealMaterial(zh: boolean, kind: StampKind): MeshBasicMaterial {
-  const key = `${zh ? 'zh' : 'en'}:${kind}`;
+  const key = `${intlLocale(zh)}:${kind}`;
   let material = seals.get(key);
   if (!material) {
     const map = new CanvasTexture(drawSeal(zh, kind));

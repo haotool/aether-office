@@ -9,8 +9,12 @@ export function taskPositions(
   for (const edge of dependencies) {
     if (!incoming.has(edge.workId) || !outgoing.has(edge.dependsOn))
       throw new Error('DAG_DEPENDENCY_NOT_FOUND');
-    incoming.set(edge.workId, incoming.get(edge.workId)! + 1);
-    outgoing.get(edge.dependsOn)!.push(edge.workId);
+    const prior = incoming.get(edge.workId);
+    if (prior === undefined) throw new Error('DAG_DEPENDENCY_NOT_FOUND');
+    incoming.set(edge.workId, prior + 1);
+    const outs = outgoing.get(edge.dependsOn);
+    if (!outs) throw new Error('DAG_DEPENDENCY_NOT_FOUND');
+    outs.push(edge.workId);
   }
   const positions = new Map<string, { x: number; y: number }>();
   let layer = ids.filter((id) => incoming.get(id) === 0).sort(),
@@ -19,8 +23,8 @@ export function taskPositions(
     const next: string[] = [];
     layer.forEach((id, row) => {
       positions.set(id, { x: column * 320, y: row * 132 - (layer.length - 1) * 66 });
-      for (const child of outgoing.get(id)!) {
-        const count = incoming.get(child)! - 1;
+      for (const child of outgoing.get(id) ?? []) {
+        const count = (incoming.get(child) ?? 0) - 1;
         incoming.set(child, count);
         if (count === 0) next.push(child);
       }

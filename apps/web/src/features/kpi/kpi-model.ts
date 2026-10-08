@@ -22,6 +22,16 @@ export type Segment = (typeof SEGMENTS)[number];
 /** Tokens the headline counts: everything but cache reads, which dominate every session and are not spend. */
 export const tokensOf = (t: UsageTotals) => t.input + t.output + t.cacheWrite + t.reasoning;
 
+/** A size for a person: 4_200 → "4 KB", 3.2e9 → "3.2 GB", unknown → a dash. */
+export const bytes = (n: number | null) =>
+  n === null
+    ? '—'
+    : n >= 1e9
+      ? `${(n / 1e9).toFixed(1)} GB`
+      : n >= 1e6
+        ? `${(n / 1e6).toFixed(0)} MB`
+        : `${Math.round(n / 1e3)} KB`;
+
 /** 1234 → 1.2K, 1_500_000 → 1.5M (`Intl` compact notation, in the page's language). */
 export function compact(n: number, locale: Locale): string {
   return new Intl.NumberFormat(locale, {
@@ -41,7 +51,11 @@ export function breakdown(totals: UsageTotals): { key: Segment; value: number; s
 }
 
 /** Today is the last day of the window. */
-export const lastDay = (scope: UsageScope): UsageTotals => scope.daily[scope.daily.length - 1]!;
+export const lastDay = (scope: UsageScope): UsageTotals => {
+  const day = scope.daily.at(-1);
+  if (!day) throw new Error('usage scope has no daily rows');
+  return day;
+};
 
 /** The share of each model in the scope's tokens (its total, not just the models listed), largest first. */
 export function modelShares(scope: UsageScope): { model: string; tokens: number; share: number }[] {
@@ -97,14 +111,16 @@ export function limitWindows(limits: UsageResponse['limits']): LimitWindow[] {
       updatedAt: claude.updatedAt,
       stale: claude.stale,
     });
-  for (const w of limits.codex?.windows ?? [])
-    out.push({
-      id: `codex-${w.minutes ?? 'x'}`,
-      provider: 'codex',
-      ...w,
-      updatedAt: limits.codex!.updatedAt,
-      stale: null,
-    });
+  const codex = limits.codex;
+  if (codex)
+    for (const w of codex.windows ?? [])
+      out.push({
+        id: `codex-${w.minutes ?? 'x'}`,
+        provider: 'codex',
+        ...w,
+        updatedAt: codex.updatedAt,
+        stale: null,
+      });
   return out;
 }
 
