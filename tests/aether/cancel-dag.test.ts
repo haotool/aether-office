@@ -1,7 +1,7 @@
 import { it, expect } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { fixture, command, seedWork } from './fixture.js';
-import { enroll, claim, report } from '../../apps/control/src/services/runners.js';
+import { enroll, claim, report } from '../../apps/control/src/services/runtime/runners.js';
 it.each(['queued', 'running'] as const)(
   'cancels waiting diamond descendants once while preserving executed work (%s root)',
   (phase) => {

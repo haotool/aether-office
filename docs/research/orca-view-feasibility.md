@@ -63,7 +63,7 @@ Orca 自己顯示的 agent 狀態，來源就是 Claude Code / Codex 的 hook �
 
 - **資料流**：`execFile('orca', ['status','--json'])` 做版本探測；每 2–5 秒（或只在有 Orca 來源 session 時）`orca worktree ps --json` 與 `worktree list --json` → zod 容錯解析（忽略未知欄位）→ 以 `path` 與 session 的 `worktree.root` 對齊 → 補上 displayName、workspaceStatus、父子、PR/issue、orchestration 任務標題、遠端主機。
 - **工作量**：3–4 天（不含 UI）。
-- **失敗模式**：`orca` 不在 PATH 或 app 未啟動（優雅退回 (c)）；CLI 輸出欄位變動（容錯 + 版本探測 + 降級）；呼叫成本未知（需節流，不得每次 2 秒掃描都呼叫）；認證 token 權限過大（只用固定參數、不接受使用者輸入、不經 shell）；輸出含 prompt 與回覆全文，必須走 AETHER 既有的 redaction 與文字管線（`apps/control/src/services/redaction.ts`）。
+- **失敗模式**：`orca` 不在 PATH 或 app 未啟動（優雅退回 (c)）；CLI 輸出欄位變動（容錯 + 版本探測 + 降級）；呼叫成本未知（需節流，不得每次 2 秒掃描都呼叫）；認證 token 權限過大（只用固定參數、不接受使用者輸入、不經 shell）；輸出含 prompt 與回覆全文，必須走 AETHER 既有的 redaction 與文字管線（`apps/control/src/services/platform/redaction.ts`）。
 - **為何不直接讀 `orca-runtime.json` 自己講 RPC**：該檔含 authToken，自己實作傳輸等於把內部協定與完整權限收進 AETHER。
 
 ### (a) 直接讀 Orca 狀態檔（不建議，僅列為最後備援）
@@ -135,8 +135,8 @@ Orca 自己顯示的 agent 狀態，來源就是 Claude Code / Codex 的 hook �
 - 會動的檔案：
   - 新增 `apps/control/src/services/orca-source.ts`；
   - `packages/contracts/src/sessions.ts`：`localSessionSchema` 加可選的 `orca` 物件（`worktreeId、displayName、workspaceStatus、parentWorktreeId、host`）與來源種類，保持向後相容（可選、預設 null）；
-  - `apps/control/src/services/local-sessions.ts`：以 path 對齊並合併；
-  - `apps/control/src/services/session-changes.ts`：新增 change kind（例如 `source`）；
+  - `apps/control/src/services/runtime/local-sessions.ts`：以 path 對齊並合併；
+  - `apps/control/src/services/sessions/session-changes.ts`：新增 change kind（例如 `source`）；
   - `apps/control/src/routes`：`/api/system` 或新的 sources 端點回報探測狀態；
   - `scripts/doctor`：加 Orca 偵測；
   - 設定項（`docs/configuration.md`）：例如 `AETHER_ORCA=auto|off` 與 workspace 根目錄覆寫。
@@ -146,7 +146,7 @@ Orca 自己顯示的 agent 狀態，來源就是 Claude Code / Codex 的 hook �
 ### Phase 2：UX（約 2–3 天）
 
 - 使用者看到的：session 面板與動物名牌上的「來源：Orca」徽章；設定頁的 Orca 來源開關與探測狀態（未安裝 / 未執行 / 版本不相容 / 正常，各有說明）；空狀態文案；辦公室名牌可用 worktree displayName；`workspaceStatus` 與 PR 連結顯示在面板。
-- 會動的檔案：`apps/web/src/features/office-model.ts`（名稱與徽章）、`PhoneOffice.tsx` / `OfficePage.tsx`、設定頁、`apps/web/src/i18n`（zh-TW 與 English 兩語）、`docs/features.md`、`docs/provider-compatibility.md`（記錄已驗證的 Orca 版本）、`CHANGELOG.md`、`docs/verification/features.json`（實作與驗證分欄，未實測者不得標通過）。
+- 會動的檔案：`apps/web/src/features/office/office-model.ts`（名稱與徽章）、`PhoneOffice.tsx` / `OfficePage.tsx`、設定頁、`apps/web/src/i18n`（zh-TW 與 English 兩語）、`docs/features.md`、`docs/provider-compatibility.md`（記錄已驗證的 Orca 版本）、`CHANGELOG.md`、`docs/verification/features.json`（實作與驗證分欄，未實測者不得標通過）。
 - 測試：i18n 完整性、responsive 與 a11y spec（`AGENTS.md` 的 UI 規則）、一個 Playwright 流程（有 / 無 Orca 來源）、截圖確認手機與平板。
 - **Stop**：徽章或名稱導致 3D 場景效能預算退步（`PerfProbe`）。
 

@@ -14,18 +14,18 @@ import {
   encodeRoot,
   resetDiscoveryCache,
   sessionsOfProcesses,
-} from '../../apps/control/src/services/session-discovery.js';
+} from '../../apps/control/src/services/sessions/session-discovery.js';
 import {
   MAX_SESSIONS,
   resetLocalSessionCache,
   scanLocalSessions,
-} from '../../apps/control/src/services/local-sessions.js';
-import type { AgentProcess } from '../../apps/control/src/services/agent-processes.js';
+} from '../../apps/control/src/services/runtime/local-sessions.js';
+import type { AgentProcess } from '../../apps/control/src/services/runtime/agent-processes.js';
 import './process-fixtures.js';
 import { eventually } from './timing.js';
 
 const DAY = 86400_000;
-const UUID = '374456c6-9009-4372-ac17-4aa8f7535e70';
+const UUID = '374456c6-9009-a172-ac17-4aa8f7535e70';
 const session = (file: string, cwd: string, ageMs: number) => {
   writeFileSync(file, `${JSON.stringify({ type: 'user', cwd })}\n`);
   const when = new Date(Date.now() - ageMs);

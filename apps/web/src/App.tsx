@@ -1,17 +1,17 @@
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Orbit } from 'lucide-react';
-import type { Session } from './api-session.js';
-import { useTheme } from './state.js';
+import type { Session } from './lib/api/api-session.js';
+import { useTheme } from './lib/preferences/state.js';
 import { useT, useLocale } from './ui/useT.js';
 import { ReasonDefs } from './ui/ReasonDefs.js';
-import { usePhone } from './phone.js';
-import { useApplication } from './app-state.js';
-import { useAuthSession, useDocumentChrome, useSignedOutTitle } from './app-hooks.js';
-import { AppMain, AppNavigation, AppPanel, AppTopbar } from './features/AppFrame.js';
-import { Login } from './features/Login.js';
-import { ProjectForm } from './features/ProjectForm.js';
-import { TabBar } from './features/TabBar.js';
+import { usePhone } from './lib/preferences/phone.js';
+import { useApplication } from './lib/app/app-state.js';
+import { useAuthSession, useDocumentChrome, useSignedOutTitle } from './lib/app/app-hooks.js';
+import { AppMain, AppNavigation, AppPanel, AppTopbar } from './features/shell-chrome/AppFrame.js';
+import { Login } from './features/shell-chrome/Login.js';
+import { ProjectForm } from './features/integrations/ProjectForm.js';
+import { TabBar } from './features/shell-chrome/TabBar.js';
 import { isFieldPerfRequested } from './features/field-perf/is-field-perf-requested.js';
 
 const fieldPerfOverlay =

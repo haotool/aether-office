@@ -1,5 +1,6 @@
 // Area 4: UI system and design tokens. The existing token lint plus the rules proposed in docs/research/ui-token-audit.md
 // section 5, counted per declaration; compared with scripts/design-token-baseline.json when that file exists.
+import { ROLE_VARIANCE_PATHS } from '../inputs.mjs';
 import { at, top } from '../lib.mjs';
 import { info, rule, skipped } from '../model.mjs';
 import { matching, runCommand } from '../repo.mjs';
@@ -12,7 +13,6 @@ import {
 } from '../../design-token-rules.mjs';
 
 const BASELINE = 'scripts/design-token-baseline.json';
-const ROLE_RESULTS = ['evidence/role-variance.json', 'test-results/role-variance.json'];
 const PHYSICAL =
   /^(margin|padding)-(left|right)$|^(left|right)$|^border-(left|right)(-[a-z]+)*$|^text-align$/;
 
@@ -43,11 +43,11 @@ function baselineCounts(repo) {
 }
 
 function roleVarianceRule(repo) {
-  const file = ROLE_RESULTS.find((f) => repo.exists(f));
+  const file = ROLE_VARIANCE_PATHS.find((f) => repo.exists(f));
   if (!file)
     return skipped(
       'role-variance',
-      'Distinct control sizes per role (e2e/role-variance.spec.ts)',
+      'Distinct control sizes per role (e2e/ui/role-variance.spec.ts)',
       20,
       'not run: the spec has no recorded result (expected evidence/role-variance.json)',
     );

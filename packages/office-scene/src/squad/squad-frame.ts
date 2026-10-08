@@ -2,7 +2,7 @@
 // leaving, and the signature that says when the frame has to be rebuilt.
 import type { Layout } from '@aether/contracts';
 import { buildNavGrid, type Point } from '@aether/kernel';
-import type { Quality } from '../scene-types.js';
+import type { Quality } from '../scene/scene-types.js';
 import { blockPods, planArrival, type Arrival, type Leave } from './errand.js';
 import { occupies, type SquadMemberState, type SquadState } from './squad-model.js';
 import { CHARACTER_BUDGET, drawSquads, type DrawSquad } from './squad-draw.js';

@@ -2,7 +2,7 @@
 // already understands (a desk's chair), so the camera, the name tags and the director find subagents like any member.
 import type { Layout } from '@aether/contracts';
 import { objectBounds, type PlacedObject } from '@aether/kernel';
-import { SEAT_DEPTH } from '../departure.js';
+import { SEAT_DEPTH } from '../animals/departure.js';
 import { membersOf, occupies, type SquadState } from './squad-model.js';
 import { placeSquads, podsOf, type Pod, type SquadRect } from './squad-layout.js';
 

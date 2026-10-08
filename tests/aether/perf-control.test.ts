@@ -12,7 +12,7 @@ import {
   startRatio,
   stepRatio,
   type RatioState,
-} from '../../packages/office-scene/src/perf-control.js';
+} from '../../packages/office-scene/src/perf/perf-control.js';
 
 it('redraws the shadow map the first time and then only once its interval has passed', () => {
   expect(shadowDue(100, null, 50)).toBe(true);

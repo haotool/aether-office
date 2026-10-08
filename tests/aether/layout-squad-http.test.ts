@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import type { Layout } from '../../packages/contracts/src/index.js';
 import { createServer } from '../../apps/control/src/server.js';
-import { defaultLayout } from '../../packages/office-scene/src/layout.js';
+import { defaultLayout } from '../../packages/office-scene/src/environment/layout.js';
 import { squadLayout, squadObjectOf } from '../../packages/office-scene/src/squad/squad-layout.js';
 import { command, fixture } from './fixture.js';
 

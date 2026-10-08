@@ -6,23 +6,27 @@ import { QueryClient, h, renderHtml, textOf } from './fixtures/ssr.js';
 // First paint of presentational components on the server renderer (fixtures/ssr.ts): effects do not run, so each case is
 // "these props, this markup". The phone hooks need a browser snapshot the server lacks and are replaced here.
 installBrowserEnv();
-vi.mock('../../apps/web/src/phone.js', () => ({ usePhone: () => false, usePhoneAny: () => false }));
-const { translate } = await import('../../apps/web/src/i18n.js');
-const { usePreferences } = await import('../../apps/web/src/state.js');
-const { Avatar, avatarUrl } = await import('../../apps/web/src/features/Avatar.js');
+vi.mock('../../apps/web/src/lib/preferences/phone.js', () => ({
+  usePhone: () => false,
+  usePhoneAny: () => false,
+}));
+const { translate } = await import('../../apps/web/src/lib/i18n/i18n.js');
+const { usePreferences } = await import('../../apps/web/src/lib/preferences/state.js');
+const { Avatar, avatarUrl } = await import('../../apps/web/src/features/office/Avatar.js');
 const { PermissionCard, PermissionCards, PermissionPeek } =
-  await import('../../apps/web/src/features/PermissionCard.js');
-const { TerminalKeys } = await import('../../apps/web/src/features/TerminalKeys.js');
-const { CodeBlock } = await import('../../apps/web/src/features/CodeBlock.js');
-const { Inline } = await import('../../apps/web/src/features/MdInline.js');
-const { LongText } = await import('../../apps/web/src/features/LongText.js');
+  await import('../../apps/web/src/features/operations/PermissionCard.js');
+const { TerminalKeys } = await import('../../apps/web/src/features/terminal/TerminalKeys.js');
+const { CodeBlock } = await import('../../apps/web/src/features/conversation/CodeBlock.js');
+const { Inline } = await import('../../apps/web/src/features/conversation/MdInline.js');
+const { LongText } = await import('../../apps/web/src/features/conversation/LongText.js');
 const { HookNote, hookInstallCommand, needsHook } =
-  await import('../../apps/web/src/features/HookNote.js');
-const { NotFound } = await import('../../apps/web/src/features/NotFound.js');
-const { ConnectionStatus } = await import('../../apps/web/src/features/ConnectionStatus.js');
-const { ThinkingLine } = await import('../../apps/web/src/features/ThinkingLine.js');
+  await import('../../apps/web/src/features/shell-chrome/HookNote.js');
+const { NotFound } = await import('../../apps/web/src/features/shell-chrome/NotFound.js');
+const { ConnectionStatus } =
+  await import('../../apps/web/src/features/shell-chrome/ConnectionStatus.js');
+const { ThinkingLine } = await import('../../apps/web/src/features/conversation/ThinkingLine.js');
 const { recordMoment, withMoment, MOMENTS_PER_MEMBER } =
-  await import('../../apps/web/src/features/life-moments.js');
+  await import('../../apps/web/src/features/feed/life-moments.js');
 
 afterAll(removeBrowserEnv);
 const en = (key: Parameters<typeof translate>[1]) => translate('en', key);

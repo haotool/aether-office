@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { newlyPending } from '../../apps/web/src/notifications.js';
+import { newlyPending } from '../../apps/web/src/lib/notifications/notifications.js';
 
 const a = (id: string, state = 'pending') => ({ id, state, kind: 'shell' });
 

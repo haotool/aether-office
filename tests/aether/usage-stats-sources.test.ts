@@ -1,7 +1,7 @@
 import { chmodSync, utimesSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { listTranscripts } from '../../apps/control/src/services/usage-files.js';
+import { listTranscripts } from '../../apps/control/src/services/usage/usage-files.js';
 import {
   claudeFile,
   claudeLine,

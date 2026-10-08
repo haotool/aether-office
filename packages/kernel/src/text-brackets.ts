@@ -35,30 +35,43 @@ export function brackets(gs: readonly string[]): number[] {
   return out;
 }
 
+function scanBracketPass(t: string): { open: { close: string; at: number }[]; stray: number[] } {
+  const open: { close: string; at: number }[] = [];
+  const stray: number[] = [];
+  for (let i = 0; i < t.length; i++) {
+    const ch = t.charAt(i);
+    const closer = PAIRS[ch];
+    if (closer) open.push({ close: closer, at: i });
+    else if (open.at(-1)?.close === ch) open.pop();
+    else if (CJK_CLOSER.test(ch)) stray.push(i);
+  }
+  return { open, stray };
+}
+
+function dropStrayClosers(t: string, stray: number[]): string {
+  return t
+    .split('')
+    .filter((_, i) => !stray.includes(i))
+    .join('');
+}
+
+function trimUnclosedOpener(t: string, last: { close: string; at: number }): string {
+  const before = t.slice(0, last.at).replace(TRAILING_JOINER, '');
+  if (before) return before;
+  return t.slice(last.at + 1).trim() ? t + last.close : '';
+}
+
 export function balanceBrackets(text: string): string {
   let t = text;
   for (let guard = 0; guard < 64; guard++) {
-    const open: { close: string; at: number }[] = [];
-    const stray: number[] = [];
-    for (let i = 0; i < t.length; i++) {
-      const ch = t.charAt(i);
-      const closer = PAIRS[ch];
-      if (closer) open.push({ close: closer, at: i });
-      else if (open.at(-1)?.close === ch) open.pop();
-      else if (CJK_CLOSER.test(ch)) stray.push(i);
-    }
+    const { open, stray } = scanBracketPass(t);
     if (stray.length) {
-      t = t
-        .split('')
-        .filter((_, i) => !stray.includes(i))
-        .join('');
+      t = dropStrayClosers(t, stray);
       continue;
     }
     const last = open.at(-1);
     if (!last) return t;
-    const before = t.slice(0, last.at).replace(TRAILING_JOINER, '');
-    if (before) t = before;
-    else t = t.slice(last.at + 1).trim() ? t + last.close : '';
+    t = trimUnclosedOpener(t, last);
   }
   return t;
 }

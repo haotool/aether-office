@@ -2,11 +2,14 @@ import { expect, it } from 'vitest';
 import { mkdir, mkdtemp, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { deriveHookState, readHookState } from '../../apps/control/src/services/hook-spool.js';
+import {
+  deriveHookState,
+  readHookState,
+} from '../../apps/control/src/services/hooks/hook-spool.js';
 import {
   resetLocalSessionCache,
   scanLocalSessions,
-} from '../../apps/control/src/services/local-sessions.js';
+} from '../../apps/control/src/services/runtime/local-sessions.js';
 import { subagentSchema, localSessionSchema } from '../../packages/contracts/src/index.js';
 
 const rec = (event: string, at: number, extra = {}) => ({

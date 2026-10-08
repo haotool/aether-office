@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../../api.js';
+import { api } from '../../lib/api/api.js';
 import { useT } from '../../ui/useT.js';
 import { Row, Skeleton, StatusChip } from './kit.js';
 

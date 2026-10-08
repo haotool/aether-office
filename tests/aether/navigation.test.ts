@@ -7,7 +7,7 @@ import {
   validateLayout,
   type PlacedObject,
 } from '../../packages/kernel/src/index.js';
-import { defaultLayout } from '../../packages/office-scene/src/layout.js';
+import { defaultLayout } from '../../packages/office-scene/src/environment/layout.js';
 import type { Agent } from '../../packages/contracts/src/index.js';
 
 const agents = Array.from({ length: 12 }, (_, i) => ({ id: `a${i}` }) as Agent);

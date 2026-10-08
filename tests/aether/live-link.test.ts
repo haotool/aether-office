@@ -9,12 +9,12 @@ import {
   parseChange,
   pollMs,
   queriesFor,
-} from '../../apps/web/src/features/live-link.js';
+} from '../../apps/web/src/features/integrations/live-link.js';
 import {
   attentionCount,
   attentionKeys,
   type Feed,
-} from '../../apps/web/src/features/feed-model.js';
+} from '../../apps/web/src/features/feed/feed-model.js';
 
 it('maps changes to the queries they make stale, once each', () => {
   const change = (

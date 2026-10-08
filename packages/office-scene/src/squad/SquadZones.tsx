@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, type RefObject } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Color, InstancedMesh } from 'three';
-import { floorY } from '../scene-geometry.js';
+import { floorY } from '../scene/scene-geometry.js';
 import type { DrawSquad } from './squad-draw.js';
 import type { SquadMemberState } from './squad-model.js';
 import { art, squadMaterials, withColors, writeInstances, type Instance } from './squad-art.js';

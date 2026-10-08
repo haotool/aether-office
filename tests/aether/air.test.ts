@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { AIR, daylight, hourOf, tintAt } from '../../packages/office-scene/src/air.js';
+import { AIR, daylight, hourOf, tintAt } from '../../packages/office-scene/src/environment/air.js';
 
 it('is dark at night, bright at midday and eases through dawn and dusk', () => {
   expect(daylight(2)).toBe(0);

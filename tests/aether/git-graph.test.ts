@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { layoutGraph, parseLog } from '../../apps/control/src/services/git-graph.js';
+import { layoutGraph, parseLog } from '../../apps/control/src/services/git/git-graph.js';
 
 it('lays a branch and its merge out in two lanes, like git log --graph', () => {
   // m3 merges f2 into main: main m1 ← m2 ← m3, feature m1 ← f1 ← f2, m3 = merge(m2, f2)

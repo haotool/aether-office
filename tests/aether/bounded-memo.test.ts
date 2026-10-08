@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
-import { memoized } from '../../packages/office-scene/src/memo.js';
-import { driftParams } from '../../packages/office-scene/src/behavior.js';
-import { pendingChains, serialized } from '../../apps/web/src/features/terminal-driver.js';
+import { memoized } from '../../packages/office-scene/src/environment/memo.js';
+import { driftParams } from '../../packages/office-scene/src/environment/behavior.js';
+import { pendingChains, serialized } from '../../apps/web/src/features/terminal/terminal-driver.js';
 
 it('memoized keeps at most `limit` entries, dropping the oldest, and recomputes a dropped one', () => {
   const cache = new Map<string, number>();

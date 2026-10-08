@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { buildNavGrid } from '../../packages/kernel/src/index.js';
 import type { Agent } from '../../packages/contracts/src/index.js';
-import { defaultLayout } from '../../packages/office-scene/src/layout.js';
+import { defaultLayout } from '../../packages/office-scene/src/environment/layout.js';
 import {
   SEAT_DEPTH,
   STAND_MS,
   WAVE_MS,
   departureAt,
-} from '../../packages/office-scene/src/departure.js';
+} from '../../packages/office-scene/src/animals/departure.js';
 import {
   SIT_MS,
   TURN_MS,

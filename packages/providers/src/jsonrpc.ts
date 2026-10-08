@@ -105,34 +105,40 @@ export class JsonRpcProcess {
     const message = record(input);
     const id = message['id'];
     if (typeof message['method'] === 'string') {
-      if (typeof id === 'string' || typeof id === 'number') {
-        const hash = createHash('sha256')
-          .update(JSON.stringify({ method: message['method'], params: message['params'] }))
-          .digest('hex');
-        const existing = this.serverRequests.get(id);
-        if (existing && existing.hash !== hash) throw new Error('SERVER_REQUEST_ID_REUSED');
-        if (!existing && this.serverRequests.size >= 256) throw new Error('SERVER_REQUEST_LIMIT');
-        const response =
-          existing?.response ?? this.onRequest(message['method'], message['params'], id);
-        this.serverRequests.set(id, { hash, response });
-        // Do not block the read loop while the operator decides. The response to our
-        // own turn/start can arrive after this independent server-side request.
-        void response
-          .then(
-            async (result) => {
-              this.write({ id, result });
-              await this.onResponseSent(id);
-            },
-            () =>
-              this.write({
-                id,
-                error: { code: -32603, message: 'Permission or request could not be resolved' },
-              }),
-          )
-          .catch(() => this.fail(new Error('SERVER_RESPONSE_WRITE_FAILED')));
-      } else this.onNotification(message['method'], message['params']);
+      this.handleMethodMessage(message, id);
       return;
     }
+    this.finishClientResponse(message, id);
+  }
+  private handleMethodMessage(message: Record<string, unknown>, id: unknown): void {
+    if (typeof id !== 'string' && typeof id !== 'number') {
+      this.onNotification(String(message['method']), message['params']);
+      return;
+    }
+    const hash = createHash('sha256')
+      .update(JSON.stringify({ method: message['method'], params: message['params'] }))
+      .digest('hex');
+    const existing = this.serverRequests.get(id);
+    if (existing && existing.hash !== hash) throw new Error('SERVER_REQUEST_ID_REUSED');
+    if (!existing && this.serverRequests.size >= 256) throw new Error('SERVER_REQUEST_LIMIT');
+    const response =
+      existing?.response ?? this.onRequest(String(message['method']), message['params'], id);
+    this.serverRequests.set(id, { hash, response });
+    void response
+      .then(
+        async (result) => {
+          this.write({ id, result });
+          await this.onResponseSent(id);
+        },
+        () =>
+          this.write({
+            id,
+            error: { code: -32603, message: 'Permission or request could not be resolved' },
+          }),
+      )
+      .catch(() => this.fail(new Error('SERVER_RESPONSE_WRITE_FAILED')));
+  }
+  private finishClientResponse(message: Record<string, unknown>, id: unknown): void {
     if (typeof id !== 'string' && typeof id !== 'number') throw new Error('RPC_ID_REQUIRED');
     const pending = this.pending.get(id);
     if (!pending) return;

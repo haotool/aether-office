@@ -16,6 +16,12 @@ describe('layout validation (the same rules guard the editor, an import and the 
     expect(() => validateLayout([desk('a', -10, -6), desk('b', 10, 6)])).not.toThrow();
   });
 
+  it('allows the same footprint on different floors', () => {
+    expect(() =>
+      validateLayout([desk('a', -10, -6, { floor: 0 }), desk('b', -10, -6, { floor: 2 })]),
+    ).not.toThrow();
+  });
+
   it.each([
     ['overlap', [desk('a', -10, -6), desk('b', -9.5, -6)], 'LAYOUT_OVERLAP'],
     ['out of bounds', [desk('a', 30, -6)], 'LAYOUT_OUT_OF_BOUNDS'],

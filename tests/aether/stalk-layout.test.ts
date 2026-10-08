@@ -5,7 +5,7 @@ import {
   SPIRE_HEIGHT,
   TIER_HEIGHT,
   tierCount,
-} from '../../packages/office-scene/src/crown-layout.js';
+} from '../../packages/office-scene/src/core/crown-layout.js';
 import {
   CORE_RADIUS,
   MAX_BRAID_RADIUS,
@@ -14,7 +14,7 @@ import {
   spread,
   spreadStalk,
   type StalkCommit,
-} from '../../packages/office-scene/src/stalk-layout.js';
+} from '../../packages/office-scene/src/core/stalk-layout.js';
 
 const DAY = 86_400_000;
 const NOW = 1_800_000_000_000;

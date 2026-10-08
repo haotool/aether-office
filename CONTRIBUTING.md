@@ -38,7 +38,7 @@ pnpm run quality:check   # the quality scorecard is current and no area is below
 pnpm exec playwright test
 ```
 
-CI also runs the unit tests on macOS and `pnpm audit:deps` (the audit needs the network, so it only reports).
+CI also runs the unit tests on macOS and `pnpm audit:gate` (fail-closed high/critical advisories; needs the network).
 
 A change is ready when:
 
@@ -47,7 +47,7 @@ A change is ready when:
    SQLite, Git, HTTP and browsers rather than mocks of them (see [development](docs/development.md#testing)).
 3. **It keeps the boundaries.** `packages/kernel` has no transport, database or UI imports; the runner never writes the
    control database; the web app has no Node imports. `pnpm lint` enforces these.
-4. **UI changes follow the [design system](docs/design-system.md).** Values come from `apps/web/src/styles/tokens.css`;
+4. **UI changes follow the [design system](docs/design-system.md).** Values come from `apps/web/src/styles/core/tokens.css`;
    the responsive and accessibility specs pass; the changed pages were looked at on a phone and a tablet.
 5. **It says what was and was not verified.** Capabilities are tracked in
    [`docs/verification/features.json`](docs/verification/features.json): implementation and verification are separate

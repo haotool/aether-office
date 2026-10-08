@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { intensityOf, newBeatLog, recordBeats } from '../../apps/web/src/features/activity-rate.js';
+import {
+  intensityOf,
+  newBeatLog,
+  recordBeats,
+} from '../../apps/web/src/features/sessions/activity-rate.js';
 import { subagentSchema, type AttributedSession } from '../../packages/contracts/src/index.js';
 
 const session = (over: Partial<AttributedSession> = {}) =>

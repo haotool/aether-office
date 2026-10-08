@@ -5,15 +5,15 @@ import type { Control } from '../control.js';
 import { z } from 'zod';
 import { DomainError, type Actor } from '@aether/kernel';
 import { permissionDecisionSchema } from '@aether/contracts';
-import { attributeSessions, scanLocalSessions } from '../services/local-sessions.js';
-import { emit } from '../services/context.js';
+import { attributeSessions, scanLocalSessions } from '../services/runtime/local-sessions.js';
+import { emit } from '../services/domain/context.js';
 import {
   DEFAULT_WAIT_MS,
   MAX_RULES,
   MAX_RULE_CHARS,
   NONCE_PATTERN,
 } from '@aether/providers/approval-config';
-import { MAX_ATTEMPTS, pruneAttempts } from '../services/attempts.js';
+import { MAX_ATTEMPTS, pruneAttempts } from '../services/runtime/attempts.js';
 import {
   approvalChannel,
   disableRemoteApprovals,
@@ -21,7 +21,7 @@ import {
   isHookToken,
   proofFor,
   remoteApprovals,
-} from '../services/remote-approvals.js';
+} from '../services/remote/remote-approvals.js';
 import { requireOperator, type RouteContext } from './context.js';
 
 const SESSION_ID = /^[A-Za-z0-9._-]{1,200}$/;

@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from '../../packages/office-scene/node_modules/three/build/three.module.js';
 import { DEPARTMENTS } from '../../packages/kernel/src/index.js';
-import { createMaterials } from '../../packages/office-scene/src/building-materials.js';
-import { furniture } from '../../packages/office-scene/src/building-furniture.js';
-import { cylinder, ring, type FloorModel } from '../../packages/office-scene/src/building-parts.js';
-import { THEMES } from '../../packages/office-scene/src/building-themes.js';
+import { createMaterials } from '../../packages/office-scene/src/environment/building-materials.js';
+import { furniture } from '../../packages/office-scene/src/environment/building-furniture.js';
+import {
+  cylinder,
+  ring,
+  type FloorModel,
+} from '../../packages/office-scene/src/environment/building-parts.js';
+import { THEMES } from '../../packages/office-scene/src/environment/building-themes.js';
 
 // The building is real three.js geometry; nothing needs a GPU to build it.
 const emptyModel = (): FloorModel => ({

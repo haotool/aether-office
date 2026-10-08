@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { Control } from '../../apps/control/src/control.js';
-import { listSchedules, tickSchedules } from '../../apps/control/src/services/schedules.js';
+import { listSchedules, tickSchedules } from '../../apps/control/src/services/domain/schedules.js';
 import { command, fixture } from './fixture.js';
 
 const utc = (iso: string) => Date.parse(iso);

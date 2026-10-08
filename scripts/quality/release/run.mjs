@@ -11,6 +11,18 @@ import {
   unmeasuredRow,
 } from './compute.mjs';
 import { evidenceForCriteria } from './evidence.mjs';
+import { gateRow, loadGates } from './gates-evidence.mjs';
+import {
+  measureAuthorIdentities,
+  measureCompactBlur,
+  measureConventionalCommits,
+  measureCoverage,
+  measureDependencyAudit,
+  measureDesignTokens,
+  measureLocaleCompleteness,
+  measureMixedLanguageDocs,
+  measureRefetchInterval,
+} from './measure-extended.mjs';
 import {
   measureCognitive,
   measureDeadCode,
@@ -62,8 +74,15 @@ function humanRow(id, ev) {
   };
 }
 
-/** @param {string} root */
-export async function scoreRelease(root) {
+function applyMeasure(id, result) {
+  if (result.unmeasured) {
+    return { ...unmeasuredRow(id), detail: result.detail ?? ['not measured'] };
+  }
+  return measuredRow(id, result);
+}
+
+/** @param {string} root @param {{ gatesPath?: string }} [options] */
+export async function scoreRelease(root, options = {}) {
   const ctx = await buildContext(root);
   const { repo, facts, graph } = ctx;
   let sha = null;
@@ -76,6 +95,11 @@ export async function scoreRelease(root) {
   const { evidence, error: evidenceError } = sha
     ? evidenceForCriteria(repo, sha)
     : { evidence: new Map(), error: gitError };
+
+  const gatesLoaded = options.gatesPath
+    ? loadGates(repo, options.gatesPath)
+    : { gates: new Map(), error: null, missing: true };
+  const gatesError = gatesLoaded.error;
 
   const staticMeasures = {
     'L1-02': () => ({ ...measureTypeEscapes(facts), source: 'scripts/quality/ast.mjs' }),
@@ -98,30 +122,75 @@ export async function scoreRelease(root) {
       ...measureDirFileCount(repo),
       source: 'scripts/quality/release/measure.mjs',
     }),
-    'L2-03': () => ({ ...measureFanIn(graph), source: 'scripts/quality/graph.mjs' }),
+    'L2-03': () => ({
+      ...measureFanIn(graph, repo),
+      source: 'scripts/quality/graph.mjs',
+    }),
     'L2-06': () => ({ ...measureFileLines(repo), source: 'scripts/quality/release/measure.mjs' }),
     'L3-05': () => ({ ...measureLedgerTests(repo), source: 'docs/verification/features.json' }),
     'L3-06': () => ({ ...measureFlaky(repo), source: 'scripts/quality/areas/tests.mjs' }),
     'L7-03': () => ({ ...measureGitHygiene(root), source: 'git' }),
     'L7-04': () => ({ ...measureRootItems(root), source: 'scripts/quality/release/measure.mjs' }),
+    'L3-03': () => ({ ...measureCoverage(repo), source: 'coverage/coverage-summary.json' }),
+    'L4-05': () => ({
+      ...measureDesignTokens(repo, root),
+      source: 'scripts/quality/areas/ui.mjs',
+    }),
+    'L4-06': () => ({
+      ...measureLocaleCompleteness(repo),
+      source: 'scripts/quality/areas/a11y.mjs',
+    }),
+    'L5-03': () => ({
+      ...measureRefetchInterval(repo),
+      source: 'apps/web/src refetchInterval',
+    }),
+    'L5-04': () => ({
+      ...measureCompactBlur(repo),
+      source: 'rg compact/touch blur',
+    }),
+    'L6-07': () => ({
+      ...measureMixedLanguageDocs(repo),
+      source: 'docs mixed-language paragraphs',
+    }),
+    'L8-03': () => ({
+      ...measureConventionalCommits(root),
+      source: 'scripts/oss/commit-msg.sh',
+    }),
+    'L8-05': () => ({
+      ...measureAuthorIdentities(root),
+      source: 'git log',
+    }),
+    'L9-04': () => ({ ...measureDependencyAudit(root), source: 'pnpm audit' }),
   };
 
   const byId = {};
   for (const meta of CRITERIA) {
     const id = meta.id;
     if (MEASURED_IDS.has(id)) {
-      if (gitError && (id === 'L7-03' || id === 'L7-04')) {
+      if (gitError && (id === 'L7-03' || id === 'L7-04' || id === 'L8-03' || id === 'L8-05')) {
         byId[id] = { ...unmeasuredRow(id), detail: [gitError] };
         continue;
       }
       const m = staticMeasures[id]();
-      const row = measuredRow(id, {
+      byId[id] = applyMeasure(id, {
         violations: m.violations,
         value: m.value,
         source: m.source,
         detail: m.detail ?? [],
+        unmeasured: m.unmeasured,
       });
-      byId[id] = row;
+      continue;
+    }
+    if (meta.type === 'G') {
+      if (gatesError) {
+        byId[id] = { ...unmeasuredRow(id), detail: [gatesError] };
+        continue;
+      }
+      if (gatesLoaded.gates.has(id)) {
+        byId[id] = gateRow(id, gatesLoaded.gates.get(id));
+        continue;
+      }
+      byId[id] = unmeasuredRow(id);
       continue;
     }
     if (evidenceError && (meta.type === 'E' || meta.type === 'H')) {
@@ -157,6 +226,7 @@ export async function scoreRelease(root) {
     unmeasured,
     gates,
     evidenceError,
+    gatesError,
     pass: releasePass({ overall, layers, unmeasured, gates }),
   };
 }

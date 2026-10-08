@@ -66,48 +66,64 @@ export function negotiationFrom(init: InitializeResponse): AcpNegotiation {
   };
 }
 
+type ToolLifecycleKind = 'tool.completed' | 'tool.failed' | 'tool.requested' | 'tool.started';
+
+function toolKindFromCallStatus(status: string | undefined): ToolLifecycleKind {
+  if (status === 'completed') return 'tool.completed';
+  if (status === 'failed') return 'tool.failed';
+  if (status === 'in_progress') return 'tool.started';
+  return 'tool.requested';
+}
+
+function toolKindFromUpdateStatus(status: string): ToolLifecycleKind {
+  if (status === 'completed') return 'tool.completed';
+  if (status === 'failed') return 'tool.failed';
+  return 'tool.started';
+}
+
+function toolCallEvent(
+  update: Extract<SessionNotification['update'], { sessionUpdate: 'tool_call' }>,
+  turnId: string,
+): ProviderEvent[] {
+  return [
+    {
+      kind: toolKindFromCallStatus(update.status),
+      toolId: text(update.toolCallId, 200),
+      turnId,
+      name: text(update.kind ?? 'other', 160),
+      summary: text(update.title, 4000),
+      parentToolId: null,
+    },
+  ];
+}
+
+function toolCallUpdateEvent(
+  update: Extract<SessionNotification['update'], { sessionUpdate: 'tool_call_update' }>,
+  turnId: string,
+): ProviderEvent[] {
+  if (!update.status || update.status === 'pending') return [];
+  return [
+    {
+      kind: toolKindFromUpdateStatus(update.status),
+      toolId: text(update.toolCallId, 200),
+      turnId,
+      name: text(update.kind ?? 'other', 160),
+      summary: text(update.title ?? '', 4000),
+      parentToolId: null,
+    },
+  ];
+}
+
 /** Maps one session/update to canonical events. Thought chunks are never collected. */
 export function normalizeAcpUpdate(n: SessionNotification, turnId: string): ProviderEvent[] {
   const u = n.update;
   switch (u.sessionUpdate) {
     case 'tool_call':
-      return [
-        {
-          kind:
-            u.status === 'completed'
-              ? 'tool.completed'
-              : u.status === 'failed'
-                ? 'tool.failed'
-                : u.status === 'in_progress'
-                  ? 'tool.started'
-                  : 'tool.requested',
-          toolId: text(u.toolCallId, 200),
-          turnId,
-          name: text(u.kind ?? 'other', 160),
-          summary: text(u.title, 4000),
-          parentToolId: null,
-        },
-      ];
-    case 'tool_call_update': {
-      if (!u.status || u.status === 'pending') return [];
-      return [
-        {
-          kind:
-            u.status === 'completed'
-              ? 'tool.completed'
-              : u.status === 'failed'
-                ? 'tool.failed'
-                : 'tool.started',
-          toolId: text(u.toolCallId, 200),
-          turnId,
-          name: text(u.kind ?? 'other', 160),
-          summary: text(u.title ?? '', 4000),
-          parentToolId: null,
-        },
-      ];
-    }
+      return toolCallEvent(u, turnId);
+    case 'tool_call_update':
+      return toolCallUpdateEvent(u, turnId);
     default:
-      return []; // message chunks are assembled by the adapter; everything else is not a canonical fact
+      return [];
   }
 }
 

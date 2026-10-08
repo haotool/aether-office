@@ -7,15 +7,18 @@ import {
   idleSessions,
   memoryOf,
   stillGone,
-} from '../../apps/web/src/features/clock-out.js';
+} from '../../apps/web/src/features/operations/clock-out.js';
 import {
   needsYou,
   sessionsNeedingYou,
   sessionsWaiting,
-} from '../../apps/web/src/features/needs-you.js';
-import { heldByOther, isNetworkError } from '../../apps/web/src/features/terminal-driver.js';
-import { sessionIdOf, sessionLink, tagOf } from '../../apps/web/src/session-names.js';
-import { pageLink } from '../../apps/web/src/nav.js';
+} from '../../apps/web/src/features/sessions/needs-you.js';
+import {
+  heldByOther,
+  isNetworkError,
+} from '../../apps/web/src/features/terminal/terminal-driver.js';
+import { sessionIdOf, sessionLink, tagOf } from '../../apps/web/src/lib/sessions/session-names.js';
+import { pageLink } from '../../apps/web/src/lib/navigation/nav.js';
 
 const NOW = 50 * DAY_MS;
 const session = (over: Record<string, unknown> = {}): AttributedSession =>

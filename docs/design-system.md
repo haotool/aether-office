@@ -1,8 +1,8 @@
 # Design system
 
 The web UI is built in three layers: **tokens → components → features**. The rules below are checked by
-`pnpm lint` (design tokens), `e2e/responsive.spec.ts` (every page at 320, 390, 820, 1194, 1280 and 1366 px, and a phone
-on its side) and `e2e/ui-sweep.spec.ts` (axe accessibility, both themes). A UI change is done when those pass and the
+`pnpm lint` (design tokens), `e2e/ui/responsive.spec.ts` (every page at 320, 390, 820, 1194, 1280 and 1366 px, and a phone
+on its side) and `e2e/ui/ui-sweep.spec.ts` (axe accessibility, both themes). A UI change is done when those pass and the
 changed pages have been looked at on a phone-sized and a tablet-sized screen.
 
 **Contents.**
@@ -22,7 +22,7 @@ Delivery: [Loading performance](#loading-performance) · [Installable app (PWA)]
 
 ## Tokens
 
-`apps/web/src/styles/tokens.css` is the **only** file allowed to hold a raw color, type size, space, radius or z-index.
+`apps/web/src/styles/core/tokens.css` is the **only** file allowed to hold a raw color, type size, space, radius or z-index.
 `scripts/check-design-tokens.mjs` (part of `pnpm lint`) fails on a raw value anywhere else in the stylesheet.
 
 | Family     | Tokens                                                                 | Notes                                                                                   |
@@ -46,7 +46,7 @@ Every button, field, select, icon button, chip and segment takes its height from
 replace the mouse values in one place, a `@media (pointer: coarse), (max-width: 760px)` block at the end of `tokens.css`; a
 rule never re-declares a height for a finger. `touch-targets.css` only extends the hit area to 44px (an invisible `::before`).
 The 3D scene's toolbar (`.segmented`, `.scene-options` in `office.css`) is a compact HUD over the canvas: its segments, buttons and
-select are `--control-h-sm` (32 with a mouse, 36 with a finger), checked by `e2e/scene-hud-consistency.spec.ts`. The HUD plaques
+select are `--control-h-sm` (32 with a mouse, 36 with a finger), checked by `e2e/scene/scene-hud-consistency.spec.ts`. The HUD plaques
 (floor card, deck panel, camera wall) are geometry: their insets and widths stay literal, each with a comment saying why.
 
 | Token              | Mouse | Touch / phone | Used by                                                 |
@@ -56,7 +56,7 @@ select are `--control-h-sm` (32 with a mouse, 36 with a finger), checked by `e2e
 | `--control-h-lg`   | 40    | 44            | a main call to action                                   |
 | `--bar-h`          | 56    | 56            | top bar, tab bar, drawer header                         |
 
-The heights are minimums: a label that wraps grows the control. `e2e/role-variance.spec.ts` measures the 14 views at
+The heights are minimums: a label that wraps grows the control. `e2e/ui/role-variance.spec.ts` measures the 14 views at
 1440x900, 390x844 and 820x1180 and fails when a role shows more distinct heights than it should (buttons 3, icon buttons 1,
 fields 2, chips 2, segments 1). Chrome that a later track of the UI consistency work owns is excluded there by name.
 
@@ -94,7 +94,7 @@ classes `primary`, `secondary`, `icon-button` and `text-button` (the `u-btn` fam
 
 A control that is off says why: `{...whyNot(t, [canWrite, 'needOperator'], [!busy, 'whyBusy'])}` (`ui/whyNot.ts`) sets the first unmet
 reason as the control's `title` and as its `aria-describedby`, which names the text `ReasonDefs` (mounted once, in the application and
-on the login page) keeps in the page. A new reason is a locale key (both languages) added to `REASONS`. `e2e/disabled-reasons.spec.ts`
+on the login page) keeps in the page. A new reason is a locale key (both languages) added to `REASONS`. `e2e/settings/disabled-reasons.spec.ts`
 walks the main pages as the owner and as a viewer and fails on a disabled control with no description.
 
 ## Responsive and touch rules
@@ -132,14 +132,14 @@ lint does not count. Four thresholds are measured facts about one component and 
 | 1500 | the top bar holds the telemetry numbers only above the width where brand, picker, numbers and controls fit |
 | 1800 | an ultra-wide window: a wider sidebar and page padding                                                    |
 
-The top bar keeps every control on screen at 320, 390, 768, 1024, 1440 and 1920px (`e2e/role-variance.spec.ts`, native
+The top bar keeps every control on screen at 320, 390, 768, 1024, 1440 and 1920px (`e2e/ui/role-variance.spec.ts`, native
 runner): its right side never shrinks, the project picker gives way first, below 1000px the emergency stop shows its icon and
 the decorative initial goes, and below 760px the link state is its dot.
 
 ### Preference queries
 
 What the person's system asks for is answered at the end of `breakpoints.css` (and `tokens.css` for the colors), and checked
-with Playwright's media emulation in `e2e/preferences.spec.ts`, which also saves screenshots to `evidence/preferences/`:
+with Playwright's media emulation in `e2e/settings/preferences.spec.ts`, which also saves screenshots to `evidence/preferences/`:
 
 - `forced-colors: active`: the system paints the colors, so shape must say what color said. Every button, chip, tab and bar
   gets a 1px `ButtonText` or `CanvasText` border, the `.primary` cut corner goes, a selected control (`.selected`, `.active`,
@@ -181,13 +181,13 @@ role (`--dur-pulse`, `--dur-breathe`, `--dur-hold`...); a single-line glyph take
 rather than tokenised. The reason is for the reader; a new hatch is a
 review decision (`grep -r "token-lint:"` lists them all). `node scripts/check-design-tokens.mjs --list` prints every counted
 violation and `--update` lowers the baseline to today's counts (it refuses to raise it). The quality scorecard
-(`pnpm run quality -- --area ui`) reads the same rules and baseline, and `e2e/role-variance.spec.ts` writes
+(`pnpm run quality -- --area ui`) reads the same rules and baseline, and `e2e/ui/role-variance.spec.ts` writes
 `evidence/role-variance.json` for it. The rules are unit-tested with CSS they allow and CSS they reject in
 `tests/aether/design-token-lint.test.ts`.
 
 ### One role, one height, and the finger
 
-`e2e/role-variance.spec.ts` measures buttons, icon buttons, inputs, chips, segmented controls, tab bar items and drawer rows on
+`e2e/ui/role-variance.spec.ts` measures buttons, icon buttons, inputs, chips, segmented controls, tab bar items and drawer rows on
 the 14 views, the 3D office and the open drawer at desktop, phone and tablet, and nothing is excluded: the scene toolbar, the
 session panel and sheet, the composer, the squad, quick open, the tab bar and the drawer count like any page. A second check holds the
 44px hit area: on a phone and a tablet every button, link, summary and tab drawn smaller than 44px must still receive a touch at
@@ -213,7 +213,7 @@ cut corner) cannot extend a hit area, so it is the 44px itself on touch.
   second when idle, and no rim light.
 - Dialogs and sheets put what you act on first and fold the explanations (`Fold`, `Hint`, `Clamp`). Sheets stand on the
   lower half of the screen (56dvh; the session sheet is described below) and render into `document.body`.
-- **The camera runs itself.** The director (`packages/office-scene/src/director.ts`, `shot-camera.ts`) cuts to who is
+- **The camera runs itself.** The director (`packages/office-scene/src/environment/director.ts`, `shot-camera.ts`) cuts to who is
   talking (a two-shot with an arc between them), who waits on a person or is in error, who works, and who wants a person
   (forgotten, ownerless, zombies), and sweeps a floor when nothing is going on. A touch, a chosen member or a focus
   request hands the camera to the person; after a quiet spell (10 s on a phone, 30 s elsewhere) it takes it back, but never
@@ -261,7 +261,7 @@ member is a conversation, not an identity card. Code: `features/SessionPanel.tsx
   way is clear. A sent message the transcript never shows is flagged after 90 s, never left looking delivered. While the
   session works, **Stop** takes the place of Send: Esc, then Ctrl+C 1.5 s later if it still works, then **Stop process**
   (`terminal.stop`, confirmed). On a phone a row of quick replies (continue, yes, no, Esc) sits above the box.
-  The model chip and the quick replies are `u-chip`; Send and the box are `--control-h-md` (`e2e/panel-consistency.spec.ts`).
+  The model chip and the quick replies are `u-chip`; Send and the box are `--control-h-md` (`e2e/ui/panel-consistency.spec.ts`).
 - **Slash menu and @file.** `/` at the start opens a fuzzy list of the CLI's built-in commands, the project's and the user's
   `.claude/commands` and `.claude/skills`; a command that opens a list or dialog in the terminal (`/model`, `/resume`,
   `/config`, `/login`, ...) says so, because it is sent but cannot be answered here. `@` opens file paths of the session's
@@ -317,7 +317,7 @@ and for a screen reader. The data is what the scene already draws (`session.suba
 accent, elapsed text, announcements), `squad-open.ts` (the fold choice), `squad-text.ts` (the words), `tree-nav.ts` (the keys).
 Components: `FeedRow.tsx`, `FeedSquad.tsx`, `SquadStrip.tsx`, `SubagentCards.tsx`, `SubagentView.tsx`, `HookNote.tsx`,
 `SquadAnnouncer.tsx`; styles `squad.css`; words `locales/squad-en.ts` and `squad-zh.ts`. Tests: `squad-feed.test.ts`,
-`e2e/squad-panel.spec.ts`, `e2e/squad-panel-states.spec.ts`.
+`e2e/office-life/squad-panel.spec.ts`, `e2e/office-life/squad-panel-states.spec.ts`.
 
 - **A subagent is never a feed row.** `groupFeed(feed, now)` attaches each supervisor's `squad` to its row. A squad is a
   `role="tree"` named "Squad of {name}": the supervisor row is the level 1 `treeitem` (`aria-expanded`), each subagent a level 2
@@ -416,7 +416,7 @@ on the server into a small set of trusted types (plain title, plain preview, Mar
 target), and **render at the edge** with typed renderers; a consumer never re-derives meaning with an ad-hoc regex. The
 code is `packages/kernel/src/text-*.ts` (no `apps/*` imports): `neutralizeHtml`, `stripCliWrappers`, `cleanTitle`,
 `shortLabel`, `displayWidth`, `balanceBrackets`. Tests: `text-html` (86 table cases plus properties), `text-title`,
-`session-transcript`, `session-title`, `session-speech`, `session-names`, and `e2e/text-pipeline.spec.ts`.
+`session-transcript`, `session-title`, `session-speech`, `session-names`, and `e2e/session/text-pipeline.spec.ts`.
 
 | Source | Where it is read | Sanitized by |
 | --- | --- | --- |
@@ -543,7 +543,7 @@ a pure function of time, and `tests/aether/intro-tour.test.ts` samples it for an
 ## The beanstalk
 
 The 3D scene draws the repository as a braid of glass trees running up the building's axis, with a crown that history builds
-above the roof (`packages/office-scene/src/stalk-layout.ts`, `crown-layout.ts`, `Beanstalk.tsx`, `Garden.tsx`, `Clouds.tsx`),
+above the roof (`packages/office-scene/src/core/stalk-layout.ts`, `crown-layout.ts`, `Beanstalk.tsx`, `Garden.tsx`, `Clouds.tsx`),
 fed by the existing commit-graph route (`/api/projects/:id/git-graph`, readable by every role that may read the project;
 subjects and author names are redacted and bounded to 150 commits). Nothing is drawn without a repository.
 
@@ -636,12 +636,12 @@ mixing a translucent term with a fresnel term and procedural vein noise ([Habel 
 First principles: the person is a CLI user who runs Claude Code and Codex in a terminal, and a phone is for glancing,
 answering and dispatching, not for administering. So:
 
-- **Two tiers of pages** (`apps/web/src/nav.ts`). The default navigation is the CLI-first set: the office, local sessions,
+- **Two tiers of pages** (`apps/web/src/lib/navigation/nav.ts`). The default navigation is the CLI-first set: the office, local sessions,
   approvals, terminals, history and settings. The pages for orchestrating several agents (tasks, review of results, team,
   knowledge, messages, execution hosts, observed sources, workspaces; and in Settings the schedules, A2A clients and
   integrations) appear only when **Advanced** is on (Settings, off by default, stored in the browser's preferences). It is a
   filter on the navigation, the tab bar and quick open, not a gate: their addresses always open. The Playwright suite starts
-  with it on; `e2e/advanced.spec.ts` covers the default.
+  with it on; `e2e/workbench/advanced.spec.ts` covers the default.
 - **Glance.** The office is the home screen. Two chips float on it: *Running* (a green dot) and *Needs you* (the sessions waiting
   for an approval or an answer, then those forgotten or ownerless). Each has an accessible name with its count, a 44px tap
   target and a list sheet; the visible word appears when the screen has room (landscape), a portrait phone shows the number.
@@ -689,7 +689,7 @@ quality, see which models were found, connect a phone and flip Advanced; an owne
 
 ## Many busy members at once
 
-- **How hard a member works** is read from real signals (`apps/web/src/features/activity-rate.ts`): how often something changed
+- **How hard a member works** is read from real signals (`apps/web/src/features/sessions/activity-rate.ts`): how often something changed
   in its session over the last minute, the CPU of its process tree, and how many subagents work for it, giving 0 to 3. It drives
   the typing speed (a flat-out member types at 2.2x), a stream of bars that scrolls over its screen, and at level 3 smoke and
   sparks over the desk and a faint shake. `?intensity=3` in the address previews it with stand-in data.
@@ -762,13 +762,13 @@ text. A made-up line may look like code or a build log; it never says how anythi
   over the model's window. The window is Codex's own `model_context_window`, else the detected catalog's figure, else
   Claude's 200k (1M for a `[1m]` model, and 1M once more than 200k is in use: Claude Code does not write the long-context
   choice into the transcript, so a 1M session below 200k reads as a share of 200k). Unknown stays `null`, never zero.
-  One rule colors it everywhere (`contextLevel` in `packages/office-scene/src/context.ts`): calm under 60%, warm (amber)
+  One rule colors it everywhere (`contextLevel` in `packages/office-scene/src/environment/context.ts`): calm under 60%, warm (amber)
   from 60 to 85, hot (red) above 85.
 - **In the office** a thin column beside each desk monitor fills from the desk up (`ContextGauge`, chosen over a ring on the
   name tag because it still reads at overview distance, where tags are hidden); its fill moves with an eased tween (0.4 to
   1.4 s, longer for a bigger move). The name tag shows the percentage on hover and selection; the desk screen shows it in
   its footer (and on the lock screen); the panel header meter and a hairline bar in each feed row use the same value.
-- **Compaction** is noticed from two kinds of evidence (`apps/web/src/features/compaction.ts`, pure, one tracker per
+- **Compaction** is noticed from two kinds of evidence (`apps/web/src/features/conversation/compaction.ts`, pure, one tracker per
   session): the CLI's own marker (Claude `system` entry with subtype `compact_boundary`, Codex item type `compacted`; the
   server returns its time as `usage.compactedAt`) and a fall of the context in use to under half and by more than 20k
   tokens between two observations of the same window. A fall that follows a marker within 90 s is the same compaction, a
@@ -811,7 +811,7 @@ dark tint that gives the fur at least 3:1 contrast, so a portrait reads on both 
 ## Interactions with the characters
 
 The person can act on a character directly in the 3D office. Everything below is drawn over the canvas
-(`packages/office-scene/src/InteractionLayer.tsx`, styled in `styles/character-menu.css`) and never takes the pointer from
+(`packages/office-scene/src/components/InteractionLayer.tsx`, styled in `styles/character-menu.css`) and never takes the pointer from
 orbiting: the layer is `pointer-events: none` except the menu, the group bar and the toast.
 
 **Ways in.** A character is reached by its 3D model and by its name tag, which is also the keyboard's way to it (the tag is a
@@ -831,7 +831,7 @@ button: Tab to it, `aria-haspopup="menu"`, an `aria-label` of name, role and sta
 inside a short one), with arrow keys, Home and End to move and focus returning to the character's tag when it closes. On a
 phone the same items are a bottom `Sheet` with 44 px rows. Every action is always listed; one that is not possible is disabled
 (`aria-disabled`, still focusable) with a one-line reason under it. What is possible is decided by one pure model,
-`apps/web/src/features/character-actions.ts` (table-tested in `tests/aether/character-actions.test.ts`), from the kind of
+`apps/web/src/features/office/character-actions.ts` (table-tested in `tests/aether/character-actions.test.ts`), from the kind of
 member (managed agent, observed session, subagent), the signed-in role, whether the session runs in an AETHER terminal
 (and whether another person holds it), whether it is working, whether it is a clock-out candidate:
 
@@ -868,7 +868,7 @@ is always the camera: without Alt nothing moves.
 **Which desk a member gets** (no saved layout, the normal case for a project AETHER only watches). A member keeps its desk
 (floor and slot) for as long as it stays in the office, whatever the order of activity: a session that writes does not move
 anyone, so a name tag, the camera's target and an open action menu stay with the same character. `assignSeats`
-(`packages/office-scene/src/layout.ts`, pure) takes the desks already held and the members present: those who hold one keep
+(`packages/office-scene/src/environment/layout.ts`, pure) takes the desks already held and the members present: those who hold one keep
 it, each new arrival takes the first free slot on its floor (the next floor with room when that one is full), a departure just
 frees its slot for a later arrival (nobody is compacted), and a seat that is invalid or shared is ignored. The first render has
 no held desks, so the arrangement is as before (most recently active first). `useSeats` keeps the map per project in
@@ -1068,7 +1068,7 @@ GPU.**
   Now the scene is replaced by a card, "The 3D view was interrupted by the device", with **Reload the scene** (remounts the canvas for a
   new context) and **Use the list**. A browser-restored context redraws by itself (`onContextRestored`). Other scene failures (no
   WebGL at all, a model that fails to load) still fall back to the list. Tested with `WEBGL_lose_context` in Chrome
-  (`e2e/scene-context.spec.ts`); whether Safari fires the event for a backgrounded page was not observed.
+  (`e2e/scene/scene-context.spec.ts`); whether Safari fires the event for a backgrounded page was not observed.
 - **What the transparent objects are (R4), phone profile, `?intensity=3`, 4x CPU, hiding one class at a time (`renderMs` of a 6.0 ms baseline, 195 draws):**
 
   | Class (layer, why transparent)                                 | Objects | Draws saved | `renderMs` saved | Instance / merge / opaque?                                        |
@@ -1226,8 +1226,8 @@ were not re-fetched when this was written, so check the names below before relyi
 ## Verifying a UI change
 
 1. Audit the changed pages on real data at 390, 820 and 1280 px.
-2. Run `pnpm exec playwright test e2e/responsive.spec.ts e2e/ui-sweep.spec.ts`.
-3. For iOS behavior, `e2e/touch-flow.spec.ts` drives the real flow with taps. With WebKit installed
+2. Run `pnpm exec playwright test e2e/ui/responsive.spec.ts e2e/ui/ui-sweep.spec.ts`.
+3. For iOS behavior, `e2e/ui/touch-flow.spec.ts` drives the real flow with taps. With WebKit installed
    (`playwright install webkit`), `AETHER_WEBKIT=1 pnpm exec playwright test --project=webkit-iphone` runs it and the
    responsive spec in WebKit, the engine of every iOS browser. Added to the home screen the app opens full screen.
 4. Look at the screens before committing.

@@ -38,8 +38,8 @@ differ from the pages above, the pages above win.
 | Document                                                | Contents                                                                           |
 | ------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | [Office life: spec](design/office-life.md)              | Squads, signals, office-life effects and the first-visit tour: rules and budgets   |
-| [Office life: work plan](design/office-life-iterations.md) | The briefs the iterations were run from                                         |
-| [Architecture decisions](adr)                           | Why the project is built the way it is                                             |
+| [Office life: work plan](design/office-life-work-plan.md) | The briefs the iterations were run from                                         |
+| [Architecture decisions](adr/README.md)               | Why the project is built the way it is (indexed list)                              |
 | [Research](research/README.md)                          | The projects studied and what was taken from them                                  |
 | [Orca view feasibility](research/orca-view-feasibility.md) | A read-only office view over Orca: sources, risks, phases (zh-TW)                  |
 | [Mobile gradient and frame performance](research/mobile-gradient-perf.md) | Banding, dithering, tiers and phone budgets: sources, audit, measurements, ranked changes (zh-TW) |
@@ -49,6 +49,7 @@ differ from the pages above, the pages above win.
 | Document                                                | Contents                                                                       |
 | ------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | [Quality scorecard](quality/scorecard.md)               | Computed score per area, the rubric ([how](quality/README.md)) and what costs points |
+| [Mobile perf harness](quality/mobile-perf.md)         | M-MID/M-LOW A/B measurement, evidence schema, G5 field steps                        |
 | [Verification ledger](verification/report.md)           | What is implemented and what is verified, per capability                       |
 | [Publishing checklist](release/publishing-checklist.md) | From the readiness check to a public repository, branch protection, a release  |
 | [Cleaning the history](release/history-cleanup.md)      | The three options (A, B, C), the `scripts/oss` kit, commands, measured results |

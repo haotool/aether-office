@@ -4,10 +4,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { createServer } from '../../apps/control/src/server.js';
-import { readProcessTable } from '../../apps/control/src/services/agent-processes.js';
-import { resetLocalSessionCache } from '../../apps/control/src/services/local-sessions.js';
-import { completePaths } from '../../apps/control/src/services/session-files.js';
-import { parseIdentity, terminalOfProcess } from '../../apps/control/src/services/terminal-link.js';
+import { readProcessTable } from '../../apps/control/src/services/runtime/agent-processes.js';
+import { resetLocalSessionCache } from '../../apps/control/src/services/runtime/local-sessions.js';
+import { completePaths } from '../../apps/control/src/services/sessions/session-files.js';
+import {
+  parseIdentity,
+  terminalOfProcess,
+} from '../../apps/control/src/services/terminals/terminal-link.js';
 import { processIdentity } from '../../packages/providers/src/index.js';
 import { command, fixture } from './fixture.js';
 import { sleep, until } from './process-fixtures.js';

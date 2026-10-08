@@ -1,4 +1,4 @@
-import type { Seat } from '../director.js';
+import type { Seat } from '../environment/director.js';
 import type { LifeContext, LifeInput } from './signals.js';
 
 /** What the scheduler may ask about the office, answered from the seats the scene has right now. */

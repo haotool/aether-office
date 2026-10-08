@@ -4,7 +4,7 @@ import {
   planAlerts,
   sessionTransitions,
   type SessionEvent,
-} from '../../apps/web/src/alert-rules.js';
+} from '../../apps/web/src/lib/notifications/alert-rules.js';
 
 const s = (key: string, activity: string) => ({
   key,

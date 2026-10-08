@@ -2,9 +2,9 @@ import { expect, it } from 'vitest';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { parseUsage, readUsage } from '../../apps/control/src/services/session-usage.js';
-import { fresh, newState } from '../../apps/control/src/services/usage-counters.js';
-import { dayKeyOf, parseChunk } from '../../apps/control/src/services/usage-parse.js';
+import { parseUsage, readUsage } from '../../apps/control/src/services/sessions/session-usage.js';
+import { fresh, newState } from '../../apps/control/src/services/usage/usage-counters.js';
+import { dayKeyOf, parseChunk } from '../../apps/control/src/services/usage/usage-parse.js';
 
 const line = (value: unknown) => JSON.stringify(value);
 

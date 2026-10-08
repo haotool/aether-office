@@ -1,12 +1,12 @@
-import { listConnections } from '../services/integrations.js';
-import { listMeetings } from '../services/meetings.js';
-import { listObservations } from '../services/observations.js';
-import { listReservations } from '../services/reservations.js';
-import { listRooms } from '../services/rooms.js';
-import { listSchedules } from '../services/schedules.js';
-import { listSkills } from '../services/skills.js';
-import { listTerminals, readTerminal } from '../services/terminals.js';
-import { listWorkflows } from '../services/workflows.js';
+import { listConnections } from '../services/domain/integrations.js';
+import { listMeetings } from '../services/domain/meetings.js';
+import { listObservations } from '../services/domain/observations.js';
+import { listReservations } from '../services/domain/reservations.js';
+import { listRooms } from '../services/domain/rooms.js';
+import { listSchedules } from '../services/domain/schedules.js';
+import { listSkills } from '../services/domain/skills.js';
+import { listTerminals, readTerminal } from '../services/platform/terminals.js';
+import { listWorkflows } from '../services/work/workflows.js';
 import { CAPABILITIES, authorize } from '@aether/kernel';
 import type { RouteContext } from './context.js';
 

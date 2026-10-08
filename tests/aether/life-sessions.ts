@@ -1,5 +1,5 @@
 import type { AttributedSession } from '../../packages/contracts/src/index.js';
-import type { LifeSnapshot } from '../../apps/web/src/features/life-signals.js';
+import type { LifeSnapshot } from '../../apps/web/src/features/office/life-signals.js';
 
 /** Scan fixtures for the signal deriver: a session as the control plane reports it, and a snapshot of several. */
 export const NOW = 1_700_000_000_000;

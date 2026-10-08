@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { between, pick, weighted } from '../../packages/office-scene/src/pick.js';
-import { hashText } from '../../packages/office-scene/src/hash.js';
-import { seeded } from '../../packages/office-scene/src/seeded.js';
+import { between, pick, weighted } from '../../packages/office-scene/src/environment/pick.js';
+import { hashText } from '../../packages/office-scene/src/environment/hash.js';
+import { seeded } from '../../packages/office-scene/src/environment/seeded.js';
 
 describe('seeded', () => {
   it('repeats the same sequence for the same seed and stays in [0, 1)', () => {

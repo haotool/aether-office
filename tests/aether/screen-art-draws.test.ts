@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { seeded } from '../../packages/office-scene/src/seeded.js';
-import * as art from '../../packages/office-scene/src/screen-art-data.js';
-import * as dev from '../../packages/office-scene/src/screen-art-dev.js';
-import * as plan from '../../packages/office-scene/src/screen-art-plan.js';
-import * as quality from '../../packages/office-scene/src/screen-art-quality.js';
+import { seeded } from '../../packages/office-scene/src/environment/seeded.js';
+import * as art from '../../packages/office-scene/src/screen/screen-art-data.js';
+import * as dev from '../../packages/office-scene/src/screen/screen-art-dev.js';
+import * as plan from '../../packages/office-scene/src/screen/screen-art-plan.js';
+import * as quality from '../../packages/office-scene/src/screen/screen-art-quality.js';
 import {
   PALETTE,
   SCREEN_H,
@@ -15,9 +15,9 @@ import {
   lineChart,
   tile,
   type Draw,
-} from '../../packages/office-scene/src/screen-draw.js';
-import { generateData } from '../../packages/office-scene/src/screen-codegen-data.js';
-import { lineText } from '../../packages/office-scene/src/screen-tokens.js';
+} from '../../packages/office-scene/src/screen/screen-draw.js';
+import { generateData } from '../../packages/office-scene/src/screen/screen-codegen-data.js';
+import { lineText } from '../../packages/office-scene/src/screen/screen-tokens.js';
 import { numbersOf, recordingContext, textsOf } from './fixtures/recording-canvas.js';
 
 // Role screens are pictures drawn on a 640 x 400 canvas from a seeded random stream. There is no canvas here, so the context

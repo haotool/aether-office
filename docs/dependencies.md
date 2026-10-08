@@ -7,7 +7,7 @@ Licenses and attributions are in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES
 [docs/legal](legal/README.md). `pnpm run notices:check` (CI) fails when a dependency has an unknown or denied licence or the
 notices are stale. No dependency in the lockfile is GPL, LGPL or AGPL.
 
-Run `pnpm audit:deps` for high-severity advisories and `pnpm run doctor` for the installed toolchain.
+Run `pnpm audit:gate` for high-severity advisories and `pnpm run doctor` for the installed toolchain.
 
 ## Notable choices
 

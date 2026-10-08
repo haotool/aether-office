@@ -1,5 +1,5 @@
 import type { RefObject } from 'react';
-import { copyText } from '../../browser-compat.js';
+import { copyText } from '../../lib/platform/browser-compat.js';
 import type { FieldPerfCollector } from './collector.js';
 
 type FieldPerfPlainTextOutcome = 'idle' | 'ok' | 'manual';

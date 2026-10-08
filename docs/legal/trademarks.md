@@ -32,7 +32,7 @@ The project follows these in its text. GitHub, Linear and Tailscale are named on
 
 ## Provider marks
 
-`packages/office-scene/src/provider-marks.tsx` draws a small mark next to each session as a **provider indicator**: for Claude
+`packages/office-scene/src/core/provider-marks.tsx` draws a small mark next to each session as a **provider indicator**: for Claude
 an eight-ray starburst in its own colour, for Codex a knot of three interlaced loops tinted to the interface's muted text
 colour (not a brand colour). The marks are simplified, 14 px-ish and decorative (`aria-hidden`); the provider's name stays as
 text (tooltip, visually hidden text, labels, filters), which carries the meaning. They belong to Anthropic and OpenAI, appear
@@ -43,5 +43,5 @@ project (slopus/happy, MIT), which shows a vendor mark only as a small provider 
 **Residual risk.** Both guidelines above restrict logo use to supplied, unaltered artwork and, for anything beyond plain text,
 ask for permission, and a simplified look-alike is closer to an "altered mark" than to plain-text reference. The maintainer
 accepts this for small indicators; the lower-risk options are to replace the marks with neutral glyphs (the change would touch
-only `provider-marks.tsx` and its colours in `apps/web/src/styles/tokens.css` and `scene-overlays.css`) or to request
+only `provider-marks.tsx` and its colours in `apps/web/src/styles/core/tokens.css` and `scene/scene-overlays.css`) or to request
 permission from Anthropic (marketing@anthropic.com) and OpenAI (partnercomms@openai.com).

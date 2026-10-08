@@ -5,6 +5,13 @@ import {
   structureWrappers,
 } from '../../packages/kernel/src/index.js';
 
+it('pairs command-name and command-args into one command notice', () => {
+  const out = structureWrappers(
+    '<command-name>pnpm</command-name><command-args>test</command-args>',
+  );
+  expect(out.notices).toEqual([{ kind: 'command', name: 'pnpm', args: 'test' }]);
+});
+
 const TASK = [
   '<task-notification>',
   '<task-id>b3k9x2</task-id>',

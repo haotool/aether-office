@@ -42,7 +42,7 @@ docs/             This documentation, ADRs and the verification ledger
 | `pnpm run doctor`             | Reports OS, Node, pnpm, Git and provider CLI versions; `--strict` fails on warnings too   |
 | `pnpm verification:report` / `verification:check` | Regenerate / check the verification report from the ledger           |
 | `node scripts/audit-dependencies.mjs [package...]` | Reads the registry metadata of the dev dependencies (network) for the dependency ledger entry |
-| `pnpm audit:deps`             | `pnpm audit` for high-severity advisories                                                |
+| `pnpm audit:gate`             | Fail-closed gate for unexempted high/critical advisories                                 |
 | `node scripts/check-bundle-size.mjs` | After `pnpm build`: gzip size of the web JavaScript against its budget (CI runs it)      |
 | `pnpm run quality` / `quality:report` / `quality:check` | Objective scorecard per area (`--json`, `--area <name>`, `--target 95`); regenerate it and raise the floors / fail on a stale scorecard or an area below its floor; see [quality](quality/README.md) |
 | `pnpm verify:clean`           | Clean-room install, build and test of the committed tree                                 |
@@ -150,7 +150,7 @@ node scripts/optimize-animals.mjs    # drops animation keyframes a straight line
 node scripts/validate-assets.mjs     # checks the shipped models and textures against their manifests
 ```
 
-The furniture's dimensions live in one file, `packages/office-scene/src/desk-seating.json` (the scene reads it typed through
+The furniture's dimensions live in one file, `packages/office-scene/src/desks/desk-seating.json` (the scene reads it typed through
 `seating.ts`), shared by the scene and the audit, so a character is checked against the chair and desk it is really given. Change an animation, a proportion or the
 desk, run the audit (it must report no clipping), rebuild the models and validate them.
 
@@ -167,9 +167,9 @@ node scripts/contact-sheet.mjs --category life --effects 'rubber-duck@3000/8000/
   --sheet wellbeing --size 1600x1000 --dpr 2 --gpu
 
 # Baseline vs variant scene through the perf probe, interleaved and repeated, on the real GPU
-PERF_GPU=1 PERF_BASELINE='preview=life&effect=off&t=0' PERF_VARIANT='preview=life&effect=rubber-duck,ci-lamp,ship-it&t=1500' pnpm exec playwright test e2e/office-life-perf.spec.ts   # three live effects
+PERF_GPU=1 PERF_BASELINE='preview=life&effect=off&t=0' PERF_VARIANT='preview=life&effect=rubber-duck,ci-lamp,ship-it&t=1500' pnpm exec playwright test e2e/office-life/office-life-perf.spec.ts   # three live effects
 node scripts/contact-sheet.mjs --category squad --gpu   # the squad storyboard on stand-in subagents (?squad=N&arrive=MS&leave=MS&look=1)
-PERF_GPU=1 PERF_BASELINE='squad=8&legacy=1' PERF_VARIANT='squad=8' pnpm exec playwright test --timeout=300000 e2e/office-life-perf.spec.ts   # 8 subagents in a squad zone against at desks
+PERF_GPU=1 PERF_BASELINE='squad=8&legacy=1' PERF_VARIANT='squad=8' pnpm exec playwright test --timeout=300000 e2e/office-life/office-life-perf.spec.ts   # 8 subagents in a squad zone against at desks
 ```
 
 An effect that reads a value takes it after a colon (`ci-stack:0` is the red CI stack, `tech-debt:60` a bigger pile), and

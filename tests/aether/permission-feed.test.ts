@@ -4,15 +4,15 @@ import type {
   AttributedSession,
   PermissionRequestView,
 } from '../../packages/contracts/src/index.js';
-import { buildFeed } from '../../apps/web/src/features/feed-model.js';
-import { sessionsNeedingYou } from '../../apps/web/src/features/needs-you.js';
+import { buildFeed } from '../../apps/web/src/features/feed/feed-model.js';
+import { sessionsNeedingYou } from '../../apps/web/src/features/sessions/needs-you.js';
 import {
   askingKeys,
   mustReview,
   requestsFor,
   secondsLeft,
-} from '../../apps/web/src/features/permission-requests.js';
-import { sessionTransitions } from '../../apps/web/src/alert-rules.js';
+} from '../../apps/web/src/features/operations/permission-requests.js';
+import { sessionTransitions } from '../../apps/web/src/lib/notifications/alert-rules.js';
 
 const NOW = Date.parse('2026-10-06T12:00:00Z');
 const request = (id: string, sessionKey: string, over: Partial<PermissionRequestView> = {}) => ({

@@ -5,9 +5,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   resetLocalSessionCache,
   scanLocalSessions,
-} from '../../apps/control/src/services/local-sessions.js';
-import { plainSummary } from '../../apps/control/src/services/subagent-text.js';
-import { readSubagentUsage } from '../../apps/control/src/services/subagent-usage.js';
+} from '../../apps/control/src/services/runtime/local-sessions.js';
+import { plainSummary } from '../../apps/control/src/services/subagents/subagent-text.js';
+import { readSubagentUsage } from '../../apps/control/src/services/subagents/subagent-usage.js';
 import {
   FRESH_PER_MESSAGE,
   append,

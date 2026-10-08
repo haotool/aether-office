@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MENU_KEYS, nextMenuIndex } from '../../apps/web/src/features/menu-nav.js';
+import { MENU_KEYS, nextMenuIndex } from '../../apps/web/src/features/shell-chrome/menu-nav.js';
 
 describe('nextMenuIndex', () => {
   it('moves forward and back, wrapping at both ends', () => {

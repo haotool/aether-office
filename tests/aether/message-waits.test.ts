@@ -4,9 +4,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fixture, command } from './fixture.js';
 import { createServer } from '../../apps/control/src/server.js';
-import { refreshMessageWaits } from '../../apps/control/src/services/messages.js';
+import { refreshMessageWaits } from '../../apps/control/src/services/domain/messages.js';
 import { Control } from '../../apps/control/src/control.js';
-import { enroll, claim, sessionCredential } from '../../apps/control/src/services/runners.js';
+import {
+  enroll,
+  claim,
+  sessionCredential,
+} from '../../apps/control/src/services/runtime/runners.js';
 it('persists per-recipient request waits with exact reply correlation, deadlines, cancellation and scoped reads', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'aether-waits-'));
   const file = join(dir, 'control.sqlite');

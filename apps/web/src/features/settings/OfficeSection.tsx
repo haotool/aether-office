@@ -1,4 +1,4 @@
-import { usePreferences } from '../../state.js';
+import { usePreferences } from '../../lib/preferences/state.js';
 import { useT } from '../../ui/useT.js';
 import { Row, Segmented, StatusChip, Switch } from './kit.js';
 import { OfficeAnimationsSettings } from './OfficeAnimationsSettings.js';

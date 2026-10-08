@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
-import { labelOf, tagOf } from '../../apps/web/src/session-names.js';
-import { sessionsToAgents } from '../../apps/web/src/localSessions.js';
+import { labelOf, tagOf } from '../../apps/web/src/lib/sessions/session-names.js';
+import { sessionsToAgents } from '../../apps/web/src/lib/sessions/localSessions.js';
 
 const session = (cwd: string, title: string | null = null) =>
   ({

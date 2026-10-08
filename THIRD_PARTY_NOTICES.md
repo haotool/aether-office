@@ -16,11 +16,11 @@ tree (it remains in the repository history). Still derived from it:
 
 - `tools/blender/aokit.py`: the Blender modelling kit (shapes, smooth skin, rigs and clips, export).
 - `tools/blender/build_animals.py`: its skinning steps follow the upstream `blender/scripts/build_dog.py`.
-- `packages/office-scene/src/geometry.ts`: geometry helpers adapted from the upstream `src/client/world/toon.ts`.
+- `packages/office-scene/src/environment/geometry.ts`: geometry helpers adapted from the upstream `src/client/world/toon.ts`.
 - The animal models in `apps/web/public/assets/animals` are output of scripts built on that kit.
 
 **Orca** ([stablyai/orca](https://github.com/stablyai/orca), commit `373d951b`), MIT License.
-`apps/control/src/services/redaction.ts` adapts the secret patterns of `src/shared/crash-report-redaction.ts`:
+`apps/control/src/services/platform/redaction.ts` adapts the secret patterns of `src/shared/crash-report-redaction.ts`:
 
 ```text
 MIT License
@@ -79,7 +79,7 @@ identify the tools this project works with; no affiliation, sponsorship or endor
 
 ## Packages shipped with the application
 
-274 packages from the npm registry are part of the running application: those marked *web bundle* are compiled
+265 packages from the npm registry are part of the running application: those marked *web bundle* are compiled
 into `apps/web/dist`, those marked *server runtime* are loaded from `node_modules` by the control plane and the runner. The
 licence is the one that applies (for a choice such as `MIT OR Apache-2.0`, the option this project relies on is named).
 Platform builds (`*-darwin-arm64` and similar) carry the licence of their package and are installed only on a matching machine.
@@ -109,7 +109,6 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | @fastify/proxy-addr | 5.1.1 | MIT | server runtime | Copyright (c) 2014-2016 Douglas Christopher Wilson; Copyright (c) 2021-present The Fastify team <https://github.com/fastify/fastify#team> |
 | @fastify/send | 4.1.1 | MIT | server runtime | Copyright (c) 2012 TJ Holowaychuk; Copyright (c) 2014-2022 Douglas Christopher Wilson; Copyright (c) 2023-present The Fastify team <https://github.com/fastify/fastify#team> |
 | @fastify/static | 10.1.5 | MIT | server runtime | Copyright (c) 2017-present The Fastify team <https://github.com/fastify/fastify#team> |
-| @fastify/websocket | 11.3.1 | MIT | server runtime | Copyright (c) 2017-present The Fastify team <https://github.com/fastify/fastify#team> |
 | @hono/node-server | 2.1.3 | MIT | server runtime | Copyright (c) 2022 - present, Yusuke Wada and Hono contributors |
 | @lukeed/ms | 2.0.2 | MIT | server runtime | Copyright (c) Luke Edwards <luke.edwards05@gmail.com> (lukeed.com) |
 | @mediapipe/tasks-vision | 0.10.17 | Apache-2.0 | web bundle | mediapipe@google.com (author; no copyright line in the licence file) |
@@ -178,11 +177,9 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | dijkstrajs | 1.0.3 | MIT | server runtime | Copyright (C) 2008 |
 | draco3d | 1.5.7 | Apache-2.0 | web bundle | Google Draco Team (author; no copyright line in the licence file) |
 | dunder-proto | 1.0.1 | MIT | server runtime | Copyright (c) 2024 ECMAScript Shims |
-| duplexify | 4.1.3 | MIT | server runtime | Copyright (c) 2014 Mathias Buus |
 | ee-first | 1.1.1 | MIT | server runtime | Copyright (c) 2014 Jonathan Ong me@jongleberry.com |
 | emoji-regex | 8.0.0 | MIT | server runtime | Copyright Mathias Bynens <https://mathiasbynens.be/> |
 | encodeurl | 2.0.0 | MIT | server runtime | Copyright (c) 2016 Douglas Christopher Wilson |
-| end-of-stream | 1.4.5 | MIT | server runtime | Copyright (c) 2014 Mathias Buus |
 | es-define-property | 1.0.1 | MIT | server runtime | Copyright (c) 2024 Jordan Harband |
 | es-errors | 1.3.0 | MIT | server runtime | Copyright (c) 2024 Jordan Harband |
 | es-object-atoms | 1.1.2 | MIT | server runtime | Copyright (c) 2024 Jordan Harband |
@@ -290,7 +287,6 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | react-router | 7.18.4 | MIT | web bundle | Copyright (c) React Training LLC 2015-2019; Copyright (c) Remix Software Inc. 2020-2021; Copyright (c) Shopify Inc. 2022-2023 |
 | react-use-measure | 2.1.7 | MIT | web bundle | Copyright (c) 2019-2025 Poimandres |
 | react | 19.3.0 | MIT | web bundle | Copyright (c) Meta Platforms, Inc. and affiliates. |
-| readable-stream | 3.6.2 | MIT | server runtime | Copyright Node.js contributors. All rights reserved.; Copyright Joyent, Inc. and other Node contributors. All rights reserved. |
 | real-require | 0.2.0 | MIT | server runtime | Copyright (c) 2021 Paolo Insogna and the real-require contributors |
 | real-require | 1.0.0 | MIT | server runtime | Copyright (c) 2021 Paolo Insogna and the real-require contributors |
 | require-directory | 2.1.1 | MIT | server runtime | Copyright (c) 2011 Troy Goode <troygoode@gmail.com> |
@@ -300,7 +296,6 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | reusify | 1.1.0 | MIT | server runtime | Copyright (c) 2015-2024 Matteo Collina |
 | rfdc | 1.4.1 | MIT | server runtime | Copyright 2019 "David Mark Clements <david.mark.clements@gmail.com>" |
 | router | 2.2.0 | MIT | server runtime | Copyright (c) 2013 Roman Shtylman; Copyright (c) 2014-2022 Douglas Christopher Wilson |
-| safe-buffer | 5.2.1 | MIT | server runtime | Copyright (c) Feross Aboukhadijeh |
 | safe-regex2 | 5.1.1 | MIT | server runtime | Copyright (c) 2019-present The Fastify team <https://github.com/fastify/fastify#team> |
 | safe-stable-stringify | 2.5.0 | MIT | server runtime | Copyright (c) Ruben Bridgewater |
 | safer-buffer | 2.1.2 | MIT | server runtime | Copyright (c) 2018 Nikita Skovoroda <chalkerx@gmail.com> |
@@ -324,9 +319,7 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | stats-gl | 2.4.2 | MIT | web bundle | Renaud ROHLINGER (https://github.com/RenaudRohlinger) (author; no copyright line in the licence file) |
 | stats.js | 0.17.0 | MIT | web bundle | Copyright (c) 2009-2016 stats.js authors |
 | statuses | 2.0.2 | MIT | server runtime | Copyright (c) 2014 Jonathan Ong <me@jongleberry.com>; Copyright (c) 2016 Douglas Christopher Wilson <doug@somethingdoug.com> |
-| stream-shift | 1.0.3 | MIT | server runtime | Copyright (c) 2016 Mathias Buus |
 | string-width | 4.2.3 | MIT | server runtime | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) |
-| string_decoder | 1.3.0 | MIT | server runtime | Copyright Node.js contributors. All rights reserved.; Copyright Joyent, Inc. and other Node contributors. All rights reserved. |
 | strip-ansi | 6.0.1 | MIT | server runtime | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) |
 | suspend-react | 0.1.3 | MIT | web bundle | Copyright (c) 2021 Paul Henschel |
 | thread-stream | 4.2.0 | MIT | server runtime | Copyright (c) 2021 Matteo Collina |
@@ -343,7 +336,6 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | type-is | 2.1.0 | MIT | server runtime | Copyright (c) 2014 Jonathan Ong <me@jongleberry.com>; Copyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com> |
 | unpipe | 1.0.0 | MIT | server runtime | Copyright (c) 2015 Douglas Christopher Wilson <doug@somethingdoug.com> |
 | use-sync-external-store | 1.7.0 | MIT | web bundle | Copyright (c) Meta Platforms, Inc. and affiliates. |
-| util-deprecate | 1.0.2 | MIT | server runtime | Copyright (c) 2014 Nathan Rajlich <nathan@tootallnate.net> |
 | utility-types | 3.11.0 | MIT | web bundle | Copyright (c) 2016 Piotr Witek <piotrek.witek@gmail.com> (http://piotrwitek.github.io) |
 | vary | 1.1.2 | MIT | server runtime | Copyright (c) 2014-2017 Douglas Christopher Wilson |
 | webgl-constants | 1.1.1 | MIT | web bundle | Copyright (c) 2019 Tim van Scherpenzeel |
@@ -352,7 +344,6 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | which | 2.0.2 | ISC | web bundle, server runtime | Copyright (c) Isaac Z. Schlueter and Contributors |
 | wrap-ansi | 6.2.0 | MIT | server runtime | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) |
 | wrappy | 1.0.2 | ISC | server runtime | Copyright (c) Isaac Z. Schlueter and Contributors |
-| ws | 8.22.0 | MIT | server runtime | Copyright (c) 2011 Einar Otto Stangvik <einaros@gmail.com>; Copyright (c) 2013 Arnout Kazemier and contributors; Copyright (c) 2016 Luigi Pinca and contributors |
 | y18n | 4.0.3 | ISC | server runtime | Copyright (c) 2015, Contributors |
 | yargs-parser | 18.1.3 | ISC | server runtime | Copyright (c) 2016, Contributors |
 | yargs | 15.4.1 | MIT | server runtime | Copyright 2010 James Halliday (mail@substack.net); Modified work Copyright 2014 Contributors (ben@npmjs.com) |
@@ -2730,34 +2721,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### MIT (text 3fe8d55a98db)
-
-Used by: `duplexify@4.1.3`, `end-of-stream@1.4.5`.
-
-```text
-The MIT License (MIT)
-
-Copyright (c) 2014 Mathias Buus
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-```
-
 ### MIT (text 422fa324bf75)
 
 Used by: `webgl-constants@1.1.1`.
@@ -3013,7 +2976,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### MIT (text 4e64c716ef91)
 
-Used by: `@fastify/cookie@11.1.2`, `@fastify/static@10.1.5`, `@fastify/websocket@11.3.1`, `fastify-plugin@6.0.0`.
+Used by: `@fastify/cookie@11.1.2`, `@fastify/static@10.1.5`, `fastify-plugin@6.0.0`.
 
 ```text
 MIT License
@@ -3037,60 +3000,6 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-```
-
-### MIT (text 4f8ade273d40)
-
-Used by: `readable-stream@3.6.2`, `string_decoder@1.3.0`.
-
-```text
-Node.js is licensed for use as follows:
-
-"""
-Copyright Node.js contributors. All rights reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to
-deal in the Software without restriction, including without limitation the
-rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-sell copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-IN THE SOFTWARE.
-"""
-
-This license applies to parts of Node.js originating from the
-https://github.com/joyent/node repository:
-
-"""
-Copyright Joyent, Inc. and other Node contributors. All rights reserved.
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to
-deal in the Software without restriction, including without limitation the
-rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-sell copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-IN THE SOFTWARE.
-"""
 ```
 
 ### MIT (text 52bdba9bf5fa)
@@ -3505,33 +3414,6 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-```
-
-### MIT (text 7adebaeee45b)
-
-Used by: `ws@8.22.0`.
-
-```text
-Copyright (c) 2011 Einar Otto Stangvik <einaros@gmail.com>
-Copyright (c) 2013 Arnout Kazemier and contributors
-Copyright (c) 2016 Luigi Pinca and contributors
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
 ### MIT (text 7ae85337f549)
@@ -4286,34 +4168,6 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
-```
-
-### MIT (text a6147f68efd3)
-
-Used by: `stream-shift@1.0.3`.
-
-```text
-The MIT License (MIT)
-
-Copyright (c) 2016 Mathias Buus
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
 ```
 
 ### MIT (text a77b0dc796cd)
@@ -5374,34 +5228,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### MIT (text dff1a84cb703)
-
-Used by: `safe-buffer@5.2.1`.
-
-```text
-The MIT License (MIT)
-
-Copyright (c) Feross Aboukhadijeh
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-```
-
 ### MIT (text e257f36bcf5e)
 
 Used by: `path-to-regexp@8.4.2`.
@@ -6038,37 +5864,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### MIT (text ff15562c1fef)
-
-Used by: `util-deprecate@1.0.2`.
-
-```text
-(The MIT License)
-
-Copyright (c) 2014 Nathan Rajlich <nathan@tootallnate.net>
-
-Permission is hereby granted, free of charge, to any person
-obtaining a copy of this software and associated documentation
-files (the "Software"), to deal in the Software without
-restriction, including without limitation the rights to use,
-copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following
-conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
-```
-
 ### MIT (text ff5a7cfcb606)
 
 Used by: `sonic-boom@4.2.1`.
@@ -6319,7 +6114,7 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | postcss | 8.5.28 | MIT |
 | prettier | 3.9.9 | MIT |
 | rolldown | 1.2.11 | MIT |
-| source-map-js | 1.2.1 | BSD-3-Clause |
+| source-map-js | 1.2.2 | BSD-3-Clause |
 | std-env | 4.3.0 | MIT |
 | tinybench | 6.2.0 | MIT |
 | tinyexec | 1.3.1 | MIT |

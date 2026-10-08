@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { outcomeOf, toRecord } from '../../packages/providers/src/hook-receiver.mjs';
-import { deriveHookState } from '../../apps/control/src/services/hook-spool.js';
+import { deriveHookState } from '../../apps/control/src/services/hooks/hook-spool.js';
 
 const receiver = join(process.cwd(), 'packages/providers/src/hook-receiver.mjs');
 const SECRET = 'ghp_EXAMPLE_NOT_A_SECRET';

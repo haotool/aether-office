@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { expect, it } from 'vitest';
-import { redeemInvitation } from '../../apps/control/src/services/invitations.js';
-import { claim, report } from '../../apps/control/src/services/runners.js';
+import { redeemInvitation } from '../../apps/control/src/services/remote/invitations.js';
+import { claim, report } from '../../apps/control/src/services/runtime/runners.js';
 import { command, fixture } from './fixture.js';
 
 it('invitations expire, redeem once, and bind a machine to one project, providers and roots', () => {

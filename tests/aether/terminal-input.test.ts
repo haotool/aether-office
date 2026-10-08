@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { inputBatcher } from '../../apps/web/src/features/terminal-input.js';
-import { profilesOf } from '../../apps/web/src/features/terminal-model.js';
+import { inputBatcher } from '../../apps/web/src/features/terminal/terminal-input.js';
+import { profilesOf } from '../../apps/web/src/features/terminal/terminal-model.js';
 
 // The terminal's typed input: batched for 50 ms, bounded at 8 KiB, sent in order, and disarmed by a refused send.
 describe('inputBatcher', () => {

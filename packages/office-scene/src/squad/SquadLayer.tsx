@@ -1,8 +1,8 @@
 import { useMemo, useRef } from 'react';
 import type { Agent } from '@aether/contracts';
-import { ringFor } from '../character-ring.js';
-import { ProjectedLabels } from '../Labels.js';
-import { floorY } from '../scene-geometry.js';
+import { ringFor } from '../characters/character-ring.js';
+import { ProjectedLabels } from '../components/Labels.js';
+import { floorY } from '../scene/scene-geometry.js';
 import { SquadBeam, beamTier } from './SquadBeam.js';
 import { squadLabelsOf } from './SquadDom.js';
 import { SquadMember, type MemberActions } from './SquadMember.js';

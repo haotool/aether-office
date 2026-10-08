@@ -104,39 +104,51 @@ function addWords(
   }
 }
 
-function addActions(ledger: Ledger, actions: readonly ToolCall[]) {
-  const recent = actions.slice(-RECENT_ACTIONS);
-  const counts = new Map<
-    string,
-    { role: RoleId; weight: number; label: string; verb: string; n: number }
-  >();
-  const note = (role: RoleId, weight: number, verb: string, label: string) => {
-    const key = `${verb}|${label}|${role}`;
-    const entry = counts.get(key) ?? { role, weight, label, verb, n: 0 };
-    entry.n++;
-    counts.set(key, entry);
-  };
-  for (const { tool, target } of recent) {
-    for (const [pattern, role, weight, label] of TOOLS)
-      if (pattern.test(tool)) note(role, weight, 'tool', label);
-    if (!target) continue;
-    if (DELEGATES.has(tool)) {
-      const role = roleOfSubagent(target);
-      if (role) note(role, 0.8, 'subagent', `delegates to ${target.slice(0, 32)}`);
-    } else if (WRITES.has(tool) || READS.has(tool)) {
-      const rule = PATHS.find(([, , pattern]) => pattern.test(target));
-      if (rule)
-        note(
-          rule[0],
-          rule[1] * (WRITES.has(tool) ? 1 : 0.25),
-          WRITES.has(tool) ? 'edits' : 'reads',
-          rule[3],
-        );
-    } else if (SHELLS.has(tool)) {
-      for (const [role, weight, pattern, label] of COMMANDS)
-        if (pattern.test(target)) note(role, weight, 'runs', label);
-    }
-  }
+type ActionNote = { role: RoleId; weight: number; label: string; verb: string; n: number };
+
+function noteToolPatterns(
+  note: (role: RoleId, weight: number, verb: string, label: string) => void,
+  tool: string,
+): void {
+  for (const [pattern, role, weight, label] of TOOLS)
+    if (pattern.test(tool)) note(role, weight, 'tool', label);
+}
+
+function noteDelegateAction(
+  note: (role: RoleId, weight: number, verb: string, label: string) => void,
+  target: string,
+): void {
+  const role = roleOfSubagent(target);
+  if (role) note(role, 0.8, 'subagent', `delegates to ${target.slice(0, 32)}`);
+}
+
+function notePathAction(
+  note: (role: RoleId, weight: number, verb: string, label: string) => void,
+  tool: string,
+  target: string,
+): void {
+  if (!WRITES.has(tool) && !READS.has(tool)) return;
+  const rule = PATHS.find(([, , pattern]) => pattern.test(target));
+  if (!rule) return;
+  note(
+    rule[0],
+    rule[1] * (WRITES.has(tool) ? 1 : 0.25),
+    WRITES.has(tool) ? 'edits' : 'reads',
+    rule[3],
+  );
+}
+
+function noteShellAction(
+  note: (role: RoleId, weight: number, verb: string, label: string) => void,
+  tool: string,
+  target: string,
+): void {
+  if (!SHELLS.has(tool)) return;
+  for (const [role, weight, pattern, label] of COMMANDS)
+    if (pattern.test(target)) note(role, weight, 'runs', label);
+}
+
+function flushActionNotes(ledger: Ledger, counts: Map<string, ActionNote>): void {
   for (const { role, weight, label, verb, n } of counts.values())
     ledger.add(
       role,
@@ -145,6 +157,27 @@ function addActions(ledger: Ledger, actions: readonly ToolCall[]) {
       n > 1 ? `${verb}: ${label} ×${n}` : `${verb}: ${label}`,
       ACTIVITY_CAP,
     );
+}
+
+function addActions(ledger: Ledger, actions: readonly ToolCall[]) {
+  const recent = actions.slice(-RECENT_ACTIONS);
+  const counts = new Map<string, ActionNote>();
+  const note = (role: RoleId, weight: number, verb: string, label: string) => {
+    const key = `${verb}|${label}|${role}`;
+    const entry = counts.get(key) ?? { role, weight, label, verb, n: 0 };
+    entry.n++;
+    counts.set(key, entry);
+  };
+  for (const { tool, target } of recent) {
+    noteToolPatterns(note, tool);
+    if (!target) continue;
+    if (DELEGATES.has(tool)) noteDelegateAction(note, target);
+    else {
+      notePathAction(note, tool, target);
+      noteShellAction(note, tool, target);
+    }
+  }
+  flushActionNotes(ledger, counts);
   // Looking without touching is what research and exploration are.
   if (recent.length >= 5 && recent.every((a) => LOOKUPS.has(a.tool)))
     ledger.add('research', 'activity-lookups', 2, 'reads: read-only exploration');

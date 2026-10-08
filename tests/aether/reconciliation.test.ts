@@ -12,7 +12,7 @@ import {
   reconcileStalled,
   STALL_FLOOR_MS,
   report,
-} from '../../apps/control/src/services/runners.js';
+} from '../../apps/control/src/services/runtime/runners.js';
 import { command, fixture } from './fixture.js';
 
 const SECRET = 'fixed-test-cursor-secret-32-characters';

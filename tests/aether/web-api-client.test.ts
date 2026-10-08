@@ -4,11 +4,12 @@ import { installBrowserEnv, installGlobal, removeBrowserEnv } from './fixtures/b
 // The browser's API client against a fake `fetch`: what it sends (credentials, CSRF token, content type), how it recovers
 // when another tab rotated the token, and where it keeps the token.
 const env = installBrowserEnv();
-const { api } = await import('../../apps/web/src/api.js');
-const { ApiError } = await import('../../apps/web/src/api-error.js');
-const { ensureCsrf, forgetCsrf, refreshCsrf } = await import('../../apps/web/src/api-csrf.js');
-const { execute } = await import('../../apps/web/src/api-commands.js');
-const { login, pair } = await import('../../apps/web/src/api-session.js');
+const { api } = await import('../../apps/web/src/lib/api/api.js');
+const { ApiError } = await import('../../apps/web/src/lib/api/api-error.js');
+const { ensureCsrf, forgetCsrf, refreshCsrf } =
+  await import('../../apps/web/src/lib/api/api-csrf.js');
+const { execute } = await import('../../apps/web/src/lib/api/api-commands.js');
+const { login, pair } = await import('../../apps/web/src/lib/api/api-session.js');
 afterAll(removeBrowserEnv);
 
 type Sent = { url: string; init: RequestInit & { headers: Record<string, string> } };

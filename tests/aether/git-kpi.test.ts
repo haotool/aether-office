@@ -10,9 +10,9 @@ import {
   parseShortstat,
   resetGitKpiCache,
   sumKpis,
-} from '../../apps/control/src/services/git-kpi.js';
-import { windowDays } from '../../apps/control/src/services/usage-aggregate.js';
-import { dayKeyOf } from '../../apps/control/src/services/usage-parse.js';
+} from '../../apps/control/src/services/git/git-kpi.js';
+import { windowDays } from '../../apps/control/src/services/usage/usage-aggregate.js';
+import { dayKeyOf } from '../../apps/control/src/services/usage/usage-parse.js';
 
 const dayOf = dayKeyOf('UTC');
 const DAY = 86_400_000;

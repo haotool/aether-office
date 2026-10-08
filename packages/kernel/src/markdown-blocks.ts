@@ -44,6 +44,44 @@ function cells(line: string): string[] {
 const alignOf = (cell: string): Align =>
   /^:-+:$/.test(cell) ? 'center' : /-:$/.test(cell) ? 'right' : /^:-/.test(cell) ? 'left' : null;
 
+function readListItemBody(
+  lines: string[],
+  i: number,
+  base: number,
+  text: string,
+): { body: string[]; next: number } {
+  const body = [text];
+  let j = i + 1;
+  // The item continues over lines indented deeper than its marker, and over blank lines between them.
+  while (j < lines.length) {
+    const line = lineAt(lines, j);
+    if (line.trim() === '') {
+      const ahead = lines.slice(j).find((l) => l.trim() !== '');
+      if (ahead === undefined || indentOf(ahead) <= base) break;
+    } else if (indentOf(line) <= base) break;
+    body.push(line);
+    j++;
+  }
+  return { body, next: j };
+}
+
+function dedentListItemBody(body: string[], text: string): string[] {
+  const inner = body.slice(1).filter((l) => l.trim() !== '');
+  const cut = inner.length ? Math.min(...inner.map(indentOf)) : 0;
+  return [text, ...body.slice(1).map((l) => l.replace(new RegExp(`^\\s{0,${cut}}`), ''))];
+}
+
+function skipListItemBlanks(lines: string[], i: number): number {
+  let at = i;
+  while (
+    at < lines.length &&
+    lineAt(lines, at).trim() === '' &&
+    marker(lines.slice(at).find((l) => l.trim() !== '') ?? '')
+  )
+    at++;
+  return at;
+}
+
 /** The list that starts at `lines[at]`: its items (with their nested blocks) and the index just past it. */
 function readList(
   lines: string[],
@@ -62,32 +100,10 @@ function readList(
     let text = (ordered ? head[3] : head[2]) ?? '';
     const task = ordered ? null : TASK.exec(text);
     if (task) text = task[2] ?? '';
-    const body = [text];
-    let j = i + 1;
-    // The item continues over lines indented deeper than its marker, and over blank lines between them.
-    while (j < lines.length) {
-      const line = lineAt(lines, j);
-      if (line.trim() === '') {
-        const ahead = lines.slice(j).find((l) => l.trim() !== '');
-        if (ahead === undefined || indentOf(ahead) <= base) break;
-      } else if (indentOf(line) <= base) break;
-      body.push(line);
-      j++;
-    }
-    const inner = body.slice(1).filter((l) => l.trim() !== '');
-    const cut = inner.length ? Math.min(...inner.map(indentOf)) : 0;
-    const dedented = [
-      text,
-      ...body.slice(1).map((l) => l.replace(new RegExp(`^\\s{0,${cut}}`), '')),
-    ];
+    const { body, next } = readListItemBody(lines, i, base, text);
+    const dedented = dedentListItemBody(body, text);
     items.push({ checked: task ? task[1] !== ' ' : null, blocks: parseBlocks(dedented) });
-    i = j;
-    while (
-      i < lines.length &&
-      lineAt(lines, i).trim() === '' &&
-      marker(lines.slice(i).find((l) => l.trim() !== '') ?? '')
-    )
-      i++;
+    i = skipListItemBlanks(lines, next);
   }
   const start = ordered ? Number(first[2]) : 1;
   return { block: { type: 'list', ordered, start, items }, next: i };

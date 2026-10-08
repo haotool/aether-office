@@ -4,20 +4,20 @@
 // difference in a platform's maths cannot fail a test.
 import { createHash } from 'node:crypto';
 import type { Agent } from '../../../packages/contracts/src/index.js';
-import type * as Building from '../../../packages/office-scene/src/building.js';
-import type * as Director from '../../../packages/office-scene/src/director.js';
-import type * as DeskItems from '../../../packages/office-scene/src/desk-items.js';
-import type * as Garden from '../../../packages/office-scene/src/garden-geometry.js';
-import type * as Genome from '../../../packages/office-scene/src/flower-genome.js';
-import type * as Layout from '../../../packages/office-scene/src/layout.js';
-import type * as Multi from '../../../packages/office-scene/src/multi-view.js';
-import type * as ScreenLayout from '../../../packages/office-scene/src/screen-layout.js';
-import type * as ScreenTheme from '../../../packages/office-scene/src/screen-theme.js';
-import type * as ScreenViews from '../../../packages/office-scene/src/screen-views.js';
+import type * as Building from '../../../packages/office-scene/src/environment/building.js';
+import type * as Director from '../../../packages/office-scene/src/environment/director.js';
+import type * as DeskItems from '../../../packages/office-scene/src/desks/desk-items.js';
+import type * as Garden from '../../../packages/office-scene/src/core/garden-geometry.js';
+import type * as Genome from '../../../packages/office-scene/src/flowers/flower-genome.js';
+import type * as Layout from '../../../packages/office-scene/src/environment/layout.js';
+import type * as Multi from '../../../packages/office-scene/src/core/multi-view.js';
+import type * as ScreenLayout from '../../../packages/office-scene/src/screen/screen-layout.js';
+import type * as ScreenTheme from '../../../packages/office-scene/src/screen/screen-theme.js';
+import type * as ScreenViews from '../../../packages/office-scene/src/screen/screen-views.js';
 import type * as Schedule from '../../../packages/office-scene/src/life/schedule.js';
 import type * as Squad from '../../../packages/office-scene/src/squad/squad-model.js';
-import type * as Stalk from '../../../packages/office-scene/src/stalk-layout.js';
-import type * as Camera from '../../../packages/office-scene/src/shot-camera.js';
+import type * as Stalk from '../../../packages/office-scene/src/core/stalk-layout.js';
+import type * as Camera from '../../../packages/office-scene/src/core/shot-camera.js';
 import { lifeSchedule, screens } from './screen-scenarios.js';
 
 export type SceneModules = {

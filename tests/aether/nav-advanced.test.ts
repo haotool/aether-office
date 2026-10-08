@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { nav, tabPages, visibleGroups, visibleNav } from '../../apps/web/src/nav.js';
+import { nav, tabPages, visibleGroups, visibleNav } from '../../apps/web/src/lib/navigation/nav.js';
 
 const keys = (list: readonly (readonly [string, ...unknown[]])[]) => list.map(([key]) => key);
 

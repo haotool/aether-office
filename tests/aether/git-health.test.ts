@@ -9,7 +9,7 @@ import {
   gitHealth,
   worktreeSizes,
   parseWorktrees,
-} from '../../apps/control/src/services/git-health.js';
+} from '../../apps/control/src/services/git/git-health.js';
 import { command, fixture } from './fixture.js';
 
 it('parses worktree porcelain, marking the main, locked and prunable entries', () => {
@@ -121,6 +121,36 @@ it('cleans only merged, clean, unused worktrees, re-checking each and never forc
     expect(existsSync(join(dir, 'clean'))).toBe(false);
     expect(existsSync(join(dir, 'dirty', 'scratch.txt'))).toBe(true);
     expect(g(repo, 'branch', '--list', 'clean')).toContain('clean'); // branches are never deleted
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+it('skips a locked merged worktree even when it is clean', async () => {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'aether-git-locked-')));
+  const repo = join(dir, 'repo');
+  const g = (cwd: string, ...args: string[]) =>
+    execFileSync('git', ['-C', cwd, '-c', 'user.name=t', '-c', 'user.email=t@t', ...args], {
+      encoding: 'utf8',
+    });
+  try {
+    execFileSync('git', ['init', '-q', '-b', 'main', repo]);
+    writeFileSync(join(repo, 'a.txt'), 'a\n');
+    g(repo, 'add', '.');
+    g(repo, 'commit', '-qm', 'base');
+    g(repo, 'worktree', 'add', '-q', '-b', 'done', join(dir, 'wt-done'));
+    writeFileSync(join(dir, 'wt-done', 'b.txt'), 'b\n');
+    g(join(dir, 'wt-done'), 'add', '.');
+    g(join(dir, 'wt-done'), 'commit', '-qm', 'done work');
+    g(repo, 'merge', '-q', 'done');
+    g(repo, 'worktree', 'lock', '--reason', 'hold', join(dir, 'wt-done'));
+    const [result] = await cleanMergedWorktrees(repo, [join(dir, 'wt-done')], []);
+    expect(result).toEqual({
+      path: join(dir, 'wt-done'),
+      outcome: 'skipped',
+      reason: 'locked',
+    });
+    expect(existsSync(join(dir, 'wt-done'))).toBe(true);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

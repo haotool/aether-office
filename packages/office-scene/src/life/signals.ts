@@ -1,9 +1,9 @@
 import type { CommandTag } from '@aether/contracts';
-import type { Quality } from '../scene-types.js';
+import type { Quality } from '../scene/scene-types.js';
 
 /**
  * What the office-life layer reads: small facts about what the sessions did, derived on the web side from real data
- * (apps/web/src/features/life-signals.ts). The scene never parses a session, and nothing here claims an outcome.
+ * (apps/web/src/features/office/life-signals.ts). The scene never parses a session, and nothing here claims an outcome.
  */
 export type SignalKind =
   | 'tool.start' // a tool call began: `tool`, the short redacted `target` the hook kept and the closed-vocabulary `tags`

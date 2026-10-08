@@ -39,11 +39,11 @@ tree (it remains in the repository history). Still derived from it:
 
 - \`tools/blender/aokit.py\`: the Blender modelling kit (shapes, smooth skin, rigs and clips, export).
 - \`tools/blender/build_animals.py\`: its skinning steps follow the upstream \`blender/scripts/build_dog.py\`.
-- \`packages/office-scene/src/geometry.ts\`: geometry helpers adapted from the upstream \`src/client/world/toon.ts\`.
+- \`packages/office-scene/src/environment/geometry.ts\`: geometry helpers adapted from the upstream \`src/client/world/toon.ts\`.
 - The animal models in \`apps/web/public/assets/animals\` are output of scripts built on that kit.
 
 **Orca** ([stablyai/orca](https://github.com/stablyai/orca), commit \`373d951b\`), MIT License.
-\`apps/control/src/services/redaction.ts\` adapts the secret patterns of \`src/shared/crash-report-redaction.ts\`:
+\`apps/control/src/services/platform/redaction.ts\` adapts the secret patterns of \`src/shared/crash-report-redaction.ts\`:
 
 ${fence(`MIT License
 

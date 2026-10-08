@@ -6,7 +6,7 @@ import {
   heartbeat,
   report,
   reconcileOffline,
-} from '../../apps/control/src/services/runners.js';
+} from '../../apps/control/src/services/runtime/runners.js';
 import { command, fixture } from './fixture.js';
 const close: (() => void)[] = [];
 afterEach(() => {

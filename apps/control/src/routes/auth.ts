@@ -6,9 +6,9 @@ import {
   openSession,
   rotateCsrf,
   sessionActor,
-} from '../services/identity.js';
-import { MAX_ATTEMPTS, pruneAttempts } from '../services/attempts.js';
-import { PAIRING_TTL_MS, lanOrigins, pairingLinks } from '../services/pairing.js';
+} from '../services/domain/identity.js';
+import { MAX_ATTEMPTS, pruneAttempts } from '../services/runtime/attempts.js';
+import { PAIRING_TTL_MS, lanOrigins, pairingLinks } from '../services/remote/pairing.js';
 import { DomainError } from '@aether/kernel';
 import { z } from 'zod';
 import type { FastifyReply, FastifyRequest } from 'fastify';

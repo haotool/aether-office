@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { itemAt, lastOf, valueOf } from '../../packages/office-scene/src/checked.js';
+import { itemAt, lastOf, valueOf } from '../../packages/office-scene/src/environment/checked.js';
 
 describe('checked reads', () => {
   it('returns the element in range, for arrays, typed arrays and strings', () => {

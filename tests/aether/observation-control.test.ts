@@ -3,11 +3,11 @@ import { realpathSync } from 'node:fs';
 import { it, expect } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { Control } from '../../apps/control/src/control.js';
-import { enroll, heartbeat } from '../../apps/control/src/services/runners.js';
+import { enroll, heartbeat } from '../../apps/control/src/services/runtime/runners.js';
 import {
   reportObservation,
   listObservations,
-} from '../../apps/control/src/services/observations.js';
+} from '../../apps/control/src/services/domain/observations.js';
 import { command } from './fixture.js';
 it('persists only observed provenance, deduplicates reports and never advances managed work', () => {
   let now = 100000;

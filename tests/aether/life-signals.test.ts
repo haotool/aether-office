@@ -5,7 +5,7 @@ import {
   KONAMI,
   konamiStep,
   type LifeSnapshot,
-} from '../../apps/web/src/features/life-signals.js';
+} from '../../apps/web/src/features/office/life-signals.js';
 
 import { NOW, session, snap, type Call } from './life-sessions.js';
 

@@ -5,14 +5,14 @@ import {
   type Compaction,
   type ContextReading,
   type Tracker,
-} from '../../apps/web/src/features/compaction.js';
+} from '../../apps/web/src/features/conversation/compaction.js';
 import {
   COMPACTION_SECONDS,
   compactionLabel,
   contextLevel,
   easeOut,
   tweenSeconds,
-} from '../../packages/office-scene/src/context.js';
+} from '../../packages/office-scene/src/environment/context.js';
 
 const T0 = 1_800_000_000_000;
 const W = 200_000;

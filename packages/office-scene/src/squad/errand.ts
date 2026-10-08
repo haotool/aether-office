@@ -3,7 +3,7 @@
 // the member sits looking along -z, as in a desk's frame, so a walker is drawn by a group put at `origin` and turned by
 // `frameYaw`, with the plan's coordinates inside it (a pod faces any of four ways).
 import { findPath, type NavGrid, type Point } from '@aether/kernel';
-import { positionAt } from '../carriers.js';
+import { positionAt } from '../environment/carriers.js';
 import {
   CORE_RADIUS,
   SINK_MS,
@@ -12,8 +12,8 @@ import {
   pathLength,
   WAVE_MS,
   type Departure,
-} from '../departure.js';
-import type { Quality } from '../scene-types.js';
+} from '../animals/departure.js';
+import type { Quality } from '../scene/scene-types.js';
 import { ARRIVE_MS } from './squad-model.js';
 
 /** Radius of the floor a seated subagent and its stool take up: others walk round it. */

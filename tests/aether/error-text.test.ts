@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { errorText } from '../../apps/web/src/error-text.js';
+import { errorText } from '../../apps/web/src/lib/i18n/error-text.js';
 
 const CJK = /[㐀-鿿]/;
 

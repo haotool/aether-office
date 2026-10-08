@@ -209,6 +209,17 @@ describe('parseInline', () => {
     ]);
   });
 
+  it('respects bracket depth in link labels and drops cut-off destinations', () => {
+    expect(parseInline('[outer [inner](http://a.test) tail](http://b.test/x)')).toEqual([
+      { text: 'outer ', href: 'http://b.test/x' },
+      { text: 'inner', href: 'http://a.test' },
+      { text: ' tail', href: 'http://b.test/x' },
+    ]);
+    expect(parseInline('[a](<http://c.test/path> "title")')).toEqual([
+      { text: 'a', href: 'http://c.test/path' },
+    ]);
+  });
+
   it('only links http and https', () => {
     expect(
       parseInline(

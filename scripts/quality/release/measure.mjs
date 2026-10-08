@@ -1,5 +1,4 @@
 // Static measurements for release criteria (CHARTER §5.3 subset).
-import { readdirSync } from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { COGNITIVE_LIMIT } from '../ast.mjs';
@@ -8,12 +7,13 @@ import { LIMITS } from '../areas/structure.mjs';
 import { FLAKY } from '../areas/tests.mjs';
 import { findDuplicates } from '../dup.mjs';
 import { deadExports, fanIn } from '../graph.mjs';
-import { at, isSourceFile, locations, scan, top } from '../lib.mjs';
+import { SELF, at, fanInExcludedTarget, isSourceFile, locations, scan, top } from '../lib.mjs';
+import { parseFanInAllowlist } from './adr-allowlist.mjs';
+import { listRootItems } from './root-items.mjs';
 import { CODE_FILE, PRODUCT_SOURCE, lineCount, matching } from '../repo.mjs';
 
 const GENERATED = /(^|\/)generated\//;
 const TESTS_DIR = /^tests\//;
-const E2E_SUPPORT = /^e2e\/support\//;
 
 /** Path segments that mark process residue (see tests for exceptions). */
 export const RESIDUE_PATTERNS = [
@@ -28,7 +28,7 @@ export const RESIDUE_PATTERNS = [
 ];
 
 export const RESIDUE_EXCEPTIONS = new Set([
-  'apps/control/src/services/oldest-entry.ts',
+  'apps/control/src/services/platform/oldest-entry.ts',
   'packages/providers/generated/codex-0.159.2-ts/v2/FsCopyParams.ts',
   'packages/providers/generated/codex-0.159.2-ts/v2/FsCopyResponse.ts',
   'packages/providers/generated/codex-0.159.2/v2/FsCopyParams.json',
@@ -130,6 +130,15 @@ export function measureDuplicates(repo) {
   };
 }
 
+/** Triple-slash env typings (for example Vite's client types) are not importable modules. */
+export function isAmbientTypeReference(file, text) {
+  return (
+    file.endsWith('.d.ts') &&
+    /^\s*\/\/\/\s*<reference\s+types=/.test(text) &&
+    !/\bexport\b/.test(text)
+  );
+}
+
 export function measureDeadCode(repo, facts, graph) {
   const productFacts = facts.filter((f) => PRODUCT_SOURCE.test(f.file));
   const dead = deadExports(productFacts, graph.uses, {
@@ -139,7 +148,12 @@ export function measureDeadCode(repo, facts, graph) {
   for (const [, targets] of graph.runtime) for (const t of targets) imported.add(t);
   const orphanFiles = productFacts
     .map((f) => f.file)
-    .filter((file) => !imported.has(file) && !/\/main\.tsx?$/.test(file));
+    .filter(
+      (file) =>
+        !imported.has(file) &&
+        !/\/main\.tsx?$/.test(file) &&
+        !isAmbientTypeReference(file, repo.read(file)),
+    );
   const depViolations = unusedDependencies(repo);
   const violations = dead.length + orphanFiles.length + depViolations.length;
   return {
@@ -207,15 +221,21 @@ export function measureDirFileCount(repo) {
   };
 }
 
-export function measureFanIn(graph) {
-  const include = (from) => !TESTS_DIR.test(from) && !E2E_SUPPORT.test(from);
-  const importers = [...fanIn(graph.runtime, include)].filter(
-    ([file, n]) => n > LIMITS.fanIn && !/\/index\.tsx?$/.test(file),
+export function measureFanIn(graph, repo = null) {
+  const allow = repo
+    ? parseFanInAllowlist(repo)
+    : { allowed: new Set(), violations: 0, detail: [] };
+  const importers = [...fanIn(graph.runtime, (f) => !SELF.test(f))].filter(
+    ([file, n]) =>
+      n > LIMITS.fanIn &&
+      !/\/index\.tsx?$/.test(file) &&
+      !fanInExcludedTarget(file) &&
+      !allow.allowed.has(file),
   );
   return {
-    violations: importers.length,
-    value: importers.length,
-    detail: top(importers.map(([file, n]) => at(file, 1, `${n} importers`))),
+    violations: importers.length + allow.violations,
+    value: importers.length + allow.violations,
+    detail: top([...allow.detail, ...importers.map(([file, n]) => at(file, 1, `${n} importers`))]),
   };
 }
 
@@ -308,7 +328,7 @@ export function measureGitHygiene(root) {
 }
 
 export function measureRootItems(root) {
-  const items = readdirSync(root).filter((name) => name !== '.git');
+  const items = listRootItems(root);
   const violations = Math.max(0, items.length - 25);
   return {
     violations,

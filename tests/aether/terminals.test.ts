@@ -1,7 +1,7 @@
 import { it, expect } from 'vitest';
 import { tmpdir } from 'node:os';
 import { Control } from '../../apps/control/src/control.js';
-import { enroll, heartbeat } from '../../apps/control/src/services/runners.js';
+import { enroll, heartbeat } from '../../apps/control/src/services/runtime/runners.js';
 import {
   claimTerminalCommand,
   reportTerminalCommand,
@@ -9,7 +9,7 @@ import {
   readTerminal,
   listTerminals,
   reconcileTerminals,
-} from '../../apps/control/src/services/terminals.js';
+} from '../../apps/control/src/services/platform/terminals.js';
 import { command } from './fixture.js';
 it('persists scoped terminal commands, fences takeover and never redispatches uncertain input', () => {
   let now = 100000;

@@ -12,14 +12,14 @@ beyond the readiness check: pushing and changing GitHub settings stay manual dec
 - [ ] Decide the canonical author identity in `.mailmap` (a GitHub noreply address is
       `<id>+haotool@users.noreply.github.com`; the id is the `id` field of `https://api.github.com/users/haotool`).
       This is the maintainer's decision: the file lists the identity that exists today, and nothing in the tooling changes it.
-- [ ] Confirm `.github/CODEOWNERS` (`* @haotool`): also a maintainer decision. The branch ruleset in step 4 requires Code
+- [ ] Confirm `.github/CODEOWNERS` (`* @s123104`): also a maintainer decision. The branch ruleset in step 4 requires Code
       Owner review, so add a second owner here before a second maintainer joins, or the single owner cannot approve their
       own pull requests.
 - [ ] `CHANGELOG.md` already has the `[0.4.0] - 2026-10-07` entry above an empty `[Unreleased]`: change the date if the release
       day differs, and set `version` to `0.4.0` in the root `package.json` and the seven workspace `package.json` files (it is
       `0.4.0-dev.0` until then; `tests/aether/version.test.ts` fails if they differ). Runtime code reads the version from
       the root file (`APP_VERSION` in `@aether/contracts`), so nothing else changes except the `v0.4 DEV` badge in
-      `apps/web/src/features/Sidebar.tsx` and the version in `SECURITY.md`; afterwards the search for the old version
+      `apps/web/src/features/shell-chrome/Sidebar.tsx` and the version in `SECURITY.md`; afterwards the search for the old version
       string must find only the history in `CHANGELOG.md`.
 - [ ] Run the full checks once: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test`, `pnpm build`,
       `pnpm exec playwright test`, `pnpm verify:clean`.

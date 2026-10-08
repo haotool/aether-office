@@ -1,4 +1,4 @@
-import { registerLocale } from '../../apps/web/src/i18n.js';
+import { registerLocale } from '../../apps/web/src/lib/i18n/i18n.js';
 import { en } from '../../apps/web/src/locales/en.js';
 import { zh } from '../../apps/web/src/locales/zh.js';
 

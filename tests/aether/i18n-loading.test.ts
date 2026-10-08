@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import { en } from './../../apps/web/src/locales/en.js';
-import { zh } from './../../apps/web/src/locales/zh.js';
+import { en } from '../../apps/web/src/locales/en.js';
+import { zh } from '../../apps/web/src/locales/zh.js';
 
-// A fresh module has no language table: the page downloads only the one in use (apps/web/src/i18n.ts).
+// A fresh module has no language table: the page downloads only the one in use (apps/web/src/lib/i18n/i18n.ts).
 const fresh = async () => {
   vi.resetModules();
-  return import('../../apps/web/src/i18n.js');
+  return import('../../apps/web/src/lib/i18n/i18n.js');
 };
 
 describe('lazy language tables', () => {

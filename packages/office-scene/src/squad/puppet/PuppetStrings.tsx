@@ -7,9 +7,9 @@ import {
   type InstancedMesh,
   type InterleavedBufferAttribute,
 } from 'three';
-import { distanceFade } from '../../interplay.js';
-import { floorY } from '../../scene-geometry.js';
-import type { Quality } from '../../scene-types.js';
+import { distanceFade } from '../../environment/interplay.js';
+import { floorY } from '../../scene/scene-geometry.js';
+import type { Quality } from '../../scene/scene-types.js';
 import {
   WAITING_AMBER,
   squadMaterials,

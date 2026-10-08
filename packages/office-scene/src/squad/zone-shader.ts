@@ -7,7 +7,7 @@ import {
   PlaneGeometry,
   ShaderMaterial,
 } from 'three';
-import { DITHER_END, DITHER_PARS, DITHERED } from '../dither.js';
+import { DITHER_END, DITHER_PARS, DITHERED } from '../environment/dither.js';
 
 const vertexShader = /* glsl */ `
   attribute vec2 aSize;

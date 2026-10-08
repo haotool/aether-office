@@ -12,8 +12,8 @@ import {
   tokensOf,
   toneOf,
   windowName,
-} from '../../apps/web/src/features/kpi-model.js';
-import { emptyScope, normalizeUsage } from '../../apps/web/src/usage-compat.js';
+} from '../../apps/web/src/features/kpi/kpi-model.js';
+import { emptyScope, normalizeUsage } from '../../apps/web/src/features/kpi/usage-compat.js';
 
 const totals = (over: Partial<UsageTotals> = {}): UsageTotals => ({
   input: 0,

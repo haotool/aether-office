@@ -11,7 +11,7 @@ afterEach(async () => {
 function setup() {
   const f = fixture();
   clean.push(() => f.control.close());
-  const app = createServer(f.control, { origin: 'http://127.0.0.1:4310' });
+  const app = createServer(f.control, { origin: 'http://127.0.0.1:8780' });
   clean.push(() => app.close());
   return { ...f, app };
 }
@@ -19,7 +19,7 @@ const get = (f: ReturnType<typeof setup>, encoding?: string) =>
   f.app.inject({
     url: '/api/capabilities', // a few KB of JSON
     headers: {
-      host: '127.0.0.1:4310',
+      host: '127.0.0.1:8780',
       authorization: `Bearer ${f.owner.token}`,
       ...(encoding ? { 'accept-encoding': encoding } : {}),
     },
@@ -41,7 +41,7 @@ it('leaves a client that asks for nothing, and small answers, alone', async () =
   expect((await get(f, 'identity')).headers['content-encoding']).toBeUndefined();
   const small = await f.app.inject({
     url: '/health',
-    headers: { host: '127.0.0.1:4310', 'accept-encoding': 'gzip' },
+    headers: { host: '127.0.0.1:8780', 'accept-encoding': 'gzip' },
   });
   expect(small.headers['content-encoding']).toBeUndefined();
 });

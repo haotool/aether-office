@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import type { Group } from 'three';
-import type { EmoteCue } from '../Animal.js';
+import type { EmoteCue } from '../animals/Animal.js';
 import { arrivalAt, type Arrival, type ErrandPose } from './errand.js';
 
 /**

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { parseVerifiers, parseVerifyOutcome } from '../../apps/web/src/features/review-model.js';
+import {
+  parseVerifiers,
+  parseVerifyOutcome,
+} from '../../apps/web/src/features/tasks-git/review-model.js';
 
 describe('review model', () => {
   it('reads the verifiers of a loaded workspace and none otherwise', () => {

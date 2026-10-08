@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { fittedOffset } from '../../packages/office-scene/src/scene-geometry.js';
+import { fittedOffset } from '../../packages/office-scene/src/scene/scene-geometry.js';
 
 const OVERVIEW: [number, number, number] = [30, 34, 44];
 const length = (v: number[]) => Math.hypot(...v);

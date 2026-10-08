@@ -96,6 +96,34 @@ function cellsTo(g: NavGrid, parent: Map<number, number>, at: number): Point[] {
   return cells.reverse();
 }
 
+type PathNode = { f: number; c: number; r: number };
+type PathSearch = {
+  g: NavGrid;
+  gc: number;
+  gr: number;
+  index: (c: number, r: number) => number;
+  cost: Map<number, number>;
+  parent: Map<number, number>;
+  push: (n: PathNode) => void;
+};
+
+function relaxPathNeighbours(search: PathSearch, c: number, r: number, base: number): void {
+  const { g, gc, gr, index, cost, parent, push } = search;
+  for (const [dc, dr] of NEIGHBOURS) {
+    const nc = c + dc;
+    const nr = r + dr;
+    if (!open(g, nc, nr)) continue;
+    if (dc !== 0 && dr !== 0 && !(open(g, c + dc, r) && open(g, c, r + dr))) continue; // no corner cutting
+    const next = base + Math.hypot(dc, dr);
+    const key = index(nc, nr);
+    if (next < (cost.get(key) ?? Infinity)) {
+      cost.set(key, next);
+      parent.set(key, index(c, r));
+      push({ f: next + Math.hypot(gc - nc, gr - nr), c: nc, r: nr });
+    }
+  }
+}
+
 export function findPath(g: NavGrid, from: Point, to: Point): PathResult {
   const start = nearestWalkable(g, from);
   const goal = nearestWalkable(g, to);
@@ -105,11 +133,12 @@ export function findPath(g: NavGrid, from: Point, to: Point): PathResult {
   const index = (c: number, r: number) => r * g.cols + c;
   const cost = new Map<number, number>([[index(sc, sr), 0]]);
   const parent = new Map<number, number>();
-  const heap: { f: number; c: number; r: number }[] = [{ f: 0, c: sc, r: sr }];
-  const push = (n: (typeof heap)[number]) => {
+  const heap: PathNode[] = [{ f: 0, c: sc, r: sr }];
+  const push = (n: PathNode) => {
     heap.push(n);
     heap.sort((a, b) => b.f - a.f); // small grid: simple and deterministic
   };
+  const search: PathSearch = { g, gc, gr, index, cost, parent, push };
   const done = new Set<number>();
   for (let node = heap.pop(); node; node = heap.pop()) {
     const { c, r } = node;
@@ -117,20 +146,7 @@ export function findPath(g: NavGrid, from: Point, to: Point): PathResult {
     if (done.has(here)) continue;
     done.add(here);
     if (c === gc && r === gr) return { status: 'ok', points: smooth(g, cellsTo(g, parent, here)) };
-    const base = cost.get(here) ?? Infinity;
-    for (const [dc, dr] of NEIGHBOURS) {
-      const nc = c + dc;
-      const nr = r + dr;
-      if (!open(g, nc, nr)) continue;
-      if (dc !== 0 && dr !== 0 && !(open(g, c + dc, r) && open(g, c, r + dr))) continue; // no corner cutting
-      const next = base + Math.hypot(dc, dr);
-      const key = index(nc, nr);
-      if (next < (cost.get(key) ?? Infinity)) {
-        cost.set(key, next);
-        parent.set(key, here);
-        push({ f: next + Math.hypot(gc - nc, gr - nr), c: nc, r: nr });
-      }
-    }
+    relaxPathNeighbours(search, c, r, cost.get(here) ?? Infinity);
   }
   return { status: 'unreachable' };
 }

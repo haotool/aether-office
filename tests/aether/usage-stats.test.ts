@@ -2,7 +2,7 @@ import { appendFileSync, readFileSync, rmSync, truncateSync, writeFileSync } fro
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { usageResponseSchema } from '../../packages/contracts/src/index.js';
-import { windowDays } from '../../apps/control/src/services/usage-aggregate.js';
+import { windowDays } from '../../apps/control/src/services/usage/usage-aggregate.js';
 import { claudeFile, claudeLine, writeLines } from './usage-fixtures.js';
 import { A, NOW, touch, usageEnv } from './usage-stats-env.js';
 

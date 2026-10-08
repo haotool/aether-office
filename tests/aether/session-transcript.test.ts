@@ -3,9 +3,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { createServer } from '../../apps/control/src/server.js';
-import { resetLocalSessionCache } from '../../apps/control/src/services/local-sessions.js';
-import { redactSecrets } from '../../apps/control/src/services/redaction.js';
-import { parseTranscript } from '../../apps/control/src/services/session-transcript.js';
+import { resetLocalSessionCache } from '../../apps/control/src/services/runtime/local-sessions.js';
+import { redactSecrets } from '../../apps/control/src/services/platform/redaction.js';
+import { parseTranscript } from '../../apps/control/src/services/sessions/session-transcript.js';
 import { fixture } from './fixture.js';
 
 const line = (v: unknown) => JSON.stringify(v);

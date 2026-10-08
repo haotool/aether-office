@@ -10,6 +10,7 @@ import { tests } from './areas/tests.mjs';
 import { types } from './areas/types.mjs';
 import { ui } from './areas/ui.mjs';
 import { buildContext } from './context.mjs';
+import { qualityInputs } from './inputs.mjs';
 import { overall, scoreArea } from './model.mjs';
 
 export const REPORT_VERSION = 1;
@@ -52,5 +53,10 @@ export async function scoreRepository(root, names = []) {
     const [title, measure] = AREAS[name];
     areas.push(scoreArea(name, title, await measure(context.repo, { ...context, readiness })));
   }
-  return { version: REPORT_VERSION, overall: overall(areas), areas };
+  return {
+    version: REPORT_VERSION,
+    overall: overall(areas),
+    areas,
+    inputs: qualityInputs(context.repo),
+  };
 }

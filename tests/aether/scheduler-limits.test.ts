@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { expect, it } from 'vitest';
-import { claim, enroll, report } from '../../apps/control/src/services/runners.js';
+import { claim, enroll, report } from '../../apps/control/src/services/runtime/runners.js';
 import { command, fixture } from './fixture.js';
 
 const agent = (f: ReturnType<typeof fixture>, name: string, provider = 'demo') =>

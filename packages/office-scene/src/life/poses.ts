@@ -1,4 +1,4 @@
-import type { PoseRequest } from '../pose-cues.js';
+import type { PoseRequest } from '../core/pose-cues.js';
 import { EACH_DESK_MAX } from './place.js';
 import type { LifeRule } from './registry.js';
 import type { LifeCue } from './schedule.js';

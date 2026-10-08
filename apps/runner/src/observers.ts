@@ -13,6 +13,36 @@ type Source = {
   name: string;
   profile: ObservationProfile;
 };
+
+function assertObservationRootsStable(profile: ObservationProfile) {
+  if (
+    realpathSync(profile.approvedRoot) !== profile.approvedRoot ||
+    realpathSync(profile.projectRoot) !== profile.projectRoot
+  )
+    throw new Error('OBSERVATION_PATH_CHANGED');
+}
+
+function observationScope(profile: ObservationProfile) {
+  return digest(
+    JSON.stringify([
+      profile.projectId,
+      profile.agentId,
+      profile.provider,
+      profile.projectRoot,
+      profile.approvedRoot,
+    ]),
+  );
+}
+
+function observationFilesFor(profile: ObservationProfile, journal: Journal, scope: string) {
+  const files = new Set(profile.files);
+  if (!profile.discover) return files;
+  for (const file of discoverObservationFiles(profile.approvedRoot)) files.add(file);
+  for (const entry of Object.values(journal.state.observers))
+    if (entry.scope === scope) files.add(entry.file);
+  return files;
+}
+
 export class ObserverRunner {
   private stopped = false;
   stop() {
@@ -24,26 +54,9 @@ export class ObserverRunner {
   private nextDiscovery = 0;
   private refresh() {
     for (const [name, profile] of this.native.observationProfiles) {
-      if (
-        realpathSync(profile.approvedRoot) !== profile.approvedRoot ||
-        realpathSync(profile.projectRoot) !== profile.projectRoot
-      )
-        throw new Error('OBSERVATION_PATH_CHANGED');
-      const scope = digest(
-        JSON.stringify([
-          profile.projectId,
-          profile.agentId,
-          profile.provider,
-          profile.projectRoot,
-          profile.approvedRoot,
-        ]),
-      );
-      const files = new Set(profile.files);
-      if (profile.discover) {
-        for (const file of discoverObservationFiles(profile.approvedRoot)) files.add(file);
-        for (const entry of Object.values(this.journal.state.observers))
-          if (entry.scope === scope) files.add(entry.file);
-      }
+      assertObservationRootsStable(profile);
+      const scope = observationScope(profile);
+      const files = observationFilesFor(profile, this.journal, scope);
       if (files.size > 64) throw new Error('OBSERVATION_FILE_LIMIT');
       for (const file of files) {
         const key = digest(scope + ':' + file);

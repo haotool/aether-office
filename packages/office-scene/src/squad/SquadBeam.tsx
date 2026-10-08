@@ -9,7 +9,7 @@ import {
   Quaternion,
   Vector3,
 } from 'three';
-import { floorY } from '../scene-geometry.js';
+import { floorY } from '../scene/scene-geometry.js';
 import {
   BEAM_CAPACITY,
   BEAM_FROM_Y,

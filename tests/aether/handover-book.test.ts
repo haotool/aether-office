@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { STAND_MS } from '../../packages/office-scene/src/departure.js';
+import { STAND_MS } from '../../packages/office-scene/src/animals/departure.js';
 import {
   DESK_GAP_MS,
   JITTER_MS,

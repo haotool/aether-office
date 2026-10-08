@@ -143,6 +143,33 @@ function noticeOf(name: string, inner: string): Notice | null {
   return label ? { kind: 'context', label, text: body } : { kind: 'hook', text: body };
 }
 
+function noteCommandPart(
+  command: { name: string; args: string; slot: number },
+  notices: Notice[],
+  push: (notice: Notice) => void,
+  name: string,
+  inner: string,
+): void {
+  if (command.slot < 0) command.slot = notices.length;
+  command[name === 'command-name' ? 'name' : 'args'] = plain(inner);
+  if (command.slot === notices.length) push({ kind: 'command', name: '', args: '' });
+}
+
+function noteWrapperOpener(
+  command: { name: string; args: string; slot: number },
+  notices: Notice[],
+  push: (notice: Notice) => void,
+  name: string,
+  inner: string,
+): void {
+  if (name === 'command-name' || name === 'command-args') {
+    noteCommandPart(command, notices, push, name, inner);
+    return;
+  }
+  const notice = noticeOf(name, inner);
+  if (notice) push(notice);
+}
+
 /** The notices of a text and what is left of it, before any HTML is neutralized. */
 function extract(text: string): Extraction {
   if (!text.includes('<') && !text.trimStart().startsWith('[')) return { rest: text, notices: [] };
@@ -167,14 +194,7 @@ function extract(text: string): Extraction {
     parts.push(masked.slice(at, m.index));
     at = end;
     OPENER.lastIndex = end;
-    if (name === 'command-name' || name === 'command-args') {
-      if (command.slot < 0) command.slot = notices.length;
-      command[name === 'command-name' ? 'name' : 'args'] = plain(inner);
-      if (command.slot === notices.length) push({ kind: 'command', name: '', args: '' });
-    } else {
-      const notice = noticeOf(name, inner);
-      if (notice) push(notice);
-    }
+    noteWrapperOpener(command, notices, push, name, inner);
   }
   parts.push(masked.slice(at));
   return finish(restore(parts.join('')).trim(), notices, command);

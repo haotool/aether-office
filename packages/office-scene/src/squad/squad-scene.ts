@@ -1,9 +1,9 @@
 // What the scene hands the squad layers: its own state (the floor on view, the hover, the label table) and its interaction,
 // in one object, so the scene mounts the layers with one line each and the layers pick what they need.
-import type { Engagement } from '../interplay.js';
-import type { OfficeSceneProps } from '../scene-props.js';
-import type { PoseApi } from '../use-pose-cues.js';
-import type { SceneInteraction } from '../use-scene-interaction.js';
+import type { Engagement } from '../environment/interplay.js';
+import type { OfficeSceneProps } from '../scene/scene-props.js';
+import type { PoseApi } from '../core/use-pose-cues.js';
+import type { SceneInteraction } from '../core/use-scene-interaction.js';
 import type { MemberActions } from './SquadMember.js';
 
 export type SquadSceneContext = {

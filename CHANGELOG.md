@@ -9,7 +9,7 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 - A disabled control names its reason to assistive technology as well as in a tooltip: `whyNot` sets `aria-describedby` to a text kept
   in the page by `ReasonDefs`; about sixty buttons and fields that were off with no reason now give one (new `why*` locale keys in both
-  languages). `e2e/disabled-reasons.spec.ts` checks the main pages as the owner and as a viewer, with axe.
+  languages). `e2e/settings/disabled-reasons.spec.ts` checks the main pages as the owner and as a viewer, with axe.
 - `apps/web/src/ui.tsx`, `api.ts` and `localSessions.ts` are split into focused modules (`ui/*`, `api-csrf`, `api-session`, `api-commands`,
   `api-error`, `session-names`, `session-attention`) and every importer names the module it uses; no names or behaviour changed. `useLocale`
   reads the interface language without importing the whole preferences store.
@@ -53,15 +53,15 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 - Intro tour caption moves to the top left, clear of the floor readout and KPI plaque (D11). The floor panel's buttons keep their glass look in the light theme, and the phone's attention chip uses the scene gold so it reads in both themes (D12).
 - Phone touch targets reach 44px: the brand, hint toggle, KPI chips, floor rail, sidebar and settings links gain the hit area; `.primary` is 44px on touch because its cut corner clips a hit area (D18). The KPI chip strip fades at its right edge.
 - `@media` uses only 760/1000/1250 wide and 500 tall (four documented exceptions); narrow-component rules became container queries. The 36px phone override, the duplicate `--tabbar-h` and every `!important` outside the preference blocks are gone.
-- `forced-colors`, `prefers-contrast: more` and `prefers-reduced-transparency` are supported (`e2e/preferences.spec.ts`).
-- `scripts/check-design-tokens.mjs` holds eight strict rules to `scripts/design-token-baseline.json` (a count may only go down), with the `/* token-lint: <reason> */` escape hatch; the quality scorecard reads the same rules. `e2e/role-variance.spec.ts` no longer excludes any chrome and adds a 44px hit-area check and the native top bar at six widths.
+- `forced-colors`, `prefers-contrast: more` and `prefers-reduced-transparency` are supported (`e2e/settings/preferences.spec.ts`).
+- `scripts/check-design-tokens.mjs` holds eight strict rules to `scripts/design-token-baseline.json` (a count may only go down), with the `/* token-lint: <reason> */` escape hatch; the quality scorecard reads the same rules. `e2e/ui/role-variance.spec.ts` no longer excludes any chrome and adds a 44px hit-area check and the native top bar at six widths.
 
 ### Added
 
 - UI consistency, tokens and shared controls: a control scale (`--control-h-sm/md/lg` 32/36/40 with a mouse, 36/40/44 on touch,
   switched in one place), `--bar-h`, `--lh-*`, `--shadow-sm/md/lg`, `--dur-slow`, role radii and one focus ring; the shared
   `u-` classes (`u-btn`, `u-field`, `u-chip`, `u-card`, `u-row`, `u-head`, `u-empty`, `u-switch`, `u-segmented`) with the old
-  classes as aliases; `e2e/role-variance.spec.ts` caps the distinct heights per control role on 14 views at three sizes.
+  classes as aliases; `e2e/ui/role-variance.spec.ts` caps the distinct heights per control role on 14 views at three sizes.
 - A computed quality scorecard: `pnpm run quality` scores ten areas (structure, types and gates, tests, UI tokens, accessibility and
   i18n, performance budgets, docs truth, security, open-source readiness, product maturity) from measurable rules with their exact
   files and lines (`--json`, `--area`, `--target 95`); `quality:report` writes `docs/quality/scorecard.{md,json}` and raises the
@@ -70,7 +70,7 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 - UI consistency, 3D scene overlays: the scene toolbar's segments, buttons and select take `--control-h-sm` (32 with a mouse,
   was 30 to 36; the finger-size rule moved out of `touch-targets.css`), the name tag and character menu focus rings use the
   focus tokens, line heights, the HUD transition and the intro dip use `--lh-*` and `--dur-*`, the character menu's shadow is
-  `--shadow-md`; `e2e/scene-hud-consistency.spec.ts` checks the toolbar heights at three sizes.
+  `--shadow-md`; `e2e/scene/scene-hud-consistency.spec.ts` checks the toolbar heights at three sizes.
 - Licence compliance: `THIRD_PARTY_NOTICES.md` is generated from the lockfile and the installed packages (every shipped
   package with its licence text and NOTICE file) by `pnpm run notices`; `pnpm run notices:check` (in CI) fails on stale notices
   and on an unknown, denied or unapproved licence; `--sbom <file>` writes a CycloneDX 1.5 SBOM. `REUSE.toml`, `LICENSES/` and a
@@ -83,7 +83,7 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   only reports. `pnpm lint` also rejects bare Node built-ins (`fs`) in the kernel and web code, anything but `zod` in the
   contracts, `better-sqlite3` in the runner, and a committed `.only` or `@ts-ignore` in `scripts`, `tests` and `e2e`.
 - `docs/architecture.md` describes how to add a layout `schemaVersion`.
-- `e2e/shell-consistency.spec.ts`: the top bar, its project select and sign-out link, the sessions table actions, the Settings
+- `e2e/ui/shell-consistency.spec.ts`: the top bar, its project select and sign-out link, the sessions table actions, the Settings
   switch and segmented, the KPI office chips and the active nav link's focus ring keep to the control scale.
 - 3D scene, mobile quality (see "Mobile quality" in `docs/design-system.md`): `?msaa=1` / `?msaa=0` overrides the tier's MSAA choice
   so it can be measured on a real phone (the default is unchanged); the soft additive gradients (light shafts, squad beam and zone,
@@ -153,7 +153,7 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   `u-chip`; Send and the text box take `--control-h-md`; the panel, feed, transcript and composer use `--lh-*` instead of
   literal line heights, `--dur-fast`, `--shadow-md` and the one focus ring (the resize handle's grip, the squad tree rows and
   a focused turn included); the other panel controls read `--control-h-sm/lg` instead of the older touch sizes (the squad chip
-  and relation chip stay 44px on a finger because they sit in a scroller). `e2e/panel-consistency.spec.ts` checks chip
+  and relation chip stay 44px on a finger because they sit in a scroller). `e2e/ui/panel-consistency.spec.ts` checks chip
   heights, Send against the box and the absence of nested vertical scrollers in the panel at three sizes.
 - Control and runner restructure (no behaviour change): every function in `apps/control/src` and `apps/runner/src` is at most 50
   lines (`Control.execute` dispatches through one typed handler table, `changeWork`, the MCP server, the observer, the local
@@ -604,10 +604,10 @@ For anyone who ran a development build before this release.
 - A first-visit intro tour: a slow 360° orbit of the building, the exploded view, a rise up the spire to the flowering crown, then
   the start view. It plays once per browser session (once ever on a phone), any input stops it where the camera is, Esc lands on
   the start view, "Don't show again" and a Replay button are in the controls, and reduced motion shows three stills. The
-  8-stop room tour is renamed "Guided tour (rooms)". `e2e/intro-perf.spec.ts` (`PERF_GPU=1`) measures its frames.
+  8-stop room tour is renamed "Guided tour (rooms)". `e2e/office-life/intro-perf.spec.ts` (`PERF_GPU=1`) measures its frames.
 - `scripts/contact-sheet.mjs` renders the scene's views (and, later, each office-life effect at fixed times through
   `?preview=life&effect=<id>&t=<ms>`) into one labelled sheet per category for a visual review, and
-  `e2e/office-life-perf.spec.ts` (`PERF_GPU=1`) measures a baseline against a variant scene on a real GPU, interleaved and
+  `e2e/office-life/office-life-perf.spec.ts` (`PERF_GPU=1`) measures a baseline against a variant scene on a real GPU, interleaved and
   repeated, into `evidence/office-life-perf.json`.
 
 **Foundations**

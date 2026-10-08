@@ -42,15 +42,15 @@ items that need a decision are collected in [Open items](#open-items).
 | Native modules | `better-sqlite3` (MIT) compiles the SQLite amalgamation in `deps/sqlite3` (public domain, "here is a blessing"). `node-pty` (MIT) ships Microsoft ConPTY binaries (`third_party/conpty`, from Windows Terminal, MIT) and `deps/winpty` (MIT, its own `LICENSE`) for Windows; native Windows is refused by the supervisor. | Package contents | Both are installed from npm and not redistributed by this project. *Residual:* the generator reproduces each package's top-level licence only, not nested third-party licences inside a package. |
 | Three.js, React Three Fiber, Drei | MIT. Drei pulls in `hls.js`, `draco3d`, `@mediapipe/tasks-vision`, `@dimforge/rapier3d-compat` (Apache-2.0) and `troika-*` (MIT). All are counted as shipped, conservatively: the web build tree-shakes most of them (the glTF loader's Draco code path is present, but no Draco decoder or HDR preset is ever loaded, from a CDN or otherwise). | Lockfile, `apps/web/dist` | Notices include them. |
 | Icons | `lucide-react` (ISC; parts derived from Feather, MIT). | `LICENSE` | Both texts reproduced. |
-| Fonts | None bundled (system font stack). | `apps/web/src/styles/tokens.css` | — |
+| Fonts | None bundled (system font stack). | `apps/web/src/styles/core/tokens.css` | — |
 | Other notable runtime packages | `react`, `react-dom`, `react-router-dom`, `zustand`, `@tanstack/react-query`, `@xterm/xterm`, `@xyflow/react`, `qrcode`, `zod`, `fastify` and its plugins, `ws`, `@modelcontextprotocol/sdk`, `@anthropic-ai/sdk` (MIT); `@a2a-js/sdk`, `@agentclientprotocol/sdk` (Apache-2.0, no NOTICE). | Generated table | Permissive; texts reproduced. |
 
 ## Code ported or derived
 
 | What | Licence | Status |
 | --- | --- | --- |
-| agent-office (upstream): `tools/blender/aokit.py`, part of `tools/blender/build_animals.py`, `packages/office-scene/src/geometry.ts` | MIT | Derived; copyright kept in `LICENSE`, `NOTICE`, `REUSE.toml`, file headers. |
-| Orca: `apps/control/src/services/redaction.ts` (secret patterns) | MIT | Derived; licence text in the notices, header, `REUSE.toml`. |
+| agent-office (upstream): `tools/blender/aokit.py`, part of `tools/blender/build_animals.py`, `packages/office-scene/src/environment/geometry.ts` | MIT | Derived; copyright kept in `LICENSE`, `NOTICE`, `REUSE.toml`, file headers. |
+| Orca: `apps/control/src/services/platform/redaction.ts` (secret patterns) | MIT | Derived; licence text in the notices, header, `REUSE.toml`. |
 | *mulberry32* in `apps/web/src/avatar/spec.ts` | Public domain (as published by its author) | Four lines, named in a comment. |
 | Contributor Covenant 2.1 in `CODE_OF_CONDUCT.md` | CC BY 4.0 | Adapted and credited; `LICENSES/CC-BY-4.0.txt`, `REUSE.toml`. |
 | Everything else, including all ideas from the 27 reference projects | — | Original. No copied code found; see [provenance](provenance.md). |
@@ -103,8 +103,8 @@ it is used and how it was verified.
 
 <!-- BEGIN GENERATED: npm-inventory (scripts/oss/third-party-notices.mjs) -->
 
-437 packages in `pnpm-lock.yaml` (274 shipped). By scope and
-licence: shipped MIT: 218; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; dev MPL-2.0: 14; dev LicenseRef-Anthropic-Commercial-Terms: 9; shipped LicenseRef-Anthropic-Commercial-Terms: 9; shipped BSD-3-Clause: 7; shipped Apache-2.0: 6; shipped BlueOak-1.0.0: 5; dev BSD-3-Clause: 2; dev ISC: 1; shipped BSD-2-Clause: 1; shipped Unlicense: 1.
+428 packages in `pnpm-lock.yaml` (265 shipped). By scope and
+licence: shipped MIT: 209; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; dev MPL-2.0: 14; dev LicenseRef-Anthropic-Commercial-Terms: 9; shipped LicenseRef-Anthropic-Commercial-Terms: 9; shipped BSD-3-Clause: 7; shipped Apache-2.0: 6; shipped BlueOak-1.0.0: 5; dev BSD-3-Clause: 2; dev ISC: 1; shipped BSD-2-Clause: 1; shipped Unlicense: 1.
 
 | Package | Version | Declared (package.json) | Applies | Used in | Verified against |
 | --- | --- | --- | --- | --- | --- |
@@ -175,7 +175,6 @@ licence: shipped MIT: 218; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | @fastify/proxy-addr | 5.1.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @fastify/send | 4.1.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @fastify/static | 10.1.5 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| @fastify/websocket | 11.3.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @hono/node-server | 2.1.3 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @jridgewell/resolve-uri | 3.1.2 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @jridgewell/sourcemap-codec | 1.6.0 | MIT | MIT | dev/build | LICENSE reads as MIT |
@@ -319,11 +318,9 @@ licence: shipped MIT: 218; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | dijkstrajs | 1.0.3 | MIT | MIT | server runtime | LICENSE.md (text not auto-recognised) |
 | draco3d | 1.5.7 | Apache-2.0 | Apache-2.0 | web bundle | no licence file; package.json only |
 | dunder-proto | 1.0.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| duplexify | 4.1.3 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | ee-first | 1.1.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | emoji-regex | 8.0.0 | MIT | MIT | server runtime | LICENSE-MIT.txt reads as MIT |
 | encodeurl | 2.0.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| end-of-stream | 1.4.5 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | es-define-property | 1.0.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | es-errors | 1.3.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | es-module-lexer | 2.3.2 | MIT | MIT | dev/build | LICENSE reads as MIT |
@@ -462,7 +459,6 @@ licence: shipped MIT: 218; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | react-router | 7.18.4 | MIT | MIT | web bundle | LICENSE.md reads as MIT |
 | react-use-measure | 2.1.7 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | react | 19.3.0 | MIT | MIT | web bundle | LICENSE reads as MIT |
-| readable-stream | 3.6.2 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | real-require | 0.2.0 | MIT | MIT | server runtime | LICENSE.md reads as MIT |
 | real-require | 1.0.0 | MIT | MIT | server runtime | LICENSE.md reads as MIT |
 | require-directory | 2.1.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
@@ -473,7 +469,6 @@ licence: shipped MIT: 218; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | rfdc | 1.4.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | rolldown | 1.2.11 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | router | 2.2.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| safe-buffer | 5.2.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | safe-regex2 | 5.1.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | safe-stable-stringify | 2.5.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | safer-buffer | 2.1.2 | MIT | MIT | server runtime | LICENSE reads as MIT |
@@ -492,16 +487,14 @@ licence: shipped MIT: 218; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | side-channel-weakmap | 1.0.2 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | side-channel | 1.1.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | sonic-boom | 4.2.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| source-map-js | 1.2.1 | BSD-3-Clause | BSD-3-Clause | dev/build | LICENSE reads as BSD-3-Clause |
+| source-map-js | 1.2.2 | BSD-3-Clause | BSD-3-Clause | dev/build | LICENSE reads as BSD-3-Clause |
 | split2 | 4.2.0 | ISC | ISC | server runtime | LICENSE reads as ISC |
 | standardwebhooks | 1.1.1 | MIT | MIT | server runtime | no licence file; package.json only |
 | stats-gl | 2.4.2 | MIT | MIT | web bundle | no licence file; package.json only |
 | stats.js | 0.17.0 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | statuses | 2.0.2 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | std-env | 4.3.0 | MIT | MIT | dev/build | LICENCE reads as MIT |
-| stream-shift | 1.0.3 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | string-width | 4.2.3 | MIT | MIT | server runtime | license reads as MIT |
-| string_decoder | 1.3.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | strip-ansi | 6.0.1 | MIT | MIT | server runtime | license reads as MIT |
 | suspend-react | 0.1.3 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | thread-stream | 4.2.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
@@ -525,7 +518,6 @@ licence: shipped MIT: 218; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | undici-types | 8.9.0 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | unpipe | 1.0.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | use-sync-external-store | 1.7.0 | MIT | MIT | web bundle | LICENSE reads as MIT |
-| util-deprecate | 1.0.2 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | utility-types | 3.11.0 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | vary | 1.1.2 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | vite | 8.3.2 | MIT | MIT | dev/build | LICENSE.md reads as Apache-2.0 + MIT |
@@ -537,7 +529,6 @@ licence: shipped MIT: 218; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | why-is-node-running | 3.2.1 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | wrap-ansi | 6.2.0 | MIT | MIT | server runtime | license reads as MIT |
 | wrappy | 1.0.2 | ISC | ISC | server runtime | LICENSE reads as ISC |
-| ws | 8.22.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | y18n | 4.0.3 | ISC | ISC | server runtime | LICENSE reads as ISC |
 | yargs-parser | 18.1.3 | ISC | ISC | server runtime | LICENSE.txt reads as ISC |
 | yargs | 15.4.1 | MIT | MIT | server runtime | LICENSE reads as MIT |

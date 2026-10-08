@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest';
 // The scene package owns three; a test of a pure module of it reads the same build.
 import * as three from '../../packages/office-scene/node_modules/three/build/three.module.js';
-import { beadRadii, paintBeads, placeBeads } from '../../packages/office-scene/src/stalk-beads.js';
+import {
+  beadRadii,
+  paintBeads,
+  placeBeads,
+} from '../../packages/office-scene/src/core/stalk-beads.js';
 import {
   PALETTE,
   layoutStalk,
   paletteAt,
   type Stalk,
   type StalkCommit,
-} from '../../packages/office-scene/src/stalk-layout.js';
+} from '../../packages/office-scene/src/core/stalk-layout.js';
 
 const { Color, IcosahedronGeometry, InstancedMesh, Matrix4, MeshBasicMaterial } = three;
 

@@ -25,7 +25,7 @@ afterEach(() => {
 
 describe('runner mcp-main', () => {
   it('hands the server the project, agent and run named in the environment', async () => {
-    vi.stubEnv('AETHER_MCP_URL', 'http://127.0.0.1:4310');
+    vi.stubEnv('AETHER_MCP_URL', 'http://127.0.0.1:8780');
     vi.stubEnv('AETHER_MCP_TOKEN', 'tok');
     vi.stubEnv('AETHER_MCP_PROJECT', 'p1');
     vi.stubEnv('AETHER_MCP_AGENT', 'a1');
@@ -34,7 +34,7 @@ describe('runner mcp-main', () => {
     await import('../../apps/runner/src/mcp-main.js');
     expect(created).toEqual([
       {
-        url: 'http://127.0.0.1:4310',
+        url: 'http://127.0.0.1:8780',
         token: 'tok',
         projectId: 'p1',
         agentId: 'a1',

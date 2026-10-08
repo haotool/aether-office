@@ -1,6 +1,6 @@
-import type { Seat } from '../director.js';
-import { hashText } from '../hash.js';
-import { toWorld } from '../shot-camera.js';
+import type { Seat } from '../environment/director.js';
+import { hashText } from '../environment/hash.js';
+import { toWorld } from '../core/shot-camera.js';
 import { EFFECTS } from './effects/index.js';
 import type { PlacedSprite, Sprite } from './effects/types.js';
 import { ruleOf } from './registry.js';

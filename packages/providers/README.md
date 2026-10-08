@@ -1,0 +1,24 @@
+# @aether/providers
+
+Adapters for Claude Code, Codex app-server, and ACP agents; hook installation; generated Codex protocol types.
+
+## Public surface
+
+- Main export: `packages/providers/src/index.ts`.
+- Subpaths: `@aether/providers/models`, `@aether/providers/approval-config` (`package.json` `exports`).
+- Generated artifacts: `packages/providers/generated/` (Codex JSON/TS per verified release).
+
+## Dependencies
+
+- Depends on `@aether/contracts`, MCP/ACP SDKs, `@anthropic-ai/claude-agent-sdk`, `zod`.
+- Must not import `apps/control` (`scripts/check-boundaries.mjs`).
+- Used by `apps/control` and `apps/runner`, not by `apps/web`.
+
+## Test locally
+
+```bash
+pnpm exec vitest run tests/aether/provider-compat.test.ts
+pnpm run doctor
+```
+
+Host CLI version checks (optional): `pnpm run test:host-clis`.

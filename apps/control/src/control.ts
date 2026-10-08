@@ -10,12 +10,18 @@ import { authorize, DomainError, type Actor } from '@aether/kernel';
 import { connect } from './db/connection.js';
 import { selectAll, selectIn } from './db/query.js';
 import { projects } from './db/schema.js';
-import { hash, secret, authenticate, createIdentity, identityActor } from './services/identity.js';
-import { emit, project, type Context } from './services/context.js';
-import { runCommand } from './services/command-handlers.js';
-import { createPermissionRequests } from './services/permission-requests.js';
-import { buildSnapshot, highWatermark } from './services/snapshot.js';
-import { getMessage, inbox, messageWaits } from './services/messages.js';
+import {
+  hash,
+  secret,
+  authenticate,
+  createIdentity,
+  identityActor,
+} from './services/domain/identity.js';
+import { emit, project, type Context } from './services/domain/context.js';
+import { runCommand } from './services/runtime/command-handlers.js';
+import { createPermissionRequests } from './services/permissions/permission-requests.js';
+import { buildSnapshot, highWatermark } from './services/domain/snapshot.js';
+import { getMessage, inbox, messageWaits } from './services/domain/messages.js';
 
 /** Result fields that are bearer secrets, by command. They are shown to the caller once and nowhere else. */
 const SECRET_RESULT_FIELDS: Partial<Record<string, readonly string[]>> = {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ZONE_OFFSET, floorY } from '../scene-geometry.js';
+import { ZONE_OFFSET, floorY } from '../scene/scene-geometry.js';
 import { beamRate } from './beam-rate.js';
 import { beamBasis } from './beam-readout.js';
 import type { DrawSquad } from './squad-draw.js';

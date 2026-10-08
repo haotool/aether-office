@@ -5,8 +5,8 @@ import { spawnSync } from 'node:child_process';
 import { afterEach, beforeEach, expect, it } from 'vitest';
 import { localSessionSchema } from '../../packages/contracts/src/index.js';
 import { createServer } from '../../apps/control/src/server.js';
-import { resetLocalSessionCache } from '../../apps/control/src/services/local-sessions.js';
-import { resetOutcomeCache } from '../../apps/control/src/services/tool-outcomes.js';
+import { resetLocalSessionCache } from '../../apps/control/src/services/runtime/local-sessions.js';
+import { resetOutcomeCache } from '../../apps/control/src/services/runtime/tool-outcomes.js';
 import { fixture } from './fixture.js';
 import {
   FRESH_PER_MESSAGE,

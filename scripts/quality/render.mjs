@@ -1,4 +1,5 @@
 // Text output: the console table, the `--target` blocker list and the generated docs/quality/scorecard.md.
+import { formatQualityInputs } from './inputs.mjs';
 import { blockers } from './model.mjs';
 
 const fmtScore = (score) => (score === null ? 'n/a' : score.toFixed(1));
@@ -33,6 +34,7 @@ export function renderTable(report, floors, { target, details = 5, brief = false
       .join('  ')
       .trimEnd();
   const out = [line(head), line(widths.map((w) => '-'.repeat(w))), ...rows.map(line)];
+  if (report.inputs) out.push('', `inputs: ${formatQualityInputs(report.inputs)}`);
   out.push('', `overall ${fmtScore(report.overall)}`);
   const goal = target ?? floors.target;
   const shown = brief ? [] : report.areas.filter((a) => a.score !== null && a.score < goal);

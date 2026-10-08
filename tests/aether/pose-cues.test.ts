@@ -9,7 +9,7 @@ import {
   turnWeight,
   type PoseGate,
   type PoseRequest,
-} from '../../packages/office-scene/src/pose-cues.js';
+} from '../../packages/office-scene/src/core/pose-cues.js';
 
 const ask = (source: PoseRequest['source'], clip: PoseRequest['clip'] = 'nod'): PoseRequest => ({
   member: 'a',

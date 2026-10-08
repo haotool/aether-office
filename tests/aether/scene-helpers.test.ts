@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { Agent } from '../../packages/contracts/src/index.js';
-import RAW from '../../packages/office-scene/src/desk-seating.json';
-import { context2d } from '../../packages/office-scene/src/canvas-2d.js';
-import { pathLength } from '../../packages/office-scene/src/departure.js';
-import { assignSeats, seatAt } from '../../packages/office-scene/src/layout.js';
-import { SEATING, SLAB_TOP } from '../../packages/office-scene/src/seating.js';
-import { setUniform } from '../../packages/office-scene/src/uniforms.js';
-import { summarizeFrames } from '../../packages/office-scene/src/perf.js';
+import RAW from '../../packages/office-scene/src/desks/desk-seating.json';
+import { context2d } from '../../packages/office-scene/src/core/canvas-2d.js';
+import { pathLength } from '../../packages/office-scene/src/animals/departure.js';
+import { assignSeats, seatAt } from '../../packages/office-scene/src/environment/layout.js';
+import { SEATING, SLAB_TOP } from '../../packages/office-scene/src/core/seating.js';
+import { setUniform } from '../../packages/office-scene/src/environment/uniforms.js';
+import { summarizeFrames } from '../../packages/office-scene/src/perf/perf.js';
 
 describe('the desk seating', () => {
   it('reads every size and position of the JSON as a point and finds the slab top', () => {

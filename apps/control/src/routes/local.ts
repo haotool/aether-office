@@ -1,18 +1,18 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { homedir } from 'node:os';
 import type { Control } from '../control.js';
-import { emit } from '../services/context.js';
+import { emit } from '../services/domain/context.js';
 import {
   attributeSessions,
   processOf,
   scanLocalSessions,
   sessionFile,
-} from '../services/local-sessions.js';
-import { runningSpeech } from '../services/session-speech.js';
-import { readTranscript } from '../services/session-transcript.js';
-import { reapSessionZombies } from '../services/reap-zombies.js';
-import { clockOutSessions } from '../services/clock-out.js';
-import { stopLocalSession } from '../services/stop-session.js';
+} from '../services/runtime/local-sessions.js';
+import { runningSpeech } from '../services/sessions/session-speech.js';
+import { readTranscript } from '../services/sessions/session-transcript.js';
+import { reapSessionZombies } from '../services/runtime/reap-zombies.js';
+import { clockOutSessions } from '../services/runtime/clock-out.js';
+import { stopLocalSession } from '../services/runtime/stop-session.js';
 import { DomainError, authorize, type Actor } from '@aether/kernel';
 import {
   clockOutRequestSchema,

@@ -14,7 +14,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Control } from '../../apps/control/src/control.js';
 import { createServer } from '../../apps/control/src/server.js';
-import { enroll } from '../../apps/control/src/services/runners.js';
+import { enroll } from '../../apps/control/src/services/runtime/runners.js';
 import { NativeExecutor } from '../../apps/runner/src/native.js';
 import { Journal } from '../../apps/runner/src/journal.js';
 import { Runner } from '../../apps/runner/src/runner.js';

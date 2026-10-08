@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { usePhoneAny } from '../phone.js';
+import { usePhoneAny } from '../lib/preferences/phone.js';
 import { useT } from './useT.js';
 
 /**

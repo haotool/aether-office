@@ -212,7 +212,7 @@ export function checkCommits(root, maintainerEmails, rules) {
 
 export function checkAgentArtifactsInTree(files) {
   const hits = files.filter((f) =>
-    /^(\.claude|\.cursor|\.codex)\/|(^|\/)CLAUDE\.local\.md$|(^|\/)\.superclaude/.test(f),
+    /^(\.claude|\.cursor|\.codex|\.omc)\/|(^|\/)CLAUDE\.local\.md$|(^|\/)\.superclaude/.test(f),
   );
   add(
     'agent-artifacts',

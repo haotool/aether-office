@@ -4,9 +4,9 @@ import {
   languageOf,
   LANGUAGES,
   type LangId,
-} from '../../packages/office-scene/src/screen-lang.js';
-import { generateFile, lineText } from '../../packages/office-scene/src/screen-codegen.js';
-import { seeded } from '../../packages/office-scene/src/seeded.js';
+} from '../../packages/office-scene/src/screen/screen-lang.js';
+import { generateFile, lineText } from '../../packages/office-scene/src/screen/screen-codegen.js';
+import { seeded } from '../../packages/office-scene/src/environment/seeded.js';
 
 const SAMPLE: Record<LangId, string> = {
   ts: 'session-store.ts',

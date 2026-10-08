@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { matchItems } from '../../apps/web/src/features/quick-match.js';
+import { matchItems } from '../../apps/web/src/features/operations/quick-match.js';
 
 const item = (label: string, hint = '') => ({ id: label, label, hint, to: `/${label}` });
 

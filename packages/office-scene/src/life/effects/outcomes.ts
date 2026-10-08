@@ -1,6 +1,6 @@
 import { clamp01, draw, envelope, lerp, SPOT } from './shared.js';
 import type { Effect, Rgb, Sprite } from './types.js';
-import { itemAt } from '../../checked.js';
+import { itemAt } from '../../environment/checked.js';
 
 // Effects that show how a test, a CI watch or a build really ended. Each one is only ever started by a rule that read a real
 // `ok` (see ../registry.ts); the pictures here are decorative and say nothing beyond that exit status.

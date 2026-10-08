@@ -9,7 +9,7 @@ import {
   apparitionOf,
   greets,
   transitionClip,
-} from '../../packages/office-scene/src/animal-states.js';
+} from '../../packages/office-scene/src/animals/animal-states.js';
 
 describe('animal states', () => {
   it('shows every activity with a clip the models have', () => {

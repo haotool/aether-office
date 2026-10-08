@@ -1,0 +1,305 @@
+# Office Life: work plan
+
+> **Design record.** The work plan the iterations were run from (briefs for engineers and agents). It is history, not a to-do
+> list; the result is described in [features](../features.md).
+
+Companion to [office-life.md](office-life.md), the spec. Section references (§) point there. Each brief below is
+self-contained: it can be handed to one engineer or agent working in its own worktree from `aether/product`.
+
+Everyone follows `AGENTS.md`:
+- **Before finishing:** run `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test`, `pnpm build` and the
+  relevant `pnpm exec playwright test` specs.
+- **Way of working:** test first, use conventional commits, and record user-visible changes in `CHANGELOG.md`.
+- **Verification:** add a `docs/verification/features.json` entry, with implementation and verification kept separate.
+- **Phone check:** look at the UI at phone and tablet sizes.
+- **Never:** run paid model turns, push, or edit global config.
+
+---
+
+## 1. Prioritized UX backlog (biggest felt improvement first)
+
+| Rank | Item | Why first | Iteration |
+| --- | --- | --- | --- |
+| 1 | Subagents sit **next to** their parent (squad zone) instead of at random free desks | It fixes the core legibility problem (§1): today a subagent can sit across the room from its parent. | I3, I4 |
+| 2 | Intro tour on first visit | It shapes the first impression, and the building, beanstalk and crown are the product's signature. It is independent of the data work. | I2 |
+| 3 | 2D squad grouping in the feed (supervisor row with nested subagent rows) | It is the fastest way to make the relationship unmistakable, and it works on phones, in calm mode and for screen readers. | I9 (the minimal version needs only I1) |
+| 4 | Hand-over animation and stamp | The emotional "work came back" moment, and it explains what finishing means. | I5 |
+| 5 | Squad beam and puppet strings | Real activity becomes ambient, so the squad's work can be felt without reading anything. | I4, I5 |
+| 6 | Office-life wave 1 (no new server data) | Character and delight at low risk. | I6 |
+| 7 | Signal enrichment (tags, outcomes, tokens, results) | It unlocks the honest outcome memes and real token beams. | I7 |
+| 8 | Office-life wave 2 (outcome memes) | Pass/fail, force push and conflicts need I7. | I8 |
+| 9 | In-scene resize handles for squad zones | Nice to have; the form editor covers it first. | I3b (optional) |
+
+---
+
+## 2. 2D information design
+
+### 2.1 Feed (`SessionFeed.tsx`, pure rules in `feed-model.ts`)
+
+```
+Working ───────────────────────────────────────────────
+ [🦊] main · aether-office · feat/x            2m   ⌄
+      "Refactoring the scene layers…"
+      ┆ squad 3 · 12 tool calls/min               (relation chip)
+      ├─ [·] Explore        running   · 14 tools · 3m12s   ▓▓▓░ 1.2k tok/min
+      ├─ [·] code-reviewer  waiting   · approval needed     (amber dot)
+      └─ [·] general        returned  · "Found 3 call sites…" (2D summary, Q5)
+```
+
+- **Supervisor row.** It is the existing row, plus a **squad chip** (`squad N · rate`). The rate label states its unit,
+  for example "tool calls/min" until token rates exist (§4.4).
+- **Nested rows** are indented 24 px with a hairline connector. Each row is a status dot plus text, one of `running`,
+  `waiting`, `returned` or `returned with error`, alongside the tool count, elapsed time and the token rate when
+  available. A row is a button: it selects the subagent and the camera follows it into the squad.
+- **Folding.** The squad folds by default when it has more than 3 subagents ("+4 more"). Returned rows fade after 2 min
+  and disappear with the subagent.
+- **Order.** A subagent never appears as a separate top-level row: `feed-model.ts` groups the `:sub:` ids under their
+  parent.
+
+### 2.2 Conversation (`SessionConversation.tsx`, `turn-groups.ts`)
+
+- A `Task`/`Agent` call renders as one folded line: "Delegated to **Explore** · 'find call sites' · returned 1.2k chars".
+  It opens the redacted summary.
+- A subagent's conversation header carries a **"spawned by main · 3m ago"** link back to the parent.
+- The parent's header carries "**3 subagents**", which opens a popover list.
+
+### 2.3 Accessibility and equivalents
+
+- Every 3D relation effect has a 2D equivalent: the squad chip, nested rows and spawned-by links.
+- The aria log (§5.5) announces arrivals and returns.
+- The name tag's accessible name of a subagent includes ", subagent of {parent}".
+- The squad zone label in 3D is a focusable button (the zone-label pattern), "Squad of {parent}, 3 working".
+
+### 2.4 Settings: Office → Animations (`OfficeAnimationsSettings.tsx`, prefs in `state.ts`)
+
+| Control | Pref key | Default |
+| --- | --- | --- |
+| Calm mode (master) | `life.calm` | off (on when `prefers-reduced-motion`) |
+| Relation effects: squad zone, beam, hand-over | `life.relation` | on |
+| Puppet strings | `life.strings` | on |
+| Memes by category: Work, Git, Tests and builds, Ops, Wellbeing, Social, Memes, Easter eggs | `life.categories.<id>` | per Q6 (spec §13) |
+| Meme frequency: rare / normal | `life.frequency` | rare |
+| Intro tour on first visit | `intro` (`'auto' \| 'never'`) | auto |
+| Replay intro (button) | — | — |
+
+Quick toggles: the BuildingPanel and CompactHud get "Replay intro". QuickPrefs gets a Calm mode switch next to quality.
+
+---
+
+## 3. Iterations
+
+Size: S ≈ 1–2 days, M ≈ 3–5 days, L ≈ 1–2 weeks.
+
+### I0. Contact sheet and real-GPU perf harness (S)
+
+| Field | Detail |
+| --- | --- |
+| **Goal** | Visual and performance gates exist before the effects do. |
+| **Scope** | Add a deterministic preview route `?preview=life&effect=<id>&t=<ms>` (extending the `scene-preview.ts` pattern; a no-op until effects exist). Add `scripts/contact-sheet.mjs`, which assembles PNGs into one sheet per category. Add `e2e/office-life/office-life-perf.spec.ts`: a baseline vs. a variant scene through `PerfProbe`, skipped unless `PERF_GPU=1`. |
+| **Files (owned)** | `scripts/contact-sheet.mjs`, `e2e/office-life/office-life-perf.spec.ts`, `apps/web/src/features/office/scene-preview.ts` (additive) |
+| **Public API** | `previewParams(url): { effect, t } \| null` |
+| **Acceptance** | `PERF_GPU=1 pnpm exec playwright test e2e/office-life/office-life-perf.spec.ts` writes a JSON report with the deltas of §10. Without the flag it is skipped and reports "not run" (never "passed"). The contact-sheet script runs on the existing scene. |
+| **Tests** | Unit test for `previewParams`; the spec itself. |
+| **Perf gate** | n/a (this builds the gate) |
+| **Docs** | `docs/development.md`: a "Contact sheets and GPU perf" paragraph. |
+| **Dependencies / merge** | None. Merge anytime; `scene-preview.ts` is also touched by the behavior branch, so rebase after it lands. |
+| **Parallel** | Yes. |
+| **DoD** | Gates runnable; the ledger entry is implemented, with verification "not run on GPU" until someone runs it. |
+
+### I1. Subagent lifecycle data (S)
+
+| Field | Detail |
+| --- | --- |
+| **Goal** | The web knows when each subagent started and finished, whether it waits, and how many tools it ran. |
+| **Scope** | Extend `subagentSchema` with `source`, `status`, `startedAt`, `endedAt`, `nickname` and `tools` (spec §7.2, all fields defaulted). In `hook-spool.ts`: `startedAt` from the first record with that `agent_id`, the tool count from PreToolUse with `agent_id`, `waiting_permission` from permission events with `agent_id`, and finished children kept for 90 s (`FINISHED_GRACE_MS`) instead of deleted. Add `agentId` on `hook.recent`. Codex children: `startedAt` from `session_meta`; finished = no write for 2 min (the existing `ACTIVE_CHILD_MS`). `office-model.ts`: a `squadsOf(sessions)` export (parent → children with status) and tethers that respect `status`. |
+| **Files (owned)** | `packages/contracts/src/sessions.ts` (subagent part), `apps/control/src/services/hooks/hook-spool.ts`, `apps/control/src/services/runtime/local-sessions.ts` (the merge line), `apps/control/src/services/sessions/session-discovery.ts` (Codex child times only), `apps/web/src/features/office/office-model.ts` |
+| **Public API** | `squadsOf(sessions): Squad[]` with `Squad = { supervisor: string; members: SquadMemberFacts[] }` |
+| **Acceptance** | A SubagentStart → 3 PreToolUse → SubagentStop spool fixture yields `running` (count 3), then `finished` for 90 s, then removed. An old server payload without the new fields still parses. |
+| **Tests** | `tests/aether/hook-spool-rotation.test.ts` (lifecycle), a contracts round-trip, `office-model` `squadsOf`. |
+| **Perf gate** | Scan time unchanged (the existing scan bench, ±5%). |
+| **Docs** | `docs/features.md` (subagent lifecycle); the `docs/provider-compatibility.md` table row. |
+| **Dependencies / merge** | **After the KPI-plaques branch** (it touches `session-discovery.ts` and `contracts/index.ts`). |
+| **Parallel** | Yes, with I0, I2 and I6. |
+| **DoD** | Checks green; ledger entry; the demo fixture emits subagent lifecycles (synthetic, labelled). |
+
+### I2. Intro tour (M)
+
+| Field | Detail |
+| --- | --- |
+| **Goal** | On a first visit: the 360° orbit, the exploded rise to the crown, the collapse, then the director (spec §6). |
+| **Scope** | `intro/intro-tour.ts` (`introPoseAt`), `intro/intro-machine.ts` (the reducer), `intro/IntroCaption.tsx`. Integration in `scene-navigation.ts` (intro mode suspends the director and drives `floor`/`exploded`) and `SceneCamera.tsx` (pose source). Prefetch other floors' GLBs and the spread stalk during the orbit. The `.cut-dip` gets a duration variant. Prefs `intro` in `state.ts`; Replay in BuildingPanel/CompactHud; the `?intro=force` test override. Locales en/zh. |
+| **Files (owned)** | `packages/office-scene/src/intro/*`, `SceneCamera.tsx`, `scene-navigation.ts`, `scene-props.ts` (`intro` prop), `SceneHud.tsx` (Replay button), `CompactHud.tsx`, `apps/web/src/lib/preferences/state.ts` (the `intro` key), `apps/web/src/features/office/SceneView.tsx` (wiring), `styles/scene/scene-pips.css` (dip variant), locales |
+| **Public API** | `introPoseAt(t: number, frame: IntroFrame): Pose`, `introReducer(state, action)`, `INTRO_TIMELINE`, `<IntroCaption/>` |
+| **Acceptance** | It plays once per browser session. Any input interrupts it and leaves the camera where it is. Esc lands on the start view. Don't-show-again persists; Replay works. Reduced motion shows 3 stills. A phone portrait frames the building. There is no frame over 120 ms outside the dips. |
+| **Tests** | `tests/aether/intro-tour.test.ts` (sampled poses, comfort assertions: ≤ 16.5°/s, no roll, distance, outside the shell, total ≤ 46 s), `intro-machine.test.ts`, `e2e/office-life/intro.spec.ts` (with `?intro=force`), the responsive spec on the caption. |
+| **Perf gate** | Δ max frame during the intro ≤ 120 ms desktop / 200 ms phone emulation, inside the dips only (I0 harness). |
+| **Docs** | `docs/design-system.md` ("The camera runs itself" paragraph); CHANGELOG. |
+| **Dependencies / merge** | None on data. Touches `SceneCamera.tsx` and `scene-navigation.ts`, which no other listed branch edits. Merge first in wave A. |
+| **Parallel** | Yes. |
+| **DoD** | Checks green; looked at on a phone and a tablet; ledger entry. |
+
+### I3. Squad zone layout model (M)
+
+| Field | Detail |
+| --- | --- |
+| **Goal** | Squad zones exist as a validated layout object type, and auto squads are placed purely. |
+| **Scope** | Spec §8. `squadSchema` + discriminated union + `schemaVersion` 1\|2 (v2 written only with squads). Kernel `objectBounds`/`validateLayout` for `squad`, with the new error codes. `navigation.ts` (squad walkable). `squad/squad-layout.ts` (`squadLayout`, `podsOf`, the capacity formula). `localSessions.ts` `mergeLayout` skips `:sub:` ids. The fallback keeps today's desk seating when no squad fits. `LayoutEditor.tsx`: add squad, anchor picker, W/D, seats, "Pin current squad". |
+| **Files (owned)** | `packages/contracts/src/core.ts`, `packages/kernel/src/layout.ts`, `packages/kernel/src/navigation.ts`, `packages/office-scene/src/squad/squad-layout.ts`, `apps/web/src/lib/sessions/localSessions.ts` (`mergeLayout`), `apps/web/src/features/office/LayoutEditor.tsx`, `apps/control/src/control.ts` (version acceptance) |
+| **Public API** | `squadLayout(layout, deskId, count): SquadRect \| null`, `podsOf(rect): Pod[]`, `squadCapacity(span)` |
+| **Acceptance** | A v1 fixture round-trips byte-identical. The validation codes fire as specified. Auto placement finds a zone for 1–12 seats on the default layout of every floor, and falls back on a full floor. The editor saves and reloads a pinned squad. |
+| **Tests** | `tests/aether/layout-squad.test.ts`, kernel unit tests, an e2e addition in `layout-editor.spec.ts` (squad add/save). |
+| **Perf gate** | n/a |
+| **Docs** | `docs/architecture.md` (the layout object types). |
+| **Dependencies / merge** | Merge after I1 (it uses `squadsOf` only in tests). It touches `localSessions.ts`; the text-pipeline branch touches labels there, so rebase on it. |
+| **Parallel** | With I6 and I7. |
+| **DoD** | Checks green; ledger entry. |
+
+### I4. Squad scene v1: zone, pods, members, supervisor dressing, beam, arrivals and dismissals (L)
+
+| Field | Detail |
+| --- | --- |
+| **Goal** | Subagents visibly gather around their supervisor, with the beam into the core (spec §4.1–4.4, §4.6 arrive/leave, §4.10). |
+| **Scope** | `squad-model.ts` (`stepSquad`), `SquadLayer.tsx`, `SquadMember.tsx` (`Animal` + `Poser` composed, no edits to them), `SupervisorDesk.tsx`, `SquadBeam.tsx` + `beam-shader.ts`, `errand.ts` (arrive and leave), overflow silhouettes, a focusable zone label button. `OfficeScene.tsx` mounts `SquadLayer` and skips `:sub:` in the `Member` map. Beam rate v1 = tool calls/min. The director: a `squad` closeup candidate (the existing `sub` pulse score). |
+| **Files (owned)** | `packages/office-scene/src/squad/*` (except `verlet.ts`, `PuppetStrings.tsx`, `Handover.tsx`), `OfficeScene.tsx` (≤ 20 lines), `scene-props.ts` (`squads` prop), `apps/web/src/features/office/SceneView.tsx` (pass `squadsOf`) |
+| **Public API** | `<SquadLayer squads seats exploded quality reducedMotion prefs/>`, `stepSquad` |
+| **Acceptance** | The demo fixture's 3 subagents appear in pods next to the parent within 6 s, and leave via the core. Seats never reorder under a seated member, and the zone shrinks only after 10 s stable. Reduced motion and the low tier match the §4.10 table. The aria log announces R1 and R6. |
+| **Tests** | `squad-model.test.ts`, `errand.test.ts`, `e2e/office-life/squad.spec.ts`, a contact sheet of the storyboard frames 1–3 and 8. |
+| **Perf gate** | Squad total ≤ 14 draws, ≤ 12k triangles, Δ jsMs ≤ 0.15 ms (I0 harness, 1 squad × 8). |
+| **Docs** | `docs/features.md`, a `docs/design-system.md` scene paragraph; CHANGELOG. |
+| **Dependencies / merge** | Needs I1 and I3. **Must not edit** `Member.tsx`, `Animal.tsx`, `Poser.tsx` or `animal-states.ts` (the behavior-director branch). Rebase `OfficeScene.tsx` on whatever has landed. |
+| **Parallel** | With I7 (server) and I9-minimal; not with I5 (same folder). |
+| **DoD** | Checks green; contact-sheet review by the maintainer; phone and tablet looked at; ledger entry. |
+
+### I5. Puppet strings and hand-over (M)
+
+| Field | Detail |
+| --- | --- |
+| **Goal** | Strings that jerk on real tool starts and slacken at the finish, and the folder hand-over with the received stamp (spec §4.5–4.8). |
+| **Scope** | `verlet.ts` (a pooled `Float32Array`, 30 Hz), `PuppetStrings.tsx` (one `LineSegments2` + instanced crosses), `Handover.tsx` (folder, stamp, seal, in-tray stack), the `errand.ts` deliver/return legs, and the supervisor `reading`→`nod` via `SquadLayer`'s own one-shot request. v1 uses fixed anchors. **After the behavior branch merges:** `anchors.ts` + 2 lines in `Animal.tsx` (`registerAnchors`), and optionally the `layers?` prop for the additive carry pose. Decision memo on the `conduct`/`carry` Blender clips. |
+| **Files (owned)** | `squad/verlet.ts`, `squad/PuppetStrings.tsx`, `squad/Handover.tsx`, `squad/errand.ts` (deliver/return), `anchors.ts`, later `Animal.tsx` (≤ 10 lines) |
+| **Public API** | `stepStrings(buf, dt, input)`, `registerAnchors(id, root)`, `anchorsOf(id)` |
+| **Acceptance** | A finish shows stand → walk → present → stamp → leave within 14 s. An error result shows the red tab. The strings' golden checksum is stable. Reduced motion shows static lines and the tray icon. Strings can be toggled. |
+| **Tests** | `verlet.test.ts` (determinism, energy bounded), `handover.test.ts` (the timeline), a contact sheet of frames 4–7, `e2e/office-life/squad.spec.ts` (hand-over aria line). |
+| **Perf gate** | Strings + folders ≤ 4 draws; simulation ≤ 0.05 ms at 12 subagents. |
+| **Docs** | Spec §4.8 updated with the clip decision; CHANGELOG. |
+| **Dependencies / merge** | After I4. The `Animal.tsx` step after the behavior-director branch merges. If clips are approved, the Blender run happens in this iteration's tail (audit + validate). |
+| **Parallel** | With I6, I7 and I9. |
+| **DoD** | Checks green; the maintainer reviews the strings for "not creepy"; ledger entry. |
+
+### I6. Office-life core and wave 1 (M)
+
+| Field | Detail |
+| --- | --- |
+| **Goal** | The registry, scheduler, pools, aria log, settings and Calm mode, with the rows that need no new server data. |
+| **Scope** | `life/signals.ts`, `registry.ts`, `schedule.ts`, `pools/*`, `LifeLayer.tsx`, `LifeLog.tsx`. Effects R8, R9 (target-based amber only), R14, R15, R16, R24, R26–R38, R41, R42, R44, R45, R49–R58. Adopt the existing compaction (R29). Web: `apps/web/src/features/office/life-signals.ts` (the snapshot diff), `OfficeAnimationsSettings.tsx`, prefs `life.*`, the Calm switch in QuickPrefs, Konami and Quick Open hooks. |
+| **Files (owned)** | `packages/office-scene/src/life/*`, `apps/web/src/features/office/life-signals.ts`, `state.ts` (the `life` keys), `SettingsPage.tsx` (one line), `QuickPrefs.tsx` (one switch), `QuickOpen.tsx` (one match hook), `OfficePage.tsx`/`SceneView.tsx` (wiring), `OfficeScene.tsx` (mount, ≤ 10 lines), locales |
+| **Public API** | `schedule(state, signals, now, prefs)`, `LIFE_RULES`, `<LifeLayer cues seats exploded/>`, `deriveLifeSignals(prev, next, now)` |
+| **Acceptance** | Each rule has a trigger test, a cooldown test and an aria text in en and zh. The arbiter limits hold (1 per member, 2 per floor, the bucket). Startup replays nothing older than 30 s. Calm mode silences memes. Every effect has a contact-sheet tile. |
+| **Tests** | `life-registry.test.ts` (honesty rules: no outcome rule enabled without `ok`), `life-schedule.test.ts`, `life-signals.test.ts`, effect timeline tests, `e2e/office-life/office-life.spec.ts` (Calm, toggles, aria log). |
+| **Perf gate** | Life layer ≤ 5 draws, ≤ 0.2 ms jsMs with 3 live cues. |
+| **Docs** | Spec §5 kept in sync (the registry is the source; a test checks that the doc table's row ids match `LIFE_RULES`); CHANGELOG. |
+| **Dependencies / merge** | **After the Settings redesign** (`SettingsPage.tsx`) and after I2 (both add `state.ts` keys; bump the persisted-store version once). No dependency on I1. Must not touch `MemberScreen`/`screen-*` (the kernel panic is our own quad). |
+| **Parallel** | With I1, I3, I5 and I7. |
+| **DoD** | Checks green; contact sheets reviewed; ledger entry with "decorative" noted. |
+
+**Status.** Wave 1 shipped with 12 rows (R8, R9, R14, R17, R27, R32, R36, R38, R41, R44, R53, R56), the registry, the
+scheduler with its arbiter, one shared sprite pool, the aria log, the settings and Calm mode, and the persisted-store version 1
+(`life`). Which rows differ from the table and which are pending is listed under the registry table in
+[office-life.md](office-life.md#53-registry). The scheduler and the log are `life/schedule.ts` and `life/aria-log.ts` (plain DOM,
+mounted by `LifeLayer`, so there is no `LifeLog.tsx`). Left for later: the "recent moments" chip in the conversation header, the
+Quick Open hook (R57) and the Ctrl+C hook (R55). The settings have no Replay button: the building panel has one. The character
+poses (the duck turn, `nod`, `shrug`, `stretch`, `celebrate`) were added afterwards through one pose registry (spec 5.6), R21 and
+R43 with them, the squad layers were measured on the high and phone tiers and made cheaper (spec 4.9), and the beam's reference rates
+were calibrated on real transcripts (spec 4.4).
+
+### I7. Signal enrichment, server side (M)
+
+| Field | Detail |
+| --- | --- |
+| **Goal** | Honest outcomes and richer squad facts: command tags, `ok`, conflicts, per-subagent tokens, Task label and result (spec §7.3). |
+| **Scope** | `packages/providers/src/command-tags.mjs` (pure, ≥ 60 cases); `hook-receiver.mjs` (tags; `ok` when the payload has it; verify the Claude version first and record findings in `docs/provider-compatibility.md`); scanner pairing of `tool_result.is_error` to `hook.recent`; Codex `exit_code` parsing; `subagents/agent-*.jsonl` discovery (`source: 'transcript'`) with token totals via the KPI branch's `usage-parse.ts`; `perMinute`; Task `label`/`result` with redaction; `git.conflicts`. |
+| **Files (owned)** | `packages/providers/src/command-tags.mjs`, `hook-receiver.mjs`, `apps/control/src/services/{hook-spool,session-discovery,session-transcript,local-sessions,git}*.ts` (the named functions), `packages/contracts/src/sessions.ts` (the recent and git parts) |
+| **Public API** | `commandTags(command, tool, pattern?): CommandTag[]` |
+| **Acceptance** | Raw args, paths and patterns never leave the hook process (a test greps the spool fixture). `ok` is null when it is not known. Hook-less Claude subagents are visible as `running` from their files. Summaries are redacted (a security test with planted secrets). |
+| **Tests** | `command-tags.test.ts`, `hook-receiver.test.ts`, `subagent-transcripts.test.ts`, the security suite additions. |
+| **Perf gate** | The scan stays within +10% on the 2000-file fixture. |
+| **Docs** | `docs/security.md` (what is stored); `docs/provider-compatibility.md`. |
+| **Dependencies / merge** | After I1 and **after the KPI branch** (it reuses `usage-parse.ts`); after the text-pipeline branch (it reuses its plain-preview parser). |
+| **Parallel** | With I4, I5 and I6. |
+| **DoD** | Checks green; security review (the `security-reviewer` agent); ledger entry. |
+
+### I8. Office-life wave 2: outcome memes and the real token beam (M)
+
+| Field | Detail |
+| --- | --- |
+| **Goal** | The rows that need I7: R2, R3, R5, R10–R13, R17 (ok), R18–R23, R25, R39, R40, R43, R46–R48; beam v2 on `tokens.perMinute`. |
+| **Scope** | New `life/effects/*`, enabling the rules (each gated on `ok !== null` where it claims an outcome), and the beam rate source switch with its caption unit. |
+| **Files (owned)** | `packages/office-scene/src/life/effects/*`, `life/registry.ts` (rows), `squad/SquadBeam.tsx` (rate input), `apps/web/src/features/office/life-signals.ts` |
+| **Public API** | unchanged |
+| **Acceptance** | The honesty tests pass. A failing test fixture shows R11, never R10. A force-push fixture shows R18. The Friday rule uses the viewer's local clock (a test with a fixed date). |
+| **Tests** | Registry and effect tests; contact sheets; `e2e/office-life/office-life.spec.ts` additions. |
+| **Perf gate** | As I6. |
+| **Docs** | Spec §5.3 "Data" column updated from ◐ to ✅ where shipped. |
+| **Dependencies / merge** | After I6 and I7. |
+| **Parallel** | With I9. |
+| **DoD** | Checks green; contact sheets reviewed; ledger. |
+
+### I9. 2D squad information design (M; a minimal slice can follow I1 directly)
+
+| Field | Detail |
+| --- | --- |
+| **Goal** | The supervisor and subagent relationship is unmistakable in the panel, on phones and for screen readers (§2 above). |
+| **Scope** | `feed-model.ts` grouping; `SessionFeed.tsx` nested rows and squad chip; the `SessionConversation`/`turn-groups.ts` Task fold line, "spawned by" link and "N subagents" popover; the name-tag accessible name; styles in `session-feed.css`/`transcript.css` with tokens only. |
+| **Files (owned)** | `apps/web/src/features/{feed-model.ts,SessionFeed.tsx,turn-groups.ts,SessionConversation.tsx}`, `styles/session/session-feed.css`, `styles/transcript/transcript.css`, locales |
+| **Public API** | `groupFeed(rows, squads)` |
+| **Acceptance** | Subagents never show as top-level rows. The axe sweep is clean in both themes. Responsive at all six sizes. Tokens and summaries show only when present. |
+| **Tests** | `feed-model.test.ts`, `turn-groups.test.ts`, `e2e/session/session-panel.spec.ts` additions, `ui-sweep`. |
+| **Perf gate** | n/a |
+| **Docs** | `docs/design-system.md` Session panel section. |
+| **Dependencies / merge** | Minimal slice after I1; tokens and summary after I7. **Coordinate with the text-pipeline branch** (it changes `SessionConversation`, the Markdown parser and the feed previews): merge after it. |
+| **Parallel** | With I4–I8 (web panel files only). |
+| **DoD** | Checks green; looked at on a phone and a tablet; ledger. |
+
+---
+
+## 4. Recommended parallel dispatch schedule
+
+```
+Concurrent work already in flight: behavior director + desk screens (af3d…), KPI plaques (ab37…),
+text pipeline (ac4a…), Settings, OSS tooling / PWA (ad62…, a9eb…).
+
+Wave A (start now)                    Wave B (after KPI + Settings land)       Wave C                       Wave D
+──────────────────                    ───────────────────────────────          ──────                       ──────
+I0 harness (scripts, e2e)             I1 lifecycle data (control/contracts)    I4 squad scene (squad/)      I8 wave 2 (life/effects)
+I2 intro (intro/, camera, nav)        I3 layout model (kernel/contracts/edit)  I7 enrichment (control)      I9 full 2D (web panel)
+                                      I6 life core (life/, web prefs)          I9-min 2D (web panel)        I5 tail: Animal anchors
+                                                                               I5 strings/hand-over          (after behavior merges)
+                                                                               (after I4)
+```
+
+Why the waves do not collide:
+- **Wave A.** I0 and I2 share no files: I2 owns the camera, navigation and the `intro` pref; I0 owns scripts and a new
+  e2e file.
+- **Wave B.** I1 owns `contracts/sessions.ts` (the subagent part) and `apps/control` services. I3 owns
+  `contracts/core.ts`, kernel and the editor. I6 owns `life/` and web settings. I1 and I3 both touch `contracts/` in
+  different files. I6 and I2 both add keys to `state.ts`, so I6 rebases after I2 merged.
+- **Wave C.** I4 (scene `squad/`) and I7 (control) are disjoint. I9-min only touches panel files. I5 waits for I4
+  because they share the folder.
+- **Wave D.** I8 (scene `life/`) and I9 (web panel) are disjoint. The `Animal.tsx` anchors step waits for the behavior
+  branch.
+- **`OfficeScene.tsx` integration owner per wave:** I2 (A), I6 (B), I4 (C). Each later edit rebases on the previous
+  one, with ≤ 20 lines per edit.
+
+## 5. Definition of done (every iteration)
+
+1. `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test` and `pnpm build` are green. The iteration's
+   Playwright specs, plus `responsive` and `ui-sweep` when UI changed, are green.
+2. The perf gate is run on a real GPU and its numbers are recorded, or it is recorded as "not run". It is never claimed
+   as passed.
+3. Reduced motion, the low tier and Calm mode have been checked for every new effect. Every effect has an aria text in
+   en and zh.
+4. Every animation in the registry is labelled decorative, and no effect claims an outcome it cannot read.
+5. `CHANGELOG.md` and the `docs/verification/features.json` entry are updated, with implementation and verification
+   separate.
+6. For UI changes: looked at on a phone and a tablet.
+7. No edits to files owned by in-flight branches outside the §9 rules. Rebased on the latest `aether/product`.

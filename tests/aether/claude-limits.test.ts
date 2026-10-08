@@ -6,7 +6,7 @@ import {
   STALE_MS,
   parseHudCache,
   readClaudeLimits,
-} from '../../apps/control/src/services/claude-limits.js';
+} from '../../apps/control/src/services/platform/claude-limits.js';
 
 const NOW = Date.parse('2026-10-04T20:00:00Z');
 const reading = {

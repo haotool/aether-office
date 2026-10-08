@@ -3,11 +3,11 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { App } from './App.js';
-import { loadLocale } from './i18n.js';
-import { usePreferences } from './state.js';
+import { loadLocale } from './lib/i18n/i18n.js';
+import { usePreferences } from './lib/preferences/state.js';
 import { RootBoundary } from './RootBoundary.js';
-import { startServiceWorker } from './pwa.js';
-import { watchInstall } from './install-prompt.js';
+import { startServiceWorker } from './lib/platform/pwa.js';
+import { watchInstall } from './lib/platform/install-prompt.js';
 import './styles/index.css';
 const client = new QueryClient({
   defaultOptions: { queries: { staleTime: 2000, retry: 1, refetchOnWindowFocus: true } },
@@ -31,7 +31,7 @@ createRoot(document.getElementById('root')!).render(
 // conversation panel does not wait for it.
 window.addEventListener('load', () =>
   setTimeout(() => {
-    void import('./features/PanelBody.js');
-    void import('./features/ProjectPage.js');
+    void import('./features/shell-chrome/PanelBody.js');
+    void import('./features/integrations/ProjectPage.js');
   }, 1500),
 );

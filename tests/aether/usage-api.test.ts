@@ -5,8 +5,8 @@ import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { gitKpiResponseSchema, usageResponseSchema } from '../../packages/contracts/src/index.js';
 import { createServer } from '../../apps/control/src/server.js';
-import { resetLocalSessionCache } from '../../apps/control/src/services/local-sessions.js';
-import { resetGitKpiCache } from '../../apps/control/src/services/git-kpi.js';
+import { resetLocalSessionCache } from '../../apps/control/src/services/runtime/local-sessions.js';
+import { resetGitKpiCache } from '../../apps/control/src/services/git/git-kpi.js';
 import { command, fixture } from './fixture.js';
 import { claudeLine } from './usage-fixtures.js';
 

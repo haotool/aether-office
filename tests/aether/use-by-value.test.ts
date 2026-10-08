@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { keepIfEqual } from '../../packages/office-scene/src/use-by-value.js';
+import { keepIfEqual } from '../../packages/office-scene/src/core/use-by-value.js';
 
 it('keepIfEqual keeps the held tuple while the numbers are the same and takes the new one when they change', () => {
   const held: [number, number, number] = [1, 2, 3];

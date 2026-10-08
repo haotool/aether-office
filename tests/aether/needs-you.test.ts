@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { needsYou } from '../../apps/web/src/features/needs-you.js';
+import { needsYou } from '../../apps/web/src/features/sessions/needs-you.js';
 import type { Snapshot } from '../../packages/contracts/src/index.js';
 
 const snapshot = {

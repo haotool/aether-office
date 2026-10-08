@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { parseCodexLimits } from '../../apps/control/src/services/codex-limits.js';
+import { parseCodexLimits } from '../../apps/control/src/services/platform/codex-limits.js';
 import { buffer, codexCount } from './usage-fixtures.js';
 
 const NOW = Date.parse('2026-10-07T12:00:00Z');

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Agent, AttributedSession, Subagent } from '../../packages/contracts/src/index.js';
-import { buildFeed, feedItems } from '../../apps/web/src/features/feed-model.js';
+import { buildFeed, feedItems } from '../../apps/web/src/features/feed/feed-model.js';
 import {
   SQUAD_FADE_AFTER_MS,
   SQUAD_FOLD_ABOVE,
@@ -14,14 +14,14 @@ import {
   squadChange,
   squadHue,
   squadViewOf,
-} from '../../apps/web/src/features/feed-squads.js';
+} from '../../apps/web/src/features/feed/feed-squads.js';
 import {
   isSquadOpen,
   parseSquadOpen,
   withSquadOpen,
-} from '../../apps/web/src/features/squad-open.js';
-import { fmt, squadSummary, toolsText } from '../../apps/web/src/features/squad-text.js';
-import { treeNav } from '../../apps/web/src/features/tree-nav.js';
+} from '../../apps/web/src/features/squad/squad-open.js';
+import { fmt, squadSummary, toolsText } from '../../apps/web/src/features/squad/squad-text.js';
+import { treeNav } from '../../apps/web/src/features/shell-chrome/tree-nav.js';
 
 const NOW = Date.parse('2026-10-07T12:00:00Z');
 const SEC = 1000;

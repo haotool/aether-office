@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { DITHERED, DITHER_END, DITHER_PARS } from '../../packages/office-scene/src/dither.js';
+import {
+  DITHERED,
+  DITHER_END,
+  DITHER_PARS,
+} from '../../packages/office-scene/src/environment/dither.js';
 import {
   captionKeyOf,
   introCaption,

@@ -3,12 +3,12 @@ import { homedir } from 'node:os';
 import { detectModels } from '@aether/providers/models';
 import { DomainError, authorize } from '@aether/kernel';
 import { z } from 'zod';
-import { readClaudeLimits } from '../services/claude-limits.js';
-import { listAgentProcesses } from '../services/agent-processes.js';
-import { emit } from '../services/context.js';
-import { gitGraph } from '../services/git-graph.js';
-import { cleanMergedWorktrees, gitHealth, worktreeSizes } from '../services/git-health.js';
-import { systemMetrics } from '../services/system-metrics.js';
+import { readClaudeLimits } from '../services/platform/claude-limits.js';
+import { listAgentProcesses } from '../services/runtime/agent-processes.js';
+import { emit } from '../services/domain/context.js';
+import { gitGraph } from '../services/git/git-graph.js';
+import { cleanMergedWorktrees, gitHealth, worktreeSizes } from '../services/git/git-health.js';
+import { systemMetrics } from '../services/platform/system-metrics.js';
 import { repositoryRoot, requireOperator, type RouteContext } from './context.js';
 
 /** A project's repository: worktree and branch health, cleaning, the commit graph. */

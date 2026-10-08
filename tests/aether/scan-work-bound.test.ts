@@ -22,7 +22,7 @@ vi.mock('node:fs/promises', async (original) => {
   };
 });
 const { MAX_SESSIONS, resetLocalSessionCache, scanLocalSessions } =
-  await import('../../apps/control/src/services/local-sessions.js');
+  await import('../../apps/control/src/services/runtime/local-sessions.js');
 
 const HISTORY = 600;
 

@@ -5,7 +5,7 @@ import {
   assertSafeUrl,
   isPublicAddress,
   safeFetch,
-} from '../../apps/control/src/services/safe-fetch.js';
+} from '../../apps/control/src/services/platform/safe-fetch.js';
 
 it('classifies private, loopback, link-local, metadata and mapped addresses as non-public', () => {
   for (const ip of [

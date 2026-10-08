@@ -1,6 +1,7 @@
 # ADR 0002: The runner never writes the control database
 
 - Status: accepted
+- Date: 2026-10-01
 
 ## Context
 

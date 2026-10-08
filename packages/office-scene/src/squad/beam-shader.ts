@@ -10,7 +10,7 @@ import {
   ShaderMaterial,
   Uint16BufferAttribute,
 } from 'three';
-import { DITHER_END, DITHER_PARS, DITHERED } from '../dither.js';
+import { DITHER_END, DITHER_PARS, DITHERED } from '../environment/dither.js';
 
 const SEGMENTS = 48;
 const SIDES = 16;

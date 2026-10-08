@@ -1,11 +1,11 @@
 import { expect, it } from 'vitest';
 import { SESSION_ACTIVE_MS as ACTIVE_MS } from '../../packages/contracts/src/index.js';
-import type { AgentProcess } from '../../apps/control/src/services/agent-processes.js';
+import type { AgentProcess } from '../../apps/control/src/services/runtime/agent-processes.js';
 import {
   CpuWatch,
   DORMANT_MS,
   classifyLiveness,
-} from '../../apps/control/src/services/session-liveness.js';
+} from '../../apps/control/src/services/sessions/session-liveness.js';
 
 const z = (pid: number) => ({ pid, startedAt: 0, program: 'node' });
 const NOW = 1_000_000_000_000;

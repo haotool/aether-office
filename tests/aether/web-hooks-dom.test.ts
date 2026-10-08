@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Entry } from '../../apps/web/src/features/turn-groups.js';
+import type { Entry } from '../../apps/web/src/features/conversation/turn-groups.js';
 import { create } from './fixtures/mini-zustand.js';
 import {
   installBrowserEnv,
@@ -22,12 +22,13 @@ type Prefs = {
   set: (n: Partial<Prefs>) => void;
 };
 const prefs = create<Prefs>((set) => ({ panelWidth: null, panelCollapsed: false, set }));
-vi.mock('../../apps/web/src/state.js', () => ({ usePreferences: prefs }));
+vi.mock('../../apps/web/src/lib/preferences/state.js', () => ({ usePreferences: prefs }));
 
-const { usePanelLayout } = await import('../../apps/web/src/features/use-panel-layout.js');
+const { usePanelLayout } = await import('../../apps/web/src/features/sessions/use-panel-layout.js');
 const { useScrollSpy } = await import('../../apps/web/src/features/settings/useScrollSpy.js');
-const { useConvKeys } = await import('../../apps/web/src/features/use-conv-keys.js');
-const { useConvScroll } = await import('../../apps/web/src/features/use-conv-scroll.js');
+const { useConvKeys } = await import('../../apps/web/src/features/conversation/use-conv-keys.js');
+const { useConvScroll } =
+  await import('../../apps/web/src/features/conversation/use-conv-scroll.js');
 
 let env: BrowserEnv;
 beforeEach(() => {

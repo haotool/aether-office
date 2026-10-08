@@ -6,8 +6,14 @@ const load = (name: string) => import(pathToFileURL(resolve('scripts/quality/rel
 const loadRoot = (name: string) => import(pathToFileURL(resolve('scripts/quality', name)).href);
 
 const { creditM, measuredRow, releasePass } = await load('compute.mjs');
-const { measureResiduePaths, measureFileLines, measureDirFileCount, RESIDUE_PATTERNS } =
-  await load('measure.mjs');
+const {
+  measureResiduePaths,
+  measureFileLines,
+  measureDirFileCount,
+  measureDeadCode,
+  isAmbientTypeReference,
+  RESIDUE_PATTERNS,
+} = await load('measure.mjs');
 const { memoryRepo, diskRepo } = await loadRoot('repo.mjs');
 const { measureCognitive } = await load('measure.mjs');
 const { scoreRelease } = await load('run.mjs');
@@ -51,14 +57,14 @@ describe('release pass gate', () => {
 describe('residue path naming', () => {
   it('flags known process paths and skips domain exceptions', () => {
     const repo = memoryRepo({
-      'docs/design/office-life-iterations.md': '# x',
-      'e2e/office-life-follow-up.spec.ts': 'test',
-      'packages/office-scene/src/life/registry-wave2.ts': 'export {}',
-      'scripts/final-verification.ts': 'export {}',
-      'apps/control/src/services/oldest-entry.ts': 'export {}',
+      'docs/design/office-life-iterations-shadow.md': '# x',
+      'e2e/office-life/office-life-scene-preview.spec.ts': 'test',
+      'packages/office-scene/src/life/registry-command-outcomes.ts': 'export {}',
+      'scripts/final-verification-shadow.ts': 'export {}',
+      'apps/control/src/services/platform/oldest-entry.ts': 'export {}',
     });
     const { violations, detail } = measureResiduePaths(repo);
-    expect(violations).toBe(4);
+    expect(violations).toBe(2);
     expect(detail.some((d: string) => d.includes('oldest-entry'))).toBe(false);
     expect(RESIDUE_PATTERNS.length).toBeGreaterThan(5);
   });
@@ -132,5 +138,19 @@ describe('measureCognitive', () => {
       },
     ];
     expect(measureCognitive(facts).violations).toBe(1);
+  });
+});
+
+describe('ambient env declarations', () => {
+  it('recognises a triple-slash reference d.ts as not an orphan module', () => {
+    const text = '/// <reference types="vite/client" />\n';
+    expect(isAmbientTypeReference('apps/web/src/env.d.ts', text)).toBe(true);
+    const repo = memoryRepo({ 'apps/web/src/env.d.ts': text, 'apps/web/src/app.ts': 'export {}' });
+    const facts = [
+      { file: 'apps/web/src/env.d.ts', functions: [], exports: [] },
+      { file: 'apps/web/src/app.ts', functions: [], exports: [{ name: 'default', line: 1 }] },
+    ];
+    const graph = { uses: [], runtime: new Map([['apps/web/src/main.tsx', ['apps/web/src/app.ts']]]) };
+    expect(measureDeadCode(repo, facts, graph).violations).toBe(0);
   });
 });

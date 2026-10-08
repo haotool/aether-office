@@ -3,11 +3,11 @@ import {
   BoundedRetainBuffer,
   FrameDeltaBuffer,
   LongTaskSampleBuffer,
-} from '../../packages/office-scene/src/field-perf-samples.js';
+} from '../../packages/office-scene/src/field/field-perf-samples.js';
 import {
   buildFieldPerfReport,
   type FieldPerfCaptureInput,
-} from '../../packages/office-scene/src/field-perf-report.js';
+} from '../../packages/office-scene/src/field/field-perf-report.js';
 
 describe('BoundedRetainBuffer', () => {
   it('caps retained entries and keeps an accurate totalCount', () => {

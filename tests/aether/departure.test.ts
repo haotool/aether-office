@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultLayout } from '../../packages/office-scene/src/layout.js';
+import { defaultLayout } from '../../packages/office-scene/src/environment/layout.js';
 import {
   CORE_RADIUS,
   SEAT_DEPTH,
@@ -11,7 +11,7 @@ import {
   WAVE_MS,
   departureAt,
   planDepartures,
-} from '../../packages/office-scene/src/departure.js';
+} from '../../packages/office-scene/src/animals/departure.js';
 import type { Agent } from '../../packages/contracts/src/index.js';
 
 const agent = (id: string) => ({ id }) as Agent;

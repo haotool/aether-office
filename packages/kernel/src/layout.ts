@@ -49,26 +49,54 @@ export function objectBounds(o: PlacedObject, padding = 0) {
     maxZ: o.z + (swap ? w : d) / 2 + padding,
   };
 }
-export function validateLayout(objects: readonly PlacedObject[]): void {
+type LayoutBounds = ReturnType<typeof objectBounds>;
+
+function assertUniqueLayoutIds(objects: readonly PlacedObject[]): void {
   if (new Set(objects.map((o) => o.id)).size !== objects.length)
     throw new DomainError('LAYOUT_DUPLICATE_ID', 400);
+}
+
+function assertUniqueLayoutAgents(objects: readonly PlacedObject[]): void {
   const assigned = objects.filter((o) => o.agentId).map((o) => o.agentId);
   if (new Set(assigned).size !== assigned.length)
     throw new DomainError('LAYOUT_DUPLICATE_AGENT', 400);
-  validateSquads(objects);
-  const bounds = objects.map((o) => objectBounds(o));
+}
+
+function layoutOutOfBounds(a: LayoutBounds): boolean {
+  return a.minX < -25 || a.maxX > 25 || a.minZ < -17 || a.maxZ > 17;
+}
+
+function layoutBlocksAisle(a: LayoutBounds): boolean {
+  return (a.minX < 1 && a.maxX > -1) || (a.minZ < 1 && a.maxZ > -1);
+}
+
+function layoutBoxesOverlap(a: LayoutBounds, b: LayoutBounds): boolean {
+  return a.minX < b.maxX && a.maxX > b.minX && a.minZ < b.maxZ && a.maxZ > b.minZ;
+}
+
+function validateLayoutCollisions(
+  objects: readonly PlacedObject[],
+  bounds: readonly LayoutBounds[],
+): void {
   for (const [i, a] of bounds.entries()) {
-    if (a.minX < -25 || a.maxX > 25 || a.minZ < -17 || a.maxZ > 17)
-      throw new DomainError('LAYOUT_OUT_OF_BOUNDS', 400);
+    if (layoutOutOfBounds(a)) throw new DomainError('LAYOUT_OUT_OF_BOUNDS', 400);
     // Two permanent two-metre circulation spines cross the campus.
-    if ((a.minX < 1 && a.maxX > -1) || (a.minZ < 1 && a.maxZ > -1))
-      throw new DomainError('LAYOUT_BLOCKS_AISLE', 400);
+    if (layoutBlocksAisle(a)) throw new DomainError('LAYOUT_BLOCKS_AISLE', 400);
     for (const [j, b] of bounds.slice(0, i).entries()) {
       if ((objects[i]?.floor ?? 0) !== (objects[j]?.floor ?? 0)) continue; // floors do not collide
-      if (a.minX < b.maxX && a.maxX > b.minX && a.minZ < b.maxZ && a.maxZ > b.minZ)
-        throw new DomainError('LAYOUT_OVERLAP', 400);
+      if (layoutBoxesOverlap(a, b)) throw new DomainError('LAYOUT_OVERLAP', 400);
     }
   }
+}
+
+export function validateLayout(objects: readonly PlacedObject[]): void {
+  assertUniqueLayoutIds(objects);
+  assertUniqueLayoutAgents(objects);
+  validateSquads(objects);
+  validateLayoutCollisions(
+    objects,
+    objects.map((o) => objectBounds(o)),
+  );
 }
 
 // A squad zone belongs to a desk of its floor, at most one zone per desk, and cannot promise more seats than fit.

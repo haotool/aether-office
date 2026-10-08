@@ -1,10 +1,10 @@
 import { homedir } from 'node:os';
 import { DomainError } from '@aether/kernel';
 import { z } from 'zod';
-import { processOf, scanLocalSessions } from '../services/local-sessions.js';
-import { listCustomCommands } from '../services/session-commands.js';
-import { listSessionFiles, MAX_QUERY_CHARS } from '../services/session-files.js';
-import { terminalOfSession } from '../services/terminal-link.js';
+import { processOf, scanLocalSessions } from '../services/runtime/local-sessions.js';
+import { listCustomCommands } from '../services/sessions/session-commands.js';
+import { listSessionFiles, MAX_QUERY_CHARS } from '../services/sessions/session-files.js';
+import { terminalOfSession } from '../services/terminals/terminal-link.js';
 import { requireOperator, type RouteContext } from './context.js';
 
 const SESSION_KEY = /^(claude|codex):[A-Za-z0-9._-]{1,200}$/;

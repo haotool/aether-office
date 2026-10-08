@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { seqOf, streamUrl, usageDelay } from '../../apps/web/src/features/use-session-stream.js';
+import { seqOf, streamUrl, usageDelay } from '../../apps/web/src/hooks/use-session-stream.js';
 
 describe('session stream helpers', () => {
   it('spaces token KPI refetches 5 seconds apart', () => {

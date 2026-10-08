@@ -1,8 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import { DomainError, type Actor } from '@aether/kernel';
-import type { SyncOptions } from '../services/integrations.js';
+import type { SyncOptions } from '../services/domain/integrations.js';
 import type { Control } from '../control.js';
-import type { PairingStore } from '../services/pairing.js';
+import type { PairingStore } from '../services/remote/pairing.js';
 
 export type ServerOptions = {
   origin: string;

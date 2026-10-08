@@ -5,11 +5,14 @@ import { QueryClient, h, renderHtml, textOf } from './fixtures/ssr.js';
 // The server renderer reads a store's initial state, whose language is the browser's own: a Chinese browser, first visit.
 installBrowserEnv();
 installGlobal('navigator', { language: 'zh-TW', webdriver: false, onLine: true });
-vi.mock('../../apps/web/src/phone.js', () => ({ usePhone: () => false, usePhoneAny: () => false }));
-const { translate } = await import('../../apps/web/src/i18n.js');
-const { PermissionCard } = await import('../../apps/web/src/features/PermissionCard.js');
-const { TerminalKeys } = await import('../../apps/web/src/features/TerminalKeys.js');
-const { NotFound } = await import('../../apps/web/src/features/NotFound.js');
+vi.mock('../../apps/web/src/lib/preferences/phone.js', () => ({
+  usePhone: () => false,
+  usePhoneAny: () => false,
+}));
+const { translate } = await import('../../apps/web/src/lib/i18n/i18n.js');
+const { PermissionCard } = await import('../../apps/web/src/features/operations/PermissionCard.js');
+const { TerminalKeys } = await import('../../apps/web/src/features/terminal/TerminalKeys.js');
+const { NotFound } = await import('../../apps/web/src/features/shell-chrome/NotFound.js');
 
 afterAll(removeBrowserEnv);
 

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { createServer } from '../../apps/control/src/server.js';
-import { resetLocalSessionCache } from '../../apps/control/src/services/local-sessions.js';
+import { resetLocalSessionCache } from '../../apps/control/src/services/runtime/local-sessions.js';
 import { command, fixture } from './fixture.js';
 import { alive, untilAsync } from './process-fixtures.js';
 

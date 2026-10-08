@@ -7,7 +7,7 @@ import {
   report,
   sessionCredential,
   reconcileOffline,
-} from '../../apps/control/src/services/runners.js';
+} from '../../apps/control/src/services/runtime/runners.js';
 import { command } from './fixture.js';
 function setup() {
   let now = 1000;

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { previewParams } from '../../apps/web/src/features/scene-preview.js';
+import { previewParams } from '../../apps/web/src/features/office/scene-preview.js';
 
 describe('previewParams', () => {
   it('reads the effect and the time from a full URL, a path or a bare query', () => {
     const want = { effect: 'rubber-duck', t: 1500 };
-    expect(previewParams('http://127.0.0.1:4320/?preview=life&effect=rubber-duck&t=1500')).toEqual(
+    expect(previewParams('http://127.0.0.1:8780/?preview=life&effect=rubber-duck&t=1500')).toEqual(
       want,
     );
     expect(previewParams('/office?preview=life&effect=rubber-duck&t=1500#x')).toEqual(want);

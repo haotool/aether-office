@@ -43,14 +43,14 @@ Score 81.2, floor 81.2, 100% of the rule weight measured.
 **function-length** (-12): Functions over 50 lines
 
 ```text
-  packages/office-scene/src/PerfProbe.tsx:34 PerfProbe 123 lines
-  packages/office-scene/src/MemberScreen.tsx:47 MemberScreen 118 lines
-  packages/office-scene/src/CommLinks.tsx:28 Link 116 lines
-  packages/office-scene/src/OrbitalBackdrop.tsx:185 OrbitalBackdrop 114 lines
-  packages/office-scene/src/director.ts:62 chooseShot 113 lines
+  packages/office-scene/src/components/PerfProbe.tsx:34 PerfProbe 123 lines
+  packages/office-scene/src/components/MemberScreen.tsx:47 MemberScreen 118 lines
+  packages/office-scene/src/environment/CommLinks.tsx:28 Link 116 lines
+  packages/office-scene/src/components/OrbitalBackdrop.tsx:185 OrbitalBackdrop 114 lines
+  packages/office-scene/src/environment/director.ts:62 chooseShot 113 lines
   packages/office-scene/src/squad/squad-model.ts:84 stepSquad 113 lines
   packages/office-scene/src/intro/use-intro-tour.ts:65 useIntroTour 105 lines
-  packages/office-scene/src/use-seat-drag.ts:34 useSeatDrag 104 lines
+  packages/office-scene/src/core/use-seat-drag.ts:34 useSeatDrag 104 lines
   ... 33 more in scorecard.json
 ```
 
@@ -58,10 +58,10 @@ Score 81.2, floor 81.2, 100% of the rule weight measured.
 
 ```text
   apps/control/src/server.ts:1 38 importers
-  apps/web/src/api.ts:1 58 importers
+  apps/web/src/lib/api/api.ts:1 58 importers
   packages/office-scene/src/random.ts:1 41 importers
-  apps/web/src/localSessions.ts:1 40 importers
-  apps/web/src/state.ts:1 44 importers
+  apps/web/src/lib/sessions/localSessions.ts:1 40 importers
+  apps/web/src/lib/preferences/state.ts:1 44 importers
   apps/web/src/ui.tsx:1 132 importers
   tests/aether/fixture.ts:1 61 importers
   e2e/support/sign-in.ts:1 57 importers
@@ -70,19 +70,19 @@ Score 81.2, floor 81.2, 100% of the rule weight measured.
 **file-size-400** (-1.28): Files over 400 lines
 
 ```text
-  apps/web/src/features/Terminals.tsx:1 434 lines
-  apps/web/src/styles/squad.css:1 431 lines
+  apps/web/src/features/terminal/Terminals.tsx:1 434 lines
+  apps/web/src/styles/session/squad.css:1 431 lines
   tests/aether/screen-views.test.ts:1 412 lines
-  apps/web/src/features/Sessions.tsx:1 406 lines
+  apps/web/src/features/sessions/Sessions.tsx:1 406 lines
 ```
 
 **dead-exports** (-0.5): Exports nothing imports
 
 ```text
-  apps/web/src/features/ConnectPhone.tsx:106 ConnectPhone
+  apps/web/src/features/integrations/ConnectPhone.tsx:106 ConnectPhone
   apps/web/src/features/settings/NotificationsSection.tsx:16 HOOK_INSTALL
-  apps/web/src/features/TaskActions.tsx:9 TaskActionProps
-  apps/web/src/features/TaskActions.tsx:17 TaskCommand
+  apps/web/src/features/tasks-git/TaskActions.tsx:9 TaskActionProps
+  apps/web/src/features/tasks-git/TaskActions.tsx:17 TaskCommand
 ```
 
 ## Types and correctness gates
@@ -107,12 +107,12 @@ Score 77.0, floor 85.0, 100% of the rule weight measured.
 ```text
   packages/office-scene/src/random.ts:24
   packages/office-scene/src/random.ts:34
-  packages/office-scene/src/carriers.ts:61
-  packages/office-scene/src/carriers.ts:62
-  packages/office-scene/src/desk-profile.ts:81
-  packages/office-scene/src/desk-profile.ts:88
-  packages/office-scene/src/desk-profile.ts:88
-  packages/office-scene/src/screen-draw.ts:62
+  packages/office-scene/src/environment/carriers.ts:61
+  packages/office-scene/src/environment/carriers.ts:62
+  packages/office-scene/src/desks/desk-profile.ts:81
+  packages/office-scene/src/desks/desk-profile.ts:88
+  packages/office-scene/src/desks/desk-profile.ts:88
+  packages/office-scene/src/screen/screen-draw.ts:62
   ... 33 more in scorecard.json
 ```
 
@@ -148,14 +148,14 @@ Score 94.0, floor 94.0, 82% of the rule weight measured.
 **flaky-patterns** (-6): Fixed sleeps, fixed ports and waitForTimeout in tests
 
 ```text
-  e2e/intro.spec.ts:93 fixed sleep
-  e2e/office-life-follow-up.spec.ts:61 fixed sleep
-  e2e/office-life-follow-up.spec.ts:104 fixed sleep
-  e2e/office-life-follow-up.spec.ts:120 fixed sleep
-  e2e/office-life.spec.ts:71 fixed sleep
-  e2e/office-life.spec.ts:86 fixed sleep
-  e2e/office-life.spec.ts:147 fixed sleep
-  e2e/office-life.spec.ts:211 fixed sleep
+  e2e/office-life/intro.spec.ts:93 fixed sleep
+  e2e/office-life/office-life-scene-preview.spec.ts:61 fixed sleep
+  e2e/office-life/office-life-scene-preview.spec.ts:104 fixed sleep
+  e2e/office-life/office-life-scene-preview.spec.ts:120 fixed sleep
+  e2e/office-life/office-life.spec.ts:71 fixed sleep
+  e2e/office-life/office-life.spec.ts:86 fixed sleep
+  e2e/office-life/office-life.spec.ts:147 fixed sleep
+  e2e/office-life/office-life.spec.ts:211 fixed sleep
   ... 10 more in scorecard.json
 ```
 
@@ -196,14 +196,14 @@ Score 92.3, floor 92.3, 100% of the rule weight measured.
 **escape-comments** (-7.7): token-lint escape comments over the budget of 100
 
 ```text
-  apps/web/src/styles/breakpoints.css:6 min-height: 540px; /* token-lint: geometry */
-  apps/web/src/styles/breakpoints.css:9 width: 220px; /* token-lint: geometry */
-  apps/web/src/styles/breakpoints.css:12 min-width: 160px; /* token-lint: geometry */
-  apps/web/src/styles/breakpoints.css:17 width: 172px; /* token-lint: geometry */
-  apps/web/src/styles/breakpoints.css:23 width: 132px; /* token-lint: geometry */
-  apps/web/src/styles/breakpoints.css:38 min-height: 380px; /* token-lint: geometry */
-  apps/web/src/styles/breakpoints.css:96 width: 28px; /* token-lint: geometry */
-  apps/web/src/styles/breakpoints.css:97 height: 28px; /* token-lint: geometry */
+  apps/web/src/styles/pages/breakpoints.css:6 min-height: 540px; /* token-lint: geometry */
+  apps/web/src/styles/pages/breakpoints.css:9 width: 220px; /* token-lint: geometry */
+  apps/web/src/styles/pages/breakpoints.css:12 min-width: 160px; /* token-lint: geometry */
+  apps/web/src/styles/pages/breakpoints.css:17 width: 172px; /* token-lint: geometry */
+  apps/web/src/styles/pages/breakpoints.css:23 width: 132px; /* token-lint: geometry */
+  apps/web/src/styles/pages/breakpoints.css:38 min-height: 380px; /* token-lint: geometry */
+  apps/web/src/styles/pages/breakpoints.css:96 width: 28px; /* token-lint: geometry */
+  apps/web/src/styles/pages/breakpoints.css:97 height: 28px; /* token-lint: geometry */
   ... 33 more in scorecard.json
 ```
 
@@ -219,20 +219,20 @@ Score 77.2, floor 77.2, 80% of the rule weight measured.
 | Disabled controls with no title or description saying why (heuristic) | `disabled-reason` | 56 | 0 | 10 | -10 | fail |
 | <img> without alt | `img-alt` | 0 | 0 | 5 | 0 | pass |
 | Clickable div or span with no role, key handler or tab stop (heuristic) | `clickable-div` | 0 | 0 | 10 | 0 | pass |
-| axe violations (e2e/accessibility.spec.ts) (not run: no recorded result (expected evidence/axe-results.json with { "violations": [...] })) | `axe` | - | - | 20 | 0 | not run |
+| axe violations (e2e/ui/accessibility.spec.ts) (not run: no recorded result (expected evidence/axe-results.json with { "violations": [...] })) | `axe` | - | - | 20 | 0 | not run |
 
 ### What costs points
 
 **inline-i18n** (-12.8): Inline bilingual strings that belong in the locale tables
 
 ```text
-  packages/office-scene/src/CompactHud.tsx:1 8 inline pairs
-  packages/office-scene/src/OfficeScene.tsx:1 1 inline pairs
-  packages/office-scene/src/PipWall.tsx:1 3 inline pairs
-  packages/office-scene/src/SceneHud.tsx:1 23 inline pairs
-  packages/office-scene/src/StalkTooltip.tsx:1 7 inline pairs
-  packages/office-scene/src/context.ts:1 1 inline pairs
-  packages/office-scene/src/flower-names.ts:1 1 inline pairs
+  packages/office-scene/src/components/CompactHud.tsx:1 8 inline pairs
+  packages/office-scene/src/components/OfficeScene.tsx:1 1 inline pairs
+  packages/office-scene/src/components/PipWall.tsx:1 3 inline pairs
+  packages/office-scene/src/components/SceneHud.tsx:1 23 inline pairs
+  packages/office-scene/src/components/StalkTooltip.tsx:1 7 inline pairs
+  packages/office-scene/src/environment/context.ts:1 1 inline pairs
+  packages/office-scene/src/flowers/flower-names.ts:1 1 inline pairs
   packages/office-scene/src/intro/intro-text.ts:1 5 inline pairs
   ... 8 more in scorecard.json
 ```
@@ -240,14 +240,14 @@ Score 77.2, floor 77.2, 80% of the rule weight measured.
 **disabled-reason** (-10): Disabled controls with no title or description saying why (heuristic)
 
 ```text
-  apps/web/src/features/Agents.tsx:134
-  apps/web/src/features/Approvals.tsx:83
-  apps/web/src/features/Approvals.tsx:86
-  apps/web/src/features/AttentionSessions.tsx:69
-  apps/web/src/features/CharacterMenu.tsx:182
-  apps/web/src/features/CharacterMenu.tsx:218
-  apps/web/src/features/CharacterMessage.tsx:92
-  apps/web/src/features/ClockOut.tsx:219
+  apps/web/src/features/integrations/Agents.tsx:134
+  apps/web/src/features/operations/Approvals.tsx:83
+  apps/web/src/features/operations/Approvals.tsx:86
+  apps/web/src/features/sessions/AttentionSessions.tsx:69
+  apps/web/src/features/office/CharacterMenu.tsx:182
+  apps/web/src/features/office/CharacterMenu.tsx:218
+  apps/web/src/features/office/CharacterMessage.tsx:92
+  apps/web/src/features/operations/ClockOut.tsx:219
   ... 33 more in scorecard.json
 ```
 

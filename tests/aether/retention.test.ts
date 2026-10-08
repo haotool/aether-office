@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { command, fixture } from './fixture.js';
-import { RETENTION, pruneRetention } from '../../apps/control/src/services/retention.js';
+import { RETENTION, pruneRetention } from '../../apps/control/src/services/domain/retention.js';
 
 const DAY = 24 * 60 * 60 * 1000;
 

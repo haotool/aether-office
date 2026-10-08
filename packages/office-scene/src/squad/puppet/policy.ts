@@ -1,4 +1,4 @@
-import type { Quality } from '../../scene-types.js';
+import type { Quality } from '../../scene/scene-types.js';
 
 /**
  * Whether the puppet strings are drawn at all: not on the low tier, and not when the person turned the relation effects

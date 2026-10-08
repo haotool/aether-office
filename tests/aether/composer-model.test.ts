@@ -19,8 +19,11 @@ import {
   slashToken,
   type Pending,
   type SlashItem,
-} from '../../apps/web/src/features/composer-model.js';
-import { BUILTIN_COMMANDS, slashItems } from '../../apps/web/src/features/slash-commands.js';
+} from '../../apps/web/src/features/conversation/composer-model.js';
+import {
+  BUILTIN_COMMANDS,
+  slashItems,
+} from '../../apps/web/src/features/conversation/slash-commands.js';
 import { fuzzyScore } from '../../packages/kernel/src/index.js';
 
 const pending = (localId: string, text: string, over: Partial<Pending> = {}): Pending => ({

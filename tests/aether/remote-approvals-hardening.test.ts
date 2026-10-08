@@ -15,8 +15,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, expect, it } from 'vitest';
 import { approvalProof } from '../../packages/providers/src/approval-config.mjs';
-import { approvalChannel } from '../../apps/control/src/services/remote-approvals.js';
-import { pruneAttempts } from '../../apps/control/src/services/attempts.js';
+import { approvalChannel } from '../../apps/control/src/services/remote/remote-approvals.js';
+import { pruneAttempts } from '../../apps/control/src/services/runtime/attempts.js';
 import { approvalsFixture } from './permission-fixtures.js';
 import { freePort } from './timing.js';
 

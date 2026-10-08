@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { mapPool } from '../../apps/control/src/services/pool.js';
+import { mapPool } from '../../apps/control/src/services/runtime/pool.js';
 
 it('keeps input order, never exceeds the width, and lets a slow item not stall the rest', async () => {
   let running = 0;

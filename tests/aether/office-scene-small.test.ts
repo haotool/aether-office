@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from '../../packages/office-scene/node_modules/three/build/three.module.js';
-import type { Seat } from '../../packages/office-scene/src/director.js';
+import type { Seat } from '../../packages/office-scene/src/environment/director.js';
 import { lifeContext } from '../../packages/office-scene/src/life/context.js';
 import {
   SPOT,
@@ -9,7 +9,7 @@ import {
   envelope,
   lerp,
 } from '../../packages/office-scene/src/life/effects/shared.js';
-import { estimateGpuBytes } from '../../packages/office-scene/src/perf-rig.js';
+import { estimateGpuBytes } from '../../packages/office-scene/src/perf/perf-rig.js';
 import { stringsEnabled } from '../../packages/office-scene/src/squad/puppet/policy.js';
 import { crossGeometry } from '../../packages/office-scene/src/squad/puppet/puppet-art.js';
 import { SEGMENT_CAPACITY } from '../../packages/office-scene/src/squad/puppet/rig.js';

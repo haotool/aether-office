@@ -13,7 +13,9 @@ pnpm run quality -- --target 95  # exactly what stops each area from reaching 95
 pnpm run quality:report          # regenerate the scorecard and raise the floors
 pnpm run quality:check           # CI: fails on a stale scorecard or an area below its floor
 pnpm run quality:release         # CHARTER §5 release score (unmeasured criteria = 0 credit)
-pnpm run quality -- --release --out /path/to/release.json   # same, write machine-readable JSON
+pnpm run quality:release -- --out release.json
+pnpm run quality:release -- --gates gates.json --out release.json
+pnpm run quality:gates -- --out gates.json [--only L1-01,L7-01]
 ```
 
 ### Release mode (`--release`)
@@ -24,30 +26,75 @@ excludes skipped rules from the denominator). Each criterion row has
 (G failures cap the layer at 80). The overall score is the §5.2 weighted mean. Exit code 1 unless overall ≥ 95, every layer ≥
 90, every **G** gate passes, and `unmeasured` is 0.
 
+**G gate results** (`--gates <file>`): JSON schema `aether-quality-gates/1` with
+`{ schema, sha, dirty, gates: [{ id, exit, command, startedAt, durationMs }] }`.
+`sha` must equal `git rev-parse HEAD`, `dirty` must be `0` (and the working tree must be clean), each `id` must be a **G**
+criterion with unique ids and integer `exit` (`0` = pass). **Trust model:** the gates file is accepted evidence only when it was
+produced by `pnpm run quality:gates` at the same `HEAD` (do not hand-edit `exit` values—the scorer cannot detect tampering).
+Independent evaluators re-run `quality:gates` themselves at release time. Produce the file with
+`pnpm run quality:gates -- --out <file>` (command map is SSOT in `scripts/quality/release/gates.mjs`). Missing ids stay
+unmeasured; an invalid file sets `gatesError` and keeps every **G** row unmeasured (same pattern as malformed E/H evidence).
+
 **E/H evidence** lives in [criteria-evidence.json](criteria-evidence.json): an array of
 `{ id, credit: 0|0.5|1, reviewers, sha, files, note }`. At release time each entry must reference a known criterion id, valid
 credit, existing `files`, and a `sha` that is an ancestor of `HEAD`; otherwise that criterion stays unmeasured.
 
-| Criterion | Source in this repository |
-| --- | --- |
-| L1-02 | `scripts/quality/ast.mjs` (`!`, `as unknown as`, `any`) |
-| L1-03 | `scripts/quality/areas/structure.mjs` limits (file/function/nesting) |
-| L1-04 | `scripts/quality/ast.mjs` cognitive complexity |
-| L1-05 | `scripts/quality/dup.mjs` |
-| L1-06 | `scripts/quality/graph.mjs` dead exports + orphan modules + unused deps heuristic |
-| L1-08 | `scripts/quality/release/measure.mjs` residue path patterns |
-| L1-09 | `scripts/quality/areas/a11y.mjs` `inline-i18n` |
-| L2-02 | directory file counts (excludes `tests/`, `generated/`) |
-| L2-03 | `scripts/quality/graph.mjs` fan-in (excludes `tests/**`, `e2e/support/**`) |
-| L2-06 | product source line median / p95 |
-| L3-05 | `docs/verification/features.json` `testIds` |
-| L3-06 | `scripts/quality/areas/tests.mjs` `FLAKY` + hard-coded `43xx` ports under `tests/` |
-| L7-03 | `git worktree`, local branches, stash |
-| L7-04 | top-level directory entry count |
-| All other §5.3 ids | Registered as `unmeasured` until later work packages implement them |
+**D9 fan-in allowlist:** a line `fan-in-allow: <repo-relative path>` in `docs/adr/*.md` excludes that file from L2-03 fan-in
+violations. At most five declarations repo-wide; invalid or missing paths and excess declarations add L2-03 violations.
 
-Implementation: `scripts/quality/release/` (registry, measure, compute, evidence). Tests:
-`tests/aether/quality-release.test.ts`.
+| Criterion | Measured by | Producer / notes |
+| --- | --- | --- |
+| L1-02 … L1-09, L2-02, L2-03, L2-06, L3-05, L3-06, L7-03, L7-04 | Release static measures (see prior WP) | `scripts/quality/release/measure.mjs` |
+| L3-03 | `coverage/coverage-summary.json` (`pnpm test:coverage`); violations = max(0, 80−line%, 70−branch%) pp; failAt 30 | Scorer (file absent → unmeasured) |
+| L4-05 | `quality` UI token lint + escape budget | Scorer |
+| L4-06 | Locale parity + inline bilingual scan | Scorer |
+| L5-03 | `refetchInterval` sites under `apps/web/src` | Scorer |
+| L5-04 | All `backdrop-filter` blur and `filter: blur(` sites under `apps/web/src/styles/**`, minus lines marked `/* blur-ok: … */` on the same or previous line (measured harmless); failAt 20 | Scorer |
+| L6-07 | Mixed zh/en paragraphs in public `docs/` (excludes research/adr/verification) | Scorer |
+| L8-03 | Conventional commit subjects on full `git log HEAD` (release clone uses post-cleanup history) | Scorer |
+| L8-05 | Distinct maintainer author emails (non-upstream commits) | Scorer |
+| L9-04 | `pnpm audit` high/critical | Scorer (network failure → unmeasured) |
+| L1-01, L2-01, L2-07, L3-01, L3-02, L3-04, L3-07, L5-01, L6-01, L7-01, L7-02, L7-05, L9-01, L9-02 | `quality:gates` | Gate executor (PM integration runs full set under lock) |
+| L1-07 | (not in executor yet) | Future static gate producer |
+| L4-01, L4-02, L4-04, L5-02, L5-07, L8-01, L8-02, L8-04, L8-08, L9-03, L9-05 | External QA / history / CI evidence | Respective work packages (file may list any **G** id) |
+| E / H rows | `criteria-evidence.json` | Review / human gates work packages |
+
+Implementation: `scripts/quality/release/` (registry, measure, gates, evidence). Tests:
+`tests/aether/quality-release*.test.ts`, `tests/aether/quality-gates.test.ts`.
+
+### L1-04 cognitive complexity (SonarJS alignment)
+
+L1-04 uses a clean-room cognitive-complexity walk in `scripts/quality/ast-cognitive*.mjs`, aligned
+with **SonarJS 4.2.2** (`eslint-plugin-sonarjs`, LGPL) as an external black-box oracle—not vendored
+in this repository and not a runtime dependency. Known intentional deltas include nullish coalescing
+(`??`), which SonarSource’s white paper ignores but SonarJS does not always treat the same way in
+every edge path; our implementation follows the SonarJS oracle on the product tree.
+
+**Invariant (ongoing):** on the product scope the scorer uses (`apps/**`, `packages/**/src`,
+`scripts/**` TypeScript, excluding `generated/`), the set of functions with cognitive complexity
+**> 15** should match SonarJS’s set (symmetric difference 0). Unit tests in
+`tests/aether/quality-cognitive-complexity.test.ts` pin boundary cases of the walk; full-set parity
+is verified outside this repository with the black-box oracle below (CI does not run that compare).
+
+**Historical snapshot (not a standing guarantee):** at commit `582f250` (2026-10-08), a black-box
+oracle compare on that tree reported about **93.33%** exact per-function match overall and about
+**89.56%** on matched functions with complexity ≥ 8. Percentages drift when sources change; do not
+treat them as release criteria.
+
+**Reproduce the oracle outside this repo (read-only, no vendoring):**
+
+1. In a directory **outside** the product clone (for example a sibling `oracle-sonarjs/`), run
+   `npm ci` from a lockfile that pins `eslint`, `eslint-plugin-sonarjs`, and
+   `@typescript-eslint/parser` only—do not add these packages to the product `pnpm-lock.yaml`.
+2. Add a flat ESLint config that enables `sonarjs/cognitive-complexity` at threshold `0` for
+   `**/*.{ts,tsx}` under the product tree.
+3. From the product root, run ESLint with that config and collect `sonarjs/cognitive-complexity`
+   messages (black box: do not copy plugin source into the product).
+4. Compare to `scripts/quality/ast.mjs` (`analyzeProject` + per-function `cognitive`) on the same
+   files; report symmetric difference for the **> 15** sets and optional exact-match rates for
+   matched functions.
+
+SonarJS is LGPL; use it only as an external reference, not as a shipped dependency.
 
 The whole run takes about 15 seconds, uses no network and starts no browser. Code is read through the TypeScript compiler API of
 the installed `typescript` package (7.x, `typescript/unstable/sync`, which starts the local native compiler); no dependency was added.
@@ -73,7 +120,7 @@ there and the rubric below must change in the same commit.
 | Structure (`structure`) | files over 400 lines (8) and over 800 (12), counting ts, tsx, mjs and css; functions over 50 lines (12); control-flow nesting over 4 (8); import cycles over runtime imports (12); files imported by more than 30 others, `index.ts` barrels excepted (5); exports no file imports, followed through barrels (10); duplicated code over 3% of product lines, by a 50-token window with comments and imports ignored (12); `any` (6); `@ts-ignore`, `@ts-expect-error`, `eslint-disable` (6); TODO, FIXME, HACK in comments (5); `console.*` in product source (5) |
 | Types and correctness gates (`types`) | `strict`, `noUncheckedIndexedAccess`, `noUnusedLocals` on (20); `noImplicitReturns`, `noFallthroughCasesInSwitch`, `noImplicitOverride`, `noUnusedParameters` (6); TypeScript files outside the type-checked project (6); `tsc --noEmit` errors (20); boundary violations (10); files prettier would change (8); non-null assertions (15); `as unknown as` (10) |
 | Tests (`tests`) | product modules no unit test reaches through imports (25); share imported directly by a test, resolved through barrels, at least 60% (15); fixed sleeps, fixed ports, `waitForTimeout` (20); skipped or todo tests, where `test.skip(condition, reason)` is a guard and not counted (10); line coverage at least 80% (8) and branches at least 70% (7), read from `coverage/coverage-summary.json` when a vitest coverage run left one, else not run (the v8 provider is not installed and none is added). The test-to-source line ratio per package is reported |
-| UI system (`ui`) | the existing token lint (20); literal px width, height, min, max, inset (10); `vh` (5); `@media` widths outside 500, 760, 1000, 1250 and their one-pixel partners (5); literal transition and animation seconds (5); literal shadows (5); literal `line-height` (5); `!important` (5); px custom properties outside `tokens.css` (5); rules above `scripts/design-token-baseline.json` when it exists (15); distinct sizes per role from `e2e/role-variance.spec.ts` (20, see below). Physical left/right properties are reported only |
+| UI system (`ui`) | the existing token lint (20); literal px width, height, min, max, inset (10); `vh` (5); `@media` widths outside 500, 760, 1000, 1250 and their one-pixel partners (5); literal transition and animation seconds (5); literal shadows (5); literal `line-height` (5); `!important` (5); px custom properties outside `tokens.css` (5); rules above `scripts/design-token-baseline.json` when it exists (15); distinct sizes per role from `e2e/ui/role-variance.spec.ts` (20, see below). Physical left/right properties are reported only |
 | Accessibility and i18n (`a11y`) | missing keys between each en/zh pair of tables in `apps/web/src/locales` (25); inline bilingual strings (20) and files above `tests/aether/inline-i18n-baseline.json` (10); disabled controls with no `title`, `aria-describedby`, `aria-label`, `whyNot` or a spread `why` object made by it (heuristic, 10); `<img>` without `alt` (5); clickable `div`/`span` without role, key handler or tab stop (heuristic, 10); axe violations (20, see below) |
 | Performance budgets (`perf`) | total web JavaScript gzip against `TOTAL_BUDGET_KB` of `scripts/check-bundle-size.mjs` (25); largest chunk against `CHUNK_BUDGET_KB` (15); first-load JavaScript and CSS of `dist/index.html`, as transferred (the `.br` the build writes) plus the larger of the two language tables, which `main.tsx` awaits before the first render, against 200 KB, which is the 186 KB of the phone budget in `docs/design-system.md` plus headroom (30); frame time and draw cost from `scripts/perf-matrix.mjs` need a real GPU and are always "not run" (30). CSS file count and size are reported (no CSS budget is documented) |
 | Docs truth (`docs`) | markdown links that do not resolve, from the `oss:check` link check (20); `pnpm <command>` in code spans and blocks that is not a script or a pnpm built-in (20); `AETHER_*` names no code reads (15); backticked repository paths that do not exist (20); required documents (5); verification ledger and report (12); `THIRD_PARTY_NOTICES.md` fresh (8). `docs/research`, `docs/adr`, `docs/verification` and the changelog describe history and are not held to the existence rules |
@@ -104,7 +151,7 @@ penalty (a rule that was not run on either side is ignored, so a machine without
 ## Challenging a rule
 
 A rule is wrong when it penalises something the project does on purpose, or misses something it should not allow. Open an issue or a pull
-request that changes the rule in `scripts/quality/areas/<area>.mjs`, its test in `tests/aether/quality-score.test.ts` and this table,
+request that changes the rule in `scripts/quality/areas/<area>.mjs`, its tests in `tests/aether/quality-score-*.test.ts` and this table,
 and regenerate the scorecard. Known limits: the dead-export analysis is by name over resolved imports (a name used only through a string
 or a computed key counts as unused); the clone detector matches exact tokens, not renamed copies; `.mjs` files are read for size and text
 patterns but not parsed; the accessibility rules are heuristics over JSX text, not a browser.

@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { isDomainEvent } from '../../apps/web/src/stream-event.js';
+import { isDomainEvent } from '../../apps/web/src/lib/sessions/stream-event.js';
 
 it('accepts a domain event and refuses anything malformed', () => {
   expect(isDomainEvent(JSON.stringify({ seq: '12', type: 'agent.updated' }))).toBe(true);

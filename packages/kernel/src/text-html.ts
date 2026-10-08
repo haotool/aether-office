@@ -249,23 +249,31 @@ function inlineTag(run: Run, t: Tag) {
     });
 }
 
+function structureListRoot(run: Run, name: string, closing: boolean): void {
+  if (closing) run.lists.pop();
+  else run.lists.push({ ordered: name === 'ol', n: 0 });
+  put(run, '\n');
+}
+
+function structureListItem(run: Run, closing: boolean): void {
+  if (closing) return;
+  const list = run.lists.at(-1);
+  if (list) list.n++;
+  const marker = list?.ordered ? `${list.n}.` : '-';
+  put(run, `\n${'  '.repeat(Math.max(0, run.lists.length - 1))}${marker} `);
+}
+
+function structureHeading(run: Run, name: string, closing: boolean): void {
+  put(run, closing ? '\n\n' : `\n\n${'#'.repeat(Number(name.slice(1)))} `);
+}
+
 /** Lists, headings, quotes and block tags: they break the paragraph. Every other known tag is only a wrapper, dropped. */
 function structureTag(run: Run, i: number, t: Tag): number {
   const { name, closing } = t;
-  if (name === 'ul' || name === 'ol') {
-    if (closing) run.lists.pop();
-    else run.lists.push({ ordered: name === 'ol', n: 0 });
-    put(run, '\n');
-  } else if (name === 'li') {
-    if (!closing) {
-      const list = run.lists.at(-1);
-      if (list) list.n++;
-      const marker = list?.ordered ? `${list.n}.` : '-';
-      put(run, `\n${'  '.repeat(Math.max(0, run.lists.length - 1))}${marker} `);
-    }
-  } else if (/^h[1-6]$/.test(name)) {
-    put(run, closing ? '\n\n' : `\n\n${'#'.repeat(Number(name.slice(1)))} `);
-  } else if (name === 'summary') put(run, closing ? '\n\n' : '\n\n#### ');
+  if (name === 'ul' || name === 'ol') structureListRoot(run, name, closing);
+  else if (name === 'li') structureListItem(run, closing);
+  else if (/^h[1-6]$/.test(name)) structureHeading(run, name, closing);
+  else if (name === 'summary') put(run, closing ? '\n\n' : '\n\n#### ');
   else if (name === 'blockquote') put(run, closing ? '\n\n' : '\n\n> ');
   // A block tag breaks the paragraph; a closer that opens nothing in this text is only noise, and breaks nothing.
   else if (BLOCKS.has(name)) {

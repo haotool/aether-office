@@ -5,9 +5,9 @@ import { beforeEach, expect, it, vi } from 'vitest';
 
 // One scan at a time: requests that arrive while a scan runs share it, and what a scan found is remembered per home.
 const processes = vi.hoisted(() => ({ calls: 0 }));
-vi.mock('../../apps/control/src/services/agent-processes.js', async (original) => {
+vi.mock('../../apps/control/src/services/runtime/agent-processes.js', async (original) => {
   const real =
-    await original<typeof import('../../apps/control/src/services/agent-processes.js')>();
+    await original<typeof import('../../apps/control/src/services/runtime/agent-processes.js')>();
   return {
     ...real,
     listAgentProcesses: async () => {
@@ -18,7 +18,7 @@ vi.mock('../../apps/control/src/services/agent-processes.js', async (original) =
   };
 });
 const { resetLocalSessionCache, scanLocalSessions } =
-  await import('../../apps/control/src/services/local-sessions.js');
+  await import('../../apps/control/src/services/runtime/local-sessions.js');
 
 async function homeWith(name: string) {
   const home = await mkdtemp(join(tmpdir(), 'aether-flight-'));

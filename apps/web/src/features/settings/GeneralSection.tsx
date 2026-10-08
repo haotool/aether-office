@@ -1,5 +1,5 @@
-import { usePreferences, type Preferences } from '../../state.js';
-import { resolveTheme, useSystemDark, type ThemePreference } from '../../theme.js';
+import { usePreferences, type Preferences } from '../../lib/preferences/state.js';
+import { resolveTheme, useSystemDark, type ThemePreference } from '../../lib/preferences/theme.js';
 import { useT } from '../../ui/useT.js';
 import { Row, Segmented, SelectBox, StatusChip, Switch } from './kit.js';
 

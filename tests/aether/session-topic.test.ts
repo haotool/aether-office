@@ -5,12 +5,12 @@ import { describe, expect, it } from 'vitest';
 import {
   resetLocalSessionCache,
   scanLocalSessions,
-} from '../../apps/control/src/services/local-sessions.js';
+} from '../../apps/control/src/services/runtime/local-sessions.js';
 import {
   claudeTopic,
   codexTopic,
   topicTitle,
-} from '../../apps/control/src/services/session-topic.js';
+} from '../../apps/control/src/services/sessions/session-topic.js';
 
 it('finds the task in Claude’s last-prompt and in the first real user message of a Codex rollout', () => {
   expect(

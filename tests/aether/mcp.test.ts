@@ -10,7 +10,7 @@ import {
   claim,
   report,
   sessionCredential,
-} from '../../apps/control/src/services/runners.js';
+} from '../../apps/control/src/services/runtime/runners.js';
 import { command } from './fixture.js';
 import { freePort } from './timing.js';
 it('MCP stdio uses durable scoped inbox/replies, stable retries and expiring run credentials', async () => {

@@ -4,6 +4,13 @@ import { PRODUCT_SOURCE } from './repo.mjs';
 /** The scorer's own files describe the patterns they look for, so they are never scanned. */
 export const SELF = /^(scripts\/quality\/|tests\/aether\/quality-|docs\/quality\/)/;
 
+/** CHARTER D9: fan-in ignores test support modules as violation targets. */
+export const FAN_IN_SUPPORT = /^(?:tests\/|e2e\/support\/)/;
+
+export function fanInExcludedTarget(file) {
+  return FAN_IN_SUPPORT.test(file);
+}
+
 export const isSourceFile = (file) => PRODUCT_SOURCE.test(file) || /^scripts\/.*\.ts$/.test(file);
 
 export const at = (file, line, message = '') => `${file}:${line}${message ? ` ${message}` : ''}`;

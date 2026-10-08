@@ -2,15 +2,15 @@
 // and the seals. Pure: the book, the squads and the clock in, lists of instances out. The layer writes them into one
 // instanced mesh (the boxes) and two (the seals, one per word), so the whole hand-over is a handful of draw calls however
 // many folders there are.
-import { hashText } from '../../hash.js';
-import { floorY } from '../../scene-geometry.js';
+import { hashText } from '../../environment/hash.js';
+import { floorY } from '../../scene/scene-geometry.js';
 import { DESK_TOP } from '../squad-art.js';
 import type { DrawSquad } from '../squad-draw.js';
 import { trayView, type Book } from './book.js';
 import { MANILA, STAMP_BASE, STAMP_HANDLE, TAB } from './handover-art.js';
 import { FOLDER_THICKNESS, deskPlaces, folderAt, pressAt, type DeskPlaces } from './plan.js';
 import type { StampKind } from './stamp.js';
-import { itemAt } from '../../checked.js';
+import { itemAt } from '../../environment/checked.js';
 
 /** Boxes the mesh has room for: five folders (two boxes each) and a stamp (two) for each of 8 supervisors, and 16 more in hand. */
 export const BOX_CAPACITY = 160;

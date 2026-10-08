@@ -10,7 +10,7 @@ import {
   orbitShare,
   type IntroFrame,
 } from '../../packages/office-scene/src/intro/intro-tour.js';
-import { MIN_DISTANCE, type Pose } from '../../packages/office-scene/src/shot-camera.js';
+import { MIN_DISTANCE, type Pose } from '../../packages/office-scene/src/core/shot-camera.js';
 
 const HOME: Pose = { position: [30, 34, 44], target: [0, 0, 0], fov: 38 };
 const frame = (over: Partial<IntroFrame> = {}): IntroFrame => ({

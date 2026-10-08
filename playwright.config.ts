@@ -72,7 +72,7 @@ export default defineConfig({
     trace: 'off',
     screenshot: 'only-on-failure',
     storageState,
-    // The page registers a service worker on 127.0.0.1; only e2e/pwa.spec.ts lets it, so no other spec runs behind one.
+    // The page registers a service worker on 127.0.0.1; only e2e/perf/pwa.spec.ts lets it, so no other spec runs behind one.
     serviceWorkers: 'block',
   },
   projects: [

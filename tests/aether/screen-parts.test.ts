@@ -1,14 +1,14 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
-import { seeded } from '../../packages/office-scene/src/seeded.js';
-import { SCREEN_H, SCREEN_W } from '../../packages/office-scene/src/screen-draw.js';
-import { borrowCanvas, returnCanvas } from '../../packages/office-scene/src/screen-pool.js';
+import { seeded } from '../../packages/office-scene/src/environment/seeded.js';
+import { SCREEN_H, SCREEN_W } from '../../packages/office-scene/src/screen/screen-draw.js';
+import { borrowCanvas, returnCanvas } from '../../packages/office-scene/src/screen/screen-pool.js';
 import {
   BAR_H,
   CHROME_BAR,
   FOOTER_Y,
   PALETTES,
   chromeBar,
-} from '../../packages/office-scene/src/screen-theme.js';
+} from '../../packages/office-scene/src/screen/screen-theme.js';
 import {
   fit,
   polyline,
@@ -17,7 +17,7 @@ import {
   text,
   textBars,
   wander,
-} from '../../packages/office-scene/src/screen-ui.js';
+} from '../../packages/office-scene/src/screen/screen-ui.js';
 import { installBrowserEnv, installGlobal, removeBrowserEnv } from './fixtures/browser-env.js';
 import {
   numbersOf,

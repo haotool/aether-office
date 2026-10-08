@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent, useRef } from 'react';
-import type { Seat } from '../director.js';
-import type { PoseApi } from '../use-pose-cues.js';
+import type { Seat } from '../environment/director.js';
+import type { PoseApi } from '../core/use-pose-cues.js';
 import { lifeContext } from './context.js';
 import { poseCalls } from './poses.js';
 import { ruleOf } from './registry.js';

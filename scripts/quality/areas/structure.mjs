@@ -2,7 +2,7 @@
 // suppressions and stray console output.
 import { findDuplicates } from '../dup.mjs';
 import { deadExports, fanIn, findCycles } from '../graph.mjs';
-import { SELF, at, isSourceFile, locations, scan, top } from '../lib.mjs';
+import { SELF, at, fanInExcludedTarget, isSourceFile, locations, scan, top } from '../lib.mjs';
 import { rule } from '../model.mjs';
 import { CODE_FILE, PRODUCT_SOURCE, lineCount } from '../repo.mjs';
 
@@ -34,7 +34,7 @@ export function structure(repo, { facts, graph }) {
   const cycles = findCycles(new Map([...graph.runtime].filter(([f]) => PRODUCT_SOURCE.test(f))));
   // A package's index.ts is its public entry point, so being imported everywhere is its job.
   const importers = [...fanIn(graph.runtime, (f) => !SELF.test(f))].filter(
-    ([file, n]) => n > LIMITS.fanIn && !/\/index\.tsx?$/.test(file),
+    ([file, n]) => n > LIMITS.fanIn && !/\/index\.tsx?$/.test(file) && !fanInExcludedTarget(file),
   );
   const dead = deadExports(
     facts.filter((f) => PRODUCT_SOURCE.test(f.file)),

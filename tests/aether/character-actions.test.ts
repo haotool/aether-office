@@ -8,7 +8,7 @@ import {
   type ActionId,
   type CharacterFacts,
   type Reason,
-} from '../../apps/web/src/features/character-actions.js';
+} from '../../apps/web/src/features/office/character-actions.js';
 import { en } from '../../apps/web/src/locales/en.js';
 import { zh } from '../../apps/web/src/locales/zh.js';
 
