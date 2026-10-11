@@ -61,37 +61,20 @@ export function testedModules(facts, graph) {
 
 const packageOf = (file) => file.split('/').slice(0, 2).join('/');
 
+const COVERAGE = [
+  { id: 'coverage-lines', label: 'Line coverage', weight: 8, kind: 'lines', atLeast: 80 },
+  { id: 'coverage-branches', label: 'Branch coverage', weight: 7, kind: 'branches', atLeast: 70 },
+];
+
 function coverageRules(repo) {
-  if (!repo.exists(COVERAGE_SUMMARY))
-    return [
-      skipped(
-        'coverage',
-        'Line and branch coverage (vitest v8 provider)',
-        15,
-        `no ${COVERAGE_SUMMARY}: @vitest/coverage-v8 is not installed and no coverage run was recorded`,
-      ),
-    ];
+  if (!repo.exists(COVERAGE_SUMMARY)) {
+    const why = `no ${COVERAGE_SUMMARY}: run pnpm test:coverage`;
+    return COVERAGE.map((c) => skipped(c.id, c.label, c.weight, why));
+  }
   const total = JSON.parse(repo.read(COVERAGE_SUMMARY)).total;
-  return [
-    rule({
-      id: 'coverage-lines',
-      label: 'Line coverage',
-      weight: 8,
-      value: Math.round(total.lines.pct),
-      atLeast: 80,
-      full: 40,
-      unit: '%',
-    }),
-    rule({
-      id: 'coverage-branches',
-      label: 'Branch coverage',
-      weight: 7,
-      value: Math.round(total.branches.pct),
-      atLeast: 70,
-      full: 40,
-      unit: '%',
-    }),
-  ];
+  return COVERAGE.map(({ kind, ...c }) =>
+    rule({ ...c, value: Math.round(total[kind].pct), full: 40, unit: '%' }),
+  );
 }
 
 export function tests(repo, { facts, graph }) {

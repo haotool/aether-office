@@ -101,7 +101,8 @@ describe('test rules', () => {
       graph: { uses: [] },
     });
     expect(rules.find((r: { id: string }) => r.id === 'skipped-tests').value).toBe(1);
-    expect(rules.find((r: { id: string }) => r.id === 'coverage').status).toBe('skipped');
+    for (const id of ['coverage-lines', 'coverage-branches'])
+      expect(rules.find((r: { id: string }) => r.id === id).status).toBe('skipped');
   });
 
   it('credits a module a test imports through a barrel', () => {
