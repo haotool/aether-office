@@ -23,7 +23,8 @@ See [docs/architecture.md](docs/architecture.md).
 ## Checks
 
 Run before finishing: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test`, `pnpm build`, and
-`pnpm exec playwright test` (the same ones CI runs). Work test-first.
+`pnpm exec playwright test` (CI runs the same ones; its browser step is limited to the DOM specs, see
+[docs/development.md](docs/development.md)). Work test-first.
 
 ## UI
 

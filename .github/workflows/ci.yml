@@ -55,8 +55,9 @@ jobs:
       - run: pnpm run oss:check
       # After the build, so that the bundle budgets are measured.
       - run: pnpm run quality:check
+      # The 3D scene specs need a GPU and time out under software WebGL on a hosted runner; they run locally.
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm exec playwright test
+      - run: pnpm exec playwright test e2e/settings e2e/session e2e/workbench
 
   # Unit tests also run on macOS (vm_stat, ps and lsof parsing); the slow browser suite stays on Linux.
   unit-macos:

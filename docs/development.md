@@ -71,7 +71,7 @@ docs/             This documentation, ADRs and the verification ledger
   verification ledger are checked here too. Playwright in `e2e/` (about 50 specs): real control plane and runner on ports 4320 and
   4330 (`AETHER_E2E_PORT` and `AETHER_E2E_NATIVE_PORT` give a second checkout or run its own pair; no spec names a port) with a **fixture home** (`playwright.config.ts` points `AETHER_LOCAL_SESSIONS_HOME`, `AETHER_HOOK_SPOOL` and
   `AETHER_CLAUDE_USAGE_FILE` at a temporary directory, so no test reads your real `~/.claude` or `~/.codex`). The e2e specs drive
-  Chrome (`channel: 'chrome'`; in CI, where `CI` is set, Playwright's own Chromium); WebKit is opt-in with `AETHER_WEBKIT=1`. GPU measurements (`PERF_GPU=1`) and `pnpm smoke:live`
+  Chrome (`channel: 'chrome'`; in CI, where `CI` is set, Playwright's own Chromium). CI runs only the DOM specs (`e2e/settings`, `e2e/session`, `e2e/workbench`): the 3D scene specs need a GPU and time out under software WebGL on a hosted runner (a run of the whole suite there was cancelled after an hour with most scene specs failing), so the whole suite is a local and release gate. WebKit is opt-in with `AETHER_WEBKIT=1`. GPU measurements (`PERF_GPU=1`) and `pnpm smoke:live`
   are never part of the default run: a skipped check is "not run", never "passed".
 - **Keeping tests stable.** Use fixture data with fixed timestamps rather than "now" where you can; synthetic processes
   (`tests/processes`, `sleep` named `claude`) instead of real CLIs; wait on a visible state (`expect(...).toBeVisible()`,
