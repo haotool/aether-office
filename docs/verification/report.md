@@ -166,7 +166,7 @@ A passing build or test run is not a claim of production readiness. This file li
 | INT-04 | partial | knowledge 有 provenance、version、ACL 與繁中搜尋。 | Provenance/version/ACL/繁中搜尋/人類批准與駁回已實作及測試；內容修訂、撤回、大庫索引與測試證實分類仍未完成。 |
 | INT-07 | partial | budget 遵守並行／turn／時間限制，未知成本不顯示零。 | Turn, time and concurrency limits exist; pricing and a global budget do not. |
 | INT-08 | partial | usage 累積值／delta／resume 重播不重複統計。 | Usage de-duplication is implemented; pricing is not. |
-| QA-01 | partial | unit／contract／integration／E2E 都有真正執行紀錄。 | Unit, contract, integration and browser suites run in CI (the unit suite also on macOS); the live provider smoke and the GPU gates are outside the default run and recorded as not run. |
+| QA-01 | partial | unit／contract／integration／E2E 都有真正執行紀錄。 | Unit, contract and integration suites run in CI (the unit suite also on macOS); the browser suite is a local and release gate that CI does not run; the live provider smoke and the GPU gates are outside the default run and recorded as not run. |
 | QA-02 | implemented | fault injection 覆蓋 commit／delivery／ack 關鍵 crash window。 | Control-side commit, outbox, delivery and ack windows are injected and proven atomic; runner journal crash windows and the outbox dispatcher lease are not injected |
 | QA-03 | partial | LIVE／DEMO／synthetic／captured 的證據不混淆。 | Labels are checked where they were implemented; live evidence is limited to the smoke runs in CLA-08 and CDX-08. |
 | QA-04 | partial | 真實頁面截圖覆蓋 overview／desk／review／approval／mobile。 | The README screenshots come from a synthetic demo stack (docs/images/README.md); screenshots of real data for each listed page are not part of the evidence. |

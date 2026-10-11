@@ -23,7 +23,7 @@ Blender 5.2 is needed only to change the animals (see [development](../docs/deve
 
 ## Before you open a pull request
 
-Run the same checks CI runs:
+Run the checks CI runs, and the browser suite, which CI does not (see [development](../docs/development.md)):
 
 ```sh
 pnpm typecheck
