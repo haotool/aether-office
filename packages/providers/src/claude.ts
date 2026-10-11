@@ -136,13 +136,11 @@ export function normalizeClaudeMessage(input: unknown, turnId: string): Provider
 
 const MCP_SERVERS = z.record(
   z.string(),
-  z
-    .object({
-      command: z.string(),
-      args: z.array(z.string()),
-      env: z.record(z.string(), z.string()),
-    })
-    .strict(),
+  z.strictObject({
+    command: z.string(),
+    args: z.array(z.string()),
+    env: z.record(z.string(), z.string()),
+  }),
 );
 
 const deny = (toolUseID: string, message: string) => ({
@@ -160,7 +158,6 @@ const toolPolicy = (readOnlyReview: boolean): Partial<Options> =>
       }
     : { disallowedTools: ['Agent', 'Task'] };
 
-/** What one `run` shares between the SDK callbacks: the promise that the spawned process has been recorded. */
 type RunState = { processReady: Promise<void> };
 
 export class ClaudeAdapter {
@@ -223,7 +220,6 @@ export class ClaudeAdapter {
     };
   }
 
-  /** Starts the Claude process the SDK asks for, and records its OS start identity once it has spawned. */
   private spawnProcess(state: RunState): NonNullable<Options['spawnClaudeCodeProcess']> {
     return (spawnOptions) => {
       const child: ChildProcessWithoutNullStreams = spawn(spawnOptions.command, spawnOptions.args, {
@@ -268,8 +264,6 @@ export class ClaudeAdapter {
         });
         if (context.signal.aborted || signal.aborted)
           return deny(context.toolUseID, 'Permission request expired.');
-        // Returning a decision is not a provider acknowledgement. A later tool event
-        // supplies execution evidence; the UI retains that distinction.
         return decision === 'approve'
           ? { behavior: 'allow', updatedInput: input, toolUseID: context.toolUseID }
           : deny(context.toolUseID, 'Denied by AETHER operator.');
@@ -279,7 +273,6 @@ export class ClaudeAdapter {
     };
   }
 
-  /** Forwards each new event of the stream to the sink until the turn ends. */
   private async consume(
     stream: AsyncIterable<unknown>,
     signal: AbortSignal,

@@ -33,7 +33,6 @@ type System = {
   disks: { path: string; totalBytes: number; freeBytes: number }[];
 };
 
-/** One readout: a label, its value (flagged when it needs a look) and an optional tooltip. */
 function Stat({
   label,
   warn = false,
@@ -53,7 +52,6 @@ function Stat({
   );
 }
 
-/** The newest Codex window anyone reported (Claude's windows come from <ClaudeQuota />). */
 const newestCodexLimit = (sessions: readonly LocalSession[]) =>
   [...sessions]
     .filter((s) => s.provider === 'codex' && s.usage.limit)
@@ -73,7 +71,6 @@ function CodexStat({ sessions }: { sessions: readonly LocalSession[] }) {
   );
 }
 
-/** The machine's CPU, memory and disk, read every few seconds from the control server. */
 function SystemStats() {
   const t = useT();
   const system = useQuery({
@@ -116,7 +113,6 @@ function SystemStats() {
   );
 }
 
-/** Readout in the top bar: how many local agent sessions exist, how many have a live process, and the time in Taipei. */
 export function Telemetry({
   sessions,
   unread = 0,

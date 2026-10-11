@@ -31,7 +31,6 @@ export function box(
   size: [number, number, number],
   position: [number, number, number],
   radius = 0.03,
-  /** A round hole through the middle (radius), for the shaft the building is organised around. */
   hole = 0,
 ): THREE.Mesh {
   const mesh = new THREE.Mesh(roundedBox(...size, radius, hole), material);

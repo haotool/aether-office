@@ -20,7 +20,6 @@ export const Floor = memo(function Floor({
 }) {
   const model = useMemo<FloorModel>(() => buildFloor(layout, floor), [layout, floor]);
   useEffect(() => () => disposeFloor(model), [model]);
-  // Moving parts (hologram rings, breathing trim) advance only while the scene animates, at a steady rate.
   const clock = useRef(0);
   useFrame((_state, delta) => {
     if (!animate || document.hidden) return;
@@ -47,7 +46,6 @@ export const Floor = memo(function Floor({
     }
     for (const p of model.pulsers)
       p.material.emissiveIntensity = p.base + p.amplitude * Math.sin(clock.current * p.speed);
-    // The next frame is requested by AnimationClock, which sets the pace.
   });
   void detail;
   return <primitive object={model.group} position={[0, y, 0]} dispose={null} />;

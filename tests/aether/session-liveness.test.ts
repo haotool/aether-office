@@ -53,8 +53,8 @@ it('is active for two minutes after the latest sign, idle after that, dormant af
 it('counts a hook event or burned CPU as a sign of life, so a quiet transcript alone does not make it dormant', () => {
   const old = NOW - 20 * HOUR;
   expect(classify({ mtime: old }).state).toBe('dormant');
-  expect(classify({ mtime: old, hookAt: NOW - 30_000 }).state).toBe('active'); // a tool ran
-  expect(classify({ mtime: old, busyAt: NOW - 30_000 }).state).toBe('active'); // a long build in a quiet transcript
+  expect(classify({ mtime: old, hookAt: NOW - 30_000 }).state).toBe('active');
+  expect(classify({ mtime: old, busyAt: NOW - 30_000 }).state).toBe('active');
   expect(classify({ mtime: old, busyAt: NOW - 3 * HOUR }).state).toBe('idle');
 });
 
@@ -67,7 +67,7 @@ it('never reads quiet as longer than the process has lived', () => {
 });
 
 it('names an orphan before anything about activity, and carries the zombies under a process along', () => {
-  expect(classify({ process: proc({ orphaned: true }), mtime: NOW }).state).toBe('orphaned'); // even while busy
+  expect(classify({ process: proc({ orphaned: true }), mtime: NOW }).state).toBe('orphaned');
   expect(classify({ process: proc({ zombies: [z(1), z(2), z(3)] }) })).toMatchObject({
     state: 'active',
     zombies: [z(1), z(2), z(3)],
@@ -97,19 +97,19 @@ it('remembers CPU between looks, keyed by pid and start so a reused pid is a new
   const watch = new CpuWatch();
   const p = proc({ cpuSeconds: 100, cpuPercent: 0 });
   watch.observe([p], NOW);
-  expect(watch.busyAt(p)).toBeNull(); // first look, quiet, nothing known
+  expect(watch.busyAt(p)).toBeNull();
   watch.observe([{ ...p, cpuSeconds: 100.2 }], NOW + 10_000);
-  expect(watch.busyAt(p)).toBeNull(); // 0.2 s in ten: idling
+  expect(watch.busyAt(p)).toBeNull();
   watch.observe([{ ...p, cpuSeconds: 103 }], NOW + 20_000);
-  expect(watch.busyAt(p)).toBe(NOW + 20_000); // 2.8 s: working
+  expect(watch.busyAt(p)).toBe(NOW + 20_000);
   watch.observe([{ ...p, cpuSeconds: 103 }], NOW + 30_000);
-  expect(watch.busyAt(p)).toBe(NOW + 20_000); // quiet again, but when it last worked is kept
+  expect(watch.busyAt(p)).toBe(NOW + 20_000);
   const reused = proc({ startedAt: NOW });
   watch.observe([reused], NOW + 40_000);
-  expect(watch.busyAt(reused)).toBeNull(); // same pid, different process: no history
-  expect(watch.busyAt(p)).toBeNull(); // and the old one is gone
+  expect(watch.busyAt(reused)).toBeNull();
+  expect(watch.busyAt(p)).toBeNull();
   expect(new CpuWatch().observe([proc({ cpuPercent: 40 })], NOW)).toBeUndefined();
   const busyAtFirstLook = new CpuWatch();
   busyAtFirstLook.observe([proc({ cpuPercent: 40 })], NOW);
-  expect(busyAtFirstLook.busyAt(proc())).toBe(NOW); // ps's own recent average counts on the first look
+  expect(busyAtFirstLook.busyAt(proc())).toBe(NOW);
 });

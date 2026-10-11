@@ -5,7 +5,6 @@ import { Control } from '../../apps/control/src/control.js';
 import { expect, it } from 'vitest';
 import { setup } from '../../scripts/setup.js';
 
-// Read through the control's own connection: it is the supported way to open the database.
 const count = (file: string, table: string) => {
   const control = new Control(file, { mode: 'demo' });
   try {
@@ -40,7 +39,7 @@ it('setup --demo can be re-run without duplicating the demo or touching existing
       migrations: count(db, 'schema_migrations'),
       identities: count(db, 'identities'),
     }).toEqual(before);
-    expect(readFileSync(join(directory, 'owner-token'), 'utf8')).toBe(token); // credentials are never rotated
+    expect(readFileSync(join(directory, 'owner-token'), 'utf8')).toBe(token);
     expect(readFileSync(join(directory, 'runner-token'), 'utf8')).toBe(runnerToken);
     expect(statSync(join(directory, 'owner-token')).mode & 0o777).toBe(0o600);
   } finally {
@@ -51,7 +50,7 @@ it('setup --demo can be re-run without duplicating the demo or touching existing
 it("re-running against a data directory that already holds the user's own project leaves it alone", () => {
   const directory = mkdtempSync(join(tmpdir(), 'aether-setup-live-'));
   try {
-    setup('live', directory); // live mode seeds nothing
+    setup('live', directory);
     expect(count(join(directory, 'control.sqlite'), 'projects')).toBe(0);
     setup('live', directory);
     expect(count(join(directory, 'control.sqlite'), 'identities')).toBe(1);

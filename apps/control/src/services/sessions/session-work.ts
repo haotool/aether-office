@@ -2,9 +2,8 @@ import { stat } from 'node:fs/promises';
 import type { ToolCall } from '@aether/kernel';
 import { readEdge } from '../platform/file-edge.js';
 
-// What a session has been doing: its latest tool calls, read from the transcript's tail. Only each call's tool name and a
-// short target (a file path, the start of a command, a subagent type) are taken, and only to classify the session on the
-// server; they are never returned. The rest of the transcript (replies, tool output, file contents) is skipped.
+// Tool names and short targets are taken only to classify the session on the server and are never returned; replies,
+// tool output and file contents are skipped.
 const TAIL_BYTES = 1024 * 1024;
 const MAX_ACTIONS = 40;
 const TARGET_CHARS = 300;
@@ -16,7 +15,6 @@ const text = (v: unknown) =>
 
 const CLAUDE_TARGETS = ['file_path', 'notebook_path', 'command', 'subagent_type', 'path'] as const;
 
-/** Pure. The tool calls in the assistant messages of a Claude Code transcript tail, oldest first. */
 export function claudeActions(tail: string): ToolCall[] {
   const out: ToolCall[] = [];
   for (const line of tail.split('\n')) {
@@ -40,7 +38,6 @@ export function claudeActions(tail: string): ToolCall[] {
 
 const PATCHED = /\*\*\* (?:Add|Update) File: (\S+)/g;
 
-/** The command a Codex shell call runs: `cmd` or `command`, as one string or an argument list. */
 function codexCommand(args: Record<string, unknown>): string | null {
   const raw = args['cmd'] ?? args['command'];
   return text(Array.isArray(raw) ? raw.join(' ') : raw);
@@ -69,7 +66,6 @@ function pushCodexCallActions(out: ToolCall[], payload: Record<string, unknown>)
   if (command) out.push({ tool: 'exec_command', target: command });
 }
 
-/** Pure. The tool calls in a Codex rollout tail: shell commands, and the files its patches touch. */
 export function codexActions(tail: string): ToolCall[] {
   const out: ToolCall[] = [];
   for (const line of tail.split('\n')) {
@@ -85,7 +81,6 @@ export function codexActions(tail: string): ToolCall[] {
 
 const cache = new Map<string, { mtime: number; size: number; actions: ToolCall[] }>();
 
-/** A session's latest tool calls, re-read only when its transcript changed. Empty when it cannot be read. */
 export async function readActions(provider: 'claude' | 'codex', file: string): Promise<ToolCall[]> {
   try {
     const { mtimeMs, size } = await stat(file);

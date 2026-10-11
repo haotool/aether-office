@@ -20,7 +20,7 @@ describe('R21 time machine', () => {
     expect(fires('time-machine', start(undefined))).toBe(false);
     expect(
       fires('time-machine', { ...start(['git.reset.hard']), kind: 'tool.end', ok: true }),
-    ).toBe(false); // it says "started", never how the reset ended
+    ).toBe(false);
   });
 
   it('shows on the high tier only, and says what was started', () => {

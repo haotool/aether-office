@@ -2,7 +2,6 @@ import { revoke } from '../services/domain/identity.js';
 import { authorize } from '@aether/kernel';
 import type { RouteContext } from './context.js';
 
-/** Operator tools: revoking an identity, runtime metrics. */
 export function adminRoutes({ app, control, actor }: RouteContext) {
   app.post<{ Params: { identityId: string } }>(
     '/api/identities/:identityId/revoke',

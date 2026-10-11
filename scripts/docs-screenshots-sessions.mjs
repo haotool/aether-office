@@ -1,4 +1,3 @@
-// The synthetic Claude sessions of the documentation screenshots: invented conversations, tool calls and hook records.
 import { MIN, NOW, iso } from './docs-screenshots-clock.mjs';
 
 let toolN = 0;
@@ -70,7 +69,6 @@ export const SESSIONS = [
     hooks: (id, cwd) => [
       hook('UserPromptSubmit', 8 * MIN, id, cwd),
       hook('PreToolUse', 20_000, id, cwd, { tool: 'Edit', target: 'CheckoutForm.tsx' }),
-      // Three subagents: two exploring, one reviewing; their hook records keep them "running" for the whole run.
       ...[
         ['sub-a', 'Explore', 'Read'],
         ['sub-b', 'Explore', 'Grep'],

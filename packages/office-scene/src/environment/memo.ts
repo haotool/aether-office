@@ -14,5 +14,4 @@ export function memoized<K, V>(
   };
 }
 
-/** Most members a pure per-seed memo remembers; beyond it the oldest is recomputed on demand. */
 export const MEMO_LIMIT = 512;

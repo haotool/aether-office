@@ -1,9 +1,7 @@
 import type { Furniture, Layout } from '@aether/contracts';
 
-/** Furniture other than a squad zone, which has its own fields. */
 export type PlainFurniture = Exclude<Furniture['type'], 'squad'>;
 
-/** The layout without the object, and without the squad zone anchored to it. */
 export function withoutObject(layout: Layout, id: string): Layout {
   return {
     ...layout,
@@ -11,7 +9,6 @@ export function withoutObject(layout: Layout, id: string): Layout {
   };
 }
 
-/** The layout with the update merged into the one object. */
 export function withPatchedObject(layout: Layout, id: string, update: Partial<Furniture>): Layout {
   return {
     ...layout,

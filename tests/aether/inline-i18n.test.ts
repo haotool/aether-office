@@ -2,11 +2,6 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { expect, it } from 'vitest';
 
-/**
- * Wording belongs in the locale tables (apps/web/src/locales) so a third language is a table, not a hunt through the code.
- * A bilingual ternary on a string (`zh ? '今天' : 'Today'`) is an inline pair; this test counts them per file and fails when
- * a file has more than the baseline below. The baseline only ever shrinks: move the wording into the tables, then lower the count.
- */
 const ROOTS = ['apps/web/src', 'packages/office-scene/src'];
 const INLINE = /(?:\b(?:zh|en|isZh|isEn)\b|\b(?:locale|lang)\s*===\s*'(?:zh-TW|en)')\s*\?\s*[`'"]/g;
 

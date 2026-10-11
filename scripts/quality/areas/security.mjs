@@ -1,5 +1,3 @@
-// Area 8: security and privacy gates. Secret scanning, the unauthenticated route table (credential documented, rate
-// limit present), no network calls from the shipped web code, and the proxy-trust setting under test.
 import { findingLocation, scan, top } from '../lib.mjs';
 import { rule, skipped } from '../model.mjs';
 import { matching } from '../repo.mjs';
@@ -9,7 +7,6 @@ const ROUTE_FILES = /^apps\/control\/src\/(routes\/.*|server)\.ts$/;
 const SECURITY_DOC = 'docs/security.md';
 const SHIPPED_WEB = /^(apps\/web\/src|packages\/office-scene\/src)\/.*\.(ts|tsx|css)$/;
 const RATE_LIMIT_SIGNAL = /_RATE_LIMIT|\b429\b|\battempts\.get\(/;
-/** Calls out of the browser to another origin, or to anything but this server. */
 export const NETWORK_CALLS = [
   /\bfetch\(\s*[`'"](?:https?:)?\/\//,
   /\bnew\s+(?:WebSocket|EventSource)\(\s*[`'"](?:https?|wss?):/,
@@ -19,7 +16,6 @@ export const NETWORK_CALLS = [
   /@import\s+(?:url\()?['"]?https?:/,
 ];
 
-/** Entries of the PUBLIC_ROUTES set: [{ route, line, comment }]. */
 export function publicRoutes(serverText) {
   const start = serverText.indexOf('PUBLIC_ROUTES');
   const block = serverText.slice(start, serverText.indexOf(']);', start));

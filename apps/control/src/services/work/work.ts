@@ -157,7 +157,6 @@ function acceptWork(row: WorkRow): Patch {
   return { state: 'completed' };
 }
 
-/** The fields one command changes on the work item, after running its side effects. */
 function stepPatch(ctx: Context, actor: Actor, c: ChangeCommand, row: WorkRow, now: number): Patch {
   switch (c.type) {
     case 'work.dependencies':

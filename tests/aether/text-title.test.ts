@@ -7,7 +7,6 @@ import {
   shortLabel,
 } from '../../packages/kernel/src/index.js';
 
-// The title from the report: a 【 and a （ left open by a cut in the middle of a phrase.
 const REPORTED = '【審查邊界（擁有者 10-05';
 const REPORTED_FULL =
   '【審查邊界（擁有者 10-05, 程式碼審查, 離線）】 檢查 confirm-rate 的有效設定與回歸風險分析';

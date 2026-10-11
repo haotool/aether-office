@@ -4,8 +4,8 @@ export type Species = Agent['species'];
 export type Marking = 'none' | 'stripes' | 'spots' | 'blaze' | 'patch';
 
 /**
- * What makes each animal read as itself in a portrait. The colors are the 3D model's own (tools/blender/animal_profiles.py),
- * so the avatar looks like the figure at the desk; `markings` is the set a seed may pick from, `intrinsic` is always drawn.
+ * The colors are the 3D model's own (tools/blender/animal_profiles.py), so the avatar looks like the figure at the
+ * desk.
  */
 interface SpeciesArt {
   fur: string;
@@ -139,7 +139,6 @@ export const SPECIES: Record<Species, SpeciesArt> = {
 
 export const SPECIES_LIST = Object.keys(SPECIES) as Species[];
 
-/** A sender that is not one of the office animals (a person) still gets a stable species from its seed. */
 export function speciesOf(value: string, pick: (n: number) => number): Species {
   if (value in SPECIES) return value as Species;
   const species = SPECIES_LIST[pick(SPECIES_LIST.length) % SPECIES_LIST.length];

@@ -84,7 +84,6 @@ const HANDLERS: { [T in Command['type']]: Handler<T> } = {
   'knowledge.propose': proposeKnowledge,
 };
 
-/** Runs the one handler of `c.type` and returns what it produced (before secrets are redacted for storage). */
 export function runCommand(ctx: Context, actor: Actor, c: Command): Result {
   // The table pairs each type with its own narrowed command; TypeScript cannot correlate `c.type` with the entry.
   const handler = HANDLERS[c.type] as (ctx: Context, actor: Actor, c: Command) => Result;

@@ -58,7 +58,6 @@ it('keeps a bounded queue, oldest first, and sends only when it can', () => {
     list = enqueue(list, pending(`q${i}`, `m${i}`, { state: 'queued' }))!;
   expect(enqueue(list, pending('over', 'x', { state: 'queued' }))).toBeNull();
   expect(nextQueued(list)?.localId).toBe('q0');
-  // Messages already sent do not count against the queue.
   expect(
     enqueue([...list.slice(1), pending('s', 's')], pending('ok', 'x', { state: 'queued' })),
   ).not.toBeNull();
@@ -76,15 +75,12 @@ it('matches a sent message to the transcript prompt once, by text, and flags one
     { text: 'fix the bug', at: 1_000_500 },
     { text: 'something else', at: 1_000_600 },
   ];
-  // One transcript prompt answers one message: the same words sent twice show once until the second arrives.
   expect([...seenIn(sent, prompts)]).toEqual(['a']);
   expect([...seenIn(sent, [...prompts, { text: 'fix the bug', at: 1_000_900 }])]).toEqual([
     'a',
     'b',
   ]);
-  // A prompt written long before the message was sent is an older message with the same words.
   expect(seenIn([pending('a', 'hi')], [{ text: 'hi', at: 1_000_000 - 3_600_000 }]).size).toBe(0);
-  // A queued or failed message was never sent: it is not "seen".
   expect(seenIn([pending('q', 'hi', { state: 'queued' })], [{ text: 'hi', at: null }]).size).toBe(
     0,
   );
@@ -97,7 +93,7 @@ it('sends the CLI own command for a model, and only claims what has one', () => 
   expect(modelCommand('claude', 'claude-opus-4-5')).toBe('/model claude-opus-4-5');
   expect(modelCommand('claude', 'opus[1m]')).toBe('/model opus[1m]');
   expect(modelCommand('claude', 'x; rm')).toBeNull();
-  expect(modelCommand('codex', 'gpt-5')).toBe('/model'); // Codex applies its own picker
+  expect(modelCommand('codex', 'gpt-5')).toBe('/model');
   expect(effortCommand('claude', 'high')).toBe('/effort high');
   expect(effortCommand('codex', 'high')).toBeNull();
   expect(effortCommand('claude', 'high; x')).toBeNull();
@@ -106,8 +102,8 @@ it('sends the CLI own command for a model, and only claims what has one', () => 
 it('finds the slash and @ word being typed', () => {
   expect(slashToken('/co', 3)).toEqual({ query: 'co', start: 0 });
   expect(slashToken('/', 1)).toEqual({ query: '', start: 0 });
-  expect(slashToken('hello /co', 9)).toBeNull(); // a slash command opens the message
-  expect(slashToken('/model opus', 11)).toBeNull(); // once there is a space it is an argument
+  expect(slashToken('hello /co', 9)).toBeNull();
+  expect(slashToken('/model opus', 11)).toBeNull();
   expect(atToken('look at @src/up', 15)).toEqual({ query: 'src/up', start: 8 });
   expect(atToken('@a', 2)).toEqual({ query: 'a', start: 0 });
   expect(atToken('mail me@host', 12)).toBeNull();
@@ -149,10 +145,9 @@ it('builds the menu from the built-in commands of the provider and the custom on
   ];
   const claude = slashItems('claude', custom);
   expect(claude.map((i) => i.name)).toContain('compact');
-  expect(claude.filter((i) => i.name === 'review')).toHaveLength(1); // a built-in is not hidden by a namesake
+  expect(claude.filter((i) => i.name === 'review')).toHaveLength(1);
   expect(claude.find((i) => i.name === 'deploy')?.kind).toBe('skill');
   expect(slashItems('codex', custom).some((i) => i.name === 'deploy')).toBe(true);
-  // Commands that open a list in the terminal are marked: AETHER can send them but not answer them.
   expect(BUILTIN_COMMANDS.claude.find((c) => c.name === 'model')?.kind).toBe('picker');
   expect(BUILTIN_COMMANDS.claude.find((c) => c.name === 'compact')?.kind).toBe('text');
   expect(BUILTIN_COMMANDS.codex.find((c) => c.name === 'compact')).toBeTruthy();

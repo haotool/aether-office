@@ -49,7 +49,6 @@ async function verificationResult(
   return { jobId: job.id, status: 'succeeded', verification };
 }
 
-/** Runs one control-issued workspace job (diff, integrate or verify) and returns its report; a failure is reported, never thrown. */
 export async function runWorkspaceJob(
   native: NativeExecutor | undefined,
   job: RunnerJob,

@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- Node.js **24.21.0** (`.node-version`) and the pnpm version pinned in `package.json`.
+- Node.js **24.21.0** (`.nvmrc`) and the pnpm version pinned in `package.json`.
 - macOS or Linux for managed terminals. Native Windows is not supported by the terminal supervisor.
 - Optional: Claude Code and/or Codex CLIs for native execution (see [provider compatibility](provider-compatibility.md)),
   Blender 5.2 to change the animals.

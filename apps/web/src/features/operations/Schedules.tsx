@@ -8,10 +8,9 @@ import { useT, useLocale } from '../../ui/useT.js';
 import { EnableToggle, useCommandRunner } from '../shell-chrome/panel-kit.js';
 import { POLL, poll } from '../../lib/app/polling.js';
 
-/** Short weekday names (Sunday first, as the schedule numbers them) in the person's language. */
 function weekdays(locale: string): string[] {
   const format = new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' });
-  return Array.from({ length: 7 }, (_, day) => format.format(new Date(Date.UTC(2023, 0, 1 + day)))); // 2023-01-01 is a Sunday
+  return Array.from({ length: 7 }, (_, day) => format.format(new Date(Date.UTC(2023, 0, 1 + day))));
 }
 
 function describe(s: Schedule, t: (key: Key) => string, days: string[]): string {
@@ -29,7 +28,6 @@ type CreateScheduleFormProps = {
   run: Run;
 };
 
-/** The schedule.create payload a filled-in form describes: weekly on the days ticked, daily when none is. */
 function scheduleOf(form: FormData) {
   const picked = form.getAll('day').map(Number);
   const time = String(form.get('time'));

@@ -1,4 +1,3 @@
-/** The automation words, in English. */
 export const enAutomation = {
   schedules: 'Schedules',
   scheduleDaily: 'Daily',

@@ -1,4 +1,3 @@
-/** Pure. Where `query` occurs in `text`: offsets of non-overlapping, case-insensitive matches, at most `limit`. */
 export function matchOffsets(text: string, query: string, limit = 1000): number[] {
   const needle = query.trim().toLowerCase();
   if (!needle) return [];
@@ -19,10 +18,8 @@ const registry = (): HighlightApi | null => {
   return css?.highlights && typeof Highlight !== 'undefined' ? css.highlights : null;
 };
 
-/** Whether the browser can paint matches without touching the DOM (the CSS Custom Highlight API). */
 export const canHighlight = () => registry() !== null;
 
-/** The ranges of every match under `root`, in document order, across the text nodes it holds. */
 export function findRanges(root: Element, query: string, limit = 1000): Range[] {
   const ranges: Range[] = [];
   if (!query.trim()) return ranges;
@@ -42,7 +39,6 @@ export function findRanges(root: Element, query: string, limit = 1000): Range[] 
   return ranges;
 }
 
-/** Paints the matches, and the current one differently; an empty list clears both. */
 export function paintMatches(ranges: readonly Range[], current: number): void {
   const api = registry();
   if (!api) return;

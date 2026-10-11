@@ -1,4 +1,3 @@
-// Tree checks of the publishing-readiness check: community files, tracked hygiene, content scan, secrets, large files.
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
@@ -123,7 +122,6 @@ export function checkTreeContent(root, files, rules, hasGitleaks) {
   );
 }
 
-/** Groups findings per severity into one check result. */
 export function report(id, title, hits) {
   const fails = hits.filter((h) => h.severity === 'fail');
   const lines = hits
@@ -168,7 +166,7 @@ export function checkSecrets(root, history, skip, configOption) {
     return false;
   }
   const config =
-    [configOption, path.join(root, '.gitleaks.toml'), KIT_GITLEAKS_CONFIG].find(
+    [configOption, path.join(root, '.github', 'gitleaks.toml'), KIT_GITLEAKS_CONFIG].find(
       (f) => f && existsSync(f),
     ) ?? null;
   const lines = runGitleaks(root, 'tree', config);
@@ -180,7 +178,6 @@ export function checkSecrets(root, history, skip, configOption) {
   return true;
 }
 
-/** Models and textures the app serves: each may pass the single-file limit while the folder stays within its budget. */
 const SHIPPED_ASSETS = /^apps\/web\/public\/assets\//;
 const SHIPPED_BUDGET_MB = 40;
 

@@ -17,7 +17,6 @@ const KIND_LABEL: Record<MemeCategory, Key> = {
   easter: 'lifeKindEaster',
 };
 
-/** Which kinds of little moment the 3D office shows. */
 function LifeKinds({
   life,
   setLife,
@@ -49,7 +48,6 @@ function LifeKinds({
   );
 }
 
-/** The first-visit tour: whether it plays, and a button that plays it again. */
 function IntroRows() {
   const t = useT();
   const prefs = usePreferences();
@@ -86,7 +84,6 @@ function IntroRows() {
   );
 }
 
-/** Office → Animations: Calm mode, which kinds of little moment the 3D office shows, how often, and the first-visit tour. */
 export function OfficeAnimationsSettings() {
   const t = useT();
   const prefs = usePreferences();

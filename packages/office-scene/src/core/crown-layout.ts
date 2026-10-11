@@ -1,23 +1,18 @@
 import type { StalkCommit, Tier, TierShape } from './stalk-types.js';
 import { itemAt } from '../environment/checked.js';
 
-/** Commits that make one tier, until the history is long enough that MAX_TIERS tiers share it. */
 export const COMMITS_PER_TIER = 12;
 export const MAX_TIERS = 12;
-/** Open air between the roof and the first tier's flower. */
 const CROWN_GAP = 6;
 export const TIER_HEIGHT = 3.4;
 export const SPIRE_HEIGHT = 14;
 
-/** Where the spire ends: the roof, the gap, the tiers and the spire. */
 export const crownTop = (roof: number, tiers: number) =>
   roof + CROWN_GAP + tiers * TIER_HEIGHT + SPIRE_HEIGHT;
-/** Each tier a little smaller than the one under it, so the crown tapers into the spire. */
 const tierRadius = (index: number) => Math.max(7.5, 20 - 1.1 * index);
 const runSize = (commits: number) => Math.max(COMMITS_PER_TIER, Math.ceil(commits / MAX_TIERS));
 export const tierCount = (commits: number) => Math.ceil(commits / runSize(commits));
 
-/** The kind of history a tier holds follows what happened in it: merges, then many hands, then parallel branches; otherwise it alternates. */
 function shapeOf(
   index: number,
   stats: { merges: number; authors: number; branches: number },
@@ -28,10 +23,6 @@ function shapeOf(
   return index % 2 ? 'prism' : 'terrace';
 }
 
-/**
- * The crown: `oldestFirst` cut into runs of consecutive commits, one tier each from the roof upwards. Pure: the tiers are
- * a function of the history alone, so a longer history only ever adds tiers on top.
- */
 export function layoutTiers(
   oldestFirst: readonly StalkCommit[],
   owner: ReadonlyMap<string, number>,

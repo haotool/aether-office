@@ -3,10 +3,7 @@ import { resolve } from 'node:path';
 import { assertSecureControlUrl } from './transport.js';
 import { print, warn } from './stdio.js';
 
-/**
- * Redeems a single-use invitation and stores the machine credential (mode 0600, never
- * overwritten). The invitation expires in minutes and works once.
- */
+/** Redeems a single-use invitation and stores the machine credential (mode 0600, never overwritten). */
 export async function enrollRunner(options: {
   url: string;
   invitation: string;

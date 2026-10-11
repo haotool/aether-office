@@ -20,9 +20,8 @@ import { generateData } from '../../packages/office-scene/src/screen/screen-code
 import { lineText } from '../../packages/office-scene/src/screen/screen-tokens.js';
 import { numbersOf, recordingContext, textsOf } from './fixtures/recording-canvas.js';
 
-// Role screens are pictures drawn on a 640 x 400 canvas from a seeded random stream. There is no canvas here, so the context
-// records the calls: what is checked is that each picture is complete (no NaN or infinite coordinate), repeatable for a member
-// and different between members, and starts by painting the whole screen.
+// There is no canvas here, so the context records the calls: each picture must be complete (no NaN or infinite
+// coordinate), repeatable for a member, different between members and start by painting the whole screen.
 const DRAWS: [string, Draw][] = [
   ...Object.entries(art),
   ...Object.entries(dev),
@@ -64,7 +63,7 @@ describe('role screen drawings', () => {
     const calls = run(draw, 'member-1');
     expect(calls.length).toBeGreaterThan(30);
     expect(calls[1]).toMatchObject({ op: 'fillRect', args: [0, 0, SCREEN_W, SCREEN_H] });
-    expect(textsOf(calls)[0]!.length).toBeGreaterThan(3); // the window title
+    expect(textsOf(calls)[0]!.length).toBeGreaterThan(3);
   });
 
   it.each(DRAWS)('%s uses only real numbers', (_name, draw) => {

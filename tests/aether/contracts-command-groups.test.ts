@@ -10,8 +10,6 @@ import { opsCommands } from '../../packages/contracts/src/command-ops.js';
 import { workbenchCommands } from '../../packages/contracts/src/command-workbench.js';
 import { id, shortText } from '../../packages/contracts/src/shared.js';
 
-// Each group of commands is a list of strict schemas; these tests parse real-looking commands against the one that owns
-// each `type`, the way the control plane does before it runs anything.
 const GROUPS = [...workbenchCommands, ...collabCommands, ...opsCommands] as const;
 type Schema = (typeof GROUPS)[number];
 const schemaFor = (type: string): Schema => {
@@ -127,7 +125,7 @@ describe('collaboration commands', () => {
   it('decide an approval only against the exact action hash that was shown', () => {
     const decision = { approvalId: randomUUID(), actionHash: 'a'.repeat(64), decision: 'approve' };
     expect(ok('approval.decide', decision, { expectedVersion: 2 })).toBe(true);
-    expect(ok('approval.decide', decision)).toBe(false); // optimistic concurrency is required
+    expect(ok('approval.decide', decision)).toBe(false);
     expect(
       ok('approval.decide', { ...decision, actionHash: 'A'.repeat(64) }, { expectedVersion: 2 }),
     ).toBe(false);

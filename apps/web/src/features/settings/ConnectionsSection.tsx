@@ -5,7 +5,6 @@ import { CopyCommand, InlineHelp, Row, StatusChip } from './kit.js';
 
 const standalone = () => window.matchMedia('(display-mode: standalone)').matches;
 
-/** Reaching the office from a phone: the QR pairing, installing it as an app, and whether this address is a secure one. */
 export function ConnectionsSection({ canWrite }: { canWrite: boolean }) {
   const t = useT();
   const { hint, install } = useInstallHint();

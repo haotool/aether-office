@@ -16,7 +16,7 @@ tools/blender/    Builds, audits and renders the animals
 assets-source/    Baked texture maps the shipped models are checked against
 e2e/              Playwright specs (real control plane, runner and browser)
 tests/aether/     Vitest unit, integration and security tests
-fixtures/         Synthetic provider processes used by tests and the demo
+tests/processes/  Synthetic provider processes the tests and e2e run instead of real CLIs
 scripts/          Build, setup, doctor, hook CLI and the checks CI runs
 docs/             This documentation, ADRs and the verification ledger
 ```
@@ -40,6 +40,7 @@ docs/             This documentation, ADRs and the verification ledger
 | `pnpm hooks <install\|remove\|status>` | Installs, removes or reports the Claude Code or Codex hooks (see [getting started](getting-started.md#exact-activity-with-hooks-optional)) |
 | `pnpm run pair` / `pnpm runner:enroll` | Prints a phone-pairing QR code / enrolls a runner with a one-time invitation                |
 | `pnpm run doctor`             | Reports OS, Node, pnpm, Git and provider CLI versions; `--strict` fails on warnings too   |
+| `pnpm run protocol:regen`     | Rewrites the generated Codex protocol types from the installed `codex` of the pinned release and records their digest in `compat.json` (`--check` reports drift, `--digest` prints the digest) |
 | `pnpm verification:report` / `verification:check` | Regenerate / check the verification report from the ledger           |
 | `node scripts/audit-dependencies.mjs [package...]` | Reads the registry metadata of the dev dependencies (network) for the dependency ledger entry |
 | `pnpm audit:gate`             | Fail-closed gate for unexempted high/critical advisories                                 |
@@ -60,7 +61,7 @@ docs/             This documentation, ADRs and the verification ledger
 - **Hermetic policy** — `tests/aether/provider-compat.test.ts` (and `provider-compat.host-clis.test.ts` when opted in) uses fixture `--version` binaries; default `provider-compat` behavior does not depend on host CLI versions.
 
 - **Real systems, not mocks.** Integration tests use real SQLite, real Git repositories, real HTTP and a real browser.
-  Providers are replaced by clearly labeled synthetic processes (`fixtures/processes`), and a synthetic provider is never
+  Providers are replaced by clearly labeled synthetic processes (`tests/processes`), and a synthetic provider is never
   reported as live evidence.
 - **Test first.** New behavior starts with a failing test; a bug fix starts with a regression test.
 - **Timing-sensitive suites** (PTY, Git, MCP) run with bounded parallelism (`maxWorkers: 4`, a 10 s test timeout). If one times
@@ -73,7 +74,7 @@ docs/             This documentation, ADRs and the verification ledger
   Chrome (`channel: 'chrome'`; in CI, where `CI` is set, Playwright's own Chromium); WebKit is opt-in with `AETHER_WEBKIT=1`. GPU measurements (`PERF_GPU=1`) and `pnpm smoke:live`
   are never part of the default run: a skipped check is "not run", never "passed".
 - **Keeping tests stable.** Use fixture data with fixed timestamps rather than "now" where you can; synthetic processes
-  (`fixtures/processes`, `sleep` named `claude`) instead of real CLIs; wait on a visible state (`expect(...).toBeVisible()`,
+  (`tests/processes`, `sleep` named `claude`) instead of real CLIs; wait on a visible state (`expect(...).toBeVisible()`,
   an element that proves the data arrived) instead of a fixed sleep; never depend on the camera director in a spec (it is off under
   automation); give a spec its own repository and session files so specs do not share state; and keep a test that needs a GPU
   behind its flag.
@@ -108,6 +109,9 @@ at how long it takes.
   guarded by counting, which needs no stopwatch: `scan-work-bound.test.ts` counts the files a scan stats and opens.
 - **Prove it under load.** Run the file ten times next to a CPU burner (`yes > /dev/null` four to twenty times, killed by its
   own PID afterwards) before calling a timing fix done, and compare with the same run on the old test.
+- **Retries are a net, not a fix.** On a slow or shared machine a few 3D-scene specs can miss a deadline. CI retries a failing
+  e2e test twice (`AETHER_E2E_RETRIES` sets the count anywhere else) and the run reports a test that needed a retry as flaky.
+  Treat a flaky test like a failing one: find the missing wait.
 
 ## Verification ledger
 

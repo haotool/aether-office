@@ -66,7 +66,7 @@ describe('runner leases and work', () => {
           f.owner.actor,
           command('work.retry', { workId, resume: true }, f.projectId, current().version),
         ),
-      ).toThrow('CAPABILITY_UNSUPPORTED'); // demo provider cannot resume
+      ).toThrow('CAPABILITY_UNSUPPORTED');
       expect(() =>
         f.control.execute(
           f.sender.actor,

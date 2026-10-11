@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { DITHER_END, DITHER_PARS, DITHERED } from './dither.js';
 
-/** Materials of a floor: the department-tinted hull, glass and glow, and the holographic surfaces. */
 export type Materials = ReturnType<typeof createMaterials>;
 
 const glow = (color: string, intensity: number, extra: THREE.MeshStandardMaterialParameters = {}) =>
@@ -25,10 +24,6 @@ const holo = (color: string, opacity: number) =>
     side: THREE.DoubleSide,
   });
 
-/**
- * A hologram: additive light that is brighter at grazing angles (fresnel), crossed by moving scanlines and a slow flicker.
- * One instance per floor; its `time` uniform is advanced by the scene.
- */
 function hologram(color: string, strength = 1) {
   return new THREE.ShaderMaterial({
     uniforms: {

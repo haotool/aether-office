@@ -1,4 +1,3 @@
-// Runs the area modules and assembles the report object that scorecard.json stores.
 import { a11y } from './areas/a11y.mjs';
 import { docs } from './areas/docs.mjs';
 import { maturity } from './areas/maturity.mjs';
@@ -15,7 +14,6 @@ import { overall, scoreArea } from './model.mjs';
 
 export const REPORT_VERSION = 1;
 
-/** name -> [title, measure(repo, context)] in the order the report lists them. */
 export const AREAS = {
   structure: ['Structure', (repo, ctx) => structure(repo, ctx)],
   types: ['Types and correctness gates', (repo, ctx) => types(repo, ctx)],
@@ -36,7 +34,6 @@ async function readinessResults(root) {
   return run({ root, history: false, maintainerEmails: [], maxHistoryMb: 5, skipGitleaks: false });
 }
 
-/** Scores the named areas (all when `names` is empty) of the repository at `root`. */
 export async function scoreRepository(root, names = []) {
   const selected = names.length ? names : Object.keys(AREAS);
   const unknown = selected.filter((n) => !AREAS[n]);

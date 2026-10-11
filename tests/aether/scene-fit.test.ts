@@ -3,7 +3,7 @@ import { fittedOffset } from '../../packages/office-scene/src/scene/scene-geomet
 
 const OVERVIEW: [number, number, number] = [30, 34, 44];
 const length = (v: number[]) => Math.hypot(...v);
-const slope = (v: number[]) => v[1]! / Math.hypot(v[0]!, v[2]!); // how steeply it looks down
+const slope = (v: number[]) => v[1]! / Math.hypot(v[0]!, v[2]!);
 
 it('leaves a landscape view as designed and pulls a portrait view back and up', () => {
   expect(fittedOffset(OVERVIEW, 1.6)).toEqual(OVERVIEW);

@@ -1,4 +1,3 @@
-/** The agents words, in English. */
 export const enAgents = {
   species: 'Species',
   color: 'Identity color',

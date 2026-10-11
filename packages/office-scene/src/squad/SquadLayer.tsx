@@ -15,19 +15,13 @@ import type { Point2 } from './squad-glide.js';
 import type { SquadSceneContext } from './squad-scene.js';
 import type { SquadFrame } from './use-squad.js';
 
-/** What the person has turned off or down. `calm` and `relation` are the office-life settings (the Calm switch is built apart). */
 export type SquadPrefs = {
-  /** Calm mode: the beam and the zone keep still. */
   calm?: boolean;
-  /** The relation effects (the zone's dressing and the beam) are on; default on. Seating itself never turns off. */
   relation?: boolean;
-  /** The puppet strings are on (default on); they also need the relation effects. */
   strings?: boolean;
-  /** The hand-over of a result is shown (default on); needs the relation effects. Not a setting: a switch to measure what it costs. */
   handover?: boolean;
 };
 
-/** What a click, a hover or a press on a subagent does: the same as on any member (the page decides). */
 function useMemberActions({ props, fly, hover, ix }: SquadSceneContext): MemberActions {
   return useMemo(
     () => ({
@@ -44,7 +38,6 @@ function useMemberActions({ props, fly, hover, ix }: SquadSceneContext): MemberA
   );
 }
 
-/** Every agent seen so far by id: a leaver is no longer listed, but its last look stays. */
 function useKnownAgents(agents: readonly Agent[]): ReadonlyMap<string, Agent> {
   const known = useRef(new Map<string, Agent>());
   for (const agent of agents) known.current.set(agent.id, agent);
@@ -58,7 +51,6 @@ type SquadEffectsProps = {
   podPos: Map<string, Point2>;
 };
 
-/** The squads in view: each zone with its pods, the supervisor's dressing, the hand-over, the strings, the beam and the zone labels. */
 function SquadEffects({ squad, scene, squads, podPos }: SquadEffectsProps) {
   const { props, exploded, compact } = scene;
   const { quality, reducedMotion } = props;
@@ -113,7 +105,6 @@ type MembersProps = {
   podPos: Map<string, Point2>;
 };
 
-/** The subagents of the squads in view: seated, arriving or leaving, each at its own floor. */
 function SquadMembers({ squad, scene, known, podPos }: MembersProps) {
   const { props, floor, exploded, compact, hover, ix, engagements, pose } = scene;
   const { quality, reducedMotion, selectedId } = props;
@@ -124,7 +115,7 @@ function SquadMembers({ squad, scene, known, podPos }: MembersProps) {
     const agent = known.get(m.id);
     const memberFloor = floorOfSquad.get(m.supervisor);
     if (!agent || memberFloor === undefined || (!exploded && memberFloor !== floor)) return null;
-    if (m.phase !== 'leaving' && m.seat >= budget) return null; // a silhouette: drawn by the zone
+    if (m.phase !== 'leaving' && m.seat >= budget) return null;
     return (
       <SquadMember
         key={m.id}
@@ -150,11 +141,6 @@ function SquadMembers({ squad, scene, known, podPos }: MembersProps) {
   });
 }
 
-/**
- * Everything drawn for the squads of the scene: each zone with its pods, the supervisor's dressing, the beam into the
- * core, the subagents (seated, arriving, leaving), the zone labels and the activity log. A sibling of the members,
- * mounted by the scene next to them; the subagents are seated in the frame's layout (see use-squad.ts).
- */
 export function SquadLayer({ squad, scene }: { squad: SquadFrame; scene: SquadSceneContext }) {
   const { floor, exploded } = scene;
   const known = useKnownAgents(scene.props.agents);
@@ -164,7 +150,7 @@ export function SquadLayer({ squad, scene }: { squad: SquadFrame; scene: SquadSc
     () => all.filter((s) => exploded || s.floor === floor),
     [all, exploded, floor],
   );
-  squad.handover.view.current = { floor, exploded }; // a hand-over is walked only for a desk that is in view
+  squad.handover.view.current = { floor, exploded };
   return (
     <>
       {squads.length > 0 && (

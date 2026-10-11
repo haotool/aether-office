@@ -30,8 +30,8 @@ function scope(s: Partial<UsageScope> | undefined, days: number): UsageScope {
 }
 
 /**
- * A control plane that has not been restarted since an upgrade answers with an older shape while this page is newer:
- * what was added later is filled with its "unknown" value, so one missing field cannot take the dashboard down.
+ * A control plane not restarted since an upgrade answers with an older shape while this page is newer: what was added
+ * later is filled with its unknown value, so one missing field cannot take the dashboard down.
  */
 export function normalizeUsage(r: UsageResponse): UsageResponse {
   const days = r.days ?? [];

@@ -1,4 +1,3 @@
-// Human-readable release score table (must match JSON fields).
 const fmt = (n) => (n === null || n === undefined ? '-' : String(n));
 
 export function renderReleaseTable(report) {

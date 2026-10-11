@@ -1,4 +1,3 @@
-/** The terminals words, in Traditional Chinese. */
 export const zhTerminals = {
   terminalCommandState: '最近命令狀態',
   terminals: '終端機',

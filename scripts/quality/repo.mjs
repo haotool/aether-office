@@ -1,12 +1,10 @@
-// The repository as the scorer sees it: tracked plus untracked-but-not-ignored files, read lazily and cached.
-// Rule modules only receive this object, so tests can hand them an in-memory repository (see `memoryRepo`).
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 /** Files the scorer never judges: generated, the ledger, binaries, vendored data and its own output. */
 const EXCLUDED =
-  /^(THIRD_PARTY_NOTICES\.md|pnpm-lock\.yaml|docs\/verification\/(features\.json|report\.md)|docs\/quality\/(scorecard\.(md|json))|LICENSES\/|assets-source\/|fixtures\/)|(^|\/)generated\/|\.(glb|png|jpe?g|webp|gif|ico|woff2?|svg|mp4|webm|lock)$|\.generated\.|\.min\./;
+  /^(docs\/legal\/THIRD_PARTY_NOTICES\.md|pnpm-lock\.yaml|docs\/verification\/(features\.json|report\.md)|docs\/quality\/(scorecard\.(md|json))|LICENSES\/|assets-source\/|tests\/processes\/)|(^|\/)generated\/|\.(glb|png|jpe?g|webp|gif|ico|woff2?|svg|mp4|webm|lock)$|\.generated\.|\.min\./;
 
 export const isExcluded = (file) => EXCLUDED.test(file);
 
@@ -25,7 +23,6 @@ export function gitFiles(root) {
   }
 }
 
-/** A repository on disk: `files` are repo-relative posix paths, `read` returns UTF-8 text ('' when unreadable). */
 export function diskRepo(root) {
   const files = gitFiles(root).filter((file) => !isExcluded(file));
   const cache = new Map();
@@ -46,7 +43,6 @@ export function diskRepo(root) {
   };
 }
 
-/** An in-memory repository for tests: `{ 'a/b.ts': 'text' }`. */
 export function memoryRepo(contents) {
   return {
     root: '/memory',
@@ -71,7 +67,6 @@ export function runCommand(command, args, { cwd, timeout = 120_000 } = {}) {
   };
 }
 
-/** The product source: application and package code under `src`, no tests. */
 export const PRODUCT_SOURCE = /^(apps|packages)\/[^/]+\/src\/.*\.(ts|tsx)$/;
 export const TEST_FILE = /^(tests|e2e)\/.*\.(ts|tsx)$/;
 export const CODE_FILE = /\.(ts|tsx|mjs|css)$/;

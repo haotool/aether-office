@@ -51,7 +51,7 @@ describe('the persisted preferences migration', () => {
       { calm: 'yes', frequency: 'often', categories: { git: false, meme: 'no', nope: true } },
       true,
     );
-    expect(repaired.calm).toBe(true); // not a boolean: the default
+    expect(repaired.calm).toBe(true);
     expect(repaired.frequency).toBe('rare');
     expect(repaired.categories.git).toBe(false);
     expect(repaired.categories.meme).toBe(true);

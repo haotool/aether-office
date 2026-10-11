@@ -10,7 +10,7 @@ review* have not been decided by a lawyer.
 | [licence-policy.md](licence-policy.md)                  | Allowed, conditional and denied licences; how to add a dependency, port code, add assets.               |
 | [provenance.md](provenance.md)                          | Where the code and assets come from; the projects studied and what was (not) taken from them.           |
 | [trademarks.md](trademarks.md)                          | How the names and marks of Anthropic, OpenAI, GitHub and others are used.                               |
-| [../../THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md) | Generated notices: every shipped package, its licence text and its NOTICE file.                     |
+| [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) | Generated notices: every shipped package, its licence text and its NOTICE file.                     |
 | [../../NOTICE](../../NOTICE)                            | Short attribution notice (upstream project and Apache-2.0 material).                                    |
 | [../../REUSE.toml](../../REUSE.toml)                    | The licence and copyright of every file, by path ([REUSE](https://reuse.software) format).              |
 

@@ -29,18 +29,16 @@ export function redact(value: unknown): unknown {
       .replace(/(Bearer\s+)[A-Za-z0-9._~-]+/gi, '$1[REDACTED]');
   return value;
 }
-const requestSchema = z
-  .object({
-    runId: z.string().uuid(),
-    epoch: z.number().int().positive(),
-    requestId: z.string().min(1).max(200),
-    kind: z.string().min(1).max(100),
-    toolId: z.string().min(1).max(200),
-    turnId: z.string().max(200),
-    providerSessionId: z.string().min(1).max(200),
-    parameters: z.record(z.string(), z.unknown()),
-  })
-  .strict();
+const requestSchema = z.strictObject({
+  runId: z.string().uuid(),
+  epoch: z.number().int().positive(),
+  requestId: z.string().min(1).max(200),
+  kind: z.string().min(1).max(100),
+  toolId: z.string().min(1).max(200),
+  turnId: z.string().max(200),
+  providerSessionId: z.string().min(1).max(200),
+  parameters: z.record(z.string(), z.unknown()),
+});
 function ownedRun(ctx: Context, actor: Actor, runId: string, epoch?: number) {
   actor = identityActor(ctx, actor.id);
   authorize(actor, 'runner.report');
@@ -70,7 +68,6 @@ function ownedRun(ctx: Context, actor: Actor, runId: string, epoch?: number) {
   return run;
 }
 type RequestData = z.infer<typeof requestSchema>;
-/** Records a pending approval for the run, marks its agent as waiting and announces the request. */
 function storeRequest(
   ctx: Context,
   actor: Actor,

@@ -1,10 +1,6 @@
 import { clamp01, draw, envelope, lerp, SPOT } from './shared.js';
 import type { Effect, Sprite } from './types.js';
 
-/**
- * A rubber duck on the right of the desk (the side the usual camera sees) while the model thinks it through: it bobs, and a
- * thought dot drifts up now and then. The seed picks where along that side it sits.
- */
 export const rubberDuck: Effect = (t, d, seed) => {
   const fade = envelope(t, d, 600);
   const x = 0.38 + draw(seed, 0) * 0.3;
@@ -30,7 +26,6 @@ export const rubberDuck: Effect = (t, d, seed) => {
   return sprites;
 };
 
-/** Steam over the mug (the coffee refill): three puffs rise, widen and fade, one after another. */
 export const coffeeRefill: Effect = (t, d) => {
   const fade = envelope(t, d, 500);
   const [x, y, z] = SPOT.mug;

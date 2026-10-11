@@ -5,18 +5,15 @@ import { seeded } from '../environment/seeded.js';
 import type { Vec3 } from '../core/stalk-types.js';
 import { itemAt, lastOf } from '../environment/checked.js';
 
-/** Twig segments and buds one garden may grow in all, so the trees stay a few hundred segments whatever the history. */
 export const MAX_TWIG_SEGMENTS = 300;
 export const MAX_BUDS = 40;
 
 type TwigLimit = { segments: number; buds: number };
-/** What each of `trees` flowers may grow so that together they stay inside the garden's limits (no tier starves another). */
 export const twigShare = (trees: number): TwigLimit => ({
   segments: Math.floor(MAX_TWIG_SEGMENTS / Math.max(1, trees)),
   buds: Math.floor(MAX_BUDS / Math.max(1, trees)),
 });
 
-/** Attractor points per twig the flower asks for; a tree gets at most this many segments per twig too. */
 const ATTRACTORS_PER_TWIG = 12;
 const SEGMENTS_PER_TWIG = 16;
 const MAX_ITERATIONS = 80;
@@ -24,39 +21,29 @@ const TROPISM = 0.18;
 const up = new THREE.Vector3(0, 1, 0);
 
 type Envelope = {
-  /** The middle of the flat side of the hemisphere (on the deck); the points lie above it. */
   centre: Vec3;
   radius: number;
-  /** Nothing grows towards the flower's own head. */
   avoid: Vec3;
   avoidRadius: number;
 };
 export type ColonyParams = {
   seed: string;
-  /** Where the tree starts: nodes already standing (the lower stem), not counted as segments. */
   roots: Vec3[];
   envelope: Envelope;
   attractors: number;
-  /** Length of one segment. */
   step: number;
-  /** An attractor pulls the nearest node only within this distance. */
   influence: number;
-  /** An attractor is reached (and removed) once a node comes this close. */
   kill: number;
   maxSegments: number;
 };
 type Colony = {
-  /** The roots first, then every grown node in the order it appeared. */
   nodes: Vec3[];
-  /** The node each one grew from (-1 for a root). */
   parent: number[];
   roots: number;
   attractors: number;
-  /** How many attractors a node came within the kill distance of. */
   reached: number;
 };
 
-/** Points uniformly in the hemisphere above the envelope's centre, outside the avoided ball; deterministic from `random`. */
 function scatter(random: () => number, count: number, e: Envelope): THREE.Vector3[] {
   const centre = new THREE.Vector3(...e.centre);
   const avoid = new THREE.Vector3(...e.avoid);
@@ -125,12 +112,6 @@ function colonizeGrow(ctx: ColonizeCtx, pulls: Map<number, THREE.Vector3>) {
   return ctx.nodes.length - ctx.roots >= ctx.p.maxSegments;
 }
 
-/**
- * Space colonization (Runions, Lane and Prusinkiewicz 2007), small and bounded: attractor points fill a hemispherical envelope;
- * each iteration every attractor pulls on the node nearest to it (inside the influence distance), every pulled node grows one
- * step towards the mean of its pulls (with a slight lean towards the light), and attractors a node has come close to are
- * removed. The tree ends when nothing is left to reach or `maxSegments` is spent. Pure: the same seed gives the same tree.
- */
 export function colonize(p: ColonyParams): Colony {
   const random = seeded(`colony:${p.seed}`);
   let live = scatter(random, p.attractors, p.envelope);
@@ -156,11 +137,9 @@ export function colonize(p: ColonyParams): Colony {
   return { nodes: nodes.map((n) => n.toArray()), parent, roots, attractors: total, reached };
 }
 
-/** Chains of single-parent nodes, each from the node it grew out of to the next fork or tip. */
 function chainsOf(colony: Colony) {
   const children = colony.nodes.map(() => [] as number[]);
   colony.parent.forEach((p, i) => p >= 0 && itemAt(children, p).push(i));
-  // Tips below each node, so a limb is as thick as the number of tips it carries.
   const tips = colony.nodes.map(() => 0);
   for (let i = colony.nodes.length - 1; i >= 0; i--) {
     const parent = itemAt(colony.parent, i);
@@ -187,7 +166,6 @@ function chainsOf(colony: Colony) {
   return { chains, tips, children, total };
 }
 
-/** The limbs: each chain of nodes a glass tube as thick as the tips it carries, in the order the tree grew. */
 function twigTubes(
   b: MeshBuilder,
   bloom: Bloom,
@@ -223,7 +201,6 @@ function twigTubes(
   }
 }
 
-/** The farthest tips from the stem carry the buds: that is where the tree reaches out. Returns how many it opened. */
 function twigBuds(
   b: MeshBuilder,
   bloom: Bloom,
@@ -269,11 +246,6 @@ function twigBuds(
   return tipNodes.length;
 }
 
-/**
- * The glass tree on a flower's stem: a space-colonized crown of twigs in a hemisphere over the deck the flower stands on, each
- * limb a glass tube (the stem's own shader) as thick as the tips it carries, every tip ending in a bud: the flower's own
- * five-petal bloom in miniature. Twigs grow before the buds open. Bounded by `limit` whatever the history; returns what it grew.
- */
 export function growTwigs(
   b: MeshBuilder,
   bloom: Bloom,

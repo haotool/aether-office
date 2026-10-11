@@ -17,7 +17,6 @@ type PermissionCardProps = {
   compact?: boolean;
 };
 
-/** Counts down to the moment the hook gives up and Claude asks in the terminal. */
 function useSecondsLeft(expiresAt: number) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -28,11 +27,8 @@ function useSecondsLeft(expiresAt: number) {
 }
 
 /**
- * One permission prompt of Claude Code, answerable here: what it wants to run (a redacted, bounded summary and
- * preview), Allow once, Allow for this session (only when Claude offered rules), and Deny with an optional reason.
- * Nothing is ever allowed except by a press on a button. `compact` is the feed row and the phone peek: the summary and
- * Deny; the full card also has the preview, the session option and the reason. A compact card offers Allow only when its
- * one line is the whole call: otherwise it shows Review, which opens the full card, so nobody allows what they have not read.
+ * Nothing is ever allowed except by a press on a button. A compact card offers Allow only when its one line is the
+ * whole call; otherwise it shows Review, so nobody allows what they have not read.
  */
 export function PermissionCard({ request, compact = false }: PermissionCardProps) {
   const t = useT();
@@ -84,7 +80,6 @@ export function PermissionCard({ request, compact = false }: PermissionCardProps
   );
 }
 
-/** What the call is: its preview, the rules a session grant would add, and the reason a denial carries. */
 function PermissionDetails({
   request,
   message,
@@ -171,7 +166,6 @@ function PermissionActions({
   );
 }
 
-/** Allow once, or Review when the compact line is not the whole call. */
 function AllowButton({
   review,
   disabled,
@@ -213,7 +207,6 @@ function DecideError({ error }: { error: unknown }) {
   );
 }
 
-/** The pending cards of one session (nothing when it has none), for the feed row and the top of the conversation. */
 export function PermissionCards({
   sessionKey,
   compact = false,
@@ -231,7 +224,6 @@ export function PermissionCards({
   );
 }
 
-/** A phone's sheet at its peek height: the prompt that most wants an answer (the member's own, else the oldest) over the bar. */
 export function PermissionPeek({ sessionKey }: { sessionKey?: string | undefined }) {
   const pending = usePermissionRequests().filter((r) => r.state === 'pending');
   const request =

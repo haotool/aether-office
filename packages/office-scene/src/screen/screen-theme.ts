@@ -6,7 +6,6 @@ import type { ScreenFacts } from './screen-facts.js';
 import { context2d } from '../core/canvas-2d.js';
 
 export { SCREEN_H, SCREEN_W };
-/** The title bar above and the footer below every view; a view draws in the box between them. */
 export const BAR_H = 30;
 export const FOOTER_Y = 346;
 export const MONO = 'ui-monospace, Menlo, monospace';
@@ -23,7 +22,6 @@ export type Palette = {
   del: string;
   warn: string;
   info: string;
-  /** The line the caret is on. */
   current: string;
   syntax: Record<TokenKind, string>;
 };
@@ -79,7 +77,6 @@ export const PALETTES: Record<Theme, Palette> = {
 
 type Box = { x: number; y: number; w: number; h: number };
 
-/** What a view keeps from one paint to the next: scrolling eases, so it needs to remember where it is. */
 type ScreenState = { scroll: number; secondScroll: number };
 
 export type ViewCtx = {
@@ -88,20 +85,15 @@ export type ViewCtx = {
   p: Palette;
   accent: string;
   seed: string;
-  /** Epoch ms of this paint. */
   now: number;
-  /** Ms since the running tool began (0 when none is running): the clock typing and streaming run on. */
   elapsed: number;
   work: Work;
   facts: ScreenFacts;
   role: string;
   profile: DeskProfile;
-  /** How much faster than its own pace the member types, 1 to 2. */
   speed: number;
-  /** Ms since the last paint, for easing. */
   dt: number;
   state: ScreenState;
-  /** False under reduced motion: views draw a still frame (no typing, no scrolling, no streaming). */
   moving: boolean;
 };
 

@@ -13,11 +13,6 @@ const subscribe = (notify: () => void) => {
 };
 const viewportWidth = () => window.innerWidth;
 
-/**
- * Where the desktop panel stands: its width for this window (the stored choice kept inside the limits, so a shrinking
- * window pulls it in and a growing one gives it back), the collapsed rail, and whether it can be resized at all (not
- * while it lies over the office on a narrow window).
- */
 export function usePanelLayout() {
   const viewport = useSyncExternalStore(subscribe, viewportWidth);
   const stored = usePreferences((s) => s.panelWidth);
@@ -26,7 +21,6 @@ export function usePanelLayout() {
   const resizable = viewport > PANEL_OVERLAY_MAX;
   const collapsed = collapsedPref && resizable;
   const width = effectivePanelWidth(stored, viewport);
-  /** What the office loses to the panel, in px. */
   const occupied = collapsed ? PANEL_RAIL : width;
   const setWidth = useCallback(
     (next: number) =>

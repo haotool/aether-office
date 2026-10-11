@@ -1,4 +1,3 @@
-// L7-04: count top-level names in the release tree (tracked + non-ignored untracked), not disk clutter.
 import { readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 
@@ -28,7 +27,6 @@ export function releaseTreeTopLevel(root) {
 
 /** @param {string} root */
 export function listRootItems(root) {
-  // Unit-test fixtures use a temp directory without .git; disk listing matches historical behavior.
   if (gitWorkTree(root)) return releaseTreeTopLevel(root);
   return readdirSync(root)
     .filter((name) => name !== '.git')

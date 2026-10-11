@@ -10,7 +10,6 @@ import { ErrorLine, Skeleton, StatusChip, Switch } from '../settings/kit.js';
 
 type Policy = { liveEnabled: boolean; maxTurns: number; timeoutMs: number; version: number };
 
-/** The project's live-execution policy: whether live agents may run, and how long and how many turns they get. */
 export function ExecutionSettings({
   projectId,
   canConfigure,
@@ -36,7 +35,6 @@ export function ExecutionSettings({
   );
 }
 
-/** Saves the policy form: the busy flag, the error to show, and the submit handler. */
 function useSavePolicy(
   projectId: string,
   policy: Policy,

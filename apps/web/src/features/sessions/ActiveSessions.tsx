@@ -15,7 +15,6 @@ type ActiveSessionsProps = {
   onOpen: (session: AttributedSession) => void;
 };
 
-/** The sessions with a live process: the most alive first, then the most recently written. */
 function runningSessions(sessions: readonly AttributedSession[]) {
   return sessions
     .filter((s) => s.process === 'running')
@@ -45,7 +44,6 @@ function LiveRow({ s, onPick }: { s: AttributedSession; onPick: () => void }) {
   );
 }
 
-/** Every session on the machine that has a live process, whatever its project: a chip with the count and a sheet to pick one. */
 export function ActiveSessions({ sessions, onOpen }: ActiveSessionsProps) {
   const t = useT();
   const [open, setOpen] = useState(false);

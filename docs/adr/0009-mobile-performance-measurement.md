@@ -10,7 +10,7 @@ device thermals. The product still needs a repeatable way to rank A/B changes.
 
 ## Decision
 
-Relative measurement uses the Phase 4 harness documented in [mobile-perf.md](../quality/mobile-perf.md): `pnpm run perf:mobile`
+Relative measurement uses the harness documented in [mobile-perf.md](../quality/mobile-perf.md): `pnpm run perf:mobile`
 with interleaved A/B passes, load-average discipline (≤2), and the harness output schema (section "Output schema" in that
 doc). Built servers for
 experiments use dedicated ports (for example 4798–4799 in the doc), not the default dev ports 4310, 4320 or 4330. On a

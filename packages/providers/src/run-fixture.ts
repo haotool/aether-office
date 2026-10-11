@@ -18,11 +18,9 @@ const fixtureLine = z.discriminatedUnion('type', [
   }),
 ]);
 
-/** What the demo fixture process says: JSON lines on stdout, handled in order, and a tail of its stderr. */
 class FixtureStream {
   result: ProviderResult | undefined;
   failed: Error | undefined;
-  /** The part of stdout that is not yet a whole line. */
   buffer = '';
   stderr = '';
   private chain: Promise<void> = Promise.resolve();
@@ -56,7 +54,6 @@ class FixtureStream {
     this.stderr = (this.stderr + bytes.toString('utf8')).slice(-4000);
   }
 
-  /** Resolves when every line read so far has been handled. */
   settled() {
     return this.chain;
   }

@@ -18,8 +18,8 @@ it('imports disabled, shows warnings, exposes only enabled skills to agents, and
       warnings: string[];
     };
     expect(first.enabled).toBe(false);
-    expect(first.warnings.length).toBe(2); // frontmatter hook + shell snippet, both inert
-    expect(listSkills(f.control.ctx, f.sender.actor, f.projectId)).toEqual([]); // agents see nothing yet
+    expect(first.warnings.length).toBe(2);
+    expect(listSkills(f.control.ctx, f.sender.actor, f.projectId)).toEqual([]);
     expect(listSkills(f.control.ctx, f.owner.actor, f.projectId)).toHaveLength(1);
 
     expect(() => run(f.sender.actor, 'skill.import', { content: file('x') })).toThrow('FORBIDDEN');
@@ -38,10 +38,10 @@ it('imports disabled, shows warnings, exposes only enabled skills to agents, and
 
     const same = run(f.owner.actor, 'skill.import', { content: file('```bash\nrm -rf /\n```') })
       .result as { enabled: boolean };
-    expect(same.enabled).toBe(true); // identical content keeps its approval
+    expect(same.enabled).toBe(true);
     const changed = run(f.owner.actor, 'skill.import', { content: file('Different body now.') })
       .result as { enabled: boolean; version: number };
-    expect(changed.enabled).toBe(false); // changed content must be approved again
+    expect(changed.enabled).toBe(false);
     expect(changed.version).toBeGreaterThan(enabled.version);
     expect(listSkills(f.control.ctx, f.sender.actor, f.projectId)).toEqual([]);
     expect(() => run(f.owner.actor, 'skill.import', { content: 'no frontmatter' })).toThrow(

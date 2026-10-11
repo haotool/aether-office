@@ -36,7 +36,6 @@ export class JsonRpcProcess {
       this.child.once('spawn', resolve);
       this.child.once('error', reject);
     });
-    // Consumers may install handlers before awaiting ready. Avoid an unhandled early spawn failure.
     void this.ready.catch((error) =>
       this.fail(error instanceof Error ? error : new Error('SPAWN_FAILED')),
     );

@@ -20,12 +20,6 @@ import { sceneText } from '../i18n/scene-text.js';
 const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
 
-/**
- * Wave 2: the rows whose data is real since the server labels commands (`tags`) and reports how they ended (`ok`). A rule
- * that says how something ended has `claimsOutcome` and its matcher reads `ok === true` or `ok === false`, so an outcome the
- * provider did not state (null) never starts one. The rest start from what a command was started as. Order matters where two
- * rules read the same call: the first one the arbiter lets in wins (the Friday sign over the plain launch pad).
- */
 export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
   {
     id: 'ci-pass',
@@ -100,7 +94,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     row: 'R18',
     category: 'git',
     decorative: true,
-    claimsOutcome: false, // "started": whether it went through is not known
+    claimsOutcome: false,
     when: forcePushStarted,
     durationMs: 4_000,
     cooldownMs: 30 * MINUTE,
@@ -169,7 +163,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     row: 'R25',
     category: 'meme',
     decorative: true,
-    claimsOutcome: false, // only a picture: nothing is executed or blocked by it
+    claimsOutcome: false,
     when: rmRecursive,
     durationMs: 2_600,
     cooldownMs: 30 * MINUTE,
@@ -217,7 +211,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     row: 'R46',
     category: 'meme',
     decorative: true,
-    claimsOutcome: true, // both runs are real outcomes: the web derives the signal from them, with the failed run's `ok`
+    claimsOutcome: true,
     when: (s) => s.kind === 'tests.machine',
     durationMs: 3_600,
     cooldownMs: DAY,
@@ -233,7 +227,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     row: 'R47',
     category: 'meme',
     decorative: true,
-    claimsOutcome: true, // failed, then a test file was edited, then passed: all three read from real calls
+    claimsOutcome: true,
     when: (s) => s.kind === 'tests.edited',
     durationMs: 3_800,
     cooldownMs: DAY,
@@ -249,7 +243,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     row: 'R48',
     category: 'social',
     decorative: true,
-    claimsOutcome: true, // a real `gh pr review --approve` that exited successfully
+    claimsOutcome: true,
     when: prApproved,
     durationMs: 2_400,
     cooldownMs: 10 * MINUTE,
@@ -265,7 +259,7 @@ export const COMMAND_OUTCOME_RULES: readonly LifeRule[] = [
     row: 'R21',
     category: 'git',
     decorative: true,
-    claimsOutcome: false, // "started": a hard reset's result is not known, and the swirl carries no danger tone
+    claimsOutcome: false,
     when: hardReset,
     durationMs: 2_000,
     cooldownMs: 30 * MINUTE,

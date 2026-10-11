@@ -1,4 +1,3 @@
-/** The tasks words, in English. */
 export const enTasks = {
   boardTodo: 'To do',
   boardDoing: 'In progress',
@@ -57,7 +56,6 @@ export const enTasks = {
   status: 'Status',
   enabled: 'Enabled',
   disabled: 'Disabled',
-  notConfigured: 'Not configured',
   workspaceHint:
     'Each writer has an isolated Git worktree. Reading a diff does not change the source repository.',
   noWorkspaces: 'No workspaces yet',

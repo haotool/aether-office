@@ -29,7 +29,6 @@ describe('animal states', () => {
     const listed = [
       ...validator.slice(start, validator.indexOf('];', start)).matchAll(/'([a-z_]+)'/g),
     ].map((m) => m[1]);
-    // The two figures that are not animals carry one clip of their own each, and the animals none of those.
     expect([...built].sort()).toEqual([...CLIPS, 'haunt', 'hop'].sort());
     for (const clip of Object.values(APPARITION_CLIP)) expect(built).toContain(clip);
     expect([...listed].sort()).toEqual([...CLIPS].sort());
@@ -56,7 +55,6 @@ it('replaces a member with a rabbit or a ghost by how its session is alive, and 
   for (const state of ['active', 'idle', 'ended', 'unknown'] as const)
     expect(apparitionOf(state)).toBeNull();
   expect(APPARITION_MODEL).toEqual({ sleeping_rabbit: 'rabbit', ghost: 'ghost', zombie: 'zombie' });
-  // Each model is a file the build makes: the animals are named for their species, the two figures for themselves.
   for (const model of ['ghost', 'zombie'])
     for (const lod of [0, 1, 2])
       expect(existsSync(`apps/web/public/assets/animals/${model}-lod${lod}.glb`), model).toBe(true);

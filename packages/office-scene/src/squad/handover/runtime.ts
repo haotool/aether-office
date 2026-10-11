@@ -1,5 +1,3 @@
-// The hand-over runtime of a scene: plans a hand-over when a subagent finishes, keeps the book, and moves it on with the
-// clock. Plain objects, no React: use-squad.ts owns one and calls `begin` (when a member starts to leave) and `tick`.
 import type { NavGrid, Point } from '@aether/kernel';
 import { hashText } from '../../environment/hash.js';
 import type { Quality } from '../../scene/scene-types.js';
@@ -24,18 +22,15 @@ import {
 } from './plan.js';
 import { stampOf, type HandedResult } from './stamp.js';
 
-/** What the layer that draws the scene says it shows: a hand-over is only walked for a desk that is in view. */
 type View = { floor: number; exploded: boolean };
 
 type HandoverStart = {
   id: string;
   type: string;
   supervisor: string;
-  /** When the subagent finished. */
   since: number;
   result: HandedResult;
   squad: Pick<DrawSquad, 'floor' | 'x' | 'z' | 'deskX' | 'deskZ' | 'deskRotation' | 'side'>;
-  /** The carrier's chair and the turn of its seat, on a grid with the other pods in the way. */
   chair: Point;
   frameYaw: number;
   grid: NavGrid;
@@ -47,7 +42,6 @@ type HandoverStart = {
 
 const planKey = (id: string, since: number) => `${id}@${since}`;
 
-/** What the book is asked to admit: the walk's length, whether the floor is in view, and the settings that thin it out. */
 function request(s: HandoverStart, route: Route, shown: View | null) {
   return {
     id: s.id,
@@ -86,13 +80,9 @@ export function createHandover() {
   const plans = new Map<string, HandoverPlan>();
   const view: { current: View | null } = { current: null };
   return {
-    /** Written by the layer that draws the scene, each render. */
     view,
-    /** The book, for the renderer's own per-frame reads. */
     book: () => book,
-    /** The plan of the hand-over of a member that finished at `since`, if it has one. */
     planOf: (id: string, since: number) => plans.get(planKey(id, since)),
-    /** Plans the hand-over of a subagent that has just finished; null when none is shown (the relation effects are off). */
     begin(s: HandoverStart): HandoverPlan | null {
       const desk = { x: s.squad.deskX, z: s.squad.deskZ, rotation: s.squad.deskRotation };
       const places = deskPlaces(desk, s.squad.side);
@@ -111,7 +101,6 @@ export function createHandover() {
       plans.set(planKey(s.id, s.since), plan);
       return plan;
     },
-    /** Moves the book on to `now`; the cues are for the supervisors, the lines for the aria log. */
     tick(now: number, live: Live): { cues: Cue[]; told: Told[] } {
       const next = advance(book, now, live);
       book = next.book;

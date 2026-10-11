@@ -1,5 +1,3 @@
-/* Settings: the skeleton, the execution form, facts, shortcuts, links and the undo notice (see settings-kit.css for the row kit). */
-/* A grey bar where an answer will be, so the page does not jump when it arrives. */
 .sskel {
   display: grid;
   gap: var(--space-8);
@@ -21,7 +19,6 @@
   }
 }
 
-/* The execution policy form, the facts list, shortcuts and links. */
 .sform {
   display: grid;
   gap: var(--space-12);
@@ -110,7 +107,6 @@ kbd {
   text-underline-offset: var(--space-4);
 }
 
-/* The notice that lets a change be taken back: it stays above the bottom edge while the page scrolls. */
 .stoast {
   position: sticky;
   bottom: var(--space-16);

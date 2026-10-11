@@ -8,11 +8,8 @@ import { art, squadMaterials, withColors } from './squad-art.js';
 import { createZoneDecal } from './zone-shader.js';
 
 /**
- * The squad layer's shader programs, linked while the scene loads instead of when the first subagent shows up: one hidden
- * copy of each kind of mesh the layer draws (the instanced glow and solid parts, the beam, the zone decal, the strings, the
- * drifting points, a seal), built from the layer's own factories so they compile to the very programs the layer will use.
- * `Warmup` compiles the whole scene, hidden objects included; nothing here is ever drawn. The strings and the points are
- * left out on the low tier, which never shows them.
+ * The squad layer's shader programs, linked while the scene loads instead of when the first subagent shows up, so the
+ * first appearance does not stall. The strings and points are left out on the low tier, which never shows them.
  */
 export function SquadWarm({ quality, zh }: { quality: Quality; zh: boolean }) {
   const parts = art();

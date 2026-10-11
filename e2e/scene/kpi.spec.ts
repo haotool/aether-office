@@ -12,10 +12,7 @@ import {
   writeLines,
 } from '../../tests/aether/usage-fixtures.js';
 
-// KPIs of the building from synthetic transcripts (real shapes, no real text) in the fixture home: the strip over the
-// office, the dashboard it opens, each floor's card in the floor switcher and the floor's plaque.
 const home = process.env['AETHER_LOCAL_SESSIONS_HOME']!;
-// Its own repository, so the other specs' fixture repository and its session stay as they were.
 const repo = join(home, 'kpi-repo');
 const transcripts = [
   join(home, '.claude/projects/p/kpi-claude.jsonl'),
@@ -26,6 +23,7 @@ test.afterAll(() => {
 });
 
 test.beforeAll(() => {
+  rmSync(repo, { recursive: true, force: true });
   mkdirSync(repo, { recursive: true });
   execFileSync('git', ['init', '-q', '-b', 'main', repo]);
   const now = Date.now();
@@ -36,7 +34,6 @@ test.beforeAll(() => {
     });
   git('commit', '-q', '--allow-empty', '-m', 'kpi one');
   git('commit', '-q', '--allow-empty', '-m', 'kpi two');
-  // Claude: two messages (the second one's usage repeated on a second line, as the CLI writes it), two models.
   writeLines(join(home, '.claude/projects/p/kpi-claude.jsonl'), [
     JSON.stringify({ type: 'user', cwd: repo }),
     claudeLine('msg_a', at(600), { i: 1200, cw: 300, cr: 40_000, o: 800 }, { tools: 2, cwd: repo }),
@@ -53,7 +50,6 @@ test.beforeAll(() => {
       { model: 'claude-opus-5-5', cwd: repo },
     ),
   ]);
-  // The usage cache the claude-hud plugin keeps: the 5-hour window at 12%, the 7-day one at 64%.
   const iso = (ms: number) => new Date(now + ms).toISOString();
   writeFileSync(
     process.env['AETHER_CLAUDE_USAGE_FILE']!,
@@ -68,7 +64,6 @@ test.beforeAll(() => {
       },
     }),
   );
-  // Codex: a session with a rate-limit reading whose window resets in three hours.
   const day = new Date(now).toISOString().slice(0, 10).replaceAll('-', '/');
   const rollout = join(
     home,
@@ -120,7 +115,6 @@ const TOKENS_TODAY = '5.4K';
 test('the dashboard says what no office holds, how old each limit reading is, and what Session time is', async ({
   page,
 }) => {
-  // Offices show running and the newest 60 sessions: 61 newer ones push the KPI transcripts out of every office.
   const fillers = join(home, '.claude/projects/kpi-fillers');
   mkdirSync(fillers, { recursive: true });
   const soon = new Date(Date.now() + 60_000);
@@ -147,7 +141,6 @@ test('the dashboard says what no office holds, how old each limit reading is, an
     await expect(dialog.locator('.kpi-note', { hasText: 'Not placed in an office' })).toContainText(
       '5.4K',
     );
-    // every limit reading carries its age
     await expect(dialog.locator('.kpi-rings li', { hasText: 'Claude · 5-hour' })).toContainText(
       /age \d+ (min|h)/,
     );
@@ -164,24 +157,20 @@ test('the strip shows the building’s KPIs and opens the dashboard with every b
   await expect(strip).toBeVisible({ timeout: 30_000 });
   await expect(strip.locator('.kpi-cell').first()).toContainText(TOKENS_TODAY, { timeout: 30_000 });
   await expect(strip.getByText('Commits today')).toBeVisible();
-  // the two commits made above: known once the page has adopted the repository as a project
   await expect(strip.locator('.kpi-cell').nth(2)).toContainText('2', { timeout: 40_000 });
 
   await strip.locator('.kpi-cell').first().click();
   const dialog = page.getByRole('dialog', { name: 'KPI dashboard' });
   await expect(dialog).toBeVisible();
   await expect(dialog.locator('.kpi-headline .kpi-tile').first()).toContainText(TOKENS_TODAY);
-  // tokens by kind, with cache reads apart
   const legend = dialog.locator('.stacked-legend');
   await expect(legend).toContainText('Cache read');
   await expect(legend).toContainText('Reasoning');
   await expect(legend.locator('li', { hasText: 'Cache write' })).toContainText('300');
-  // a bar per day, the last one today, with a tooltip on focus
   const bars = dialog.locator('.daily-bars li');
   await expect(bars).toHaveCount(7);
   await bars.last().focus();
   await expect(bars.last()).toHaveAttribute('data-tip', /: 5\.4K$/);
-  // models and rate-limit windows: Claude's two (12% and 64%) and Codex's (41.5% of its 5-hour window)
   await expect(dialog.locator('.share-list').first()).toContainText('claude-opus-5-5');
   const rings = dialog.locator('.kpi-rings');
   await expect(rings.locator('li', { hasText: 'Claude · 5-hour' })).toContainText('12%');
@@ -190,12 +179,10 @@ test('the strip shows the building’s KPIs and opens the dashboard with every b
   await expect(rings.locator('li', { hasText: 'Codex · 5-hour' })).toContainText(
     /resets in [23] h/,
   );
-  // Git: the two commits, no branch merged yet
   await expect(dialog.getByText('Commits today').last()).toBeVisible();
   await expect(
     dialog.locator('.kpi-section', { hasText: 'Git activity' }).locator('.kpi-tile').first(),
   ).toContainText('2');
-  // the whole building and an office: the same sessions are classified onto the product floor
   await dialog.getByRole('button', { name: /^1F/ }).click();
   await expect(dialog.locator('.kpi-headline .kpi-tile').first()).toContainText(TOKENS_TODAY);
   await dialog.getByRole('button', { name: '30 days' }).click();
@@ -204,7 +191,7 @@ test('the strip shows the building’s KPIs and opens the dashboard with every b
   await expect(dialog.getByText('No token usage recorded in this range yet.')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
-  await expect(strip.locator('.kpi-cell').first()).toBeFocused(); // focus goes back to what opened it
+  await expect(strip.locator('.kpi-cell').first()).toBeFocused();
 });
 
 test('the floor switcher shows each floor’s tokens with a bar, and the floor’s plaque opens its dashboard', async ({
@@ -217,7 +204,7 @@ test('the floor switcher shows each floor’s tokens with a bar, and the floor�
   const shares = await page
     .locator('.slab-kpi')
     .evaluateAll((nodes) => nodes.map((n) => getComputedStyle(n).getPropertyValue('--share')));
-  expect(shares).toContain('1'); // the busiest floor fills its bar
+  expect(shares).toContain('1');
   const plaque = page.locator('.floor-plaque');
   await expect(plaque).toBeVisible();
   await expect(plaque).toContainText(TOKENS_TODAY);
@@ -241,13 +228,13 @@ test('on a phone the KPIs are chips that scroll sideways and the dashboard is a 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   );
-  await expect(page.locator('.floor-plaque')).toHaveCount(0); // no plaque over a phone's scene
+  await expect(page.locator('.floor-plaque')).toHaveCount(0);
   await chips.locator('.kpi-cell').first().click();
   const dialog = page.getByRole('dialog', { name: 'KPI dashboard' });
   await expect(dialog).toBeVisible();
   const box = await dialog.boundingBox();
   expect(box!.width).toBeGreaterThanOrEqual(389);
-  expect(box!.y + box!.height).toBeGreaterThanOrEqual(843); // seated on the bottom edge
+  expect(box!.y + box!.height).toBeGreaterThanOrEqual(843);
   expect(box!.height).toBeLessThanOrEqual(0.9 * 844);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
@@ -263,7 +250,6 @@ for (const theme of ['dark', 'light'] as const)
     await expect(strip.locator('.kpi-cell').first()).toContainText(TOKENS_TODAY, {
       timeout: 30_000,
     });
-    // The scene's own "warming up" text is not what is being checked here: wait until it is gone.
     await expect(page.locator('.scene-warming, .scene-loading')).toHaveCount(0, {
       timeout: 40_000,
     });

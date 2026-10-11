@@ -107,7 +107,7 @@ describe('what the numbers may be missing', () => {
     }
     const snapshot = await look(stats({ maxFiles: 4 }));
     expect(snapshot.scan).toMatchObject({ files: 4, found: 6, truncated: true });
-    expect(snapshot.building.totals.input).toBe(1 + 2 + 3 + 4); // the two oldest are the ones left out
+    expect(snapshot.building.totals.input).toBe(1 + 2 + 3 + 4);
     expect((await look(stats())).scan).toMatchObject({ found: 6, truncated: false });
   });
 
@@ -128,7 +128,6 @@ describe('what the numbers may be missing', () => {
       (NOW - 60_000) / 1000,
       (NOW - 60_000) / 1000,
     );
-    // Entries: the project folder, then its file. A budget of two visits the newest folder and its file only.
     const listing = await listTranscripts(env.home, NOW, 30 * 86_400_000, 100, 2);
     expect(listing.truncated).toBe(true);
     expect(listing.transcripts.map((t) => t.sessionKey)).toEqual(['claude:new']);
@@ -143,7 +142,7 @@ describe('what the numbers may be missing', () => {
     const locked = claudeFile(env.home, 'locked');
     writeLines(locked, [line('l')]);
     touch(locked);
-    chmodSync(locked, 0); // listed, but cannot be opened
+    chmodSync(locked, 0);
     expect((await look(stats())).scan).toMatchObject({ skippedLines: 1, failedFiles: 1 });
   });
 
@@ -154,7 +153,6 @@ describe('what the numbers may be missing', () => {
     touch(file);
     const s = stats();
     expect((await look(s)).building.totals.input).toBe(105);
-    // Same first line, different content after it, and longer than before.
     writeLines(file, [head, line('y1', 7), line('y2', 7)]);
     touch(file, NOW - 30_000);
     expect((await look(s)).building.totals.input).toBe(5 + 7 + 7);

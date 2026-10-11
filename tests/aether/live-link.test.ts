@@ -55,7 +55,7 @@ it('backs off exponentially with jitter, within a ceiling', () => {
   expect(backoffMs(3, 1)).toBe(8000);
   expect(backoffMs(10, 1)).toBe(30_000);
   expect(backoffMs(3, 0.5)).toBe(4000);
-  expect(backoffMs(5, 0)).toBe(250); // never a hot loop
+  expect(backoffMs(5, 0)).toBe(250);
 });
 
 it('tracks the link: live on open, reconnecting after a loss, offline after repeated losses or no network', () => {
@@ -73,7 +73,6 @@ it('tracks the link: live on open, reconnecting after a loss, offline after repe
     failures: 0,
     lastAt: 300,
   });
-  // a message while not live changes nothing; a reset keeps the time of the last word
   expect(linkReducer(state, { type: 'message', at: 400 })).toBe(state);
   expect(linkReducer(live, { type: 'reset' })).toEqual({ ...initialLink, lastAt: 100 });
 });

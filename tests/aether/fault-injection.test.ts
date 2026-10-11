@@ -23,12 +23,10 @@ const counts = (sql: Db) =>
     ]),
   );
 
-// Crash windows inside a command: after the domain write, after the event, after the outbox row and
-// right before the idempotency journal. Each failure must leave NOTHING behind, and a retry of the
-// same command must then take effect exactly once.
+// Crash windows inside a command: after the domain write, after the event, after the outbox row and right before the
+// idempotency journal. Each failure must leave nothing behind, and a retry must take effect exactly once.
 const WINDOWS = ['events', 'outbox', 'command_journal'] as const;
 
-// A retrying client resends the identical envelope, so each scenario builds its command once.
 type Envelope = Omit<ReturnType<typeof command>, 'idempotencyKey'> & { idempotencyKey: string };
 type Scenario = {
   name: string;
@@ -129,13 +127,13 @@ describe.each(scenarios)('$name', (scenario) => {
           .run();
         const { actor, input } = scenario.build(f, key);
         expect(() => f.control.execute(actor, input)).toThrow('INJECTED_CRASH');
-        expect(counts(sql)).toEqual(before); // no partial state in any table
+        expect(counts(sql)).toEqual(before);
 
         sql.prepare(`DROP TRIGGER inject_${window}`).run();
         f.control.execute(actor, input);
         const after = counts(sql);
         expect(after[scenario.domain]).toBe(before[scenario.domain]! + 1);
-        f.control.execute(actor, input); // a client retrying the same key after success replays the receipt
+        f.control.execute(actor, input);
         expect(counts(sql)).toEqual(after);
       } finally {
         f.control.close();
@@ -157,7 +155,7 @@ it('a crash after commit but before the response is recovered by retrying the sa
       ),
       idempotencyKey: 'retry-after-crash',
     };
-    const first = f.control.execute(f.sender.actor, message); // committed; pretend the response never reached the client
+    const first = f.control.execute(f.sender.actor, message);
     f.control.close();
 
     const reopened = new Control(file, {
@@ -222,7 +220,7 @@ it('a failed acknowledgement leaves the delivery unacknowledged, and the retried
       )
       .run();
     expect(() => f.control.execute(f.recipient.actor, ack)).toThrow('INJECTED_CRASH');
-    expect(state()).toBe('available'); // not half-acknowledged
+    expect(state()).toBe('available');
     sql.prepare('DROP TRIGGER inject_ack').run();
     f.control.execute(f.recipient.actor, ack);
     expect(state()).toBe('acknowledged');

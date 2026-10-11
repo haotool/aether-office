@@ -61,7 +61,6 @@ export const CAPABILITIES = {
     usage: true,
     externalObservation: true,
   },
-  // Generic ACP agent: static floor only. resume, images and MCP depend on negotiation per agent.
   acp: {
     ...none,
     start: true,

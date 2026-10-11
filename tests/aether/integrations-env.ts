@@ -26,7 +26,7 @@ export const state = {
     updatedAt: string;
   }[],
   linearRateLimited: false,
-  resetAt: 0, // epoch seconds the fake provider reports for its rate-limit reset
+  resetAt: 0,
 };
 let server: http.Server;
 export let port: number;

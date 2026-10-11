@@ -12,7 +12,6 @@ import { Sidebar } from './Sidebar.js';
 import { Telemetry } from '../kpi/Telemetry.js';
 import { Topbar } from './Topbar.js';
 
-/** The top bar: the project switcher, the menu button and the connection state. */
 export function AppTopbar({ app }: { app: Application }) {
   const { session, sel, local, shell, view } = app;
   return (
@@ -34,7 +33,6 @@ export function AppTopbar({ app }: { app: Application }) {
   );
 }
 
-/** Above the sign-out row: the quick preferences, and (on a phone) the top bar's numbers. */
 function SidebarFooter({ app }: { app: Application }) {
   const { local, view } = app;
   return (
@@ -47,7 +45,6 @@ function SidebarFooter({ app }: { app: Application }) {
   );
 }
 
-/** The navigation: the sidebar, the backdrop that closes it on a narrow screen, and the quick-open palette. */
 export function AppNavigation({ app, onLogout }: { app: Application; onLogout: () => void }) {
   const t = useT();
   const { prefs, sel, local, shell, needs } = app;
@@ -95,7 +92,6 @@ export function AppNavigation({ app, onLogout }: { app: Application; onLogout: (
   );
 }
 
-/** The banners above the page (offline, PWA, notice) and the page itself. */
 export function AppMain({ app }: { app: Application }) {
   const t = useT();
   const { session, shell, sel, local, view, pick, compact } = app;
@@ -141,7 +137,6 @@ export function AppMain({ app }: { app: Application }) {
   );
 }
 
-/** The conversation next to the office: a bottom sheet on a phone, a side panel on a desktop. */
 export function AppPanel({ app }: { app: Application }) {
   const { sel, shell, view, pick, compact } = app;
   const data = sel.snapshot.data;

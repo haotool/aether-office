@@ -26,39 +26,21 @@ const ICONS = {
 } as const satisfies Record<SectionId, unknown>;
 
 type NavProps = {
-  sections: readonly { id: SectionId }[];
   projectId: string;
-  /** Called with the section; the page changes the address and scrolls. */
   onGo: (id: SectionId) => void;
 };
 
-/**
- * The groups as a column at the left (a row of tabs above the content where the page is too narrow for two columns),
- * with the one in view marked. Real links, so they open in a new tab and work with the keyboard.
- */
-export function SideNav({
-  sections,
-  active,
-  projectId,
-  onGo,
-}: NavProps & { active: SectionId | null }) {
+export function SideNav({ active, projectId, onGo }: NavProps & { active: SectionId | null }) {
   const t = useT();
   return (
     <nav className="snav" aria-label={t('stNavLabel')}>
       <ul>
-        {sections.map(({ id }) => {
+        {SECTIONS.map(({ id, label }) => {
           const Icon = ICONS[id];
-          const meta = SECTIONS.find((s) => s.id === id);
-          if (!meta) throw new Error(`unknown settings section: ${id}`);
           return (
-            <SectionItem
-              key={id}
-              {...{ id, projectId, onGo }}
-              current={active === id}
-              keepNewTab // the browser's own: a new tab
-            >
+            <SectionItem key={id} {...{ id, projectId, onGo }} current={active === id} keepNewTab>
               <Icon size={16} aria-hidden="true" />
-              {t(meta.label)}
+              {t(label)}
             </SectionItem>
           );
         })}
@@ -67,7 +49,6 @@ export function SideNav({
   );
 }
 
-/** One group's entry: a real link to its address that the page answers by scrolling instead of navigating. */
 function SectionItem({
   id,
   projectId,
@@ -78,7 +59,6 @@ function SectionItem({
 }: Pick<NavProps, 'projectId' | 'onGo'> & {
   id: SectionId;
   current?: boolean;
-  /** Leave Cmd/Ctrl/Shift-clicks to the browser. */
   keepNewTab?: boolean;
   children: ReactNode;
 }) {
@@ -99,22 +79,19 @@ function SectionItem({
   );
 }
 
-/** A phone's home: the groups as large rows, each opening its own page (a back button returns here). */
-export function HomeList({ sections, projectId, onGo }: NavProps) {
+export function HomeList({ projectId, onGo }: NavProps) {
   const t = useT();
   return (
     <nav className="shome" aria-label={t('stNavLabel')}>
       <ul>
-        {sections.map(({ id }) => {
+        {SECTIONS.map(({ id, label, hint }) => {
           const Icon = ICONS[id];
-          const meta = SECTIONS.find((s) => s.id === id);
-          if (!meta) throw new Error(`unknown settings section: ${id}`);
           return (
             <SectionItem key={id} {...{ id, projectId, onGo }}>
               <Icon size={20} aria-hidden="true" />
               <span>
-                <strong>{t(meta.label)}</strong>
-                <small>{t(meta.hint)}</small>
+                <strong>{t(label)}</strong>
+                <small>{t(hint)}</small>
               </span>
               <ChevronRight size={18} aria-hidden="true" />
             </SectionItem>

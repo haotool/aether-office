@@ -1,6 +1,6 @@
-// The engineering organisation the office is built around: five departments (one floor each) holding the roles
-// industry teams commonly staff. Sources: public role descriptions for frontend, backend, mobile, platform, SRE, QA/SDET,
-// security, data, ML and developer-relations engineers, and engineering management / staff ladders.
+// Five departments (one floor each) holding the roles industry teams commonly staff. Sources: public role descriptions
+// for frontend, backend, mobile, platform, SRE, QA/SDET, security, data, ML and developer-relations engineers, and
+// engineering management ladders.
 export type DepartmentId = 'product' | 'platform' | 'quality' | 'data' | 'leadership';
 export type RoleId =
   | 'frontend'

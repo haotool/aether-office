@@ -2,7 +2,6 @@ import type { Agent } from '@aether/contracts';
 import type { EmoteId } from '../animals/emotes.js';
 import type { SeatReason } from './seat-drag.js';
 
-/** The words the scene itself speaks (hover card, live announcements, drag hints); the page's own menu has its own. */
 export type Words = {
   state: Record<Agent['activity'], string>;
   context: string;

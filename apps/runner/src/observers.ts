@@ -90,7 +90,6 @@ export class ObserverRunner {
       this.journal.save();
     }
   }
-  /** Looks for new files at most every five seconds; a failure is returned so the tick can still read what is known. */
   private discover(): unknown {
     if (this.now() < this.nextDiscovery) return undefined;
     this.nextDiscovery = this.now() + 5000;
@@ -101,7 +100,6 @@ export class ObserverRunner {
       return error;
     }
   }
-  /** One look at one source: its status and the records that are new since `prior`. */
   private async readSource(source: Source, prior: ObserverJournal) {
     let checkpoint = prior.checkpoint,
       fingerprint = prior.fingerprint;
@@ -157,7 +155,6 @@ export class ObserverRunner {
     }
     return batches;
   }
-  /** Queues the reports for this look when there is something new, the status changed or the last report is old. */
   private queueReports(
     source: Source,
     prior: ObserverJournal,
@@ -220,7 +217,6 @@ export class ObserverRunner {
       pending: [],
     };
     this.queueReports(source, prior, next, read.status, records);
-    // Cursor and every unsent record are committed together; a failed save rolls back both in memory.
     this.save(source.key, next);
     await this.flush(source);
     if (discoveryError) throw discoveryError;

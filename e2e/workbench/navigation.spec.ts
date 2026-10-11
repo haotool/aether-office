@@ -15,11 +15,11 @@ test('the selected agent lives in the URL, so reload and deep links restore it',
   const panel = page.locator('.session-panel');
   await expect(panel).toContainText('Mika');
   await page.reload();
-  await expect(page.locator('.session-panel')).toContainText('Mika'); // selection survives a reload
+  await expect(page.locator('.session-panel')).toContainText('Mika');
   const url = page.url();
   await page.goto('/tasks');
   await page.goto(url);
-  await expect(page.locator('.session-panel')).toContainText('Mika'); // and a pasted deep link
+  await expect(page.locator('.session-panel')).toContainText('Mika');
 });
 
 test('everything the 3D scene shows has an equivalent in the DOM that works by keyboard', async ({
@@ -31,15 +31,14 @@ test('everything the 3D scene shows has an equivalent in the DOM that works by k
   const snapshot = (await (await page.request.get(`/api/projects/${agents}/snapshot`)).json()) as {
     agents: { name: string }[];
   };
-  await expect(page.locator('canvas')).toBeVisible(); // the 3D view is on
-  await expect(page.locator('.team-chip')).toHaveCount(snapshot.agents.length); // every character is also a button
-  // Labels exist for every managed agent (plus any observed sessions), each a real button.
+  await expect(page.locator('canvas')).toBeVisible();
+  await expect(page.locator('.team-chip')).toHaveCount(snapshot.agents.length);
   expect(await page.locator('button.scene-label').count()).toBeGreaterThanOrEqual(
     snapshot.agents.length,
   );
   await page.locator('.team-chip', { hasText: 'Nova' }).focus();
   await page.keyboard.press('Enter');
-  await expect(page.locator('.session-panel')).toContainText('Nova'); // selecting by keyboard works without the canvas
+  await expect(page.locator('.session-panel')).toContainText('Nova');
 });
 
 test('state is never carried by colour alone: every badge has visible text', async ({ page }) => {

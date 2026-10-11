@@ -19,6 +19,5 @@ export default defineConfig({
       '/health': { target: 'http://127.0.0.1:4310', changeOrigin: true },
     },
   },
-  // The 3D scene (Three.js) is the one large chunk (about 1 MB) and loads only when the office view opens.
   build: { outDir: 'dist', emptyOutDir: true, chunkSizeWarningLimit: 1100 },
 });

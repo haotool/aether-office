@@ -1,7 +1,7 @@
 # Security
 
 This document describes the threat model, the trust boundaries and the safety properties AETHER OFFICE maintains.
-To report a vulnerability, see [SECURITY.md](../SECURITY.md).
+To report a vulnerability, see [SECURITY.md](../.github/SECURITY.md).
 
 ## Threat model
 

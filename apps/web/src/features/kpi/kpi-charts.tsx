@@ -12,8 +12,6 @@ import {
 } from './kpi-model.js';
 import type { Key } from '../../lib/i18n/i18n.js';
 
-// Small charts drawn as plain SVG and CSS: no chart library, no per-frame work. Every value is also text.
-
 const SEGMENT_WORD: Record<Segment, Key> = {
   input: 'kpiInput',
   output: 'kpiOutput',
@@ -22,7 +20,6 @@ const SEGMENT_WORD: Record<Segment, Key> = {
   reasoning: 'kpiReasoning',
 };
 
-/** A line of values over time, filled beneath; decorative (the number beside it says the same). */
 export function Sparkline({
   values,
   className = '',
@@ -50,7 +47,6 @@ export function Sparkline({
   );
 }
 
-/** The token breakdown as one bar split by kind, with a legend that carries the numbers. */
 export function StackedBar({ totals }: { totals: UsageTotals }) {
   const t = useT();
   const locale = useLocale();
@@ -82,7 +78,6 @@ const dayLabel = (day: string, locale: Locale) =>
     Date.parse(`${day}T00:00:00Z`),
   );
 
-/** One bar per day; a tooltip (hover or focus) names the day and its tokens. The last bar is today. */
 export function DailyBars({
   days,
   totals,
@@ -114,7 +109,6 @@ export function DailyBars({
   );
 }
 
-/** A rate-limit window as a ring: how much is used, the tone by how near the limit, the reset beside it as text. */
 export function Ring({ percent, children }: { percent: number; children?: React.ReactNode }) {
   const shown = Math.min(100, Math.max(0, percent));
   return (
@@ -139,7 +133,6 @@ export function Ring({ percent, children }: { percent: number; children?: React.
   );
 }
 
-/** A name, a bar for its share and the figure: the by-model and by-project rows. */
 export function ShareRow({
   label,
   value,

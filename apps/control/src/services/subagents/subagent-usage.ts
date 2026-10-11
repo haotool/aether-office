@@ -5,14 +5,11 @@ import { fresh, newState, type ParseState } from '../usage/usage-counters.js';
 import { parseChunk } from '../usage/usage-parse.js';
 
 /**
- * What a Claude subagent's transcript says it spent and did, counted incrementally with the KPI parser (`usage-parse.ts`):
- * counters and tool-call markers only, no text decoded or kept. Each file is read from where the last look stopped, so a
- * long-running subagent costs its new bytes per scan, never its whole history again. Work per scan is bounded by a shared
- * byte budget: a file the budget did not reach yet reports nothing (null), never a partial total as if it were whole.
+ * Each file is read from where the last look stopped, within a shared byte budget: a file the budget did not reach
+ * reports null, never a partial total as if it were whole.
  */
 const CHUNK = 1024 * 1024;
 const SAMPLE_GAP_MS = 5000;
-/** The rate is measured against the oldest sample within this window, and needs at least RATE_MIN_SPAN_MS of span. */
 const RATE_WINDOW_MS = 70_000;
 const RATE_MIN_SPAN_MS = 10_000;
 const MAX_SAMPLES = 16;
@@ -27,7 +24,7 @@ export type ReadBudget = { bytes: number };
 
 const entries = new Map<string, Entry>();
 const buffer = Buffer.allocUnsafe(CHUNK);
-let queue: Promise<unknown> = Promise.resolve(); // one shared buffer: files are read one at a time
+let queue: Promise<unknown> = Promise.resolve();
 export const resetSubagentUsage = () => entries.clear();
 
 const totalOf = (state: ParseState) =>
@@ -35,7 +32,6 @@ const totalOf = (state: ParseState) =>
 const toolsOf = (state: ParseState) =>
   Object.values(state.days).reduce((sum, bucket) => sum + bucket.tools, 0);
 
-/** Reads what `file` gained, within the budget. Returns whether it is now read up to its end. */
 async function advance(file: string, size: number, entry: Entry, budget: ReadBudget) {
   // Never a link, and never block on a pipe that replaced the file after it was listed.
   const handle = await open(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
@@ -47,10 +43,10 @@ async function advance(file: string, size: number, entry: Entry, budget: ReadBud
       const { bytesRead } = await handle.read(buffer, 0, want, entry.offset);
       if (!bytesRead) return true;
       budget.bytes -= bytesRead;
-      const end = buffer.lastIndexOf(10, bytesRead - 1); // whole lines only; the rest is read next time
+      const end = buffer.lastIndexOf(10, bytesRead - 1);
       if (end < 0) {
-        if (bytesRead < CHUNK) return entry.offset + bytesRead >= size; // an unfinished last line: wait for the rest
-        entry.offset += bytesRead; // one line longer than a chunk: step over it
+        if (bytesRead < CHUNK) return entry.offset + bytesRead >= size;
+        entry.offset += bytesRead;
         continue;
       }
       parseChunk(entry.state, buffer.subarray(0, end), ONE_BUCKET);
@@ -68,7 +64,6 @@ function rateOf(samples: readonly Sample[], total: number, now: number): number 
   return Math.max(0, Math.round(((total - base.total) / (now - base.at)) * 60_000));
 }
 
-/** Total tokens, tool calls and the tokens-per-minute rate of one subagent file; null while it is not read completely. */
 export function readSubagentUsage(
   file: string,
   size: number,
@@ -79,12 +74,12 @@ export function readSubagentUsage(
     let entry = entries.get(file);
     if (!entry || size < entry.offset)
       entry = { state: newState('claude'), offset: 0, samples: [] };
-    if (entries.size >= MAX_FILES && !entries.has(file)) deleteOldest(entries); // the oldest only: the rest keep their offsets
+    if (entries.size >= MAX_FILES && !entries.has(file)) deleteOldest(entries);
     entries.set(file, entry);
     try {
       if (!(await advance(file, size, entry, budget))) return null;
     } catch {
-      entries.delete(file); // vanished, a link, unreadable: no facts, and the scan goes on
+      entries.delete(file);
       return null;
     }
     const total = totalOf(entry.state);

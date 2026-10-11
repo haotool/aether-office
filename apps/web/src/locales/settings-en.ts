@@ -1,4 +1,3 @@
-/** The words of the Settings page (features/settings), in English. */
 export const settingsEn = {
   sectGeneral: 'General',
   sectGeneralHint: 'Language, appearance, motion and quality',

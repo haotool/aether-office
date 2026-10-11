@@ -61,7 +61,7 @@ it('after a restart a lost runner leaves the run indeterminate: no second spawn,
     const { workId, run } = started(f, machineA);
     expect(state(f, workId)).toBe('running');
 
-    clock.now += 60_000; // machine A stops heartbeating; B stays alive
+    clock.now += 60_000;
     heartbeat(f.control.ctx, machineB.actor);
     f.control.close();
 
@@ -74,7 +74,7 @@ it('after a restart a lost runner leaves the run indeterminate: no second spawn,
       const view = { ...f, control: reopened } as typeof f;
       expect(reconcileOffline(reopened.ctx)).toBe(1);
       expect(state(view, workId)).toBe('indeterminate');
-      expect(reconcileOffline(reopened.ctx)).toBe(0); // idempotent across repeated sweeps and restarts
+      expect(reconcileOffline(reopened.ctx)).toBe(0);
 
       // Another machine must not pick the work up: the unknown side effects may already have happened.
       expect(claim(reopened.ctx, machineB.actor, ['demo'])).toBeNull();
@@ -97,7 +97,6 @@ it('after a restart a lost runner leaves the run indeterminate: no second spawn,
       });
       expect(state(view, workId)).toBe('indeterminate');
 
-      // No automatic retry either: re-running is a human decision.
       const current = () =>
         (
           reopened.ctx.sqlite.prepare('SELECT version FROM work_items WHERE id=?').get(workId) as {
@@ -111,7 +110,6 @@ it('after a restart a lost runner leaves the run indeterminate: no second spawn,
         ),
       ).toThrow('INVALID_TRANSITION');
 
-      // The human closes it. The run is retired with it.
       const version = (
         reopened.ctx.sqlite.prepare('SELECT version FROM work_items WHERE id=?').get(workId) as {
           version: number;
@@ -152,7 +150,6 @@ it('a snapshot and the event stream never lose or repeat an event around the sna
     add('after-2');
     add('after-3');
 
-    // Everything in the snapshot was committed at or before its cursor...
     const upTo = f.control
       .events(f.owner.actor, f.projectId, '0', 200)
       .filter((e) => BigInt(e.seq) <= BigInt(snapshot.seq));
@@ -160,7 +157,6 @@ it('a snapshot and the event stream never lose or repeat an event around the sna
       .filter((e) => e.type === 'work.create')
       .map((e) => String(e.payload['title']));
     expect(snapshot.work.map((w) => w.title).sort()).toEqual(created.sort());
-    // ...and the stream from that cursor is exactly the later events, contiguous and in order.
     const later = f.control.events(f.owner.actor, f.projectId, snapshot.seq, 200);
     expect(later.map((e) => String(e.payload['title']))).toEqual(['after-1', 'after-2', 'after-3']);
     const seqs = later.map((e) => BigInt(e.seq));
@@ -185,22 +181,21 @@ it('asks a stuck run on a healthy machine to stop, once, and leaves a quiet but 
         }
       ).state;
 
-    clock.now += STALL_FLOOR_MS - 1000; // quiet, but within the limit
+    clock.now += STALL_FLOOR_MS - 1000;
     heartbeat(f.control.ctx, machine.actor);
     expect(reconcileStalled(f.control.ctx)).toBe(0);
     expect(runState()).toBe('running');
 
-    clock.now += 2000; // past the limit while the machine keeps heartbeating
+    clock.now += 2000;
     heartbeat(f.control.ctx, machine.actor);
     expect(reconcileStalled(f.control.ctx)).toBe(1);
     expect(runState()).toBe('cancel_requested');
-    expect(reconcileStalled(f.control.ctx)).toBe(0); // idempotent: it is no longer `running`
+    expect(reconcileStalled(f.control.ctx)).toBe(0);
     const stalled = f.control
       .events(f.owner.actor, f.projectId, '0', 500)
       .filter((e) => e.type === 'run.stalled');
     expect(stalled).toHaveLength(1);
     expect(stalled[0]!.payload).toMatchObject({ runId: run.runId });
-    // The runner is told to abort it on the next heartbeat.
     expect(heartbeat(f.control.ctx, machine.actor).cancelRunIds).toContain(run.runId);
   } finally {
     f.control.close();

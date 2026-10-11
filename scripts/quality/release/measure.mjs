@@ -1,4 +1,3 @@
-// Static measurements for release criteria (CHARTER §5.3 subset).
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { COGNITIVE_LIMIT } from '../ast.mjs';
@@ -15,7 +14,6 @@ import { CODE_FILE, PRODUCT_SOURCE, lineCount, matching } from '../repo.mjs';
 const GENERATED = /(^|\/)generated\//;
 const TESTS_DIR = /^tests\//;
 
-/** Path segments that mark process residue (see tests for exceptions). */
 export const RESIDUE_PATTERNS = [
   { id: 'wave', re: /(?:^|\/)[^/]*(?:-wave\d+|wave\d)[^/]*$/i },
   { id: 'iter', re: /(?:^|\/)[^/]*iterations[^/]*$/i },
@@ -31,8 +29,6 @@ export const RESIDUE_EXCEPTIONS = new Set([
   'apps/control/src/services/platform/oldest-entry.ts',
   'packages/providers/generated/codex-0.159.2-ts/v2/FsCopyParams.ts',
   'packages/providers/generated/codex-0.159.2-ts/v2/FsCopyResponse.ts',
-  'packages/providers/generated/codex-0.159.2/v2/FsCopyParams.json',
-  'packages/providers/generated/codex-0.159.2/v2/FsCopyResponse.json',
 ]);
 
 export function measureResiduePaths(repo) {
@@ -130,7 +126,6 @@ export function measureDuplicates(repo) {
   };
 }
 
-/** Triple-slash env typings (for example Vite's client types) are not importable modules. */
 export function isAmbientTypeReference(file, text) {
   return (
     file.endsWith('.d.ts') &&

@@ -1,4 +1,3 @@
-/** The automation words, in Traditional Chinese. */
 export const zhAutomation = {
   schedules: '排程',
   scheduleDaily: '每日',

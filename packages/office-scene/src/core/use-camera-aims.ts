@@ -16,7 +16,6 @@ import {
 type Seats = ReadonlyMap<string, Seat>;
 type Fly = (target: V3, offset: V3) => void;
 
-/** A point in a seat's own frame, in the world (or, from `baseOnly`, relative to the seat on its floor). */
 function seatWorld(seats: Seats, exploded: boolean, id: string, local: V3, baseOnly = false) {
   const seat = seats.get(id);
   if (!seat) return null;
@@ -34,13 +33,11 @@ type FocusAim = {
   setFloor: (floor: number) => void;
 };
 
-/** The page's focus (overview, a zone or an agent) drives the camera; focusing an agent switches to its floor. */
 export function useFocusCamera(aim: FocusAim) {
   const firstFocus = useRef(true);
   const now = useRef(aim);
   now.current = aim;
   useEffect(() => {
-    // Only a change of focus drives the camera, not a floor or layout edit.
     const { focus, layout, floor, exploded, fly, takeOver, setFloor } = now.current;
     if (!firstFocus.current && focus !== 'overview') takeOver(true);
     firstFocus.current = false;
@@ -64,7 +61,6 @@ type SeatAim = {
   userChoseFloor: RefObject<boolean>;
 };
 
-/** Follow: the camera flies to the member and then keeps it in frame (SceneCamera tracks `followPoint`). */
 export function useFollow(
   { seats, exploded, fly, takeOver, setFloor, userChoseFloor }: SeatAim,
   following: string | null,
@@ -87,7 +83,6 @@ export function useFollow(
   return { follow, followPoint };
 }
 
-/** A close-up of the member's monitor, from the sitter's side (the camera keeps the controls' minimum distance). */
 export function useLookAtScreen({
   seats,
   exploded,

@@ -1,11 +1,8 @@
 import { neutralizeHtml } from './text-html.js';
 
 /**
- * Pure. What the Claude Code and Codex CLIs wrap around the words of a conversation, resolved wrapper by wrapper: a
- * wrapper that carries meaning becomes a typed notice (never shown as tags, and ids and file paths inside it are not kept),
- * injected context becomes a notice the reader may open, hidden reasoning is dropped, and every other `<name>` is left to
- * `neutralizeHtml`, which removes the tags and keeps the text. Code spans and fences are never read. Idempotent, and
- * linear in the size of the input: every scan moves forward and a block is skipped once it is read.
+ * What the Claude Code and Codex CLIs wrap around a conversation's words, resolved wrapper by wrapper: a wrapper that
+ * carries meaning becomes a typed notice (never shown as tags; ids and file paths inside it are not kept).
  */
 export type Notice =
   | {
@@ -21,7 +18,6 @@ export type Notice =
   | { kind: 'hook'; text: string }
   | { kind: 'interrupted' };
 
-/** Injected context: what a tool added next to the user's words. Label says which sort. */
 const CONTEXT: Record<string, string> = {
   'system-reminder': 'system',
   environment_context: 'environment',
@@ -67,7 +63,6 @@ const SLOT_CHARS = /[]/g;
 const FENCE = /^ {0,3}(`{3,}|~{3,})/;
 const SPAN = /(`+)[^`]*?\1(?!`)/g;
 
-/** Fenced blocks and code spans swapped for placeholders, and the way back. */
 function maskCode(text: string): { masked: string; restore: (s: string) => string } {
   const saved: string[] = [];
   const keep = (code: string) => `${saved.push(code) - 1}`;
@@ -98,7 +93,6 @@ function maskCode(text: string): { masked: string; restore: (s: string) => strin
 const cut = (s: string, max: number) => (s.length > max ? `${s.slice(0, max)}…` : s);
 const plain = (s: string) => neutralizeHtml(s.replace(ANSI, '')).trim();
 
-/** The text of `<name>…</name>` inside `inner` (the first one), or ''. */
 function field(inner: string, name: string): string {
   const open = new RegExp(`<${name}(?:\\s[^<>]*)?>`, 'i').exec(inner);
   if (!open) return '';
@@ -107,7 +101,6 @@ function field(inner: string, name: string): string {
   return inner.slice(from, end < 0 ? inner.length : end).trim();
 }
 
-/** Leaf children (`<cwd>/x</cwd>`) as `cwd: /x` lines, so injected context reads as facts rather than markup. */
 const LEAF = /<([A-Za-z][\w:.-]*)(?:\s[^<>]*)?>([^<>]*)<\/\1\s*>/g;
 const facts = (inner: string) =>
   inner.replace(LEAF, (_, name: string, value: string) =>
@@ -129,13 +122,11 @@ function taskNotice(inner: string): Notice {
 
 type Extraction = { rest: string; notices: Notice[] };
 
-/** The notice a wrapper called `name` carries, or null when it is silent or has nothing to show. */
 function noticeOf(name: string, inner: string): Notice | null {
   if (name === 'task-notification' || name === 'subagent_notification') return taskNotice(inner);
   if (name === 'turn_aborted') return { kind: 'interrupted' };
   const label = CONTEXT[name];
   const output = name.startsWith('local-command-s');
-  // SILENT wrappers (hidden reasoning, caveats, memory citations) are dropped with their content.
   if (!label && !output && !name.endsWith('-hook')) return null;
   const body = cut(plain(label ? facts(inner) : inner), MAX_FIELD);
   if (!body) return null;
@@ -170,7 +161,6 @@ function noteWrapperOpener(
   if (notice) push(notice);
 }
 
-/** The notices of a text and what is left of it, before any HTML is neutralized. */
 function extract(text: string): Extraction {
   if (!text.includes('<') && !text.trimStart().startsWith('[')) return { rest: text, notices: [] };
   const { masked, restore } = maskCode(text);
@@ -200,7 +190,6 @@ function extract(text: string): Extraction {
   return finish(restore(parts.join('')).trim(), notices, command);
 }
 
-/** The text that is left and the notices, the slash command filled in and a lone interruption marker turned into a notice. */
 function finish(
   rest: string,
   notices: Notice[],
@@ -221,16 +210,11 @@ function finish(
   };
 }
 
-/** The words of a message with every wrapper resolved: clean Markdown text, and the notices the wrappers carried. */
 export function structureWrappers(text: string): { text: string; notices: Notice[] } {
   const { rest, notices } = extract(text);
   return { text: neutralizeHtml(rest).trim(), notices };
 }
 
-/**
- * The same as plain text for places that have no room for a notice (a title, a speech bubble): a slash command as typed
- * (`/compact now`) and a local command's output stay; injected context, task and hook notices and interruptions go.
- */
 export function stripCliWrappers(text: string): string {
   const { rest, notices } = extract(text);
   const inline = notices.flatMap((n) =>

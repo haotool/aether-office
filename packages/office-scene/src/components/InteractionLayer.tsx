@@ -11,7 +11,6 @@ import type {
 
 export type HoverFacts = {
   agent: Agent;
-  /** The engineering role id the session was classified into. */
   role: string;
   context: number | null;
   doing: string | undefined;
@@ -23,13 +22,11 @@ const refFor = (elements: Registry, id: string) => (node: HTMLElement | null) =>
   else elements.delete(id);
 };
 
-/** The role's name in the page's language (the id itself when the classification is unknown). */
 export const roleLabel = (role: string, zh: boolean) => {
   const label = ROLE_LABELS[role as RoleId];
   return label ? (zh ? label.zh : label.en) : role;
 };
 
-/** A small card after a moment of hover: who, in which role, what state, how full the context is, which tool. Never takes the pointer. */
 function HoverCard({
   facts,
   words,
@@ -64,13 +61,11 @@ type InteractionLayerProps = {
   ix: SceneInteraction;
   zh: boolean;
   compact: boolean;
-  /** Reduced motion: icons fade instead of rising. */
   still: boolean;
   characterMenu: ((context: CharacterMenuContext) => ReactNode) | undefined;
   groupBar: ((context: GroupBarContext) => ReactNode) | undefined;
 };
 
-/** The emote icons rising over their characters, each in a box the scene places every frame. */
 function EmoteIcons({ ix }: { ix: SceneInteraction }) {
   return ix.emotes.sprites.map((sprite) => (
     <div
@@ -85,7 +80,6 @@ function EmoteIcons({ ix }: { ix: SceneInteraction }) {
   ));
 }
 
-/** The action menu of one character (supplied by the page): beside the character, or in the page's own sheet on a phone. */
 function MenuSlot({
   ix,
   compact,
@@ -112,7 +106,6 @@ function MenuSlot({
   );
 }
 
-/** What the carried desk says: where it may land, or why it may not. */
 function SeatHint({ ix }: { ix: SceneInteraction }) {
   const { words, seatDrag } = ix;
   if (!seatDrag.drag) return null;
@@ -124,11 +117,6 @@ function SeatHint({ ix }: { ix: SceneInteraction }) {
   );
 }
 
-/**
- * Everything the scene draws over the canvas for interaction, none of it in the way of orbiting: the hover card, the
- * action menu of one character (supplied by the page; anchored beside the character, or in the page's own sheet on a
- * phone), the emote icons, the bar for a group, the marquee, the seat-drag hint and the live region screen readers hear.
- */
 export function InteractionLayer({
   ix,
   zh,

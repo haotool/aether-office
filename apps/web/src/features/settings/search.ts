@@ -1,7 +1,6 @@
 import { ENTRIES, type EntryId } from './entries.js';
 import { SECTIONS } from './sections.js';
 
-// Settings are found in either language, so this page (a lazy chunk) is the one place that downloads both tables.
 const [{ en }, { zh }] = await Promise.all([
   import('../../locales/en.js'),
   import('../../locales/zh.js'),
@@ -10,7 +9,6 @@ const [{ en }, { zh }] = await Promise.all([
 const normalize = (text: string) => text.normalize('NFKC').toLowerCase();
 const tokens = (query: string) => normalize(query).split(/\s+/).filter(Boolean);
 
-/** What a setting is found by: its label and description in both languages, its extra words and its group's name. */
 const haystacks = new Map<EntryId, string>(
   ENTRIES.map((entry) => {
     const group = SECTIONS.find((section) => section.id === entry.section);
@@ -20,7 +18,6 @@ const haystacks = new Map<EntryId, string>(
   }),
 );
 
-/** The settings that every word of the query appears in, in either language; null when there is nothing to look for. */
 export function searchSettings(query: string): ReadonlySet<EntryId> | null {
   const words = tokens(query);
   if (!words.length) return null;
@@ -34,7 +31,6 @@ export function searchSettings(query: string): ReadonlySet<EntryId> | null {
 
 type Piece = { text: string; hit: boolean };
 
-/** Splits `text` into the runs that match a word of the query and the runs between them. */
 export function highlight(text: string, query: string): Piece[] {
   const words = tokens(query);
   const lower = normalize(text);

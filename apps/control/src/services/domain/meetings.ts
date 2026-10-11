@@ -16,7 +16,6 @@ type MeetingRow = {
   concludedAt: number | null;
 };
 
-/** Opens a bounded conversation: a room, one request to everyone, a round budget and a deadline. */
 export function startMeeting(ctx: Context, actor: Actor, c: Start) {
   const room = roomCommand(ctx, actor, {
     ...c,
@@ -54,7 +53,6 @@ export function startMeeting(ctx: Context, actor: Actor, c: Start) {
   return { threadId: opening.threadId, roomId: room.id, maxRounds: c.data.maxRounds, deadlineAt };
 }
 
-/** Records the outcome as a knowledge proposal whose provenance is the meeting's own messages. */
 export function concludeMeeting(ctx: Context, actor: Actor, c: Conclude) {
   const meeting = ctx.sqlite
     .prepare('SELECT * FROM meetings WHERE threadId=? AND projectId=?')

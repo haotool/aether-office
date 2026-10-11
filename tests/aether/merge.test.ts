@@ -58,14 +58,14 @@ it('integrates into a candidate branch without moving base, touching the checkou
   const result = await integrate(r.request(head, 'aether/integrate/one'));
   expect(result.status).toBe('merged');
   if (result.status !== 'merged') return;
-  expect(run(r.repository, 'rev-parse', 'main')).toBe(r.base); // base untouched
+  expect(run(r.repository, 'rev-parse', 'main')).toBe(r.base);
   expect(run(r.repository, 'rev-parse', 'aether/integrate/one')).toBe(result.mergeSha);
   expect(run(r.repository, 'show', `${result.mergeSha}:new.txt`)).toBe('hello');
-  expect(existsSync(join(r.repository, 'new.txt'))).toBe(false); // user's checkout untouched
+  expect(existsSync(join(r.repository, 'new.txt'))).toBe(false);
   expect(run(r.repository, 'worktree', 'list').split('\n')).toHaveLength(1);
   await expect(integrate(r.request(head, 'aether/integrate/one'))).rejects.toThrow(
     'MERGE_CANDIDATE_EXISTS',
-  ); // never overwrites
+  );
 });
 
 it('stops on conflict: reports files, creates nothing, never resolves automatically', async () => {

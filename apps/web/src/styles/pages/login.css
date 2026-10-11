@@ -17,7 +17,7 @@
   border: 1px solid var(--art-ring);
   border-radius: 50%;
   width: 580px; /* the login art's rings are geometry, not controls token-lint: geometry */
-  height: 580px; /* token-lint: geometry */
+  aspect-ratio: 1;
 }
 .r1 {
   transform: rotate(-30deg) scaleY(0.45);
@@ -25,11 +25,9 @@
 .r2 {
   transform: rotate(40deg) scaleY(0.45);
   width: 630px; /* token-lint: geometry */
-  height: 630px; /* token-lint: geometry */
 }
 .r3 {
   width: 400px; /* token-lint: geometry */
-  height: 400px; /* token-lint: geometry */
   border-color: var(--art-ring);
   box-shadow: 0 0 100px var(--art-glow) inset; /* token-lint: ring */
 }
@@ -85,5 +83,5 @@
   font-size: var(--fs-small);
 }
 .login-panel .primary {
-  min-height: var(--control-h-lg); /* the login is the one main call to action */
+  min-height: var(--control-h-lg);
 }

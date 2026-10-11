@@ -23,7 +23,6 @@ type PhoneOfficeProps = {
   canWrite: boolean;
   sessions: readonly AttributedSession[];
   owner: boolean;
-  /** The full-height sheet hides the scene. */
   covered: boolean;
   onSelect: (id: string) => void;
   onOpen: (id: string) => void;
@@ -35,10 +34,6 @@ type PhoneOfficeProps = {
   onRefresh: () => void;
 };
 
-/**
- * The office on a portrait phone: the scene fills the screen and everything else is a small control floating over it
- * (view switch and active sessions on top, a new-task button at the thumb). No heading, no stats, no team strip.
- */
 export function PhoneOffice({ sessions, owner, onFocus, onNewTask, ...scene }: PhoneOfficeProps) {
   const t = useT();
   const advanced = usePreferences((s) => s.advanced);
@@ -60,7 +55,6 @@ export function PhoneOffice({ sessions, owner, onFocus, onNewTask, ...scene }: P
   );
 }
 
-/** The controls floating over the top of the phone's scene: the view switch, the session lists and the camera reset. */
 function PhoneTop({
   sessions,
   owner,

@@ -13,9 +13,8 @@ import { useLocale } from '../../ui/useT.js';
 import { POLL, poll, pollMs } from '../../lib/app/polling.js';
 
 /**
- * The last prompt and reply of every running session, by session key. One query shared by the speech bubbles in the
- * scene and the feed in the panel. While the change stream is live it refetches when a session speaks; otherwise it is
- * polled, only while the page is visible and there is someone to show. Undefined until the first answer.
+ * While the change stream is live it refetches when a session speaks; otherwise it is polled, only while the page is
+ * visible and there is someone to show.
  */
 export function useSpeechBySession(enabled: boolean): Record<string, Speech> | undefined {
   const live = useLinkLive();
@@ -32,15 +31,14 @@ export function useSpeechBySession(enabled: boolean): Record<string, Speech> | u
 }
 
 /**
- * The panel's feed. Opening a session (selecting it, and while it stays selected) marks it read. A new event in some
- * other session only changes the feed and its counts; it never changes what is selected.
+ * Opening a session marks it read; a new event in another session only changes the feed and its counts, never what is
+ * selected.
  */
 export function useSessionFeed(
   all: readonly AttributedSession[] | undefined,
   selectedKey: string | null,
 ): Feed {
   const locale = useLocale();
-  // Every session that belongs to a project: the office cannot show one that does not.
   const sessions = useMemo(() => (all ?? []).filter((s) => s.projectId !== null), [all]);
   const speech = useSpeechBySession(sessions.length > 0);
   const { seen, markSeen } = useSeen();
@@ -51,7 +49,6 @@ export function useSessionFeed(
     const agents = sessionsToAgents(sessions, '', now, locale);
     return groupFeed(buildFeed({ sessions, agents, speech, seen, now, asking }), now);
   }, [sessions, locale, speech, seen, asking]);
-  // First, before the effect below marks it seen: what "last looked" was as this visit began.
   const seenNow = useLatest(seen); // read at the moment of selection: a later change to `seen` must not move it
   useEffect(() => {
     if (!selectedKey) return;

@@ -3,13 +3,8 @@ import { EACH_DESK_MAX } from './place.js';
 import type { LifeRule } from './registry.js';
 import type { LifeCue } from './schedule.js';
 
-/** A pose to ask for `delayMs` after the effect started. */
 type PoseCall = { delayMs: number; request: PoseRequest };
 
-/**
- * The poses an effect asks of the members it stands over: its desk's member, the members of its group, or the members at
- * the desks in view (the same few the effect dresses). Pure; the pose registry decides whether each one plays.
- */
 export function poseCalls(
   rule: LifeRule,
   cue: LifeCue,

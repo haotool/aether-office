@@ -1,4 +1,3 @@
-// CHARTER D9: fan-in allowlist lines in docs/adr/*.md (`fan-in-allow: <repo-relative path>`).
 const ALLOW_RE = /^fan-in-allow:\s*(\S+)\s*$/;
 export const FAN_IN_ALLOW_MAX = 5;
 

@@ -2,16 +2,13 @@ import { test, expect, type Locator, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { signIn } from '../support/sign-in.js';
 
-// First use and the accessibility skeleton: the first minutes of a person who has just started AETHER.
 const PREFS = 'aether-ui-preferences';
 const READY = 'main';
 
-/** Nothing is running yet: no project at all. */
 async function noProjects(page: Page) {
   await page.route('**/api/projects', (route) => route.fulfill({ json: [] }));
 }
 
-/** A project that exists but has no character and no session anywhere. */
 async function emptyOffice(page: Page) {
   await page.route(/\/api\/projects\/[^/]+\/snapshot$/, async (route) => {
     const response = await route.fetch();
@@ -25,7 +22,6 @@ async function emptyOffice(page: Page) {
   });
 }
 
-/** The drawn mark after a required field's label (it is not text, so it is read from the style). */
 const marker = (label: Locator) => label.evaluate((el) => getComputedStyle(el, '::after').content);
 
 test.describe('language follows the browser on a first visit', () => {
@@ -46,7 +42,6 @@ test.describe('language follows the browser on a first visit', () => {
     });
 
     test('never overrides a saved preference', async ({ page }) => {
-      // The person chose Chinese on an earlier visit (the other preferences the suite starts with stay).
       await page.addInitScript((key) => {
         const saved = JSON.parse(localStorage.getItem(key) ?? '{"version":0}');
         saved.state = { ...saved.state, locale: saved.state?.locale ?? 'zh-TW' };
@@ -87,7 +82,7 @@ test.describe('nothing is running yet', () => {
     const create = panel.getByRole('button', { name: 'Create a project by hand' });
     await expect(create).toHaveClass(/secondary/);
     await expect(create).not.toHaveClass(/primary/);
-    await expect(page.getByRole('combobox', { name: 'Project' })).toHaveCount(0); // nothing to choose from yet
+    await expect(page.getByRole('combobox', { name: 'Project' })).toHaveCount(0);
   });
 
   test('a project with no session shows it in the office view and the list, not an empty building', async ({
@@ -126,6 +121,30 @@ test.describe('nothing is running yet', () => {
         const results = await new AxeBuilder({ page }).include('.first-run').analyze();
         expect(results.violations.map((v) => v.id)).toEqual([]);
       });
+});
+
+test.describe('the Sessions page without rows', () => {
+  test.use({ locale: 'en-US' });
+
+  test('says there are no sessions yet, instead of a bare filter bar', async ({ page }) => {
+    await emptyOffice(page);
+    await signIn(page, '/sessions');
+    await expect(page.getByRole('heading', { name: 'No local sessions yet' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Show all sessions' })).toHaveCount(0);
+    await expect(page.locator('.sessions-page table')).toHaveCount(0);
+  });
+
+  test('says what the filters hide, and one tap shows every session', async ({ page }) => {
+    await signIn(page, '/sessions');
+    await expect(page.locator('.sessions-page table')).toBeVisible();
+    await page.getByPlaceholder(/^Search title/).fill('no session is called this');
+    await expect(
+      page.getByRole('heading', { name: 'No session matches these filters' }),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Show all sessions' }).click();
+    await expect(page.locator('.sessions-page table')).toBeVisible();
+    await expect(page.getByPlaceholder(/^Search title/)).toHaveValue('');
+  });
 });
 
 test.describe('an address that names a project that is not there', () => {
@@ -222,7 +241,7 @@ test.describe('the tab title names the page, in the language of the interface', 
 test.describe('the keyboard skeleton', () => {
   test('the first Tab is a skip link that lands on the main landmark', async ({ page }) => {
     await signIn(page);
-    await page.goto('/office'); // a fresh page: the keyboard starts at the top
+    await page.goto('/office');
     await expect(page.locator(READY)).toBeVisible();
     await page.keyboard.press('Tab');
     const skip = page.getByRole('link', { name: '跳到主要內容' });
@@ -261,7 +280,6 @@ test.describe('an address that is no page', () => {
     await expect(page).toHaveTitle('找不到這個頁面 · AETHER OFFICE');
     await page.getByRole('link', { name: '回到辦公室' }).click();
     await expect(page).toHaveURL(/\/office/);
-    // A valid deep link still opens its page.
     await page.goto('/settings/notifications');
     await expect(page.getByText('找不到這個頁面')).toHaveCount(0);
   });
@@ -320,7 +338,6 @@ test('the layout editor says it is experimental and leaves the scene in view', a
     dialog.boundingBox(),
     page.locator('.scene-shell').boundingBox(),
   ]);
-  // The dialog is docked at the side: it covers less than half of the scene.
   const overlap = Math.max(
     0,
     Math.min(box!.x + box!.width, scene!.x + scene!.width) - Math.max(box!.x, scene!.x),

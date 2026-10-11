@@ -3,11 +3,7 @@ import { resolve } from 'node:path';
 import { pairingFailure, pairingText } from './services/remote/pairing.js';
 import { print, warn } from './stdio.js';
 
-/**
- * `pnpm run pair`: shows a QR code in the terminal that signs a phone in. It asks the running control plane for a
- * one-time code with the owner token from the data directory (the token itself is never printed), then prints one QR code, for
- * the best address, and lists the others (the code is the same on every address). The code works once and expires in five minutes.
- */
+/** `pnpm run pair`: prints a one-time QR code that signs a phone in; the owner token is never printed. */
 const mode = process.argv.includes('--demo') ? 'demo' : 'live';
 const directory = resolve(process.env['AETHER_DATA_DIR'] ?? `.data/${mode}`);
 const base = process.env['AETHER_CONTROL_URL'] ?? `http://127.0.0.1:${process.env['PORT'] ?? 4310}`;

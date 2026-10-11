@@ -3,8 +3,6 @@ import { statfs } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import { cpus, freemem, homedir, loadavg, totalmem } from 'node:os';
 
-// Machine load and free disk from the standard library (os, fs.statfs): what check-disk-space and systeminformation
-// read too, without adding a dependency. CPU use is the share of busy time between two samples.
 type Times = { idle: number; total: number };
 const sample = (): Times =>
   cpus().reduce(
@@ -20,7 +18,7 @@ const sample = (): Times =>
 let previous: Times = sample();
 
 /**
- * Pure. Memory macOS can hand out without paging: free plus inactive, speculative and purgeable pages (`vm_stat`).
+ * Memory macOS can hand out without paging: free plus inactive, speculative and purgeable pages (`vm_stat`).
  * `os.freemem()` counts only free pages, so on macOS it reports a near-full machine that is not.
  */
 export function availableFromVmStat(text: string): number | null {
@@ -41,7 +39,6 @@ async function availableMemory(): Promise<number> {
   }
 }
 
-/** Pure. Busy share between two cumulative CPU samples, or null when no time has passed. */
 export function cpuBusy(before: Times, after: Times): number | null {
   const total = after.total - before.total;
   if (total <= 0) return null;
@@ -59,7 +56,7 @@ export async function systemMetrics(paths: readonly string[] = [homedir()]) {
       const fs = await statfs(path);
       const total = fs.blocks * fs.bsize;
       const free = fs.bavail * fs.bsize;
-      const key = `${total}:${fs.type}`; // the same volume reached by two paths is listed once
+      const key = `${total}:${fs.type}`;
       if (seen.has(key)) continue;
       seen.add(key);
       disks.push({ path, totalBytes: total, freeBytes: free });

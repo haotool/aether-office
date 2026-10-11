@@ -1,11 +1,6 @@
 import { weighted } from '../environment/pick.js';
 import { seeded } from '../environment/seeded.js';
 
-/**
- * How one member's desk is dressed: the editor theme, the window chrome, whether there is a second monitor and what is
- * on it, and the small things on the desk. All of it is drawn from the member's id (and role), never from anything
- * the session says, so it is decoration that stays the same for the same member and differs between members.
- */
 export type Theme = 'dark' | 'light';
 export type Chrome = 'mac' | 'win' | 'flat';
 export type DeskItem = 'mug' | 'plant' | 'figure' | 'headphones' | 'notepad' | 'sticky';
@@ -16,12 +11,9 @@ export type DeskProfile = {
   chrome: Chrome;
   monitors: 1 | 2;
   secondary: Secondary | null;
-  /** Which side of the main monitor the second one stands on. */
   side: 'left' | 'right';
   items: DeskItem[];
-  /** Index into the palette of sticky notes. */
   sticky: number;
-  /** Which of three wallpapers its lock screen shows. */
   wallpaper: 0 | 1 | 2;
 };
 
@@ -34,7 +26,6 @@ export const DESK_WEIGHTS = {
   >,
 } as const;
 
-/** The chance a role has a second monitor. */
 export const MONITOR_CHANCE: Record<string, number> & { default: number } = {
   backend: 0.55,
   platform: 0.6,
@@ -67,7 +58,6 @@ const SECONDARY_DEFAULT: Partial<Record<Secondary, number>> = {
   chat: 1,
 };
 
-/** The things a role keeps on its desk lean a little: writers have notepads, headphones go with the heads-down roles. */
 const ITEM_BIAS: Record<string, Partial<Record<DeskItem, number>>> = {
   docs: { notepad: 3, sticky: 2 },
   'product-manager': { sticky: 3, notepad: 2 },
@@ -92,7 +82,7 @@ export function deskProfile(seed: string, role: string): DeskProfile {
   for (let n = 1 + Math.floor(r() * 3); n > 0; n--) {
     const item = weighted(r, pool) as DeskItem;
     items.push(item);
-    delete pool[item]; // one of each kind
+    delete pool[item];
   }
   return {
     theme,

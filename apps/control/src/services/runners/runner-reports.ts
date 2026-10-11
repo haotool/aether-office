@@ -5,7 +5,6 @@ import { recordProvider } from '../runtime/provider-events.js';
 import { emit, type Context } from '../domain/context.js';
 import { machine } from './runner-machine.js';
 
-/** What a runner reports about a run (workspace, start, activity, result), applied to the control plane's rows. */
 type RunRow = {
   id: string;
   epoch: number;
@@ -25,7 +24,6 @@ type RunRow = {
 type MachineRow = ReturnType<typeof machine>['row'];
 type Report<T extends RunnerEvent['type']> = Extract<RunnerEvent, { type: T }>;
 
-/** The runner reports the workspace it made for a run: bound to the run's work, under a root the machine was granted. */
 function adoptWorkspace(ctx: Context, row: MachineRow, run: RunRow, e: Report<'workspace'>) {
   const w = e.workspace;
   if (
@@ -37,7 +35,6 @@ function adoptWorkspace(ctx: Context, row: MachineRow, run: RunRow, e: Report<'w
     throw new DomainError('WORKSPACE_SCOPE_MISMATCH');
   if (run.purpose === 'review' && w.baseSha !== run.reviewHead)
     throw new DomainError('REVIEW_HEAD_MISMATCH');
-  // A machine may only report workspaces under the roots it was granted (none = unrestricted local machine).
   const roots = JSON.parse(row.allowedRoots) as string[];
   if (
     roots.length &&
@@ -67,7 +64,6 @@ function adoptWorkspace(ctx: Context, row: MachineRow, run: RunRow, e: Report<'w
   return 'workspace.created';
 }
 
-/** The provider session began: the run, its session, the work and the member move to running. */
 function markStarted(ctx: Context, run: RunRow, e: Report<'started'>) {
   if (run.resumeSessionId && e.providerSessionId !== run.resumeSessionId)
     throw new DomainError('RESUME_SESSION_MISMATCH');
@@ -115,7 +111,6 @@ function settledOutcome(run: RunRow, e: Report<'result'>) {
   return run.state === 'indeterminate' ? 'indeterminate' : e.outcome;
 }
 
-/** A submitted review: bound to the commit and version it was asked about; returns true when the work moved on meanwhile. */
 function recordReview(ctx: Context, run: RunRow, e: Report<'result'>): boolean {
   const work = ctx.sqlite
     .prepare('SELECT state,headSha,version,assignee,reviewBy FROM work_items WHERE id=?')
@@ -167,7 +162,6 @@ function recordReview(ctx: Context, run: RunRow, e: Report<'result'>): boolean {
   return false;
 }
 
-/** The run ended: record its outcome (a late success never overwrites a cancellation), and apply it to the work, a review, the member. */
 function finishRun(ctx: Context, run: RunRow, e: Report<'result'>) {
   let stale = false;
   const outcome = settledOutcome(run, e);

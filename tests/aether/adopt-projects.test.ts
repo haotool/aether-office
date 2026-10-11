@@ -53,14 +53,14 @@ it('retries a failed adoption with a growing wait, a bounded number of times, an
   const tracker: AdoptTracker = new Map();
   expect(dueRepos(repos, tracker, 0)).toEqual(repos);
   noteAdoption(tracker, '/a/one', false, 0);
-  expect(dueRepos(repos, tracker, 1999)).toEqual([]); // 2 s
+  expect(dueRepos(repos, tracker, 1999)).toEqual([]);
   expect(dueRepos(repos, tracker, 2000)).toEqual(repos);
   noteAdoption(tracker, '/a/one', false, 2000);
-  expect(dueRepos(repos, tracker, 5999)).toEqual([]); // then 4 s
+  expect(dueRepos(repos, tracker, 5999)).toEqual([]);
   expect(dueRepos(repos, tracker, 6000)).toEqual(repos);
   noteAdoption(tracker, '/a/one', false, 6000);
   noteAdoption(tracker, '/a/one', false, 20000);
-  expect(dueRepos(repos, tracker, 1e9)).toEqual([]); // gives up after ADOPT_TRIES
+  expect(dueRepos(repos, tracker, 1e9)).toEqual([]);
   noteAdoption(tracker, '/a/two', true, 0);
   expect(dueRepos([{ root: '/a/two', name: 'two' }], tracker, 1e9)).toEqual([]);
 });

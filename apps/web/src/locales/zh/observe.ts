@@ -1,4 +1,3 @@
-/** The observe words, in Traditional Chinese. */
 export const zhObserve = {
   obNote: '只讀取明確核准的外部 session。觀察文字不是完成證據，也不會觸發派工或批准。',
   obEmpty: '尚未收到觀察資料；請檢查 runner 的 opt-in 設定與日誌。',

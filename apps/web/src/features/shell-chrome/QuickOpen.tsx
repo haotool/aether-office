@@ -4,7 +4,6 @@ import { Modal } from '../../ui/Modal.js';
 import { useT } from '../../ui/useT.js';
 import { matchItems, type QuickItem } from '../operations/quick-match.js';
 
-/** ⌘K / Ctrl+K: jump to a page, a project or a local session by typing part of its name. */
 export function QuickOpen({
   items,
   onClose,

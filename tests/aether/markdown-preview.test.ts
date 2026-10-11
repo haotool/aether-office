@@ -15,7 +15,6 @@ const REPLY = [
   '- 第二項 [連結](https://example.com/a)',
 ].join('\n');
 
-/** Samples with every construct the agents use; none of their syntax may reach a plain preview. */
 const CORPUS = [
   REPLY,
   '# Heading one\n\n## Two\n\nSome **bold**, *italic*, ~~gone~~ and `code`.',
@@ -182,7 +181,7 @@ describe('cutMarkdown', () => {
 
   it('drops a table that was cut before its delimiter row, and keeps one that is whole enough', () => {
     const table = 'intro\n\n| file | change |\n|------|--------|\n| a | b |\n| c | d |';
-    expect(cutMarkdown(`${table}\n\nafter`, 26)).toBe('intro…'); // the delimiter row is cut at its first pipe
+    expect(cutMarkdown(`${table}\n\nafter`, 26)).toBe('intro…');
     expect(cutMarkdown(`${table}\n\nafter`, 21)).toBe('intro…');
     expect(cutMarkdown(`${table}\n\nafter`, 56)).toMatch(/\| a \| b \|\n\| c…$/);
   });

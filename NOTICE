@@ -20,7 +20,7 @@ Codex CLI (https://github.com/openai/codex), licensed under the Apache License, 
     Copyright (c) 2016-2022 Florian Dehau
     Copyright (c) 2023-2025 The Ratatui Developers
 
-Third-party packages and their licences: THIRD_PARTY_NOTICES.md.
+Third-party packages and their licences: docs/legal/THIRD_PARTY_NOTICES.md.
 
 Claude and Claude Code are trademarks of Anthropic, PBC. OpenAI and Codex are trademarks of
 OpenAI. This project is not affiliated with, endorsed by or sponsored by either company.

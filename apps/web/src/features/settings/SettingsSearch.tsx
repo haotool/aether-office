@@ -2,7 +2,6 @@ import { forwardRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { useT } from '../../ui/useT.js';
 
-/** The box that narrows Settings to the rows that match; Escape empties it, "/" brings the focus here. */
 export const SettingsSearch = forwardRef<
   HTMLInputElement,
   { query: string; count: number | null; onChange: (query: string) => void }

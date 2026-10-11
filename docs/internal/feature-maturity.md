@@ -37,7 +37,7 @@
 頁面掃描（14 頁，zh 與 en）、axe（桌面與手機 x 深色與淺色）、首次使用（零 session、一個 session）、對話內容（Markdown、XSS、密鑰遮蔽）、KPI、設定全部分區、
 配對（真實一次性碼：成功與重複使用）、遠端核准、Composer（假 Claude TUI：`/` 選單、`@` 檔案、送出、回覆）、PTY 終端、角色動作選單、版面編輯器、
 任務／工作流程／審查、訊息／房間／會議、知識／Skills、離線與恢復、窗寬 1920 至 768、手機 390、80 個 session 的規模、hooks CLI 安裝／移除、README 指令。截圖在
-`/private/tmp/claude-501/-Users-dev-Tools-aether-office/23475a39-1333-4543-9901-a8d3f9736ec7/scratchpad/maturity/shots/`（暫存區，未納入倉庫）。
+倉庫外的暫存區（未納入倉庫）。
 
 ## 3. 成熟度矩陣
 
@@ -176,6 +176,33 @@
 | D20 | 低 | `pnpm run pair` 在伺服器使用不同 data dir 時說「(401). Is the control plane running?」 | 對 4641 的伺服器用另一個 data dir 執行 | 輸出（第 5 節） | 區分「連不到」與「權杖不符」 | S |
 
 另有兩項小觀察不列入 Top 20：頂部列計數（會話 004）與當前專案的面板（0 個）在多專案時口徑不同；Sessions 表中剛被寫入 5 秒的 session 顯示「idle · none／已結束」，與 feed 的「剛完成」措辭不一致。
+
+### 結案狀態（2026-10-09 補入）
+
+下表逐項對照目前程式碼，每一項都有會失敗的測試把關。唯一未結的是 D16 的真機螢幕閱讀器實測，它需要人與裝置，列在[發佈檢查表](../release/publishing-checklist.md)。
+
+| # | 狀態 | 現況 | 把關的測試 |
+|---|---|---|---|
+| D01 | 已修 | 空狀態是首次使用面板：說明 session 會自動出現、附可複製的指令，「建立專案」降為次要 | `e2e/settings/first-run.spec.ts`（nothing is running yet） |
+| D02 | 已修 | 首次依 `navigator.language` 決定語言，已存的偏好優先；登入頁同 | `tests/aether/first-run.test.ts`、`e2e/settings/first-run.spec.ts`（language follows the browser） |
+| D03 | 已修 | 伺服器回 400 `PROJECT_ROOT_NOT_FOUND`，前端翻成句子 | `tests/aether/project-root.test.ts`、`tests/aether/error-text.test.ts` |
+| D04 | 已修 | 錯誤的專案 id 改選第一個專案並顯示短提示，沒有 Retry | `e2e/settings/first-run.spec.ts`（an address that names a project that is not there） |
+| D05 | 已修 | 核准頁列出待處理的權限請求；空狀態依「遠端核准」是否開啟分支 | `e2e/settings/first-run.spec.ts`（the Approvals page） |
+| D06 | 已修 | 原生執行模式的頂部列在 320 至 1920 px 都不溢出（選擇器讓位、停止鈕在窄寬只顯示圖示） | `e2e/ui/responsive.spec.ts`（每頁每寬度：無橫向溢出、控制項不互壓）、UX 矩陣 |
+| D07 | 已修 | 手機頂部列的專案名稱、狀態與停止鈕不再重疊 | 同 D06 |
+| D08 | 已修 | `document.title` 隨頁面與語言，待處理數在最前 | `tests/aether/first-run.test.ts`、`e2e/settings/first-run.spec.ts`（the tab title） |
+| D09 | 已修 | 用量剖析器能讀位元組捷徑漏掉的行，讀不了的行計入 `skippedLines` | `tests/aether/usage-parse.test.ts` |
+| D10 | 已修 | doctor 缺可選 CLI 只警告，版本依 `compat.json` 判斷，並有 `--strict` | `tests/aether/doctor.test.ts` |
+| D11 | 已修 | 開場說明移到樓層 HUD 之外 | `e2e/office-life/intro.spec.ts`、`e2e/scene/scene-hud-consistency.spec.ts` |
+| D12 | 已修 | 淺色主題對比度符合 4.5:1，axe serious 為 0 | UX 矩陣的 axe 檢查（兩主題）、`e2e/settings/first-run.spec.ts` |
+| D13 | 已修 | 必填欄位有標示與行內錯誤（不再出現作業系統語言的氣泡）；版本與 id 收進「詳細資料」；相依任務欄有標籤與說明 | `e2e/settings/first-run.spec.ts`（forms say what is missing） |
+| D14 | 已修 | `AETHER_HOME` 可搬移 `~/.aether`；`hooks install` 先列出會寫入的檔案並支援 `--dry-run` | `tests/aether/aether-home.test.ts` |
+| D15 | 已修 | 文案說明快取過期時會執行 `codex debug models`（不啟動模型 session） | `tests/aether/i18n.test.ts`（兩種語言鍵相同、無空文案；文案由人讀過） |
+| D16 | 程式面已修，真機實測待人工 | 有 skip link、`main`／`nav`／`complementary` landmark、3D canvas 的名稱與一句內容說明；VoiceOver／TalkBack 實測尚未做 | `e2e/settings/first-run.spec.ts`（the keyboard skeleton）、axe |
+| D17 | 已修 | 未知路由顯示「找不到頁面」並連回首頁，兩種語言 | `e2e/settings/first-run.spec.ts`（an address that is no page） |
+| D18 | 已修 | 手機與平板上每個控制項都有 44 px 的觸控區（繪製 36 至 40 px，加上隱形的擴充區） | `e2e/ui/role-variance.spec.ts`（every control reaches a 44px hit area） |
+| D19 | 已修 | 標示「Edit layout (experimental)」，編輯時場景保持可見 | `e2e/settings/first-run.spec.ts`（the layout editor says it is experimental） |
+| D20 | 已修 | `pnpm run pair` 區分連不到、權杖不被接受與其他回應 | `tests/aether/pair-cli.test.ts` |
 
 ## 7. 帳本 83 筆 partial：真缺口還是未填的阻擋文字
 

@@ -25,7 +25,6 @@ const HOVER_MS = 40;
 const TOUCH_TIP_MS = 4000;
 const scratch = new Vector3();
 
-/** Once the braid is up, the tiers' flowers rise one after another, then the clouds gather. */
 function advanceAfterGrowth(
   built: { current: number },
   gathered: { current: number },
@@ -36,10 +35,6 @@ function advanceAfterGrowth(
   else gathered.current = Math.min(1, gathered.current + delta / CLOUD_SECONDS);
 }
 
-/**
- * The build: `grown` climbs the braid, `built` counts tiers (the spire is the last), `gathered` is the clouds. A spire that
- * was already built stays so when its data refreshes; a tier that is new rises after the ones that were already there.
- */
 function useStalkBuild(
   stalk: Stalk,
   animate: boolean,
@@ -62,7 +57,6 @@ function useStalkBuild(
     },
     [nodesMesh, stalk, radii],
   );
-  // Placed once per layout; the build continues in the frame loop.
   useLayoutEffect(() => {
     if (!nodesMesh.current) return;
     paintBeads(nodesMesh.current, stalk);
@@ -90,7 +84,6 @@ function useStalkBuild(
 
 type Target = { node: StalkNode } | { bloom: BloomInfo };
 
-/** The hover card: reports what the pointer is over (at most every `HOVER_MS`) and, for a finger, takes it away again. */
 function useStalkHover(onHover: (hover: StalkHover) => void) {
   const size = useThree((s) => s.size);
   const last = useRef(0);
@@ -110,13 +103,11 @@ function useStalkHover(onHover: (hover: StalkHover) => void) {
   return { report, leave: () => onHover(null) };
 }
 
-/** The bead an instance id names, if it names one. */
 function beadAt(stalk: Stalk, id: number | undefined): Target | undefined {
   const node = stalk.nodes[id ?? -1];
   return node && { node };
 }
 
-/** The bead nearest to a point on a strand. */
 function nearestBead(stalk: Stalk, point: Vector3): Target | undefined {
   let best: StalkNode | undefined;
   let distance = Infinity;
@@ -130,12 +121,10 @@ function nearestBead(stalk: Stalk, point: Vector3): Target | undefined {
 type BeanstalkProps = {
   stalk: Stalk;
   animate: boolean;
-  /** Fewer sides and path points on the strands, and no clouds. */
   low: boolean;
   onHover: (hover: StalkHover) => void;
 };
 
-/** What the spire is drawn with: the strands' tube, their skin, the bead mesh parts, and each bead's radius. */
 function useStalkParts(stalk: Stalk, low: boolean) {
   const tubes = useMemo(() => stalkTubes(stalk, low), [stalk, low]);
   const skin = useMemo(() => stalkMaterial(), []);
@@ -154,14 +143,6 @@ function useStalkParts(stalk: Stalk, low: boolean) {
   return { tubes, skin, bead, glow, radii };
 }
 
-/**
- * The Git spire: a braid of glass strands up the building's axis, one crystal bead for each commit and energy pulses running
- * up the cores, then the flowering crown that history builds above the roof (a bloom for each tier of it, on stems that leave the braid) and a bank of clouds round its tip. Everything is laid out
- * in the building's own coordinates (spread apart already when the floors are). The first time it is shown it builds itself:
- * the braid climbs, then the tiers' flowers open one after another from buds, then the clouds gather; a tier that arrives with new commits blooms
- * the same way, and with motion off or reduced it is simply complete. Five draw calls (strands, beads, flowers, pollen, clouds); nothing
- * casts a shadow.
- */
 export function Beanstalk({ stalk, animate, low, onHover }: BeanstalkProps) {
   const nodesMesh = useRef<InstancedMesh>(null);
   const { tubes, skin, bead, glow, radii } = useStalkParts(stalk, low);

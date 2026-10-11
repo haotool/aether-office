@@ -37,10 +37,8 @@ type TopbarProps = {
   session: Session;
   projects: readonly Project[];
   projectId: string | undefined;
-  /** The local sessions to summarise, or null when local discovery is off. */
   sessions: LocalSessionsResponse['sessions'] | null;
   unread: number;
-  /** When the local sessions last arrived (ms epoch), and whether the project stream is down. */
   updatedAt: number;
   offline: boolean;
   onMenu: () => void;
@@ -48,7 +46,6 @@ type TopbarProps = {
   onNewProject: () => void;
 };
 
-/** The controls that belong to the person: connection, telemetry, mode, pairing, language, theme. */
 function TopbarRight({ session, projectId, sessions, unread, updatedAt, offline }: RightProps) {
   const t = useT();
   const locale = useLocaleToggle();
@@ -78,7 +75,6 @@ function TopbarRight({ session, projectId, sessions, unread, updatedAt, offline 
   );
 }
 
-/** Brand, project picker and the controls that belong to the person: language, theme, live-mode stop. */
 export function Topbar({
   session,
   projects,

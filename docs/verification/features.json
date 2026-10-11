@@ -87,7 +87,7 @@
     ],
     "evidencePaths": [],
     "blockers": [
-      "Run on macOS arm64 with Node 24.21.0 and pnpm 12.8.1; CI runs typecheck, lint and build on Ubuntu with the Node of .node-version; Windows was not run."
+      "Run on macOS arm64 with Node 24.21.0 and pnpm 12.8.1; CI runs typecheck, lint and build on Ubuntu with the Node of .nvmrc; Windows was not run."
     ]
   },
   {

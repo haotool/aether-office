@@ -1,4 +1,3 @@
-// CHARTER §5.3 criteria registry for `pnpm quality --release` (unlisted ids are not scored here).
 export const LAYER_WEIGHTS = {
   L1: 15,
   L2: 10,
@@ -274,12 +273,16 @@ export const MEASURED_IDS = new Set([
   'L3-03',
   'L3-05',
   'L3-06',
+  'L3-09',
   'L4-03',
   'L4-05',
   'L4-06',
   'L4-08',
   'L5-03',
   'L5-04',
+  'L5-05',
+  'L5-06',
+  'L5-09',
   'L6-05',
   'L6-07',
   'L7-03',

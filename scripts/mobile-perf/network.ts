@@ -1,6 +1,6 @@
 /**
- * Chrome DevTools Slow 4G preset (NetworkManager.ts Slow4GConditions, 2024).
- * @see https://github.com/ChromeDevTools/devtools-frontend/blob/main/front_end/core/sdk/NetworkManager.ts
+ * Chrome DevTools Slow 4G preset (NetworkManager.ts Slow4GConditions, 2024):
+ * https://github.com/ChromeDevTools/devtools-frontend/blob/main/front_end/core/sdk/NetworkManager.ts
  */
 export const SLOW_4G_CDP = {
   offline: false,

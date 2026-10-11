@@ -10,9 +10,7 @@ import { assistantLine, textBlock, toolBlock, writeSubagent } from './fixtures/c
 import { timingTests } from './timing.js';
 
 // A performance guard for the session scan on a machine with a long history: 2000 Codex rollouts and 40 Claude sessions
-// holding 200 subagent transcripts (each 150 messages, all written a minute ago). The budgets are generous enough for a
-// loaded CI machine; the numbers they guard are recorded in docs/verification (measured, not assumed). The time budgets are
-// asserted only with AETHER_TIMING_TESTS=1: a default run, often beside other suites, checks the answers, not the speed.
+// holding 200 subagent transcripts. The budgets are generous enough for a loaded CI machine.
 const ROLLOUTS = 2000;
 const CLAUDE_SESSIONS = 40;
 const SUBAGENTS_PER_SESSION = 5;
@@ -20,7 +18,6 @@ const MESSAGES = 150;
 const COLD_BUDGET_MS = 12_000;
 const WARM_BUDGET_MS = 2_000;
 const RSS_GROWTH_BUDGET = 300 * 1024 * 1024;
-// AETHER_SCAN_BUDGET_SUBAGENTS=0 builds the same history without subagent files: the cost the new reads add to a scan with none.
 const SUBAGENTS = process.env['AETHER_SCAN_BUDGET_SUBAGENTS'] === '0' ? 0 : SUBAGENTS_PER_SESSION;
 
 async function build(home: string) {
@@ -67,7 +64,7 @@ it(`scans ${ROLLOUTS} rollouts and ${CLAUDE_SESSIONS * SUBAGENTS} subagent files
   resetLocalSessionCache();
   const rssBefore = process.memoryUsage().rss;
   const cold = await timed();
-  const warm = await timed(); // heads, usage and subagent offsets are remembered
+  const warm = await timed();
   const warm2 = await timed();
   const rssGrowth = process.memoryUsage().rss - rssBefore;
 
@@ -90,7 +87,6 @@ it(`scans ${ROLLOUTS} rollouts and ${CLAUDE_SESSIONS * SUBAGENTS} subagent files
   expect(keys(warm)).toEqual(keys(cold));
   expect(keys(warm2)).toEqual(keys(cold));
   expect(rssGrowth).toBeLessThan(RSS_GROWTH_BUDGET);
-  // How fast it finds it is performance, which a loaded machine changes: AETHER_TIMING_TESTS=1 on a quiet one.
   if (timingTests) {
     expect(cold.ms).toBeLessThan(COLD_BUDGET_MS);
     expect(warm.ms).toBeLessThan(WARM_BUDGET_MS);
@@ -109,7 +105,7 @@ it('bounds the first scan of very large subagent transcripts by a byte budget, t
     parent,
     `${JSON.stringify({ type: 'user', cwd: home, message: { role: 'user', content: 'x' } })}\n`,
   );
-  const MESSAGES_EACH = 5000; // about 3 MB a file; 16 files are more than the 32 MiB a scan may read
+  const MESSAGES_EACH = 5000;
   const block = Array.from({ length: MESSAGES_EACH }, () =>
     assistantLine('b', textBlock('x'.repeat(500)), minuteAgo),
   ).join('');
@@ -123,8 +119,8 @@ it('bounds the first scan of very large subagent transcripts by a byte budget, t
   const first = await totals();
   const done = (all: (number | null)[]) => all.filter((t) => t !== null);
   expect(done(first).length).toBeGreaterThan(0);
-  expect(done(first).length).toBeLessThan(16); // the budget stopped the scan, the rest wait
-  expect(done(first).every((t) => t === MESSAGES_EACH * 35)).toBe(true); // never a partial total
+  expect(done(first).length).toBeLessThan(16);
+  expect(done(first).every((t) => t === MESSAGES_EACH * 35)).toBe(true);
   let last = first;
   for (let scans = 0; scans < 3 && done(last).length < 16; scans++) last = await totals();
   expect(last).toEqual(Array(16).fill(MESSAGES_EACH * 35));

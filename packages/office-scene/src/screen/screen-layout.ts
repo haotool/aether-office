@@ -2,12 +2,6 @@ import { memberRng } from './screen-seed.js';
 import { languageOf, type LangId } from './screen-lang.js';
 import { kindOf, type ToolCall, type WorkKind } from './screen-work.js';
 
-/**
- * What a desk screen shows is chosen from facts, in this order: the state (a member who is not working has a lock
- * screen), the kind of tool call in hand (editing is an editor, a shell command is a terminal), the language of the
- * real file, then what the member's role usually keeps open. Nothing else decides it, so an unrelated change (the
- * context share, the quiet minutes, the title) never changes the picture.
- */
 export type ViewId =
   | 'editor'
   | 'terminal'
@@ -22,7 +16,6 @@ export type ViewId =
   | 'dashboard'
   | 'lock';
 
-/** The parts of a session's facts that decide the view. */
 export type WorkFacts = {
   state: 'working' | 'idle' | 'waiting_permission' | 'offline' | 'unknown';
   tool: string | null;
@@ -33,12 +26,9 @@ export type Work = {
   kind: WorkKind;
   tool: string | null;
   target: string | null;
-  /** A shell command's head, as the session recorded it. */
   head: string | null;
-  /** The file the member is in: the last edited or read one. */
   file: string | null;
   lang: LangId | null;
-  /** Working, but no tool is running: the model is writing. */
   thinking: boolean;
 };
 
@@ -66,7 +56,6 @@ export function currentWork(facts: WorkFacts): Work {
   };
 }
 
-/** What a role has open when nothing says otherwise. */
 const ROLE_DEFAULT: Record<string, ViewId> = {
   sre: 'dashboard',
   platform: 'dashboard',
@@ -81,7 +70,6 @@ const ROLE_DEFAULT: Record<string, ViewId> = {
   'product-manager': 'docs',
   research: 'browser',
 };
-/** The window a member alt-tabs to while it waits for the model. */
 const ROLE_REFERENCE: Record<string, ViewId> = {
   frontend: 'browser',
   backend: 'terminal',

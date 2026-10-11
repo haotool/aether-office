@@ -1,10 +1,8 @@
-// Area 1: structure. File and function size, nesting, import cycles, fan-in, unused exports, duplicated code,
-// suppressions and stray console output.
 import { findDuplicates } from '../dup.mjs';
 import { deadExports, fanIn, findCycles } from '../graph.mjs';
 import { SELF, at, fanInExcludedTarget, isSourceFile, locations, scan, top } from '../lib.mjs';
 import { rule } from '../model.mjs';
-import { CODE_FILE, PRODUCT_SOURCE, lineCount } from '../repo.mjs';
+import { CODE_FILE, PRODUCT_SOURCE, lineCount, matching } from '../repo.mjs';
 
 export const LIMITS = {
   fileSoft: 400,
@@ -13,16 +11,19 @@ export const LIMITS = {
   nesting: 4,
   fanIn: 30,
   duplicateShare: 3,
+  codeLines: 146606,
 };
 
 const isEntry = (file) => /\/main\.tsx?$/.test(file);
 
 export function structure(repo, { facts, graph }) {
   const source = facts.filter((f) => isSourceFile(f.file));
-  const sizes = repo.files
-    .filter((f) => CODE_FILE.test(f) && !SELF.test(f))
-    .map((file) => ({ file, lines: lineCount(repo.read(file)) }));
-  const big = (min, max) => sizes.filter((s) => s.lines > min && s.lines <= max);
+  const code = repo.files.filter((f) => CODE_FILE.test(f) && !SELF.test(f));
+  const sizes = code.map((file) => ({ file, lines: lineCount(repo.read(file)) }));
+  const big = (min, max) =>
+    sizes.filter((s) => s.lines > min && s.lines <= max).sort((a, b) => b.lines - a.lines);
+  const soft = big(LIMITS.fileSoft, LIMITS.fileHard);
+  const hard = big(LIMITS.fileHard, Infinity);
   const fileLine = (s) => at(s.file, 1, `${s.lines} lines`);
   const functions = source.flatMap((f) => f.functions.map((fn) => ({ ...fn, file: f.file })));
   const long = functions
@@ -32,7 +33,6 @@ export function structure(repo, { facts, graph }) {
     .filter((fn) => fn.nesting > LIMITS.nesting)
     .sort((a, b) => b.nesting - a.nesting);
   const cycles = findCycles(new Map([...graph.runtime].filter(([f]) => PRODUCT_SOURCE.test(f))));
-  // A package's index.ts is its public entry point, so being imported everywhere is its job.
   const importers = [...fanIn(graph.runtime, (f) => !SELF.test(f))].filter(
     ([file, n]) => n > LIMITS.fanIn && !/\/index\.tsx?$/.test(file) && !fanInExcludedTarget(file),
   );
@@ -41,42 +41,32 @@ export function structure(repo, { facts, graph }) {
     graph.uses,
     { isEntry },
   );
-  const sources = repo.files
-    .filter((f) => PRODUCT_SOURCE.test(f))
-    .map((file) => ({ file, text: repo.read(file) }));
+  const sources = matching(repo, PRODUCT_SOURCE).map((file) => ({ file, text: repo.read(file) }));
   const dup = findDuplicates(sources);
   const share = dup.totalLines === 0 ? 0 : (dup.duplicatedLines / dup.totalLines) * 100;
-  const code = repo.files.filter((f) => CODE_FILE.test(f) && !SELF.test(f));
   const todo = scan(repo, code, /(?:\/\/|\/\*|^\s*\*).*\b(?:TODO|FIXME|HACK)\b/);
   const suppress = scan(repo, code, /@ts-(?:ignore|nocheck|expect-error)|eslint-disable/);
   const consoleUse = scan(
     repo,
-    repo.files.filter((f) => PRODUCT_SOURCE.test(f)),
+    matching(repo, PRODUCT_SOURCE),
     /^(?!\s*(?:\/\/|\*)).*\bconsole\.(?:log|info|warn|error|debug|trace)\s*\(/,
   );
-  const anyFacts = source;
   return [
     rule({
       id: 'file-size-400',
       label: `Files over ${LIMITS.fileSoft} lines`,
       weight: 8,
-      value: big(LIMITS.fileSoft, LIMITS.fileHard).length,
+      value: soft.length,
       full: 25,
-      details: top(
-        big(LIMITS.fileSoft, LIMITS.fileHard)
-          .sort((a, b) => b.lines - a.lines)
-          .map(fileLine),
-      ),
+      details: top(soft.map(fileLine)),
     }),
     rule({
       id: 'file-size-800',
       label: `Files over ${LIMITS.fileHard} lines`,
       weight: 12,
-      value: big(LIMITS.fileHard, Infinity).length,
+      value: hard.length,
       full: 4,
-      details: big(LIMITS.fileHard, Infinity)
-        .sort((a, b) => b.lines - a.lines)
-        .map(fileLine),
+      details: hard.map(fileLine),
     }),
     rule({
       id: 'function-length',
@@ -119,6 +109,13 @@ export function structure(repo, { facts, graph }) {
       details: top(dead.map((d) => at(d.file, d.line, d.name))),
     }),
     rule({
+      id: 'code-lines',
+      label: `Code lines over the budget of ${LIMITS.codeLines}`,
+      weight: 6,
+      value: Math.max(0, sizes.reduce((n, s) => n + s.lines, 0) - LIMITS.codeLines),
+      full: 50,
+    }),
+    rule({
       id: 'duplicates',
       label: `Duplicated code share (limit ${LIMITS.duplicateShare}%)`,
       weight: 12,
@@ -139,9 +136,9 @@ export function structure(repo, { facts, graph }) {
       id: 'any-type',
       label: 'Uses of the any type (product source)',
       weight: 6,
-      value: anyFacts.reduce((n, f) => n + f.any.length, 0),
+      value: source.reduce((n, f) => n + f.any.length, 0),
       full: 40,
-      details: top(locations(anyFacts, 'any')),
+      details: top(locations(source, 'any')),
     }),
     rule({
       id: 'suppressions',

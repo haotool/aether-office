@@ -1,4 +1,3 @@
-// The synthetic fixture home of the documentation screenshots: repositories, transcripts, hook records, stand-in processes.
 import { execFileSync, spawn } from 'node:child_process';
 import {
   appendFileSync,
@@ -36,7 +35,6 @@ const git = (cwd, args, date) =>
     },
   );
 
-/** A repository with a believable history: a trunk, three feature branches merged, one still open. */
 export function repository(name, branch, commits) {
   const cwd = join(home, 'repos', name);
   mkdirSync(cwd, { recursive: true });
@@ -79,7 +77,6 @@ export function buildFixture() {
     const dir = join(home, '.claude/projects', cwd.replace(/[^A-Za-z0-9]/g, '-'));
     mkdirSync(dir, { recursive: true });
     const file = join(dir, `${s.id}.jsonl`);
-    // A week of earlier usage (for the KPI dashboard) before the conversation itself.
     const history = [];
     for (let d = 6; d >= 1; d -= 1)
       for (let k = 0; k < 3; k += 1)
@@ -103,13 +100,12 @@ export function buildFixture() {
         .map((l) => JSON.stringify(l))
         .join('\n') + '\n',
     );
-    const earlier = join(dir, `earlier-${s.id}.jsonl`); // finished sessions of the week: only the KPI numbers read them
+    const earlier = join(dir, `earlier-${s.id}.jsonl`);
     writeLines(earlier, history);
     utimesSync(earlier, new Date(NOW - 1 * DAY), new Date(NOW - 1 * DAY));
     const at = new Date(NOW - s.agoMs);
     utimesSync(file, at, at);
     for (const record of s.hooks(s.id, cwd)) appendFileSync(spool, JSON.stringify(record) + '\n');
-    // `sleep` named claude, standing in the repository: the scanner finds the process by name and working directory.
     const child = spawn('bash', ['-c', 'exec -a claude sleep 86400'], {
       cwd,
       stdio: 'ignore',
@@ -118,7 +114,6 @@ export function buildFixture() {
     child.unref();
     pids.push(child.pid);
   }
-  // Claude's subscription windows and one Codex rollout with its own, so the KPI dashboard has both rings.
   writeFileSync(
     join(home, 'claude-hud-usage.json'),
     JSON.stringify({

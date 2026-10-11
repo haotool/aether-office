@@ -102,7 +102,6 @@ function atCapacity(ctx: Context, row: Machine): boolean {
   return count.n >= row.concurrency || total.n >= 4;
 }
 
-/** The queued run this machine may take next, by priority plus queue age. */
 function nextCandidate(ctx: Context, row: Machine, providers: readonly string[]) {
   const ids = JSON.parse(row.projectIds) as string[];
   // One queue-age priority point per minute prevents fresh high-priority work from starving older work.
@@ -129,7 +128,6 @@ function promptFor(ctx: Context, candidate: Candidate): string {
   return `${reviewPrompt}${candidate.title}\n\n${candidate.description}\n\nAcceptance criteria:\n${candidate.acceptance}${feedback}`;
 }
 
-/** A review run names the commit and base it reviews; both were recorded when it was requested. */
 function reviewTarget(candidate: Candidate) {
   if (!candidate.reviewHead || !candidate.reviewBase)
     throw new DomainError('REVIEW_TARGET_REQUIRED', 500);

@@ -20,9 +20,9 @@ const textureBytes = (texture: Texture) => {
 };
 
 /**
- * What the scene holds on the GPU, from the sizes of what it uploaded: each texture once (with its mip chain),
- * each geometry's attributes once, plus the shadow maps and the drawing buffer. An estimate, not a driver figure:
- * WebGL does not report memory, and compressed or resident-on-demand formats differ.
+ * What the scene holds on the GPU, from the sizes of what it uploaded (each texture once with its mip chain, each
+ * geometry's attributes once, the shadow maps and the drawing buffer). An estimate, not a driver figure: WebGL does not
+ * report memory.
  */
 export function estimateGpuBytes(scene: Object3D, drawingBufferPixels: number): number {
   const textures = new Set<Texture>();
@@ -31,7 +31,7 @@ export function estimateGpuBytes(scene: Object3D, drawingBufferPixels: number): 
   scene.traverse((node) => {
     const light = node as Light & { shadow?: LightShadow };
     if (light.isLight && light.castShadow && light.shadow)
-      bytes += light.shadow.mapSize.x * light.shadow.mapSize.y * 4 * 2; // depth map and its blur target
+      bytes += light.shadow.mapSize.x * light.shadow.mapSize.y * 4 * 2;
     if (!(node instanceof Mesh) && !('geometry' in node)) return;
     const holder = node as Mesh;
     for (const attribute of Object.values(holder.geometry?.attributes ?? {}))
@@ -46,15 +46,13 @@ export function estimateGpuBytes(scene: Object3D, drawingBufferPixels: number): 
     const array = (attribute as BufferAttribute).array as ArrayBufferView | undefined;
     if (array) bytes += array.byteLength;
   }
-  bytes += drawingBufferPixels * BYTES_PER_PIXEL * 2; // colour and depth
+  bytes += drawingBufferPixels * BYTES_PER_PIXEL * 2;
   return bytes;
 }
 
-/** What `?perf` leaves on `window` so a script can re-sample frame times after changing the scene (a measurement aid). */
 export type PerfRig = {
   sample: (frames: number) => Promise<import('./perf.js').PerfReport>;
   scene: Object3D;
   gl: import('three').WebGLRenderer;
-  /** The scene's camera, for a script that checks where a camera move left it. */
   camera: import('three').Camera;
 };

@@ -1,6 +1,5 @@
 import { PALETTE, SCREEN_W, frame, bars, tile, Draw } from './screen-draw.js';
 
-/** Data screens: tables, a training run and KPI charts. */
 export const dataTables: Draw = (g, r, a) => {
   frame(g, 'warehouse · schema · query', a);
   for (const [x, y, n] of [

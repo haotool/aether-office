@@ -1,5 +1,3 @@
-// Workflow templates as pure data. Each step becomes an ordinary WorkItem; dependencies make the
-// DAG, and provider constraints are enforced when an agent is assigned or asked to review.
 type WorkflowTemplate =
   'claude_codex_review' | 'codex_claude_review' | 'frontend_backend' | 'research_design_impl';
 
@@ -7,7 +5,7 @@ type StepPlan = {
   role: string;
   titleSuffix: string;
   acceptanceNote: string;
-  dependsOn: number[]; // indexes of earlier steps
+  dependsOn: number[];
   engineerProvider?: 'claude' | 'codex';
   reviewerProvider?: 'claude' | 'codex';
 };

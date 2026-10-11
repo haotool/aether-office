@@ -23,7 +23,7 @@ it('the database refuses exactly the work-state transitions the kernel refuses',
       for (const to of all) {
         if (from === to) continue;
         const id = randomUUID();
-        insert.run(id, from, templateId); // INSERT bypasses the UPDATE trigger, giving a row in `from`
+        insert.run(id, from, templateId);
         const attempt = () => sql.prepare('UPDATE work_items SET state=? WHERE id=?').run(to, id);
         const allowed = (TRANSITIONS[from] as readonly string[]).includes(to);
         if (allowed) expect(attempt, `${from}->${to}`).not.toThrow();

@@ -29,8 +29,6 @@ createRoot(root).render(
     </QueryClientProvider>
   </React.StrictMode>,
 );
-// Once the page is up and the network is quiet, the code a click would need is fetched, so a first visit to a page or the
-// conversation panel does not wait for it.
 window.addEventListener('load', () =>
   setTimeout(() => {
     void import('./features/shell-chrome/PanelBody.js');

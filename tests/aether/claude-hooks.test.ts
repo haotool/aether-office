@@ -56,7 +56,7 @@ it('file round-trip: atomic write, pristine backup kept, unparseable file refuse
   await writeFile(file, '{ not json');
   await expect(installHooksFile(file, script)).rejects.toThrow('SETTINGS_NOT_JSON');
   expect(await readFile(file, 'utf8')).toBe('{ not json');
-  await installHooksFile(join(dir, 'new', 'settings.json'), script); // missing file is created
+  await installHooksFile(join(dir, 'new', 'settings.json'), script);
 });
 
 it('installs for Codex after existing hooks, so their positions (and any trust recorded for them) are unchanged', () => {

@@ -1,13 +1,4 @@
 // Documentation screenshots: starts a throwaway demo stack on synthetic data and photographs it with Playwright.
-//
-//   node --import tsx scripts/docs-screenshots.mjs --port 4511 --out docs/images [--only id,id] [--list] [--gpu] [--hold]
-//
-// Everything on screen comes from a fixture home built here: invented repositories, authors and conversations, fake
-// `claude` processes (`sleep`, named claude, standing in each repository) and hook records. Nothing is read from your
-// ~/.claude or ~/.codex, no model is called, and the stack and its data directory are removed afterwards. Only the PIDs this
-// script started are signalled. The LAN address in the pairing QR code is a stand-in (`192.168.1.20`).
-// `--gpu` uses the real GPU (ANGLE Metal); without it Chrome renders in software, which is slower but identical in content.
-// `--hold` keeps the stack up after the shots (Ctrl+C to stop) so a page can be looked at by hand.
 import { join } from 'node:path';
 import { chromium } from '@playwright/test';
 import { flag, only } from './docs-screenshots-config.mjs';

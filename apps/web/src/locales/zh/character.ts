@@ -1,4 +1,3 @@
-/** The character words, in Traditional Chinese. */
 export const zhCharacter = {
   charMenuLabel: '角色動作',
   charFollow: '鏡頭跟隨',

@@ -5,15 +5,8 @@ import { DomainError } from '@aether/kernel';
 import { isLanHostname } from '../platform/host-policy.js';
 
 /**
- * Pairing a phone without typing a token: the signed-in owner asks for a code, the page shows it as a QR code, the phone
- * scans it and is signed in. What makes that safe, learned from the pairing flows of other projects (Orca, Nimbalyst):
- *
- *  - the code is 128 random bits, kept only as a hash, valid five minutes and **once** (checked here, on the server: a
- *    client-side expiry is no expiry);
- *  - it travels in the URL's fragment, which a browser never sends over the network, so it is in no server log and no
- *    Referer header; the page swaps it for a session at once and removes it from the address bar;
- *  - an unknown, used and expired code answer the same, so the answer teaches nothing;
- *  - a few codes at a time, and the person who made one can see whether it was used (nobody pairs unnoticed).
+ * Pairing a phone without typing a token. The code is 128 random bits, kept only as a hash, valid five minutes and once
+ * (checked on the server). It travels in the URL fragment, so no server log or Referer holds it.
  */
 export const PAIRING_TTL_MS = 5 * 60_000;
 const MAX_OUTSTANDING = 5;
@@ -44,7 +37,6 @@ export function createPairingStore(now: () => number) {
       byHash.set(hashOf(code), entry);
       return { id: entry.id, code, expiresAt: entry.expiresAt };
     },
-    /** The identity the code was made for, once; the same error for every way a code can be wrong. */
     redeem(code: string): string {
       const entry = byHash.get(hashOf(code));
       if (!entry || entry.redeemedAt || entry.expiresAt <= now())
@@ -65,13 +57,12 @@ export type PairingStore = ReturnType<typeof createPairingStore>;
 const VIRTUAL_INTERFACE =
   /^(lo|utun|awdl|llw|bridge|docker|br-|veth|virbr|vmnet|vboxnet|zt|tailscale)/i;
 
-/** Lower is better: home and office networks first, then 172.16/12, then anything else private (Tailscale, ...). */
 const rank = (address: string) =>
   /^(192\.168|10)\./.test(address) ? 0 : address.startsWith('172.') ? 1 : 2;
 
 /**
- * The addresses a phone on this network can reach the server at (private IPv4 on real interfaces; link-local and virtual
- * ones skipped), best first, with the port.
+ * The addresses a phone on this network can reach the server at, best first, with the port: private IPv4 on real
+ * interfaces; link-local and virtual ones are skipped.
  */
 export function lanOrigins(
   port: string,
@@ -92,12 +83,8 @@ export function lanOrigins(
     .map((address) => `http://${address}:${port}`);
 }
 
-const QUIET_ZONE = 4; // modules of blank border the QR standard asks for
+const QUIET_ZONE = 4;
 
-/**
- * A QR code for a terminal: black on white (set explicitly, so it scans on a dark theme too), two modules per text row
- * as half blocks, a quiet zone around it and an even number of rows so no row is left half drawn.
- */
 export function terminalQr(text: string): string {
   const { size, data } = QRCode.create(text, { errorCorrectionLevel: 'M' }).modules;
   const side = size + 2 * QUIET_ZONE;
@@ -119,7 +106,6 @@ export function terminalQr(text: string): string {
   return lines.join('\n');
 }
 
-/** What `pnpm run pair` says when the control plane did not hand out a code: `status` is null when it was not reached. */
 export function pairingFailure(status: number | null, base: string, directory: string): string {
   if (status === null)
     return `Could not reach ${base}. Is the control plane running? Start it with pnpm start (or set AETHER_CONTROL_URL or PORT to where it listens).`;
@@ -128,7 +114,6 @@ export function pairingFailure(status: number | null, base: string, directory: s
   return `${base} answered ${status} when asked for a pairing code.`;
 }
 
-/** What a terminal shows for a pairing code: the QR code for the best address, the other addresses, and the caveats. */
 export function pairingText(
   links: readonly { origin: string; url: string }[],
   ttlSeconds: number,
@@ -145,7 +130,7 @@ export function pairingText(
   ].join('\n');
 }
 
-/** One link per address, all with the same code (the code is what is single-use, not the address), each with its QR code as an SVG. The code is in the fragment, never the query. */
+/** The code is single-use, not the address, and travels in the URL fragment, never the query. */
 export async function pairingLinks(origins: readonly string[], code: string) {
   return Promise.all(
     origins.map(async (origin) => {

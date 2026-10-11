@@ -40,8 +40,6 @@ def hold(t, a, b, ramp=.12):
     return min(1.0, (t - a) / ramp, (b - t) / ramp)
 
 
-# ---- Parts of a pose ------------------------------------------------------------------------------
-
 def sit(p, k=1.0):
     p.move('pelvis', y=-.14 * k, z=-.08 * k)  # world axes: .14 toward the desk, .08 down
     p.turn('chest', 'x', .16 * k)
@@ -54,8 +52,6 @@ def sit(p, k=1.0):
     return p
 
 
-# How an arm rests on the desk once seated: the elbow tucked in under the shoulder (z, mirrored for the right arm),
-# the forearm angled in toward the keyboard, the paw flat. (upper arm z, upper arm x, forearm z, hand x)
 SETTLE = (.3, .05, .15, .45)
 
 
@@ -140,8 +136,6 @@ def lerp(a, b, k):
 
 SIT_ARM = (-.6, 0.0, 0.0, -1.0)  # (raise, yaw, spread, elbow) of an arm resting on the desk
 
-# Arm poses solved against the posed face and body, so a hand meets the mouth, ear or chin: (side solved for,
-# (raise, yaw, spread, elbow)). The other side mirrors a pose: yaw and spread negated.
 REACH = {
     'sip': ('R', (-.13, -.59, -.38, -.28)), 'phone': ('L', (-1.14, -.68, .63, -.53)),
     'chin': ('R', (-.45, -.35, -.49, -.16)), 'scratch': ('R', (-1.51, .69, -.68, -.4)),
@@ -172,8 +166,6 @@ def desk_typing(p, t, speed=5, amount=.09):
     p.turn('forearm_L', 'x', .04 * wave(t, speed, .3)).turn('forearm_R', 'x', -.04 * wave(t, speed, .6))
     return p
 
-
-# ---- The clips ------------------------------------------------------------------------------------
 
 def make_clips():
     def idle(t):
@@ -337,8 +329,6 @@ def make_clips():
         return brows(p, 0, .008)
 
     def sleeping(t):
-        # Folded forward over the desk with the cheek on the forearms, face turned to the side. The loop is 4 s: one slow
-        # breath and one small bob of the head.
         p = sit(Pose())
         p.turn('chest', 'x', .55).turn('neck', 'x', .4).turn('head', 'y', 1.15).turn('head', 'z', .1)
         p.move('pelvis', y=-.07)
@@ -422,7 +412,6 @@ def make_clips():
         return brows(p, 0, .004)
 
     def haunt(t):
-        # A ghost floats: bobbing, swaying, arms hanging limp in front, the wisp trailing behind it.
         p = Pose().move('root', z=.06 * wave(t, 1))  # the whole figure rises and sinks, so nothing deforms
         p.turn('chest', 'x', .05 * wave(t, 1, .25)).turn('chest', 'y', .08 * wave(t, 1, .1))
         head_turn(p, .05 * wave(t, 2), .1 * wave(t, 1), .06 * wave(t, 1, .3))
@@ -432,7 +421,6 @@ def make_clips():
         return p
 
     def hop(t):
-        # A jiangshi hops with its feet together and its arms held out straight: stiff, never bending.
         air = max(0.0, wave(t, 1))
         p = Pose().move('pelvis', z=.17 * air)
         p.turn('chest', 'x', .1 + .03 * wave(t, 2)).turn('neck', 'x', .1)
@@ -457,7 +445,6 @@ def make_clips():
     }
 
 
-# The clips of the two figures that are not animals; the animals have none of them, and they have only theirs.
 FORM_CLIPS = {'ghost': ['haunt'], 'zombie': ['hop']}
 
 
@@ -467,8 +454,6 @@ def clips_for(species):
         return {name: table[name] for name in FORM_CLIPS[species]}
     return {name: v for name, v in table.items() if name not in {n for names in FORM_CLIPS.values() for n in names}}
 
-
-# ---- Keying ---------------------------------------------------------------------------------------
 
 def place_props(arm, pose):
     """Carries each prop the pose holds to its hand; props not held stay inside the torso."""

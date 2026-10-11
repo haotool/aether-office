@@ -17,14 +17,12 @@ import {
   type Turn,
 } from './turn-groups.js';
 
-/** Consecutive tool calls as one line ("read 4 files · edited 2"); a tap lists each call with its target. */
 function ToolGroup({ calls, fresh }: { calls: ToolCall[]; fresh: boolean }) {
   const t = useT();
   const locale = useLocale();
   const [open, setOpen] = useState(false);
   const { running, failed } = countCalls(calls);
   const [now, setNow] = useState(() => Date.now());
-  // A running group's clock ticks; a finished one is static.
   useEffect(() => {
     if (!running) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -63,7 +61,6 @@ function ToolGroup({ calls, fresh }: { calls: ToolCall[]; fresh: boolean }) {
   );
 }
 
-/** The line that marks where what you have not seen starts. */
 function UnreadDivider() {
   const t = useT();
   return (
@@ -122,11 +119,6 @@ function AssistantMessage({
   );
 }
 
-/**
- * A prompt, then what the agent said and did about it. What `isFresh` says arrived while the conversation was open
- * enters with a short rise, and a fresh reply fades in word by word. Every assistant message but the newest folds when tall.
- * `unreadId` is the first thing that happened after the person last looked: the divider goes just before it.
- */
 export const TurnView = memo(function TurnView({
   turn,
   isFresh,

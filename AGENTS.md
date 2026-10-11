@@ -1,7 +1,7 @@
 # AETHER OFFICE: guidance for coding agents
 
 This file is the shared rule index for every AI coding agent working in this repository (`CLAUDE.md` points here). Humans
-should read [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/development.md](docs/development.md).
+should read [CONTRIBUTING.md](.github/CONTRIBUTING.md) and [docs/development.md](docs/development.md).
 
 ## Non-negotiable rules
 
@@ -40,4 +40,5 @@ See [docs/development.md](docs/development.md#the-animals).
 ## Conventions
 
 Conventional commit prefixes (`feat`, `fix`, `refactor`, `perf`, `docs`, `test`, `chore`, `ci`). Small focused changes. Prefer
-the standard library and existing code over new dependencies. Record user-visible changes in `CHANGELOG.md`.
+the standard library and existing code over new dependencies. Record user-visible changes in `CHANGELOG.md`. Code only shrinks and
+comments are rare: see [Code only shrinks](.github/CONTRIBUTING.md#code-only-shrinks).

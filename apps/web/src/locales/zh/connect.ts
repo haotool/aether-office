@@ -1,4 +1,3 @@
-/** The connect words, in Traditional Chinese. */
 export const zhConnect = {
   pairTitle: '連接手機',
   pairHint:

@@ -16,11 +16,11 @@ describe('settings addresses', () => {
   it('reads the section from the path, then from the hash, and an unknown name is the home', () => {
     expect(sectionFromLocation('/settings/models', '')).toBe('models');
     expect(sectionFromLocation('/settings', '#about')).toBe('about');
-    expect(sectionFromLocation('/settings/data', '#about')).toBe('data'); // the path wins
+    expect(sectionFromLocation('/settings/data', '#about')).toBe('data');
     expect(sectionFromLocation('/settings/models/', '')).toBe('models');
     expect(sectionFromLocation('/settings/nope', '')).toBeNull();
     expect(sectionFromLocation('/settings', '')).toBeNull();
-    expect(sectionFromLocation('/office/models', '#general')).toBe('general'); // another page's path says nothing
+    expect(sectionFromLocation('/office/models', '#general')).toBe('general');
   });
 
   it('builds the address of a section and keeps the open project', () => {

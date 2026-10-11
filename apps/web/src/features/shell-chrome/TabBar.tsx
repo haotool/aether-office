@@ -8,7 +8,6 @@ const icons = new Map<string, (typeof nav)[number][1]>(nav);
 
 type Counts = Record<'tasks' | 'messages' | 'approvals' | 'sessions', number>;
 
-/** Navigation at the thumb on a portrait phone: four pages, and "more" for the rest (the drawer). */
 export function TabBar({
   projectId,
   advanced,
@@ -18,14 +17,12 @@ export function TabBar({
 }: {
   projectId: string | undefined;
   advanced: boolean;
-  /** Things that need a person, per page. */
   counts: Counts;
   moreOpen: boolean;
   onMore: () => void;
 }) {
   const t = useT();
   const tabs: readonly string[] = tabPages(advanced);
-  // What waits in the pages behind "more": the approvals, unless they are a tab themselves.
   const more = tabs.includes('approvals') ? 0 : counts.approvals;
   return (
     <nav className="tabbar" aria-label={t('project')}>

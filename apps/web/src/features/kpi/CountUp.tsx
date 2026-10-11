@@ -7,10 +7,7 @@ import { useLocale } from '../../ui/useT.js';
 const DURATION_MS = 450;
 const easeOut = (p: number) => 1 - (1 - p) ** 3;
 
-/**
- * A number that counts up to its value over a short moment (instantly with reduced motion). The animation writes the text
- * node directly, frame by frame, so React renders once per value, never once per frame.
- */
+/** The animation writes the text node directly, so React renders once per value, never once per frame. */
 export function CountUp({ value, format }: { value: number; format?: (n: number) => string }) {
   const locale = useLocale();
   const reduced = usePreferences((s) => s.reducedMotion);
@@ -39,7 +36,6 @@ export function CountUp({ value, format }: { value: number; format?: (n: number)
     };
     frame = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frame);
-    // The formatter is read through the ref; the value, the motion preference and the locale decide when to run.
   }, [value, reduced, locale, showNow]);
   return (
     <span ref={node} className="count-up">

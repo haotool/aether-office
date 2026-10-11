@@ -98,9 +98,8 @@ export class CodexAdapter {
       (!this.pendingTurn && this.turnId === null)
     )
       throw new Error('APPROVAL_SCOPE_MISMATCH');
-    // Codex asks the human before an MCP tool call by way of an elicitation tagged mcp_tool_call. That is a tool
-    // approval, decided like any other: one call only. Codex also offers to remember the choice for the session; that
-    // option is never taken.
+    // An MCP tool call asked by an elicitation tagged mcp_tool_call is a tool approval like any other: one call only.
+    // Codex also offers to remember the choice for the session; that option is never taken.
     if (isElicitation && record(p['_meta'] ?? {})['codex_approval_kind'] === 'mcp_tool_call')
       return this.mcpApproval(p, id, sessionId);
     if (isQuestion || isElicitation) return this.unanswered(method, p, id);
@@ -145,9 +144,8 @@ export class CodexAdapter {
     return { decision: decision === 'approve' ? 'accept' : 'decline' };
   }
   /**
-   * The agent asked the human a question (or an MCP server asked for input). No interactive channel is connected to a
-   * managed run, so it is answered explicitly as "no answer" instead of failing the request, and recorded where the
-   * human can see what was asked. Secret questions are never echoed.
+   * No interactive channel is connected to a managed run, so a question from the agent is answered as "no answer"
+   * instead of failing the request, and recorded where the human can see it. Secret questions are never echoed.
    */
   private unanswered(method: string, p: Record<string, unknown>, id: string | number) {
     const questions = Array.isArray(p['questions']) ? p['questions'] : [];
@@ -264,7 +262,6 @@ export class CodexAdapter {
       this.rpc.close();
     }
   }
-  /** Initializes the app server and starts (or resumes) the thread; returns its id. */
   private async startThread(): Promise<string> {
     await this.rpc.ready;
     await this.sink.processStarted(processIdentity(this.rpc.child));
@@ -328,7 +325,6 @@ export class CodexAdapter {
       timer = setTimeout(() => reject(new Error('PROVIDER_RUN_TIMEOUT')), this.options.timeoutMs);
       timer.unref();
     });
-    // Always observe an early failure while a start request is still pending.
     void completion.catch(() => {});
     try {
       if (signal.aborted)

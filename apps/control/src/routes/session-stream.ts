@@ -10,7 +10,6 @@ import { requireOperator, type RouteContext } from './context.js';
 const SCAN_MS = 2000;
 const HEARTBEAT_MS = 20_000;
 const MAX_CLIENTS = 16;
-/** A client whose socket holds more unsent bytes than this is not keeping up: it is dropped and resumes. */
 const MAX_BUFFERED_BYTES = 64 * 1024;
 /** How often an open stream re-checks its credential (a logout or a role change ends it). */
 const RECHECK_MS = 2000;
@@ -24,7 +23,7 @@ const sse = (event: string, data: unknown, id?: number) =>
 function startEventStream(reply: FastifyReply) {
   reply.hijack();
   reply.raw.writeHead(200, {
-    ...(reply.getHeaders() as OutgoingHttpHeaders), // the security headers set for every request
+    ...(reply.getHeaders() as OutgoingHttpHeaders),
     'content-type': 'text/event-stream',
     'cache-control': 'no-store',
     connection: 'keep-alive',
@@ -33,8 +32,8 @@ function startEventStream(reply: FastifyReply) {
 }
 
 /**
- * Re-checks the exact credential while the stream is open (a logout or revocation ends it with a fault) and sends a
- * heartbeat when nothing was written for a while.
+ * Re-checks the exact credential while the stream is open (a logout or revocation ends it) and sends a heartbeat when
+ * idle.
  */
 function watchCredential(
   { actor }: RouteContext,
@@ -61,7 +60,6 @@ function watchCredential(
   return timer;
 }
 
-/** Sends the hub's changes to one client until it leaves, falls behind or loses its credential. */
 async function serveChanges(
   context: RouteContext,
   hub: Hub,
@@ -99,8 +97,8 @@ async function serveChanges(
 }
 
 /**
- * Server-Sent Events for the local sessions: "session x changed (state, tool, speech, transcript)". Owner and operator
- * only, like the endpoints the page reads afterwards; nothing but the session key and the kind of change is sent.
+ * Server-Sent Events for local sessions: "session x changed (state, tool, speech, transcript)". Owner and operator
+ * only; nothing but the session key and the kind of change is sent.
  */
 export function sessionStreamRoutes(context: RouteContext) {
   const { app, actor, options } = context;
@@ -125,7 +123,6 @@ export function sessionStreamRoutes(context: RouteContext) {
       if (process.env['AETHER_LOCAL_SESSIONS'] === 'off')
         throw new DomainError('LOCAL_SESSIONS_OFF', 404);
       if (hub.clients >= maxClients) throw new DomainError('TOO_MANY_STREAMS', 429);
-      // EventSource resumes with Last-Event-ID; a client that reconnects by hand passes ?after=.
       const given = Number(request.headers['last-event-id'] ?? request.query.after);
       const after = Number.isSafeInteger(given) && given >= 0 ? given : null;
       startEventStream(reply);

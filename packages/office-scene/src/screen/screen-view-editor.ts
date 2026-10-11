@@ -24,10 +24,8 @@ const CW = 7.2;
 const CODE_X = 44;
 const MINIMAP_ROW = 3;
 const MAX_DT = 400;
-/** Where a still frame (reduced motion) leaves the typing: a few lines into the first hunk. */
 const STILL_CHARS = 120;
 
-/** The files the member's last edits and reads touched, oldest first, the open one last. */
 function openFiles(c: ViewCtx, open: string): string[] {
   const names = c.facts.recent.flatMap((call) =>
     (kindOf(call) === 'edit' || kindOf(call) === 'read') && call.target ? [call.target] : [],
@@ -35,7 +33,6 @@ function openFiles(c: ViewCtx, open: string): string[] {
   return [...new Set([...names.filter((n) => n !== open), open])].slice(-4);
 }
 
-/** One line's tokens, the first `limit` characters of it (after the indent): a line being typed shows only what is typed. */
 function drawTokens(c: ViewCtx, line: CodeLine, x: number, y: number, limit = Infinity): void {
   const { g, p } = c;
   g.font = `12px ${MONO}`;
@@ -131,7 +128,6 @@ type Pane = { codeTop: number; codeH: number };
 
 const inHunk = (hunk: Hunk, i: number) => hunk.start <= i && i < hunk.start + hunk.length;
 
-/** Where the typing has got to now (a still frame stops a few lines into the first hunk). */
 function typingAt(c: ViewCtx, lines: readonly CodeLine[], hunks: readonly Hunk[]): Typing {
   const toolStart = c.now - c.elapsed;
   const chars = c.moving
@@ -141,7 +137,6 @@ function typingAt(c: ViewCtx, lines: readonly CodeLine[], hunks: readonly Hunk[]
   return { at, hunk: itemAt(hunks, at.hunk) };
 }
 
-/** Follows the caret while typing and drifts over the file while reading. */
 function scrollTo(c: ViewCtx, lines: readonly CodeLine[], typing: Typing | null, codeH: number) {
   const maxScroll = Math.max(0, lines.length * LH - codeH);
   const target = typing
@@ -150,7 +145,6 @@ function scrollTo(c: ViewCtx, lines: readonly CodeLine[], typing: Typing | null,
   c.state.scroll = c.moving ? easeToward(c.state.scroll, target, Math.min(c.dt, MAX_DT)) : target;
 }
 
-/** The visible code lines: line numbers, the lines of the hunk being typed marked, a line mid-typing cut at the caret. */
 function drawCode(
   c: ViewCtx,
   lines: readonly CodeLine[],
@@ -167,7 +161,7 @@ function drawCode(
       g.fillStyle = p.current;
       g.fillRect(box.x, y, box.w, LH);
     }
-    if (typing && inHunk(typing.hunk, i) && i > typing.at.line) continue; // not typed yet
+    if (typing && inHunk(typing.hunk, i) && i > typing.at.line) continue;
     text(g, String(i + 1).padStart(3, ' '), box.x + 4, y + 11, caretHere ? p.text : p.dim, 11);
     if (hot.has(i)) {
       g.fillStyle = p.add;
@@ -179,7 +173,6 @@ function drawCode(
   }
 }
 
-/** What the typing leaves around the caret: the cut-out mark above the hunk, a squiggle under the line before, the caret. */
 function drawTypingMarks(
   c: ViewCtx,
   lines: readonly CodeLine[],
@@ -190,7 +183,7 @@ function drawTypingMarks(
   const { g, p, box } = c;
   const redY = codeTop + hunk.start * LH - c.state.scroll;
   g.fillStyle = p.del;
-  g.fillRect(box.x + 36, redY - 4, 3, 7); // lines taken out above the new ones
+  g.fillRect(box.x + 36, redY - 4, 3, 7);
   if (viewRng(c, `${file}:wave:${at.hunk}`)() < 0.35 && at.line > hunk.start) {
     const prev = itemAt(lines, at.line - 1);
     squiggle(
@@ -212,7 +205,6 @@ function drawTypingMarks(
   }
 }
 
-/** An editor over the member's real file: tabs from the real recent files, code made up in the file's own language. */
 export function drawEditor(c: ViewCtx): void {
   const { g, p, box } = c;
   const file = c.work.file ?? 'untitled';

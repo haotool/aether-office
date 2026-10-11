@@ -8,7 +8,6 @@ type Point = [number, number, number];
 const seatOf = (layout: Layout, agentId: string) =>
   layout.objects.find((o) => o.agentId === agentId);
 
-/** Where the name tags go: one over each member's desk, and (on a single floor) one over each zone. */
 export function labelsOf(
   agents: readonly Agent[],
   layout: Layout,
@@ -25,7 +24,7 @@ export function labelsOf(
               x: d.x,
               y: floorY(d.floor ?? 0, exploded) + 2,
               z: d.z,
-              width: displayWidth(a.name) * 6 + 40, // columns, CJK counting two; the mark, dot and padding come on top
+              width: displayWidth(a.name) * 6 + 40,
             },
           ]
         : [];
@@ -40,11 +39,9 @@ export function labelsOf(
   ];
 }
 
-/** The colour of a branch beam: uncommitted work amber, detached violet, a linked worktree cyan, the main checkout white. */
 const beamColor = (info: BranchInfo) =>
   info.dirty > 0 ? '#ffc65c' : !info.branch ? '#a592ff' : info.linked ? '#43e6df' : '#e8f2f8';
 
-/** One beam per member that is in a repository, from the desk up into the elevator core. */
 export function beamsOf(
   agents: readonly Agent[],
   layout: Layout,
@@ -68,7 +65,6 @@ export function beamsOf(
   });
 }
 
-/** The activity marker floating above each member's seat. */
 export function beaconsOf(agents: readonly Agent[], layout: Layout, exploded: boolean) {
   return agents.flatMap((agent) => {
     const desk = seatOf(layout, agent.id);

@@ -19,11 +19,11 @@ const session = (over: Partial<AttributedSession> = {}) =>
 describe('how hard a session works', () => {
   it('counts the changes seen between looks, over the last minute only', () => {
     const log = newBeatLog();
-    expect(recordBeats(log, [session({ mtime: 1 })], 0).get('claude:a')).toBe(0); // the first look is not a change
+    expect(recordBeats(log, [session({ mtime: 1 })], 0).get('claude:a')).toBe(0);
     expect(recordBeats(log, [session({ mtime: 2 })], 5_000).get('claude:a')).toBe(1);
-    expect(recordBeats(log, [session({ mtime: 2 })], 10_000).get('claude:a')).toBe(1); // unchanged: no new beat
+    expect(recordBeats(log, [session({ mtime: 2 })], 10_000).get('claude:a')).toBe(1);
     expect(recordBeats(log, [session({ mtime: 3 })], 15_000).get('claude:a')).toBe(2);
-    expect(recordBeats(log, [session({ mtime: 3 })], 70_000).get('claude:a')).toBe(1); // the first beat has aged out
+    expect(recordBeats(log, [session({ mtime: 3 })], 70_000).get('claude:a')).toBe(1);
   });
 
   it('is calm unless the session is working, and rises with beats, CPU and subagents', () => {
@@ -38,7 +38,6 @@ describe('how hard a session works', () => {
       subagentSchema.parse({ id, type: 'x', lastSeen, status });
     const helpers = [helper('a', now - 1000), helper('b', now - 2000)];
     expect(intensityOf(session({ subagents: helpers }), true, 3, now)).toBe(3);
-    // A finished subagent does not count, even if it was heard from a moment ago.
     expect(
       intensityOf(
         session({ subagents: [...helpers, helper('c', now - 500, 'finished')] }),
@@ -50,7 +49,6 @@ describe('how hard a session works', () => {
     expect(
       intensityOf(session({ subagents: [helper('c', now - 500, 'finished')] }), true, 3, now),
     ).toBe(1);
-    // A subagent that has gone quiet no longer counts.
     expect(intensityOf(session({ subagents: [helper('a', now - 60_000)] }), true, 0, now)).toBe(1);
   });
 });

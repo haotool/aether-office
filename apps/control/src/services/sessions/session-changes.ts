@@ -26,7 +26,6 @@ const printOf = (s: LocalSession, speech: Speech | undefined): Print => ({
   ),
 });
 
-/** Pure. The prints of this scan and the sessions that differ from `prev` (none at all when there is no baseline yet). */
 export function diffSessions(
   prev: Prints | null,
   sessions: readonly LocalSession[],
@@ -37,7 +36,6 @@ export function diffSessions(
   const changed = [...new Set([...prev.keys(), ...next.keys()])].flatMap((key) => {
     const before = prev.get(key);
     const after = next.get(key);
-    // A session that appeared brings its words too (the feed shows its reply at once); one that vanished is only a state.
     const kinds: ChangeKind[] =
       before && after
         ? (Object.keys(after) as ChangeKind[]).filter((k) => before[k] !== after[k])
@@ -50,7 +48,6 @@ export function diffSessions(
 }
 
 type Subscription = {
-  /** The newest sequence number, and whether the caller missed changes the hub no longer remembers. */
   seq: number;
   resync: boolean;
   /** Settles once the baseline scan is in: only then is whatever a client reads next at least as new as the baseline. */
@@ -62,10 +59,9 @@ type Subscription = {
 const REMEMBERED = 256;
 
 /**
- * One watcher shared by every client: it scans every `intervalMs` while anyone is subscribed and stops when nobody is.
- * Each tick yields at most one change per session (kinds merged), so a session never produces more than 1000/intervalMs
- * events a second however fast its transcript grows. Sequence numbers start at the clock so they keep rising across a
- * restart; a client that fell behind the remembered window is told to refetch instead.
+ * One watcher shared by every client, scanning only while someone subscribes. One change per session per tick, so a
+ * session never yields more than 1000/intervalMs events a second. Sequence numbers start at the clock to keep rising
+ * across restarts.
  */
 class SessionHub {
   private readonly listeners = new Set<(change: SessionChange) => void>();
@@ -84,7 +80,6 @@ class SessionHub {
     },
   ) {}
 
-  /** Remembers the change for replay and tells every listener; what falls out of the window can no longer be replayed. */
   private publish(change: SessionChange) {
     this.ring.push(change);
     for (const listener of this.listeners) listener(change);
@@ -119,7 +114,7 @@ class SessionHub {
   subscribe(after: number | null, listener: (change: SessionChange) => void): Subscription {
     this.listeners.add(listener);
     if (!this.timer) {
-      this.baseline = this.tick(); // the baseline, so the first real change is seen
+      this.baseline = this.tick();
       this.timer = setInterval(() => void this.tick(), this.options.intervalMs);
       this.timer.unref();
     }

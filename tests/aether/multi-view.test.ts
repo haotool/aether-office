@@ -41,8 +41,6 @@ describe('picture-in-picture feeds', () => {
       max: 3,
     });
     expect(first.map((f) => f.id)).toEqual(['a', 'b', 'c']);
-    // The main shot moves to `a`: `d` takes its slot and `b`, `c` neither move nor reorder (a frame that moves in the
-    // page restarts its power-on dip, which blacks it out).
     const later = chooseFeeds({
       agents,
       seats,
@@ -71,7 +69,7 @@ describe('picture-in-picture feeds', () => {
       previous: first,
       max: 2,
     });
-    expect(later.map((f) => f.id)).toEqual(first.map((f) => f.id)); // d is hotter but the wall does not reshuffle
+    expect(later.map((f) => f.id)).toEqual(first.map((f) => f.id));
     expect(
       chooseFeeds({
         agents: [agent('a', 'working')],
@@ -99,7 +97,7 @@ describe('the wall on the canvas', () => {
       }).map((f) => f.id);
     expect(onFloor(0)).toEqual(['c', 'd']);
     expect(onFloor(1)).toEqual(['b']);
-    expect(onFloor()).toEqual(['b', 'c', 'd']); // the building spread apart draws every floor
+    expect(onFloor()).toEqual(['b', 'c', 'd']);
   });
 
   it('fits as many views as the canvas has room for, up to four, and none on a narrow one', () => {
@@ -107,7 +105,7 @@ describe('the wall on the canvas', () => {
     expect(feedCapacity(560, 700)).toBeLessThan(feedCapacity(750, 700));
     expect(feedCapacity(910, 553)).toBe(MAX_FEEDS);
     expect(feedCapacity(4000, 900)).toBe(MAX_FEEDS);
-    expect(feedCapacity(750, 453)).toBe(0); // too short: the wall would cover the floor switcher
+    expect(feedCapacity(750, 453)).toBe(0);
     expect(
       chooseFeeds({ agents, seats, intensity: new Map(), taken: new Set(), previous: [] }),
     ).toHaveLength(4);
@@ -117,7 +115,7 @@ describe('the wall on the canvas', () => {
 describe('the director with many busy members', () => {
   it('cuts faster the more members are busy, but never below 70%', () => {
     expect(pacedSeconds(6, [agent('a', 'working')])).toBe(6);
-    expect(pacedSeconds(6, agents)).toBe(4.9); // four busy
+    expect(pacedSeconds(6, agents)).toBe(4.9);
     expect(
       pacedSeconds(
         6,
@@ -151,7 +149,7 @@ describe('the director with many busy members', () => {
         taken: new Set(['e']),
         pinned: new Set(['e']),
       });
-      expect(feeds.map((f) => f.id)).toEqual(['e']); // idle, a single view, and the member is the main shot
+      expect(feeds.map((f) => f.id)).toEqual(['e']);
     });
 
     it('come before the busy ones and take their places when the wall is short', () => {

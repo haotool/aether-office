@@ -57,7 +57,7 @@ describe('parseOutcomes', () => {
   it('reads Claude tool results by id whatever the key order, several to a message, skipping a cut first line', () => {
     const tail = Buffer.from(
       [
-        '{"type":"user","message":{"role":"user","content":[{"type":"tool_re', // cut in half
+        '{"type":"user","message":{"role":"user","content":[{"type":"tool_re',
         JSON.stringify({
           type: 'user',
           message: {
@@ -185,7 +185,7 @@ describe('a session’s tool calls get their outcome from its own transcript whe
           toolUseId: 'toolu_unseen',
           tags: ['lint'],
         }),
-        hook('claude', 'PreToolUse', t, { tool: 'Bash', tags: ['install'] }), // no id at all
+        hook('claude', 'PreToolUse', t, { tool: 'Bash', tags: ['install'] }),
       ].join('\n') + '\n',
     );
     resetLocalSessionCache();
@@ -197,7 +197,7 @@ describe('a session’s tool calls get their outcome from its own transcript whe
       [['lint'], null],
       [['install'], null],
     ]);
-    expect(JSON.stringify(session!.hook!.recent)).not.toContain('toolu_'); // ids stay on the server
+    expect(JSON.stringify(session!.hook!.recent)).not.toContain('toolu_');
   });
 
   it('Codex: pairs a rollout output with its call by call id when it carries an exit code', async () => {

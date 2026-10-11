@@ -12,7 +12,6 @@ import {
 } from '../../packages/providers/src/index.js';
 import { alive, orphan, startReady, until } from './process-fixtures.js';
 
-/** A detached child (its own group) that ignores SIGTERM and has a grandchild of its own. */
 const stubborn = () =>
   startReady(
     `process.on('SIGTERM',()=>{});require('node:child_process').spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{stdio:'ignore'});setInterval(()=>{},1000)`,
@@ -25,25 +24,25 @@ describe('stopping a group', () => {
     expect(groupAlive(child.pid!)).toBe(true);
     const stopper = groupStopper(child, 300);
     stopper.stop();
-    stopper.stop(); // asking twice does not start a second wait
-    expect(await until(() => !groupAlive(child.pid!))).toBe(true); // the leader and its grandchild, by SIGKILL after 300 ms
-    expect(signalGroup(child.pid!, 'SIGTERM')).toBe(false); // a group that is gone is not an error
+    stopper.stop();
+    expect(await until(() => !groupAlive(child.pid!))).toBe(true);
+    expect(signalGroup(child.pid!, 'SIGTERM')).toBe(false);
   });
 
   it("does not signal after it is cancelled: the group id is the leader's pid, and pids are reused", async () => {
     const child = await stubborn();
-    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] }); // the grace period is read off a clock the test owns
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     try {
       const stopper = groupStopper(child, 200);
       stopper.stop();
-      expect(vi.getTimerCount()).toBe(1); // the SIGKILL is scheduled
+      expect(vi.getTimerCount()).toBe(1);
       stopper.cancel();
-      expect(vi.getTimerCount()).toBe(0); // and cancelling removes it: it can never come
+      expect(vi.getTimerCount()).toBe(0);
       vi.advanceTimersByTime(600);
     } finally {
       vi.useRealTimers();
     }
-    expect(groupAlive(child.pid!)).toBe(true); // SIGTERM was ignored and no SIGKILL was sent
+    expect(groupAlive(child.pid!)).toBe(true);
     signalGroup(child.pid!, 'SIGKILL');
   });
 });
@@ -65,7 +64,7 @@ describe('judging what a recorded process is now', () => {
     expect(judgeSurvivor(start, seen({ stat: 'Z' }), null)).toBe('zombie');
     expect(judgeSurvivor(start, seen({ ppid: 4000 }), { command: 'node runner.js' })).toBe('owned');
     expect(judgeSurvivor(start, seen({ ppid: 1 }), { command: '/sbin/launchd' })).toBe('orphaned');
-    expect(judgeSurvivor(start, seen({ ppid: 4000 }), null)).toBe('orphaned'); // its parent has vanished from the table
+    expect(judgeSurvivor(start, seen({ ppid: 4000 }), null)).toBe('orphaned');
     expect(
       judgeSurvivor(start, seen({ ppid: 900 }), { command: '/usr/lib/systemd/systemd --user' }),
     ).toBe('orphaned');
@@ -98,9 +97,9 @@ describe('reaping what a dead runner left behind', () => {
     try {
       await until(() => alive(child.pid!));
       const identity = processIdentity(child);
-      expect(await reapSurvivor(identity)).toEqual({ identity, verdict: 'owned', action: 'none' }); // our own child
+      expect(await reapSurvivor(identity)).toEqual({ identity, verdict: 'owned', action: 'none' });
       expect(alive(child.pid!)).toBe(true);
-      const reused = `${child.pid}:Mon Jan  1 00:00:00 2001`; // same pid, a different life
+      const reused = `${child.pid}:Mon Jan  1 00:00:00 2001`;
       expect(await reapSurvivor(reused)).toEqual({
         identity: reused,
         verdict: 'reused',

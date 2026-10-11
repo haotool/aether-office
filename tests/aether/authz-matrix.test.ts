@@ -8,7 +8,6 @@ import {
   type Role,
 } from '../../packages/kernel/src/index.js';
 
-// The intended policy, written out. Changing a grant has to be a deliberate edit here too.
 const OWNER_ONLY: Action[] = [
   'project.execution.configure',
   'project.create',
@@ -99,6 +98,6 @@ describe('authorization matrix', () => {
       expect(() => authorize(actor(role, ['p1']), 'read', 'p2'), role).toThrow('PROJECT_FORBIDDEN');
       expect(() => authorize(actor(role, ['p1']), 'read', 'p1'), role).not.toThrow();
     }
-    expect(() => authorize(actor('owner', ['*']), 'read', 'anything')).not.toThrow(); // wildcard is for the local owner only by construction
+    expect(() => authorize(actor('owner', ['*']), 'read', 'anything')).not.toThrow();
   });
 });

@@ -1,4 +1,3 @@
-/** Eyes and mouths on the 64 x 64 portrait. Pure string builders; the face is the only part a state may swap. */
 export const INK = '#16181D';
 const TONGUE = '#E8788A';
 
@@ -12,7 +11,6 @@ export const EYE_STYLES = [
   'tired',
   'determined',
 ] as const;
-/** The styles a state puts on top of the identity's own. */
 type StateEyes = 'alert' | 'closed' | 'cross';
 export type EyeStyle = (typeof EYE_STYLES)[number] | StateEyes;
 

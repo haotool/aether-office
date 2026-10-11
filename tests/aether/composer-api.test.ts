@@ -31,7 +31,7 @@ function world() {
   writeFileSync(join(repo, 'dist', 'bundle.js'), 'x');
   git(repo, 'add', '.gitignore', 'src', 'README.md');
   git(repo, 'commit', '-q', '-m', 'i');
-  writeFileSync(join(repo, 'src', 'untracked.ts'), 'x'); // not tracked, not ignored: offered
+  writeFileSync(join(repo, 'src', 'untracked.ts'), 'x');
   for (const [provider, id] of [
     ['claude', 'claude-one'],
     ['codex', '019aaaaa-0000-4000-8000-000000000001'],
@@ -150,11 +150,11 @@ it('completes @ paths from what Git knows: ignored and credential files left out
     expect(all).toHaveLength(20);
     expect(await files('upload')).toEqual(['src/upload.ts']);
     expect(await files('untracked')).toEqual(['src/untracked.ts']);
-    expect(await files('bundle')).toEqual([]); // ignored
-    expect(await files('.env')).toEqual([]); // credentials
+    expect(await files('bundle')).toEqual([]);
+    expect(await files('.env')).toEqual([]);
     expect(await files('../../../etc/passwd')).toEqual([]);
     expect(await files('/etc/passwd')).toEqual([]);
-    expect(await files('x'.repeat(101))).toBeNull(); // over the query bound: refused
+    expect(await files('x'.repeat(101))).toBeNull();
   } finally {
     await app.close();
     f.control.close();
@@ -178,7 +178,6 @@ it('finds the AETHER terminal behind a process by pid and start time, through it
   expect(parseIdentity('123:Mon Oct  5 10:23:45 2026')).toMatchObject({ pid: 123 });
   expect(parseIdentity('garbage')).toBeNull();
   expect(parseIdentity('x:Mon Oct  5 10:23:45 2026')).toBeNull();
-  // A shell (the terminal's child) with a program under it (the agent).
   const shell = spawn('sh', ['-c', 'sleep 30; :'], { stdio: 'ignore' });
   try {
     const identity = processIdentity(shell);
@@ -190,7 +189,6 @@ it('finds the AETHER terminal behind a process by pid and start time, through it
     const terminals = [{ id: 'terminal-1', identity }];
     expect(terminalOfProcess(table, agent!.pid, terminals)).toBe('terminal-1');
     expect(terminalOfProcess(table, shell.pid!, terminals)).toBe('terminal-1');
-    // The same pid with another start time is a reused pid, not the terminal.
     const reused = [{ id: 'terminal-1', identity: `${shell.pid}:Mon Jan  1 00:00:00 2001` }];
     expect(terminalOfProcess(table, agent!.pid, reused)).toBeNull();
     expect(terminalOfProcess(table, process.pid, terminals)).toBeNull();

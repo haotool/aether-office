@@ -1,4 +1,3 @@
-/** The git words, in Traditional Chinese. */
 export const zhGit = {
   gitClean: '清理已合併且乾淨的 worktree',
   gitCleanExplain:

@@ -77,7 +77,6 @@ function loadEntry(url: string): Entry {
   return entry;
 }
 
-/** Geometry/textures are shared; cloned rigs and mixers belong to each actor. */
 export function acquireAnimal(url: string) {
   const entry = entries.get(url) ?? loadEntry(url);
   if (entry.cleanup) clearTimeout(entry.cleanup);

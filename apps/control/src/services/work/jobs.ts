@@ -5,7 +5,6 @@ import { identityActor } from '../domain/identity.js';
 import { task, emit, type Context } from '../domain/context.js';
 type Work = ReturnType<typeof task>;
 
-/** Queues a job for the runner that owns the workspace, bound to the work's head and version; returns its id. */
 function queueJob(
   ctx: Context,
   actor: Actor,
@@ -62,7 +61,6 @@ export function requestIntegration(
 ) {
   const work = task(ctx, c.projectId, c.data.workId);
   assertVersion(work.version, c.expectedVersion);
-  // Only human-accepted work whose verified commit is exactly the current head may be integrated.
   if (work.state !== 'completed' || !work.headSha || work.verifiedSha !== work.headSha)
     throw new DomainError('INTEGRATION_REQUIRES_ACCEPTED_WORK');
   const workspace = ctx.sqlite
@@ -71,7 +69,6 @@ export function requestIntegration(
     )
     .get(work.id) as { id: string; machineId: string } | undefined;
   if (!workspace) throw new DomainError('WORKSPACE_NOT_READY');
-  // Serial: one integration per project at a time, so each one sees the previous result.
   assertCanIntegrate(ctx, c.projectId, work.id, work.headSha);
   const candidate = `aether/integrate/${work.id.slice(0, 8)}-${work.headSha.slice(0, 8)}`;
   const payload = {
@@ -165,7 +162,6 @@ type JobReport = ReturnType<typeof jobReportSchema.parse>;
 
 type Verification = NonNullable<JobReport['verification']>;
 
-/** A run that touched nothing: same head, tree, index and base before and after, from a clean start. */
 const isCleanRun = (v: Verification, baseSha: string) =>
   v.baseBefore === baseSha &&
   v.before.indexTree === v.before.tree &&
@@ -179,8 +175,8 @@ const isCleanRun = (v: Verification, baseSha: string) =>
   v.baseBefore === v.baseAfter;
 
 /**
- * A successful verify job: its evidence must be for this job's workspace and harness, and the work becomes verified only
- * when the run was clean, passed, and still matches the head and version the job was started for.
+ * The work becomes verified only when the run was clean, passed, and still matches the head and version the job was
+ * started for.
  */
 function recordVerification(ctx: Context, job: JobRow, work: Work, result: JobReport) {
   const v = result.verification;
@@ -232,7 +228,6 @@ function recordVerification(ctx: Context, job: JobRow, work: Work, result: JobRe
       .run(v.after.head, ctx.now(), work.id);
 }
 
-/** A successful integrate job: what was merged (or why the base moved), bound to the head it was started for. */
 function recordIntegration(ctx: Context, job: JobRow, result: JobReport) {
   const i = result.integration;
   if (!i) throw new DomainError('INTEGRATION_REQUIRED');
@@ -256,7 +251,6 @@ function recordIntegration(ctx: Context, job: JobRow, result: JobReport) {
     );
 }
 
-/** What a succeeded job must have produced, stored by kind. */
 function recordEvidence(ctx: Context, job: JobRow, work: Work, result: JobReport) {
   if (job.kind === 'verify') recordVerification(ctx, job, work, result);
   if (job.kind === 'diff' && !result.diff) throw new DomainError('DIFF_REQUIRED');

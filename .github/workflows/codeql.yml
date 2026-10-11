@@ -1,7 +1,6 @@
 name: CodeQL
 
-# Static analysis for JavaScript and TypeScript (interpreted; no build step). Results upload needs
-# security-events: write on this job only.
+# security-events: write is granted to this job only.
 
 on:
   push:

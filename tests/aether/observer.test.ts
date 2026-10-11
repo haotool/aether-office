@@ -214,7 +214,7 @@ it('decodes verified 0.160.0 rollouts with their non-conversation records, and s
     expect(verified.records.map((r) => r.text)).toEqual(['hello']);
     expect(write('old.jsonl', [meta('0.130.0-alpha.5'), message]).status).toBe(
       'unsupported_schema',
-    ); // never parsed on a guess
+    );
     expect(
       write('new.jsonl', [meta('0.160.0'), { type: 'brand_new_record', payload: {} }]).status,
     ).toBe('unsupported_schema');

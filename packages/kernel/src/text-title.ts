@@ -4,15 +4,14 @@ import { balanceBrackets, brackets } from './text-brackets.js';
 import { stripCliWrappers } from './text-wrappers.js';
 
 /**
- * Pure. A session title is a label, not prose: `cleanTitle` makes whatever a provider stored one tidy line of plain text,
- * and `shortLabel` shortens that on a meaning boundary for a name tag. Neither ever leaves a bracket open or cuts inside a
- * user-perceived character, and both give the same answer when run on their own output.
+ * A session title is a label, not prose: `cleanTitle` makes a stored title one tidy line of plain text and `shortLabel`
+ * shortens it on a meaning boundary. Neither leaves a bracket open or cuts inside a user-perceived character, and both
+ * give the same answer on their own output.
  */
 const WIDE =
   /[ᄀ-ᅟ⺀-〾ぁ-㏿㐀-䶿一-꓏가-힣豈-﫿︰-﹯＀-｠￠-￦\u{1f300}-\u{1faff}\u{20000}-\u{3fffd}]/u;
 const PICTOGRAPH = /\p{Extended_Pictographic}/u;
 const ZERO = /^[\p{M}​-‏⁠﻿️]+$/u;
-// Controls, zero-width and bidirectional marks; the zero-width joiner survives only inside an emoji sequence.
 const INVISIBLE = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f​‌‎‏‪-‮⁠-⁤⁦-⁩﻿]/gu;
 const STRAY_JOINER = /(?<!\p{Extended_Pictographic}️?)‍|‍(?!\p{Extended_Pictographic})/gu;
 const LEAD_MARK = /^(?:[-*•·▪▸▶►→✓✔✅🔹🔸🔷▫◦‣]|#{1,6}|>|\d{1,2}[.)])\s+/u;
@@ -25,7 +24,6 @@ const ELLIPSIS = '…';
 const TITLE_CHARS = 120;
 const LABEL_WIDTH = 28;
 
-/** Terminal columns of one user-perceived character: 2 for East Asian wide characters and emoji, 0 for marks. */
 function graphemeWidth(g: string): number {
   if (ZERO.test(g)) return 0;
   return WIDE.test(g) || PICTOGRAPH.test(g) ? 2 : 1;
@@ -79,7 +77,6 @@ function pickCutIndex(
   return pick || at;
 }
 
-/** Whole graphemes of `text` kept up to `max` of `measure`, cut on the best boundary; `null` when it already fits. */
 function cutOn(text: string, max: number, measure: (g: string) => number): string | null {
   const gs = graphemes(text);
   const sum = (to: number) => gs.slice(0, to).reduce((s, g) => s + measure(g), 0);
@@ -95,12 +92,11 @@ function cutOn(text: string, max: number, measure: (g: string) => number): strin
     const kept = balanceBrackets(gs.slice(0, pick).join('').replace(SEPARATORS, ''));
     const result = kept ? kept + ELLIPSIS : ELLIPSIS;
     if (graphemes(result).reduce((s, g) => s + measure(g), 0) <= max) return result;
-    at = pick - 1; // closing a bracket made it too wide: cut earlier
+    at = pick - 1;
   }
   return ELLIPSIS;
 }
 
-/** A provider's title as one line of plain text: no markup, no invisible characters, balanced, at most ~120 characters. */
 export function cleanTitle(raw: string, maxChars = TITLE_CHARS): string {
   let t = raw;
   for (let pass = 0; pass < 4; pass++) {
@@ -115,7 +111,6 @@ export function cleanTitle(raw: string, maxChars = TITLE_CHARS): string {
 
 type LabelOptions = { maxWidth?: number; repo?: string | null };
 
-/** The short name a tag shows: the title without its id prefix or leading repo name, at most `maxWidth` columns. */
 export function shortLabel(title: string, options: LabelOptions = {}): string {
   const max = options.maxWidth ?? LABEL_WIDTH;
   let t = cleanTitle(title).replace(ID_PREFIX, '');

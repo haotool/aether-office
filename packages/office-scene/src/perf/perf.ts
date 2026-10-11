@@ -29,18 +29,12 @@ const round = (n: number) => Math.round(n * 100) / 100;
 
 export type PerfReport = {
   stats: FrameStats;
-  /** Of the main view in the heaviest frame of the sample (the frames that redraw the shadow map). */
-  /** Of the main view in the heaviest frame of the sample (the frames that redraw the shadow map). */
   drawCalls: number;
   triangles: number;
-  /** GPU resources currently alive, for leak checks across mounts. */
   geometries: number;
   textures: number;
-  /** Linked shader programs (each one was a compile). */
   programs: number;
-  /** Texture, geometry and render-target bytes held on the GPU, estimated from their sizes (see perf-rig.ts), in MB. */
   gpuMegabytes: number;
-  /** CPU time per frame: every useFrame callback plus the render submit, and the render submit alone. */
   jsMs: { median: number; p95: number };
   renderMs: { median: number; p95: number };
   renderer: string;

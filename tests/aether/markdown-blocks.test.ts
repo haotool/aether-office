@@ -68,7 +68,6 @@ it('never produces HTML: markup stays text or is dropped, links are http(s) only
   );
   expect(json).not.toContain('javascript');
   expect(json).not.toContain('href');
-  // A script element is dropped with its content, an image becomes its (absent) alt text.
   expect(json).not.toContain('<script');
   expect(json).not.toContain('onerror');
 });

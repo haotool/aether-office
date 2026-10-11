@@ -2,14 +2,12 @@ import { resolve } from 'node:path';
 import { createBackup, restoreBackup } from '../apps/control/src/backup.js';
 import { Control } from '../apps/control/src/control.js';
 
-// pnpm run backup -- create [--data <dir>] [--out <dir>]
-// pnpm run backup -- restore --from <manifest.json> --to <new dir>
-// Restore never overwrites: it needs an empty target. cursor-secret and owner-token live outside the
-// database; copy them yourself if you want existing sessions and cursors to stay valid.
+// Restore never overwrites: it needs an empty target. cursor-secret and owner-token live outside the database; copy
+// them yourself if you want existing sessions and cursors to stay valid.
 const [action, ...rest] = process.argv.slice(2);
 const flag = (name: string) => {
   const at = rest.indexOf(name);
-  return at < 0 ? undefined : rest[at + 1]; // absent flag is undefined, never the next token
+  return at < 0 ? undefined : rest[at + 1];
 };
 
 if (action === 'create') {

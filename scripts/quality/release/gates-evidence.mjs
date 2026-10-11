@@ -1,4 +1,3 @@
-// Structured gate results (`aether-quality-gates/1`) for release G criteria.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';

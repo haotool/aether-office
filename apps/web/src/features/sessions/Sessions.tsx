@@ -4,6 +4,7 @@ import type { AttributedSession } from '@aether/contracts';
 import { copyText } from '../../lib/platform/browser-compat.js';
 import { usePhoneAny } from '../../lib/preferences/phone.js';
 import { DoorOpen } from 'lucide-react';
+import { Empty } from '../../ui/Empty.js';
 import { PageHeading } from '../../ui/PageHeading.js';
 import { useT } from '../../ui/useT.js';
 import { reapZombies } from '../operations/reap.js';
@@ -21,9 +22,15 @@ type SessionsProps = {
 
 /** Rows drawn at first; the rest on request, so a long list does not make a phone render hundreds of cards. */
 const PAGE = 30;
+const SHOW_ALL: SessionFilters = {
+  query: '',
+  provider: '',
+  department: '',
+  runningOnly: false,
+  liveness: '',
+};
 
 type Locale = 'zh-TW' | 'en';
-/** Reaping zombies of one session, and the short outcome text each row shows afterwards. */
 function useReaper() {
   const t = useT();
   const client = useQueryClient();
@@ -43,10 +50,8 @@ function useReaper() {
   return { reaped, reap };
 }
 
-/** The list's state: the filters, how many rows show, the dialogs, and what a row's buttons do. */
 function useSessionsList(sessions: readonly AttributedSession[], canStop: boolean) {
   const phone = usePhoneAny();
-  // On a phone it opens on what is running; the rest is one tap away.
   const [filters, setFilters] = useState<SessionFilters>({
     query: '',
     provider: '',
@@ -76,7 +81,23 @@ function useSessionsList(sessions: readonly AttributedSession[], canStop: boolea
   };
 }
 
-/** Every local session in one searchable list: what it is, where it runs, what it is doing, and how to pick it up. */
+function SessionsEmpty({ none, onShowAll }: { none: boolean; onShowAll: () => void }) {
+  const t = useT();
+  return (
+    <Empty
+      title={t(none ? 'sessionsNone' : 'sessionsNoMatch')}
+      hint={none ? t('sessionsNoneHint') : undefined}
+      action={
+        !none && (
+          <button className="secondary" onClick={onShowAll}>
+            {t('sessionsShowAll')}
+          </button>
+        )
+      }
+    />
+  );
+}
+
 export function Sessions({ sessions, locale, canStop = false }: SessionsProps) {
   const t = useT();
   const list = useSessionsList(sessions, canStop);
@@ -102,7 +123,11 @@ export function Sessions({ sessions, locale, canStop = false }: SessionsProps) {
           </span>
         </FilterBar>
         <DepartmentTokens rows={rows} locale={locale} />
-        <SessionsTable rows={rows.slice(0, shown)} locale={locale} actions={list.actions} />
+        {rows.length === 0 ? (
+          <SessionsEmpty none={sessions.length === 0} onShowAll={() => list.setFilters(SHOW_ALL)} />
+        ) : (
+          <SessionsTable rows={rows.slice(0, shown)} locale={locale} actions={list.actions} />
+        )}
         {rows.length > shown && (
           <button
             className="secondary full-width show-more"

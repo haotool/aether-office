@@ -15,34 +15,26 @@ import {
 } from '../features/integrations/live-link.js';
 
 const STREAM_URL = '/api/local-sessions/stream';
-/** Changes that arrive together become one refresh. */
 const BATCH_MS = 120;
-/** A growing transcript changes every second, the token KPIs are refetched at most this often (the server rescans on each). */
 const USAGE_GAP_MS = 5_000;
 
-/** A random number in [0, 1) that spreads reconnects apart (not a secret). */
 const jitter = () => (crypto.getRandomValues(new Uint32Array(1))[0] ?? 0) / 2 ** 32;
 
-/** The link's state, shared: the connection indicator and every query that polls only while it is down read it. */
 export const useLink = create<LinkState & { dispatch: (action: LinkAction) => void }>((set) => ({
   ...initialLink,
   dispatch: (action) => set((state) => linkReducer(state, action)),
 }));
 export const useLinkLive = () => useLink((s) => s.status === 'live');
 
-/** How long until the token KPIs may be refetched again, given when they last were. */
 export const usageDelay = (usageAt: number, now: number) =>
   Math.max(0, usageAt + USAGE_GAP_MS - now);
 
-/** The stream's resume address: from the start, or after the last change seen. */
 export const streamUrl = (last: number | null) =>
   last === null ? STREAM_URL : `${STREAM_URL}?after=${last}`;
 
-/** The `seq` a `hello` or `resync` event carries. */
 export const seqOf = (event: Event) =>
   Number((JSON.parse((event as MessageEvent<string>).data) as { seq: number }).seq);
 
-/** Turns changes into refetches: batched, and the token KPIs at most every `USAGE_GAP_MS`. */
 function createRefresher(client: QueryClient) {
   let pending: SessionChange[] = [];
   let batch: ReturnType<typeof setTimeout> | undefined;
@@ -86,7 +78,6 @@ type Connection = {
   last: number | null;
 };
 
-/** What each event of the stream does to the connection state and the queries. */
 function listen(es: EventSource, c: Connection, refresher: Refresher, dispatch: Dispatch) {
   es.addEventListener('hello', (e) => {
     const seq = seqOf(e);
@@ -110,7 +101,6 @@ function listen(es: EventSource, c: Connection, refresher: Refresher, dispatch: 
   });
 }
 
-/** One EventSource at a time: connects from the last change seen, and reconnects with backoff and jitter when it drops. */
 function createConnection(refresher: Refresher, dispatch: Dispatch) {
   const c: Connection = { source: null, retry: undefined, attempt: 0, last: null };
   const stop = () => {
@@ -130,7 +120,6 @@ function createConnection(refresher: Refresher, dispatch: Dispatch) {
       c.retry = setTimeout(connect, backoffMs(c.attempt++, jitter()));
     };
   };
-  // Waking, becoming visible or getting the network back: reconnect now and refetch, changes may have been missed.
   const resume = () => {
     if (document.visibilityState === 'hidden') return;
     c.attempt = 0;
@@ -140,12 +129,6 @@ function createConnection(refresher: Refresher, dispatch: Dispatch) {
   return { connect, stop, resume };
 }
 
-/**
- * Keeps the session queries fresh from the control plane's change stream: a change marks what it touches stale, so the
- * pages refetch the moment something happens instead of on a timer. It reconnects with backoff and jitter, pauses while
- * the tab is hidden and resyncs when it comes back, the device wakes or the network returns. While it is not live the
- * queries fall back to their own polling (see `pollMs`).
- */
 export function useSessionStream(enabled: boolean) {
   const client = useQueryClient();
   const dispatch = useLink((s) => s.dispatch);

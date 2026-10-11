@@ -7,10 +7,9 @@ import { mapPool } from '../runtime/pool.js';
 import { plainSummary } from './subagent-text.js';
 
 /**
- * Where Claude Code keeps a session's subagents: `<session>.jsonl` has a sibling folder `<session>/subagents/` holding
- * `agent-<id>.jsonl` (the subagent's own transcript, every line carrying that `agentId`) and `agent-<id>.meta.json` (what the
- * parent asked for). The `<id>` in the file name is the `agent_id` the hooks report, which is what ties a file to a hook
- * record (checked on real files, see docs/provider-compatibility.md). Only names, times and a few meta fields are read here.
+ * Claude Code keeps a session's subagents in `<session>/subagents/`: `agent-<id>.jsonl` (transcript) and
+ * `agent-<id>.meta.json` (what the parent asked for). `<id>` is the hooks' `agent_id` (see
+ * docs/provider-compatibility.md).
  */
 const STAT_WIDTH = 16;
 const MAX_FILES_PER_SESSION = 16;
@@ -25,18 +24,15 @@ export type SubagentFile = {
   file: string;
   mtime: number;
   size: number;
-  /** When the file was created, which is when the subagent started; null where the file system keeps no creation time. */
   startedAt: number | null;
 };
 type SubagentMeta = {
   type: string;
   label: string | null;
-  /** The parent's tool call that spawned it: how its result is found in the parent's transcript. */
   toolUseId: string | null;
   foreground: boolean;
 };
 
-/** The subagent files of a session changed within `windowMs`, newest first, at most MAX_FILES_PER_SESSION. */
 export async function listSubagentFiles(
   sessionFile: string,
   now: number,
@@ -82,7 +78,6 @@ const metas = new Map<string, SubagentMeta>();
 const MAX_METAS = 1024;
 export const resetSubagentMetas = () => metas.clear();
 
-/** The type, label and spawning call of a subagent, from its meta file; defaults when the file is missing or unreadable. */
 export async function readSubagentMeta(file: string): Promise<SubagentMeta> {
   const known = metas.get(file);
   if (known) return known;
@@ -103,7 +98,6 @@ export async function readSubagentMeta(file: string): Promise<SubagentMeta> {
     metas.set(file, meta);
     return meta;
   } catch {
-    // Not there yet (it may be written just after the transcript), or not readable: ask again next time.
     return { type: 'subagent', label: null, toolUseId: null, foreground: false };
   }
 }

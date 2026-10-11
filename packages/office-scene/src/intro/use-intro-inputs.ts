@@ -1,7 +1,6 @@
 import { useEffect, type Dispatch } from 'react';
 import type { IntroAction, IntroState } from './intro-machine.js';
 
-/** Frames that must run smoothly in a row before the tour starts, and the longest the scene waits for them. */
 const SMOOTH_FRAMES = 10;
 const SMOOTH_MS = 40;
 const WAIT_MS = 4000;
@@ -9,9 +8,8 @@ const TICK_MS = 100;
 const BARE_MODIFIERS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Fn']);
 
 /**
- * The tour's clock when the camera's frames do not carry it. Preparing: the floors mount, and the tour starts when
- * frames run smoothly, or after a few seconds at most. Playing: the camera's frames carry the clock (see `pose` in
- * use-intro-tour.ts); this tick is the backstop when no frame runs.
+ * Preparing: the tour starts when frames run smoothly, or after a few seconds at most. Playing: the camera's frames
+ * carry the clock (see `pose` in use-intro-tour.ts); this tick is the backstop when no frame runs.
  */
 export function useIntroClock(status: IntroState['status'], dispatch: Dispatch<IntroAction>) {
   useEffect(() => {
@@ -37,7 +35,6 @@ export function useIntroClock(status: IntroState['status'], dispatch: Dispatch<I
   }, [status, dispatch]);
 }
 
-/** Every input that is the person's hands on the scene ends the tour where the camera is; Esc lands on the start view. */
 export function useIntroInterrupts(active: boolean, dispatch: Dispatch<IntroAction>) {
   useEffect(() => {
     if (!active) return;

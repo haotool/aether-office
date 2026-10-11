@@ -1,5 +1,3 @@
-// Area 9: open-source readiness. The oss:check results (community files, hygiene, licences, personal data), REUSE
-// coverage, the version having one source and not being a "-dev" build. The maintainer's open decisions are listed, not scored.
 import { findingLocation, top } from '../lib.mjs';
 import { info, rule } from '../model.mjs';
 import { matching, runCommand } from '../repo.mjs';
@@ -12,7 +10,6 @@ const TEMPLATES = [
 ];
 const PERSONAL = /^(?:fail|warn): \S+ (?:user-path|hostname|lan-address|private\S*|name|email)\b/;
 
-/** The numbered items under the "blockers" heading of the assessment: the decisions only the maintainer can take. */
 export function openDecisions(text) {
   const lines = text.split('\n');
   const start = lines.findIndex((l) => /^\*\*阻擋公開/.test(l));

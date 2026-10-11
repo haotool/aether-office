@@ -4,9 +4,8 @@ import { join } from 'node:path';
 import { environment } from './workspaces.js';
 
 /**
- * Serial integration of a reviewed commit into a LOCAL candidate branch.
- * It never moves the base branch, never pushes, never resolves conflicts, and never touches the
- * user's checkout: all work happens in a throwaway worktree that is always removed.
+ * Never moves the base branch, never pushes, never resolves conflicts and never touches the user's checkout: all work
+ * happens in a throwaway worktree that is always removed.
  */
 type MergeResult =
   | { status: 'merged'; baseSha: string; headSha: string; mergeSha: string; candidate: string }
@@ -66,17 +65,15 @@ function validate(r: MergeRequest) {
   if (!r.candidate.startsWith('aether/')) throw new Error('MERGE_CANDIDATE_NAMESPACE');
 }
 
-/** Is the commit already reachable from the base? Then there is nothing to integrate. */
 function isAncestorOfBase(r: MergeRequest): boolean {
   try {
     git(r.repository, r.hooksDir, ['merge-base', '--is-ancestor', r.headSha, r.expectedBase]);
     return true;
   } catch {
-    return false; // not an ancestor: continue
+    return false;
   }
 }
 
-/** Merges the head into the detached tree at the base and commits it on a new candidate branch (never overwriting one). */
 function mergeInTree(r: MergeRequest, tree: string): MergeResult {
   const merge = (args: string[]) =>
     git(tree, r.hooksDir, [
@@ -140,7 +137,6 @@ function integrateNow(r: MergeRequest): MergeResult {
   }
 }
 
-/** Integrations for one repository run strictly one at a time. */
 export function integrate(r: MergeRequest): Promise<MergeResult> {
   const previous = queues.get(r.repository) ?? Promise.resolve();
   const next = previous.catch(() => undefined).then(() => integrateNow(r));

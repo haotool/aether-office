@@ -4,7 +4,6 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
 
-// The release kit is plain .mjs; import it untyped.
 const load = (name: string) => import(pathToFileURL(resolve('scripts/oss', name)).href);
 const notices = await load('third-party-notices.mjs');
 const reuse = await load('reuse-check.mjs');

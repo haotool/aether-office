@@ -23,10 +23,8 @@ export type {
   FieldPerfReport,
 } from './field-perf-types.js';
 
-/** JSON schema id for maintainer field captures (`?fieldperf=1`). Bump when the shape changes. */
 export const FIELD_PERF_SCHEMA = 'aether-field-perf/1';
 
-/** Builds the maintainer JSON report from measured inputs only. */
 export function buildFieldPerfReport(input: FieldPerfCaptureInput): FieldPerfReport {
   const durationMs = Math.max(0, input.endedAtMs - input.startedAtMs);
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';

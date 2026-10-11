@@ -1,10 +1,7 @@
 import { appendFile, mkdir, utimes, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-// Synthetic Claude Code transcripts in the on-disk format: a session `<project>/<session>.jsonl` and its subagents
-// `<project>/<session>/subagents/agent-<id>.jsonl` (+ `.meta.json`). Content is invented; only the shapes are real.
 export const FRESH = { input: 10, cacheWrite: 20, cacheRead: 1000, output: 5 };
-/** Tokens one `assistant` line counts as spent: new input, cache writes and output (cache reads are not counted). */
 export const FRESH_PER_MESSAGE = FRESH.input + FRESH.cacheWrite + FRESH.output;
 
 const line = (v: unknown) => `${JSON.stringify(v)}\n`;
@@ -56,7 +53,6 @@ export type SubagentFixture = {
   lines?: string[];
 };
 
-/** A session with its transcript, and the folder of its subagents. Returns the session's file. */
 export async function writeSession(home: string, session = 'sess-1'): Promise<string> {
   const file = join(home, '.claude/projects/-synthetic', `${session}.jsonl`);
   await mkdir(dirname(file), { recursive: true });
@@ -92,7 +88,6 @@ export async function append(file: string, text: string, at = new Date()): Promi
   await utimes(file, at, at);
 }
 
-/** A `tool_result` line of the parent's transcript for a call, as Claude Code writes it. */
 export const toolResultLine = (toolUseId: string, isError: boolean) =>
   line({
     type: 'user',

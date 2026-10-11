@@ -1,7 +1,6 @@
 import { PALETTE, SCREEN_W, frame, label, tile, Draw } from './screen-draw.js';
 import { pick } from '../environment/pick.js';
 
-/** Quality and review screens: a test run, a security scan and a diff. */
 export const tests: Draw = (g, r, a) => {
   frame(g, 'test runner · e2e · unit', a);
   for (let i = 0; i < 16; i++) {

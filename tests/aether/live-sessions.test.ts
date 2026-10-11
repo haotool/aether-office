@@ -67,7 +67,7 @@ it('finds the old session a live process owns: by --resume wherever it began, or
   );
   expect(byId.map((r) => [r.sessionId, r.cwd])).toEqual([[UUID, '/work/began-elsewhere']]);
   const byDirectory = await sessionsOfProcesses(home, [agent({ cwd: '/work/here' })], new Set());
-  expect(byDirectory.map((r) => r.sessionId)).toEqual(['old-a']); // one process, the newest file of its folder
+  expect(byDirectory.map((r) => r.sessionId)).toEqual(['old-a']);
   const two = await sessionsOfProcesses(
     home,
     [agent({ cwd: '/work/here' }), agent({ pid: 2, cwd: '/work/here' })],
@@ -79,7 +79,7 @@ it('finds the old session a live process owns: by --resume wherever it began, or
     [agent({ cwd: '/work/here' })],
     new Set([join(here, 'old-a.jsonl')]),
   );
-  expect(skipsKnown.map((r) => r.sessionId)).toEqual(['old-b']); // what is already known is not found twice
+  expect(skipsKnown.map((r) => r.sessionId)).toEqual(['old-b']);
   expect(await sessionsOfProcesses(home, [agent({ cwd: '/nowhere' })], new Set())).toEqual([]);
 });
 
@@ -97,7 +97,7 @@ it('shows a live session even when it is older than a week and far past the newe
   mkdirSync(own, { recursive: true });
   for (let n = 0; n < MAX_SESSIONS + 15; n++)
     session(join(crowd, `s${n}.jsonl`), '/elsewhere', n * 60_000);
-  session(join(own, 'quiet.jsonl'), work, 12 * DAY); // older than the recent window
+  session(join(own, 'quiet.jsonl'), work, 12 * DAY);
   const child = spawn(join(bin, 'claude'), ['-e', 'setInterval(()=>{},1000)', '--', '-p'], {
     cwd: work,
     stdio: 'ignore',
@@ -117,7 +117,7 @@ it('shows a live session even when it is older than a week and far past the newe
     // counted from before its process lived, so a fresh launch is active, not dormant.
     expect(mine!.liveness.state).toBe('active');
     expect(mine!.liveness.startedAt).toBeGreaterThan(Date.now() - 60_000);
-    expect(sessions.filter((s) => s.process !== 'running')).toHaveLength(MAX_SESSIONS); // the cap is for the rest
+    expect(sessions.filter((s) => s.process !== 'running')).toHaveLength(MAX_SESSIONS);
   } finally {
     child.kill();
   }

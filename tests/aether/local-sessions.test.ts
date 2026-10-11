@@ -113,7 +113,7 @@ it('folds an active spawned Codex rollout into its parent session as a subagent'
   );
   resetLocalSessionCache();
   const found = await scanLocalSessions(home, Date.now(), 0, join(home, 'none.jsonl'));
-  expect(found.map((s) => s.sessionId)).toEqual([parent]); // the child is not a session of its own
+  expect(found.map((s) => s.sessionId)).toEqual([parent]);
   expect(found[0]!.subagents.map((s) => s.type)).toEqual(['worker']);
 });
 

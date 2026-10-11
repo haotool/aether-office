@@ -16,10 +16,8 @@ import { fit, text } from './screen-ui.js';
 import type { ViewId } from './screen-layout.js';
 import { context2d } from '../core/canvas-2d.js';
 
-/** Where the ambient column sits on a screen, as a share of its width: the stream that scrolls over it shares these. */
 export const BAND = { from: 0.89, to: 0.985 } as const;
 
-/** How each department's screen is dressed: a title for the work, and the ambient pattern drawn in the column beside the view. */
 const SCREEN_THEME: Record<
   DepartmentId,
   { title: string; pattern: 'code' | 'pipeline' | 'checks' | 'chart' | 'board' }
@@ -34,7 +32,6 @@ const SCREEN_THEME: Record<
 type Pattern = (typeof SCREEN_THEME)[DepartmentId]['pattern'];
 type Row = (g: CanvasRenderingContext2D, x: number, y: number, w: number, i: number) => void;
 
-/** Row `i` of each pattern: the column is eleven of them. */
 const ROW: Record<Pattern, Row> = {
   code: (g, x, y, w, i) =>
     g.fillRect(x + (i % 3) * 6, y, w * (0.4 + ((i * 37) % 50) / 100) - (i % 3) * 6, 6),
@@ -60,7 +57,6 @@ const ROW: Record<Pattern, Row> = {
   },
 };
 
-/** The pattern of a department's screen in its right-hand column. Abstract shapes, not data: what is real is the text. */
 export function ambient(
   g: CanvasRenderingContext2D,
   department: DepartmentId,
@@ -78,7 +74,6 @@ export function ambient(
   g.restore();
 }
 
-/** The window's title: the real file, command or host where the view has one. */
 export function viewTitle(view: ViewId, c: ViewCtx): string {
   const { work, facts } = c;
   switch (view) {
@@ -105,7 +100,6 @@ export function viewTitle(view: ViewId, c: ViewCtx): string {
   }
 }
 
-/** The title bar: window buttons (a look chosen per member), the title, the department and the provider's mark. */
 export function drawTitleBar(c: ViewCtx, title: string, department: DepartmentId): void {
   const { g, p, profile } = c;
   g.drawImage(chromeBar(profile.chrome, profile.theme, c.accent), 0, 0);
@@ -126,7 +120,6 @@ export function drawTitleBar(c: ViewCtx, title: string, department: DepartmentId
   g.textAlign = 'left';
 }
 
-/** What is being run now, and for how long: the footer's first words. */
 function running(c: ViewCtx): string {
   const { facts, now } = c;
   if (facts.state === 'waiting_permission') return '⚠ approval needed';
@@ -134,7 +127,6 @@ function running(c: ViewCtx): string {
   return `▶ ${facts.tool}${facts.toolSince === null ? '' : ` ${elapsedLabel(now - facts.toolSince)}`}`;
 }
 
-/** The footer: the running tool with its clock, how long it has been quiet, the open ports, the context in use. All real. */
 export function drawFooter(c: ViewCtx): void {
   const { g, p, facts } = c;
   g.fillStyle = p.bg;
@@ -163,7 +155,6 @@ export function drawFooter(c: ViewCtx): void {
 }
 
 let lines: HTMLCanvasElement | null = null;
-/** A faint scanline overlay keeps a screen reading as a projection; drawn once, copied on every paint. */
 export function drawScanlines(g: CanvasRenderingContext2D): void {
   if (!lines) {
     lines = document.createElement('canvas');

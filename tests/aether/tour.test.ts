@@ -17,9 +17,9 @@ it('starts at the first stop, can pause and resume, and skip advances immediatel
   expect(tourFocus(s)).toBe(TOUR_STOPS[0]);
   s = run([{ type: 'pause' }], s);
   expect(s.status).toBe('paused');
-  expect(run([{ type: 'skip' }], s)).toMatchObject({ status: 'paused', index: 1 }); // skipping while paused stays paused
+  expect(run([{ type: 'skip' }], s)).toMatchObject({ status: 'paused', index: 1 });
   expect(run([{ type: 'resume' }], s).status).toBe('playing');
-  expect(run([{ type: 'resume' }]).status).toBe('idle'); // resume with nothing to resume is a no-op
+  expect(run([{ type: 'resume' }]).status).toBe('idle');
 });
 
 it('ends after the last stop and restores the prior focus, but an interrupt leaves the camera alone', () => {

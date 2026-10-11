@@ -92,7 +92,7 @@ describe('generated code', () => {
       return counts;
     };
     const frontend = mix('frontend');
-    expect(frontend.get('tsx')!).toBeGreaterThan(60); // weight 5 of 10
+    expect(frontend.get('tsx')!).toBeGreaterThan(60);
     expect(frontend.get('py') ?? 0).toBe(0);
     expect(mix('ml').get('py')!).toBeGreaterThan(130);
     expect(new Set(mix('generalist').keys()).size).toBeGreaterThanOrEqual(4);

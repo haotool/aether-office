@@ -5,7 +5,6 @@ import {
   type ObserverCheckpoint,
 } from '../../apps/runner/src/observer-codex-lines.js';
 
-// Lines in the shape of a Codex rollout file. The version is one the repo has verified (providers/generated/compat.json).
 const ROOT = '/work/project';
 const checkpoint = (over: Partial<ObserverCheckpoint> = {}): ObserverCheckpoint => ({
   identity: 'file-1',

@@ -1,8 +1,7 @@
-// Timezone-aware schedule arithmetic using only Intl. Pure; instants are UTC milliseconds.
 export type ScheduleSpec =
   | { kind: 'once'; at: number }
   | { kind: 'daily'; time: string }
-  | { kind: 'weekly'; days: readonly number[]; time: string }; // 0 = Sunday
+  | { kind: 'weekly'; days: readonly number[]; time: string };
 
 const DEFAULT_TIMEZONE = 'Asia/Taipei';
 const TIME = /^([01]\d|2[0-3]):([0-5]\d)$/;
@@ -57,7 +56,6 @@ function partsOf(utc: number, tz: string): Parts {
   };
 }
 
-/** UTC instant of a wall-clock time in `tz`, or null when that local time does not exist (DST gap). */
 function zonedToUtc(
   year: number,
   month: number,
@@ -67,7 +65,6 @@ function zonedToUtc(
   tz: string,
 ): number | null {
   const guess = Date.UTC(year, month - 1, day, hour, minute);
-  // Try the offsets in effect a day before and after: this resolves ambiguity and detects gaps.
   const candidates = new Set<number>();
   for (const probe of [guess - DAY_MS, guess + DAY_MS]) {
     const p = partsOf(probe, tz);
@@ -85,10 +82,9 @@ function zonedToUtc(
       p.minute === minute
     );
   });
-  return valid.length ? Math.min(...valid) : null; // ambiguous (fall back): the first occurrence
+  return valid.length ? Math.min(...valid) : null;
 }
 
-/** First occurrence strictly after `after`, or null for an elapsed one-off. */
 export function nextRun(
   spec: ScheduleSpec,
   after: number,
@@ -114,10 +110,7 @@ export function nextRun(
   return null;
 }
 
-/**
- * Decide what to dispatch for a schedule whose `dueAt` has passed. At most one occurrence is ever
- * dispatched, so a long outage cannot create a burst of catch-up work.
- */
+/** At most one occurrence is ever dispatched, so a long outage cannot create a burst of catch-up work. */
 export function dueDecision(
   spec: ScheduleSpec,
   tz: string,
@@ -126,7 +119,6 @@ export function dueDecision(
   missed: 'skip' | 'single',
   graceMs = 60_000,
 ): { dispatch: boolean; occurrence: number; nextAt: number | null } {
-  // The latest occurrence that is already due; everything older is covered by the single catch-up.
   let latest = dueAt;
   for (
     let next = nextRun(spec, latest, tz);

@@ -58,7 +58,6 @@ function drawChatTyping(c: ViewCtx) {
   }
 }
 
-/** Agent coordination as a chat: the number of agents is the count of subagent calls really made; the messages are bubbles, not words. */
 export function drawChat(c: ViewCtx): void {
   const { g, p, box } = c;
   const agents = c.facts.recent.filter((call) => AGENT_CALL.test(call.tool)).length;
@@ -71,7 +70,6 @@ export function drawChat(c: ViewCtx): void {
   if (c.facts.tool) drawChatTyping(c);
 }
 
-/** A notebook: code cells in the file's name over made-up Python, and the chart a cell would draw. */
 export function drawNotebook(c: ViewCtx): void {
   const { g, p, box } = c;
   const file = c.work.file ?? 'analysis.py';
@@ -127,7 +125,6 @@ const FRAMES = [
   { x: 150, y: 232, w: 240, h: 70 },
 ];
 type Frame = (typeof FRAMES)[number];
-/** The eight handles of a selection, as fractions of its width and height. */
 const HANDLES = [
   [0, 0],
   [1, 0],
@@ -139,7 +136,6 @@ const HANDLES = [
   [1, 0.5],
 ] as const;
 
-/** The canvas with its dot grid, the layers list on the left and the side bar on the right. */
 function drawDesignChrome(c: ViewCtx, r: Rng): void {
   const { g, p, box } = c;
   g.fillStyle = p.bg;
@@ -187,7 +183,6 @@ function drawSelection(c: ViewCtx, selected: Frame): void {
   }
 }
 
-/** The pointer drifting over the canvas, and the side bar's rows. */
 function drawCursor(c: ViewCtx): void {
   const { g, p, box } = c;
   const t = c.moving ? c.now / 2300 : 0;
@@ -205,12 +200,10 @@ function drawCursor(c: ViewCtx): void {
   for (let i = 0; i < 5; i++) g.fillRect(box.x + box.w - 78, box.y + 30 + i * 26, 56, 6);
 }
 
-/** A design canvas: frames of page-shaped boxes, a selected one with handles, a layers list, a cursor drifting between them. */
 export function drawDesign(c: ViewCtx): void {
   const r = viewRng(c, 'design');
   drawDesignChrome(c, r);
   drawFrames(c, r);
-  // A different one is picked now and then.
   const selected = FRAMES[Math.floor(c.now / 7000) % FRAMES.length];
   if (selected) drawSelection(c, selected);
   drawCursor(c);

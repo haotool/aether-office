@@ -8,10 +8,8 @@ import {
 } from './alert-rules.js';
 
 export type PendingApproval = { id: string; state: string; kind: string };
-/** Where an alert goes when it cannot be a browser notification, and what a tap on it opens. */
 export type AlertSink = { toast: (text: string) => void; open: (to: string) => void };
 
-/** Ids that are pending now and were not seen before; the first call only records what exists. */
 export function newlyPending(
   seen: ReadonlySet<string> | null,
   approvals: readonly PendingApproval[],
@@ -31,8 +29,8 @@ export async function requestNotificationPermission(): Promise<boolean> {
 }
 
 /**
- * Alerts are on by default, but the browser's permission prompt is never raised by itself: the first click or key press
- * in the page (a user gesture) asks once. Until it is granted, alerts are shown inside the page.
+ * Alerts are on by default, but the browser's permission prompt is never raised by itself: the first user gesture in
+ * the page asks once. Until it is granted, alerts are shown inside the page.
  */
 export function useNotificationPermission(enabled: boolean) {
   useEffect(() => {
@@ -51,7 +49,6 @@ export function useNotificationPermission(enabled: boolean) {
   }, [enabled]);
 }
 
-/** Shows an alert as a browser notification (a tap opens its page) or, without permission, as an in-page notice. */
 function deliver(d: Delivery, sink: AlertSink) {
   if (d.via === 'toast') return sink.toast(`${d.title}: ${d.body}`);
   const n = new Notification(d.title, { body: d.body, tag: d.tag, silent: true });
@@ -92,7 +89,6 @@ export function useApprovalNotifications(
   }, [enabled, approvals, alert.title, alert.project, projectId, sink]);
 }
 
-/** Raises the alerts planned for what changed in the local sessions. */
 export function useSessionAlerts(
   sessions: readonly Brief[] | undefined,
   notify: boolean,

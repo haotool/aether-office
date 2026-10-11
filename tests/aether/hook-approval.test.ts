@@ -11,7 +11,7 @@ const script = join(process.cwd(), 'packages/providers/src/hook-approval.mjs');
 const suggestion = {
   type: 'addRules',
   behavior: 'allow',
-  destination: 'localSettings', // Claude offers its own destination; the hook pins the session
+  destination: 'localSettings',
   rules: [{ toolName: 'Bash', ruleContent: 'pnpm test:*' }],
 };
 const payload = (sessionId: string, extra: Record<string, unknown> = {}) => ({
@@ -54,7 +54,6 @@ it('prints Claude’s decision JSON for a human answer, and only for that', asyn
     await f.enable();
     const browser = await f.signIn(operator.token);
     await f.app.listen({ host: '127.0.0.1', port: PORT });
-    // The request appears once the hook process has started and asked: as long as a loaded machine takes to start it.
     const answer = async (body: unknown) => {
       const request = await eventually(
         async () => {
@@ -83,7 +82,7 @@ it('prints Claude’s decision JSON for a human answer, and only for that', asyn
     await answer({ decision: 'allow_session' });
     const a = await allowed;
     expect(a.code).toBe(0);
-    expect(a.ms).toBeLessThan(budget(5000, 19_000)); // it answered, rather than waiting out its 20 s deadline
+    expect(a.ms).toBeLessThan(budget(5000, 19_000));
     expect(JSON.parse(a.out)).toEqual({
       hookSpecificOutput: {
         hookEventName: 'PermissionRequest',
@@ -115,7 +114,6 @@ it('prints Claude’s decision JSON for a human answer, and only for that', asyn
     await answer({ decision: 'allow' });
     expect(JSON.parse((await once).out).hookSpecificOutput.decision).toEqual({ behavior: 'allow' });
 
-    // Nobody answers: nothing is printed (Claude asks in its terminal), the request is closed for good.
     const silent = await runHook(f.configFile, payload(f.sessionId), 1500);
     expect(silent).toMatchObject({ code: 0, out: '' });
     expect(silent.ms).toBeGreaterThanOrEqual(1400);
@@ -143,18 +141,16 @@ it('falls back to the terminal (prints nothing, exits 0) when the server hangs, 
     writeFileSync(file, JSON.stringify({ url, token }));
     return file;
   };
-  // A server that accepts the request and never answers.
   const hung: Server = listen(() => undefined);
   await new Promise<void>((done) => hung.listen(PORT, '127.0.0.1', done));
   try {
     const hang = await runHook(config('hang.json', `http://127.0.0.1:${PORT}`), payload('s'), 2000);
     expect(hang).toMatchObject({ code: 0, out: '' });
-    expect(hang.ms).toBeLessThan(budget(8000, 30_000)); // it gave up at its 2 s deadline on a server that never answers
+    expect(hang.ms).toBeLessThan(budget(8000, 30_000));
   } finally {
     hung.closeAllConnections();
     await new Promise((done) => hung.close(done));
   }
-  // Nothing listens on the port now.
   expect(
     await runHook(config('none.json', `http://127.0.0.1:${PORT}`), payload('s'), 5000),
   ).toMatchObject({ code: 0, out: '' });
@@ -169,7 +165,6 @@ it('falls back to the terminal (prints nothing, exits 0) when the server hangs, 
   expect(
     await runHook(config('ok.json', `http://127.0.0.1:${PORT}`), 'not json', 5000),
   ).toMatchObject({ code: 0, out: '' });
-  // Another event is none of this hook's business.
   expect(
     await runHook(
       config('ok.json', `http://127.0.0.1:${PORT}`),

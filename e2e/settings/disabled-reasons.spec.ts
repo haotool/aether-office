@@ -2,11 +2,6 @@ import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { signIn } from '../support/sign-in.js';
 
-/**
- * A control that is off says why, to a screen reader too: it names the text that explains it with aria-describedby
- * (ui/whyNot.ts), and that text exists and is not empty. Walked as the owner and as a viewer (whose role turns most
- * write actions off) over the main pages, with axe on each.
- */
 const PAGES = [
   'office',
   'agents',
@@ -26,7 +21,6 @@ const PAGES = [
 
 type Off = { control: string; reason: string | null };
 
-/** Every visible control that is disabled (or aria-disabled), with the text its aria-describedby points at. */
 async function disabledControls(page: Page): Promise<Off[]> {
   return page.evaluate(() => {
     const out: { control: string; reason: string | null }[] = [];

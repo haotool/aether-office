@@ -1,8 +1,5 @@
 name: CI
 
-# Every push and pull request is typechecked, linted (module boundaries and design tokens), format-checked, unit
-# tested, built and driven through a real browser. Nothing is published and no paid model is called.
-
 on:
   push:
     branches: [main]
@@ -44,7 +41,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version-file: .node-version
+          node-version-file: .nvmrc
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
@@ -52,22 +49,16 @@ jobs:
       - run: pnpm format:check
       - run: pnpm test
       - run: pnpm build
-      # The verification ledger is internally consistent (no claim without evidence).
       - run: pnpm verification:check
-      # Gzip size of the web JavaScript stays inside the budget (scripts/check-bundle-size.mjs).
       - run: node scripts/check-bundle-size.mjs
-      # Publishing readiness: notices up to date, every dependency under an approved licence, every file covered by
-      # REUSE.toml, community files, no personal paths or secrets in the tree. After the build, so that it also proves
-      # the ignore rules cover the build output.
+      # After the build, so the ignore rules are also proven against the build output.
       - run: pnpm run oss:check
-      # The quality scorecard is current and no area is below its floor (scripts/quality; static analysis, no browser).
       # After the build, so that the bundle budgets are measured.
       - run: pnpm run quality:check
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm exec playwright test
 
-  # The product is used mostly on macOS (vm_stat, ps and lsof parsing), so the unit tests run there too. The browser
-  # suite stays on Linux only: it is the slow part and does not depend on the operating system.
+  # Unit tests also run on macOS (vm_stat, ps and lsof parsing); the slow browser suite stays on Linux.
   unit-macos:
     runs-on: macos-latest
     timeout-minutes: 30
@@ -77,7 +68,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version-file: .node-version
+          node-version-file: .nvmrc
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
@@ -92,7 +83,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version-file: .node-version
+          node-version-file: .nvmrc
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm audit:gate

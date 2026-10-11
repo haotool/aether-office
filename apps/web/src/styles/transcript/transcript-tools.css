@@ -1,7 +1,3 @@
-/*
- * What the agent shows inside a message and around it: code blocks and diffs, tool-call chips, the jump-to-latest pill and the
- * loading skeleton (features/Markdown.tsx, TranscriptTurns.tsx, TranscriptView.tsx). The messages are transcript.css.
- */
 .code-block {
   margin: 0 0 var(--space-8);
   overflow: hidden;
@@ -65,7 +61,6 @@
   display: block;
   min-width: max-content;
 }
-/* Wrapping: long lines fold at the block's edge instead of scrolling sideways */
 .code-block.wrap .code-line {
   min-width: 0;
   overflow-wrap: anywhere;
@@ -103,7 +98,6 @@
   color: var(--violet);
 }
 
-/* Tool calls: a slim chip per run of them (a shimmer while it runs, how long it took), the calls under it on request */
 .tool-group {
   justify-self: start;
   max-width: 100%;
@@ -216,7 +210,6 @@
   color: var(--red);
 }
 
-/* Jump to latest / N new */
 .new-pill {
   position: absolute;
   left: 50%;
@@ -246,7 +239,6 @@
   }
 }
 
-/* Loading: rows where the messages will be */
 .skeleton .skeleton-row {
   display: grid;
   gap: var(--space-8);

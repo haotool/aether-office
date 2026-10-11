@@ -11,7 +11,6 @@ type GraphCommit = {
   author: string;
   at: number;
   lane: number;
-  /** Lanes this row connects down to, one per parent. */
   edges: { to: number; parent: string }[];
 };
 
@@ -49,7 +48,6 @@ function trimTrailingEmptyLanes(lanes: (string | null)[]): void {
   while (lanes.length && lanes[lanes.length - 1] === null) lanes.pop();
 }
 
-/** Pure. Lays commits (newest first) out in lanes, the way `git log --graph` does. */
 export function layoutGraph(commits: readonly Omit<GraphCommit, 'lane' | 'edges'>[]): {
   commits: GraphCommit[];
   lanes: number;
@@ -73,7 +71,6 @@ export function layoutGraph(commits: readonly Omit<GraphCommit, 'lane' | 'edges'
   return { commits: out, lanes: width };
 }
 
-/** Pure. `git log --format=%H%x1f%P%x1f%D%x1f%s%x1f%ct%x1f%an`. */
 export function parseLog(text: string): Omit<GraphCommit, 'lane' | 'edges'>[] {
   return text
     .split('\n')

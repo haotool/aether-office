@@ -3,7 +3,6 @@ import type { Context } from '../domain/context.js';
 
 const MAX_ANCESTORS = 12;
 
-/** Pure. Splits a runner's process identity (`<pid>:<ps lstart>`) into the pid and its start time. */
 export function parseIdentity(identity: string): { pid: number; startedAt: number } | null {
   const at = identity.indexOf(':');
   const startedAt = at > 0 ? parseStartTime(identity.slice(at + 1)) : null;
@@ -13,8 +12,8 @@ export function parseIdentity(identity: string): { pid: number; startedAt: numbe
 }
 
 /**
- * Pure. The terminal AETHER started a session's process in, if any: the process, or one of the processes above it (a
- * wrapper script), is the terminal's own child, by pid and by start time, so a reused pid is not mistaken for it.
+ * The terminal AETHER started a session's process in, if any: the process or one above it (a wrapper script) is the
+ * terminal's own child, matched by pid and start time so a reused pid is not mistaken for it.
  */
 export function terminalOfProcess(
   table: readonly ProcessRow[],
@@ -36,7 +35,6 @@ export function terminalOfProcess(
   return null;
 }
 
-/** The running terminals of these projects, with the identity of the process each runs. */
 function runningTerminals(ctx: Context, projectIds: readonly string[]) {
   const rows = ctx.sqlite
     .prepare("SELECT id,projectId,snapshot FROM terminal_sessions WHERE state='running'")
@@ -52,7 +50,6 @@ function runningTerminals(ctx: Context, projectIds: readonly string[]) {
   });
 }
 
-/** The terminal behind a local session's process, among those of the projects the caller may open. */
 export async function terminalOfSession(
   ctx: Context,
   pid: number | null,

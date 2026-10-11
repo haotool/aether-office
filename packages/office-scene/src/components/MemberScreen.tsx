@@ -25,19 +25,14 @@ import { context2d } from '../core/canvas-2d.js';
 
 const WIDTH = 0.76;
 const HEIGHT = (WIDTH * SCREEN_H) / SCREEN_W;
-/** The second monitor stands where the desk's own side pane does (building-furniture.ts), a hair in front of it. */
 const SECOND_WIDTH = 0.5;
 const SECOND_HEIGHT = (SECOND_WIDTH * SECONDARY_H) / SECONDARY_W;
-/** How fast the stream runs, in screen heights per second, by how hard the member works. */
 const STREAM_SPEED = [0, 0.35, 0.9, 2.2] as const;
-/** How a member types faster as it works harder, as a multiple of its own pace. */
 const TYPING_SPEED = [1, 1.25, 1.5, 1.75] as const;
-/** Least ms between two paints of a screen by the camera's distance from it: a close screen is read, a far one only seen. */
 const PAINT_MS = [200, 500, 1000] as const;
 const NEAR = 10;
 const MID = 24;
 
-/** Bright bars of different lengths on dark: scrolled over the ambient column, they read as work going by. */
 function streamTexture(accent: string): CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 32;
@@ -60,20 +55,14 @@ type MemberScreenProps = {
   member: string;
   accent: string;
   activity: Agent['activity'];
-  /** What the member is really doing; without it the screen is the role's decorative art. */
   facts?: ScreenFacts | undefined;
-  /** The department's look (its title, pattern and stream). */
   theme: DepartmentId;
-  /** How hard the member is working, 0 to 3. */
   intensity: 0 | 1 | 2 | 3;
-  /** How the desk is dressed: editor theme, window chrome, second monitor. */
   profile: DeskProfile;
   reducedMotion: boolean;
-  /** Room for the extras of a desk: the second monitor (not on a phone or at low quality). */
   rich: boolean;
 };
 
-/** The textures a screen is made of: its live painter (or the role's art), the shared second monitor and the work stream. */
 function useScreenTextures({
   role,
   member,
@@ -107,15 +96,12 @@ function useScreenTextures({
 
 type Textures = ReturnType<typeof useScreenTextures>;
 
-/** Milliseconds between repaints of a screen at a distance: often when near, rarely when far, never with reduced motion. */
 const paintEvery = (distance: number, reducedMotion: boolean) =>
   reducedMotion ? Infinity : PAINT_MS[distance < NEAR ? 0 : distance < MID ? 1 : 2];
 
-/** The sideways shake of a machine at its limit: it hums. */
 const hum = (intensity: number, seconds: number) =>
   intensity === 3 ? Math.sin(seconds * 60) * 0.0016 : 0;
 
-/** Repaints the screens at the pace the camera's distance deserves, scrolls the stream and shakes a machine at its limit. */
 function useScreenLoop(
   { live, second, stream }: Textures,
   {
@@ -126,10 +112,9 @@ function useScreenLoop(
 ) {
   const shake = useRef<Group>(null);
   const here = useRef(new Vector3());
-  const paintOptions = useRef<PaintOptions>({ interval: 0, moving: true, speed: 1 }); // reused, so a frame allocates nothing
+  const paintOptions = useRef<PaintOptions>({ interval: 0, moving: true, speed: 1 });
   useFrame((state, delta) => {
     if (live && facts) {
-      // A screen is repainted at the pace its distance from the camera deserves, and only when a paint is due.
       const at = shake.current ? shake.current.getWorldPosition(here.current) : here.current;
       const distance = state.camera.position.distanceTo(at);
       paintOptions.current.interval = paintEvery(distance, reducedMotion);
@@ -153,7 +138,6 @@ const SEEN: readonly Agent['activity'][] = [
 const opacityOf = (activity: Agent['activity']) =>
   activity === 'offline' || activity === 'unknown' ? 0.12 : SEEN.includes(activity) ? 1 : 0.5;
 
-/** The second monitor, turned in toward the member on the side the desk dresses it. */
 function SecondMonitor({
   texture,
   side,
@@ -172,7 +156,6 @@ function SecondMonitor({
   );
 }
 
-/** The scrolling work stream laid over the ambient column of the main screen. */
 function StreamBand({ texture }: { texture: Texture }) {
   return (
     <mesh position={[((BAND.from + BAND.to) / 2 - 0.5) * WIDTH, 0, 0.002]}>
@@ -189,7 +172,6 @@ function StreamBand({ texture }: { texture: Texture }) {
   );
 }
 
-/** A member's own screen (and second monitor): what the session is really doing, or role-themed art; its brightness follows the real activity. */
 export function MemberScreen(props: MemberScreenProps) {
   const { activity, intensity, profile } = props;
   const textures = useScreenTextures(props);

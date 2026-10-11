@@ -10,7 +10,6 @@ import { heldByOther, type TerminalControl } from '../terminal/terminal-driver.j
 import { useSessionTerminal, type Drive } from '../../hooks/use-drive.js';
 import { POLL, poll } from '../../lib/app/polling.js';
 
-/** A member made of a session, a subagent of one, or an agent AETHER manages. */
 export const kindOf = (agentId: string): CharacterKind =>
   !agentId.startsWith(LOCAL_PREFIX)
     ? 'managed'
@@ -18,7 +17,6 @@ export const kindOf = (agentId: string): CharacterKind =>
       ? 'subagent'
       : 'observed';
 
-/** The machine's sessions as the office last fetched them. Read-only: the app's own hook keeps them fresh. */
 export function useCachedSessions(): readonly AttributedSession[] {
   const query = useQuery({
     queryKey: ['local-sessions'],
@@ -28,7 +26,6 @@ export function useCachedSessions(): readonly AttributedSession[] {
   return query.data?.sessions ?? [];
 }
 
-/** Who is signed in. */
 export function useActor() {
   const me = useQuery({
     queryKey: ['session'],
@@ -38,7 +35,6 @@ export function useActor() {
   return { id: me.data?.actor.id ?? '', role: me.data?.actor.role ?? '' };
 }
 
-/** Which of these members are clock-out candidates (running, idle for a day or more, the kind the server would stop). */
 export function clockOutKeys(
   sessions: readonly AttributedSession[],
   agentIds: readonly string[],
@@ -50,10 +46,6 @@ export function clockOutKeys(
   });
 }
 
-/**
- * The AETHER terminal a session runs in and whether it can be typed into now: none (not started in AETHER), free, held by
- * another person's lease, or stopped. Shares its queries with the composer, so the two never disagree.
- */
 export function useTerminalState(session: AttributedSession | null, userId: string) {
   const { drive } = useSessionTerminal(session?.key ?? null);
   const control = useQuery({
@@ -77,7 +69,6 @@ export function useTerminalState(session: AttributedSession | null, userId: stri
   return { drive: drive as Drive | null, state };
 }
 
-/** The sessions the office knows for these members, by agent id. */
 export const sessionOf = (
   sessions: readonly AttributedSession[],
   agent: Pick<Agent, 'id'>,

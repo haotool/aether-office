@@ -23,7 +23,6 @@ type ComposerProps = {
   working: boolean;
 };
 
-/** The box grows with what is typed (CSS caps it at eight lines) and shrinks back when it is sent. */
 function useAutoGrow(field: RefObject<HTMLTextAreaElement | null>, text: string) {
   useLayoutEffect(() => {
     const el = field.current;
@@ -33,12 +32,11 @@ function useAutoGrow(field: RefObject<HTMLTextAreaElement | null>, text: string)
   }, [field, text]);
 }
 
-/** Arrows move in the open menu, Tab/Enter choose, Escape closes it; otherwise Enter sends on a desktop. */
 function handleComposerKey(
   e: KeyboardEvent<HTMLTextAreaElement>,
   ctx: { menu: Completion; phone: boolean; pick: (row: MenuRow) => void; submit: () => void },
 ) {
-  if (e.nativeEvent.isComposing) return; // an IME is choosing a character: Enter belongs to it
+  if (e.nativeEvent.isComposing) return;
   const { menu, phone, pick, submit } = ctx;
   const { open, rows, current } = menu;
   const choosing = e.key === 'Tab' || (e.key === 'Enter' && !e.shiftKey);
@@ -58,7 +56,6 @@ function handleComposerKey(
   }
 }
 
-/** What the box says it cannot do, in order of how final it is; empty when it can send. */
 function blockedReason(
   d: Pick<ReturnType<typeof useDrive>, 'canWrite' | 'running' | 'free'>,
   t: ReturnType<typeof useT>,
@@ -88,7 +85,6 @@ function StopProcessModal({ onClose, onStop }: { onClose: () => void; onStop: ()
   );
 }
 
-/** The status line a blocked box explains itself in: what its disabled input and Send point at. */
 const COMPOSER_STATUS_ID = 'composer-status';
 
 function SendOrStop({
@@ -164,7 +160,6 @@ function ComposerNotes({
 
 type Driven = ReturnType<typeof useDrive>;
 
-/** What is typed, where the caret is, the completion menu under it, and the edits that keep them in step. */
 function useComposerEditor(
   session: AttributedSession,
   d: Driven,
@@ -198,7 +193,6 @@ function useComposerEditor(
 
 type Editor = ReturnType<typeof useComposerEditor>;
 
-/** The text box with its completion menu, and Send (or Stop while the session works) beside it. */
 function ComposerBox({
   field,
   editor,
@@ -250,7 +244,6 @@ function ComposerBox({
   );
 }
 
-/** The model chip and, on a phone, the quick replies. */
 function ComposerBar({
   session,
   d,
@@ -273,10 +266,8 @@ function ComposerBar({
 }
 
 /**
- * The input for a session AETHER drives (one running in an AETHER terminal). A message is typed into that terminal the
- * way a person would; the conversation shows it at once as a pending bubble and the transcript confirms it. While the
- * session works, Stop (an interrupt) takes the place of Send. Nothing here claims more than the terminal does: what a
- * command opens in the terminal itself is labelled, not answered.
+ * Nothing here claims more than the terminal does: what a command opens in the terminal itself is labelled, not
+ * answered.
  */
 export function Composer({ session, drive, working }: ComposerProps) {
   const t = useT();
@@ -287,7 +278,6 @@ export function Composer({ session, drive, working }: ComposerProps) {
   const [interrupted, setInterrupted] = useState(false);
   const [confirmStop, setConfirmStop] = useState(false);
 
-  // Once it has stopped working the interrupt is over, and "stop the process" is no longer offered.
   useEffect(() => {
     if (!working) setInterrupted(false);
   }, [working]);

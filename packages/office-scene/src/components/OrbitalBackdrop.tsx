@@ -10,8 +10,6 @@ import {
   Color,
 } from 'three';
 import { context2d } from '../core/canvas-2d.js';
-// Original stylized cartography, hand-authored for the orbital-office backdrop.
-// These coarse silhouettes are decorative and are not a geographical dataset.
 const continents = [
   [
     [-168, 68],
@@ -109,7 +107,7 @@ function paintContinents(ctx: Paint, scale: number) {
     ctx.closePath();
     ctx.fillStyle = '#758976';
     ctx.shadowColor = '#779e99';
-    ctx.shadowBlur = 12 * scale; // not scaled by the transform
+    ctx.shadowBlur = 12 * scale;
     ctx.fill();
     ctx.shadowBlur = 0;
   }
@@ -143,7 +141,6 @@ function paintPolarCaps(ctx: Paint) {
   ctx.fillRect(0, 0, 2048, 1024);
 }
 
-/** Painted in a 2048 x 1024 space whatever the canvas size (`small` halves it, see `earthTextureSize`), so the picture is the same. */
 function earthTexture(small: boolean) {
   const { width, height } = earthTextureSize(small);
   const canvas = document.createElement('canvas');
@@ -161,7 +158,6 @@ function earthTexture(small: boolean) {
   texture.colorSpace = SRGBColorSpace;
   return texture;
 }
-/** A soft radial glow painted once: the nebula clouds and the planet's halo are additive sprites of it. */
 function glowTexture(inner: string, outer: string) {
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = 256;
@@ -182,7 +178,6 @@ const NEBULAE = [
   { position: [60, 260, -640], scale: 520, color: 'rgba(255,90,170,.28)' },
 ] as const;
 
-/** The stars: points spread evenly over a sphere (a golden-angle spiral), tinted from teal to pale. */
 function starField(low: boolean): BufferGeometry {
   const geometry = new BufferGeometry();
   const points: number[] = [];
@@ -203,7 +198,6 @@ function starField(low: boolean): BufferGeometry {
   return geometry;
 }
 
-/** The planet with its thin atmosphere and the glow round it. */
 function Planet({ texture, low }: { texture: CanvasTexture; low: boolean }) {
   return (
     <group position={[-70, 30, -190]} rotation={[0.06, 1.6, -0.2]}>
@@ -235,7 +229,6 @@ function Planet({ texture, low }: { texture: CanvasTexture; low: boolean }) {
   );
 }
 
-/** An orbital ring round the planet and a distant station give the sky scale and depth. */
 function Orbits() {
   return (
     <>

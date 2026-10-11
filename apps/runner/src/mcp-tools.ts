@@ -4,7 +4,6 @@ import { z } from 'zod';
 import type { InboxPage, Snapshot } from '@aether/contracts';
 import type { McpScope } from './mcp.js';
 
-/** What the tools need from the control API: the run's scope, plain calls, commands and the error mapping. */
 export type ControlClient = {
   scope: McpScope;
   projectPath: string;
@@ -27,7 +26,6 @@ const key = z
   .max(100)
   .describe('Stable retry key; reuse it only for the exact same operation.');
 
-/** Read the run's identity and the project's work. */
 function registerWorkTools(server: McpServer, client: ControlClient) {
   const { scope, projectPath, api, perform } = client;
   server.registerTool(
@@ -59,7 +57,6 @@ function registerWorkTools(server: McpServer, client: ControlClient) {
   );
 }
 
-/** Read the durable inbox, a message and the waits of a request. */
 function registerReadTools(server: McpServer, client: ControlClient) {
   const { scope, projectPath, api, perform } = client;
   server.registerTool(
@@ -103,7 +100,6 @@ function registerReadTools(server: McpServer, client: ControlClient) {
   );
 }
 
-/** Persist a message or acknowledge one. */
 function registerSendTools(server: McpServer, client: ControlClient) {
   const { scope, command, perform } = client;
   server.registerTool(
@@ -141,7 +137,6 @@ function registerSendTools(server: McpServer, client: ControlClient) {
   );
 }
 
-/** A bounded wait on the inbox. */
 function registerWaitTool(server: McpServer, client: ControlClient) {
   const { scope, projectPath, api, perform } = client;
   server.registerTool(
@@ -176,7 +171,6 @@ function registerWaitTool(server: McpServer, client: ControlClient) {
   );
 }
 
-/** Advisory file reservations: list and acquire. */
 function registerReservationStartTools(server: McpServer, client: ControlClient) {
   const { scope, projectPath, api, command, perform } = client;
   server.registerTool(
@@ -208,7 +202,6 @@ function registerReservationStartTools(server: McpServer, client: ControlClient)
   );
 }
 
-/** Extend or give up a reservation. */
 function registerReservationEndTools(server: McpServer, client: ControlClient) {
   const { command, perform } = client;
   server.registerTool(
@@ -237,7 +230,6 @@ function registerReservationEndTools(server: McpServer, client: ControlClient) {
   );
 }
 
-/** Reference text and knowledge proposals. */
 function registerKnowledgeTools(server: McpServer, client: ControlClient) {
   const { scope, projectPath, api, command, perform } = client;
   server.registerTool(
@@ -270,7 +262,6 @@ function registerKnowledgeTools(server: McpServer, client: ControlClient) {
   );
 }
 
-/** Every tool of the collaboration server. */
 export function registerCollaborationTools(server: McpServer, client: ControlClient) {
   for (const register of [
     registerWorkTools,

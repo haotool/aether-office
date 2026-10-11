@@ -7,7 +7,6 @@ import type { CommandTag } from '../../packages/contracts/src/index.js';
 import { office } from './life-fixtures.js';
 
 const doc = readFileSync('docs/design/office-life.md', 'utf8');
-// The registry table has twelve columns; the shorter "as shipped" table below it is not read here.
 const tableRows = new Map(
   [...doc.matchAll(/^\| (R\d+) \|(.*)\|$/gm)]
     .map((m) => [m[1]!, m[2]!.split(/(?<!\\)\|/).map((cell) => cell.trim())] as const)
@@ -93,7 +92,7 @@ describe('each rule fires on its trigger and on nothing near it', () => {
       expect(fires('ci-lamp', call('Bash', t))).toBe(true);
     for (const t of ['pnpm build', 'git status', 'vim', 'pnpm testing'])
       expect(fires('ci-lamp', call('Bash', t))).toBe(false);
-    expect(fires('ci-lamp', call('Read', 'vitest'))).toBe(false); // a file named so is not a test run
+    expect(fires('ci-lamp', call('Read', 'vitest'))).toBe(false);
   });
   it('R14 install hole: an install command', () => {
     for (const t of ['pnpm install', 'npm i', 'npm ci', 'yarn', 'bun add'])
@@ -112,9 +111,9 @@ describe('each rule fires on its trigger and on nothing near it', () => {
     expect(fires('ship-it', end(true, ['git.push']))).toBe(true);
     expect(fires('ship-it', end(false, ['git.push']))).toBe(false);
     expect(fires('ship-it', end(null, ['git.push']))).toBe(false);
-    expect(fires('ship-it', end(true, ['git.push', 'git.push.force']))).toBe(false); // R18 has the force push
+    expect(fires('ship-it', end(true, ['git.push', 'git.push.force']))).toBe(false);
     expect(fires('ship-it', end(true, ['git.commit']))).toBe(false);
-    expect(fires('ship-it', call('Bash', 'git push'))).toBe(false); // a start says nothing about the end
+    expect(fires('ship-it', call('Bash', 'git push'))).toBe(false);
   });
   it('R27 pager: an error state', () => {
     expect(fires('pager', { kind: 'activity.error', member: 'm1', at: 0 })).toBe(true);

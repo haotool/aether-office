@@ -1,7 +1,6 @@
 .page-padding {
   padding: var(--space-32);
 }
-/* A heading row: the title on one side, its actions (any number, wrapping) on the other. */
 .u-head,
 .page-heading {
   display: flex;
@@ -86,7 +85,7 @@
 }
 .empty-orbit {
   width: 55px; /* token-lint: geometry */
-  height: 55px; /* token-lint: geometry */
+  aspect-ratio: 1;
   position: relative;
   border: 1px solid var(--line);
   border-radius: 50%;

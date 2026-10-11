@@ -1,8 +1,5 @@
-// The squad's state machine: who sits where, who is arriving or leaving, how big each zone is and how hard the squad works.
-// Pure and deterministic: the same state, input and clock give the same next state. Renderers only read it.
 import { RATE_WINDOW_MS, squadTokenRate } from './beam-rate.js';
 
-/** What the page knows about one subagent (a subset of what `squadsOf` produces; extra fields are ignored). */
 export type SquadMemberInput = {
   id: string;
   type: string;
@@ -10,11 +7,8 @@ export type SquadMemberInput = {
   startedAt: number | null;
   lastSeen: number;
   toolCount: number;
-  /** Tokens per minute from the subagent's transcript (Claude only); null or absent when no sample exists. */
   tokensPerMinute?: number | null;
-  /** When it last started a tool (the hook's PreToolUse time); a change is a jerk of its puppet strings. */
   toolAt?: number | null;
-  /** What it handed back, when it finished: only `error` is read (true: the result is flagged as an error). */
   result?: { error: boolean | null } | null;
 };
 export type SquadInput = { supervisor: string; members: readonly SquadMemberInput[] };
@@ -24,12 +18,10 @@ export type SquadMemberState = {
   id: string;
   supervisor: string;
   type: string;
-  /** Index into the zone's pods; stable for as long as the member holds it. */
   seat: number;
   phase: SquadPhase;
   /** Wall clock, ms: when the phase began. Poses are pure functions of `now - since`. */
   since: number;
-  /** When a leaving member is out of the office. */
   until: number;
   working: boolean;
   waiting: boolean;
@@ -37,13 +29,9 @@ export type SquadMemberState = {
   toolAt: number | null;
 };
 export type SquadZoneState = {
-  /** Seats the zone is sized for. It grows at once and shrinks only after a quiet spell. */
   seats: number;
-  /** When the need last differed from `seats` (the start of the quiet spell is the moment it stopped differing). */
   since: number;
-  /** Tool starts in the last minute (the beam's fallback rate); oldest first. */
   events: readonly number[];
-  /** Tokens per minute of the working members that have a sample (the beam's rate); null when none has one. */
   tokensPerMinute: number | null;
 };
 export type SquadState = {
@@ -53,24 +41,17 @@ export type SquadState = {
 };
 type SquadStep = {
   squads: readonly SquadInput[];
-  /** How long a member that starts leaving now takes to be out (its errand), in ms. `fact` is what the page knows of it. */
   leaveMs: (id: string, fact: SquadMemberInput | undefined) => number;
 };
 
 export const EMPTY_SQUAD: SquadState = { ready: false, members: {}, zones: {} };
-/** The longest an arrival takes: the walk is sped up to fit, then the turn and the sit. */
 export const ARRIVE_MS = 6000;
-/** A subagent that started longer ago than this was there before we looked: it is seated, not walked in. */
 const FRESH_MS = 30_000;
-/** The zone shrinks only after this long without a change. */
 export const SHRINK_AFTER_MS = 10_000;
-/** A subagent that has run a tool this recently is working. */
 const LIVE_MS = 20_000;
-/** A leaving member gives its pod up this long after it begins to leave (it has stood and waved by then). */
 export const POD_FREE_MS = 3250;
 const MAX_EVENTS = 120;
 
-/** Whether the member still holds its pod: a leaver gives it up once it has stood and waved. */
 export const occupies = (m: SquadMemberState, now: number) =>
   m.phase !== 'leaving' || now - m.since < POD_FREE_MS;
 
@@ -80,7 +61,6 @@ function lowestFree(taken: ReadonlySet<number>): number {
   return seat;
 }
 
-/** What one step collects while it runs: the new members, the pods they hold and the tool starts it saw. */
 type Ledger = {
   members: Record<string, SquadMemberState>;
   taken: Map<string, Set<number>>;
@@ -100,7 +80,6 @@ function pushEvent(ledger: Ledger, prev: SquadState, supervisor: string, at: num
   ledger.events.set(supervisor, list);
 }
 
-/** Members the page still reports keep their phase (or start leaving); those that vanished leave. */
 function settleMembers(
   prev: SquadState,
   input: SquadStep,
@@ -120,7 +99,7 @@ function settleMembers(
     const fact = facts.get(old.id);
     let next = old;
     if (old.phase === 'leaving') {
-      if (now >= old.until) continue; // out of the office
+      if (now >= old.until) continue;
     } else if (!fact || fact.status === 'finished') {
       next = leave(old);
     } else {
@@ -139,7 +118,6 @@ function settleMembers(
   }
 }
 
-/** New members take the lowest free seat of their squad. The first look at the page seats everyone where they are. */
 function seatNewcomers(prev: SquadState, input: SquadStep, now: number, ledger: Ledger) {
   for (const squad of input.squads)
     for (const fact of squad.members) {
@@ -165,7 +143,6 @@ function seatNewcomers(prev: SquadState, input: SquadStep, now: number, ledger: 
     }
 }
 
-/** Zones: sized by the highest held seat, grown at once, shrunk after a quiet spell with no walk in flight. */
 function sizeZones(
   prev: SquadState,
   input: SquadStep,
@@ -210,7 +187,6 @@ function sizeZones(
   return zones;
 }
 
-/** The next state of the squads, given the page's facts. */
 export function stepSquad(prev: SquadState, input: SquadStep, now: number): SquadState {
   const ledger: Ledger = { members: {}, taken: new Map(), events: new Map() };
   const facts = new Map<string, SquadMemberInput>();
@@ -220,7 +196,6 @@ export function stepSquad(prev: SquadState, input: SquadStep, now: number): Squa
   return { ready: true, members: ledger.members, zones: sizeZones(prev, input, now, ledger) };
 }
 
-/** The members of one squad, in seat order. */
 export const membersOf = (state: SquadState, supervisor: string): SquadMemberState[] =>
   Object.values(state.members)
     .filter((m) => m.supervisor === supervisor)

@@ -72,7 +72,7 @@ const view = (ctx: Context, row: Row): IntegrationConnection => {
     id: row.id,
     provider: row.provider,
     target: config.provider === 'github' ? `${config.owner}/${config.repo}` : config.teamKey,
-    tokenEnv: config.tokenEnv, // the variable NAME; the secret itself is never stored or returned
+    tokenEnv: config.tokenEnv,
     enabled: row.enabled === 1,
     lastSyncAt: row.lastSyncAt,
     lastError: row.lastError,
@@ -125,7 +125,6 @@ export function integrationCommand(
   return view(ctx, connection(ctx, c.projectId, id));
 }
 
-/** Records a failed sync on the connection and in the event log, then throws the matching error. */
 function failSync(
   ctx: Context,
   row: Row,
@@ -165,10 +164,8 @@ async function fetchIssues(
 }
 
 /**
- * Pull-based import. Field ownership: the external system owns title and description until work
- * starts; the platform owns state, assignment and results forever. After work starts, an upstream
- * edit is recorded as a conflict for a human and never overwrites anything. Because every import
- * compares a content hash, the platform's own write-backs (which bump updated_at) cannot loop.
+ * Pull-based import: the external system owns title and description until work starts, the platform owns the rest.
+ * After that an upstream edit is recorded as a conflict and never overwrites; a content hash stops write-backs looping.
  */
 export async function syncConnection(
   ctx: Context,
@@ -198,7 +195,6 @@ export async function syncConnection(
   return ctx.sqlite.transaction(() => storeIssues(ctx, row, issues, now)).immediate();
 }
 
-/** Imports the fetched issues, advances the cursor and records that the sync completed. */
 function storeIssues(ctx: Context, row: Row, issues: ExternalIssue[], now: number): SyncResult {
   const actor = identityActor(ctx, row.createdBy);
   const result: SyncResult = { imported: 0, updated: 0, conflicts: 0 };
@@ -292,7 +288,6 @@ function verifyGithubSignature(secret: string, raw: Buffer, header: string | und
   return given.length === expected.length && timingSafeEqual(given, expected);
 }
 
-/** The webhook is only a signal: authenticity is checked, the delivery is deduplicated, then state is pulled. */
 export async function handleGithubWebhook(
   ctx: Context,
   connectionId: string,
@@ -303,7 +298,6 @@ export async function handleGithubWebhook(
   const row = ctx.sqlite
     .prepare("SELECT * FROM integration_connections WHERE id=? AND provider='github'")
     .get(connectionId) as Row | undefined;
-  // An unknown id answers like a bad signature, so the endpoint does not reveal which integrations exist.
   if (!row) throw new DomainError('WEBHOOK_SIGNATURE_INVALID', 401);
   const config = JSON.parse(row.config) as Config;
   const secretEnv = config.provider === 'github' ? config.webhookSecretEnv : undefined;

@@ -1,5 +1,3 @@
-// Area 10: product maturity. The share of ledger entries that are implemented and verified (docs/verification/features.json)
-// and, when a maturity audit has been recorded, its per-feature scores (docs/quality/maturity.json).
 import { top } from '../lib.mjs';
 import { info, rule, skipped } from '../model.mjs';
 
@@ -8,7 +6,6 @@ const INPUT = 'docs/quality/maturity.json';
 const IMPLEMENTATION = { implemented: 1, partial: 0.5 };
 const VERIFICATION = { passed: 1, partial: 0.5 };
 
-/** 0 to 1: half for how far the feature is built, half for how far the checks prove it. */
 export const entryScore = (entry) =>
   ((IMPLEMENTATION[entry.implementationStatus] ?? 0) +
     (VERIFICATION[entry.verificationStatus] ?? 0)) /
@@ -16,7 +13,6 @@ export const entryScore = (entry) =>
 
 const mean = (list) => (list.length === 0 ? 0 : list.reduce((n, x) => n + x, 0) / list.length);
 
-/** `{ "source": "...", "features": [{ "id": "...", "score": 0-100, "note": "..." }] }`; invalid input throws. */
 export function parseMaturity(text) {
   const data = JSON.parse(text);
   if (!Array.isArray(data.features)) throw new Error(`${INPUT}: "features" must be an array`);

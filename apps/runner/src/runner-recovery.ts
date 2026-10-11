@@ -3,8 +3,8 @@ import type { Reaped } from '@aether/providers';
 import type { Journal } from './journal.js';
 
 /**
- * After a restart: a workspace job that was running has an unknown result, and a run that was not finished gets an
- * `indeterminate` result (no automatic retry) that says whether its process was left running and has been stopped.
+ * After a restart a run that was not finished gets an `indeterminate` result (no automatic retry) that says whether its
+ * process was left running and has been stopped.
  */
 export function settleInterruptedWork(journal: Journal, survivors: ReadonlyMap<string, Reaped>) {
   for (const entry of Object.values(journal.state.jobs))

@@ -4,8 +4,6 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { frames, throughout } from '../support/settled.js';
 
-// The office-life follow-ups: R21 and R43 (docs/design/office-life.md section 5.3), the looped preview that the perf matrix
-// measures motion with, and the first-appearance shader warm-up of the squad layer (no program is linked when a squad shows).
 const LOG = '[role="log"]';
 
 async function open(page: Page, path: string, seed: { quality?: string; theme?: string } = {}) {
@@ -37,7 +35,6 @@ async function scenario(browser: Browser, path: string, seed: { quality?: string
 }
 
 const logText = (page: Page) => page.locator(LOG).allInnerTexts();
-// `legacy=1`: no squad zones, so the fixture subagent's own join is not said ahead of the effect in the shared log.
 const preview = (effect: string, extra = '') =>
   `/office?preview=life&effect=${effect}&t=1000&legacy=1${extra}`;
 
@@ -58,7 +55,6 @@ test.describe('R21 and R43', () => {
     );
     await high.close();
     const balanced = await scenario(browser, preview('time-machine'), { quality: 'balanced' });
-    // The tier says nothing: no announcement in a window longer than the high tier's effect took to show.
     await throughout(
       balanced.page,
       () => expect(balanced.page.locator(`${LOG} p`)).toHaveCount(0),
@@ -114,14 +110,12 @@ test.describe('the squad layer is warm before the first subagent shows', () => {
   test('a squad that appears late links no new shader program', async ({ page }) => {
     await open(page, '/office?perf=60&squad=3&after=6000');
     await page.waitForFunction(() => '__aetherPerfRig' in window, undefined, { timeout: 60_000 });
-    await frames(page, 180); // the warm-up has linked what the scene holds (scene time, so a loaded machine only waits longer)
+    await frames(page, 180);
     const before = await page.evaluate(
       () =>
         (window as unknown as { __aetherPerfRig: { gl: { info: { programs: unknown[] } } } })
           .__aetherPerfRig.gl.info.programs.length,
     );
-    // The squad shows 6 s after load (`after=6000`, a page timer): its zone label is the mark, and the frames after it
-    // are the zone, pods, beam and strings drawn.
     await expect(page.getByRole('button', { name: /^Squad of .*, \d+ working/ })).toBeAttached({
       timeout: 60_000,
     });

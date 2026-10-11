@@ -50,7 +50,7 @@ it('the hook routes refuse a request a proxy forwarded, with or without a truste
         url: `/api/hook/permission-requests/x?nonce=${'n'.repeat(24)}`,
         headers: { ...host, authorization: `Bearer ${'g'.repeat(43)}`, ...headers },
       });
-    expect((await hook({})).statusCode).toBe(401); // a local hook: loopback, wrong token
+    expect((await hook({})).statusCode).toBe(401);
     expect((await hook({ 'x-forwarded-for': '203.0.113.5' })).statusCode).toBe(403);
     expect((await hook({ forwarded: 'for=203.0.113.5' })).statusCode).toBe(403);
   }

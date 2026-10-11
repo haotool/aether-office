@@ -23,7 +23,6 @@ import { POLL, poll, pollBy } from '../../lib/app/polling.js';
 
 type TerminalExit = { exitCode: number; signal: number | null };
 
-/** The terminal's detail, polled until it has exited. */
 function useTerminalDetail(projectId: string, id: string) {
   return useQuery({
     queryKey: ['terminal', projectId, id],
@@ -35,7 +34,6 @@ function useTerminalDetail(projectId: string, id: string) {
   });
 }
 
-/** One terminal's state: the polled detail, whether this person may type into it, the screen, and the commands. */
 function useTerminalSession(projectId: string, id: string, userId: string, canWrite: boolean) {
   const [error, setError] = useState('');
   const [armed, setArmed] = useState(false);

@@ -51,8 +51,6 @@ def materials(P):
     }
 
 
-# ---- Where things are on the face ----------------------------------------------------------------
-
 def ellipsoids(P):
     """The head and muzzle as [(centre, radii)], the shapes the skin is fused from."""
     cx, cy, cz = HEAD_CENTRE
@@ -86,8 +84,6 @@ def layout(P):
     }
 
 
-# ---- Small helpers --------------------------------------------------------------------------------
-
 def mesh_part(name, mat, bone, build, bones=None):
     """A loose part: one material, weighted to `bone` (or by `bones(co)` -> {bone: weight})."""
     bm = bmesh.new()
@@ -114,8 +110,6 @@ def smooth_step(v, a, b):
     t = min(1.0, max(0.0, (v - a) / (b - a)))
     return t * t * (3 - 2 * t)
 
-
-# ---- The skin -------------------------------------------------------------------------------------
 
 def skin_shapes(P, bm):
     """Head, muzzle, cheeks, neck, torso, arms and legs, overlapping, ready to be fused into one skin."""
@@ -217,8 +211,6 @@ def body_skin(P, mats):
     ao.paint(skin, mats['fur'], patches)
     return skin
 
-
-# ---- Loose parts ----------------------------------------------------------------------------------
 
 def eye_parts(P, mats, lay):
     ex, ey, ez = lay['eye']
@@ -370,14 +362,12 @@ def sweep_tube(bm, path, segs=24):
         d = pts[min(i + 1, len(pts) - 1)] - pts[max(i - 1, 0)]
         tangents.append(d.normalized())
     rings = []
-    # Rounded ends: three rings that pull in along the tangent like a hemisphere.
     caps = [math.radians(a) for a in (65, 40, 18)]
     def ring(centre, r, frame):
         return [bm.verts.new(centre + (frame @ Vector((math.cos(2 * math.pi * k / segs) * r, math.sin(2 * math.pi * k / segs) * r, 0)))) for k in range(segs)]
     quat = tangents[0].to_track_quat('Z', 'Y')
     frames = []
     for t in tangents:
-        # carry the frame along: the smallest turn taking the last tangent to this one
         last = quat @ Vector((0, 0, 1))
         quat = last.rotation_difference(t) @ quat
         frames.append(quat.to_matrix())

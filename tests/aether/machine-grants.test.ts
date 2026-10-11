@@ -30,7 +30,7 @@ it('invitations expire, redeem once, and bind a machine to one project, provider
 
     const fresh = invite();
     const machine = redeemInvitation(f.control.ctx, fresh.token);
-    expect(() => redeemInvitation(f.control.ctx, fresh.token)).toThrow('INVITATION_INVALID'); // single use
+    expect(() => redeemInvitation(f.control.ctx, fresh.token)).toThrow('INVITATION_INVALID');
     const row = f.control.ctx.sqlite
       .prepare('SELECT projectIds,allowedProviders,allowedRoots FROM machines WHERE id=?')
       .get(machine.machineId);
@@ -46,10 +46,9 @@ it('invitations expire, redeem once, and bind a machine to one project, provider
       machineId: machine.machineId,
       projectIds: [f.projectId],
     });
-    expect(() => claim(f.control.ctx, actor, ['codex'])).toThrow('PROVIDER_NOT_GRANTED'); // not granted, whatever the runner claims
-    expect(claim(f.control.ctx, actor, ['demo', 'codex'])).toBeNull(); // intersection is allowed; nothing queued
+    expect(() => claim(f.control.ctx, actor, ['codex'])).toThrow('PROVIDER_NOT_GRANTED');
+    expect(claim(f.control.ctx, actor, ['demo', 'codex'])).toBeNull();
 
-    // A workspace outside the granted roots is refused.
     const workId = String(
       f.control.execute(
         f.owner.actor,
@@ -80,7 +79,7 @@ it('invitations expire, redeem once, and bind a machine to one project, provider
         epoch: run.epoch,
         workspace: workspace(path),
       });
-    expect(() => send('/srv/work-evil/checkout')).toThrow('WORKSPACE_ROOT_NOT_GRANTED'); // prefix of a sibling, not inside the root
+    expect(() => send('/srv/work-evil/checkout')).toThrow('WORKSPACE_ROOT_NOT_GRANTED');
     expect(() => send('/etc/checkout')).toThrow('WORKSPACE_ROOT_NOT_GRANTED');
     expect(send('/srv/work/checkout')).toEqual({ duplicate: false });
   } finally {

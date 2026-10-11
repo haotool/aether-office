@@ -44,19 +44,22 @@ violations. At most five declarations repo-wide; invalid or missing paths and ex
 
 | Criterion | Measured by | Producer / notes |
 | --- | --- | --- |
-| L1-02 … L1-09, L2-02, L2-03, L2-06, L3-05, L3-06, L7-03, L7-04 | Release static measures (see prior WP) | `scripts/quality/release/measure.mjs` |
+| L1-02 … L1-09, L2-02, L2-03, L2-06, L3-05, L3-06, L7-03, L7-04 | Release static measures | `scripts/quality/release/measure.mjs` |
 | L3-03 | `coverage/coverage-summary.json` (`pnpm test:coverage`); violations = max(0, 80−line%, 70−branch%) pp; failAt 30 | Scorer (file absent → unmeasured) |
+| L3-09 | `docs/verification/stability.json`: the whole vitest suite run three times on one tree, stamped with the tree ids of `apps`, `packages` and `tests` (`node scripts/quality/release/stability.mjs`); one violation per test whose result differs | Scorer |
+| L4-03, L4-08 | `docs/verification/ux-matrix.json`, stamped with the code tree ids (`pnpm run ux:matrix`, `pnpm run ux:summary -- --write`) | Scorer; see [the UX matrix](../verification/ux-matrix.md) |
 | L4-05 | `quality` UI token lint + escape budget | Scorer |
 | L4-06 | Locale parity + inline bilingual scan | Scorer |
 | L5-03 | `refetchInterval` sites under `apps/web/src` | Scorer |
+| L5-05, L5-06, L5-09 | `docs/verification/perf-mobile.json`, stamped with the code tree ids (`pnpm run perf:evidence`, `pnpm run perf:record`) | Scorer; see [mobile-perf.md](mobile-perf.md) |
 | L5-04 | All `backdrop-filter` blur and `filter: blur(` sites under `apps/web/src/styles/**`, minus lines marked `/* blur-ok: … */` on the same or previous line (measured harmless); failAt 20 | Scorer |
 | L6-07 | Mixed zh/en paragraphs in public `docs/` (excludes research/adr/verification) | Scorer |
-| L8-03 | Conventional commit subjects on full `git log HEAD` (release clone uses post-cleanup history) | Scorer |
+| L8-03 | Conventional commit subjects of the maintainer's commits (upstream commits are skipped, as in `oss:check --history`) | Scorer |
 | L8-05 | Distinct maintainer author emails (non-upstream commits) | Scorer |
 | L9-04 | `pnpm audit` high/critical | Scorer (network failure → unmeasured) |
-| L1-01, L2-01, L2-07, L3-01, L3-02, L3-04, L3-07, L5-01, L6-01, L7-01, L7-02, L7-05, L9-01, L9-02 | `quality:gates` | Gate executor (PM integration runs full set under lock) |
-| L1-07 | (not in executor yet) | Future static gate producer |
-| L4-01, L4-02, L4-04, L5-02, L5-07, L8-01, L8-02, L8-04, L8-08, L9-03, L9-05 | External QA / history / CI evidence | Respective work packages (file may list any **G** id) |
+| L1-01, L1-07, L2-01, L2-07, L3-01, L3-02, L3-04, L3-07, L4-01, L4-02, L4-04, L5-01, L6-01, L7-01, L7-02, L7-05, L9-01, L9-02, L9-03, L9-05 | `quality:gates` | Gate executor (run the full set on a clean checkout) |
+| L8-01, L8-02, L8-04, L8-08 | `quality:gates` in the release clone | `scripts/oss/history-gate.mjs`; the first three read the record `history-verify.sh --evidence` wrote (`OSS_HISTORY_EVIDENCE`), bound to the checked-out commit |
+| L5-02, L5-07 | Perf report | A gate file may list any **G** id; see `docs/quality/mobile-perf.md` |
 | E / H rows | `criteria-evidence.json` | Review / human gates work packages |
 
 Implementation: `scripts/quality/release/` (registry, measure, gates, evidence). Tests:
@@ -111,13 +114,13 @@ there and the rubric below must change in the same commit.
 - `info` rules are reported and never penalised.
 - The overall score is the mean of the scored areas.
 - Files never judged: generated and ledger files (`THIRD_PARTY_NOTICES.md`, `docs/verification/features.json` and `report.md`, the scorecard
-  itself, `generated/` folders), lockfiles, binaries and `fixtures/`. The scorer's own files are skipped by the text scans (they name the patterns).
+  itself, `generated/` folders), lockfiles, binaries and `tests/processes/`. The scorer's own files are skipped by the text scans (they name the patterns).
 
 ## The rubric
 
 | Area (id) | Rules (weight) |
 | --- | --- |
-| Structure (`structure`) | files over 400 lines (8) and over 800 (12), counting ts, tsx, mjs and css; functions over 50 lines (12); control-flow nesting over 4 (8); import cycles over runtime imports (12); files imported by more than 30 others, `index.ts` barrels excepted (5); exports no file imports, followed through barrels (10); duplicated code over 3% of product lines, by a 50-token window with comments and imports ignored (12); `any` (6); `@ts-ignore`, `@ts-expect-error`, `eslint-disable` (6); TODO, FIXME, HACK in comments (5); `console.*` in product source (5) |
+| Structure (`structure`) | files over 400 lines (8) and over 800 (12), counting ts, tsx, mjs and css; functions over 50 lines (12); control-flow nesting over 4 (8); import cycles over runtime imports (12); files imported by more than 30 others, `index.ts` barrels excepted (5); exports no file imports, followed through barrels (10); code lines over the budget in `LIMITS.codeLines`, which only goes down (6); duplicated code over 3% of product lines, by a 50-token window with comments and imports ignored (12); `any` (6); `@ts-ignore`, `@ts-expect-error`, `eslint-disable` (6); TODO, FIXME, HACK in comments (5); `console.*` in product source (5) |
 | Types and correctness gates (`types`) | `strict`, `noUncheckedIndexedAccess`, `noUnusedLocals` on (20); `noImplicitReturns`, `noFallthroughCasesInSwitch`, `noImplicitOverride`, `noUnusedParameters` (6); TypeScript files outside the type-checked project (6); `tsc --noEmit` errors (20); boundary violations (10); files prettier would change (8); non-null assertions (15); `as unknown as` (10) |
 | Tests (`tests`) | product modules no unit test reaches through imports (25); share imported directly by a test, resolved through barrels, at least 60% (15); fixed sleeps, fixed ports, `waitForTimeout` (20); skipped or todo tests, where `test.skip(condition, reason)` is a guard and not counted (10); line coverage at least 80% (8) and branches at least 70% (7), read from `coverage/coverage-summary.json` when a vitest coverage run left one, else not run (the v8 provider is not installed and none is added). The test-to-source line ratio per package is reported |
 | UI system (`ui`) | the existing token lint (20); literal px width, height, min, max, inset (10); `vh` (5); `@media` widths outside 500, 760, 1000, 1250 and their one-pixel partners (5); literal transition and animation seconds (5); literal shadows (5); literal `line-height` (5); `!important` (5); px custom properties outside `tokens.css` (5); rules above `scripts/design-token-baseline.json` when it exists (15); distinct sizes per role from `e2e/ui/role-variance.spec.ts` (20, see below). Physical left/right properties are reported only |
@@ -146,7 +149,7 @@ Rules that need a run this scorer will not start read a file the run leaves behi
 area is below its floor; `quality:report` raises a floor to the area's new score and never lowers one. Lowering a floor is a visible edit of
 that file. `quality:check` also fails when `scorecard.json` is stale: a rule that was measured on both sides must have the same value and
 penalty (a rule that was not run on either side is ignored, so a machine without gitleaks or a build still checks the rest), and
-`scorecard.md` must be exactly what `scorecard.json` renders. See "Raising the floor" in [CONTRIBUTING.md](../../CONTRIBUTING.md).
+`scorecard.md` must be exactly what `scorecard.json` renders. See "Raising the floor" in [CONTRIBUTING.md](../../.github/CONTRIBUTING.md).
 
 ## Challenging a rule
 

@@ -69,7 +69,6 @@ type KpiScopeViewProps = {
   now: number;
 };
 
-/** The five headline figures, and the notes under them when there is nothing to count or some of it has no office. */
 function HeadlineSection({ totals, unplaced }: { totals: Scope['totals']; unplaced: number }) {
   const t = useT();
   const locale = useLocale();
@@ -112,7 +111,6 @@ function ShareSection({ id, title, children }: { id: string; title: string; chil
   );
 }
 
-/** Tokens by model, by project (the whole building only) and by the heaviest sessions. */
 function ShareSections({ scope, usage, office, top, titles }: ShareSectionsProps) {
   const t = useT();
   const locale = useLocale();
@@ -161,10 +159,6 @@ function ShareSections({ scope, usage, office, top, titles }: ShareSectionsProps
   );
 }
 
-/**
- * One scope of the dashboard: the whole building (`office` null) or one office. Tokens by kind, by day, by model, the
- * heaviest sessions, the rate-limit windows and the repositories' Git activity, every figure with the numbers beside it.
- */
 export function KpiScopeView({
   usage,
   git,

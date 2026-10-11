@@ -10,28 +10,23 @@ import { newState } from './usage-counters.js';
 import { dayKeyOf, parseChunk } from './usage-parse.js';
 import { MAX_TRACKED_FILES, keyOf, loadRollup, saveRollup, type Entry } from './usage-store.js';
 
-// Token usage of every local session, per day, kept current by reading only what each transcript gained since the last
-// look. The first scan of a long history is done in the background, one file at a time through one shared buffer, with a
-// turn of the event loop between chunks, so a request never waits for it: it answers with what is known and says so.
+// The first scan of a long history runs in the background, one file at a time through one shared buffer with a turn of
+// the event loop between chunks, so a request never waits for it.
 
-const CHUNK = 1024 * 1024; // about 30 ms of parsing: the longest the event loop is held at a time
+const CHUNK = 1024 * 1024;
 const SIG_BYTES = 256;
 const sha = (data: Buffer) => createHash('sha1').update(data).digest('hex').slice(0, 12);
 /** A pass may take about a tenth of the time (the listing of a big history is the cost), never leaving a gap above this. */
 const PASS_DUTY = 10;
 const MAX_PASS_GAP_MS = 3000;
 const SAVE_GAP_MS = 30_000;
-const MEMO_ANSWERS = 6; // a few ranges and attribution sets at once
-/** Files modified within this many days can hold a day of the window (one more than the window, for the zone's edge). */
+const MEMO_ANSWERS = 6;
 const FILE_WINDOW_MS = (WINDOW_DAYS + 1) * 86_400_000;
 const tick = () => new Promise<void>((resolve) => setImmediate(resolve));
 
 type UsageOptions = {
-  /** The home directory whose `.claude/projects` and `.codex/sessions` are read. */
   home: string;
-  /** IANA zone the days are counted in; defaults to this machine's. */
   timeZone?: string;
-  /** Where the numbers-only rollup is kept between runs; none keeps everything in memory. */
   cacheFile?: string | null;
   now?: () => number;
   maxFiles?: number;
@@ -52,15 +47,12 @@ class UsageTracker {
   private pending = 0;
   private running: Promise<void> | null = null;
   private lastPassEnd = 0;
-  /** How long after the last pass the next may start: proportional to what that pass cost, so a small history is always fresh. */
   private passGap = 0;
   private lastSaved = 0;
   private dirty = false;
-  /** When the numbers last changed: the answer is stamped with it, so an unchanged answer is byte for byte the same (ETag). */
   private changedAt = 0;
   private limitsMemo: { stamp: string; value: CodexLimits | null } | null = null;
   private readonly memo = new Map<string, Answer>();
-  /** Which Claude messages some file already counted: a copy of one in another file adds nothing. */
   private readonly claims = new ClaimBook();
   private found = 0;
   private truncated = false;
@@ -73,14 +65,12 @@ class UsageTracker {
     this.dayOf = dayKeyOf(this.timeZone);
   }
 
-  /** The hash of the bytes just before `offset` (the whole file's start when there are fewer). */
   private async tailOf(handle: FileHandle, offset: number): Promise<string> {
     const from = Math.max(0, offset - SIG_BYTES);
     const { bytesRead } = await handle.read(this.buffer, 0, offset - from, from);
     return sha(this.buffer.subarray(0, bytesRead));
   }
 
-  /** The entry to continue from: the known one if the file only grew, else an empty one (its messages are counted again). */
   private async entryToRead(
     handle: FileHandle,
     t: Transcript,
@@ -107,7 +97,6 @@ class UsageTracker {
     };
   }
 
-  /** Parses the whole lines `entry` has not seen yet and returns the offset reached. */
   private async parseRest(handle: FileHandle, t: Transcript, key: string, entry: Entry) {
     let offset = entry.offset;
     while (offset < t.size) {
@@ -119,10 +108,10 @@ class UsageTracker {
       );
       if (!bytesRead) break;
       this.metrics.bytesRead += bytesRead;
-      const end = this.buffer.lastIndexOf(10, bytesRead - 1); // only whole lines; the rest is read next time
+      const end = this.buffer.lastIndexOf(10, bytesRead - 1);
       if (end < 0) {
-        if (bytesRead < CHUNK) break; // an unfinished last line: wait for the rest
-        offset += bytesRead; // one line longer than a chunk: step over it
+        if (bytesRead < CHUNK) break;
+        offset += bytesRead;
         continue;
       }
       parseChunk(entry.state, this.buffer.subarray(0, end), this.dayOf, {
@@ -179,7 +168,6 @@ class UsageTracker {
     }
   }
 
-  /** Forgets the files that are no longer listed (and the messages they counted). */
   private dropGone(entries: Map<string, Entry>) {
     const keys = new Set(this.listing.map((t) => keyOf(t.file)));
     const gone = new Set([...entries.keys()].filter((key) => !keys.has(key)));
@@ -210,21 +198,15 @@ class UsageTracker {
     if (this.dirty && this.clock() - this.lastSaved >= SAVE_GAP_MS) await this.flush();
   }
 
-  /** Writes the rollup now (when there is a file to write it to and something new in it). */
   async flush() {
     if (!this.options.cacheFile || !this.store || !this.dirty) return;
     this.dirty = false;
     this.lastSaved = this.clock();
     await saveRollup(this.options.cacheFile, this.timeZone, this.store).catch(() => {
-      this.dirty = true; // try again next time
+      this.dirty = true;
     });
   }
 
-  /**
-   * Starts a scan unless one is running, and waits at most `waitMs` for it: the caller gets what is known by then
-   * (`scan.complete` says whether that is everything). A scan that just ended is waited out when its gap is short, so a
-   * file that appeared since is counted by this very request; after a costly one the caller gets what is known.
-   */
   async refresh(waitMs: number): Promise<void> {
     const start = this.clock();
     if (!this.running) {
@@ -278,7 +260,6 @@ class UsageTracker {
     };
   }
 
-  /** The transcripts read so far, each with its entry. */
   private trackedFiles(): Tracked[] {
     const entries = this.store ?? new Map<string, Entry>();
     return this.listing.flatMap((transcript) => {
@@ -291,13 +272,11 @@ class UsageTracker {
     range: Answer['range'],
     attributions: ReadonlyMap<string, Attribution>,
     claude: Answer['limits']['claude'],
-    /** Answer with nothing (local sessions are switched off) whatever has been read. */
     blank = false,
   ): Promise<Answer> {
     const today = this.dayOf(this.clock());
     const scan = this.scanState();
     const limits = { claude, codex: blank ? null : await this.codexLimits() };
-    // The answer depends on what was read, the day, who the sessions are and the limits: when none changed, it is reused.
     const sig = JSON.stringify([
       range,
       blank,

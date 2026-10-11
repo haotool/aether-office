@@ -18,7 +18,6 @@ describe('language switch', () => {
       .filter(([, v]) => CJK.test(v))
       .map(([k]) => k);
     expect(chineseInEnglish).toEqual([]);
-    // A Chinese string made only of Latin words longer than a short product name is almost certainly a missed translation.
     const untranslated = Object.entries(zh)
       .filter(
         ([, v]) =>

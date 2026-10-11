@@ -1,6 +1,5 @@
 import { hashText } from './hash.js';
 
-/** The generator type `seeded` returns. */
 export type Rng = () => number;
 
 /** A small deterministic generator: the same seed always gives the same sequence in [0, 1). */

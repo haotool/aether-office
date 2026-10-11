@@ -45,9 +45,9 @@ it('picks pending requests per session, oldest first, and counts the seconds lef
 
 it('a compact card offers Allow only when its one line is the whole call', () => {
   const multi = request('m', 'claude:a', { needsReview: true });
-  expect(mustReview(multi, true, false)).toBe(true); // Review first, no Allow
-  expect(mustReview(multi, true, true)).toBe(false); // once opened, the full card has the preview and Allow
-  expect(mustReview(multi, false, false)).toBe(false); // the full card always shows the preview
+  expect(mustReview(multi, true, false)).toBe(true);
+  expect(mustReview(multi, true, true)).toBe(false);
+  expect(mustReview(multi, false, false)).toBe(false);
   expect(mustReview(request('s', 'claude:a'), true, false)).toBe(false);
 });
 
@@ -84,11 +84,9 @@ it('a session with a request waiting needs you, once, whatever its hooks last sa
   const asked = buildFeed({ ...base, asking: new Set(['claude:a']) });
   expect(asked.needs.map((i) => [i.key, i.reason])).toEqual([['claude:a', 'permission']]);
 
-  // The badge counts a session once, whether the hooks, the request or both say it waits.
   expect(sessionsNeedingYou([{ key: 'claude:a' }], new Set(['claude:a', 'claude:b']))).toBe(2);
   expect(sessionsNeedingYou([], new Set())).toBe(0);
 
-  // And the alert for it is the existing "needs you" one.
   const before = new Map([['claude:a', { activity: 'working', since: 0 }]]);
   const { events } = sessionTransitions(
     before,

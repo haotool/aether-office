@@ -9,23 +9,21 @@ import {
   type Work,
 } from './core.js';
 
-export const eventSchema = z
-  .object({
-    schemaVersion: z.literal(1),
-    eventId: id,
-    seq: z.string().regex(/^\d+$/),
-    projectId: id,
-    type: z.string().regex(/^[a-z][a-z.]+$/),
-    actorId: z.string(),
-    occurredAt: z.number(),
-    ingestedAt: z.number(),
-    correlationId: id,
-    causationId: z.string(),
-    source: z.enum(['command', 'native', 'simulated', 'observed']),
-    dataClassification: z.literal('project'),
-    payload: z.record(z.string(), z.unknown()),
-  })
-  .strict();
+export const eventSchema = z.strictObject({
+  schemaVersion: z.literal(1),
+  eventId: id,
+  seq: z.string().regex(/^\d+$/),
+  projectId: id,
+  type: z.string().regex(/^[a-z][a-z.]+$/),
+  actorId: z.string(),
+  occurredAt: z.number(),
+  ingestedAt: z.number(),
+  correlationId: id,
+  causationId: z.string(),
+  source: z.enum(['command', 'native', 'simulated', 'observed']),
+  dataClassification: z.literal('project'),
+  payload: z.record(z.string(), z.unknown()),
+});
 export type OfficeEvent = z.infer<typeof eventSchema>;
 export type Snapshot = {
   schemaVersion: 1;

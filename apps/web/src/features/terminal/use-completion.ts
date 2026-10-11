@@ -17,7 +17,6 @@ const MENU_ROWS = 8;
 
 type SlashRow = MenuRow & { item: SlashItem };
 
-/** The rows of the slash menu: built-ins, skills and the project's own commands, ranked by what was typed. */
 function useSlashRows(session: AttributedSession, slash: Token | null): SlashRow[] {
   const t = useT();
   const locale = useLocale();
@@ -55,7 +54,6 @@ function useSlashRows(session: AttributedSession, slash: Token | null): SlashRow
   }));
 }
 
-/** The rows of the `@` menu: the project's files that match what was typed. */
 function useFileRows(session: AttributedSession, at: Token | null): MenuRow[] {
   const files = useQuery({
     queryKey: ['session-files', session.key, at?.query ?? ''],
@@ -70,7 +68,6 @@ function useFileRows(session: AttributedSession, at: Token | null): MenuRow[] {
   return at ? (files.data?.files ?? []).map((f) => ({ id: f, label: f })) : [];
 }
 
-/** The completion menu under the box: which token is being completed, its rows, and the highlighted one. */
 export function useCompletion(session: AttributedSession, text: string, caret: number) {
   const [active, setActive] = useState(0);
   const [dismissed, setDismissed] = useState('');
@@ -89,7 +86,6 @@ export function useCompletion(session: AttributedSession, text: string, caret: n
     current: Math.min(active, Math.max(rows.length - 1, 0)),
     setActive,
     dismiss: () => setDismissed(here),
-    /** The text a chosen row inserts: `/name ` for a command, `@path ` for a file. */
     insertion: (row: MenuRow) => (slash ? `/${(row as SlashRow).item.name} ` : `@${row.id} `),
   };
 }

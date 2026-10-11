@@ -11,7 +11,6 @@ import { selectAll } from '../../db/query.js';
 import { agents, dependencies, messages, work } from '../../db/schema.js';
 import { project, type Context } from './context.js';
 
-/** The newest event sequence of a project, as text (sequences are 64-bit). */
 export function highWatermark(ctx: Context, projectId: string): string {
   return (
     ctx.sqlite
@@ -20,7 +19,6 @@ export function highWatermark(ctx: Context, projectId: string): string {
   ).seq;
 }
 
-/** The last 100 messages the actor can read (an agent: its own and those delivered to it), with their deliveries. */
 function recentMessages(ctx: Context, actor: Actor, projectId: string) {
   const visible = selectAll(ctx.sqlite, messages, { projectId }).filter(
     (m) =>
@@ -42,7 +40,6 @@ function recentMessages(ctx: Context, actor: Actor, projectId: string) {
   }));
 }
 
-/** The machines granted this project; one not heard from for 15 seconds is offline. */
 function runnersOf(ctx: Context, projectId: string) {
   return (
     ctx.sqlite
@@ -64,7 +61,6 @@ function runnersOf(ctx: Context, projectId: string) {
     }));
 }
 
-/** The project as one actor may see it now: agents, work, the last messages it can read, the layout and the runners. */
 export function buildSnapshot(ctx: Context, actor: Actor, projectId: string): Snapshot {
   return ctx.sqlite
     .transaction(() => {

@@ -5,10 +5,7 @@ import type { Harness } from './workspaces.js';
 
 const OUTPUT_LIMIT_BYTES = 1024 * 1024;
 
-/**
- * Runs a verification harness in `cwd` with the given environment, collecting its output up to a limit. It ends when it
- * exits, when `signal` aborts, after its timeout or when the output limit is passed; its whole process group is stopped.
- */
+/** Its whole process group is stopped when it ends, aborts, times out or passes the output limit. */
 export async function runHarnessProcess(
   harness: Harness,
   cwd: string,
@@ -26,7 +23,7 @@ export async function runHarnessProcess(
     stdio: ['ignore', 'pipe', 'pipe'],
     detached: process.platform !== 'win32',
   });
-  const stopper = groupStopper(child); // the group can outlive its leader while descendants retain pipes
+  const stopper = groupStopper(child);
   const { stop } = stopper;
   const collect = (chunk: Buffer) => {
     outputBytes += chunk.length;

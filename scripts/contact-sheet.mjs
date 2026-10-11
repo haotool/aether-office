@@ -1,13 +1,5 @@
-// Contact sheets: renders a list of scene views in a real browser and assembles them into one labelled PNG per category,
-// for a human to look at. No dependencies beyond Playwright: the sheet is an HTML grid that the same browser screenshots.
-//
-//   node scripts/contact-sheet.mjs --url http://127.0.0.1:4320 --out evidence/contact-sheets
-//        [--token-file .data/e2e-session.json | --token <owner token>] [--category scene|life|squad|all]
-//        [--effects id,id@t1/t2/t3] [--times 0,1000,2000] [--sheet <file name>] [--theme dark|light] [--quality low|balanced|high] [--size 1280x800] [--dpr 2] [--crop 0.5] [--gpu]
-//
-// `scene` shots the existing scene (default view plus the opt-in previews). `life` shots every `--effects` id at each
-// `--times` through `?preview=life&effect=<id>&t=<ms>`; with no effects registered it renders nothing and says so.
-// `--gpu` launches Chrome on the real GPU (ANGLE Metal) instead of the default software path; the renderer is printed.
+// Contact sheets: renders a list of scene views in a real browser and assembles them into one labelled PNG per
+// category, for a human to look at. No dependencies beyond Playwright.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from '@playwright/test';
@@ -18,8 +10,6 @@ const SCENE_SHOTS = [
   { id: 'compact', query: 'compact=1' },
   { id: 'talk', query: 'talk=1' },
 ];
-// The squad storyboard (docs/design/office-life.md section 2.4, frames 1 to 8) on stand-in subagents (`?squad=`):
-// `settle` is how long after the scene is up the frame is taken, so a frame is where the preview's clock puts it.
 const SQUAD_SHOTS = [
   { id: 'zone-seated', query: 'squad=4&look=1', settle: 5000 },
   { id: 'spawn', query: 'squad=2&arrive=5000&look=1', settle: 5300 },
@@ -27,7 +17,6 @@ const SQUAD_SHOTS = [
   { id: 'gather', query: 'squad=6&arrive=1500&look=1', settle: 10500 },
   { id: 'dismiss-wave', query: 'squad=2&leave=4000&look=1', settle: 5200 },
   { id: 'dismiss-walk', query: 'squad=2&leave=4000&look=1', settle: 9000 },
-  // Frames 4 to 7 (puppet strings and the hand-over of a result), up close. `look=desk` frames the supervisor's desk.
   { id: 'strings-taut', query: 'squad=4&tools=900&look=1', settle: 5000 },
   { id: 'strings-slack', query: 'squad=2&leave=4000&look=1', settle: 3600 },
   { id: 'handover-stand', query: 'squad=1&leave=4000&tools=900&look=desk', settle: 3200 },
@@ -63,7 +52,6 @@ const readToken = (args) => {
   return readFileSync(join(JSON.parse(raw).directory, 'owner-token'), 'utf8').trim();
 };
 
-/** The shots of a category: `{ id, query }` where `query` is appended to the office URL. */
 export function shotsFor(category, args) {
   if (category === 'scene') return SCENE_SHOTS;
   if (category === 'squad') return SQUAD_SHOTS;
@@ -71,7 +59,6 @@ export function shotsFor(category, args) {
   const defaults = (typeof args.times === 'string' ? args.times : '0,1000,2000')
     .split(',')
     .map((t) => Number(t));
-  // `id` takes the default times; `id@3000/8000/14000` brings its own (effects last from 2 s to 45 s).
   return effects.flatMap((spec) => {
     const [effect, own] = spec.split('@');
     const times = own ? own.split('/').map((t) => Number(t)) : defaults;
@@ -101,7 +88,7 @@ figure{margin:0}img{display:block;width:${width}px;border:1px solid #333}figcapt
 async function enter(page, url, token, theme, quality) {
   await page.addInitScript(
     ({ value, quality }) => {
-      window.localStorage.setItem('aether-building-panel', 'closed'); // the decks panel would cover the scene
+      window.localStorage.setItem('aether-building-panel', 'closed');
       window.localStorage.setItem(
         'aether-ui-preferences',
         JSON.stringify({
@@ -111,7 +98,7 @@ async function enter(page, url, token, theme, quality) {
             view: '3d',
             autoCamera: false,
             advanced: true,
-            panelCollapsed: true, // the scene gets the room
+            panelCollapsed: true,
             ...(quality ? { quality } : {}),
           },
           version: 0,
@@ -161,9 +148,7 @@ async function main() {
         const page = await context.newPage();
         await enter(page, `${base}/${shot.query ? `?${shot.query}` : ''}`, token, theme, quality);
         await page.waitForTimeout(shot.settle ?? SETTLE_MS);
-        // Just the scene (its overlays included), not the app around it.
         const box = await page.locator('canvas').first().boundingBox();
-        // The camera looks at the member of a life preview, so its middle is where a small effect is: crop to it.
         const keep = crop ?? (category === 'life' ? 0.5 : 1);
         const clip = box && {
           x: box.x + (box.width * (1 - keep)) / 2,

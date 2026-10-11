@@ -4,14 +4,9 @@ import { copyText } from '../../lib/platform/browser-compat.js';
 import { useT } from '../../ui/useT.js';
 import { diffKind, isDiff } from './md-parse.js';
 
-/** Longer than this and the lines are numbered: a short snippet reads better without a gutter. */
 const NUMBERED_FROM = 8;
 const COPIED_MS = 1500;
 
-/**
- * A fenced block: its language, a switch between scrolling sideways and wrapping, a copy button, a gutter of line numbers
- * past eight lines (drawn by CSS, so a selection copies only the code), and +/- colouring when it is a diff.
- */
 export function CodeBlock({ text, lang }: { text: string; lang: string | undefined }) {
   const t = useT();
   const [copied, setCopied] = useState(false);

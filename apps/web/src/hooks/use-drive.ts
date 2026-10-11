@@ -27,7 +27,6 @@ import { POLL, poll } from '../lib/app/polling.js';
 
 export type Drive = { terminalId: string; projectId: string };
 
-/** The AETHER terminal a local session runs in, or null when it was not started there (AETHER cannot type into it). */
 export function useSessionTerminal(sessionKey: string | null) {
   const query = useQuery({
     queryKey: ['session-terminal', sessionKey],
@@ -44,7 +43,6 @@ export function useSessionTerminal(sessionKey: string | null) {
   return { drive: query.data?.terminal ?? null, loading: query.isLoading };
 }
 
-/** False while the browser says it is offline, or the last request could not reach the server (until one can). */
 function useReachable() {
   const [online, setOnline] = useState(() => navigator.onLine);
   const [reachable, setReachable] = useState(true);
@@ -71,7 +69,6 @@ function useReachable() {
   return { online: online && reachable, lost: () => setReachable(false) };
 }
 
-/** Who may write, and whether the session's terminal is running and not another person's right now. */
 function useDriveAccess(drive: Drive) {
   const me = useQuery({
     queryKey: ['session'],
@@ -95,7 +92,6 @@ function useDriveAccess(drive: Drive) {
   };
 }
 
-/** The writes that never queue: a key, an interrupt, stopping the process; and the error the last write left. */
 function useDirectWrites(
   drive: Drive,
   userId: string,
@@ -126,7 +122,6 @@ function useDirectWrites(
       ).catch(() => undefined),
     [drive, userId, guarded],
   );
-  /** Esc, then Ctrl+C a moment later if it is still working. */
   const interrupt = useCallback(async () => {
     await sendKey(ESC);
     await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -140,7 +135,6 @@ function useDirectWrites(
 
 type Way = { online: boolean; free: boolean; working: boolean; canWrite: boolean; userId: string };
 
-/** Sends one queued message: marks it sending, then sent, back to queued when the network dropped, or failed. */
 function useDeliver(
   sessionKey: string,
   drive: Drive,
@@ -169,7 +163,6 @@ function useDeliver(
         hold.current = Date.now() + SETTLE_MS;
         mark(item.localId, { state: 'sent', at: Date.now() });
       } catch (e) {
-        // The network dropped: the message goes back to waiting. Anything else is the server's answer: it failed.
         mark(
           item.localId,
           isNetworkError(e)
@@ -186,7 +179,6 @@ function useDeliver(
   return { deliver, sending, hold, tick };
 }
 
-/** Flush: the oldest waiting message, whenever the way is clear. A timer re-looks while one waits (the settle gap). */
 function useFlushQueue(
   sessionKey: string,
   drive: Drive,
@@ -209,12 +201,6 @@ function useFlushQueue(
   });
 }
 
-/**
- * Everything the composer needs to drive a session's terminal: who may write, whose lease it is under, the messages
- * waiting or just sent (kept in the outbox for the transcript to show), and the sends themselves. A message goes in
- * when the network is up, the terminal is not another person's and the session is not working; until then it waits in
- * a bounded queue.
- */
 export function useDrive(sessionKey: string, drive: Drive, working: boolean) {
   const access = useDriveAccess(drive);
   const network = useReachable();

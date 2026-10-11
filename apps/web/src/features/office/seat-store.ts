@@ -1,8 +1,7 @@
 import type { Seat } from '@aether/office-scene/model';
 
-// The desks of one project's observed members, remembered in the browser so a reload seats the same people where they sat.
-// Only session ids and two integers per member are stored; anything unreadable is ignored (the desks are then simply
-// assigned afresh).
+// Remembered in the browser so a reload seats the same people where they sat. Only session ids and two integers per
+// member are stored; anything unreadable is ignored and the desks are assigned afresh.
 const VERSION = 1;
 export const MAX_SEATS = 512;
 const key = (projectId: string) => `aether-seats:${projectId}`;
@@ -24,7 +23,6 @@ export function parseSeats(raw: string | null): Map<string, Seat> {
   return out;
 }
 
-/** The last MAX_SEATS entries, as the text that is stored (a map of the members present stays far below it). */
 export function serializeSeats(seats: ReadonlyMap<string, Seat>): string {
   const rows = [...seats].slice(-MAX_SEATS).map(([id, [floor, slot]]) => [id, floor, slot]);
   return JSON.stringify({ v: VERSION, seats: rows });

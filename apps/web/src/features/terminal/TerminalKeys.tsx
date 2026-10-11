@@ -1,7 +1,6 @@
 import { TERMINAL_KEYS } from './terminal-keys.js';
 import { useT, useLocale } from '../../ui/useT.js';
 
-/** Esc, Tab, Ctrl+C and the arrows for a touch screen. Shown only to a finger (see styles/phone/phone-drawer.css). */
 export function TerminalKeys({ onKey }: { onKey: (sequence: string) => void }) {
   const t = useT();
   const zh = useLocale() === 'zh-TW';
@@ -12,7 +11,6 @@ export function TerminalKeys({ onKey }: { onKey: (sequence: string) => void }) {
           key={key.label}
           type="button"
           aria-label={zh ? key.label_zh : key.label}
-          // Keep the focus where it is, or the on-screen keyboard closes on every tap.
           onPointerDown={(e) => e.preventDefault()}
           onClick={() => onKey(key.send)}
         >

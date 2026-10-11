@@ -12,7 +12,6 @@ const GENUS: Record<Archetype, [string, string]> = {
   crystal: ['Prism', '晶花'],
 };
 
-/** 24 epithets, English and Chinese, each a quality of light or metal. */
 const EPITHET: [string, string][] = [
   ['Aurelia', '金輝'],
   ['Nocturna', '夜幕'],
@@ -40,7 +39,6 @@ const EPITHET: [string, string][] = [
   ['Ember', '餘燼'],
 ];
 
-/** "Lotus Aurelia" in English, "金輝蓮" in Chinese. */
 export function speciesName(archetype: Archetype, epithet: number, en: boolean): string {
   const [genusEn, genusZh] = GENUS[archetype];
   const [epithetEn, epithetZh] = itemAt(EPITHET, epithet % EPITHET.length);

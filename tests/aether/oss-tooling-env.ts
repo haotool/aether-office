@@ -5,13 +5,11 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { afterAll } from 'vitest';
 
-// The release kit is plain .mjs; import it untyped.
 const load = (name: string) => import(pathToFileURL(resolve('scripts/oss', name)).href);
 export const lib = await load('lib.mjs');
 export const { buildPlan } = await load('history-plan.mjs');
 export const { run: runReadiness } = await load('readiness-check.mjs');
 
-// Built at runtime: the history cleanup rewrites home directories in every file, including these fixtures.
 export const PERSON = ['jd', 'oe'].join('');
 
 export const scratch = realpathSync(mkdtempSync(join(tmpdir(), 'aether-oss-')));
@@ -51,7 +49,6 @@ function commit(
   });
 }
 
-/** An upstream root, a maintainer chain with long subjects, and a side branch merged back. */
 export function syntheticRepo(name: string) {
   const repo = join(scratch, name);
   mkdirSync(repo);
@@ -60,7 +57,10 @@ export function syntheticRepo(name: string) {
   commit(
     repo,
     UPSTREAM,
-    'Initial upstream snapshot (#1)',
+    [
+      'Initial upstream snapshot (#1)',
+      'Claude-Session: https://claude.example/code/session_1\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\nCo-authored-by: Real Person <real@example.com>',
+    ].join('\n\n'),
     { 'README.md': '# up\n', 'big.glb': 'v1' },
     '2026-01-01',
   );

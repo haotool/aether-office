@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useT } from './useT.js';
@@ -11,7 +11,6 @@ export function Modal({
 }: {
   title: string;
   onClose: () => void;
-  /** Stands at the side instead of the middle, so the page behind it (a live preview) stays in view. */
   dock?: boolean;
   children: ReactNode;
 }) {
@@ -48,11 +47,24 @@ export function Modal({
     </dialog>
   );
 }
-/**
- * A list in a bottom sheet over everything (a phone's way to pick from a few things without leaving the scene): a
- * title with a count, an action (the close button unless one is given), and the rows as `<li>`s. Escape and the
- * backdrop close it; focus moves in, the page behind is inert while it is open, and focus returns to what opened it.
- */
+function useSheetFocus(ref: RefObject<HTMLElement | null>, onClose: () => void) {
+  const close = useRef(onClose);
+  close.current = onClose;
+  useEffect(() => {
+    const opener = document.activeElement;
+    const page = document.getElementById('root');
+    if (page) page.inert = true;
+    ref.current?.focus();
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close.current();
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      if (page) page.inert = false;
+      if (opener instanceof HTMLElement) opener.focus();
+    };
+  }, [ref]);
+}
+
 export function Sheet({
   title,
   count,
@@ -68,21 +80,7 @@ export function Sheet({
 }) {
   const t = useT();
   const ref = useRef<HTMLElement>(null);
-  const close = useRef(onClose);
-  close.current = onClose;
-  useEffect(() => {
-    const opener = document.activeElement;
-    const page = document.getElementById('root'); // the sheet sits beside it, in the body
-    if (page) page.inert = true; // so neither Tab nor a screen reader reaches the page behind
-    ref.current?.focus();
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close.current();
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      if (page) page.inert = false;
-      if (opener instanceof HTMLElement) opener.focus();
-    };
-  }, []);
+  useSheetFocus(ref, onClose);
   return createPortal(
     <>
       <button

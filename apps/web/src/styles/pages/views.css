@@ -127,7 +127,7 @@
   background: transparent;
   flex: 1;
   min-width: 0;
-  outline: 0; /* the ring is drawn on the box (below), so it is one ring around the whole field */
+  outline: 0;
 }
 .search-box:has(input:focus-visible) {
   outline: var(--focus-ring);
@@ -307,5 +307,5 @@ th {
   color: var(--glass-edge);
   font-size: var(--fs-small);
   z-index: var(--z-labels);
-  pointer-events: none; /* a touch still reaches the canvas, as it does the moment the scene is ready */
+  pointer-events: none;
 }

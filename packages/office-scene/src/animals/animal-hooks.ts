@@ -34,15 +34,10 @@ import {
 
 const FADE_SECONDS = 0.35;
 export type Model = { scene: Object3D; clips: AnimationClip[]; url: string };
-/** A reaction the person asked for: the clip plays once over what the member is doing; a new `key` plays it again. */
 export type EmoteCue = { clip: ClipName; key: number };
 
 type SetOneShot = Dispatch<SetStateAction<ClipName | null>>;
 
-/**
- * One-shots (a gesture, a cheer, a greeting) play over the base clip of the activity, then hand back to it: a change of
- * activity brings its own, being chosen greets, an emote request reacts, and the micro-action director fills quiet moments.
- */
 export function useOneShots(o: {
   agent: Agent;
   held: Apparition | ClipName | undefined;
@@ -70,7 +65,7 @@ export function useOneShots(o: {
   const react = useEffectEvent(() => {
     if (emote && !reducedMotion && !held && model) setOneShot(emote.clip);
   });
-  const emoteKey = emote?.key; // one reaction per request, not per render
+  const emoteKey = emote?.key;
   useEffect(() => {
     if (emoteKey !== undefined) react();
   }, [emoteKey]);
@@ -97,7 +92,6 @@ type AnimalModelOptions = {
   onError: () => void;
 };
 
-/** Casts and receives shadows; a ghost is see-through, anyone else not on the light tier gets a rim light. */
 function styleCharacter(scene: Object3D, species: string, light: boolean) {
   scene.traverse((node) => {
     if (!(node instanceof SkinnedMesh)) return;
@@ -108,7 +102,6 @@ function styleCharacter(scene: Object3D, species: string, light: boolean) {
   });
 }
 
-/** Loads the character's model for `url`, links its shaders before it appears and tears it down when the url changes. */
 export function useAnimalModel(o: AnimalModelOptions) {
   const { agent, url, species, light, setModel, setOneShot, mixer, current } = o;
   const invalidate = useThree((s) => s.invalidate);
@@ -132,7 +125,7 @@ export function useAnimalModel(o: AnimalModelOptions) {
         styleCharacter(loaded.scene, species, light);
         mixer.current = new AnimationMixer(loaded.scene);
         mixer.current.addEventListener('finished', () => setOneShot(null));
-        forgetAnchors = registerAnchors(agent.id, loaded.scene); // the squad's puppet strings tie to its head and hands
+        forgetAnchors = registerAnchors(agent.id, loaded.scene);
         setModel(instance);
         invalidate();
       })
@@ -157,7 +150,6 @@ export function useAnimalModel(o: AnimalModelOptions) {
   }, [url, species, light, invalidate, gl, camera, stage]);
 }
 
-/** Plays `clip` once the model for `url` is in: a one-shot or a held gesture once, anything else in a loop. */
 export function useClipPlayer(o: {
   model: Model | null;
   url: string;
@@ -187,7 +179,7 @@ export function useClipPlayer(o: {
       oneShot !== null || (!apparition && (override === 'stand_up' || override === 'wave'));
     const previous = o.current.current;
     next.reset().setLoop(once ? LoopOnce : LoopRepeat, once ? 1 : Infinity);
-    next.clampWhenFinished = once && oneShot === null; // a held gesture ends in its last pose, not in the bind pose
+    next.clampWhenFinished = once && oneShot === null;
     if (previous && previous !== next && !reducedMotion) {
       next.fadeIn(FADE_SECONDS).play();
       previous.fadeOut(FADE_SECONDS);
@@ -202,7 +194,6 @@ export function useClipPlayer(o: {
   }, [model, url, clip, oneShot, apparition, override, reducedMotion, agentId, invalidate]);
 }
 
-/** Far members are updated at a lower rate (see animationInterval); the time they skipped is applied in one step. */
 export function useMixerUpdates(
   mixer: RefObject<AnimationMixer | null>,
   root: RefObject<Group | null>,

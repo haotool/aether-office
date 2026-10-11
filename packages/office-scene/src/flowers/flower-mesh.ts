@@ -1,32 +1,22 @@
 import * as THREE from 'three';
 import { itemAt } from '../environment/checked.js';
 
-/** What a vertex is, so one shader can draw all of it. */
 export const KIND = { petal: 0, tube: 1, glow: 3 } as const;
 
-/** Everything the shader needs to know about a part of a flower, shared by the vertices of that part. */
 export type Style = {
-  /** The point the part opens or grows from. */
   hinge: THREE.Vector3;
-  /** The axis a petal swings about (unit). */
   axis: THREE.Vector3;
-  /** Radians a petal swings between bud and bloom. */
   swing: number;
-  /** 0 to 1: how late in the bloom this part appears. */
   order: number;
   flower: number;
   kind: number;
   colorA: THREE.Color;
   colorB: THREE.Color;
-  /** Vein strength for a petal, intensity for glow. */
   detail: number;
-  /** Translucency of a petal. */
   glass: number;
-  /** Metres the part sways at the top of the breathing sway. */
   sway: number;
 };
 
-/** The attribute arrays of the whole garden, grown vertex by vertex. */
 export class MeshBuilder {
   position: number[] = [];
   normal: number[] = [];
@@ -54,7 +44,6 @@ export class MeshBuilder {
     this.index.push(a, b, c);
   }
 
-  /** Two triangles over four vertices in a ring (a, b, c, d). */
   quad(a: number, b: number, c: number, d: number) {
     this.tri(a, b, c);
     this.tri(a, c, d);
@@ -64,7 +53,6 @@ export class MeshBuilder {
     return this.index.length / 3;
   }
 
-  /** A grid of `cols` by `rows` points laid out row after row, joined into triangles; returns the first vertex index. */
   grid(
     cols: number,
     rows: number,
@@ -85,10 +73,6 @@ export class MeshBuilder {
     return first;
   }
 
-  /**
-   * A tube of `sides` sides about a path. `radius(t)` is its thickness at t in [0, 1] along it. Each ring is a fresh set of
-   * vertices; normals point away from the path.
-   */
   tube(path: THREE.Vector3[], radius: (t: number) => number, sides: number, style: Style) {
     const first = this.position.length / 3;
     let normal = new THREE.Vector3(0, 1, 0);
@@ -121,7 +105,6 @@ export class MeshBuilder {
       }
   }
 
-  /** A square of light facing along `normal`, half-size `size` (a floret, a bead). */
   glowQuad(center: THREE.Vector3, normal: THREE.Vector3, size: number, style: Style) {
     const right = new THREE.Vector3()
       .crossVectors(

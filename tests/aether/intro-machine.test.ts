@@ -63,7 +63,7 @@ describe('introReducer', () => {
     const s = introReducer(playingAt(0), { type: 'skip', now: 7000 });
     expect(s).toMatchObject({ status: 'playing', phase: 'toStacked' });
     expect(introElapsed(s, 7000)).toBeCloseTo(45.4, 6);
-    expect(introReducer(s, { type: 'tick', now: 7000 + 300 })).toBe(s); // still under the closing dip
+    expect(introReducer(s, { type: 'tick', now: 7000 + 300 })).toBe(s);
     expect(introReducer(s, { type: 'tick', now: 7000 + 500 })).toEqual({
       status: 'done',
       outcome: 'completed',

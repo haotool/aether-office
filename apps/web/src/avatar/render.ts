@@ -6,7 +6,6 @@ import { SPECIES } from './species.js';
 const CLOTH = '#3F6F78';
 const BLUSH = '#F28FA3';
 
-/** The two halves that never change with the state: everything behind the face and everything in front of it. */
 interface AvatarParts {
   back: string;
   eyes: string;
@@ -64,7 +63,6 @@ function muzzle(spec: AvatarSpec): string {
   return '';
 }
 
-/** The dark patches round the eyes (panda, raccoon, a dog's patch) and which eyes sit on one. */
 function patches(spec: AvatarSpec): { shapes: string; backed: number[] } {
   const { intrinsic } = SPECIES[spec.species];
   if (intrinsic === 'eyes')
@@ -141,7 +139,6 @@ export function avatarParts(spec: AvatarSpec): AvatarParts {
   };
 }
 
-/** The portrait as an SVG string: base identity from the seed, plus the state's eyes, mouth and mark. */
 export function renderAvatar(seed: string, species: string, state: AvatarState = 'idle'): string {
   const spec = avatarSpec(seed, species);
   const parts = avatarParts(spec);

@@ -1,7 +1,3 @@
-/*
- * The composer at the foot of a conversation (features/Composer.tsx): the model chip and quick replies, the text box with
- * its Send or Stop, the slash and @ list over it, and the pending bubbles it leaves in the conversation.
- */
 .composer-footer {
   padding-bottom: calc(var(--space-8) + var(--safe-bottom));
 }
@@ -16,7 +12,6 @@
   gap: var(--space-6);
   min-width: 0;
 }
-/* The chips beside the model chip scroll sideways instead of wrapping; the model popover stays outside the scroller. */
 .composer-scroll {
   flex: 1;
   min-width: 0;
@@ -76,7 +71,7 @@
   flex: 1;
   min-width: 0;
   min-height: var(--control-h-md);
-  max-height: calc(8 * var(--lh-snug) * 1em + var(--space-16)); /* eight lines, then it scrolls */
+  max-height: calc(8 * var(--lh-snug) * 1em + var(--space-16));
   overflow-y: auto;
   resize: none;
   font-size: var(--fs-lead);
@@ -174,7 +169,6 @@
   color: var(--muted);
   cursor: default;
 }
-/* What was typed and the transcript has not shown yet */
 .pending-list {
   display: grid;
   gap: var(--space-8);
@@ -197,7 +191,6 @@
   display: flex;
   gap: var(--space-6);
 }
-/* A narrow panel: Send and Stop shrink to their icon (the label stays for screen readers), the model chip to a short name */
 @container panel (max-width: 359px) {
   .composer-send-label {
     position: absolute;

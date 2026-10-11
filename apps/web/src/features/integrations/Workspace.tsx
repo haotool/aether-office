@@ -74,7 +74,6 @@ type DiffResult = {
   error?: string;
 };
 
-/** Asks for the diff of a work item's workspace; `error` keeps the last failure. */
 function useLoadDiff(projectId: string, refetch: () => Promise<unknown>) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);

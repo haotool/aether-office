@@ -1,8 +1,6 @@
-/** Pure. The conversation's keyboard: j and k between turns, `g g` to the top, `G` to the bottom. */
 export type KeyAction = 'next' | 'prev' | 'top' | 'bottom';
 export type KeyState = { pending: 'g' | null; at: number };
 
-/** The second `g` of `g g` must come within this long of the first. */
 const CHORD_MS = 800;
 
 export function nextKey(

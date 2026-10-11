@@ -1,10 +1,6 @@
-// SPDX expressions, licence-text recognition and hashing for the third-party notices (scripts/oss).
 import { createHash } from 'node:crypto';
 import { ALLOWED, ALLOWED_EXCEPTIONS, CONDITIONAL, DENIED } from './notices-policy.mjs';
 
-// ------------------------------------------------------------------------------------------------------------- licences
-
-/** Parses an SPDX licence expression into a tree; throws on a malformed one. */
 export function parseSpdx(expression) {
   const tokens = expression.match(/\(|\)|[^\s()]+/g) ?? [];
   let i = 0;
@@ -51,8 +47,8 @@ const rank = (id) => {
 };
 
 /**
- * Picks the licence that applies: for `A OR B` the most permissive acceptable option, for `A AND B` both. Returns
- * { chosen, status } where status is 'allowed', 'conditional', 'denied' or 'unknown'.
+ * Picks the licence that applies: for `A OR B` the most permissive acceptable option, for `A AND B` both. The status is
+ * 'allowed', 'conditional', 'denied' or 'unknown'.
  */
 export function evaluate(expression) {
   if (!expression || /^(UNKNOWN|UNLICENSED|SEE LICENSE)/i.test(expression))
@@ -96,7 +92,6 @@ export function evaluate(expression) {
   return { chosen: result.text, status: result.status };
 }
 
-/** The `license` field as an expression; old `licenses` arrays become `A OR B`. */
 export function declaredLicense(manifest) {
   const raw = manifest.license ?? manifest.licenses;
   if (raw === undefined || raw === null) return null;
@@ -105,7 +100,6 @@ export function declaredLicense(manifest) {
   return String(raw);
 }
 
-/** Recognises the common licence texts in a file (a file can hold several, e.g. ISC plus MIT for ported parts). */
 export function sniffLicenses(text) {
   const t = text.slice(0, 20000).replace(/\s+/g, ' ');
   const found = [];

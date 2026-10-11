@@ -9,8 +9,8 @@ Agent SDK, ACP, and the hook mechanisms of Claude Code and Codex. It does not pa
 and `pnpm run doctor` accept.
 
 - **Codex** is matched by exact release. The generated protocol types for 0.160.0 are byte-identical to 0.159.2, which
-  `tests/aether/codex-schema.test.ts` checks against the installed binary. Generated artifacts live in
-  `packages/providers/generated/`.
+  `tests/aether/codex-schema.test.ts` checks against the installed binary. The generated types live in
+  `packages/providers/generated/`; `pnpm run protocol:regen` rewrites them for the pinned release.
 - **Claude Code** is matched per minor series (2.1.x), because the contract is the exactly pinned
   `@anthropic-ai/claude-agent-sdk`.
 

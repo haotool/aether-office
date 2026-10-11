@@ -17,7 +17,6 @@ export function activityOf(session: LocalSession, now: number): Agent['activity'
     return 'offline';
   if (session.hook?.activity === 'waiting_permission') return 'waiting_permission';
   if (session.hook) return session.hook.activity === 'working' ? 'working' : 'idle';
-  // No process: a recently written file is a finished session, not work, and a long-quiet one is gone.
   if (session.process === 'none') return now - session.mtime < SESSION_GONE_MS ? 'idle' : 'offline';
   return now - session.mtime < SESSION_ACTIVE_MS ? 'working' : 'idle';
 }
@@ -26,7 +25,6 @@ const NOTE = {
   dormant: { 'zh-TW': '休眠', en: 'dormant' },
   orphaned: { 'zh-TW': '孤兒', en: 'orphaned' },
 } as const;
-/** How the member is alive, when that is worth saying: appended to its role line. */
 export const noteOf = (s: Pick<LocalSession, 'liveness'>, locale: 'zh-TW' | 'en') => {
   const state =
     s.liveness.state in NOTE ? ` · ${NOTE[s.liveness.state as keyof typeof NOTE][locale]}` : '';
@@ -36,11 +34,9 @@ export const noteOf = (s: Pick<LocalSession, 'liveness'>, locale: 'zh-TW' | 'en'
   return state + zombies;
 };
 
-/** Sessions worth a person's attention for how they are alive: forgotten, ownerless, or with zombies under them. */
 export const needsAttention = (s: Pick<LocalSession, 'liveness'>) =>
   ['dormant', 'orphaned'].includes(s.liveness.state) || s.liveness.zombies.length > 0;
 
-/** Which sessions are drawn as a sleeping rabbit or a ghost in place of the member, by the id of that member. */
 export function apparitionsOf(
   sessions: readonly LocalSession[],
 ): Record<string, Exclude<Apparition, 'zombie'>> {
@@ -52,7 +48,6 @@ export function apparitionsOf(
   );
 }
 
-/** Which members have zombie processes under them, and how many. */
 export function zombiesOf(sessions: readonly LocalSession[]): Record<string, number> {
   return Object.fromEntries(
     sessions.flatMap((s) =>
@@ -63,10 +58,6 @@ export function zombiesOf(sessions: readonly LocalSession[]): Record<string, num
   );
 }
 
-/**
- * Why a session wants a person, in a few words: "休眠 27 小時", "孤兒", "殭屍 ×2 (node, sh)". Null when it does not.
- * Pure; the same words label the director's shot of it and the row in the attention list.
- */
 export function attentionReason(
   s: Pick<LocalSession, 'liveness'>,
   locale: 'zh-TW' | 'en' = 'zh-TW',
@@ -86,7 +77,6 @@ export function attentionReason(
   return parts.length ? parts.join(' · ') : null;
 }
 
-/** The members that want a person, by id, with the reason: what the director's attention shots are made of. */
 export function attentionOf(
   sessions: readonly LocalSession[],
   locale: 'zh-TW' | 'en',

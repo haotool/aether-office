@@ -14,7 +14,6 @@ const KINDS: Record<string, Key> = {
 };
 const NO_SIGNAL = 'no clear signal';
 
-/** Pure. The classifier's `kind: detail` evidence as a phrase in the reader's language ("edits server code ×4"). */
 function explainEvidence(evidence: string, t: (key: Key) => string): string {
   if (evidence === NO_SIGNAL) return t('whyNone');
   const [kind = '', ...rest] = evidence.split(': ');
@@ -22,7 +21,6 @@ function explainEvidence(evidence: string, t: (key: Key) => string): string {
   return key ? `${t(key)} ${rest.join(': ')}` : evidence;
 }
 
-/** Pure. "82% · because: edits server code ×4; runs test runs", the confidence and the strongest three reasons. */
 export function roleWhy(
   c: { confidence: number; evidence: readonly string[] },
   t: (key: Key) => string,

@@ -1,11 +1,9 @@
-/** Where an accessory sits. One accessory per slot, so two hats or two pairs of glasses cannot happen. */
 type Slot = 'head' | 'eyes' | 'audio' | 'neck' | 'face';
 
 export interface Gear {
   readonly id: string;
   readonly slot: Slot;
   readonly weight: number;
-  /** Does not sit with a hat: headphones run a band over the top of the head. */
   readonly clashesWithHead?: boolean;
   /** Ears that stand straight up would poke through it. */
   readonly noTallEars?: boolean;

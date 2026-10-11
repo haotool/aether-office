@@ -28,7 +28,7 @@ describe('stopping a process by pid and start', () => {
     const startedAt = await startOf(child.pid!);
     expect(await stopProcess(child.pid!, startedAt, 3000)).toBe('stopped');
     expect(await until(() => !alive(child.pid!))).toBe(true);
-    expect(await stopProcess(child.pid!, startedAt, 500)).toBe('stopped'); // gone is stopped
+    expect(await stopProcess(child.pid!, startedAt, 500)).toBe('stopped');
   }, 20000);
 
   it('does not touch a process whose pid now belongs to another life, and says when it will not end', async () => {
@@ -41,7 +41,7 @@ describe('stopping a process by pid and start', () => {
       expect(await stopProcess(stubborn.pid!, await startOf(stubborn.pid!), 600)).toBe(
         'still_running',
       );
-      expect(alive(stubborn.pid!)).toBe(true); // asked, not killed
+      expect(alive(stubborn.pid!)).toBe(true);
     } finally {
       child.kill('SIGKILL');
       stubborn.kill('SIGKILL');
@@ -72,12 +72,10 @@ describe('stopping the process behind a session', () => {
         await expect(stop(session(state, startedAt))).rejects.toMatchObject({
           code: 'SESSION_NOT_STALE',
         });
-      // This test process is the child's parent and so above it: a session whose pid is the server's own, or an
-      // ancestor's, is refused. Here the pretend server is the child itself.
       await expect(
         stop(session('orphaned', startedAt), { controlPid: child.pid! }),
       ).rejects.toMatchObject({ code: 'REFUSED_OWN_ANCESTOR' });
-      expect(alive(child.pid!)).toBe(true); // nothing was signalled by any refusal
+      expect(alive(child.pid!)).toBe(true);
       expect(await stop(session('dormant', startedAt))).toEqual({ outcome: 'stopped' });
       expect(await until(() => !alive(child.pid!))).toBe(true);
     } finally {

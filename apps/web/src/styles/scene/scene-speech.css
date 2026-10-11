@@ -1,7 +1,5 @@
 /*
- * What a working member was last told and last answered, as two glass bubbles over its head (packages/office-scene Speech.tsx).
- * The text is rendered (bold, code chips, bullets, small-label headings), never shown as raw Markdown. A text taller than
- * the bubble scrolls by itself (a teleprompter, see use-speech.ts); hovering a bubble holds it and shows more of it.
+ * A text taller than the bubble scrolls by itself (a teleprompter, see use-speech.ts); hovering a bubble holds it.
  * `--accent` is the member's department color, set on `.speech`.
  */
 .world-speech {
@@ -15,7 +13,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  visibility: hidden; /* shown once the scene has placed it */
+  visibility: hidden;
   display: grid;
   gap: var(--space-6);
   width: max-content;
@@ -45,7 +43,6 @@
     opacity var(--dur) var(--ease),
     box-shadow var(--dur) var(--ease);
 }
-/* A faint scanline over the glass */
 .speech-bubble::before {
   content: '';
   position: absolute;
@@ -65,13 +62,11 @@
 .speech-bubble.assistant {
   justify-self: end;
 }
-/* While a reply is being typed the edge glows brighter */
 .speech-bubble.typing {
   box-shadow:
     0 0 16px color-mix(in srgb, var(--edge) 55%, transparent),
     0 3px 10px var(--shade-soft);
 }
-/* A tail: the prompt points back to whoever gave it (left), the reply down at the member (right). */
 .speech-bubble::after {
   content: '';
   position: absolute;
@@ -96,7 +91,6 @@
   opacity: 0.55;
 }
 
-/* The text: five lines for a reply, two for a prompt; the rest scrolls behind a fade at both ends */
 .speech-scroll {
   position: relative;
   max-height: 7em;
@@ -165,7 +159,7 @@
   margin-left: var(--space-2);
   background: var(--edge);
   vertical-align: text-bottom;
-  animation: caret-blink 0.9s steps(2, start) infinite; /* token-lint: loop */
+  animation: caret-blink var(--dur-caret) steps(2, start) infinite;
 }
 @keyframes caret-blink {
   to {
@@ -187,7 +181,6 @@
     opacity: 1;
     z-index: var(--z-label-hover);
   }
-  /* Hovering holds the scroll and lets the person read all of it */
   .speech-bubble:hover .speech-scroll {
     max-height: 16em;
     overflow-y: auto;

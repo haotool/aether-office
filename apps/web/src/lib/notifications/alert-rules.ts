@@ -1,24 +1,20 @@
-/** Pure rules for the alerts about local sessions: what is worth a notification, what it says, and where it is shown. */
 import { toPlainPreview } from '@aether/kernel';
 export type SessionEvent = {
   key: string;
   kind: 'needs-you' | 'finished';
   project: string;
-  /** The deep link: the session in the office. */
   to: string;
-  /** How long the turn that just ended had been running; null for events that are not a turn ending. */
   turnMs: number | null;
 };
 export type Brief = { key: string; activity: string; project: string; to: string };
 type Seen = { activity: string; since: number };
 
-/** A turn shorter than this is not worth interrupting someone for when they come back to the tab anyway. */
 export const LONG_TURN_MS = 60_000;
 const BODY_MAX = 60;
 
 /**
- * What changed since the last look: a session that now waits for a human (an approval or a question), or one that
- * stopped working. The first call only records the current states, so opening the page never floods notifications.
+ * What changed since the last look: a session that now waits for a human, or one that stopped working. The first call
+ * only records the current states, so opening the page never floods notifications.
  */
 export function sessionTransitions(
   before: ReadonlyMap<string, Seen> | null,
@@ -59,9 +55,8 @@ export type Delivery = {
 export type Permission = NotificationPermission | 'unsupported';
 
 /**
- * Which events become alerts, and how they are shown. A session that needs a person always alerts; one that finished
- * only when its turn was long and the tab is hidden (a visible tab shows it already). A browser notification needs
- * granted permission; without it the same alert is shown inside the page.
+ * A session that needs a person always alerts; one that finished only when its turn was long and the tab is hidden (a
+ * visible tab shows it already).
  */
 export function planAlerts(
   events: readonly SessionEvent[],

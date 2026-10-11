@@ -1,14 +1,6 @@
 #!/usr/bin/env node
 // Helper steps called by history-apply.sh and history-verify.sh. Every step that rewrites anything first calls
 // assertThrowawayClone, so it cannot run against the working checkout or any repository this kit did not create.
-//   guard <clone>                       exit 0 only for a throwaway clone made by history-apply
-//   guard-new <out> <source>            exit 0 only when <out> is a safe place for a new clone
-//   plan-field <plan.json> <a.b.c>...   print fields of the plan, one per line
-//   describe <plan.json> <source>       print what applying the plan will do (read-only)
-//   mark <clone> <plan.json> <source>   write the throwaway marker into a fresh clone
-//   verify <clone> <plan.json>         structural checks of a rewritten clone against its source
-//   squash <clone> <plan.json>          strategy C and A: replace main by milestone commits (tree preserved)
-//   filter-inputs <clone> <plan.json> <dir> [private-patterns]   write the git-filter-repo inputs
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -16,9 +8,11 @@ import {
   BUILT_IN_RULES,
   CLONE_MARKER,
   SUBJECT_MAX,
+  TOOL_TRAILER,
   assertFreshOutput,
   assertThrowawayClone,
   git,
+  hasToolTrailers,
   loadPrivatePatterns,
   readCommits,
   replaceRules,
@@ -43,10 +37,6 @@ function commitTree(repo, { tree, parents, message, author, committer }) {
   return git(repo, args, { env, input: message }).trim();
 }
 
-/**
- * Replaces `main` of a throwaway clone by one commit per milestone. Each milestone gets the exact tree of its last
- * original commit, so the tip tree is unchanged (checked). Upstream commits keep their authorship, dates and messages.
- */
 export function squashHistory(repo, plan) {
   assertThrowawayClone(repo);
   const originals = new Map(readCommits(repo, plan.source.commit).map((c) => [c.hash, c]));
@@ -92,6 +82,8 @@ if state is None:
     state = types.ModuleType('oss_state')
     state.rules = [(re.compile(r['re'].encode()), r['rep'].encode(), r['literal']) for r in json.load(open(os.environ['OSS_RULES']))]
     state.messages = json.load(open(os.environ['OSS_MESSAGES']))
+    source = open(os.environ['OSS_TOOL_TRAILER']).read().strip()
+    state.trailer = re.compile(source.encode(), re.I | re.M) if source else None
     sys.modules['oss_state'] = state
 `;
 
@@ -106,9 +98,12 @@ if new is not None:
 else:
     for rx, rep, literal in state.rules:
         commit.message = rx.sub((lambda m, rep=rep: rep) if literal else rep, commit.message)
+    if state.trailer:
+        cleaned, found = state.trailer.subn(b'', commit.message)
+        if found:
+            commit.message = re.sub(rb'\\n{3,}', b'\\n\\n', cleaned).rstrip() + b'\\n'
 `;
 
-/** Writes everything \`git filter-repo\` needs; returns the counts the apply script prints. */
 export function writeFilterInputs(repo, plan, dir, privateFile) {
   assertThrowawayClone(repo);
   mkdirSync(dir, { recursive: true });
@@ -121,6 +116,7 @@ export function writeFilterInputs(repo, plan, dir, privateFile) {
     'mailmap.txt': plan.identity.mailmap.join('\n') + (plan.identity.mailmap.length ? '\n' : ''),
     'rules.json': JSON.stringify(rules, null, 2),
     'messages.json': JSON.stringify(messages, null, 2),
+    'tool-trailer.txt': plan.options.dropTrailers ? TOOL_TRAILER : '',
     'blob-callback.py': BLOB_CALLBACK,
     'commit-callback.py': COMMIT_CALLBACK,
   };
@@ -157,7 +153,6 @@ const matchesStrip = (file, paths) =>
       : file.startsWith(p),
   );
 
-/** Compares the tip of the clone with the source tip: identical, expectedly stripped or rewritten, or unexpected. */
 export function compareTips(clone, source, plan) {
   const before = treeEntries(source, plan.source.commit);
   const after = treeEntries(clone, MAIN);
@@ -183,7 +178,6 @@ export function compareTips(clone, source, plan) {
   return { identical, removed, rewritten, unexpected, total: before.size };
 }
 
-/** Structural checks of a rewritten clone against its source and plan. */
 export function verifyStructure(clone, source, plan) {
   const checks = [];
   const check = (name, ok, detail = '') => checks.push({ name, ok, detail });
@@ -240,6 +234,14 @@ export function verifyStructure(clone, source, plan) {
     !stray.length,
     stray.length ? `${stray.length} commits with another identity` : plan.identity.canonical.email,
   );
+  if (plan.options.dropTrailers) {
+    const traced = after.filter((c) => hasToolTrailers(c.message));
+    check(
+      'no session links or AI co-author trailers in any commit',
+      !traced.length,
+      `${after.length - traced.length}/${after.length} commits clean`,
+    );
+  }
   check(
     'commit count',
     true,

@@ -1,14 +1,13 @@
 import type { Database } from 'better-sqlite3';
 
 /**
- * The few typed queries the control plane runs on its tables: equality lookups, an IN lookup, insert and update by
- * equality. Everything else is written as SQL where it is used. Table and column names come from `schema.ts`, never
- * from input, and are checked again here; values are always bound.
+ * Typed queries for equality lookups, IN lookups and inserts or updates by equality; everything else is SQL where it is
+ * used. Table and column names come from `schema.ts`, never from input; values are always bound.
  */
 type Table<R> = {
   readonly name: string;
   readonly columns: readonly (keyof R & string)[];
-  readonly json: readonly (keyof R & string)[]; // columns holding JSON text
+  readonly json: readonly (keyof R & string)[];
 };
 export const table = <R>(
   name: string,
@@ -76,7 +75,6 @@ export function selectIn<R>(
   ).map((r) => decode(t, r));
 }
 
-/** Inserts `row` into every column of the table; a column the row lacks is NULL. */
 export function insertRow<R extends object>(db: Database, t: Table<R>, row: R): void {
   const params = Object.fromEntries(
     t.columns.map((c) => [c, bound(t, c, (row as Record<string, unknown>)[c])]),

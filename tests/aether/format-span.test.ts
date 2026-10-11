@@ -58,5 +58,5 @@ it('names the member that stands for each session drawn as a figure, and which h
     'local:claude:b': 'sleeping_rabbit',
     'local:codex:c': 'ghost',
   });
-  expect(zombiesOf(sessions)).toEqual({ 'local:claude:d': 2 }); // the member stays; a jiangshi stands behind it
+  expect(zombiesOf(sessions)).toEqual({ 'local:claude:d': 2 });
 });

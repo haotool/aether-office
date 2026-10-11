@@ -12,12 +12,10 @@ import {
   fileRemoteApprovals,
 } from '../packages/providers/src/hook-status.js';
 
-// Opt-in Claude Code hook installer. Default scope is one project's .claude/settings.local.json (gitignored).
-// `--scope user` edits the provider's user-level file and therefore fires for every session on this machine.
 const [action, ...rest] = process.argv.slice(2);
 const flag = (name: string) => {
   const at = rest.indexOf(name);
-  return at < 0 ? undefined : rest[at + 1]; // absent flag is undefined, never the next token
+  return at < 0 ? undefined : rest[at + 1];
 };
 const scope = flag('--scope') ?? 'project';
 const provider = flag('--provider') ?? 'claude';
@@ -25,7 +23,6 @@ if (provider !== 'claude' && provider !== 'codex') {
   console.error('--provider must be claude or codex');
   process.exit(2);
 }
-// Claude: settings.local.json (gitignored) or ~/.claude/settings.json. Codex: <repo>/.codex/hooks.json or ~/.codex/hooks.json.
 const [directory, file] =
   provider === 'codex' ? ['.codex', 'hooks.json'] : ['.claude', 'settings.local.json'];
 const settings =
@@ -33,9 +30,9 @@ const settings =
     ? join(homedir(), directory, provider === 'codex' ? 'hooks.json' : 'settings.json')
     : join(resolve(flag('--project') ?? process.cwd()), directory, file);
 const receiver = resolve(import.meta.dirname, '../packages/providers/src/hook-receiver.mjs');
-// Opt-in: Claude Code's permission prompt can be answered from the AETHER panel. If nobody answers within the wait,
-// Claude asks in its terminal as usual. It also needs Remote approvals switched on in AETHER's settings. The hook runs
-// from a private copy in $AETHER_HOME/hooks, default ~/.aether/hooks (not from this repository, where an agent could edit it).
+// Opt-in: if nobody answers within the wait, Claude asks in its terminal as usual. It also needs Remote approvals
+// switched on in AETHER's settings. The hook runs from a private copy in $AETHER_HOME/hooks (default ~/.aether/hooks),
+// not from this repository where an agent could edit it.
 const remote = rest.includes('--remote-approvals');
 if (remote && provider !== 'claude') {
   console.error('--remote-approvals is for Claude Code only');
@@ -45,12 +42,10 @@ const dryRun = rest.includes('--dry-run');
 const waitSeconds = flag('--wait') === undefined ? undefined : Number(flag('--wait'));
 
 if (action === 'install' || action === 'remove') {
-  // Say what is about to be written, and where, before anything is.
   const files = [settings, ...(action === 'install' && remote ? approvalScriptFiles() : [])];
   console.log(`${dryRun ? 'would write' : 'writing'}:\n${files.map((f) => `  ${f}`).join('\n')}`);
   if (dryRun) process.exit(0);
 }
-// A folder that cannot be written is a sentence, not a stack trace.
 process.on('uncaughtException', (error) => {
   console.error(`hooks ${action} failed: ${error.message}`);
   process.exit(1);

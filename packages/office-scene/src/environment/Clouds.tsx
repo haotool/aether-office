@@ -10,8 +10,8 @@ const noRaycast = () => null;
 
 function cloudSprites() {
   const random = seeded('aether-clouds');
-  const cloud = new Float32Array(COUNT * 4); // radius, angle, height about the tip, drift (radians per second)
-  const look = new Float32Array(COUNT * 2); // size, seed
+  const cloud = new Float32Array(COUNT * 4);
+  const look = new Float32Array(COUNT * 2);
   for (let i = 0; i < COUNT; i++) {
     cloud.set(
       [
@@ -90,11 +90,6 @@ const cloudMaterial = () =>
     depthWrite: false,
   });
 
-/**
- * A bank of soft clouds round the spire's tip, one instanced draw: each a camera-facing quad shaded with a few octaves of
- * noise (lumpy edge, pale top, the crown's colour on its underside), drifting slowly round the axis. Not shown on low quality.
- * `shown` (0 to 1) fades them in once the crown is built.
- */
 export function Clouds({
   top,
   tint,

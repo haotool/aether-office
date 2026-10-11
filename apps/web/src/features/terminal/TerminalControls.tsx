@@ -4,7 +4,6 @@ import type { TerminalAct, TerminalDetail } from './terminal-model.js';
 
 type Props = {
   canWrite: boolean;
-  /** This person holds the terminal's control and the terminal is running. */
   writable: boolean;
   data: TerminalDetail | undefined;
   act: TerminalAct;
@@ -78,7 +77,6 @@ function ResizeForm({ canWrite, writable, act }: Omit<Props, 'data'>) {
   );
 }
 
-/** Take over, release, stop, and resize one terminal. */
 export function TerminalControls(props: Props) {
   return (
     <>

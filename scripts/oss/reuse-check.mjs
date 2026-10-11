@@ -1,9 +1,7 @@
 #!/usr/bin/env node
-// A small stand-in for `reuse lint` (https://reuse.software) that needs no Python: every tracked file must be covered by an
-// annotation of REUSE.toml with a copyright and a licence, every licence named must have its text in LICENSES/, every
-// file in LICENSES/ must be used, and every literal path in REUSE.toml must still exist. Exit 1 on a problem.
-//
-//   node scripts/oss/reuse-check.mjs [--root <repo>]
+// A small stand-in for `reuse lint` (https://reuse.software) that needs no Python: every tracked file must be covered
+// by an annotation of REUSE.toml with a copyright and a licence, and every licence named must have its text in
+// LICENSES/.
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
@@ -17,7 +15,6 @@ const parseValue = (raw) => {
   return string ? string[1] : value;
 };
 
-/** Reads the [[annotations]] tables of a REUSE.toml (the subset of TOML the file uses: strings and string arrays). */
 export function parseReuseToml(text) {
   const annotations = [];
   let current = null;
@@ -39,7 +36,6 @@ export function parseReuseToml(text) {
   }));
 }
 
-/** REUSE globs: `*` matches within one path segment, `**` across segments. */
 export function globToRegExp(glob) {
   let out = '';
   for (let i = 0; i < glob.length; i += 1) {

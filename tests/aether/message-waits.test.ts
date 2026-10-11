@@ -154,7 +154,6 @@ it('persists per-recipient request waits with exact reply correlation, deadlines
       .snapshot(f.owner.actor, f.projectId)
       .work.find((w) => w.id === workId)!.version;
     control.execute(f.owner.actor, command('work.cancel', { workId }, f.projectId, version));
-    // The cancellation command itself persists the terminal wait, before any read reconciliation.
     expect(
       control.ctx.sqlite
         .prepare('SELECT state,workId,runId FROM message_waits WHERE messageId=?')

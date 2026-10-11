@@ -21,7 +21,6 @@ const NOW = 1_800_000_000_000;
 const ROOF = 42;
 const EXPLODING = { floorHeight: 7, gap: 11 };
 
-/** A linear history of `n` commits, newest first, one every `gapDays`, the newest `ageDays` old. */
 function line(n: number, gapDays: number, ageDays = 0, prefix = 'c'): StalkCommit[] {
   return Array.from({ length: n }, (_, i) => {
     const k = n - 1 - i;
@@ -36,7 +35,6 @@ function line(n: number, gapDays: number, ageDays = 0, prefix = 'c'): StalkCommi
   });
 }
 
-/** main m0..m5 with a feature branch f1, f2 forking at m2 and merged back by m5 (newest first). */
 function forked(): StalkCommit[] {
   const c = (sha: string, parents: string[], age: number, refs: string[] = []): StalkCommit => ({
     sha,
@@ -209,7 +207,6 @@ describe('spreadStalk', () => {
     expect(apart.tiers[0]!.y - stalk.tiers[0]!.y).toBe(5 * 11);
     const trunk = apart.strands[0]!.points;
     trunk.slice(1).forEach((p, i) => expect(p[1]).toBeGreaterThan(trunk[i]![1]));
-    // Floor 2's own stretch (its deck at 14, ceiling at 20) keeps its height relative to the floor.
     const inside = trunk.filter((p) => p[1] >= 2 * 18 && p[1] <= 2 * 18 + 6);
     expect(inside.length).toBeGreaterThan(10);
     expect(Math.max(...trunk.slice(1).map((p, i) => p[1] - trunk[i]![1]))).toBeGreaterThan(10);

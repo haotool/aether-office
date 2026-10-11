@@ -19,7 +19,6 @@ import { DomainError } from '@aether/kernel';
 import { z } from 'zod';
 import type { RouteContext } from './context.js';
 
-/** Everything a runner calls: enrolment, heartbeat, claiming and reporting work, jobs, terminals, approvals. */
 export function runnerRoutes(context: RouteContext) {
   machineRoutes(context);
   enrollRoute(context);
@@ -27,16 +26,14 @@ export function runnerRoutes(context: RouteContext) {
   runnerApprovalRoutes(context);
 }
 
-/** Enrolling a machine and its heartbeat. */
 function machineRoutes({ app, control, actor }: RouteContext) {
   app.post('/api/machines', async (request) => {
     const body = z
-      .object({
+      .strictObject({
         name: z.string().min(1).max(160),
         projectIds: z.array(z.string().uuid()).min(1).max(32),
         concurrency: z.number().int().min(1).max(4).default(2),
       })
-      .strict()
       .parse(request.body);
     const enrolled = enroll(
       control.ctx,
@@ -49,11 +46,10 @@ function machineRoutes({ app, control, actor }: RouteContext) {
   });
   app.post('/api/runner/heartbeat', async (request) => {
     const body = z
-      .object({
+      .strictObject({
         verifiers: z.array(verifierSchema).max(20).optional(),
         terminalProfiles: z.array(terminalProfileSchema).max(20).optional(),
       })
-      .strict()
       .parse(request.body);
     return heartbeat(control.ctx, actor(request), body.verifiers, body.terminalProfiles);
   });
@@ -68,8 +64,7 @@ function enrollRoute({ app, control, attempts }: RouteContext) {
     if (last && last.until > now && last.count >= 10)
       throw new DomainError('ENROLL_RATE_LIMIT', 429);
     const { invitation } = z
-      .object({ invitation: z.string().min(10).max(200) })
-      .strict()
+      .strictObject({ invitation: z.string().min(10).max(200) })
       .parse(request.body);
     try {
       return redeemInvitation(control.ctx, invitation);
@@ -83,7 +78,6 @@ function enrollRoute({ app, control, attempts }: RouteContext) {
   });
 }
 
-/** Claiming and reporting runs, jobs, terminals and observations. */
 function runnerWorkRoutes({ app, control, actor }: RouteContext) {
   app.post('/api/runner/observations', async (request) =>
     reportObservation(control.ctx, actor(request), request.body),
@@ -105,20 +99,18 @@ function runnerWorkRoutes({ app, control, actor }: RouteContext) {
   );
   app.post('/api/runner/claim', async (request) => {
     const body = z
-      .object({
+      .strictObject({
         providers: z
           .array(z.enum(['demo', 'claude', 'codex', 'acp']))
           .min(1)
           .max(4),
       })
-      .strict()
       .parse(request.body);
     return { command: claim(control.ctx, actor(request), body.providers) };
   });
   app.post('/api/runner/session-credential', async (request) => {
     const data = z
-      .object({ runId: z.string().uuid(), epoch: z.number().int().positive() })
-      .strict()
+      .strictObject({ runId: z.string().uuid(), epoch: z.number().int().positive() })
       .parse(request.body);
     return sessionCredential(control.ctx, actor(request), data.runId, data.epoch);
   });
@@ -127,22 +119,19 @@ function runnerWorkRoutes({ app, control, actor }: RouteContext) {
   );
 }
 
-/** Permission prompts a run raises for a person. */
 function runnerApprovalRoutes({ app, control, actor }: RouteContext) {
   app.post('/api/runner/approvals/request', async (request) =>
     requestApproval(control.ctx, actor(request), request.body),
   );
   app.post('/api/runner/approvals/poll', async (request) => {
     const body = z
-      .object({ runId: z.string().uuid(), approvalId: z.string().uuid() })
-      .strict()
+      .strictObject({ runId: z.string().uuid(), approvalId: z.string().uuid() })
       .parse(request.body);
     return pollApproval(control.ctx, actor(request), body.runId, body.approvalId);
   });
   app.post('/api/runner/approvals/sent', async (request) => {
     const body = z
-      .object({ runId: z.string().uuid(), requestId: z.string().min(1).max(200) })
-      .strict()
+      .strictObject({ runId: z.string().uuid(), requestId: z.string().min(1).max(200) })
       .parse(request.body);
     return approvalSent(control.ctx, actor(request), body.runId, body.requestId);
   });

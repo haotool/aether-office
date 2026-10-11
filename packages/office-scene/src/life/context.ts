@@ -1,7 +1,6 @@
 import type { Seat } from '../environment/director.js';
 import type { LifeContext, LifeInput } from './signals.js';
 
-/** What the scheduler may ask about the office, answered from the seats the scene has right now. */
 export function lifeContext(
   seats: ReadonlyMap<string, Seat>,
   view: { floor: number; exploded: boolean },

@@ -6,9 +6,8 @@ import { polyline, roundRect, textBars, wander } from './screen-ui.js';
 import { context2d } from '../core/canvas-2d.js';
 
 /**
- * The second monitor of a desk: a reference window (docs, a page, a log, a chat, a dashboard) shown as shapes, never as
- * facts. Every desk with the same look shares one canvas and one texture, repainted every few seconds, so a second
- * monitor costs one upload per few seconds for the whole office, not one per member.
+ * Every desk with the same look shares one canvas and one texture, repainted every few seconds, so a second monitor
+ * costs one upload per few seconds for the whole office, not one per member.
  */
 export const SECONDARY_W = 320;
 export const SECONDARY_H = 250;
@@ -104,7 +103,6 @@ function paintKind(
   PAINTERS[kind](g, r, p, accent, step);
 }
 
-/** The shared screen for a look; `release` it when the member goes. */
 export function acquireSecondary(kind: Secondary, theme: Theme, accent: string) {
   const key = `${kind}|${theme}|${accent}`;
   let entry = shared.get(key);
@@ -121,7 +119,6 @@ export function acquireSecondary(kind: Secondary, theme: Theme, accent: string) 
   const held = entry;
   return {
     texture: held.texture,
-    /** Repaints the shared canvas if it is due (the first caller of a round does the work for all). */
     paint(now: number, moving: boolean) {
       if (now - held.lastAt < REPAINT_MS) return;
       held.lastAt = now;

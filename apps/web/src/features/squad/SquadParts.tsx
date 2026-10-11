@@ -23,7 +23,6 @@ function subscribe(listener: () => void) {
 const noSubscribe = () => () => undefined;
 const getBeat = () => beat;
 
-/** How long a subagent has run: ticking while it runs, fixed once it ended. Hidden from assistive tech (it only counts up). */
 export function Elapsed({ row }: { row: Pick<SquadRow, 'startedAt' | 'endedAt' | 'status'> }) {
   const ticking = row.endedAt === null && row.status !== 'finished';
   useSyncExternalStore(ticking ? subscribe : noSubscribe, getBeat);
@@ -42,12 +41,10 @@ export const SubDot = ({ status }: { status: SquadRow['status'] }) => (
   <i className="sub-dot" data-status={status} aria-hidden="true" />
 );
 
-/** Two rows that show the same thing: lets a memoized row skip a render when a poll brings the same facts again. */
 export function sameRow(a: SquadRow, b: SquadRow): boolean {
   return (Object.keys(a) as (keyof SquadRow)[]).every((k) => a[k] === b[k]);
 }
 
-/** The relation to the supervisor ("subagent of main", "Spawned by main") as a chip; pressing it selects the supervisor. */
 export function RelationChip({
   text,
   hue,

@@ -80,6 +80,5 @@ it('keeps every floor of the building valid and walkable on its own', () => {
     for (const to of seats.slice(1))
       expect(findPath(grid, seats[0]!, to).status, `floor ${floor} ${to.id}`).toBe('ok');
   }
-  // Floors do not collide with each other: the same desk positions repeat on every floor.
   expect(() => validateLayout(building)).not.toThrow();
 });

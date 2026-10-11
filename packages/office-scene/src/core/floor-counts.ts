@@ -3,7 +3,6 @@ import { FLOORS } from '../environment/layout.js';
 import { floorOfDesk } from '../scene/scene-geometry.js';
 import type { FloorCount } from '../components/SceneHud.js';
 
-/** Members and working members per floor (index = floor). */
 export function floorCounts(agents: readonly Agent[], layout: Layout): FloorCount[] {
   const counts = Array.from({ length: FLOORS }, () => ({ total: 0, working: 0 }));
   for (const agent of agents) {
@@ -15,7 +14,6 @@ export function floorCounts(agents: readonly Agent[], layout: Layout): FloorCoun
   return counts;
 }
 
-/** The floor to start on: most work, then most members; null when the office is empty. */
 export function busiestFloor(counts: readonly FloorCount[]): number | null {
   let best: number | null = null;
   let score = 0;

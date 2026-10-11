@@ -1,4 +1,3 @@
-/** The machines words, in Traditional Chinese. */
 export const zhMachines = {
   online: '在線',
   machineOffline: '離線',

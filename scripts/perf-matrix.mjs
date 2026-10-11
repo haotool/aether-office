@@ -1,28 +1,10 @@
 // Real-GPU perf matrix: scene variants through the perf probe on one device profile, interleaved and repeated, medians.
-//
-//   node --import tsx scripts/perf-matrix.mjs --url http://127.0.0.1:4320 --cases 'base=;squad=squad=8&tools=900' \
-//        [--quality balanced|high|low] [--size 1440x900] [--dpr 2] [--throttle 4] [--phone] [--rounds 3] [--frames 240]
-//        [--motion] [--hitch] [--network slow-4g] [--token-file .data/e2e-session.json] [--out evidence/perf-matrix.json]
-//
-// A case is `name=query` (the query is added to `/?perf=N`). Every round mounts every case once, in turn (A, B, A, B), so a
-// loaded machine hits all alike. `--phone` is the phone profile: compact layout, beanstalk off, touch. `--throttle N` slows the CPU
-// N times (CDP). `--motion` samples a second time after the first report, with everything already warm and playing.
-// `--hitch` records, as well, the worst frame in the seconds after mount (`--hitch-ms`, default 15000) (the shader-compile hitch of a first appearance).
-// The renderer that produced the numbers is printed and written to the report; a software renderer is refused.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { chromium } from '@playwright/test';
+import { flags } from './mobile-perf/flags.ts';
 import { applyNetworkProfile } from './mobile-perf/network.ts';
 
-const flags = (argv) => {
-  const out = {};
-  for (let i = 0; i < argv.length; i += 1) {
-    if (!argv[i].startsWith('--')) continue;
-    const next = argv[i + 1];
-    out[argv[i].slice(2)] = next === undefined || next.startsWith('--') ? true : next;
-  }
-  return out;
-};
 const median = (values) => [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)];
 const round = (n) => Math.round(n * 100) / 100;
 
@@ -55,7 +37,6 @@ async function mount(browser, query) {
   });
   const page = await context.newPage();
   if (!args.phone)
-    // A synthetic history (the shape e2e/support/git-graph.ts answers with), so the beanstalk and its crown exist.
     await page.route('**/api/projects/*/git-graph', (route) => {
       const hex = (n) => `${n.toString(16).padStart(7, '0')}abc`;
       const commits = Array.from({ length: 150 }, (_, i) => ({
@@ -89,7 +70,6 @@ async function mount(browser, query) {
           version: 0,
         }),
       );
-      // Frame log for --hitch: every animation frame's time, from the first one the page gets.
       const log = [];
       let last = performance.now();
       const tick = (now) => {
@@ -99,12 +79,10 @@ async function mount(browser, query) {
       };
       requestAnimationFrame(tick);
       window.__frameLog = log;
-      // When the scene mounted (the perf probe appears with it): the origin of a first-appearance window.
       const watch = setInterval(() => {
         if (!window.__aetherPerfRig) return;
         window.__rigAt = performance.now();
         clearInterval(watch);
-        // Every render call with its duration and the number of linked programs: a first-use compile shows as a slow call that adds one.
         const { gl } = window.__aetherPerfRig;
         const draw = gl.render.bind(gl);
         window.__renders = [];
@@ -167,7 +145,6 @@ for (let r = 0; r < rounds; r += 1) {
       entry.hitch = {
         worst: round(Math.max(...deltas)),
         over80: deltas.filter((d) => d > 80).length,
-        // The render calls of the window: the slowest, and the ones that linked a program (their total time and the programs).
         worstRenderMs: round(Math.max(...renders.map(([, d]) => d))),
         compileMs: round(compiling.reduce((sum, [, d]) => sum + d, 0)),
         programsAdded: compiling.reduce((sum, [, , added]) => sum + added, 0),

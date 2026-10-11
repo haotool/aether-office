@@ -1,9 +1,8 @@
 #!/usr/bin/env node
-// Writes a reviewable history-cleanup plan (JSON + Markdown) for one repository branch. Read-only: it never changes the
-// repository. Usage: node scripts/oss/history-plan.mjs --strategy B|C|A [--repo .] [--ref <branch>] [--out <dir>]
-//   [--target 24] [--maintainer-email <e>]... [--canonical-name <n>] [--canonical-email <e>] [--drop-trailers]
-// Strategies: B keeps every commit (cleaned), C squashes the maintainer's commits into milestones and keeps upstream
-// commits, A is C with the upstream merge flattened into one commit (a fresh milestone history).
+// Writes a reviewable history-cleanup plan (JSON + Markdown); read-only. Usage: node scripts/oss/history-plan.mjs
+// --strategy B|C|A [--repo .] [--ref <branch>] [--out <dir>] [--target 24] [--canonical-name <n>] [--canonical-email
+// <e>] [--drop-trailers]. B keeps every commit (cleaned), C squashes the maintainer's commits into milestones and keeps
+// upstream commits, A is C with the upstream merge flattened.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -40,13 +39,11 @@ function mailmapIdentity(repo, commit) {
   }
 }
 
-/** First and last `YYYY-MM-DD` of a list of commits. */
 const span = (commits) => {
   const days = commits.map((c) => c.day).sort();
   return [days[0] ?? '', days.at(-1) ?? ''];
 };
 
-/** Maintainer commits of units (oldest unit first), oldest first inside each, merges left out. */
 const chronological = (units) =>
   units.flatMap((u) => [...u.own].reverse()).filter((c) => c.parents.length < 2);
 
@@ -118,7 +115,6 @@ function syncMessage(unit, flatten, dropTrailers) {
   return `${subject}\n\nImports ${unit.imported.length} upstream commits by ${people.join(', ')}:\n\n${list}\n`;
 }
 
-/** Headline of a group: the biggest commit of the group's own type (else of any type), without its prefix. */
 function leadSubject(members, type, sizes) {
   const commits = chronological(members);
   const ofType = commits.filter((c) => conventional(c.subject)?.type === type);
@@ -130,7 +126,6 @@ function leadSubject(members, type, sizes) {
   return conventional(lead.subject)?.rest ?? lead.subject;
 }
 
-/** The next biggest commits of a group after its headline, cut short: a hint of what else the milestone holds. */
 function highlights(members, lead, sizes) {
   return chronological(members)
     .filter((c) => (conventional(c.subject)?.rest ?? c.subject) !== lead)
@@ -211,7 +206,6 @@ function messagePlan(commits, upstream, byHash, dropTrailers) {
   return out;
 }
 
-/** Builds the plan object. Deterministic: the same repository state and options give the same plan. */
 export function buildPlan(repo, options = {}) {
   const strategy = options.strategy ?? 'C';
   if (!['A', 'B', 'C'].includes(strategy)) throw new Error(`unknown strategy ${strategy}`);
@@ -285,7 +279,7 @@ export function buildPlan(repo, options = {}) {
       authors: [...authors]
         .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
         .map(([who, n]) => ({ who, commits: n })),
-      note: 'Commits by non-maintainer authors and their ancestry. Authorship, dates and messages are never rewritten.',
+      note: 'Commits by non-maintainer authors and their ancestry. Authorship and dates are never rewritten; messages only lose the lines an AI tool added (session links, AI co-author trailers) when trailers are dropped.',
     },
     strip: {
       ...strip,

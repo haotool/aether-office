@@ -82,7 +82,6 @@ export function createIdentity(
   });
   return { token, actor: identityActor(ctx, id) };
 }
-/** How long a browser session lasts: a working day, or a month on a device the person chose to remember. */
 const SESSION_MS = 8 * 60 * 60 * 1000;
 export const REMEMBERED_SESSION_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -115,8 +114,8 @@ export function sessionActor(ctx: Context, session: string, csrf?: string): Acto
   return identityActor(ctx, row.identityId);
 }
 /**
- * A new CSRF token for a signed-in browser whose page no longer holds one (a closed tab, a reload in a new tab). The session
- * cookie is the credential: the old token stops working in the same statement, so there is no moment with two.
+ * The session cookie is the credential: the old CSRF token stops working in the same statement, so there is no moment
+ * with two.
  */
 export function rotateCsrf(ctx: Context, session: string): { csrf: string; expiresAt: number } {
   const who = sessionActor(ctx, session);

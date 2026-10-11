@@ -8,7 +8,6 @@
  * line from every rule; the reason is for the reader.
  */
 
-/** The media-query widths (and the one height) the layout may use; a value one above is the `min-` partner of a `max-`. */
 export const BREAKPOINTS = [500, 760, 1000, 1250];
 
 /**
@@ -39,7 +38,6 @@ const SIZE_PROPERTY = /^(min-|max-)?(width|height)$|^(inset|top|left|right|botto
 const HATCH = /token-lint:/;
 const noVars = (value) => value.replace(/var\([^)]*\)/g, '');
 
-/** [property, value, line, escaped] for each single-line declaration, comments cut off. */
 export function declarations(text) {
   const out = [];
   text.split('\n').forEach((raw, i) => {
@@ -50,7 +48,6 @@ export function declarations(text) {
   return out;
 }
 
-/** Each rule: does this declaration break it? */
 export const RULES = {
   'literal-size': ({ property, value }) =>
     SIZE_PROPERTY.test(property) && LITERAL_PX.test(noVars(value)),
@@ -72,7 +69,6 @@ const allowedMedia = (px) =>
   BREAKPOINTS.some((b) => px === b || px === b + 1) ||
   MEDIA_EXCEPTIONS.some((e) => px === e.px || px === e.px + 1);
 
-/** The `@media` lines with a px value off the scale (and not an exception). */
 export function mediaViolations(text) {
   const bad = [];
   text.split('\n').forEach((line, i) => {
@@ -83,7 +79,6 @@ export function mediaViolations(text) {
   return bad;
 }
 
-/** Every violation in one stylesheet's text: [{ rule, line, text }]. tokens.css is the one file that may hold raw values. */
 export function violationsIn(text, { tokens = false } = {}) {
   if (tokens) return [];
   const found = [];
@@ -97,7 +92,6 @@ export function violationsIn(text, { tokens = false } = {}) {
   return found;
 }
 
-/** { counts: {rule: n}, files: {rule: {file: n}} } for [{ file, text }]. */
 export function tally(sources) {
   const counts = Object.fromEntries(RULE_NAMES.map((r) => [r, 0]));
   const files = Object.fromEntries(RULE_NAMES.map((r) => [r, {}]));
@@ -109,7 +103,6 @@ export function tally(sources) {
   return { counts, files };
 }
 
-/** What got worse than the baseline: per rule and per file, as printable lines. Counts may only go down. */
 export function regressions(baseline, current) {
   const out = [];
   for (const rule of RULE_NAMES) {

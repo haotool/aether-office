@@ -44,8 +44,6 @@ beforeAll(async () => {
   URL_BASE = `http://127.0.0.1:${PORT}`;
   directory = mkdtempSync(join(tmpdir(), 'aether-remote-'));
 });
-// One hook, in this order (hooks run in reverse): the runners are gone before their directory is, or they write into it
-// while it is being removed (ENOTEMPTY).
 afterAll(async () => {
   await Promise.all(
     children.map(
@@ -84,7 +82,6 @@ it('enrolls two independent runner processes by single-use invitation and keeps 
     const inviteA = invite(f.projectId, 'Runner A');
     const inviteB = invite(second, 'Runner B');
 
-    // REM-02: invitations are single-use; REM-01: the token file is private and TLS is required remotely.
     const dirA = join(directory, 'a');
     const dirB = join(directory, 'b');
     const a = await enrollRunner({ url: URL_BASE, invitation: inviteA.token, directory: dirA });
@@ -109,12 +106,11 @@ it('enrolls two independent runner processes by single-use invitation and keeps 
     const stored = JSON.stringify(
       f.control.ctx.sqlite.prepare('SELECT tokenHash FROM machine_invitations').all(),
     );
-    expect(stored).not.toContain(inviteA.token); // only a hash is kept
+    expect(stored).not.toContain(inviteA.token);
 
     const processA = launch(dirA);
     const processB = launch(dirB);
 
-    // REM-03 / project scope: each runner only ever receives work from its own project.
     const workOne = String(
       owner(
         'work.create',
@@ -144,14 +140,13 @@ it('enrolls two independent runner processes by single-use invitation and keeps 
         ).state === 'reviewing',
     );
 
-    // Revocation: B's identity is revoked, so its next call fails and it never claims again.
     const identityB = (
       f.control.ctx.sqlite
         .prepare('SELECT id FROM identities WHERE machineId=?')
         .get(b.machineId) as { id: string }
     ).id;
     revoke(f.control.ctx, f.owner.actor, identityB);
-    await until(() => processB.exitCode !== null || processB.signalCode !== null, 30000); // halts on 401
+    await until(() => processB.exitCode !== null || processB.signalCode !== null, 30000);
     const lateTwo = String(
       owner('work.create', { title: 'After revoke', description: '', acceptance: 'x' }, second)
         .result['id'],
@@ -160,7 +155,6 @@ it('enrolls two independent runner processes by single-use invitation and keeps 
     await delay(3000); // a negative wait: a revoked runner must never take the work, so there is nothing to wait for
     expect(machineOf(lateTwo)).toBeUndefined();
 
-    // Reconnect: control goes away and comes back on the same database; runner A keeps working.
     await app.close();
     const afterOutage = String(
       owner(
@@ -173,7 +167,7 @@ it('enrolls two independent runner processes by single-use invitation and keeps 
     app = createServer(f.control, { origin: URL_BASE });
     await app.listen({ host: '127.0.0.1', port: PORT });
     expect(await until(() => machineOf(afterOutage), 30000)).toBe(a.machineId);
-    expect(processA.exitCode).toBeNull(); // never died during the outage
+    expect(processA.exitCode).toBeNull();
     expect(readFileSync(join(dirA, 'runner-token'), 'utf8').trim().length).toBeGreaterThan(20);
   } finally {
     await app.close();

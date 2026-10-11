@@ -4,9 +4,8 @@ import https from 'node:https';
 import { isIP } from 'node:net';
 import { DomainError } from '@aether/kernel';
 
-// Outbound fetch for third-party URLs (connectors, A2A artifacts). Blocks SSRF into private networks
-// and cloud metadata, pins the connection to the address that was validated, revalidates every
-// redirect, and bounds time and size.
+// Blocks SSRF into private networks and cloud metadata, pins the connection to the validated address, revalidates every
+// redirect and bounds time and size.
 
 const ipv4 = (ip: string) => ip.split('.').map(Number) as [number, number, number, number];
 
@@ -17,8 +16,8 @@ function privateV4(ip: string): boolean {
     a === 10 ||
     a === 127 ||
     a >= 224 ||
-    (a === 100 && b >= 64 && b <= 127) || // CGNAT
-    (a === 169 && b === 254) || // link-local incl. 169.254.169.254 metadata
+    (a === 100 && b >= 64 && b <= 127) ||
+    (a === 169 && b === 254) ||
     (a === 172 && b >= 16 && b <= 31) ||
     (a === 192 && b === 168) ||
     (a === 192 && b === 0) ||
@@ -38,9 +37,9 @@ export function isPublicAddress(ip: string): boolean {
   return !(
     lower === '::' ||
     lower === '::1' ||
-    (first & 0xfe00) === 0xfc00 || // unique local fc00::/7
-    (first & 0xffc0) === 0xfe80 || // link-local fe80::/10
-    (first & 0xff00) === 0xff00 // multicast
+    (first & 0xfe00) === 0xfc00 ||
+    (first & 0xffc0) === 0xfe80 ||
+    (first & 0xff00) === 0xff00
   );
 }
 
@@ -94,7 +93,6 @@ type Response = {
   headers: http.IncomingHttpHeaders;
 };
 
-/** Collects a response body up to `maxBytes`; a larger one rejects and destroys the request. */
 function collectBody(
   req: http.ClientRequest,
   maxBytes: number,
@@ -147,7 +145,6 @@ function request(
             ? {}
             : { 'content-length': String(Buffer.byteLength(init.body)) }),
         },
-        // Pin the socket to the validated address; the hostname is still used for SNI and Host.
         lookup: (_host, _options, callback) => callback(null, address, isIP(address)),
       },
       (res) => collectBody(req, maxBytes, resolve, reject)(res),
@@ -182,7 +179,7 @@ export async function safeFetch(
       // Credentials and request bodies never follow a redirect to somewhere else.
       if (init.method === 'POST' || (init.headers && url.origin !== origin))
         throw new DomainError('URL_REDIRECT_FORBIDDEN', 400);
-      current = new URL(response.location, url).toString(); // revalidated at the top of the loop
+      current = new URL(response.location, url).toString();
       if (init.headers && new URL(current).origin !== origin)
         throw new DomainError('URL_REDIRECT_FORBIDDEN', 400);
       continue;

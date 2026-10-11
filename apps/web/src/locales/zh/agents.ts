@@ -1,4 +1,3 @@
-/** The agents words, in Traditional Chinese. */
 export const zhAgents = {
   species: '物種',
   color: '識別色',

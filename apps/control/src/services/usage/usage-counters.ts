@@ -1,40 +1,26 @@
-// The per-file usage state shared by the Claude and Codex readers: one bucket per local calendar day, the counters in
-// it, and the few byte-level helpers both need. Only counters, the model name and timestamps are ever read.
-
 export type Counters = {
-  /** New input, without what the cache served. */
   i: number;
-  /** Output, without reasoning. */
   o: number;
-  /** Input served from the cache. */
   cr: number;
-  /** Input written to the cache. */
   cw: number;
-  /** Reasoning output (Codex; Claude folds thinking into output). */
   r: number;
 };
 export type Bucket = Counters & {
-  /** Model requests. */
   req: number;
   tools: number;
-  /** Active milliseconds: gaps of at most ACTIVE_GAP_MS between events. */
   ms: number;
-  /** Tokens without cache reads, per model. */
   m: Record<string, number>;
 };
 export type ParseState = {
   provider: 'claude' | 'codex';
   days: Record<string, Bucket>;
-  /** Claude: the message being written (one message is several lines repeating its usage) and what was counted of it. */
   lastId: string | null;
   lastUsage: Counters | null;
-  /** Codex: the running total of the session, to turn it into deltas. */
   total: Counters | null;
   model: string | null;
   lastAt: number | null;
   /** Lines that held usage the parser could not place (no usable timestamp, a cut counter line): counted, never silent. */
   skipped: number;
-  /** Claude lines the byte fast path missed that a bounded JSON.parse read instead (work counter, for tests). */
   fallbacks: number;
 };
 export type DayOf = (ms: number) => string;
@@ -55,7 +41,6 @@ export const newState = (provider: ParseState['provider']): ParseState => ({
   fallbacks: 0,
 });
 
-/** Tokens a bucket or delta counts as spent: everything but cache reads. */
 export const fresh = (c: Counters) => c.i + c.o + c.cw + c.r;
 
 export function bucketOf(state: ParseState, day: string): Bucket {
@@ -76,7 +61,6 @@ export function addTokens(state: ParseState, day: string, delta: Counters, model
   b.m[key] = (b.m[key] ?? 0) + tokens;
 }
 
-/** An event at `at` extends the active time by the gap since the previous one, when that gap is short. */
 export function touch(state: ParseState, at: number, day: string) {
   if (state.lastAt !== null && at > state.lastAt) {
     if (at - state.lastAt <= ACTIVE_GAP_MS) bucketOf(state, day).ms += at - state.lastAt;

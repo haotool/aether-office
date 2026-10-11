@@ -139,7 +139,6 @@ function RoomPicker({
   );
 }
 
-/** Who the message goes to (unless it goes to a room) and what kind of message it is. */
 function RecipientFields({ agents, toRoom }: { agents: Snapshot['agents']; toRoom: boolean }) {
   const t = useT();
   const whyNot = useWhy();
@@ -173,7 +172,6 @@ function RecipientFields({ agents, toRoom }: { agents: Snapshot['agents']; toRoo
   );
 }
 
-/** Sending the composed message (to a room or to the chosen recipients); the form is cleared once it went. */
 function useSendMessage(
   projectId: string,
   roomId: string,

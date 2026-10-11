@@ -20,14 +20,12 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.5px;
 }
-/* The top bar has room for the numbers from 1500px; below that they sit in the sidebar (see compact-desktop.css). */
 @media (max-width: 1500px) {
   .telemetry {
     display: none;
   }
 }
 
-/* The link to the control plane: a dot, a word and how long ago anything last arrived. */
 .link-status {
   display: inline-flex;
   align-items: center;
@@ -46,5 +44,5 @@
   color: var(--gold);
 }
 .telemetry dd.stale {
-  opacity: 0.6; /* shown, but not current */
+  opacity: 0.6;
 }

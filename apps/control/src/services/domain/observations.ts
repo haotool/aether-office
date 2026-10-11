@@ -6,7 +6,6 @@ import { project, agent, emit, type Context } from './context.js';
 import { redact } from '../permissions/approvals.js';
 type Record_ = ObservationReport['records'][number];
 
-/** A record already stored under this source id must be the same record: a changed one is a conflict. */
 function assertSameRecord(ctx: Context, sourceId: string, record: Record_, text: string) {
   const existing = ctx.sqlite
     .prepare(
@@ -24,7 +23,6 @@ function assertSameRecord(ctx: Context, sourceId: string, record: Record_, text:
     throw new DomainError('OBSERVATION_EVENT_CONFLICT');
 }
 
-/** Stores the new records of a report once each (a repeat of the same record is ignored, a changed one is a conflict) and emits an event per new one. */
 function storeRecords(
   ctx: Context,
   actor: Actor,
@@ -65,7 +63,6 @@ function storeRecords(
   return added;
 }
 
-/** The machine must be granted the project and the project's root must match; the agent must be an observer. */
 function assertMayReport(ctx: Context, actor: Actor, data: ObservationReport) {
   authorize(actor, 'runner.report', data.projectId);
   const machine = ctx.sqlite
@@ -80,7 +77,6 @@ function assertMayReport(ctx: Context, actor: Actor, data: ObservationReport) {
     throw new DomainError('OBSERVE_AGENT_REQUIRED', 403);
 }
 
-/** The source this report continues (its revision must be the next one) and the id it is stored under. */
 function sourceFor(ctx: Context, actor: Actor, data: ObservationReport): string {
   const source = ctx.sqlite
     .prepare(

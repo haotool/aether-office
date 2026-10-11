@@ -1,8 +1,3 @@
-/*
- * The session panel on a phone: a sheet over the office at three heights. Peek (72px, the member bar) is the member in
- * hand or the sessions that want a look; half is the feed; full is the conversation. It stands above the tab bar and
- * keeps clear of the notch and the home bar.
- */
 @media (max-width: 760px), (pointer: coarse) and (max-height: 500px) {
   :root {
     --sheet-bottom: var(--safe-bottom);
@@ -61,7 +56,6 @@
     border: 2px solid var(--surface);
   }
 
-  /* Nothing chosen: a chip for every session worth a look, and the newest reply line */
   .member-bar.feed-peek {
     flex-direction: column;
     align-items: stretch;
@@ -79,7 +73,7 @@
     flex: 1;
     gap: var(--space-12);
     min-width: 0;
-    padding: var(--space-4); /* room inside the scroll box for the chips' 44px hit area */
+    padding: var(--space-4);
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -116,7 +110,6 @@
     color: var(--dim);
   }
 
-  /* Half and full: the feed and the conversation, over the tab bar's top edge */
   .session-sheet {
     position: fixed;
     z-index: var(--z-panel-sheet);
@@ -145,14 +138,12 @@
   }
 }
 
-/* A portrait phone has a tab bar: the sheet stands on it. */
 @media (max-width: 760px) and (min-height: 501px) {
   :root {
     --sheet-bottom: calc(var(--tabbar-h) + var(--safe-bottom));
   }
 }
 
-/* A narrow phone gives the name and the reply line the width the state badge would take; a dot on the avatar says it. */
 @container memberbar (max-width: 414px) {
   .member-bar .badge {
     position: absolute;
@@ -164,7 +155,6 @@
   }
 }
 
-/* On its side: the peek leaves room for the new-task button, the feed and conversation take a column at the right. */
 @media (pointer: coarse) and (max-height: 500px) {
   .member-bar {
     right: calc(80px + var(--safe-right)); /* token-lint: geometry */

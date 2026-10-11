@@ -3,44 +3,32 @@ import type { Layout } from '@aether/contracts';
 import { positionAt } from '../environment/carriers.js';
 import type { ClipName } from './animal-states.js';
 
-/**
- * A member sent home: it stands up from the chair, waves, shoulders a bag, walks the collision-free way to the elevator
- * core and is taken up by it. Pure: where the member is, which clip it plays and how big it is at a given moment, from
- * the plan alone; Departing.tsx only applies it.
- */
-export const SEAT_DEPTH = 0.86; // how far behind the desk the chair stands, in the desk's own frame
-export const CORE_RADIUS = 1.5; // the elevator core every floor is built around: the door they leave by
-// The lengths of the stand_up and wave clips (30 and 48 frames at 24 fps, tools/blender/animal_clips.py).
+export const SEAT_DEPTH = 0.86;
+export const CORE_RADIUS = 1.5;
 export const STAND_MS = 1250;
 export const WAVE_MS = 2000;
-export const WALK_SPEED = 1.2; // metres per second
+export const WALK_SPEED = 1.2;
 // How fast the walk clip's own stride moves the body at 1x: each foot swings 0.45 m back in the half second it is planted
 // (measured on the model: 2 x 0.46 rad over a 0.49 m leg). Played at WALK_PACE the planted foot stays put on the floor.
 export const WALK_STRIDE_SPEED = 0.9;
 export const WALK_PACE = WALK_SPEED / WALK_STRIDE_SPEED;
-export const SINK_MS = 450; // the last step into the core: shrinking out of sight
-export const STAGGER_MS = 350; // between one member's start and the next's, so a row of them is not in lockstep
-const TURN_MS = 400; // from facing the desk to facing the way out, at the start of the wave
-const SEATED_HEADING = Math.PI; // facing the desk (the model looks along +z; the chair is behind the desk)
+export const SINK_MS = 450;
+export const STAGGER_MS = 350;
+const TURN_MS = 400;
+const SEATED_HEADING = Math.PI;
 
 export type Departure = {
-  /** The chair, then the way to the core. World coordinates of the floor. */
   points: Point[];
   walkMetres: number;
-  /** The desk's turn about the vertical, which the pose is expressed relative to. */
   deskYaw: number;
 };
 export type DeparturePose = {
-  /** The clip to play, or null while the member has not begun to leave (it is still as it was). */
   clip: Extract<ClipName, 'stand_up' | 'wave' | 'walk'> | null;
-  /** Offset from the chair in the desk's frame, and the turn about the vertical to add to the seated one. */
   x: number;
   z: number;
   yaw: number;
   scale: number;
-  /** Carrying the bag. */
   bag: boolean;
-  /** Out of the office: nothing is drawn any more. */
   gone: boolean;
 };
 
@@ -55,13 +43,11 @@ export const pathLength = (points: readonly Point[]) => {
 };
 const heading = (from: Point, to: Point, otherwise: number) =>
   from.x === to.x && from.z === to.z ? otherwise : Math.atan2(to.x - from.x, to.z - from.z);
-/** The turn from `a` to `b` by the shorter way round. */
 const shortest = (a: number, b: number) =>
   ((((b - a + Math.PI) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)) - Math.PI;
 
 type Desk = Pick<Layout['objects'][number], 'x' | 'z' | 'rotation'>;
 
-/** The way from a desk's chair to the elevator core. Walks straight when no way is found: it is only a picture. */
 function planDeparture(grid: NavGrid, desk: Desk): Departure {
   const deskYaw = (desk.rotation * Math.PI) / 2;
   const seat = {
@@ -73,7 +59,6 @@ function planDeparture(grid: NavGrid, desk: Desk): Departure {
   return { points, walkMetres: Math.max(0, pathLength(points) - CORE_RADIUS), deskYaw };
 }
 
-/** Plans for the given members, one navigation grid per floor (a floor's own furniture is what is in the way). */
 export function planDepartures(layout: Layout, ids: readonly string[]): Record<string, Departure> {
   const grids = new Map<number, NavGrid>();
   const out: Record<string, Departure> = {};
@@ -91,7 +76,6 @@ export function planDepartures(layout: Layout, ids: readonly string[]): Record<s
   return out;
 }
 
-/** Where the member is, `elapsedMs` after it started to leave. With reduced motion it is simply gone at the start. */
 export function departureAt(
   plan: Departure,
   elapsedMs: number,
@@ -105,7 +89,7 @@ export function departureAt(
     const sin = Math.sin(plan.deskYaw);
     return {
       clip: null,
-      x: dx * cos - dz * sin, // into the desk's own frame
+      x: dx * cos - dz * sin,
       z: dx * sin + dz * cos,
       yaw: facing - plan.deskYaw - SEATED_HEADING,
       scale: 1,
@@ -127,7 +111,7 @@ export function departureAt(
     });
   }
   const walked = ((waved - WAVE_MS) / 1000) * WALK_SPEED;
-  const at = positionAt(plan.points, walked); // past the walk it carries on, into the core
+  const at = positionAt(plan.points, walked);
   const facing = heading(at, positionAt(plan.points, walked + 0.4), SEATED_HEADING);
   if (walked < plan.walkMetres) return pose(at, facing, { clip: 'walk', bag: true });
   const sunk = ((walked - plan.walkMetres) / WALK_SPEED) * 1000;

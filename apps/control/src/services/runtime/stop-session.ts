@@ -18,11 +18,8 @@ const exists = (pid: number) => {
 };
 
 /**
- * Asks one process to end and waits for it. It is named by pid and start time, and that is checked against the live
- * process table right before the signal, so a pid reused in the meantime is never hit. SIGTERM goes to that process
- * alone (it may be someone's terminal session; its group is not ours), and one that does not end within `graceMs` is
- * reported rather than killed: the person who asked decides what comes next. Unless they asked in advance (`force`, for
- * the bulk clock-out): then it is sent SIGKILL, once more checked to be the same process, and given a moment to vanish.
+ * Named by pid and start time, re-checked against the live process table before the signal, so a reused pid is never
+ * hit. SIGTERM goes to that process alone; one that outlives `graceMs` is reported, not killed, unless `force`.
  */
 export async function stopProcess(
   pid: number,
@@ -31,7 +28,7 @@ export async function stopProcess(
   force = false,
 ): Promise<Stopped> {
   const row = (await readProcessTable()).find((r) => r.pid === pid);
-  if (!row) return 'stopped'; // already gone
+  if (!row) return 'stopped';
   if (row.startedAt !== startedAt) return 'changed';
   if (row.stat.startsWith('Z')) return 'zombie';
   process.kill(pid, 'SIGTERM');
@@ -51,9 +48,8 @@ export async function stopProcess(
 }
 
 /**
- * Stops the process behind a local session, on an owner's request. Every step refuses rather than guesses: the session
- * must still be the one the person saw (same process: start time included), must be dormant or orphaned by the server's
- * own reckoning (the client's word is not taken), and must not be this server or anything above it in the process tree.
+ * Every step refuses rather than guesses: the session must still be the one the person saw (same start time), be
+ * dormant or orphaned by the server's own reckoning, and not be this server or anything above it in the process tree.
  */
 export async function stopLocalSession(input: {
   session: LocalSession | undefined;
@@ -61,7 +57,6 @@ export async function stopLocalSession(input: {
   startedAt: number;
   controlPid?: number;
   graceMs?: number;
-  /** SIGKILL a process that ignored SIGTERM (see stopProcess). */
   force?: boolean;
 }): Promise<{ outcome: Stopped }> {
   const { session, pid, startedAt } = input;

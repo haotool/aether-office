@@ -1,4 +1,3 @@
-/* Corner marks, the way instrument panels frame a readout: drawn, not bordered, so they never clip content. */
 .panel::before,
 .fui::before {
   content: '';
@@ -20,8 +19,7 @@
 .fui {
   position: relative;
 }
-.field,
-.u-field {
+.field {
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
@@ -40,7 +38,6 @@ select {
   min-width: 0;
   max-width: 100%;
 }
-/* A one-line field or select is one control height (the box types keep their own size). */
 input:where(:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='color'])),
 select {
   min-height: var(--control-h-md);
@@ -57,14 +54,13 @@ select option {
   display: flex;
   gap: var(--space-12);
 }
-.field-row > .field,
-.field-row > .u-field {
+.field-row > .field {
   flex: 1;
   min-width: 0;
 }
 .modal {
   width: min(560px, calc(100% - 28px)); /* token-lint: geometry */
-  max-height: calc(100dvh - 48px); /* token-lint: geometry */
+  max-height: calc(100dvh - var(--space-48));
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--line);

@@ -45,7 +45,6 @@ describe('arrival', () => {
 
   it('walks from the core to the chair, whole within the arrival budget', () => {
     expect(plan.mode).toBe('walk');
-    // In the seat's frame the chair is the origin, and the core lies the way the pod's own turn puts it.
     expect(plan.points[plan.points.length - 1]).toEqual({ x: 0, z: 0 });
     const core = plan.points[0]!;
     const yaw = Math.PI / 2;
@@ -104,7 +103,7 @@ describe('pods in the way', () => {
       g.blocked[Math.round((p.z - g.minZ) / g.cell) * g.cols + Math.round((p.x - g.minX) / g.cell)];
     expect(at(blocked, pods[1]!)).toBe(1);
     expect(at(blocked, chair)).toBe(at(grid, chair));
-    expect(grid.blocked).not.toBe(blocked.blocked); // the floor's own grid is not touched
+    expect(grid.blocked).not.toBe(blocked.blocked);
   });
 });
 
@@ -136,15 +135,13 @@ describe('seats', () => {
     expect(seats.map((s) => s.member)).toEqual(['a', 'b', 'c'].map((n) => `local:s1:sub:${n}`));
     const seated = withPodSeats(layout, seats);
     const first = seated.objects.find((o) => o.agentId === seats[0]!.member)!;
-    // The chair of the seat's desk frame is the pod.
     const yaw = (first.rotation * Math.PI) / 2;
     expect(first.x + SEAT_DEPTH * Math.sin(yaw)).toBeCloseTo(seats[0]!.x, 9);
     expect(first.z + SEAT_DEPTH * Math.cos(yaw)).toBeCloseTo(seats[0]!.z, 9);
-    // Looking along the desk frame's -z, the member faces the supervisor's desk.
     const desk = layout.objects.find((o) => o.agentId === 'local:s1')!;
     const toDesk = { x: desk.x - seats[0]!.x, z: desk.z - seats[0]!.z };
     expect(toDesk.x * -Math.sin(yaw) + toDesk.z * -Math.cos(yaw)).toBeGreaterThan(0);
-    expect(layout.objects.some((o) => o.agentId === seats[0]!.member)).toBe(false); // the page's layout is untouched
+    expect(layout.objects.some((o) => o.agentId === seats[0]!.member)).toBe(false);
   });
 
   it('has no zone for a supervisor that has no desk', () => {

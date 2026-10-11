@@ -35,7 +35,7 @@ export function Rooms({ projectId, agents, canManage }: AgentPanelProps) {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            const element = e.currentTarget; // React clears currentTarget after the first await
+            const element = e.currentTarget;
             const form = new FormData(element);
             void run(async () => {
               await execute(

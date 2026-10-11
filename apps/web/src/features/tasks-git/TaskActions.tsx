@@ -6,7 +6,6 @@ import { Field } from '../../ui/Field.js';
 import { useT, useWhy } from '../../ui/useT.js';
 import { useCapabilities } from '../integrations/CapabilityMatrix.js';
 
-/** What the action forms of one task share: its command runner and who may do what. */
 type TaskActionProps = {
   snapshot: Snapshot;
   work: Work;
@@ -22,7 +21,6 @@ type TaskCommand = (
   clearError?: boolean,
 ) => Promise<void>;
 
-/** Runs a command on a task (at the version on screen), keeping the busy flag and the last error for the modal. */
 export function useTaskCommand(projectId: string, onSaved: () => void) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -122,7 +120,6 @@ export function AssignForm({ snapshot, work, canWrite, busy, command }: TaskActi
   );
 }
 
-/** Retry a failed or change-requested task, optionally resuming its session when the provider can. */
 export function RetryControls({ snapshot, work, canWrite, busy, command }: TaskActionProps) {
   const t = useT();
   const whyNot = useWhy();
@@ -160,7 +157,6 @@ export function RetryControls({ snapshot, work, canWrite, busy, command }: TaskA
   );
 }
 
-/** Shown once the attempts are used up: the limit, and (for those who may) a form to extend it. */
 export function AttemptLimit({
   work,
   canExtend,

@@ -21,5 +21,5 @@ test('an owner creates a one-time machine invitation that is shown once and neve
   ).toEqual([]);
   await page.reload();
   await page.getByRole('link', { name: '執行主機', exact: true }).click();
-  await expect(page.getByText('AETHER_INVITATION=inv_')).toHaveCount(0); // gone after reload
+  await expect(page.getByText('AETHER_INVITATION=inv_')).toHaveCount(0);
 });

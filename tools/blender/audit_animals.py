@@ -35,7 +35,6 @@ BOXES = {name: box_of(SEATING[key]) for name, key in (('chair_back', 'back'), ('
 _pedestal = SEATING['pedestal']
 PEDESTAL = {'centre': (-_pedestal['at'][0], _pedestal['at'][2] - SITTER_Z), 'radius': _pedestal['radius'], 'top': _pedestal['height']}
 TOLERANCE = .025  # a seated animal sinks into its cushion a little on purpose; more than this shows
-# sit_down and stand_up pass through standing at the chair and no state plays them; they are not audited as seated
 NOT_SEATED = {'idle', 'walk', 'turn', 'haunt', 'hop', 'sit_down', 'stand_up'}
 WHERE = {}
 

@@ -1,4 +1,3 @@
-/** The feed words, in English. */
 export const enFeed = {
   panelTitle: 'Live sessions',
   panelBack: 'All sessions',

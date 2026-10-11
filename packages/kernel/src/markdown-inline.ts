@@ -1,9 +1,6 @@
 /**
- * Pure. The inline half of the Markdown an agent's reply uses: **bold**, *italic*, ~~strike~~, `code`, links, images and
- * HTML noise. The output is data (styled runs), never HTML: a renderer builds elements from it, so nothing a reply says
- * can inject markup, and only http(s) links keep their address.
- *
- * Unfinished constructs (a reply cut off or still streaming) degrade to styled text, never to visible markers.
+ * The inline half of the Markdown an agent's reply uses. The output is data (styled runs), never HTML: a renderer
+ * builds elements from it, so nothing a reply says can inject markup.
  */
 export type Span = {
   text: string;
@@ -11,12 +8,10 @@ export type Span = {
   italic?: true;
   strike?: true;
   code?: true;
-  /** Only ever an http(s) address. */
   href?: string;
 };
 type Style = Omit<Span, 'text'>;
 
-/** An address that may be linked: http(s) only, no whitespace or markup characters. Anything else is just its text. */
 function safeHref(url: string): string | null {
   const href = url.trim();
   if (!/^https?:\/\/[^\s<>"'`]+$/i.test(href)) return null;
@@ -60,7 +55,6 @@ const runLength = (text: string, at: number, ch: string) => {
   return n;
 };
 
-/** Where the run of `n` backticks that closes a code span starts, or -1. */
 export function closingTicks(text: string, from: number, n: number): number {
   for (let j = from; j < text.length; j++) {
     if (text[j] !== '`') continue;
@@ -91,7 +85,6 @@ function linkDestination(text: string, close: number): { url: string; end: numbe
     else if (text[j] === '\n') break;
   }
   if (level > 0) {
-    // Cut off inside the address: keep the label, drop the half-written address.
     const stop = text.slice(close + 2).search(/\s/);
     return { url: '', end: stop < 0 ? text.length : close + 2 + stop };
   }
@@ -100,7 +93,6 @@ function linkDestination(text: string, close: number): { url: string; end: numbe
   return { url, end: j };
 }
 
-/** The `[label](url)` that starts at `at` (after any `!`), or null. `end` is just past the closing parenthesis. */
 function linkAt(text: string, at: number) {
   const close = linkLabelClose(text, at);
   if (close < 0 || text[close + 1] !== '(') return null;
@@ -109,7 +101,6 @@ function linkAt(text: string, at: number) {
   return { label, url: dest.url, end: dest.end };
 }
 
-/** Where the marker that closes the emphasis opened at `from` starts, or -1. */
 function closer(text: string, marker: string, n: number, from: number): number {
   for (let j = from; j < text.length; j++) {
     const c = text[j];
@@ -130,13 +121,11 @@ function closer(text: string, marker: string, n: number, from: number): number {
   return -1;
 }
 
-/** One `parse` run: the text, how far it has been read, and the plain text waiting to be written as a run. */
 type Reader = {
   text: string;
   style: Style;
   out: Span[];
   depth: number;
-  /** Markers (`*2`) found to have no closer, so the scan does not look for it again. */
   dead: Set<string>;
   buf: string;
   i: number;
@@ -153,7 +142,6 @@ function parse(text: string, style: Style, out: Span[], depth: number) {
   flush(r);
 }
 
-/** Reads what starts at `r.i`: an escape, a code span, a link, markup, a bare address, emphasis or one plain character. */
 function readOne(r: Reader) {
   const { text, i } = r;
   const c = text.charAt(i);
@@ -191,7 +179,6 @@ function codeSpan(r: Reader) {
   r.i = end >= 0 ? end + n : stop;
 }
 
-/** `[label](url)` and `![alt](url)`: the label is read as inline text, only a safe address becomes a link. */
 function link(r: Reader, image: boolean) {
   const found = linkAt(r.text, r.i + (image ? 1 : 0));
   if (!found) {
@@ -210,7 +197,6 @@ function link(r: Reader, image: boolean) {
   r.i = found.end;
 }
 
-/** `<https://…>` is a link, a known HTML tag or comment is dropped (`<br>` is a line break), any other `<` is text. */
 function angle(r: Reader) {
   const rest = r.text.slice(r.i);
   const found = ANGLE_URL.exec(rest);
@@ -243,17 +229,14 @@ const emphasisStyle = (c: string, n: number): Style =>
         ? { bold: true }
         : { italic: true };
 
-/** `*italic*`, `**bold**`, `***both***`, `_italic_`, `~~strike~~`; a marker nothing closes degrades to styled text or itself. */
 function emphasis(r: Reader, c: string) {
   const { text, i } = r;
   const run = runLength(text, i, c);
   const n = Math.min(run, c === '~' ? 2 : 3);
   const key = `${c}${n}`;
   const open = !isSpace(text[i + n]);
-  // A single `~` is plain text; a marker already known to have no closer is not searched for again.
   const end = open && n >= (c === '~' ? 2 : 1) && !r.dead.has(key) ? closer(text, c, n, i + n) : -1;
   if (end < 0 && open) r.dead.add(key);
-  // A marker with nothing to close it: with a word before it, it is just a character.
   const lenient = end < 0 && open && n >= 2 && c !== '_' && !isWord(text[i - 1]);
   if (end < 0 && !lenient) {
     r.buf += text.slice(i, i + run);
@@ -272,5 +255,4 @@ export function parseInline(text: string): Span[] {
   return out;
 }
 
-/** The text of runs with every style dropped. */
 export const spansText = (spans: readonly Span[]): string => spans.map((s) => s.text).join('');

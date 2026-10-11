@@ -1,8 +1,3 @@
-/*
- * What an agent's reply is made of once rendered (features/Markdown.tsx): headings, nested lists, tables, quotes, links, the
- * word-by-word reveal of a reply that just arrived, the entrance of new messages, the fold on a long message and the
- * "working" line. Messages themselves are transcript.css; code blocks and tool chips transcript-tools.css.
- */
 .markdown .md-heading {
   margin: var(--space-12) 0 var(--space-4);
   line-height: var(--lh-tight);
@@ -27,7 +22,6 @@
   letter-spacing: 1px;
   text-transform: uppercase;
 }
-/* A line break in a paragraph is a line break: agents write their lists and steps that way */
 .markdown p {
   white-space: pre-wrap;
 }
@@ -55,8 +49,9 @@
 }
 .markdown blockquote {
   margin: 0 0 var(--space-8);
-  padding: var(--space-2) var(--space-12);
-  border-left: 2px solid var(--glass-accent-line);
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--r-md);
+  background: var(--surface);
   color: var(--muted);
 }
 .markdown hr {
@@ -105,7 +100,6 @@
   border-bottom: 0;
 }
 
-/* A reply that has just arrived: its words fade in one after another (the delay is set per word) */
 .markdown .w {
   animation: word-in var(--dur-pop) var(--ease) both;
 }
@@ -114,7 +108,6 @@
     opacity: 0;
   }
 }
-/* A message that arrives while you watch: a short rise and fade, never for what was there when it opened */
 .msg.enter,
 .tool-group.enter,
 .sys-notice.enter {
@@ -127,7 +120,6 @@
   }
 }
 
-/* A long message: folded to a fixed height with a fade and a toggle */
 .long {
   position: relative;
 }
@@ -160,7 +152,6 @@
   }
 }
 
-/* "Working · 12s": the session is at work and has said nothing new yet */
 .thinking-line {
   display: flex;
   align-items: baseline;
@@ -176,7 +167,7 @@
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
-  animation: text-shimmer 2.2s linear infinite; /* token-lint: loop */
+  animation: text-shimmer var(--dur-shimmer) linear infinite;
 }
 .thinking-line time {
   color: var(--dim);

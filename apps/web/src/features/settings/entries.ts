@@ -1,10 +1,6 @@
 import type { Key } from '../../lib/i18n/i18n.js';
 import type { SectionId } from './sections.js';
 
-/**
- * Every setting a person can look for, once: its group, the words that name it and describe it (the page and the
- * search read the same two keys), and extra words in both languages for what the labels do not say.
- */
 export const ENTRIES = [
   {
     id: 'language',

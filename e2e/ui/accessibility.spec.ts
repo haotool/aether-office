@@ -7,7 +7,6 @@ async function login(page: Page) {
   await expect(page.locator('main')).toBeVisible();
 }
 
-// Moves focus with Tab only, until the focused element has the wanted accessible name.
 async function tabTo(page: Page, name: RegExp, limit = 120) {
   for (let i = 0; i < limit; i++) {
     await page.keyboard.press('Tab');
@@ -34,9 +33,8 @@ test('a task can be created with the keyboard alone, the dialog traps focus, and
   await page.keyboard.press('Enter');
   const dialog = page.getByRole('dialog');
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByLabel('任務標題', { exact: true })).toBeFocused(); // focus moves into the dialog
+  await expect(dialog.getByLabel('任務標題', { exact: true })).toBeFocused();
 
-  // Focus never escapes the modal, however long the user tabs.
   for (let i = 0; i < 25; i++) {
     await page.keyboard.press('Tab');
     // Native modal dialogs may hand focus to the browser's own UI, but never to the page behind them.
@@ -48,16 +46,14 @@ test('a task can be created with the keyboard alone, the dialog traps focus, and
     ).toBe(true);
   }
 
-  // Escape closes it and focus returns to the control that opened it.
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
   await expect(page.getByRole('button', { name: '建立任務', exact: true })).toBeFocused();
 
-  // Complete the whole flow with the keyboard.
   await page.keyboard.press('Enter');
   await page.keyboard.type('鍵盤建立的任務');
-  await page.keyboard.press('Tab'); // description
-  await page.keyboard.press('Tab'); // acceptance
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
   await page.keyboard.type('只用鍵盤也能完成');
   await tabTo(page, /^建立$/);
   await page.keyboard.press('Enter');
@@ -73,11 +69,11 @@ test('the reduced-motion preference follows the operating system and can be chan
   await login(page);
   await page.getByRole('link', { name: '設定', exact: true }).click();
   const toggle = page.getByRole('switch', { name: /減少動態/ });
-  await expect(toggle).toBeChecked(); // defaulted from prefers-reduced-motion, not guessed
+  await expect(toggle).toBeChecked();
   await toggle.uncheck();
   await page.reload();
   await page.getByRole('link', { name: '設定', exact: true }).click();
-  await expect(page.getByRole('switch', { name: /減少動態/ })).not.toBeChecked(); // the explicit choice persists
+  await expect(page.getByRole('switch', { name: /減少動態/ })).not.toBeChecked();
   await context.close();
 });
 

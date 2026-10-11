@@ -2,14 +2,6 @@ import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { NATIVE_SESSION, nativeOrigin, signIn } from '../support/sign-in.js';
 
-/**
- * One role, one height: the same kind of control must not be drawn at a different size on every page. Each role is
- * measured on the 14 views at three layouts (desktop with a mouse; a phone and a tablet with a finger), on the 3D
- * office and with the phone's drawer open, and the number of distinct heights per role may not pass its limit. The
- * sizes come from the control scale in tokens.css (--control-h-sm/md/lg), so a new one-off height fails here instead of
- * drifting back in. Nothing is excluded: the scene toolbar, the session panel and sheet, the composer, the squad, quick
- * open, the tab bar and the drawer are measured like any page. A second check holds a finger's 44px hit area.
- */
 const VIEWS = [
   'office',
   'agents',
@@ -34,10 +26,10 @@ const LAYOUTS = {
 
 const ROLES: Record<string, { selector: string; limit: number }> = {
   button: {
-    selector: '.primary, .secondary, .text-button, .u-btn:not(.u-btn--icon), button:not([class])',
+    selector: '.primary, .secondary, .text-button, button:not([class])',
     limit: 3,
   },
-  'icon button': { selector: '.icon-button, .u-btn--icon', limit: 1 },
+  'icon button': { selector: '.icon-button', limit: 1 },
   input: {
     selector:
       'input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=hidden]):not([type=file]), select',
@@ -109,7 +101,6 @@ async function measure(page: Page, label: string, seen: Seen) {
           const box = el.getBoundingClientRect();
           const style = getComputedStyle(el);
           if (box.width === 0 || box.height === 0 || style.visibility === 'hidden') continue;
-          // a label that wrapped onto more lines is the content's height, not the control's own
           if (box.height > parseFloat(style.fontSize) * 3.2) continue;
           out[role]!.push([
             Math.round(box.height),
@@ -130,7 +121,6 @@ async function measure(page: Page, label: string, seen: Seen) {
     }
 }
 
-/** The roles that broke their limit, for the quality scorecard (scripts/quality/areas/ui.mjs reads evidence/role-variance.json). */
 const violations: {
   page: string;
   viewport: string;
@@ -176,7 +166,6 @@ for (const layout of Object.keys(LAYOUTS) as (keyof typeof LAYOUTS)[]) {
     const scene = await open(browser, layout, '3d');
     await show(scene.page, 'office', scene.project);
     await measure(scene.page, 'office-3d', seen);
-    // the session sheet: the member bar of the first chip, then the conversation it opens
     const chip = scene.page.locator('.sheet-chip').first();
     if (await chip.count()) {
       await chip.click();
@@ -187,7 +176,6 @@ for (const layout of Object.keys(LAYOUTS) as (keyof typeof LAYOUTS)[]) {
       await measure(scene.page, 'sheet', seen);
       await scene.page.getByRole('button', { name: '收合', exact: true }).click();
     }
-    // the drawer: the tab bar's "more" on a portrait phone, the menu button where there is no sidebar
     const opener = scene.page
       .locator('.tab[aria-expanded], .mobile-menu')
       .filter({ visible: true });
@@ -224,7 +212,6 @@ for (const layout of ['phone', 'tablet'] as const)
             const cx = box.left + box.width / 2;
             const cy = box.top + box.height / 2;
             const reach = finger / 2 - 1;
-            // only the axis that is short is probed; a point that lands on another control is that control's own space
             const points: [number, number][] = [];
             if (box.height < finger - 0.5) points.push([cx, cy - reach], [cx, cy + reach]);
             if (box.width < finger - 0.5) points.push([cx - reach, cy], [cx + reach, cy]);
@@ -232,7 +219,6 @@ for (const layout of ['phone', 'tablet'] as const)
               if (x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) continue;
               const hit = document.elementFromPoint(x, y);
               if (hit && (el.contains(hit) || hit.closest(selector))) continue;
-              // a gap of a few pixels between two stacked controls is the pair's shared boundary
               const [dx, dy] = [Math.sign(x - cx) * 4, Math.sign(y - cy) * 4];
               const beyond = document.elementFromPoint(x + dx, y + dy);
               if (beyond?.closest(selector)) continue;
@@ -259,7 +245,7 @@ for (const layout of ['phone', 'tablet'] as const)
     await probe(scene.page, 'office-3d');
     const chip = scene.page.locator('.sheet-chip').first();
     if (await chip.count()) {
-      await chip.tap(); // the sheet's member bar: focus, open the conversation, close
+      await chip.tap();
       await expect(scene.page.locator('.member-bar .icon-button').first()).toBeVisible();
       await probe(scene.page, 'member bar', '.member-bar');
       await scene.page.locator('.member-bar .icon-button').last().tap();
@@ -275,10 +261,6 @@ for (const layout of ['phone', 'tablet'] as const)
     expect([...misses], `${layout} controls under a ${FINGER}px hit area`).toEqual([]);
   });
 
-/**
- * The native runner shows the most in the top bar (the live link, the numbers, the emergency stop, the mode badge, pairing,
- * language and theme): at every width each control stays on the screen and none covers another (D06, D07).
- */
 for (const width of [320, 390, 768, 1024, 1440, 1920])
   test(`native top bar at ${width}px keeps every control reachable and apart`, async ({
     browser,
@@ -291,7 +273,7 @@ for (const width of [320, 390, 768, 1024, 1440, 1920])
     });
     const page = await context.newPage();
     await signIn(page, nativeOrigin(), { session: NATIVE_SESSION });
-    await expect(page.locator('.topbar-right .danger')).toBeVisible(); // the emergency stop: live mode
+    await expect(page.locator('.topbar-right .danger')).toBeVisible();
     const problems = await page.evaluate(() => {
       const bar = document.querySelector('.topbar')!;
       const controls = [
@@ -324,7 +306,6 @@ for (const width of [320, 390, 768, 1024, 1440, 1920])
       return out;
     });
     expect(problems).toEqual([]);
-    // the language and theme buttons are reachable where there is room for them
     if (width >= 768)
       for (const name of [/^(介面語言|Language)$/, /^(介面外觀|Appearance)$/])
         await expect(page.getByRole('button', { name })).toBeInViewport();

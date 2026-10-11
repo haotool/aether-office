@@ -103,7 +103,6 @@ function Managed({ agent, snapshot }: { agent: Agent; snapshot: Snapshot }) {
   );
 }
 
-/** Everything about the session that is not the conversation, in one fold that stays closed until asked for. */
 export function SessionDetails({
   agent,
   session,

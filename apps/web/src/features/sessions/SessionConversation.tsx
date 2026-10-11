@@ -104,19 +104,14 @@ type SessionConversationProps = {
   agent: Agent;
   session: AttributedSession | null;
   snapshot: Snapshot;
-  /** Sessions other than this one that want a look: shown on the way back to the feed. */
   attention: number;
-  /** An input to use in place of the one the foot chooses for the session. */
   composer?: ReactNode;
-  /** Buttons at the end of the header (close, or collapse to a peek on a phone). */
   trailing?: ReactNode;
   onBack: () => void;
   onFocus: () => void;
-  /** Select a member: the supervisor of a subagent, from its "spawned by" link. */
   onOpen: (agentId: string) => void;
 };
 
-/** The model chip, the context percentage and the thin meter under it. */
 function ConvContext({ session }: { session: AttributedSession | null }) {
   const t = useT();
   const locale = useLocale();
@@ -165,7 +160,6 @@ function ContextMeter({ session }: { session: AttributedSession | null }) {
   );
 }
 
-/** What the middle of the conversation shows: a subagent's own view, the transcript, or just the details. */
 function ConvMain({
   agent,
   session,
@@ -213,7 +207,6 @@ function ConvMain({
   );
 }
 
-/** What stands between the header and the messages: the hook note, permission requests, and the wait for one. */
 function ConvNotices({
   session,
   agent,
@@ -243,10 +236,6 @@ function ConvNotices({
   );
 }
 
-/**
- * The selected member as a conversation: who and in what state, then the transcript (newest at the bottom), then one
- * closed fold of details, then the foot (read-only actions, or a composer where AETHER can drive the session).
- */
 export function SessionConversation({
   agent,
   session,
@@ -260,7 +249,6 @@ export function SessionConversation({
 }: SessionConversationProps) {
   const asking = !!session && requestsFor(usePermissionRequests(), session.key).length > 0;
   const isSub = agent.id.includes(SUBAGENT_INFIX);
-  // The squad as it stands now; a subagent's own view and a supervisor's strip and cards both read it.
   const squad = useMemo(() => (session ? squadViewOf(session, Date.now()) : null), [session]);
   const [picked, setPicked] = useState<string | null>(null);
   useEffect(() => setPicked(null), [agent.id]);

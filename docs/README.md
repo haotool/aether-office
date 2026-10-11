@@ -3,11 +3,16 @@
 The [project README](../README.md) is the short version: what it is, a quick start and the limits. These pages are the manual.
 They are written in English; the Traditional Chinese README is [README.zh-TW.md](../README.zh-TW.md).
 
+The pages follow four kinds. **Tutorial:** Getting started. **How-to:** the How-to guides. **Reference:** Configuration,
+Provider compatibility, the verification ledger and the UX matrix. **Explanation:** Architecture, Security, Session roles,
+Native execution and the design records.
+
 ## Use it
 
 | Document                              | Contents                                                                                         |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | [Getting started](getting-started.md) | First run in five minutes, hooks, phone and QR pairing, HTTPS and the installable app, upgrading |
+| [How-to guides](how-to.md)            | Short answers to specific jobs: run, connect, change the code, release                           |
 | [Features](features.md)               | How the features behave: the panel, approvals, KPIs, the office, office life, the tour           |
 | [Configuration](configuration.md)     | Every environment variable and the native-execution file                                         |
 | [Session roles](roles.md)             | How a session is placed on a floor: signals, evidence, accuracy                                  |
@@ -29,6 +34,7 @@ They are written in English; the Traditional Chinese README is [README.zh-TW.md]
 | [Design system](design-system.md) | Tokens, components, the panel, the 3D office, responsive rules        |
 | [Dependencies](dependencies.md)   | Notable dependency choices and supply-chain controls                  |
 | [Screenshots](images/README.md)   | The images in the README, what they show and how to regenerate them   |
+| [Maintainers](maintainers.md)     | Who maintains the project, how decisions are made, response times     |
 
 ## Design records
 

@@ -34,12 +34,12 @@ it("every non-public route refuses unauthenticated callers, and project routes r
     const swept = routes.filter(
       (r) => !r.url.startsWith('/*') && r.url !== '/' && !PUBLIC_ROUTES.has(`${r.method} ${r.url}`),
     );
-    expect(swept.length).toBeGreaterThan(30); // the sweep must actually cover the API
+    expect(swept.length).toBeGreaterThan(30);
 
     const unauthenticated: string[] = [];
     const crossProject: string[] = [];
     for (const { method, url } of swept) {
-      if (url.includes('/stream')) continue; // long-lived: covered by the revocation test
+      if (url.includes('/stream')) continue;
       const target = fill(url, f.projectId);
       const anon = await app.inject({
         method: method as 'GET',

@@ -13,7 +13,6 @@ type Run = {
 };
 type ProviderReport = Extract<RunnerEvent, { type: 'provider' }>;
 
-/** Stores the highest token counts seen for the turn and returns how much they grew since the last report. */
 function recordTurnUsage(
   ctx: Context,
   scope: string[],
@@ -36,7 +35,6 @@ function recordTurnUsage(
   return delta;
 }
 
-/** Token usage of one turn: the growth since the last report is added to the run's totals and announced. */
 function recordUsage(
   ctx: Context,
   actor: Actor,

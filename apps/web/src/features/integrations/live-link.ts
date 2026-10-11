@@ -1,14 +1,9 @@
 import type { QueryKey } from '@tanstack/react-query';
 import { fill, translate } from '../../lib/i18n/i18n.js';
 
-/**
- * The live link to the control plane, as pure functions: what a change event refreshes, how long to wait before
- * reconnecting, and what the connection indicator says. The EventSource itself lives in use-session-stream.ts.
- */
 type ChangeKind = 'state' | 'tool' | 'speech' | 'transcript' | 'squad' | 'outcome';
 export type SessionChange = { seq: number; key: string; kinds: ChangeKind[] };
 
-/** Parses an event's data; anything that is not a change is ignored rather than trusted. */
 export function parseChange(data: string): SessionChange | null {
   try {
     const v = JSON.parse(data) as Partial<SessionChange>;
@@ -22,11 +17,9 @@ export function parseChange(data: string): SessionChange | null {
 
 const LOCAL_SESSIONS_KEY: QueryKey = ['local-sessions'];
 const SPEECH_KEY: QueryKey = ['speech'];
-/** Token KPIs, every range: a transcript that moved or appeared changes them. */
 export const USAGE_KEY: QueryKey = ['usage'];
 const transcriptKey = (key: string): QueryKey => ['transcript', key];
 
-/** Every query a set of changes makes stale (deduplicated; a query nobody is looking at is only marked, not fetched). */
 export function queriesFor(changes: readonly SessionChange[]): QueryKey[] {
   const out = new Map<string, QueryKey>();
   const add = (key: QueryKey) => out.set(JSON.stringify(key), key);
@@ -39,7 +32,6 @@ export function queriesFor(changes: readonly SessionChange[]): QueryKey[] {
   return [...out.values()];
 }
 
-/** Everything the link feeds, for when changes may have been missed (reconnect after a gap, waking, back online). */
 export const allQueries = (): QueryKey[] => [
   LOCAL_SESSIONS_KEY,
   SPEECH_KEY,
@@ -49,20 +41,17 @@ export const allQueries = (): QueryKey[] => [
 
 const BACKOFF_BASE_MS = 1000;
 const BACKOFF_MAX_MS = 30_000;
-/** Exponential backoff with full jitter: `random` in [0, 1) picks a point in the window. At least 250 ms. */
 export function backoffMs(attempt: number, random: number): number {
   const window = Math.min(BACKOFF_MAX_MS, BACKOFF_BASE_MS * 2 ** attempt);
   return Math.max(250, Math.round(window * random));
 }
 
-/** After this many failed attempts in a row the indicator says offline rather than reconnecting. */
 export const OFFLINE_AFTER_FAILURES = 3;
 
 export type LinkStatus = 'connecting' | 'live' | 'reconnecting' | 'offline';
 export type LinkState = {
   status: LinkStatus;
   failures: number;
-  /** When the stream last said anything (ms epoch), or null before the first word. */
   lastAt: number | null;
 };
 export type LinkAction =
@@ -92,7 +81,6 @@ export function linkReducer(state: LinkState, action: LinkAction): LinkState {
   }
 }
 
-/** "4s", "3 min": how long ago, for the connection indicator. */
 export function ageText(ms: number, locale: 'zh-TW' | 'en'): string {
   const s = Math.max(0, Math.round(ms / 1000));
   if (s < 60) return fill(translate(locale, 'ageSeconds'), s);

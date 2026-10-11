@@ -1,4 +1,3 @@
-/** The clockout words, in Traditional Chinese. */
 export const zhClockout = {
   clockOut: '下班了！',
   clockOutTitle: '讓閒置的 Session 下班',

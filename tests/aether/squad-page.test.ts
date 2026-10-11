@@ -18,7 +18,6 @@ const agent = (id: string): Agent =>
   ({ id, projectId: 'p', name: id, activity: 'working', species: 'fox', color: '#fff' }) as Agent;
 const parent = agent('local:s1');
 
-/** The page seats `count` subagents of `local:s1` and the scene sits them: do they agree on where? */
 function both(count: number, others = 0) {
   const subs = Array.from({ length: count }, (_, n) => agent(`local:s1:sub:a${n}`));
   const rest = Array.from({ length: others }, (_, n) => agent(`local:o${n}`));
@@ -47,7 +46,7 @@ describe('the page and the scene agree about squads', () => {
     (n) => {
       const { layout, subs, zones, state } = both(n);
       const withDesks = subs.filter((s) => layout.objects.some((o) => o.agentId === s.id));
-      expect(withDesks.length === 0 || withDesks.length === n).toBe(true); // all in the zone or all at desks
+      expect(withDesks.length === 0 || withDesks.length === n).toBe(true);
       expect(zones).toHaveLength(withDesks.length === 0 ? 1 : 0);
       if (zones.length) {
         expect(zones[0]!.pods.length).toBeGreaterThanOrEqual(n);

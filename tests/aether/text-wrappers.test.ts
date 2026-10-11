@@ -22,9 +22,7 @@ const TASK = [
   '</task-notification>',
 ].join('\n');
 
-// [name, input, expected text after structureWrappers]
 const TEXT: [string, string, string][] = [
-  // wrappers that must never reach the screen
   ['the reported task notification, alone', TASK, ''],
   ['a stray task-notification closer', '</task-notification>', ''],
   ['a stray div closer', 'done </div>', 'done'],
@@ -63,7 +61,6 @@ const TEXT: [string, string, string][] = [
   ['placeholder with underscore mid-line', 'set <api_key> first', 'set <api_key> first'],
   ['single word placeholder', 'use <file> here', 'use <file> here'],
   ['balanced placeholder pair is a wrapper', 'use <file>a.ts</file> here', 'use a.ts here'],
-  // generics and comparisons survive
   ['Array<string>', 'type Array<string>', 'type Array<string>'],
   ['Map<K, V>', 'Map<K, V> is a map', 'Map<K, V> is a map'],
   ['std::vector<int>', 'use std::vector<int> here', 'use std::vector<int> here'],
@@ -109,7 +106,6 @@ const TEXT: [string, string, string][] = [
     'A stray closer must not show.',
   ],
   ['a matched div still breaks the paragraph', 'a<div>b</div>c', 'a\n\nb\n\nc'],
-  // mixed with markdown
   ['bold around wrappers', '**a** <my-tag>b</my-tag> *c*', '**a** b *c*'],
   ['a link and a wrapper', '[x](https://a.dev) <my-tag>y</my-tag>', '[x](https://a.dev) y'],
   [

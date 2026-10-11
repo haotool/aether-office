@@ -13,7 +13,6 @@ const LazyBody = lazy(() =>
   import('../shell-chrome/PanelBody.js').then((m) => ({ default: m.PanelBody })),
 );
 
-/** The panel's content is a lazy chunk (the conversation, the feed, the Markdown renderer); its header is there at once. */
 export function PanelBody(props: PanelProps) {
   const t = useT();
   return (
@@ -32,7 +31,6 @@ export function PanelBody(props: PanelProps) {
   );
 }
 
-/** The collapsed panel: a column of 48px with the way back in and what wants a look (needs you, unread). */
 function PanelRail({ feed, onExpand }: { feed: Feed; onExpand: () => void }) {
   const t = useT();
   const needs = feed.needs.length;
@@ -64,7 +62,6 @@ function PanelRail({ feed, onExpand }: { feed: Feed; onExpand: () => void }) {
   );
 }
 
-/** The buttons at the head of the panel: fold it to a rail (where it can be resized) and close it. */
 function PanelControls({
   resizable,
   onCollapse,
@@ -94,11 +91,6 @@ function PanelControls({
   );
 }
 
-/**
- * The desktop panel: a column beside the office, always there, a feed until a member is chosen. Its width is the
- * `--panel-w` variable of the app body (set here, and by the drag handle while dragging); narrow windows lay it over the
- * office at a fixed width, and it can fold to a rail.
- */
 export function SessionPanel(props: Omit<PanelProps, 'trailing'> & { onClose: () => void }) {
   const t = useT();
   const { onClose, feed, ...body } = props;

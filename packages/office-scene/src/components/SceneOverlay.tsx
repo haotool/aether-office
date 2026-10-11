@@ -11,13 +11,11 @@ import { departmentAt, floorOfDesk, floorY, ZONE_OFFSET } from '../scene/scene-g
 import { IntroCaption, IntroDip } from '../intro/index.js';
 import { SquadDom } from '../squad/index.js';
 
-/** The DOM nodes the projected labels write into: set when the node mounts, dropped when it goes. */
 const registerIn = (nodes: Map<string, HTMLElement>, id: string) => (node: HTMLElement | null) => {
   if (node) nodes.set(id, node);
   else nodes.delete(id);
 };
 
-/** The name tags: one per member who has one on show. */
 function NameTags({ m }: { m: SceneModel }) {
   const { props, nav, hovered, layout } = m;
   const { marks, seatDrag, words } = m.ix;
@@ -55,7 +53,6 @@ function NameTags({ m }: { m: SceneModel }) {
   ));
 }
 
-/** The chip over a member whose context is being compacted. */
 function CompactionChips({ m }: { m: SceneModel }) {
   const { props, zh } = m;
   return m.chipped.map((agent) => {
@@ -74,7 +71,6 @@ function CompactionChips({ m }: { m: SceneModel }) {
   });
 }
 
-/** Room names on the floor in view: each one flies the camera to its room. */
 function ZoneLabels({ m }: { m: SceneModel }) {
   const { floor, exploded, zh } = m;
   if ((m.compact && !m.namesOn) || exploded) return null;
@@ -93,7 +89,6 @@ function ZoneLabels({ m }: { m: SceneModel }) {
     ));
 }
 
-/** Everything that moves with the 3D scene but is drawn as DOM: tags, chips, the aria log, the squads' text, room names. */
 export function WorldLabels({ m }: { m: SceneModel }) {
   return (
     <div className="world-labels">
@@ -107,7 +102,6 @@ export function WorldLabels({ m }: { m: SceneModel }) {
   );
 }
 
-/** The last prompt and reply of the members who are speaking. */
 export function SpeechBubbles({ m }: { m: SceneModel }) {
   const { props, layout } = m;
   return (
@@ -125,7 +119,6 @@ export function SpeechBubbles({ m }: { m: SceneModel }) {
   );
 }
 
-/** The tour's dip and caption, the director's cut and the caption of the shot it is on. */
 export function SceneCaptions({ m }: { m: SceneModel }) {
   const { props, nav, intro, zh } = m;
   return (
@@ -156,7 +149,6 @@ export function SceneCaptions({ m }: { m: SceneModel }) {
   );
 }
 
-/** The floor controls: the phone's one-line HUD, or the desktop's floor readout, plaque and building panel. */
 export function HudPanels({ m }: { m: SceneModel }) {
   const { props, nav, intro, zh, floor, exploded } = m;
   const replay = intro.available ? intro.replay : undefined;

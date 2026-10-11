@@ -1,11 +1,7 @@
 #!/usr/bin/env node
-// Usage: hook-approval.mjs [waitMs]. Synchronous PermissionRequest hook for Claude Code ("Remote approvals", opt-in). Payload on stdin.
-// It asks the local AETHER control plane to show the permission prompt in the panel, waits up to a short deadline for a
-// person's answer and prints it as Claude's decision JSON. Anything else (no answer, offline, an error, a bad config)
-// prints nothing and exits 0: Claude Code then asks in its own terminal as if this hook did not exist. It never decides
-// by itself and never allows anything a person did not click: a decision counts only with the control plane's proof
-// (an HMAC under a key only that server and this machine's config file hold), so a process squatting the port cannot
-// answer for a person.
+// Synchronous PermissionRequest hook (Remote approvals, opt-in). Anything but a person's answer (none, offline, error,
+// bad config) prints nothing and exits 0, so Claude Code asks in its terminal. A decision counts only with the control
+// plane's HMAC proof, so a process squatting the port cannot answer for a person.
 import { randomBytes } from 'node:crypto';
 import {
   DEFAULT_WAIT_MS,
@@ -38,7 +34,6 @@ export function sessionUpdates(suggestions) {
 }
 const label = (r) => (r.ruleContent ? `${r.toolName}(${r.ruleContent})` : r.toolName);
 
-/** The documented stdout of a PermissionRequest hook for a person's answer. */
 export function decisionOutput(answer, updates) {
   const decision = { behavior: answer.behavior };
   if (answer.message) decision.message = answer.message;
@@ -58,10 +53,8 @@ async function call(base, token, path, init = {}, ms = CALL_MS) {
   return response.json();
 }
 
-/** Returns the decision JSON to print, or null for "no decision: let Claude ask in the terminal". */
 export async function requestDecision(payload, config, waitMs, startedAt = Date.now()) {
   if (payload?.hook_event_name !== 'PermissionRequest') return null;
-  // "Allow for this session" is offered only when the server will take and show every label whole.
   const offered = sessionUpdates(payload.permission_suggestions);
   const labels = offered.flatMap((u) => u.rules.map(label));
   const updates =

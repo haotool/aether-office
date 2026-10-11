@@ -11,7 +11,6 @@ import {
 } from '../../packages/office-scene/src/core/stalk-layout.js';
 
 const NOW = 1_800_000_000_000;
-/** A linear history with a second parent (a merge) on every `every`th commit. */
 function history(n: number, prefix: string, every: number): StalkCommit[] {
   const sha = (k: number) => `${prefix}${String(k * 31 + 7).padStart(6, '0')}`;
   return Array.from({ length: n }, (_, i) => {

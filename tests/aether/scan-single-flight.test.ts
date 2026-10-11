@@ -3,7 +3,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { beforeEach, expect, it, vi } from 'vitest';
 
-// One scan at a time: requests that arrive while a scan runs share it, and what a scan found is remembered per home.
 const processes = vi.hoisted(() => ({ calls: 0 }));
 vi.mock('../../apps/control/src/services/runtime/agent-processes.js', async (original) => {
   const real =

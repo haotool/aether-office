@@ -3,17 +3,11 @@ import { anchorOf, newMessagesSince, type Entry } from '../conversation/turn-gro
 
 const NEAR_BOTTOM_PX = 48;
 
-/**
- * Keeps a conversation's scroll the way a reader wants it. At the bottom it follows the newest message (the first look
- * lands there at once, later arrivals glide); scrolled up to read, it stays put and counts what arrived out of sight.
- * `toBottom` is the "jump to latest" pill.
- */
 export function useConvScroll(entries: readonly Entry[] | undefined, still: boolean) {
   const scroller = useRef<HTMLDivElement>(null);
   const loaded = useRef(false);
   const following = useRef(true);
   const anchor = useRef<string | null>(null);
-  // A smooth scroll to the newest message is under way: its in-between positions are not "scrolled away".
   const jumping = useRef(false);
   const [unseen, setUnseen] = useState(0);
   const [away, setAway] = useState(false);

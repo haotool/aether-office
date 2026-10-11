@@ -2,29 +2,20 @@ import { SESSION_ACTIVE_MS } from '@aether/contracts';
 import type { AgentProcess, Zombie } from '../runtime/agent-processes.js';
 
 /**
- * How alive a local session is, on two separate questions the projects reviewed (gascity, gastown) keep apart: is a
- * process there at all, and is anything happening in it. A process can be alive and idle for a day; that is a different
- * thing from an orphan nobody owns or a zombie nobody collected, and each calls for something different from the owner.
+ * How alive a local session is, on two separate questions: is a process there at all, and is anything happening in it.
+ * A process can be alive and idle for a day; that is different from an orphan nobody owns or a zombie nobody collected.
  */
-type LivenessState =
-  | 'active' // work seen in the last couple of minutes
-  | 'idle' // alive, quiet for a while: waiting for its person
-  | 'dormant' // alive, quiet for hours: probably forgotten
-  | 'orphaned' // alive, but whatever started it has gone
-  | 'ended' // no process
-  | 'unknown'; // cannot tell (Codex Desktop threads share one app server)
+type LivenessState = 'active' | 'idle' | 'dormant' | 'orphaned' | 'ended' | 'unknown'; // cannot tell (Codex Desktop threads share one app server)
 type Liveness = {
   state: LivenessState;
   startedAt: number | null;
   quietMs: number | null;
-  /** Finished processes under it that nobody collected (see AgentProcess.zombies). */
   zombies: Zombie[];
 };
 
 export const DORMANT_MS = 6 * 60 * 60 * 1000;
-const BUSY_CPU_SECONDS = 0.5; // CPU used between two looks that counts as doing something
+const BUSY_CPU_SECONDS = 0.5;
 
-/** Pure. */
 export function classifyLiveness(input: {
   process: AgentProcess | null;
   state: 'running' | 'none' | 'unknown';
@@ -51,11 +42,6 @@ export function classifyLiveness(input: {
   return { state, startedAt: process.startedAt, quietMs, zombies: process.zombies };
 }
 
-/**
- * Remembers each process's CPU time from one look to the next, so "has it done anything lately" does not rest on the
- * transcript alone (a long build in a quiet transcript is not a dormant session). Keyed by pid and start time, so a
- * reused pid is a new process. In memory only: after a restart the first look has no history and says nothing.
- */
 export class CpuWatch {
   private seen = new Map<string, { cpuSeconds: number; busyAt: number | null }>();
   private key = (p: Pick<AgentProcess, 'pid' | 'startedAt'>) => `${p.pid}:${p.startedAt}`;
@@ -66,13 +52,13 @@ export class CpuWatch {
       const before = this.seen.get(this.key(p));
       const busy = before
         ? p.cpuSeconds - before.cpuSeconds >= BUSY_CPU_SECONDS
-        : p.cpuPercent >= 5; // first look: ps's own recent average
+        : p.cpuPercent >= 5;
       next.set(this.key(p), {
         cpuSeconds: p.cpuSeconds,
         busyAt: busy ? now : (before?.busyAt ?? null),
       });
     }
-    this.seen = next; // processes that went away are forgotten here
+    this.seen = next;
   }
 
   busyAt(p: Pick<AgentProcess, 'pid' | 'startedAt'>): number | null {

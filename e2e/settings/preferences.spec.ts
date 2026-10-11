@@ -2,12 +2,6 @@ import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { signIn } from '../support/sign-in.js';
 
-/**
- * The preference queries of breakpoints.css and tokens.css, each under Playwright's media emulation: forced colors keep
- * every control's border and the focus ring (the system paints the colors, so shape must say what color said), more
- * contrast and reduced transparency make the glass opaque and switch off the blur. Screenshots go to evidence/preferences
- * for a person to look at.
- */
 const SHOTS = 'evidence/preferences';
 mkdirSync(SHOTS, { recursive: true });
 
@@ -92,7 +86,7 @@ for (const theme of ['dark', 'light'] as const)
         blur: getComputedStyle(document.querySelector('.topbar')!).backdropFilter,
       };
     });
-    expect(tokens.glass).toBe('#0a141c'); // no alpha channel
+    expect(tokens.glass).toBe('#0a141c');
     expect(tokens.line).toBe(theme === 'dark' ? '#7e97ab' : '#5c7385');
     expect(tokens.ring).toContain('3px');
     expect(tokens.blur).toBe('none');
@@ -112,6 +106,6 @@ test('reduced transparency: opaque glass over the scene and no blur', async ({ p
   }));
   expect(look.glass).toBe('#0a141c');
   expect(look.blur).toBe('none');
-  expect(look.panel).not.toMatch(/rgba\(.*,\s*0?\.\d+\)$/); // an opaque rgb(), not a see-through rgba()
+  expect(look.panel).not.toMatch(/rgba\(.*,\s*0?\.\d+\)$/);
   await page.screenshot({ path: `${SHOTS}/reduced-transparency.png` });
 });

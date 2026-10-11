@@ -4,7 +4,6 @@ import { execute } from '../../lib/api/api-commands.js';
 
 const SCRATCH = ['/tmp/', '/private/tmp/']; // agent scratchpads, never real projects
 
-/** Main checkouts of sessions that no AETHER project owns yet, once each, ignoring scratch directories. */
 export function unclaimedRepos(
   sessions: readonly AttributedSession[],
 ): { root: string; name: string }[] {
@@ -15,12 +14,10 @@ export function unclaimedRepos(
   return [...found].map(([root, name]) => ({ root, name }));
 }
 
-/** Where an adoption stands: while it is in flight `retryAt` is infinite; after a failure it is when to try again. */
 export type AdoptTracker = Map<string, { tries: number; retryAt: number }>;
 export const ADOPT_TRIES = 4;
 const ADOPT_BACKOFF_MS = 2000;
 
-/** The repositories to try now: new ones, and failed ones whose wait has passed, until they used up their tries. */
 export function dueRepos(
   repos: readonly { root: string; name: string }[],
   tracker: AdoptTracker,
@@ -32,7 +29,6 @@ export function dueRepos(
   });
 }
 
-/** Records an attempt's end: a failure waits twice as long as the one before it (2 s, 4 s, 8 s), a success is final. */
 export function noteAdoption(tracker: AdoptTracker, root: string, ok: boolean, now: number) {
   if (ok) tracker.set(root, { tries: ADOPT_TRIES, retryAt: Infinity });
   else {
@@ -41,10 +37,6 @@ export function noteAdoption(tracker: AdoptTracker, root: string, ok: boolean, n
   }
 }
 
-/**
- * Gives every repository a session works in a project, so its sessions appear there. Owner only. A failed attempt is
- * tried again, a few times with a growing wait, whenever the sessions are next read.
- */
 export function useAdoptRepos(
   sessions: readonly AttributedSession[] | undefined,
   enabled: boolean,

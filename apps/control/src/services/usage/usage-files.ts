@@ -4,9 +4,7 @@ import { basename, dirname, join } from 'node:path';
 import { UUID_SUFFIX, headOf } from '../sessions/session-discovery.js';
 import { mapPool } from '../runtime/pool.js';
 
-// Which transcript files can hold usage inside a window: every session file of both providers changed in it, plus the
-// files of Claude's sub-agents (<session>/subagents/agent-*.jsonl), which spend tokens of their own. Metadata only.
-const MAX_ENTRIES = 24 * 1024; // directory entries visited per provider, newest first
+const MAX_ENTRIES = 24 * 1024;
 const STAT_WIDTH = 16;
 const DAY_MS = 86_400_000;
 
@@ -15,7 +13,6 @@ export type Transcript = {
   file: string;
   mtime: number;
   size: number;
-  /** `provider:sessionId`, the key the session list uses. A sub-agent's file belongs to its parent session. */
   sessionKey: string;
 };
 
@@ -28,7 +25,6 @@ const sessionKeyOf = (provider: Transcript['provider'], file: string): string =>
   return `codex:${UUID_SUFFIX.exec(base)?.[0] ?? base}`;
 };
 
-// Codex shards its sessions by YYYY/MM/DD: a day folder wholly older than the window is not opened at all.
 function olderThanWindow(parts: readonly string[], cutoff: number): boolean {
   if (parts.length !== 3) return false;
   const [y, m, d] = parts.map(Number) as [number, number, number];
@@ -38,17 +34,15 @@ function olderThanWindow(parts: readonly string[], cutoff: number): boolean {
 type Found = { file: string; mtime: number; size: number };
 type Budget = { entries: number; spent: boolean };
 
-/** Sorts `entries` newest first in place; Claude's folders by modification time (returning the stats it took), Codex's by name. */
 async function orderNewestFirst(dir: string, entries: Dirent[], codex: boolean) {
   const stats = new Map<string, Stats>();
-  if (codex)
-    entries.sort((a, b) => (a.name < b.name ? 1 : -1)); // newest shard first: a spent budget drops the oldest
+  if (codex) entries.sort((a, b) => (a.name < b.name ? 1 : -1));
   else {
     await mapPool(entries, STAT_WIDTH, async (e) => {
       if (!e.isSymbolicLink())
         await stat(join(dir, e.name))
           .then((s) => stats.set(e.name, s))
-          .catch(() => undefined); // vanished
+          .catch(() => undefined);
     });
     const at = (name: string) => stats.get(name)?.mtimeMs ?? 0;
     entries.sort((a, b) => at(b.name) - at(a.name));
@@ -56,10 +50,6 @@ async function orderNewestFirst(dir: string, entries: Dirent[], codex: boolean) 
   return stats;
 }
 
-/**
- * Collects the transcripts under `dir`. Claude's folders have no date in their names, so a spent budget could drop the
- * newest project: its entries are visited newest first by modification time. Codex's day shards sort by name.
- */
 async function walk(
   dir: string,
   parts: string[],
@@ -102,13 +92,10 @@ async function walk(
 
 type Listing = {
   transcripts: Transcript[];
-  /** How many transcripts changed within the window, before the cap: what a complete look would have tracked. */
   found: number;
-  /** The file cap or the directory budget cut the listing short: what is tracked is the newest part of what exists. */
   truncated: boolean;
 };
 
-/** Transcript files changed within `windowMs` of `now`, newest first, at most `maxFiles`. */
 export async function listTranscripts(
   home: string,
   now: number,
@@ -143,13 +130,11 @@ export async function listTranscripts(
   };
 }
 
-/** The repository folder a working directory belongs to, by name: a linked worktree is named after its repository. */
 function repoOfCwd(cwd: string): string {
   const linked = /^(.*?)\/\.(?:claude\/)?worktrees\//.exec(cwd);
   return basename(linked?.[1] ?? cwd) || 'unknown';
 }
 
-/** The session a Codex rollout was spawned by (its first line names the parent thread); null for any other transcript. */
 export async function parentOf(t: Transcript): Promise<string | null> {
   if (t.provider !== 'codex') return null;
   try {
@@ -159,7 +144,6 @@ export async function parentOf(t: Transcript): Promise<string | null> {
   }
 }
 
-/** The repository folder of a transcript, from the directory its session started in; null when it names none. */
 export async function repoOf(t: Transcript): Promise<string | null> {
   // A sub-agent's transcript says nothing of its own: it ran where its parent did.
   const main =

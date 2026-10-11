@@ -1,4 +1,3 @@
-/** The reviews words, in English. */
 export const enReviews = {
   nativeReview: 'Native agent review',
   nativeReviewHint:

@@ -10,7 +10,6 @@ import { HOOK_STATUS } from './NotificationsSection.js';
 const providerName = (catalog: ModelCatalog) =>
   catalog.provider === 'claude' ? 'Claude' : 'Codex';
 
-/** What each CLI on this machine offers, and whether it was found at all: a built-in list means the CLI was not read. */
 function ModelList() {
   const t = useT();
   const { catalogs, error, loading, refresh } = useModels();
@@ -32,7 +31,6 @@ function ModelList() {
   );
 }
 
-/** Whether this machine's Claude Code and Codex sessions are being read, read from what the page already loaded. */
 function LocalSessionsRow() {
   const t = useT();
   const local = useQuery<LocalSessionsResponse>({

@@ -1,8 +1,6 @@
 import type { Rng } from '../environment/seeded.js';
 import { MONO } from './screen-theme.js';
 
-/** Small drawing helpers shared by the desk views. */
-
 /** Text cut to a width with an ellipsis; one line. The font must be set on `g` first. */
 export function fit(g: CanvasRenderingContext2D, text: string, width: number): string {
   if (g.measureText(text).width <= width) return text;
@@ -26,7 +24,6 @@ export function text(
   g.fillText(s, x, y);
 }
 
-/** A rounded rectangle path (filled by the caller). */
 export function roundRect(
   g: CanvasRenderingContext2D,
   x: number,
@@ -39,7 +36,6 @@ export function roundRect(
   g.roundRect(x, y, w, h, r);
 }
 
-/** A wavy line under a stretch of text: how an editor marks a problem. */
 export function squiggle(
   g: CanvasRenderingContext2D,
   x: number,
@@ -55,7 +51,6 @@ export function squiggle(
   g.stroke();
 }
 
-/** A polyline of `n` points whose height wanders: a sparkline's shape (a picture of a series, never one). */
 export function wander(r: Rng, n: number, drift = 0.22): number[] {
   const out: number[] = [];
   let v = 0.3 + r() * 0.4;
@@ -90,7 +85,6 @@ export function polyline(
   g.stroke();
 }
 
-/** A paragraph's worth of grey bars standing for lines of text: used where the words themselves are not ours to invent. */
 export function textBars(
   g: CanvasRenderingContext2D,
   r: Rng,

@@ -5,10 +5,6 @@ import { activityOf } from '../../lib/sessions/session-attention.js';
 import type { SquadView } from './feed-squads.js';
 import { sessionWaiting } from '../sessions/needs-you.js';
 
-/**
- * Pure. The session feed: every observed session as one row, sorted into what a person should look at first: those
- * waiting on them, those working, those that just finished (with an unread marker) and the rest, idle.
- */
 type Utterance = { text: string; at: number | null };
 export type Speech = { user: Utterance | null; assistant: Utterance | null };
 export type FeedBucket = 'needs' | 'working' | 'finished' | 'idle';
@@ -19,33 +15,22 @@ export type FeedItem = {
   agent: Agent;
   session: AttributedSession;
   bucket: FeedBucket;
-  /** The session's own title, else its repository. */
   label: string;
-  /** Repository and branch, when the label is not already the repository. */
   where: string;
-  /** The newest thing the agent said, as plain text. */
   reply: string | null;
-  /** Whether the replies have been fetched at all: until then an empty `reply` means "not known yet", not "no reply". */
   replyLoaded: boolean;
-  /** The tool it is running (or last ran) with its target, while it works or waits. */
   tool: string | null;
-  /** Why it waits: a permission prompt, or a notification that wants a person. */
   reason: 'permission' | 'attention' | null;
-  /** Newest sign of life: the transcript, a hook event, the latest reply. */
   at: number;
   unread: boolean;
   stale: boolean;
-  /** Its subagents, nested under it (attached by `groupFeed`); never a row of their own. */
   squad?: SquadView | null;
 };
 export type Feed = Record<FeedBucket, FeedItem[]>;
 
-/** A session that finished this recently still counts as news; older ones are just idle. */
 const FINISHED_MS = 30 * 60 * 1000;
-/** Idle this long and a row fades. */
 const STALE_MS = 2 * 60 * 60 * 1000;
 const MAX_IDLE_ROWS = 30;
-/** A reply is previewed in a line or two: this many characters is more than any row shows. */
 const REPLY_CHARS = 200;
 
 type RowInput = {
@@ -55,7 +40,6 @@ type RowInput = {
   speech: Readonly<Record<string, Speech>> | undefined;
   seen: Readonly<Record<string, number>>;
   now: number;
-  /** A permission request of this session waits for an answer here. */
   requested: boolean;
 };
 
@@ -88,7 +72,6 @@ const feedWaitReason = (
   return requested || session.hook?.lastEvent === 'PermissionRequest' ? 'permission' : 'attention';
 };
 
-/** The row of one session: which bucket it belongs to, what it said last, what it is doing and whether it is news. */
 function feedRow({ session, agent, activity, speech, seen, now, requested }: RowInput): FeedItem {
   const said = speech?.[session.key]?.assistant ?? null;
   const at = Math.max(session.mtime, session.hook?.at ?? 0, said?.at ?? 0);
@@ -122,12 +105,9 @@ export function buildFeed({
 }: {
   sessions: readonly AttributedSession[];
   agents: readonly Agent[];
-  /** By session key; undefined while the first answer is still on its way. */
   speech: Readonly<Record<string, Speech>> | undefined;
-  /** When each session was last opened, by key. */
   seen: Readonly<Record<string, number>>;
   now: number;
-  /** Sessions with a permission request waiting for an answer here: they need a person whatever their hooks last said. */
   asking?: ReadonlySet<string>;
 }): Feed {
   const byId = new Map(agents.map((a) => [a.id, a]));
@@ -152,14 +132,11 @@ export function buildFeed({
   return feed;
 }
 
-/** The locale key for a row with no reply to show: "No reply yet" is only said once the replies are known. */
 export const noReplyKey = (item: Pick<FeedItem, 'session' | 'replyLoaded'>) =>
   item.replyLoaded && item.session.process === 'running' ? 'feedNoReply' : 'feedReplyNotLoaded';
 
 export const feedItems = (feed: Feed): FeedItem[] => BUCKETS.flatMap((b) => feed[b]);
-/** What the peek shows when nothing is chosen: the row that most wants a look. */
 export const mostUrgent = (feed: Feed): FeedItem | null => feedItems(feed)[0] ?? null;
-/** The sessions a badge counts: those waiting on a person and finished ones not yet opened. One answer for every badge. */
 export const attentionKeys = (feed: Feed): ReadonlySet<string> =>
   new Set([...feed.needs, ...feed.finished.filter((i) => i.unread)].map((i) => i.key));
 export const attentionCount = (feed: Feed): number => attentionKeys(feed).size;

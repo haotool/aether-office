@@ -1,8 +1,6 @@
 import * as THREE from 'three';
 
-/** What a floor builds, and the small solids its parts are made from. */
 type Spinner = { mesh: THREE.Object3D; axis: 'x' | 'y' | 'z'; speed: number };
-/** What a floor builds: merged static geometry (cheap to draw) and the few moving parts kept apart so they can animate. */
 export type FloorModel = {
   group: THREE.Group;
   spinners: Spinner[];
@@ -12,7 +10,6 @@ export type FloorModel = {
     amplitude: number;
     speed: number;
   }[];
-  /** Small lit craft gliding along an ellipse above the floor. */
   orbiters: {
     mesh: THREE.Object3D;
     rx: number;
@@ -21,11 +18,8 @@ export type FloorModel = {
     speed: number;
     phase: number;
   }[];
-  /** A light plane that sweeps the floor from front to back and starts over. */
   sweepers: { mesh: THREE.Object3D; from: number; to: number; speed: number }[];
-  /** Rising points of light (the data column in the elevator core): positions are advanced every frame. */
   streams: { points: THREE.Points; speed: number; height: number }[];
-  /** Hologram materials whose `time` uniform the scene advances. */
   holograms: THREE.ShaderMaterial[];
 };
 

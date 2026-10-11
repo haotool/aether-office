@@ -6,7 +6,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import aokit as ao  # Upstream MIT geometry/rig helpers, attribution retained.
 from mathutils import Vector
 
-# Where a prop waits, out of sight inside the torso (its bones ride on the chest), until a clip brings it to a hand.
 PROP_REST = {'cup': (0.0, 0.0, .7), 'phone': (.05, 0.0, .8), 'pad': (-.04, 0.0, .84)}
 FACE_BONES = ['eye', 'joy', 'lid', 'brow']
 MOUTH_BONES = ['smile', 'open', 'oh', 'flat']

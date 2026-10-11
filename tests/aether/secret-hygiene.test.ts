@@ -39,7 +39,6 @@ it('no credential, invitation, A2A token or provider secret ever lands in the da
       return res;
     };
 
-    // Credentials used over HTTP: a good login, a wrong one, and bearer calls.
     await send(
       'POST',
       '/api/login',
@@ -53,7 +52,6 @@ it('no credential, invitation, A2A token or provider secret ever lands in the da
       authorization: `Bearer ${f.sender.token}`,
     });
 
-    // Credentials minted by commands: invitation, runner token, A2A client token, an integration naming an env var.
     const invitation = f.control.execute(
       f.owner.actor,
       command('machine.invite', { name: 'm', providers: ['demo'], roots: ['/srv'] }, f.projectId),
@@ -82,7 +80,7 @@ it('no credential, invitation, A2A token or provider secret ever lands in the da
     ).result as { id: string };
     await send('POST', `/api/projects/${f.projectId}/integrations/${connection.id}/sync`, {
       authorization: `Bearer ${f.owner.token}`,
-    }); // fails: unreachable, with the secret in the request header
+    });
     await send('GET', `/api/projects/${f.projectId}/integrations`, {
       authorization: `Bearer ${f.owner.token}`,
     });
@@ -108,7 +106,6 @@ it('no credential, invitation, A2A token or provider secret ever lands in the da
     );
     secrets['probeCookie'] = 'probe-cookie-value-123456';
 
-    // Everything persisted: every table, every event payload.
     const sql = f.control.ctx.sqlite;
     const tables = (
       sql.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[]
@@ -122,9 +119,8 @@ it('no credential, invitation, A2A token or provider secret ever lands in the da
       for (const [name, secret] of Object.entries(secrets))
         expect(text.includes(secret), `${name} secret found in ${place}`).toBe(false);
 
-    // Sanity: the places do contain the surrounding facts, so the scan is not vacuous.
-    expect(everything.database).toContain('AETHER_TEST_PROVIDER_TOKEN'); // the variable NAME is stored, never its value
-    expect(everything.logs).toContain('"msg":"probe"'); // the log stream is wired; the request serializer drops headers
+    expect(everything.database).toContain('AETHER_TEST_PROVIDER_TOKEN');
+    expect(everything.logs).toContain('"msg":"probe"');
     expect(everything.responses).toContain('AUTH_REQUIRED');
   } finally {
     delete process.env['AETHER_TEST_PROVIDER_TOKEN'];

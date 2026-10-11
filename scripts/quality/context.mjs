@@ -1,4 +1,3 @@
-// Builds what the area modules share: the repository, the parsed files and the import graph.
 import { analyzeProject } from './ast.mjs';
 import { buildGraph } from './graph.mjs';
 import { diskRepo } from './repo.mjs';

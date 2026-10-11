@@ -9,7 +9,6 @@ import {
 } from '@aether/office-scene/model';
 
 type Call = { tool: string; target: string | null };
-/** What a stand-in member is doing: its recent calls, the last of which is the one running. */
 const STAND_IN_WORK: { recent: Call[]; ports?: number[] }[] = [
   {
     recent: [
@@ -115,7 +114,6 @@ const STAND_IN_WORK: { recent: Call[]; ports?: number[] }[] = [
   },
 ];
 
-/** The roles a preview's members go through in turn, so each role's habits (a QA desk, a data desk) show up. */
 const STAND_IN_ROLES = [
   'frontend',
   'qa',
@@ -144,23 +142,11 @@ export const standInRole = (index: number): string => {
 
 const nameHash = (name: string) => [...name].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
 
-/** A stand-in screen for the opt-in previews (`?intensity=`, `?compact=`): invented on purpose, never shown otherwise. It varies by member so the desks differ. */
-
-/** What a deterministic effect preview asks for: draw this effect as it looks `t` ms after it started. */
 type PreviewParams = { effect: string; t: number; loop?: true };
 
-/** An effect id, with an optional `:value` for the ones that read one (`ci-stack:0` is the red CI stack, `tech-debt:60` a bigger pile). */
 const ONE_EFFECT = '[a-z][a-z0-9-]{0,39}(?::\\d{1,6})?';
-/** One effect id, or up to six joined by a comma (`rubber-duck,ci-lamp`) to put several on show at once. */
 const EFFECT_ID = new RegExp(`^${ONE_EFFECT}(,${ONE_EFFECT}){0,5}$`);
 
-/**
- * `?preview=life&effect=<id>&t=<ms>`: the address of one frame of one office-life effect (or of several, joined by commas),
- * so a contact sheet can render every effect at fixed times. Null when the address is not a preview or names no valid effect. `t` defaults to 0 and
- * must be a whole number of milliseconds (anything else is rejected, not rounded, so a sheet never shows a wrong frame).
- * `loop=1` plays the effects on from `t`, over and over, instead of holding the frame (to measure what motion costs).
- * Accepts a full URL, a path with a query, or just a query string.
- */
 export function previewParams(url: string): PreviewParams | null {
   const query = url.includes('?') ? url.slice(url.indexOf('?') + 1) : url;
   const params = new URLSearchParams(query.split('#')[0]);
@@ -175,12 +161,10 @@ export function previewParams(url: string): PreviewParams | null {
   };
 }
 
-/** A stand-in screen for the opt-in previews (`?intensity=`, `?compact=`): invented on purpose, never shown otherwise. */
 export function standInFacts(
   agent: Pick<Agent, 'name' | 'role'>,
   provider: ScreenFacts['provider'],
   contextPercent: number | null,
-  /** The member's place in the office: members in a row go through the scenarios in turn, so every kind of desk shows up. */
   index = 0,
 ): ScreenFacts {
   const hash = nameHash(agent.name);
@@ -209,15 +193,9 @@ export function standInFacts(
 
 const HIGH = 88;
 const LOW = 24;
-/** The preview fills every member's context, then compacts it, once every `period` ms. */
 const PERIOD_MS = 8000;
 const FILL_LEAD_MS = 900;
 
-/**
- * `?compact=1`: every member gets a stand-in screen whose context fills to a high share and, a moment later, is compacted
- * (88% to 24%), over and over, so the gauge, the effect and the chip can be looked at without a long real session.
- * Returns what the scene gets: the stand-in screens and the compaction happening now (null while `enabled` is false).
- */
 export function useCompactPreview(agents: readonly Agent[], enabled: boolean) {
   const [state, setState] = useState<{ pct: number; event: SceneCompaction | null }>({
     pct: HIGH,
@@ -270,12 +248,6 @@ const talkPulseKind = (step: number) => {
   return kind;
 };
 
-/**
- * `?talk=1`: stand-in traffic to look at how members react to each other without real sessions: a message between the
- * next pair every few seconds (they turn to each other, an envelope crosses, the receiver nods), the first member as the
- * parent of the next two (tethers), members alternating between two repositories (threads, on hover) and two members that
- * want a person (the ring on the floor). Null while `enabled` is false.
- */
 export function useTalkPreview(agents: readonly Agent[], enabled: boolean) {
   const [step, setStep] = useState(0);
   const [started] = useState(() => Date.now());

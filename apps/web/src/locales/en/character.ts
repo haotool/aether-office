@@ -1,4 +1,3 @@
-/** The character words, in English. */
 export const enCharacter = {
   charMenuLabel: 'Character actions',
   charFollow: 'Follow camera',

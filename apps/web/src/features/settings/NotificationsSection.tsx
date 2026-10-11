@@ -16,7 +16,6 @@ const KEY = ['remote-approvals'];
 const HOOK_INSTALL = 'pnpm hooks install --remote-approvals';
 export const HOOK_STATUS = 'pnpm hooks status';
 
-/** Alerts: whether they are on, and what the browser will let them be. */
 function NotifyRow() {
   const t = useT();
   const prefs = usePreferences();
@@ -66,7 +65,6 @@ function NotifyRow() {
   );
 }
 
-/** The remote-approvals setting: its state from the server, the switch's mutation and the toast with its undo. */
 function useRemoteApprovals(mode: Mode) {
   const t = useT();
   const client = useQueryClient();
@@ -85,7 +83,6 @@ function useRemoteApprovals(mode: Mode) {
       }),
     onSuccess: (next) => {
       client.setQueryData(KEY, next);
-      // The prompts list is asked for slowly while this is off: ask it now that the switch moved.
       void client.invalidateQueries({ queryKey: ['permission-requests'] });
     },
   });
@@ -101,7 +98,6 @@ function useRemoteApprovals(mode: Mode) {
   return { state, toggle, enabled, change };
 }
 
-/** Answering Claude Code permission prompts from the page: the switch, the connection it is allowed on, the hook to install. */
 function RemoteRow({ mode, owner }: { mode: Mode; owner: boolean }) {
   const t = useT();
   const { state, toggle, enabled, change } = useRemoteApprovals(mode);

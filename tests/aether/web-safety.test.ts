@@ -39,7 +39,6 @@ it('flags Math.random in product code so progress can never be fabricated', () =
   expect(result.stderr).toContain('Math.random');
 });
 
-/** A file that carries a type-checking pragma, built so this test file carries none itself. */
 const tsPragma = (name: string) => `// @ts-${name}\nexport const a = 1;`;
 
 it('enforces the architecture boundaries: kernel stays pure and web/scene never reach Node or provider SDKs', () => {

@@ -1,4 +1,3 @@
-// Personal-data and secret scanning rules of the open-source release kit (scripts/oss): pure, nothing touches a repository.
 import { existsSync, readFileSync } from 'node:fs';
 
 /** Directory owners that appear in fixtures and examples, not real people. */
@@ -56,7 +55,6 @@ export const BUILT_IN_RULES = [
   },
 ];
 
-/** Built-in secret shapes, used when gitleaks is not installed. */
 export const TOKEN_RULES = [
   { id: 'token', re: /\bAKIA[0-9A-Z]{16}\b/g, note: 'AWS access key id' },
   { id: 'token', re: /\bgh[pousr]_[A-Za-z0-9]{36,}\b/g, note: 'GitHub token' },
@@ -109,7 +107,6 @@ export function loadPrivatePatterns(file) {
 
 const REDACT = (text) => (text.length <= 8 ? '***' : `${text.slice(0, 4)}***`);
 
-/** Returns `{rule, line, sample}` for every finding of `rules` in `text`. */
 export function scanText(text, rules, { docs = false } = {}) {
   const findings = [];
   for (const rule of rules) {
@@ -128,10 +125,6 @@ export function scanText(text, rules, { docs = false } = {}) {
   return findings;
 }
 
-/**
- * Text rewrite rules for history cleanup (Python regex syntax, applied to text blobs and commit messages by the
- * filter-repo callback): home directories become `/Users/dev`, private patterns become their replacement.
- */
 export function replaceRules(privateRules) {
   const names = [...PLACEHOLDER_USERS].join('|');
   return [
@@ -152,7 +145,6 @@ export const isDocPath = (file) =>
   /\.(?:md|mdx|txt|ya?ml)$/i.test(file) || file.startsWith('docs/');
 export const looksBinary = (buffer) => buffer.subarray(0, 8000).includes(0);
 
-/** Printable ASCII runs of a binary file, the way `strings` reads it (latin1 keeps byte offsets and costs no copies). */
 export function binaryText(buffer) {
   return buffer.toString('latin1').replace(/[^\x20-\x7e\n]+/g, '\n');
 }

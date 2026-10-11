@@ -1,4 +1,3 @@
-/** Pure. The one place durations are named and spoken: a span ("3 min"), and how long ago ("3 min ago"). */
 export const MINUTE_MS = 60_000;
 export const HOUR_MS = 60 * MINUTE_MS;
 export const DAY_MS = 24 * HOUR_MS;
@@ -17,7 +16,6 @@ export function formatSpan(ms: number, locale: Lang = 'zh-TW'): string {
   return locale === 'zh-TW' ? `${n} ${zh}` : `${n} ${en}`;
 }
 
-/** "剛剛" / "just now" for the last minute, then "3 分鐘前" / "3 min ago". */
 export function formatAgo(ms: number, locale: Lang = 'zh-TW'): string {
   if (ms < MINUTE_MS) return locale === 'zh-TW' ? '剛剛' : 'just now';
   return locale === 'zh-TW' ? `${formatSpan(ms, locale)}前` : `${formatSpan(ms, locale)} ago`;

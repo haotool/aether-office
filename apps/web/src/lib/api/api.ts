@@ -17,7 +17,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     const body = (await response.json()) as T & { error?: { code?: string } };
     if (response.ok) return body;
     if (retry && response.status === 403 && body.error?.code === 'CSRF_REQUIRED') {
-      if (csrfToken() === sent) await refreshCsrf(); // else another tab has already brought a new one
+      if (csrfToken() === sent) await refreshCsrf();
       continue;
     }
     throw new ApiError(body.error?.code ?? 'REQUEST_FAILED', response.status);

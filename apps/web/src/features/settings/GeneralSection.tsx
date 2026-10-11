@@ -51,7 +51,6 @@ function MotionRow({ prefs }: { prefs: Prefs }) {
   );
 }
 
-/** Language, appearance, motion and the quality of the 3D scene: personal, kept in this browser, applied at once. */
 export function GeneralSection() {
   const t = useT();
   const prefs = usePreferences();

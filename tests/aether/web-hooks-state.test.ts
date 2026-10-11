@@ -4,8 +4,6 @@ import { installBrowserEnv, removeBrowserEnv, type BrowserEnv } from './fixtures
 import { renderHook } from './fixtures/mini-react.js';
 import type { Turn } from '../../apps/web/src/features/conversation/turn-groups.js';
 
-// Product hooks on a synthetic hook runtime (fixtures/mini-react.ts): the repo's vitest has no DOM environment.
-// phone.ts reads window.matchMedia as it loads, so the browser exists before the modules do and lasts for the file.
 const env: BrowserEnv = installBrowserEnv();
 const web = await vi.hoisted(async () => {
   const paths = await import('./fixtures/web-paths.js');
@@ -53,10 +51,10 @@ describe('useCompactions', () => {
     hook.rerender({ a: reading(30_000) });
     const first = hook.current['a']!.key;
     vi.advanceTimersByTime(2_000);
-    hook.rerender({ a: reading(30_000, Date.now() - 1_000) }); // the CLI's own marker, a new detection
+    hook.rerender({ a: reading(30_000, Date.now() - 1_000) });
     const second = hook.current['a']!.key;
     expect(second).not.toBe(first);
-    vi.advanceTimersByTime(1_500); // the first timer is due now, the second is not
+    vi.advanceTimersByTime(1_500);
     expect(hook.current['a']?.key).toBe(second);
   });
 
@@ -66,7 +64,7 @@ describe('useCompactions', () => {
       ReturnType<typeof reading>
     >);
     hook.rerender({});
-    hook.rerender({ a: reading(30_000) }); // first sight again: no earlier reading to fall from
+    hook.rerender({ a: reading(30_000) });
     expect(hook.current).toEqual({});
   });
 
@@ -95,14 +93,14 @@ describe('fresh ids', () => {
 
   it('treats what was there at the first look as history and what arrives later as fresh', () => {
     const hook = renderHook(useFreshIds, 's1', null as readonly string[] | null);
-    expect(hook.current('a')).toBe(false); // nothing loaded yet is not a first look
+    expect(hook.current('a')).toBe(false);
     hook.rerender('s1', ['a', 'b']);
     expect(hook.current('a')).toBe(false);
     hook.rerender('s1', ['a', 'b', 'c']);
     expect(hook.current('c')).toBe(true);
     hook.rerender('s1', ['a', 'b', 'c', 'd']);
-    expect(hook.current('c')).toBe(true); // stays fresh while on screen
-    hook.rerender('other', ['a', 'b', 'c', 'd']); // another session: all of it is history again
+    expect(hook.current('c')).toBe(true);
+    hook.rerender('other', ['a', 'b', 'c', 'd']);
     expect(hook.current('c')).toBe(false);
   });
 
@@ -110,7 +108,7 @@ describe('fresh ids', () => {
     const turns = [turn('t1', 1, 100), turn('t2', 1, 200)];
     expect(firstUnreadId(turns, 0)).toBeNull();
     expect(firstUnreadId(turns, 150)).toBe('t2:prompt');
-    expect(firstUnreadId(turns, 50)).toBeNull(); // everything is newer: nothing older to divide it from
+    expect(firstUnreadId(turns, 50)).toBeNull();
     expect(firstUnreadId(turns, 500)).toBeNull();
   });
 });
@@ -187,7 +185,7 @@ describe('usePhone', () => {
     const portrait = renderHook(usePhone);
     const any = renderHook(usePhoneAny);
     expect(portrait.current).toBe(false);
-    env.media.get(ANY)!.set(true); // a phone on its side: the phone layout without the tab bar
+    env.media.get(ANY)!.set(true);
     expect(any.current).toBe(true);
     expect(portrait.current).toBe(false);
     env.media.get(PORTRAIT)!.set(true);

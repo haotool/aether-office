@@ -19,9 +19,8 @@ type PendingBubblesProps = {
 };
 
 /**
- * What was typed in the composer and the transcript has not shown yet, as the person's own bubbles at the end of the
- * conversation. Each gives way to the real prompt when the transcript has it (matched by text, see `seenIn`), so a
- * message is never shown twice.
+ * Each gives way to the real prompt when the transcript has it (matched by text, see `seenIn`), so a message is never
+ * shown twice.
  */
 export function PendingBubbles({ sessionKey, prompts }: PendingBubblesProps) {
   const t = useT();
@@ -33,7 +32,6 @@ export function PendingBubbles({ sessionKey, prompts }: PendingBubblesProps) {
   useEffect(() => {
     if (seen.size) update(sessionKey, (list) => list.filter((p) => !seen.has(p.localId)));
   }, [seen, sessionKey, update]);
-  // A message you just wrote is where you look next.
   useEffect(() => {
     end.current?.scrollIntoView({ block: 'end' });
   }, [shown.length]);

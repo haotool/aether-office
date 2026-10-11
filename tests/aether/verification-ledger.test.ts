@@ -34,7 +34,7 @@ it('keeps implementation and verification separate and shows blockers for anythi
   for (const status of ['passed', 'partial', 'blocked', 'failed', 'not_run'])
     expect(report).toContain(`## ${status} (1)`);
   expect(report).toContain('needs a GPU');
-  expect(report).toContain('req A \\| with pipe'); // table-safe
+  expect(report).toContain('req A \\| with pipe');
   expect(report).toContain('not a claim of production readiness');
 });
 

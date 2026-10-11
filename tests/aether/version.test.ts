@@ -5,7 +5,6 @@ import { APP_VERSION } from '../../packages/contracts/src/index.js';
 
 const read = (file: string) => readFileSync(file, 'utf8');
 const rootVersion = (JSON.parse(read('package.json')) as { version: string }).version;
-// The grep exits 1 when nothing matches, which is the passing case here, so the exit status is not checked.
 const tracked = (...args: string[]) =>
   spawnSync('git', args, { encoding: 'utf8' }).stdout.split('\n').filter(Boolean);
 
@@ -29,7 +28,7 @@ describe('one version string', () => {
   it('is the one the sidebar badge names', () => {
     const [major, minor] = rootVersion.split('.');
     expect(read('apps/web/src/features/shell-chrome/Sidebar.tsx')).toContain(
-      `v${major}.${minor} DEV`,
+      `v${major}.${minor}</small>`,
     );
   });
 });

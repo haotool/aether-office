@@ -3,12 +3,6 @@ import { useFrame, useThree } from '@react-three/fiber';
 import type { Group } from 'three';
 import { memberAt, type HandoverPlan, type MemberPose } from './plan.js';
 
-/**
- * Moves its children along a hand-over (see plan.ts): the subagent stands, walks the folder to the supervisor's desk,
- * presents it, waves and walks out through the core. `startAt` is the wall-clock moment it finished, so a subagent
- * that scrolls out of view and back is where it would have been. The children are told which clip to hold and how fast
- * to play the walk; nothing is drawn once the subagent is out. Mounted in the seat's frame, like an arrival.
- */
 export function Handing({
   plan,
   startAt,

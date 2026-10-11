@@ -1,7 +1,5 @@
 import { resolveLocale, translate, type Key, type Locale } from './i18n.js';
 
-// What a person can run into without the orchestration pages, in words. Any other code is shown as it is: a code is
-// better than a guess about what went wrong.
 const WORDS: Record<string, Key> = {
   REQUEST_FAILED: 'errRequestFailed',
   AUTH_REQUIRED: 'errAuthRequired',
@@ -28,7 +26,6 @@ export const errorText = (code: string, locale: Locale): string => {
   return key ? translate(locale, key) : code;
 };
 
-/** The language the person chose (kept by the preferences store); read here so this file needs no browser at import. */
 export const savedLocale = (): Locale => {
   try {
     const saved = JSON.parse(localStorage.getItem('aether-ui-preferences') ?? '{}') as {
@@ -36,6 +33,6 @@ export const savedLocale = (): Locale => {
     };
     return saved.state?.locale ?? resolveLocale(navigator.language);
   } catch {
-    return resolveLocale(typeof navigator === 'undefined' ? undefined : navigator.language); // no storage (a test, a private window)
+    return resolveLocale(typeof navigator === 'undefined' ? undefined : navigator.language);
   }
 };

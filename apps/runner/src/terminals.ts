@@ -59,7 +59,6 @@ export class TerminalRunner {
       ),
     );
   }
-  /** A lease held for another controller or epoch is released (an already lost one is fine) before a new one is taken. */
   private releaseStaleLease(c: TerminalDispatch, pty: PtySession) {
     const lease = this.leases.get(c.terminalId);
     if (!lease || (lease.epoch === c.controlEpoch && lease.user.id === c.identityId)) return;
@@ -79,7 +78,6 @@ export class TerminalRunner {
       pty.write(user, acquired.token, z.string().min(1).max(8192).parse(c.payload['text']));
     else pty.resize(user, acquired.token, z.object(terminalDimensions).parse(c.payload));
   }
-  /** Applies a stop, input or resize to the terminal this runner owns; returns false when a stop finds it already exited. */
   private applyToOwned(c: TerminalDispatch) {
     const pty = this.sessions.get(c.terminalId);
     if (pty) {

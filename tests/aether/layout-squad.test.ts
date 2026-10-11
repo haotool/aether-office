@@ -54,7 +54,6 @@ const agent = (id: string): Agent =>
   ({ id: `local:claude:${id}`, name: id, role: 'engineer' }) as unknown as Agent;
 
 describe('the layout schema keeps every saved layout valid', () => {
-  // Written by a build that knew no squads: the key order and the defaulted fields are exactly the old ones.
   const v1 =
     '{"schemaVersion":1,"objects":[{"id":"desk-0","type":"desk","x":-22,"z":-6,"rotation":0,"agentId":"local:claude:abc","floor":0},' +
     '{"id":"plant-0","type":"plant","x":-23,"z":5,"rotation":0,"agentId":null,"floor":2}],"zones":[{"id":"atrium","name":"指揮中庭"}]}';
@@ -184,9 +183,9 @@ describe('squad validation', () => {
     const grid = buildNavGrid(objects);
     expect(findPath(grid, { x: -6.5, z: -6 }, { x: -4, z: -6 }).status).toBe('ok');
     const straight = findPath(grid, { x: -6.5, z: -6 }, { x: -4, z: -6 });
-    if (straight.status === 'ok') expect(straight.points).toHaveLength(2); // a straight line through the zone
+    if (straight.status === 'ok') expect(straight.points).toHaveLength(2);
     const blocked = buildNavGrid([desk('d', -10, -6)]);
-    expect(grid.blocked).toEqual(blocked.blocked); // the squad adds no blocked cell
+    expect(grid.blocked).toEqual(blocked.blocked);
   });
 });
 
@@ -248,7 +247,7 @@ describe('auto squads', () => {
 
   it('puts the zone on the side that faces the central aisle first', () => {
     const left = squadLayout(layout, supervisorOf(0).id, 3)!;
-    expect(left.x).toBeGreaterThan(supervisorOf(0).x); // a desk west of the aisle: its zone is east of it
+    expect(left.x).toBeGreaterThan(supervisorOf(0).x);
     const right = layout.objects.find(
       (o) => o.type === 'desk' && o.x === 10 && o.z === -6 && !o.floor,
     )!;
@@ -273,7 +272,7 @@ describe('auto squads', () => {
     const full = defaultLayout(Array.from({ length: FLOOR_CAPACITY }, (_, i) => agent(`a${i}`)));
     const d = full.objects.find(
       (o) => o.type === 'desk' && !o.floor && o.agentId === 'local:claude:a31',
-    )!; // outer column, mid-floor: neighbours on every side
+    )!;
     expect(squadLayout(full, d.id, 3)).toBeNull();
     expect(squadLayout(layout, 'nope', 3)).toBeNull();
     expect(squadLayout(layout, layout.objects.find((o) => o.type === 'plant')!.id, 3)).toBeNull();

@@ -48,7 +48,6 @@ it('diffs scans into the kinds of change per session, with no events for a first
   expect(hooked.changed[0]!.kinds.sort()).toEqual(['state', 'tool']);
   const gone = diffSessions(first.next, [], {});
   expect(gone.changed).toEqual([{ key: 'claude:a', kinds: ['state'] }]);
-  // A session that appears is read whole: its reply is fetched with it, not left for the slow safety-net poll.
   const appeared = diffSessions(first.next, [session(), session({ key: 'claude:b' })], {});
   expect(appeared.changed).toEqual([{ key: 'claude:b', kinds: ['state', 'speech', 'transcript'] }]);
 });
@@ -155,7 +154,6 @@ async function setup(sessionStream = { scanMs: 40, heartbeatMs: 120, maxClients:
     const reader = response.body?.getReader();
     const decoder = new TextDecoder();
     let text = '';
-    /** Reads until `done(text)` holds, or fails at a deadline only a hang reaches. */
     // One read stays pending until it answers: a read that merely lost the race to the timer would still take the next chunk
     // and drop it, and under load that was the change the test was waiting for.
     let pending: ReturnType<NonNullable<typeof reader>['read']> | null = null;
@@ -165,7 +163,7 @@ async function setup(sessionStream = { scanMs: 40, heartbeatMs: 120, maxClients:
         if (Date.now() > deadline) throw new Error(`timed out; got: ${text}`);
         if (!pending) {
           pending = reader!.read();
-          pending.catch(() => undefined); // an abort while nobody is waiting is not an error
+          pending.catch(() => undefined);
         }
         const chunk = await Promise.race([
           pending,
@@ -204,7 +202,7 @@ it('streams a change when a transcript moves: headers, hello, increasing ids, no
   expect(stream.response.headers.get('content-type')).toContain('text/event-stream');
   expect(stream.response.headers.get('cache-control')).toBe('no-store');
   expect(stream.response.headers.get('x-content-type-options')).toBe('nosniff');
-  await stream.until((t) => t.includes('event: hello')); // said only after the baseline scan
+  await stream.until((t) => t.includes('event: hello'));
   await appendFile(
     s.file,
     line({ type: 'assistant', message: { role: 'assistant', content: 'SECRETTEXT' } }),
@@ -226,13 +224,11 @@ it('resumes from Last-Event-ID without losing or repeating changes, and resyncs 
   const seq = idOf(hello)[0]!;
   await appendFile(s.file, line({ type: 'user', message: { role: 'user', content: 'one' } }));
   await first.until((t) => t.includes('event: session'));
-  // a second client, connected from the same point, sees the change replayed
   const resumed = await s.open({ 'last-event-id': String(seq) });
   const replay = await resumed.until((t) => t.includes('event: session'));
   expect(replay).not.toContain('event: resync');
   expect(replay).toContain('"key":"claude:sess-1"');
   first.abort.abort();
-  // an id from before the hub's memory is told to refetch (once the closed stream has freed its slot)
   const stale = await eventually(
     async () => {
       const attempt = await s.open({ 'last-event-id': '1' });
@@ -265,7 +261,7 @@ it('is for owners and operators only, and refuses the anonymous', async () => {
     projectIds: [s.f.projectId],
   });
   expect((await s.open({}, viewer.token)).response.status).toBe(403);
-  expect((await s.open({}, s.f.sender.token)).response.status).toBe(403); // an agent
+  expect((await s.open({}, s.f.sender.token)).response.status).toBe(403);
   expect((await fetch(`${BASE}/api/local-sessions/stream`)).status).toBe(401);
   const ok = await s.open({}, operator.token);
   expect(ok.response.status).toBe(200);
@@ -316,7 +312,7 @@ it('answers the heavy reads with an ETag and a 304 for an unchanged answer, and 
     '/api/local-sessions/speech',
     '/api/local-sessions/claude:sess-1/transcript',
   ]) {
-    await get('/api/local-sessions'); // registers the session key
+    await get('/api/local-sessions');
     const first = await get(url);
     expect(first.statusCode).toBe(200);
     const etag = String(first.headers['etag']);
@@ -341,14 +337,14 @@ it('says hello only after the baseline scan, so what a page reads next is not ol
         })
       ).json()) as { sessions: unknown[] }
     ).sessions.length;
-  expect(await read()).toBe(1); // warms the page's 5 s cache
+  expect(await read()).toBe(1);
   await writeFile(
     join(s.home, '.claude/projects/-p/sess-2.jsonl'),
     line({ type: 'user', cwd: s.home, message: { role: 'user', content: 'new' } }),
   );
-  await new Promise((r) => setTimeout(r, 80)); // older than the stream's own scan window
+  await new Promise((r) => setTimeout(r, 80));
   const stream = await s.open();
   await stream.until((t) => t.includes('event: hello'));
-  expect(await read()).toBe(2); // a session that appeared before the baseline is in what the page reads after hello
+  expect(await read()).toBe(2);
   stream.abort.abort();
 });

@@ -38,7 +38,6 @@ type ChipProps = {
   children?: ReactNode;
 };
 
-/** One slim system row between messages: an icon, a label, an optional one-line gist, and details behind a toggle. */
 function Chip({ tone, icon, label, gist, mono = false, fresh, children }: ChipProps) {
   const t = useT();
   const [open, setOpen] = useState(false);
@@ -145,7 +144,6 @@ function Contexts({
 
 type TextGroup = Extract<NoticeGroup, { kind: 'output' | 'hook' }>;
 
-/** A notice that is a block of text: its first line as the gist, the whole of it when opened. */
 function TextNotice({
   group,
   tone,
@@ -216,7 +214,6 @@ function One({ group, fresh }: { group: NoticeGroup; fresh: boolean }) {
   }
 }
 
-/** The notices of one place in the conversation, as chips: injected context together as one, everything else on its own. */
 export function Notices({ items, fresh }: { items: readonly Notice[]; fresh: boolean }) {
   return (
     <div className="notices">

@@ -53,7 +53,6 @@ describe('genome', () => {
       const grand = genomeOf(input(s, { grand: true }));
       expect(grand.shape.pitch).toBeGreaterThanOrEqual(0.85);
       expect(grand.halo).toBeGreaterThan(0);
-      // Richer than any other flower: five whorls, a full disc, a crown of stamens and a cloud of motes.
       expect(grand.whorls).toBe(5);
       expect([13, 21]).toContain(grand.petals);
       expect(grand.florets).toBe(89);

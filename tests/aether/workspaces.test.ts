@@ -111,9 +111,9 @@ describe('real Git workspaces and immutable verification', () => {
 });
 
 /**
- * Verifies with growing deadlines until the harness got as far as writing `marker` (its last set-up step). The deadline runs
- * from the spawn: one that a loaded machine's slow start overruns kills the harness before the thing under test exists, which
- * says nothing about it, so that attempt is thrown away and the next gets longer.
+ * Verifies with growing deadlines until the harness got as far as writing `marker` (its last set-up step): a deadline
+ * that a loaded machine's slow start overruns kills the harness before the thing under test exists, so that attempt is
+ * thrown away and the next gets longer.
  */
 async function verifyOnceStarted(
   f: ReturnType<typeof setup>,
@@ -158,7 +158,6 @@ it.skipIf(process.platform === 'win32')(
   async () => {
     const f = setup();
     try {
-      // The descendant outlives the whole test several times over: waiting for it is the failure, not a close call.
       const descendant = "process.on('SIGTERM',()=>{});setTimeout(()=>process.exit(0),40000);";
       const { result, elapsed } = await verifyOnceStarted(
         f,

@@ -37,11 +37,10 @@ const look = (p: Pose) => {
 };
 const pitchOf = (p: Pose) => {
   const d = p.target.map((v, i) => v - p.position[i]!);
-  return Math.atan2(-d[1]!, Math.hypot(d[0]!, d[2]!)) * DEG; // below the horizon is positive
+  return Math.atan2(-d[1]!, Math.hypot(d[0]!, d[2]!)) * DEG;
 };
 const distanceOf = (p: Pose) => Math.hypot(...p.target.map((v, i) => v - p.position[i]!));
 
-/** Samples of the tour at 60 Hz, with the segment each belongs to. */
 const samples = (f: IntroFrame) =>
   Array.from({ length: Math.floor(introLength(f.reduced) / STEP) }, (_, i) => {
     const t = i * STEP;
@@ -72,7 +71,7 @@ describe('the intro tour timeline', () => {
       expect(orbitShare(t)).toBeGreaterThanOrEqual(last);
       last = orbitShare(t);
     }
-    expect(orbitShare(2) - orbitShare(0)).toBeLessThan(orbitShare(14) - orbitShare(12)); // slower at the start than cruising
+    expect(orbitShare(2) - orbitShare(0)).toBeLessThan(orbitShare(14) - orbitShare(12));
   });
 });
 
@@ -108,7 +107,7 @@ describe('introPoseAt: comfort', () => {
         rise.forEach((p, i) => {
           if (i) expect(p).toBeGreaterThanOrEqual(rise[i - 1]! - 1e-9);
         });
-        expect(rise[0]!).toBeGreaterThan(0); // always looking down at the building
+        expect(rise[0]!).toBeGreaterThan(0);
       });
 
       it('never zooms: the field of view is constant', () => {
@@ -133,8 +132,8 @@ describe('introPoseAt: comfort', () => {
           a.forEach((v, i) => expect(v).toBeCloseTo(b[i]!, 6));
         const b = farther(f.aspect);
         close(at(0), [84 * b * Math.sin(START_BEARING), 38, 84 * b * Math.cos(START_BEARING)]);
-        close(at(25.9999999), at(0)); // one full turn: the orbit ends where it began
-        close(at(26.4 + 15 - 1e-9), introPoseAt(26.4 + 15, f).position); // the rise runs into the hold
+        close(at(25.9999999), at(0));
+        close(at(26.4 + 15 - 1e-9), introPoseAt(26.4 + 15, f).position);
       });
     });
   }
@@ -144,7 +143,7 @@ describe('introPoseAt: comfort', () => {
       const f = frame({ tiers });
       const pose = introPoseAt(41.5, f);
       const { roof, bloom } = crownHeights(tiers);
-      const half = (Math.atan(Math.tan((19 * Math.PI) / 180)) * distanceOf(pose)) / 1; // half the view's height at the target
+      const half = (Math.atan(Math.tan((19 * Math.PI) / 180)) * distanceOf(pose)) / 1;
       expect(pose.target[1] - half).toBeLessThanOrEqual(roof);
       expect(pose.target[1] + half).toBeGreaterThanOrEqual(bloom);
     }
@@ -165,7 +164,7 @@ describe('introPoseAt: comfort', () => {
   it('ends on the home view and leaves it there', () => {
     expect(introPoseAt(introLength(false), frame())).toEqual(HOME);
     expect(introPoseAt(500, frame())).toEqual(HOME);
-    expect(introPoseAt(45.5, frame())).toEqual(HOME); // under the closing dip
+    expect(introPoseAt(45.5, frame())).toEqual(HOME);
   });
 });
 
@@ -173,7 +172,7 @@ describe('introPoseAt: reduced motion', () => {
   const f = frame({ reduced: true });
   it('is three still views then the home view, each held for three seconds', () => {
     const a = introPoseAt(0.1, f);
-    expect(introPoseAt(2.9, f)).toEqual(a); // the first still does not move
+    expect(introPoseAt(2.9, f)).toEqual(a);
     const b = introPoseAt(4, f);
     expect(introPoseAt(6, f)).toEqual(b);
     const c = introPoseAt(7, f);

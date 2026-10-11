@@ -2,7 +2,6 @@ import { afterAll, describe, expect, it, vi } from 'vitest';
 import { installBrowserEnv, removeBrowserEnv } from './fixtures/browser-env.js';
 import { QueryClient, h, renderHtml, textOf } from './fixtures/ssr.js';
 
-// First paint on the server renderer (fixtures/ssr.ts), with data put in the query cache the way a fetch would.
 installBrowserEnv();
 vi.mock('../../apps/web/src/lib/preferences/phone.js', () => ({
   usePhone: () => false,
@@ -90,7 +89,7 @@ describe('KpiLimits and Ring', () => {
     expect(textOf(html)).toContain(en('kpiResetsIn'));
     expect(textOf(html)).toContain(en('kpiReadAge'));
     expect(html).toContain('ring-ok');
-    expect(textOf(html)).toContain(en('kpiCodexLimitsNone')); // Codex has no reading
+    expect(textOf(html)).toContain(en('kpiCodexLimitsNone'));
     expect(textOf(html)).not.toContain(en('kpiClaudeLimitsNone'));
   });
 

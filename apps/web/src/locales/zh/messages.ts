@@ -1,4 +1,3 @@
-/** The messages words, in Traditional Chinese. */
 export const zhMessages = {
   recipients: '收件成員',
   messageBody: '訊息內容',

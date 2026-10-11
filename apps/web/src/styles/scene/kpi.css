@@ -1,8 +1,5 @@
-/* ── KPI: the strip over the office, the dashboard, the floor cards and the floor plaque ───────────────────── */
-
-/* The strip: one line of the building's numbers; each cell opens the dashboard. */
 .kpi-strip {
-  flex: none; /* the scene gives way to it, never the other way round */
+  flex: none;
   display: flex;
   align-items: stretch;
   margin: 0 0 var(--space-12);
@@ -50,9 +47,7 @@
   background: var(--selected);
 }
 .kpi-cell:focus-visible {
-  outline-offset: calc(
-    -1 * var(--focus-offset)
-  ); /* the strip scrolls and clips, so the ring sits inside the cell */
+  outline-offset: calc(-1 * var(--focus-offset));
 }
 .kpi-scan,
 .kpi-off {
@@ -91,7 +86,6 @@
   stroke: none;
 }
 
-/* The dashboard: a side panel on a desktop, a bottom sheet on a phone. */
 .kpi-dialog {
   width: min(760px, 100vw); /* token-lint: geometry */
   max-width: 100vw;
@@ -113,7 +107,7 @@
   flex-direction: column;
 }
 .kpi-head {
-  margin-bottom: 0; /* the dialog's own padding spaces it; .u-head gives the wrapping row */
+  margin-bottom: 0;
   gap: var(--space-12);
   padding: var(--space-16) var(--space-20) var(--space-8);
 }
@@ -123,7 +117,6 @@
   font-size: var(--fs-title);
   white-space: nowrap;
 }
-/* The scene's glass switch, re-colored for a page surface (it is dark glass in both themes by default). */
 .kpi-head .segmented {
   background: var(--raised);
   border-color: var(--line);
@@ -178,7 +171,7 @@
 }
 .kpi-empty,
 .kpi-note {
-  margin: var(--space-16) 0 0; /* the same gap under the tiles, under a section and under the body */
+  margin: var(--space-16) 0 0;
   color: var(--muted);
   font-size: var(--fs-small);
 }
@@ -221,7 +214,7 @@
   gap: var(--space-8);
 }
 .kpi-tile dd .spark {
-  width: 48px; /* token-lint: geometry */
+  width: var(--space-48);
   height: var(--icon-md);
 }
 .kpi-tile small {
@@ -229,7 +222,6 @@
   font-size: var(--fs-label);
 }
 
-/* A phone: the strip floats over the scene as chips that scroll sideways; the dashboard is a bottom sheet. */
 .phone-kpi {
   display: none;
 }

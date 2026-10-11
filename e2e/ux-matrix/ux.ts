@@ -4,7 +4,6 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { frames } from '../support/settled.js';
 import { signIn } from '../support/sign-in.js';
 
-/** Where the screenshots and the per-run indexes go; `pnpm run ux:summary` reads them from here. */
 export const OUT = process.env['UX_OUT'] ?? 'evidence/ux';
 /** WCAG 2.5.8 (AA): a target is at least this many CSS pixels on its short side unless it is spaced from the others. */
 const MIN_TARGET = 24;
@@ -36,7 +35,6 @@ export type Cell = {
 
 export const isPhoneOrTablet = (tag: Tag) => tag.w <= 1180;
 
-/** A browser context with the viewport, colour scheme, language and motion preference of one matrix cell. */
 export async function openContext(browser: Browser, tag: Tag): Promise<BrowserContext> {
   const context = await browser.newContext({
     viewport: { width: tag.w, height: tag.h },
@@ -67,7 +65,6 @@ export async function openContext(browser: Browser, tag: Tag): Promise<BrowserCo
   return context;
 }
 
-/** Collects what the page logs as an error into `errors`; `record` empties it per cell. */
 export function watchErrors(page: Page, errors: string[]) {
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message.slice(0, 160)}`));
   page.on('console', (m) => {
@@ -82,7 +79,6 @@ export async function signedInPage(context: BrowserContext): Promise<Page> {
   return page;
 }
 
-/** The office is a canvas: wait for it, then for the scene to draw a while. Other pages only need a few frames. */
 export async function settle(page: Page, scene: string) {
   await page.waitForLoadState('networkidle', { timeout: 4000 }).catch(() => undefined);
   if (scene.includes('office')) {
@@ -105,7 +101,7 @@ async function inspect(page: Page, touch: boolean) {
       for (const el of checkTargets ? document.querySelectorAll(selector) : []) {
         const box = el.getBoundingClientRect();
         if (!box.width || !box.height || getComputedStyle(el).visibility === 'hidden') continue;
-        if (el instanceof HTMLInputElement && el.closest('label')) continue; // the label is the target
+        if (el instanceof HTMLInputElement && el.closest('label')) continue;
         if (Math.min(box.width, box.height) >= min) continue;
         const name = (el.getAttribute('aria-label') ?? el.textContent ?? '').trim().slice(0, 20);
         small.push(
@@ -136,7 +132,6 @@ async function seriousAxe(page: Page): Promise<Cell['axe']> {
     }));
 }
 
-/** Waits for the scene to settle, runs the assertions of one cell, takes its screenshot and returns the result. */
 export async function record(
   page: Page,
   scene: string,

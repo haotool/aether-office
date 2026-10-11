@@ -9,13 +9,13 @@ it('imports issues once (skipping PRs), advances a cursor, and never stores the 
     const first = await t.sync(id);
     expect(first.json()).toEqual({ imported: 2, updated: 0, conflicts: 0 });
     expect(t.works().map((w) => w.title)).toEqual(['#1 Fix login', '#2 Add export']);
-    expect((await t.sync(id)).json()).toEqual({ imported: 0, updated: 0, conflicts: 0 }); // idempotent
+    expect((await t.sync(id)).json()).toEqual({ imported: 0, updated: 0, conflicts: 0 });
     expect(state.requests.at(-1)!.url).toContain('since=2026-10-02T00%3A00%3A00Z');
     const dump = JSON.stringify(
       t.f.control.ctx.sqlite.prepare('SELECT * FROM integration_connections').all(),
     );
     expect(dump).not.toContain(SECRET);
-    expect(dump).toContain('GH_TOKEN'); // only the variable name
+    expect(dump).toContain('GH_TOKEN');
     expect(state.requests.every((r) => r.auth === `Bearer ${SECRET}`)).toBe(true);
   } finally {
     await t.app.close();
@@ -47,7 +47,7 @@ it('applies field ownership: updates unstarted work, records a conflict once wor
     expect(t.works().find((w) => w.id === started.id)).toMatchObject({
       state: 'running',
       title: '#2 Add export',
-    }); // untouched
+    });
     const listed = await t.app.inject({
       method: 'GET',
       url: `/api/projects/${t.f.projectId}/integrations`,
@@ -82,10 +82,10 @@ it('surfaces auth failures and rate limits, and backs off without calling the pr
     expect((await t.sync(id)).json().error.code).toBe('INTEGRATION_RATE_LIMITED');
     state.mode = 'ok';
     const before = state.requests.length;
-    expect((await t.sync(id)).json().error.code).toBe('INTEGRATION_RATE_LIMITED'); // still backing off
-    expect(state.requests.length).toBe(before); // no request was made
+    expect((await t.sync(id)).json().error.code).toBe('INTEGRATION_RATE_LIMITED');
+    expect(state.requests.length).toBe(before);
 
-    t.advance(2 * 3600_000); // past the reset time
+    t.advance(2 * 3600_000);
     expect((await t.sync(id)).json()).toMatchObject({ imported: 2 });
     const [row] = t.f.control.ctx.sqlite
       .prepare('SELECT lastError,backoffUntil FROM integration_connections')

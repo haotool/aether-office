@@ -23,7 +23,7 @@ A passing build or test run is not a claim of production readiness. This file li
 | ENV-02 | implemented | 依賴有 registry metadata、peer／engine 相容查證與例外紀錄。 | The registry audit itself is run by hand and writes local evidence; the policy test enforces exact pins and no stale exceptions in CI |
 | ENV-03 | implemented | 乾淨目錄可以 frozen-lockfile 安裝，不依賴開發者 global packages。 | Verified from a fresh clone on macOS arm64 with a warm pnpm store; a cold-cache or other-OS install was not run |
 | ENV-04 | implemented | setup／migration／seed 重跑不破壞既有資料或重複 demo。 | — |
-| ENV-05 | implemented | build、typecheck、lint 在同一鎖定環境成功。 | Run on macOS arm64 with Node 24.21.0 and pnpm 12.8.1; CI runs typecheck, lint and build on Ubuntu with the Node of .node-version; Windows was not run. |
+| ENV-05 | implemented | build、typecheck、lint 在同一鎖定環境成功。 | Run on macOS arm64 with Node 24.21.0 and pnpm 12.8.1; CI runs typecheck, lint and build on Ubuntu with the Node of .nvmrc; Windows was not run. |
 | ENV-06 | implemented | 既有 git dirty changes 不被覆寫／reset／刪除。 | Covered for managed workspaces and integration; the platform never operates on the user's main working tree |
 | ENV-07 | implemented | doctor 能區分 missing CLI、auth required、native module failure、healthy。 | — |
 | ENV-08 | implemented | README 命令在真正乾淨環境重現，無未宣告步驟。 | Install, build, run setup --demo and the built control were reproduced from a fresh clone; found and fixed that pnpm's built-in setup and doctor shadow the scripts. The pnpm demo watcher is not part of the script |

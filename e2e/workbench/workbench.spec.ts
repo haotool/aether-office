@@ -113,7 +113,7 @@ test('a phone gets the 3D office by default, with the 2D list one tap away, and 
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await signIn(page);
-  await expect(page.locator('.phone-office')).toBeVisible(); // the phone office has no heading: the scene is the page
+  await expect(page.locator('.phone-office')).toBeVisible();
   await expect(page.locator('canvas')).toBeVisible();
   await page.getByRole('button', { name: '2D', exact: true }).click();
   await expect(page.locator('.office-2d')).toBeVisible();

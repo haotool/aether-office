@@ -57,7 +57,6 @@ function TerminalsPage({ projectId, session, canWrite }: PageProps) {
 
 const isOwner = (session: Session) => session.actor.role === 'owner';
 
-/** The body of each page, by the name in the address. */
 const PAGES: Record<string, (p: PageProps) => ReactNode> = {
   agents: (p) => (
     <>
@@ -120,7 +119,6 @@ const PAGES: Record<string, (p: PageProps) => ReactNode> = {
   ),
 };
 
-/** Every page of a project except the office: picks one by its name. */
 export function ProjectPage({ page, ...props }: PageProps & { page: string }) {
   const render = Object.hasOwn(PAGES, page) ? PAGES[page] : undefined;
   return (

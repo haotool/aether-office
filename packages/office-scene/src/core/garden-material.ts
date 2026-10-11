@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { DITHER_END, DITHER_PARS } from '../environment/dither.js';
 
-/** Flowers the shader can open independently: a tier's each (up to 12), the great bloom's and a merge's each (up to 16). */
 export const MAX_FLOWERS = 32;
 
 const SHARED_VERTEX = `
@@ -109,14 +108,6 @@ const GARDEN_FRAGMENT = `
         ${DITHER_END}
       }`;
 
-/**
- * The garden's skin. One vertex shader opens every flower: a part's `pose` holds how far it swings and how late in the bloom it
- * comes (so the petals open one after another, outer whorl first, with a little overshoot), then a slow breathing sway.
- * The fragment shader paints by kind: a petal is a gradient from the branch hue to a shifted tip with a fan of glowing veins,
- * a fresnel rim with an iridescent edge and a fake of light shining through (translucency grows with `glass`), and it hides
- * what is behind it a little so a flower reads against the bright glass of the crown; a tube is the strands' glass; a glow is a
- * soft additive spot (florets, bead tips, rings). No textures, no lights, no transmission pass.
- */
 export function gardenMaterial() {
   return new THREE.ShaderMaterial({
     uniforms: { time: { value: 0 }, open: { value: new Array<number>(MAX_FLOWERS).fill(0) } },
@@ -125,7 +116,6 @@ export function gardenMaterial() {
     dithering: true,
     transparent: true,
     depthWrite: false,
-    // Premultiplied: a petal (alpha above 0) hides what is behind it, light (alpha 0) simply adds.
     blending: THREE.CustomBlending,
     blendSrc: THREE.OneFactor,
     blendDst: THREE.OneMinusSrcAlphaFactor,
@@ -133,7 +123,6 @@ export function gardenMaterial() {
   });
 }
 
-/** Pollen orbiting a flower and spores rising past it, as soft additive points that appear once the flower is open. */
 export function pollenMaterial() {
   return new THREE.ShaderMaterial({
     uniforms: {

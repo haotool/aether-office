@@ -13,7 +13,6 @@ import { ProjectForm } from './features/integrations/ProjectForm.js';
 import { TabBar } from './features/shell-chrome/TabBar.js';
 import { isFieldPerfRequested } from './features/field-perf/is-field-perf-requested.js';
 
-// The sign-in page is only for a visitor who is not signed in: everyone else never loads it.
 const Login = lazy(() =>
   import('./features/shell-chrome/Login.js').then((m) => ({ default: m.Login })),
 );
@@ -33,7 +32,6 @@ function FieldPerfOverlay() {
   return <Panel />;
 }
 
-/** Signed out: the login; signed in: the application. */
 export function App() {
   const t = useT();
   const theme = useTheme();
@@ -74,7 +72,7 @@ function Application({ session, onLogout }: { session: Session; onLogout: () => 
   const t = useT();
   const app = useApplication(session);
   const { shell, sel } = app;
-  const phone = usePhone(); // portrait: tab bar
+  const phone = usePhone();
   return (
     <div className="application">
       <ReasonDefs />

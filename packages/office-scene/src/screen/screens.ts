@@ -15,12 +15,6 @@ import { dataTables, kpis, training } from './screen-art-data.js';
 import { architecture, documents, kanban, mindmap } from './screen-art-plan.js';
 import { context2d } from '../core/canvas-2d.js';
 
-/**
- * Role-themed screen art for the holographic workstations. It is decoration that says what kind of work a desk does
- * (a test runner for QA, a pipeline for platform, charts for analytics), never data: nothing here is a measurement,
- * and how bright a screen is comes from the member's real activity, set by the scene.
- * Variety is deterministic: the same member always gets the same picture.
- */
 const VARIANTS = 3;
 
 const DEFAULT_DRAWS: Draw[] = [editor, browserUi];
@@ -59,7 +53,6 @@ export function screenTexture(role: string, member: string, accent: string): Can
   const g = context2d(canvas);
   const rng = seeded(`${role}:${variant}`);
   draws[variant % draws.length]?.(g, rng, accent);
-  // A faint scanline overlay keeps it reading as a projection rather than a flat monitor.
   g.fillStyle = 'rgba(255,255,255,0.035)';
   for (let y = 0; y < SCREEN_H; y += 3) g.fillRect(0, y, SCREEN_W, 1);
   const texture = new CanvasTexture(canvas);

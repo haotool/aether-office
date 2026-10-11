@@ -1,7 +1,6 @@
 import { clamp01, draw, envelope, SPOT } from './shared.js';
 import type { Effect, Sprite } from './types.js';
 
-/** A time-machine swirl over the screen, turning backwards: a hard reset was started. Calm blue, no danger tone. */
 export const timeMachine: Effect = (t, d) => {
   const fade = envelope(t, d, 350);
   const [x, y, z] = SPOT.aboveScreen;
@@ -18,7 +17,6 @@ export const timeMachine: Effect = (t, d) => {
 };
 
 const NOTES = 3;
-/** Sticky notes pop onto the screen's edge, one after another (a search for TODOs), each a little askew. */
 export const stickyNotes: Effect = (t, d, seed) => {
   const fade = envelope(t, d, 300);
   const sprites: Sprite[] = [];

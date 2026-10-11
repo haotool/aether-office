@@ -4,9 +4,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { arch, platform, release } from 'node:os';
 import { resolve } from 'node:path';
 
-// Read-only environment diagnosis. It never starts a model session and never changes anything: it
-// reports versions and tells apart a missing CLI, a CLI that needs sign-in, a broken native module
-// and a healthy install.
+// Read-only: it never starts a model session and never changes anything.
 
 export type Status =
   'ok' | 'missing' | 'auth_required' | 'native_failure' | 'version_mismatch' | 'warn';
@@ -42,7 +40,6 @@ const realProbe: Probe = {
   load: (module, fromApp) => {
     try {
       const loaded = createRequire(resolve(fromApp, 'package.json'))(module);
-      // Loading the file is not enough for SQLite: open a database to exercise the native binding.
       if (module === 'better-sqlite3') new loaded(':memory:').close();
       return null;
     } catch (error) {
@@ -115,7 +112,6 @@ const PROVIDER_CLIS = [
   { id: 'codex', version: ['--version'], auth: ['login', 'status'] },
 ];
 
-/** The sign-in state of each provider CLI, and a note when the codex version is not one the compat table verified. */
 function providerChecks(probe: Probe): Check[] {
   const checks: Check[] = [];
   const verified =
@@ -183,7 +179,6 @@ const mark: Record<Status, string> = {
 /** CLIs for the providers are optional (each is used only for its own sessions); a failing check of anything else is fatal. */
 const OPTIONAL = new Set(['claude', 'codex']);
 
-/** 1 when a hard prerequisite is missing or broken; with `strict`, any check that is not ok fails too. */
 export function exitCodeOf(checks: Check[], strict: boolean): number {
   const failed = (c: Check) =>
     strict

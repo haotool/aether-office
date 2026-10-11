@@ -5,6 +5,11 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Changed
+
+- README and `docs/native-execution.md` state that AETHER neither stores nor forwards your Claude credentials.
+- The quality scorecard caps code lines at a recorded budget that only goes down; comments were cut to the few that explain why.
+
 ## [0.4.0] - 2026-10-08
 
 The first public release. AETHER OFFICE started from [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT; see
@@ -212,10 +217,11 @@ For anyone who ran a development build before this release.
   to copy. A project id in the address that is not available falls back to the first project with a short notice; unknown pages
   show "Page not found". The tab title is `<page> · AETHER OFFICE` in the interface language.
 - Create task, Propose knowledge and the login mark required fields and show their own inline errors.
-- On a phone: the 2D office list starts below the view switch and the KPI chips and ends above the new-task button; the floor rail
+- On a phone: the 2D office list scrolls below the view switch and the KPI chips, so no card passes under them, and ends above the new-task button; the floor rail
   scrolls instead of climbing over the top row on a short screen; a table row drawn as a card keeps every part of a value beside its
   label; the connection says "reconnecting" or "offline" in words; the top bar keeps language and theme on screen from 320 to
   1920 px.
+- The Sessions page says when there is no session yet, or when the filters hide every one, and a button shows them all.
 - Members beyond a floor's 48 desks take a desk on the next floor with room instead of vanishing; "Show in office" brings the
   camera to the member on a phone too.
 - Scene fixes: close-up camera shots push in, members sent home walk with planted feet, pointing at the crown works, the

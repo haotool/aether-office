@@ -28,7 +28,6 @@ it('updates a character less often the farther it is from the camera', () => {
   expect(steps[1]).toBeLessThan(steps[2]!);
 });
 
-/** Feeds `frames` frames of `ms` each, 16 ms of wall clock apart plus the frame time, and returns the final state. */
 function run(state: RatioState, frames: number, ms: number, at: { now: number }, ceiling = 2) {
   let s = state;
   for (let i = 0; i < frames; i++) {
@@ -59,17 +58,17 @@ it('does not move on a healthy scene, and waits out its cooldown between steps',
     1000 / 60,
     2,
   );
-  expect(sooner.ratio).toBe(first.ratio); // 100 ms after a step is inside the cooldown
+  expect(sooner.ratio).toBe(first.ratio);
 });
 
 it('steps back up after a long calm stretch, and waits longer when that step had to be undone', () => {
   const at = { now: 10_000 };
-  let s = run(startRatio(2, at.now), 30, 40, at); // down to 1.75
+  let s = run(startRatio(2, at.now), 30, 40, at);
   at.now += 5000;
   s = run(s, 200, 16, at);
   expect(s.ratio).toBe(2);
   expect(s.lastStep).toBe('up');
-  s = run(s, 30, 40, at); // slow again right after: undone
+  s = run(s, 30, 40, at);
   expect(s.ratio).toBe(1.75);
   expect(s.upCooldown).toBeGreaterThan(startRatio(2, 0).upCooldown);
 });
@@ -91,7 +90,7 @@ it('holds a phone to its own ambient pace, so an idle phone is not read as slow'
   expect(target).toBeGreaterThan(AMBIENT_FRAME_MS_PHONE);
   let s = startRatio(1.5, at.now);
   for (let i = 0; i < 300; i++) {
-    at.now += AMBIENT_FRAME_MS_PHONE + 4; // a timer tick and a few ms of drawing
+    at.now += AMBIENT_FRAME_MS_PHONE + 4;
     s = stepRatio(s, AMBIENT_FRAME_MS_PHONE + 4, at.now, target, 1.5);
   }
   expect(s.ratio).toBe(1.5);
@@ -115,5 +114,5 @@ it('keeps MSAA to the tiers unless ?msaa says otherwise, so a phone can be measu
   expect(antialiasFor('', false, 'low')).toBe(false);
   expect(antialiasFor('?msaa=1', true, 'balanced')).toBe(true);
   expect(antialiasFor('?perf=240&msaa=0', false, 'high')).toBe(false);
-  expect(antialiasFor('?msaa=yes', true, 'high')).toBe(false); // anything else is not an override
+  expect(antialiasFor('?msaa=yes', true, 'high')).toBe(false);
 });

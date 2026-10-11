@@ -11,10 +11,7 @@ type KpiLimitsProps = {
   timeZone: string;
 };
 
-/**
- * Claude's and Codex's rate-limit windows as rings: percent used, the reset as a countdown and a clock time. Account-wide,
- * not per office. A provider with no reading says so rather than showing a figure it does not have.
- */
+/** A provider with no reading says so rather than showing a figure it does not have. */
 export function KpiLimits({ limits, now, timeZone }: KpiLimitsProps) {
   const t = useT();
   const locale = useLocale();

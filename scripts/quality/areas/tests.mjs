@@ -1,5 +1,3 @@
-// Area 3: tests. How much of the product source the unit tests import (directly and through the import graph), flaky
-// patterns, skipped tests, and line/branch coverage when a vitest coverage run left a summary behind.
 import { reachableFrom } from '../graph.mjs';
 import { SELF, scan, top } from '../lib.mjs';
 import { info, rule, skipped } from '../model.mjs';
@@ -31,10 +29,6 @@ export const FLAKY = [
 const SKIPPED =
   /\b(?:it|test|describe)\.(?:skip\(\s*(?:['"`]|\)|\w+\s*,\s*(?:async|\())|todo\(|fixme\()|\bxit\(|\bxdescribe\(/;
 
-/**
- * Modules a unit test imports by name, following re-exports through barrels (`index.ts`) to the module that defines the
- * name. A namespace import credits every module the barrel re-exports.
- */
 export function directlyImported(uses, fromTest) {
   const reexports = new Map();
   for (const u of uses.filter((x) => x.reexport))
@@ -55,7 +49,6 @@ export function directlyImported(uses, fromTest) {
   return found;
 }
 
-/** Product modules the unit tests import directly, and those reachable from them. */
 export function testedModules(facts, graph) {
   const product = facts
     .map((f) => f.file)
@@ -84,7 +77,7 @@ function coverageRules(repo) {
       id: 'coverage-lines',
       label: 'Line coverage',
       weight: 8,
-      value: total.lines.pct,
+      value: Math.round(total.lines.pct),
       atLeast: 80,
       full: 40,
       unit: '%',
@@ -93,7 +86,7 @@ function coverageRules(repo) {
       id: 'coverage-branches',
       label: 'Branch coverage',
       weight: 7,
-      value: total.branches.pct,
+      value: Math.round(total.branches.pct),
       atLeast: 70,
       full: 40,
       unit: '%',

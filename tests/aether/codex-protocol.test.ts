@@ -6,7 +6,6 @@ import { CodexAdapter } from '../../packages/providers/src/codex.js';
 import { JsonRpcProcess } from '../../packages/providers/src/jsonrpc.js';
 import type { ProviderEvent } from '../../packages/providers/src/protocol.js';
 
-// Scripted app-server peers. They speak the same JSON-RPC wire as `codex app-server` but run no model.
 const peer = (body: string) =>
   new JsonRpcProcess(process.execPath, ['-e', body], { cwd: process.cwd() });
 
@@ -155,7 +154,6 @@ describe('CodexAdapter against scripted app-server peers', () => {
         });`);
       const s = sink();
       await new CodexAdapter(options, s.sink, rpc).run('go', new AbortController().signal);
-      // The platform was asked exactly once, about the right thread, under the provider's own request id.
       expect(s.permissions).toEqual([
         {
           requestId: 'req-real',
@@ -169,9 +167,9 @@ describe('CodexAdapter against scripted app-server peers', () => {
       const answers = Object.fromEntries(
         recorded().map((r) => [r.name, r.value as { result?: unknown; error?: unknown }]),
       );
-      expect(answers['foreign-answer']!.error).toBeDefined(); // refused, not approved
+      expect(answers['foreign-answer']!.error).toBeDefined();
       expect(answers['foreign-answer']!.result).toBeUndefined();
-      expect(answers['real-answer']!.result).toEqual({ decision: 'accept' }); // one invocation only
+      expect(answers['real-answer']!.result).toEqual({ decision: 'accept' });
     } finally {
       done();
     }
@@ -211,7 +209,7 @@ describe('CodexAdapter against scripted app-server peers', () => {
       );
       expect(answers['question-answer']!.result).toEqual({ answers: {} });
       expect(answers['elicitation-answer']!.result).toEqual({ action: 'decline' });
-      expect(answers['foreign-answer']!.error).toBeDefined(); // another thread's question is refused, not answered
+      expect(answers['foreign-answer']!.error).toBeDefined();
       const asked = s.events.filter((e) => e.kind === 'tool.failed');
       expect(asked.map((e) => ('name' in e ? e.name : ''))).toEqual([
         'request_user_input',
@@ -248,9 +246,9 @@ describe('CodexAdapter against scripted app-server peers', () => {
       const answers = Object.fromEntries(
         recorded().map((r) => [r.name, r.value as { result?: unknown; error?: unknown }]),
       );
-      expect(s.permissions).toHaveLength(1); // asked once, about the right thread
+      expect(s.permissions).toHaveLength(1);
       expect(s.permissions[0]).toMatchObject({ requestId: 'mcp-real', kind: 'mcpToolCall' });
-      expect(answers['real']!.result).toEqual({ action: 'accept' }); // no `_meta`: nothing is persisted for the session
+      expect(answers['real']!.result).toEqual({ action: 'accept' });
       expect(answers['foreign']!.error).toBeDefined();
     } finally {
       done();

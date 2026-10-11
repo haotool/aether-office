@@ -1,4 +1,3 @@
-/** The common words, in Traditional Chinese. */
 export const zhCommon = {
   retry: '重試',
   save: '儲存',

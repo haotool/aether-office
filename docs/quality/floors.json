@@ -4,12 +4,12 @@
     "structure": 95,
     "types": 100,
     "tests": 100,
-    "ui": 97.5,
+    "ui": 100,
     "a11y": 100,
     "perf": 99.1,
     "docs": 100,
     "security": 100,
-    "oss": 95,
+    "oss": 100,
     "maturity": 80.6
   }
 }

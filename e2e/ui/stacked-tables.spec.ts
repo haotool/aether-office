@@ -3,7 +3,6 @@ import { signIn } from '../support/sign-in.js';
 
 test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 
-/** The cells whose parts do not all start in the value column: a part left of the cell's first one fell under the label. */
 async function strayCells(page: Page) {
   return page.evaluate(() => {
     const stray: string[] = [];

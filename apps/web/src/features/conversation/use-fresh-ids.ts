@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import type { Turn } from '../conversation/turn-groups.js';
 
-/** Stable identities for what a turn draws, so what is new can be told from what was there when the conversation opened. */
 export const promptId = (turn: Turn) => `${turn.id}:prompt`;
 export const blockId = (turn: Turn, index: number) => `${turn.id}:${index}`;
 export const turnIds = (turn: Turn): string[] => [
@@ -10,9 +9,8 @@ export const turnIds = (turn: Turn): string[] => [
 ];
 
 /**
- * Which of `ids` arrived after the first look at `scope` (a session). What was there at the first look is history and is
- * never animated; what shows up later is fresh, and stays fresh while it is on screen. `null` ids (nothing loaded yet) do
- * not count as a first look.
+ * What was there at the first look is history and is never animated; `null` ids (nothing loaded yet) do not count as a
+ * first look.
  */
 export function useFreshIds(scope: string, ids: readonly string[] | null): (id: string) => boolean {
   const state = useRef<{ scope: string; seen: Set<string>; fresh: Set<string> } | null>(null);
@@ -29,10 +27,6 @@ export function useFreshIds(scope: string, ids: readonly string[] | null): (id: 
   return (id) => state.current?.fresh.has(id) ?? false;
 }
 
-/**
- * The first thing in the conversation that happened after `seenAt` (when the person last looked), or null when there is
- * none or when it is the very first thing shown, which leaves nothing older to divide it from.
- */
 export function firstUnreadId(turns: readonly Turn[], seenAt: number): string | null {
   if (!seenAt) return null;
   const items = turns.flatMap((turn) => [

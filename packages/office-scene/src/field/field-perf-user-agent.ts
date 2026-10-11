@@ -48,7 +48,6 @@ function parseMacUserAgent(ua: string): FieldPerfUaParse | null {
   return { ...emptyUa, os: 'macOS', osVersion: ver };
 }
 
-/** Parses common mobile UA tokens; returns null fields when unknown. */
 export function parseUserAgent(ua: string): FieldPerfUaParse {
   return parseIosUserAgent(ua) ?? parseAndroidUserAgent(ua) ?? parseMacUserAgent(ua) ?? emptyUa;
 }

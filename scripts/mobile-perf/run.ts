@@ -1,4 +1,3 @@
-// Mobile A/B perf harness (M-MID interleaved).
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,19 +13,9 @@ import {
   resolveLoadValidity,
 } from './stats.ts';
 import { collectEnvMeta, readLoadAverage, waitForQuietLoad } from './env.ts';
+import { flags } from './flags.ts';
 import { measureCaseRound, profileSettings } from './measure.ts';
 import { renderMarkdown, assertSchema } from './render-summary.ts';
-
-const flags = (argv: string[]) => {
-  const out: Record<string, string | boolean> = {};
-  for (let i = 0; i < argv.length; i += 1) {
-    const token = argv[i];
-    if (token === undefined || !token.startsWith('--')) continue;
-    const next = argv[i + 1];
-    out[token.slice(2)] = next === undefined || next.startsWith('--') ? true : next;
-  }
-  return out;
-};
 
 const args = flags(process.argv.slice(2).filter((a) => a !== '--'));
 const aa = Boolean(args.aa);

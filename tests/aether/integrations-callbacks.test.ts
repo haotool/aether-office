@@ -56,7 +56,7 @@ it('verifies webhook signatures on the raw body, deduplicates deliveries, and on
     expect((await send(sign('wrong'), 'd1')).statusCode).toBe(401);
     expect(t.works()).toHaveLength(0);
     expect((await send(sign('hook-secret'), 'd2')).json()).toEqual({ status: 'synced' });
-    expect(t.works().map((w) => w.title)).toEqual(['#1 Fix login', '#2 Add export']); // from the pulled state
+    expect(t.works().map((w) => w.title)).toEqual(['#1 Fix login', '#2 Add export']);
     expect((await send(sign('hook-secret'), 'd2')).json()).toEqual({ status: 'duplicate' });
     expect((await send(sign('hook-secret'), 'd3', 'ping')).json()).toEqual({ status: 'ignored' });
   } finally {
@@ -76,7 +76,7 @@ it('answers an unknown webhook id like a bad signature and limits how often one 
         payload: '{}',
         headers: { 'content-type': 'application/json', host: '127.0.0.1:4493' },
       });
-    expect((await send('nope')).statusCode).toBe(401); // not 404: no oracle for which integrations exist
+    expect((await send('nope')).statusCode).toBe(401);
     expect((await send(id)).statusCode).toBe(401);
     for (let i = 0; i < 118; i++) await send(id);
     expect((await send(id)).statusCode).toBe(429);
@@ -106,7 +106,7 @@ it('imports from Linear over GraphQL, surfaces its rate limit, and comments on a
       baseUrl: `http://127.0.0.1:${port}`,
     });
     expect((await t.sync(id)).json()).toEqual({ imported: 1, updated: 0, conflicts: 0 });
-    expect(state.requests.at(-1)!.auth).toBe('lin_key'); // Linear API keys are sent as-is, not as Bearer
+    expect(state.requests.at(-1)!.auth).toBe('lin_key');
     state.linearRateLimited = true;
     expect((await t.sync(id)).json().error.code).toBe('INTEGRATION_RATE_LIMITED');
     state.linearRateLimited = false;

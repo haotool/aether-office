@@ -8,5 +8,5 @@ it('records existing approvals silently, then reports only new pending ones', ()
   expect(first.fresh).toEqual([]);
   const second = newlyPending(first.seen, [a('1'), a('2'), a('3'), a('4', 'approved')]);
   expect(second.fresh.map((x) => x.id)).toEqual(['3']);
-  expect(newlyPending(second.seen, [a('3')]).fresh).toEqual([]); // never twice
+  expect(newlyPending(second.seen, [a('3')]).fresh).toEqual([]);
 });

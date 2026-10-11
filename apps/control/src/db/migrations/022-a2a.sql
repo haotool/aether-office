@@ -1,5 +1,3 @@
--- A2A gateway (disabled unless AETHER_A2A=on). Each remote client has its own revocable credential,
--- one project, and a cap on open tasks. External task ids map one-to-one to internal work items.
 CREATE TABLE a2a_clients (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,

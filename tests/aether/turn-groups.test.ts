@@ -103,7 +103,6 @@ it('counts the messages that arrived after an anchor, not tool traffic', () => {
   ];
   expect(newMessagesSince(after, anchor)).toBe(2);
   expect(newMessagesSince(before, anchor)).toBe(0);
-  // The anchor slid out of the tail: everything is new.
   expect(newMessagesSince(after.slice(3), anchor)).toBe(2);
   expect(newMessagesSince(after, null)).toBe(4);
 });
@@ -116,7 +115,7 @@ it('times a group of calls: first call to last result, to now while one still ru
   ]);
   const block = turn!.blocks[0];
   if (block?.type !== 'tools') throw new Error('expected a tool group');
-  expect(groupSpanMs(block.calls, 9000)).toBeNull(); // untimed entries have no span
+  expect(groupSpanMs(block.calls, 9000)).toBeNull();
   const timed = groupTurns([
     call('Read', 'a', '/x.ts'),
     call('Bash', 'b', 'ls'),
@@ -127,7 +126,7 @@ it('times a group of calls: first call to last result, to now while one still ru
     at: 1000 + i * 500,
     result: c.result ? { ...c.result, at: 3000 } : null,
   }));
-  expect(groupSpanMs(calls, 9000)).toBe(8000); // the Bash call is still running
+  expect(groupSpanMs(calls, 9000)).toBe(8000);
   expect(groupSpanMs([calls[0]!], 9000)).toBe(2000);
 });
 
@@ -144,7 +143,7 @@ it('puts notices in the current turn without opening one, and joins a run of the
     e('notice', '', { notice: { kind: 'command', name: '/compact', args: '' } }),
     e('notice', '', { notice: { kind: 'interrupted' } }),
     e('assistant', 'done'),
-    e('notice', '', { notice: null }), // an entry from an older server carries nothing to show
+    e('notice', '', { notice: null }),
   ]);
   expect(turns.map((t) => [t.user?.text ?? null, t.blocks.map((b) => b.type)])).toEqual([
     [null, ['notices']],

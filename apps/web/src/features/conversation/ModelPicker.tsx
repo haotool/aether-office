@@ -14,10 +14,6 @@ export const SOURCE_NOTE = {
   fallback: 'modelsSourceFallback',
 } as const;
 
-/**
- * Model and effort choice, grouped by provider. Presentational: it shows what it is given and reports what is picked;
- * the effort list is only what the chosen model supports. Without `onChange` it is a read-only list.
- */
 export function ModelPicker({
   catalogs,
   value,
@@ -29,7 +25,6 @@ export function ModelPicker({
   value?: ModelChoice;
   onChange?: (choice: ModelChoice) => void;
   onRefresh?: () => Promise<void>;
-  /** Offer the effort list for the chosen model. False where the caller cannot apply an effort. */
   efforts?: boolean;
 }) {
   const chosen = catalogs
@@ -48,7 +43,6 @@ export function ModelPicker({
   );
 }
 
-/** One provider's models as chips, with where the list came from. */
 function ModelGroup({
   catalog,
   value,

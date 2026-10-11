@@ -2,17 +2,12 @@ import { clamp01, draw, envelope, lerp, SPOT } from './shared.js';
 import type { Effect, Rgb, Sprite } from './types.js';
 import { itemAt } from '../../environment/checked.js';
 
-// Effects that show how a test, a CI watch or a build really ended. Each one is only ever started by a rule that read a real
-// `ok` (see ../registry.ts); the pictures here are decorative and say nothing beyond that exit status.
-
 const GREEN: Rgb = [0.35, 0.9, 0.5];
 const RED: Rgb = [1, 0.3, 0.3];
 const AMBER: Rgb = [1, 0.72, 0.2];
-/** Where the bug is squashed: on the right of the desk, the side the usual camera sees. */
 const SQUASH_AT = [0.5, 0.66, 0.12] as const;
 const LAMP = [SPOT.aboveScreen[0], 1.36, SPOT.aboveScreen[2]] as const;
 
-/** A steady lamp: a glow that breathes slowly (well under the three flashes a second a viewer can bear). */
 const lamp = (t: number, fade: number, tint: Rgb): Sprite => ({
   cell: 'glow',
   at: LAMP,
@@ -21,10 +16,6 @@ const lamp = (t: number, fade: number, tint: Rgb): Sprite => ({
   tint,
 });
 
-/**
- * Tests passed: the lamp turns green with a tick, and the bug that was scurrying over the desk gets squashed in the middle
- * (a puff, then it lies flat and fades). The seed picks the side it ran in from.
- */
 export const ciPass: Effect = (t, d, seed) => {
   const fade = envelope(t, d, 400);
   const dir = draw(seed, 0) < 0.5 ? 1 : -1;
@@ -70,7 +61,6 @@ export const ciPass: Effect = (t, d, seed) => {
   return sprites;
 };
 
-/** Tests failed: the lamp turns red with a cross, and a red bug scurries off the desk's edge (the seed picks which). */
 export const ciFail: Effect = (t, d, seed) => {
   const fade = envelope(t, d, 400);
   const dir = draw(seed, 0) < 0.5 ? 1 : -1;
@@ -92,10 +82,6 @@ export const ciFail: Effect = (t, d, seed) => {
   ];
 };
 
-/**
- * The CI stack: a three-light post beside the screen. Green when the watch command exited successfully, red when it did
- * not (`value` is 1 or 0). That is the command's own status; `gh run watch` without `--exit-status` exits 0 whatever the run did.
- */
 export const ciStack: Effect = (t, d, _seed, value) => {
   const fade = envelope(t, d, 400);
   const lens: readonly [number, Rgb][] = [
@@ -103,7 +89,7 @@ export const ciStack: Effect = (t, d, _seed, value) => {
     [1.34, AMBER],
     [1.18, GREEN],
   ];
-  const lit = value > 0 ? 2 : 0; // the lens that is on: green, or red
+  const lit = value > 0 ? 2 : 0;
   const sprites: Sprite[] = lens.map(([y]) => ({
     cell: 'ring',
     at: [0.62, y, -0.3],
@@ -122,7 +108,6 @@ export const ciStack: Effect = (t, d, _seed, value) => {
   return sprites;
 };
 
-/** A red squiggle under the screen, as an editor underlines an error: it sways, with a cross at its end. */
 export const buildError: Effect = (t, d, seed) => {
   const fade = envelope(t, d, 350);
   const sway = Math.sin(t / 260 + draw(seed, 0) * 6) * 0.015;
@@ -138,7 +123,6 @@ export const buildError: Effect = (t, d, seed) => {
   ];
 };
 
-/** "Works on my machine": a sticker slaps onto the screen's edge (large, then settling) with a small pop. */
 export const worksMachine: Effect = (t, d, seed) => {
   const fade = envelope(t, d, 250);
   const slap = clamp01(t / 260);
@@ -160,7 +144,6 @@ export const worksMachine: Effect = (t, d, seed) => {
   ];
 };
 
-/** "Not a bug, a feature": a red BUG sign flips into a green FEATURE sign (a cross-fade with a small wobble). */
 export const notABug: Effect = (t, d) => {
   const fade = envelope(t, d, 300);
   const flip = clamp01((t - 1400) / 400);

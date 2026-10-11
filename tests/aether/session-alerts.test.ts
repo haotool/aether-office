@@ -16,15 +16,10 @@ const labels = { needsYou: 'needs you', finished: 'finished' };
 
 it('reports a session that starts waiting for a human or stops working, never on the first look', () => {
   const first = sessionTransitions(null, [s('a', 'working'), s('b', 'working'), s('c', 'idle')], 0);
-  expect(first.events).toEqual([]); // opening the page does not flood
+  expect(first.events).toEqual([]);
   const next = sessionTransitions(
     first.states,
-    [
-      s('a', 'waiting_permission'),
-      s('b', 'idle'),
-      s('c', 'working'),
-      s('d', 'waiting_permission'), // new session: no transition yet
-    ],
+    [s('a', 'waiting_permission'), s('b', 'idle'), s('c', 'working'), s('d', 'waiting_permission')],
     90_000,
   );
   expect(next.events).toEqual([
@@ -33,7 +28,7 @@ it('reports a session that starts waiting for a human or stops working, never on
   ]);
   expect(sessionTransitions(next.states, [s('a', 'waiting_permission')], 95_000).events).toEqual(
     [],
-  ); // no repeat
+  );
 });
 
 it('measures a turn from when the session started working, not from the last look', () => {

@@ -46,7 +46,6 @@ const within = (
     }
 };
 
-/** The checksum of 120 frames of the two strings below (to the millimetre). */
 const GOLDEN = 1315462519;
 
 describe('the verlet step', () => {
@@ -60,14 +59,13 @@ describe('the verlet step', () => {
 
   it('is deterministic: the same pins and the same frames give the same points (golden checksum)', () => {
     expect(checksum(run(300))).toBe(checksum(run(300)));
-    // A change to the integrator, its constants or the sway shows here: update the number on purpose.
     expect(checksum(run(120))).toBe(GOLDEN);
   });
 
   it('runs at a fixed rate whatever the frame rate: whole steps, the rest carried', () => {
     const s = createStrings(1);
     pinString(s, 0, [0, 2, 0], [0, 1, 0], 0, false);
-    expect(stepStrings(s, 1 / 60, 30)).toBe(0); // half a step
+    expect(stepStrings(s, 1 / 60, 30)).toBe(0);
     expect(stepStrings(s, 1 / 60, 30)).toBe(1);
     expect(stepStrings(s, 0.1, 30)).toBe(3);
   });
@@ -75,7 +73,6 @@ describe('the verlet step', () => {
   it('keeps every point of a taut string between its pins', () => {
     const s = run(600);
     within(s, 0, [0, 1.46, 0], [0, 2.7, 0], 0.05);
-    // Taut: the middle is nearly straight (a sag of a few centimetres, not a loop).
     const mid = (POINTS >> 1) * 3;
     expect(Math.abs(s.pos[mid]!)).toBeLessThan(0.08);
   });
@@ -105,7 +102,6 @@ describe('the verlet step', () => {
     pinString(s, 0, [40, 2.7, 40], [40, 1.46, 40], 0, false);
     stepStrings(s, 1 / 30, 30);
     within(s, 0, [40, 1.46, 40], [40, 2.7, 40], 0.1);
-    // Just under the teleport distance is an ordinary (fast) move: still bounded.
     pinString(s, 0, [40 + TELEPORT_M * 0.9, 2.7, 40], [40 + TELEPORT_M * 0.9, 1.46, 40], 0, false);
     for (let n = 0; n < 30; n++) stepStrings(s, 1 / 30, 30);
     within(s, 0, [40, 1.46, 40], [43, 2.7, 40], 0.6);
@@ -138,7 +134,7 @@ describe('the verlet step', () => {
     for (let i = 0; i < 48; i++) pinString(s, i, [i, 2.7, 0], [i, 1.4, 0.3], 0, false);
     const start = performance.now();
     for (let n = 0; n < 300; n++) stepStrings(s, 1 / 30, 30);
-    expect((performance.now() - start) / 300).toBeLessThan(2); // ms per step, 48 strings: a generous guard, not the gate
+    expect((performance.now() - start) / 300).toBeLessThan(2);
   });
 });
 
@@ -159,8 +155,8 @@ describe('what a subagent does to its strings', () => {
     expect(working).toMatchObject({ slack: 0, alpha: 1 });
     const quiet = settle(working, 'idle', 1.2);
     expect(quiet.slack).toBe(1);
-    expect(visible(quiet)).toBe(true); // slack first
-    expect(visible(settle(quiet, 'idle', 8))).toBe(false); // then gone
+    expect(visible(quiet)).toBe(true);
+    expect(visible(settle(quiet, 'idle', 8))).toBe(false);
   });
 
   it('eases the slack over a second, not at once', () => {
@@ -173,12 +169,12 @@ describe('what a subagent does to its strings', () => {
     let m = settle(calmMotion(100), 'working', 2, 100);
     expect(m.dip).toBe(0);
     m = stepMotion(m, { phase: 'working', toolAt: 100 }, 1 / 60);
-    expect(m.dip).toBe(0); // the same start again is not a jerk
+    expect(m.dip).toBe(0);
     m = stepMotion(m, { phase: 'working', toolAt: 200 }, 1 / 60);
     expect(m.dip).toBeLessThan(JERK_DIP_M / 2);
     expect(m.dip).toBeGreaterThan(JERK_DIP_M * 1.1);
     const settled = settle(m, 'working', 0.4, 200);
-    expect(Math.abs(settled.dip)).toBeLessThan(0.002); // critically damped: back within a few hundred ms, no ringing
+    expect(Math.abs(settled.dip)).toBeLessThan(0.002);
   });
 
   it('never overshoots the dip (critically damped)', () => {
@@ -250,9 +246,9 @@ describe('the rig', () => {
     ]);
     expect(rig.strings.count).toBe(2 * STRINGS_PER_MEMBER);
     updateRig(rig, [member('a2')], 1 / 30, { simulate: true, hz: 30 });
-    expect(rig.slots.get('a2')).toBe(1); // never moves under a member
+    expect(rig.slots.get('a2')).toBe(1);
     updateRig(rig, [member('a2'), member('a3')], 1 / 30, { simulate: true, hz: 30 });
-    expect(rig.slots.get('a3')).toBe(0); // the free slot is reused
+    expect(rig.slots.get('a3')).toBe(0);
   });
 
   it('starts a slot straight for a new subagent, whatever the last tenant left in it', () => {
@@ -260,7 +256,7 @@ describe('the rig', () => {
     for (let n = 0; n < 60; n++) updateRig(rig, [member('a1')], 1 / 30, { simulate: true, hz: 30 });
     updateRig(rig, [], 1 / 30, { simulate: true, hz: 30 });
     updateRig(rig, [member('a9')], 1 / 30, { simulate: true, hz: 30 });
-    const x = rig.strings.pos[3 * 3]!; // second point of the first string: between a9's pins
+    const x = rig.strings.pos[3 * 3]!;
     expect(Math.abs(x - 18)).toBeLessThan(1);
   });
 
@@ -279,8 +275,7 @@ describe('the rig', () => {
     const motion = rig.motions.get('a1')!;
     expect(motion).toMatchObject({ dip: 0, slack: 0, alpha: 1 });
     const a = seatedAnchors(m.chair);
-    // The head string's middle point sits on the straight line between its pins.
-    const mid = (2 * 3 + 0) * 0 + 2 * 3; // point 2 of string 0
+    const mid = (2 * 3 + 0) * 0 + 2 * 3;
     expect(rig.strings.pos[mid]).toBeCloseTo(a.cross[0] + (a.head[0] - a.cross[0]) * 0.4, 4);
     expect(rig.strings.pos[mid + 1]).toBeCloseTo(a.cross[1] + (a.head[1] - a.cross[1]) * 0.4, 4);
   });
@@ -288,14 +283,13 @@ describe('the rig', () => {
   it('keeps the pool and the segments inside the one-draw budget', () => {
     expect(SEGMENT_CAPACITY).toBe(MEMBER_CAPACITY * STRINGS_PER_MEMBER * (POINTS - 1));
     expect(SEGMENT_CAPACITY).toBeLessThanOrEqual(1024);
-    expect(MEMBER_CAPACITY * STRINGS_PER_MEMBER * POINTS * 3 * 4 * 2).toBeLessThan(64 * 1024); // positions, as bytes
+    expect(MEMBER_CAPACITY * STRINGS_PER_MEMBER * POINTS * 3 * 4 * 2).toBeLessThan(64 * 1024);
   });
 });
 
 type Vec = [number, number, number];
 
 describe("the rig's own sockets (v2 anchors)", () => {
-  /** A model with named nodes at places relative to it, like a rig's sockets (three.js's `Object3D` has the same two methods). */
   const model = (at: Vec, names = ['head_socket', 'hand_socket_L', 'hand_socket_R']) => {
     const places = new Map<string, { local: Vec }>(
       names.map((name, n) => [
@@ -308,7 +302,6 @@ describe("the rig's own sockets (v2 anchors)", () => {
         const node = places.get(name);
         return (
           node && {
-            // The world matrix of a node that sits at `at + local` (only its translation matters).
             get matrixWorld() {
               return {
                 elements: [
@@ -343,10 +336,9 @@ describe("the rig's own sockets (v2 anchors)", () => {
     const forget = registerAnchors('c1', root);
     const found = anchorsOf('c1')!;
     expect(found.head[0]).toBeCloseTo(10, 5);
-    expect(found.head[1]).toBeGreaterThan(3 + 1.4); // a little over the head socket
+    expect(found.head[1]).toBeGreaterThan(3 + 1.4);
     expect(found.handL[0]).toBeCloseTo(9.7, 5);
     expect(found.handR[0]).toBeCloseTo(10.3, 5);
-    // The hand strings follow the clip: move the hand bone and the anchor moves with it.
     places.get('hand_socket_L')!.local[1] = 0.9;
     expect(anchorsOf('c1')!.handL[1]).toBeCloseTo(3.9, 5);
     forget();
@@ -356,7 +348,7 @@ describe("the rig's own sockets (v2 anchors)", () => {
   it('keeps to the fixed offsets for a model without sockets, and for one not placed yet', () => {
     expect(registerAnchors('c2', model([5, 0, 5], ['head_socket']).root)).toBeInstanceOf(Function);
     expect(anchorsOf('c2')).toBeNull();
-    registerAnchors('c3', model([0, 0, 0]).root); // still at the origin: not drawn yet
+    registerAnchors('c3', model([0, 0, 0]).root);
     expect(anchorsOf('c3')).toBeNull();
     const fixed = seatedAnchors({ x: 1, z: 2, yaw: 0, y: 0 });
     expect(chooseAnchors(fixed, null)).toBe(fixed);
@@ -367,7 +359,7 @@ describe("the rig's own sockets (v2 anchors)", () => {
   it('forgets only its own registration when a character is drawn again under the same id', () => {
     const first = registerAnchors('c4', model([2, 0, 2]).root);
     const second = registerAnchors('c4', model([8, 0, 8]).root);
-    first(); // the old model's cleanup after the new one registered
+    first();
     expect(anchorsOf('c4')!.head[0]).toBeCloseTo(8, 5);
     second();
     expect(anchorsOf('c4')).toBeNull();

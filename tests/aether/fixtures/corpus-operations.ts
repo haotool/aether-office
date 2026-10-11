@@ -1,8 +1,6 @@
-// Cases for build, operations, release and test work.
 import { type CorpusCase, edit, run, tool } from './corpus-types.js';
 
 export const OPERATIONS: CorpusCase[] = [
-  // Platform / devops / build tooling
   {
     name: 'github actions',
     expect: 'platform',
@@ -37,7 +35,6 @@ export const OPERATIONS: CorpusCase[] = [
     repo: 'infra-tools',
     actions: [...edit('docker-compose.yml'), ...run('docker compose up -d')],
   },
-  // SRE
   {
     name: 'outage',
     expect: 'sre',
@@ -57,7 +54,6 @@ export const OPERATIONS: CorpusCase[] = [
     prompt: 'on-call: the worker pods are being OOM killed',
     actions: [...run('kubectl top pods')],
   },
-  // Release
   {
     name: 'cut a release',
     expect: 'release',
@@ -83,7 +79,6 @@ export const OPERATIONS: CorpusCase[] = [
       ...run('pnpm changeset version', 'gh release create v1.4.0'),
     ],
   },
-  // QA
   {
     name: 'flaky e2e',
     expect: 'qa',

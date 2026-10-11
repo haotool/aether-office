@@ -5,9 +5,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// pair-cli.ts is a script: it runs as it loads and ends with process.exit. These cases import it in this process (a real
-// server on a free port, a real data directory) so the printed words and the exit code can be read; pair-cli.test.ts runs
-// the same script as a child process.
 class Exit extends Error {
   constructor(readonly code: number | undefined) {
     super(`exit ${code}`);
@@ -55,7 +52,6 @@ beforeEach(() => {
   vi.spyOn(process, 'exit').mockImplementation(((code?: number) => {
     throw new Exit(code);
   }) as never);
-  // The CLI writes through the stdio helpers, so the words are read from the two streams (one line per write).
   const capture = (into: string[]) =>
     ((text: string) => {
       into.push(String(text).replace(/\n$/, ''));

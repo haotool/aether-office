@@ -1,5 +1,3 @@
-// Where a supervisor's squad sits: the rectangle of floor beside its desk, and the pods inside it. Pure and
-// deterministic; nothing here draws anything or reads a clock.
 import type { Furniture, Layout, SquadObject } from '@aether/contracts';
 import {
   SQUAD_MARGIN,
@@ -12,18 +10,13 @@ import {
 
 export { squadCapacity };
 
-/** The most seats a zone is ever sized for; more subagents than this stand as silhouettes. */
 export const MAX_SQUAD_SEATS = 12;
-/** Seats in a row of an auto zone. */
 const ROW_SEATS = 4;
-/** Room left between the desk and its zone. */
 const DESK_GAP = 0.2;
-/** Free room beyond this many metres does not make a place better. */
 const ROOM_CAP = 3;
 const AUTO_ID = 'squad-auto';
 const SIDES = ['east', 'west', 'north', 'south'] as const;
 
-/** A squad zone on the floor, in world extents: `width` along x and `depth` along z, whatever its rotation. */
 export type SquadRect = {
   anchor: string;
   floor: number;
@@ -31,7 +24,6 @@ export type SquadRect = {
   z: number;
   width: number;
   depth: number;
-  /** The seats the zone was sized for (at least what the squad needed). */
   seats: number;
 };
 export type Pod = { index: number; x: number; z: number };
@@ -39,9 +31,8 @@ export type SquadRequest = { deskId: string; count: number };
 
 const isSquad = (o: Furniture): o is SquadObject => o.type === 'squad';
 const floorOf = (o: { floor?: number }) => o.floor ?? 0;
-const halfUp = (n: number) => Math.ceil(n * 2) / 2; // spans move in half metres
+const halfUp = (n: number) => Math.ceil(n * 2) / 2;
 
-/** The saved zone of a desk as a rectangle, or null when it has none. */
 export function savedSquadOf(layout: Layout, deskId: string): SquadRect | null {
   const zone = layout.objects.filter(isSquad).find((o) => o.anchor === deskId);
   if (!zone) return null;
@@ -58,7 +49,6 @@ export function savedSquadOf(layout: Layout, deskId: string): SquadRect | null {
   };
 }
 
-/** The layout object that saves a zone, so an auto squad can be pinned. Never rotated: the extents are the span. */
 export const squadObjectOf = (rect: SquadRect, id: string, seats = 0): SquadObject => ({
   id,
   type: 'squad',
@@ -72,7 +62,6 @@ export const squadObjectOf = (rect: SquadRect, id: string, seats = 0): SquadObje
   seats,
 });
 
-/** The pods of a zone, in a fixed order (row by row from its north-west corner): a member keeps its pod. */
 export function podsOf(rect: Pick<SquadRect, 'x' | 'z' | 'width' | 'depth'>): Pod[] {
   const cols = Math.max(0, Math.floor((rect.width - SQUAD_MARGIN) / SQUAD_PITCH));
   const rows = Math.max(0, Math.floor((rect.depth - SQUAD_MARGIN) / SQUAD_PITCH));
@@ -87,7 +76,6 @@ export function podsOf(rect: Pick<SquadRect, 'x' | 'z' | 'width' | 'depth'>): Po
   return pods;
 }
 
-/** Footprint of an auto zone for this many subagents: whole rows of up to four, at least a pair. */
 function sizeFor(count: number): { seats: number; span: [number, number] } {
   const wanted = Math.min(MAX_SQUAD_SEATS, Math.max(2, Math.floor(count)));
   const cols = Math.min(ROW_SEATS, wanted);
@@ -102,7 +90,6 @@ function sizeFor(count: number): { seats: number; span: [number, number] } {
 }
 
 type Box = ReturnType<typeof objectBounds>;
-// Straight-line gap between two boxes; 0 when they touch or overlap.
 const gap = (a: Box, b: Box) =>
   Math.hypot(
     Math.max(a.minX - b.maxX, b.minX - a.maxX, 0),
@@ -111,7 +98,6 @@ const gap = (a: Box, b: Box) =>
 const overlaps = (a: Box, b: Box) =>
   a.minX < b.maxX && a.maxX > b.minX && a.minZ < b.maxZ && a.maxZ > b.minZ;
 
-/** How much open floor a zone has around it, in metres up to a cap: the walls, the aisles and its neighbours. */
 function room(box: Box, others: readonly Box[]): number {
   const toAisleX = box.maxX <= 0 ? -1 - box.maxX : box.minX - 1;
   const toAisleZ = box.maxZ <= 0 ? -1 - box.maxZ : box.minZ - 1;
@@ -170,7 +156,6 @@ function candidateAt(
   return { rect, box, side };
 }
 
-// The four sides of the desk, each in two orientations and three alignments along the desk's edge.
 function candidates(desk: PlacedObject, size: ReturnType<typeof sizeFor>): Candidate[] {
   const d = objectBounds(desk);
   const base = { anchor: desk.id, floor: floorOf(desk), seats: size.seats };
@@ -182,11 +167,6 @@ function candidates(desk: PlacedObject, size: ReturnType<typeof sizeFor>): Candi
   return out;
 }
 
-/**
- * The zone for a supervisor's squad: the one saved for its desk, else the best rectangle beside the desk that breaks no
- * layout rule. The side that faces the central aisle comes first, then the one with the most open floor. Null when no
- * rectangle fits (a full floor): the subagents then keep sitting at desks of their own.
- */
 export function squadLayout(layout: Layout, deskId: string, count: number): SquadRect | null {
   const saved = savedSquadOf(layout, deskId);
   if (saved) return saved;
@@ -198,13 +178,12 @@ export function squadLayout(layout: Layout, deskId: string, count: number): Squa
   const fitting = candidates(desk, size).filter(({ rect, box }) => {
     if (boxes.some((other) => overlaps(box, other))) return false;
     try {
-      validateLayout([desk, { ...squadObjectOf(rect, AUTO_ID) }]); // bounds, aisles, anchor and capacity
+      validateLayout([desk, { ...squadObjectOf(rect, AUTO_ID) }]);
       return true;
     } catch {
       return false;
     }
   });
-  // The side that faces the aisle at x = 0 first, then the most open floor; the generation order breaks ties.
   const aisleSide: Side = desk.x > 0 ? 'west' : 'east';
   const ranked = fitting.map(
     (c, i): { c: (typeof fitting)[number]; key: [number, number, number] } => ({
@@ -217,8 +196,8 @@ export function squadLayout(layout: Layout, deskId: string, count: number): Squa
 }
 
 /**
- * Zones for several supervisors at once, in the order given: each is placed with the earlier ones already on the
- * floor, so two auto squads never overlap. The result has an entry for every request (null where nothing fits).
+ * Each zone is placed with the earlier ones already on the floor, so two auto squads never overlap; every request has
+ * an entry (null where nothing fits).
  */
 export function placeSquads(
   layout: Layout,

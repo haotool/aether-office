@@ -1,11 +1,6 @@
 import { parseInline, type Span } from './markdown-inline.js';
 import { neutralizeHtml } from './text-html.js';
 
-/**
- * Pure. The block structure of an agent's reply: paragraphs, headings, nested bullet / numbered / task lists, tables,
- * quotes, rules and fenced code (an unclosed fence runs to the end, as in a reply that is still streaming). Output is
- * data for a renderer to turn into elements, so nothing a reply says is ever HTML.
- */
 type Align = 'left' | 'center' | 'right' | null;
 export type ListItem = { checked: boolean | null; blocks: MdBlock[] };
 export type MdBlock =
@@ -30,7 +25,6 @@ const indentOf = (line: string) => {
   const spaced = line.replace(/\t/g, '    ');
   return spaced.length - spaced.trimStart().length;
 };
-/** The line at `i`; blocks only ask inside the bounds they just checked. */
 const lineAt = (lines: string[], i: number) => lines[i] ?? '';
 const marker = (line: string) => BULLET.exec(line) ?? NUMBERED.exec(line);
 
@@ -52,7 +46,6 @@ function readListItemBody(
 ): { body: string[]; next: number } {
   const body = [text];
   let j = i + 1;
-  // The item continues over lines indented deeper than its marker, and over blank lines between them.
   while (j < lines.length) {
     const line = lineAt(lines, j);
     if (line.trim() === '') {
@@ -82,7 +75,6 @@ function skipListItemBlanks(lines: string[], i: number): number {
   return at;
 }
 
-/** The list that starts at `lines[at]`: its items (with their nested blocks) and the index just past it. */
 function readList(
   lines: string[],
   at: number,
@@ -111,7 +103,6 @@ function readList(
 
 type Read = { block: MdBlock; next: number };
 
-/** The fenced code that opens at `lines[at]`; an unclosed fence runs to the end. */
 function readFence(lines: string[], at: number, fence: RegExpExecArray): Read {
   const ticks = fence[1] ?? '';
   const lang = fence[2];
@@ -122,7 +113,6 @@ function readFence(lines: string[], at: number, fence: RegExpExecArray): Read {
   return { block: { type: 'code', text: code.join('\n'), ...(lang ? { lang } : {}) }, next: i + 1 };
 }
 
-/** The run of `>` lines that starts at `lines[at]`, parsed as blocks of their own. */
 function readQuote(lines: string[], at: number): Read {
   const quoted: string[] = [];
   let i = at;
@@ -131,7 +121,6 @@ function readQuote(lines: string[], at: number): Read {
   return { block: { type: 'quote', blocks: parseBlocks(quoted) }, next: i };
 }
 
-/** The table whose header is `lines[at]` and whose rule line is `rule`. */
 function readTable(lines: string[], at: number, rule: string): Read {
   const head = cells(lineAt(lines, at));
   const rows: Span[][][] = [];
@@ -153,7 +142,6 @@ function readTable(lines: string[], at: number, rule: string): Read {
   return { block, next: i };
 }
 
-/** The block that starts at `lines[i]`, or null when it is a plain paragraph line. */
 function readBlock(lines: string[], i: number): Read | null {
   const line = lineAt(lines, i);
   const fence = FENCE.exec(line);

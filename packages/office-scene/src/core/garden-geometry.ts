@@ -10,41 +10,28 @@ import { paletteAt } from './stalk-layout.js';
 import type { Stalk, Tier } from './stalk-types.js';
 import { itemAt, lastOf } from '../environment/checked.js';
 
-/** What a flower is, for the hover card. */
 export type BloomInfo = {
   genome: Genome;
-  /** The tier it grows on, or null for the great bloom on the spire. */
   tier: Tier | null;
-  /** The commit that seeded it. */
   sha: string;
-  /** What it stands for: the commits and the span of time of its tier, or of the whole history. */
   commits: number;
   from: number;
   to: number;
-  /** Set for a merge commit's small flower: what the commit says. */
   merge?: { subject: string; strand: number };
 };
 
 type Garden = {
-  /** Every petal, stem, twig, floret and ring of every flower: one mesh. */
   mesh: THREE.BufferGeometry;
-  /** Orbiting pollen and drifting spores: one points object (null on low quality). */
   pollen: THREE.BufferGeometry | null;
-  /** Indexed by the shader's flower index (a tier's index; the spire's is `tiers.length`, then one for each merge flower). */
   blooms: BloomInfo[];
-  /** The same index: the height of the braid a merge flower waits for before it opens, null for a tier's or the spire's. */
   climb: (number | null)[];
   triangles: number;
-  /** What the glass trees grew in all, for the budget. */
   twigs: { segments: number; buds: number };
 };
 
-/** The history at which the great bloom reaches its full size. */
 const FULL_HISTORY = 150;
 const STEM_SEGMENTS = 8;
-/** How far from the axis (metres) a tier's stem leaves the braid. */
 const BRAID_STAND = 1.2;
-/** Metres above the braid's tip the great bloom opens, over the clouds. */
 const GRAND_RISE = 6;
 const up = new THREE.Vector3(0, 1, 0);
 const bezier = (
@@ -63,17 +50,12 @@ const bezier = (
     .addScaledVector(d, t ** 3);
 };
 
-/** The tier's branch colour turned a little further round the colour wheel for each tier, so the crown is a spectrum, not one hue. */
 const tierColor = (t: Tier) => {
   const hsl = { h: 0, s: 0, l: 0 };
   new THREE.Color(paletteAt(t.strand)).getHSL(hsl);
   return new THREE.Color().setHSL((hsl.h + 0.09 * t.index) % 1, hsl.s, hsl.l);
 };
 
-/**
- * Where a tier's flower blooms: its stem leaves the braid at the tier's height and arcs outwards and upwards, the lower tiers
- * reaching further, so the flowers spread like a flowering tree that narrows towards the top. Each faces up and out.
- */
 function tierBloom(tier: Tier): { bloom: Bloom; stem: THREE.Vector3[] } {
   const genome = genomeOf({
     seed: tier.seed,
@@ -132,7 +114,6 @@ function stemOf(b: MeshBuilder, bloom: Bloom, stem: THREE.Vector3[]) {
   b.tube(stem, (t) => bloom.size * (bloom.grand ? 0.014 : 0.035) * (1 - 0.35 * t), 3, style);
 }
 
-/** Pollen orbiting each flower (mode 0) and spores drifting up past it (mode 1), as points the shader moves. */
 function pollenOf(blooms: Bloom[]): THREE.BufferGeometry | null {
   const orbit: number[] = [];
   const centre: number[] = [];
@@ -167,7 +148,6 @@ function pollenOf(blooms: Bloom[]): THREE.BufferGeometry | null {
   return g;
 }
 
-/** One flower per tier on its stem, with the twigs (shared out between the tiers that grow any). */
 function tierFlowers(b: MeshBuilder, stalk: Stalk, low: boolean) {
   const stands = stalk.tiers.map(tierBloom);
   const share = twigShare(stands.filter((s) => s.bloom.genome.twigs > 0).length);
@@ -194,7 +174,6 @@ function tierFlowers(b: MeshBuilder, stalk: Stalk, low: boolean) {
   return { blooms, infos, twigs };
 }
 
-/** The great bloom on the spire, seeded by every tier and as big as the history is long. */
 function crownFlower(
   b: MeshBuilder,
   stalk: Stalk,
@@ -235,11 +214,6 @@ function crownFlower(
   return { bloom, info };
 }
 
-/**
- * The garden: one flower per tier, grown from its first commit's hash, and a great bloom on the spire whose size follows the
- * length of the history. A few tiers (those with merges, or with parallel branches) also put out glass twigs ending in buds.
- * One mesh and one points object whatever the number of flowers. Pure given the stalk.
- */
 export function gardenOf(stalk: Stalk, low: boolean): Garden | null {
   if (!stalk.tiers.length) return null;
   const b = new MeshBuilder();
@@ -248,7 +222,6 @@ export function gardenOf(stalk: Stalk, low: boolean): Garden | null {
   blooms.push(crown.bloom);
   infos.push(crown.info);
   const climb: (number | null)[] = infos.map(() => null);
-  // A small flower for each recent merge, in the strand's own glass; none on low quality.
   for (const { bloom, node } of low ? [] : mergeStands(stalk, infos.length)) {
     infos.push({
       genome: bloom.genome,

@@ -143,7 +143,6 @@ describe('signals', () => {
     for (const input of [{}, { prompt: 'hello' }, { title: 'fix it' }, { title: 'bug' }]) {
       expect(classifySession(input)).toMatchObject({ role: 'generalist', department: 'product' });
     }
-    // two roles level with each other are no answer either
     expect(classifySession({ prompt: 'update the tests and the docs' }).role).toBe('generalist');
   });
 
@@ -187,7 +186,7 @@ describe('stability', () => {
     let state: Settled = settle(undefined, frontend, 0).state;
     state = settle(state, backend, 20_000).state;
     expect(state.role).toBe('frontend');
-    state = settle(state, backend, 21_000).state; // too soon to count as another look
+    state = settle(state, backend, 21_000).state;
     state = settle(state, backend, 22_000).state;
     expect(state.role).toBe('frontend');
   });

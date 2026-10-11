@@ -30,7 +30,6 @@ type Entry = {
   commitSha: string | null;
 };
 
-/** The reference fields of a proposal that were filled in. */
 function filledReferences(data: FormData) {
   return Object.fromEntries(
     ['workId', 'artifactId', 'commitSha'].flatMap((key) =>
@@ -39,11 +38,9 @@ function filledReferences(data: FormData) {
   );
 }
 
-/** Runs the knowledge commands; the error and busy flag are shared by the cards and the proposal form. */
 function useKnowledgeActions(projectId: string, refetch: () => Promise<unknown>) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  /** Runs one command and refreshes the list; true when it succeeded. */
   const act = async (command: () => Promise<unknown>) => {
     setBusy(true);
     setError('');
@@ -191,7 +188,6 @@ function EntryCard({
 
 type Problem = ReturnType<typeof useFormCheck>['problem'];
 
-/** The optional links of a proposal: the work, the artifact and the commit it came from. */
 function ReferenceFields({ workItems, problem }: { workItems: Work[]; problem: Problem }) {
   const t = useT();
   return (
@@ -266,7 +262,6 @@ function ProposeModal({
   );
 }
 
-/** The entries that match the search: loading, the error, the cards or the empty state. */
 function EntryList({
   query,
   canApprove,

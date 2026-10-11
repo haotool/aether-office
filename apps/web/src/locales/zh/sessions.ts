@@ -1,8 +1,11 @@
-/** The sessions words, in Traditional Chinese. */
 export const zhSessions = {
   sessionsHint:
     '這台電腦上所有 Claude 與 Codex session：搜尋、篩選、續接或分叉，以及它們啟動的開發伺服器。',
   sessionsSearch: '搜尋標題、repo、分支、職位、模型…',
+  sessionsNone: '還沒有本機 session',
+  sessionsNoneHint: '在專案資料夾的終端機啟動 claude 或 codex，幾秒內就會出現在這裡。',
+  sessionsNoMatch: '沒有符合篩選條件的 session',
+  sessionsShowAll: '顯示全部 session',
   allDepartments: '全部部門',
   runningOnly: '只看執行中',
   zombieHint: '已結束但沒人收尾的子進程；要清掉它，是它的父進程（這個 session）需要結束或收尾。',

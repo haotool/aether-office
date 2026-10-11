@@ -67,7 +67,6 @@ function RequestReviewForm({
   );
 }
 
-/** The review runs started so far, and the reviews they produced. */
 function ReviewOutcomes({ data, agents }: { data: ReviewRuns; agents: Snapshot['agents'] }) {
   return (
     <>

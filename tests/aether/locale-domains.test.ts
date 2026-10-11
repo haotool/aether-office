@@ -54,8 +54,6 @@ import { squadZh } from '../../apps/web/src/locales/squad-zh.js';
 import { en } from '../../apps/web/src/locales/en.js';
 import { zh } from '../../apps/web/src/locales/zh.js';
 
-// Every domain module of the locale tables has the same keys in both languages, no key lives in two modules, and
-// the composed `en` and `zh` hold exactly the union of the modules.
 const DOMAINS: [string, object, object][] = [
   ['agents', enAgents, zhAgents],
   ['approvals', enApprovals, zhApprovals],

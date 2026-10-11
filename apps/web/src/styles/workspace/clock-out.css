@@ -1,4 +1,3 @@
-/* The "clock out" dialog: pick the long-idle sessions, confirm, read each one's result (features/ClockOut.tsx). */
 .clock-out {
   display: grid;
   gap: var(--space-12);

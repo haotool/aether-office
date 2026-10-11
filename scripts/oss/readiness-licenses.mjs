@@ -1,4 +1,3 @@
-// Licence and documentation-link checks of the publishing-readiness check.
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { PERMISSIVE, STRONG_COPYLEFT } from './readiness-config.mjs';
@@ -23,7 +22,6 @@ function lockfilePackages(root) {
   return [...out].sort();
 }
 
-/** Reads the license text next to a package that declares no `license` field. */
 function sniffLicenseFile(dir) {
   const file = readdirSync(dir).find((f) => /^licen[sc]e(\.(md|txt))?$/i.test(f));
   const text = file ? readFileSync(path.join(dir, file), 'utf8').slice(0, 3000) : '';
@@ -83,8 +81,8 @@ export function checkLicenses(root, files) {
   const index = new Map(
     readdirSync(store).map((entry) => [entry.replace(/_.*$/, ''), path.join(store, entry)]),
   );
-  const notices = existsSync(path.join(root, 'THIRD_PARTY_NOTICES.md'))
-    ? readFileSync(path.join(root, 'THIRD_PARTY_NOTICES.md'), 'utf8')
+  const notices = existsSync(path.join(root, 'docs/legal/THIRD_PARTY_NOTICES.md'))
+    ? readFileSync(path.join(root, 'docs/legal/THIRD_PARTY_NOTICES.md'), 'utf8')
     : '';
   const problems = [];
   const reported = new Set();
@@ -93,7 +91,7 @@ export function checkLicenses(root, files) {
     const at = entry.lastIndexOf('@');
     const [name, version] = [entry.slice(0, at), entry.slice(at + 1)];
     const found = installedLicense(index, name, version);
-    if (!found) continue; // optional or other-platform package that is not installed
+    if (!found) continue;
     counts.set(found, (counts.get(found) ?? 0) + 1);
     const options = found.replace(/[()]/g, '').split(/\s+(?:OR|AND)\s+/);
     if (options.some((o) => PERMISSIVE.test(o.trim()))) continue;
@@ -104,7 +102,9 @@ export function checkLicenses(root, files) {
     reported.add(name);
     if (options.every((o) => STRONG_COPYLEFT.test(o))) problems.push(`fail: ${entry} is ${found}`);
     else if (!noted)
-      problems.push(`warn: ${entry} is ${found} and is not named in THIRD_PARTY_NOTICES.md`);
+      problems.push(
+        `warn: ${entry} is ${found} and is not named in docs/legal/THIRD_PARTY_NOTICES.md`,
+      );
   }
   const summary = `${packages.length} locked packages; ${[...counts]
     .sort((a, b) => b[1] - a[1])

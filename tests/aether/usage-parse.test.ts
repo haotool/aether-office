@@ -95,9 +95,9 @@ describe('Claude transcripts', () => {
       state,
       buffer(
         claudeLine('1', '2026-10-07T01:00:00.000Z', { i: 1, o: 1 }),
-        claudeLine('2', '2026-10-07T01:03:00.000Z', { i: 1, o: 1 }), // +3 min: counted
-        claudeLine('3', '2026-10-07T01:20:00.000Z', { i: 1, o: 1 }), // +17 min: an idle break
-        claudeLine('4', '2026-10-07T01:21:00.000Z', { i: 1, o: 1 }), // +1 min: counted
+        claudeLine('2', '2026-10-07T01:03:00.000Z', { i: 1, o: 1 }),
+        claudeLine('3', '2026-10-07T01:20:00.000Z', { i: 1, o: 1 }),
+        claudeLine('4', '2026-10-07T01:21:00.000Z', { i: 1, o: 1 }),
       ),
       utc,
     );
@@ -142,7 +142,6 @@ describe('Claude messages seen twice', () => {
     parseChunk(original, lines, utc, { book, owner: 'f1' });
     parseChunk(copy, lines, utc, { book, owner: 'f2' });
     expect(totals(copy)).toMatchObject({ req: 0, i: 0, o: 0 });
-    // A copy that goes on past the original counts only what is new.
     parseChunk(copy, buffer(claudeLine('c', at, u)), utc, { book, owner: 'f2' });
     expect(totals(copy)).toMatchObject({ req: 1, i: 3 });
     book.release(new Set(['f1']));
@@ -179,7 +178,6 @@ describe('Codex transcripts', () => {
       ),
       utc,
     );
-    // total 2500 input with 1900 cached → 600 new; 160 output with 50 reasoning → 110 plain output
     expect(totals(state)).toMatchObject({ i: 600, cr: 1900, o: 110, r: 50, req: 2 });
     expect(state.days['2026-10-07']!.m).toEqual({ 'gpt-5.5': 600 + 110 + 50 });
   });
@@ -211,8 +209,8 @@ describe('Codex transcripts', () => {
       state,
       buffer(
         codexCount(t(1), usage(5000, 0, 500, 0), usage(5000, 0, 500, 0)),
-        codexCount(t(2), usage(900, 0, 40, 0), usage(900, 0, 40, 0)), // reset
-        codexCount(t(3), usage(1500, 0, 90, 0), usage(600, 0, 50, 0)), // continues from the new total
+        codexCount(t(2), usage(900, 0, 40, 0), usage(900, 0, 40, 0)),
+        codexCount(t(3), usage(1500, 0, 90, 0), usage(600, 0, 50, 0)),
       ),
       utc,
     );
@@ -238,7 +236,7 @@ describe('Codex transcripts', () => {
         codexContext(t(0), 'gpt-5.5'),
         codexTool(t(0)),
         codexTool(t(0), 'custom_tool_call'),
-        codexTool(t(0), 'function_call_output'), // an output is not a call
+        codexTool(t(0), 'function_call_output'),
         codexCount(t(1), usage(100, 0, 10, 0), usage(100, 0, 10, 0)),
         codexContext(t(2), 'gpt-5.5-mini'),
         codexCount(t(3), usage(300, 0, 30, 0), usage(200, 0, 20, 0)),
@@ -358,7 +356,7 @@ describe('Claude lines the byte fast path does not match', () => {
     const state = read(...lines);
     expect(state.fallbacks).toBe(0);
     expect(totals(state).req).toBe(500);
-    parseChunk(state, buffer(claudeLine('next', at, { i: 1, o: 1 })), utc); // warm: only new lines are read
+    parseChunk(state, buffer(claudeLine('next', at, { i: 1, o: 1 })), utc);
     expect(state.fallbacks).toBe(0);
   });
 });

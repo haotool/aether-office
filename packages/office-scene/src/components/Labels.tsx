@@ -4,10 +4,6 @@ import { Vector3, type Mesh } from 'three';
 import type { Agent } from '@aether/contracts';
 import type { Rect } from '../core/multi-view.js';
 
-/**
- * How much of a name tag shows by camera distance (the overview is about 60 away): close, the whole chip; beyond the
- * overview only the provider's mark and the status dot, which is all the width such a tag takes.
- */
 const NEAR_DISTANCE = 30;
 const FAR_DISTANCE = 85;
 const FAR_WIDTH = 44;
@@ -16,19 +12,15 @@ type LabelsProps = {
   labels: { id: string; x: number; y: number; z: number; width: number }[];
   elements: Map<string, HTMLElement>;
   selected: string | null;
-  /** Rectangles drawn over the canvas (the small live views): a tag under one is hidden, not drawn over its picture. */
   avoid?: RefObject<ReadonlyMap<string, Rect>>;
-  /** Rectangles drawn over the canvas this frame by the speech bubbles (see ProjectedSpeech): a tag under one is hidden too, except the selected one's. */
   covered?: RefObject<ReadonlyMap<string, Rect>>;
 };
 type Occupied = { x: number; y: number; width: number };
 
 const densityAt = (distance: number) =>
   distance < NEAR_DISTANCE ? 'near' : distance > FAR_DISTANCE ? 'far' : 'mid';
-/** Whether a projected depth is between the near and far planes. */
 const inDepth = (z: number) => z >= -1 && z <= 1;
 
-/** Whether a tag of `width` centred at (x, y) fits in view, clear of the rectangles drawn over the canvas and the tags placed before it. */
 function tagFits(
   x: number,
   y: number,
@@ -38,7 +30,7 @@ function tagFits(
   occupied: readonly Occupied[],
 ): boolean {
   return (
-    x - width / 2 > 0 && // the whole tag fits, not just its centre
+    x - width / 2 > 0 &&
     x + width / 2 < size.width &&
     y > 55 &&
     y < size.height - 30 &&
@@ -65,7 +57,7 @@ export function ProjectedLabels({ labels, elements, selected, avoid, covered }: 
       point.current.set(label.x, label.y, label.z);
       const distance = camera.position.distanceTo(point.current);
       const density = densityAt(distance);
-      element.dataset['density'] = density; // the tag's own CSS decides what each step shows
+      element.dataset['density'] = density;
       const shrunk =
         density === 'far' && label.id !== selected && element.classList.contains('scene-label');
       const width = shrunk ? FAR_WIDTH : label.width;
@@ -86,7 +78,6 @@ export function ProjectedLabels({ labels, elements, selected, avoid, covered }: 
   return null;
 }
 
-// What each activity looks like above a character's head. Only real states are drawn; offline has no beacon.
 const BEACON: Partial<Record<Agent['activity'], { color: string; size: number; pulse: boolean }>> =
   {
     working: { color: '#43e6df', size: 0.16, pulse: false },

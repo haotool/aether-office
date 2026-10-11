@@ -1,4 +1,3 @@
-/** The observe words, in English. */
 export const enObserve = {
   obNote:
     'Read only explicitly approved external sessions. Observed text is not completion evidence and cannot dispatch work or grant permissions.',

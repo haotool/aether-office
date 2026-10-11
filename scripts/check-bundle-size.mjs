@@ -1,5 +1,3 @@
-// Bundle-size budget for the web build: gzip size of the JavaScript the browser downloads. Run after `pnpm build`.
-// Budgets sit about 6% above today's sizes (823 KB total, 374 KB for the 3D engine chunk), so a new heavy dependency or an accidental eager import fails here.
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';

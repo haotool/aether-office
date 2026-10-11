@@ -17,7 +17,7 @@ it('makes the pre-migration copy owner-only and keeps only the newest few', () =
   for (let i = 0; i < 5; i++) {
     const old = join(dir, `control.sqlite.pre-migration-old${i}.sqlite`);
     writeFileSync(old, 'x');
-    utimesSync(old, 1_000 + i, 1_000 + i); // seconds since the epoch: all older than the new copy
+    utimesSync(old, 1_000 + i, 1_000 + i);
   }
   writeFileSync(join(dir, 'unrelated.sqlite'), 'x');
   backupBeforeMigration(sqlite, file);

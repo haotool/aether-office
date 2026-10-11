@@ -1,5 +1,3 @@
-// Area 6: performance budgets. Measured from the web build in apps/web/dist (run `pnpm build` first). Budgets are read
-// from scripts/check-bundle-size.mjs and docs/design-system.md; a measurement that needs a GPU run is reported as not run.
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
@@ -14,17 +12,14 @@ export const FIRST_LOAD_BUDGET_KB = 200;
 
 export const gzipKb = (buffer) => gzipSync(buffer).length / 1024;
 
-/** What the server sends: the pre-compressed .br copy the build writes, else the gzip size of the file. */
 export const transferredKb = (file) =>
   existsSync(`${file}.br`) ? readFileSync(`${file}.br`).length / 1024 : gzipKb(readFileSync(file));
 
-/** The budget constants of the bundle-size gate, so there is one place that defines them. */
 export function bundleBudgets(script) {
   const read = (name) => Number(new RegExp(`const ${name}\\s*=\\s*(\\d+)`).exec(script)?.[1]);
   return { total: read('TOTAL_BUDGET_KB'), chunk: read('CHUNK_BUDGET_KB') };
 }
 
-/** Assets the entry page loads before anything else: scripts, modulepreloads and stylesheets of index.html. */
 export function firstLoadAssets(html) {
   const refs = [...html.matchAll(/<(?:script|link)\b[^>]*?(?:src|href)="([^"]+)"[^>]*>/g)]
     .filter(([tag]) => /type="module"|rel="modulepreload"|rel="stylesheet"/.test(tag))
@@ -49,8 +44,6 @@ function measureDist(root) {
     name: ref,
     kb: transferredKb(path.join(dist, ref.replace(/^\//, ''))),
   }));
-  // The language table is fetched right after the entry script (main.tsx awaits it before the first render), so the
-  // larger of the two is part of the first load even though index.html does not preload it.
   const tables = readdirSync(assets)
     .filter((n) => /^(en|zh)-[\w-]+\.js$/.test(n))
     .map((n) => ({ name: `/assets/${n}`, kb: transferredKb(path.join(assets, n)) }))

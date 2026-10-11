@@ -1,7 +1,6 @@
 /**
- * Pure. HTML character references in prose, decoded once. `&lt;` becomes an escaped `\<` so that a literal tag a reply
- * meant to show can never be read as a tag by a later pass (the output is Markdown, and the escape renders as `<`).
- * `&amp;` followed by what looks like another reference stays as it is, so decoding twice never decodes twice.
+ * HTML character references in prose, decoded once. `&lt;` becomes an escaped `\<` so that a literal tag a reply meant
+ * to show can never be read as a tag by a later pass.
  */
 const NAMED: Record<string, string> = {
   nbsp: ' ',
@@ -47,6 +46,5 @@ export function decodeEntities(text: string): string {
   });
 }
 
-/** Entities inside code are decoded too (an HTML `<code>` holds `&lt;`), but into the plain character. */
 export const decodeCodeEntities = (text: string): string =>
   decodeEntities(text).replace(/\\([<`\\])/g, '$1');

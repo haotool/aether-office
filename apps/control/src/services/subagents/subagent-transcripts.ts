@@ -19,10 +19,9 @@ import {
 import type { Outcomes } from '../runtime/tool-outcomes.js';
 
 /**
- * Claude subagents known from their own transcript files (`<session>/subagents/agent-<id>.jsonl`), so they are visible
- * without hooks and, with hooks, gain what hooks cannot say: label, token usage and the last words. A file quiet for
- * SESSION_ACTIVE_MS is taken as finished (the same rule as a Codex child rollout) and stays for the grace period. Tail reads are
- * bounded and cached by mtime and size; every text goes through `plainSummary` (redaction before any cut).
+ * Claude subagents known from their own transcript files, so they are visible without hooks; with hooks they also gain
+ * label, token usage and last words. A file quiet for SESSION_ACTIVE_MS counts as finished, as for a Codex child
+ * rollout.
  */
 const TAIL_BYTES = 128 * 1024;
 const MAX_TEXT_LINE_BYTES = 200 * 1024;
@@ -44,7 +43,6 @@ const at = (stamp: string | undefined) => {
   return Number.isFinite(t) ? t : null;
 };
 
-/** Pure. The last assistant text and the last tool call in a transcript tail. */
 function parseTail(data: Buffer): Tail {
   let text: string | null = null;
   for (const line of linesWithFromEnd(data, ['"type":"text"'])) {
@@ -90,9 +88,7 @@ async function readTail(f: SubagentFile): Promise<Tail> {
 }
 
 type SubagentContext = {
-  /** The parent transcript's tool outcomes (read on demand), for the `error` flag of a result. */
   outcomes: () => Promise<Outcomes>;
-  /** Ids a hook already reported as stopped: their result is shown at once, not after the quiet period. */
   finished: ReadonlySet<string>;
   budget: ReadBudget;
 };
@@ -139,7 +135,6 @@ const toolsOf = (usage: SubagentUsage, tail: Tail): NonNullable<Subagent['tools'
   lastAt: tail.tool?.at ?? null,
 });
 
-/** The subagents of a Claude session as its own files show them (live ones and those finished within the grace period). */
 export async function readSubagentTranscripts(
   sessionFile: string,
   now: number,
@@ -152,8 +147,8 @@ export async function readSubagentTranscripts(
 }
 
 /**
- * Joins what each source knows. A hook child keeps its own lifecycle (it saw the stop and the permission waits); the file
- * adds label, tokens and the last words (once it is finished). A file with no hook child, and a rollout child, stand alone.
+ * A hook child keeps its own lifecycle (it saw the stop and the permission waits); the file adds label, tokens and the
+ * last words once finished.
  */
 export function mergeSubagents(
   hooked: readonly Subagent[],

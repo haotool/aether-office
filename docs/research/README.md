@@ -3,14 +3,14 @@
 AETHER OFFICE was designed after studying 27 public projects in the same space (agent orchestrators, session observers,
 terminal multiplexers, agent protocols). This folder keeps the evidence.
 
-- `repo-selection-2026-10-01/` is the comparison of the 27 projects (report, matrix, source index). The report is written in
-  Traditional Chinese.
+- `repo-selection-2026-10-01/` is the comparison of the 27 projects (report, matrix, source index). The
+  [report](repo-selection-2026-10-01/REPORT.md) is written in Traditional Chinese.
 - `SOURCES.json` pins the exact commits, licenses and the parts read of the projects studied most closely.
 
 ## What was taken, and how
 
 Nothing was copied from a project whose license forbids it. Ideas were adopted and the code written here; where code was adapted it
-is credited in [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md).
+is credited in [THIRD_PARTY_NOTICES.md](../legal/THIRD_PARTY_NOTICES.md).
 
 | Source                      | License    | Used for                                                                                                      |
 | --------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------- |

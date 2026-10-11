@@ -4,7 +4,6 @@ import type { Quality } from '../scene/scene-types.js';
 import { LIFE_RULES, type LifeRule } from './registry.js';
 import { TIER, type LifeContext, type LifePrefs, type LifeSignal } from './signals.js';
 
-/** One effect on show: what started it, where, and for how long. */
 export type LifeCue = {
   key: string;
   rule: LifeRule['id'];
@@ -13,14 +12,10 @@ export type LifeCue = {
   floor: number | null;
   startedAt: number;
   durationMs: number;
-  /** Drives every seeded choice of the effect (side, variant, jitter), so the same cue always looks the same. */
   seed: number;
-  /** The signal's count; for an outcome without one, 1 when it succeeded and 0 when it did not. */
   value: number;
-  /** For a group effect: the members it stands over. */
   group: readonly string[];
   aria: string;
-  /** A contact sheet frame: hold the effect at this many ms and never expire. */
   frozenT?: number;
 };
 
@@ -28,11 +23,8 @@ export type LifeState = {
   live: readonly LifeCue[];
   /** Signals already handled, by key, with when: so a snapshot that repeats one never replays it. */
   seen: Readonly<Record<string, number>>;
-  /** When each rule last started, per its cooldown scope. */
   last: Readonly<Record<string, number>>;
-  /** How many eligible triggers each (member, rule) has had: the `n` of the seeded draw. */
   eligible: Readonly<Record<string, number>>;
-  /** When the arbitrated cues of the last minute started. */
   starts: readonly number[];
 };
 export const emptyLifeState: LifeState = { live: [], seen: {}, last: {}, eligible: {}, starts: [] };
@@ -40,23 +32,18 @@ export const emptyLifeState: LifeState = { live: [], seen: {}, last: {}, eligibl
 export type ScheduleEnv = {
   quality: Quality;
   reducedMotion: boolean;
-  /** The rules to read; the registry's own unless a test brings others. */
   rules?: readonly LifeRule[];
 };
 
 /** A signal older than this when first seen is history, not news: a page load never replays it as a burst. */
 export const STALE_MS = 30_000;
 const SEEN_MS = 60_000;
-/** The arbiter: at most one effect per member, two per floor, and three starts in any minute in the whole building. */
 export const PER_FLOOR = 2;
 export const PER_MINUTE = 3;
 const WINDOW_MS = 60_000;
-/** Out of view, an effect fires at half chance, so effects land where people look. */
 const OFF_SCREEN = 0.5;
-/** `rare` frequency halves the meme and social categories. */
 const RARE = 0.5;
 
-/** Is the rule allowed to show at all under these settings, this tier and this motion preference? */
 export function ruleEnabled(rule: LifeRule, prefs: LifePrefs, env: ScheduleEnv): boolean {
   if (TIER[env.quality] < TIER[rule.minTier]) return false;
   if (env.reducedMotion && rule.reduced === 'none') return false;
@@ -75,7 +62,6 @@ const chanceOf = (rule: LifeRule, prefs: LifePrefs, ctx: LifeContext, member: st
   return rule.chance * rare * seen;
 };
 
-/** The cooldown's scope key: a rule per member, per floor, or in the whole building. */
 const cooldownKey = (rule: LifeRule, member: string | null, floor: number | null) =>
   rule.scope === 'member'
     ? `${rule.id}:${member}`
@@ -83,7 +69,6 @@ const cooldownKey = (rule: LifeRule, member: string | null, floor: number | null
       ? `${rule.id}:f${floor}`
       : rule.id;
 
-/** The cue a rule starts for a signal: where, for how long, its seed and value, who is in a group effect, and what is announced. */
 function cueOf(
   rule: LifeRule,
   signal: LifeSignal,
@@ -163,7 +148,7 @@ function applySignal(
 /**
  * Takes the signals the page saw and decides which effects start now. Pure: the same state, signals, time, settings and
  * office always give the same cues. A cue is held back by its settings and tier, by the honesty rule (an effect that
- * claims a result needs a real one), by its cooldown, by its seeded chance, and by the arbiter.
+ * claims a result needs a real one), its cooldown, its seeded chance and the arbiter.
  */
 export function schedule(
   prev: LifeState,
@@ -213,11 +198,6 @@ function admitted(
   );
 }
 
-/**
- * The cues of a contact sheet frame (`?preview=life&effect=a,b:0&t=1500`): each named effect held at `t` ms on a member,
- * if its settings, tier and motion preference let it show, with none of the cooldowns, chances or arbiter. A group effect
- * stands over that one member.
- */
 export function previewCues(
   effects: readonly string[],
   t: number,

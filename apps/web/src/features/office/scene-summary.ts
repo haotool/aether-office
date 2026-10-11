@@ -1,7 +1,6 @@
 import type { Agent } from '@aether/contracts';
 import { fill, translate, type Locale } from '../../lib/i18n/i18n.js';
 
-/** The office in a sentence for a person who cannot see the canvas: how many characters, on how many floors, how many busy or waiting. */
 export function sceneSummary(
   agents: readonly Agent[],
   floorOf: (agent: Agent) => number,

@@ -7,7 +7,6 @@ const agents = (n: number): Agent[] =>
   Array.from({ length: n }, (_, i) => ({ id: `local:a${i}` }) as Agent);
 
 const SITTER_Z = 0.86;
-/** Where each seated member stands: the desk's own frame, the member at +z. */
 const standing = (layout: NonNullable<ReturnType<typeof mergeLayout>>) =>
   layout.objects.flatMap((o) =>
     o.agentId ? [{ id: o.agentId, floor: o.floor ?? 0, x: o.x, z: o.z + SITTER_Z }] : [],

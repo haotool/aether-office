@@ -48,7 +48,6 @@ type CaptionFacts = {
   attention?: Readonly<Record<string, string>> | undefined;
 };
 
-/** What the page says a member is doing, else why the camera is on them. */
 function closeupDoing(shot: Shot, id: string, { zh, doing, attention }: CaptionFacts) {
   const said = (shot.reason === 'attention' ? attention?.[id] : undefined) ?? doing?.[id];
   if (said !== undefined) return said;
@@ -57,7 +56,6 @@ function closeupDoing(shot: Shot, id: string, { zh, doing, attention }: CaptionF
     : (zh ? REASON_ZH : REASON_EN)[shot.reason];
 }
 
-/** The caption's words: a close-up names the member and what they do, a pair the two and the kind of message, a sweep the floor. */
 function shotText(shot: Shot, facts: CaptionFacts): string {
   const { zh, agents } = facts;
   const name = (id: string | undefined) => agents.find((a) => a.id === id)?.name ?? '';
@@ -69,7 +67,6 @@ function shotText(shot: Shot, facts: CaptionFacts): string {
   return `${shot.floor + 1}F · ${zh ? DEPARTMENTS[shot.floor]?.zh : DEPARTMENTS[shot.floor]?.en}`;
 }
 
-/** What the camera is on, in one short line: who, and what they are doing or to whom they are talking. */
 export function ShotCaption({ zh, shot, agents, doing, attention }: CaptionFacts & { shot: Shot }) {
   const text = shotText(shot, { zh, agents, doing, attention });
   return (
@@ -80,7 +77,6 @@ export function ShotCaption({ zh, shot, agents, doing, attention }: CaptionFacts
   );
 }
 
-/** Which floor is shown (or the whole building), with its head count and how many are working. */
 export function FloorHud({
   zh,
   exploded,
@@ -117,8 +113,6 @@ export function FloorHud({
   );
 }
 
-// What the person chose last time; failing that, open on a screen with room for it and closed on a phone, where it
-// would cover the scene.
 const rememberedOpen = () => {
   try {
     const saved = localStorage.getItem('aether-building-panel');
@@ -136,28 +130,23 @@ type BuildingPanelProps = {
   exploded: boolean;
   follow: boolean;
   perFloor: readonly FloorCount[];
-  /** Each floor's KPIs, when the page has them: shown under the deck's name. */
   kpi?: readonly (FloorKpiBadge | null)[] | undefined;
   onFloor: (floor: number) => void;
   onExplode: () => void;
   onFollow: () => void;
-  /** Plays the first-visit tour again (absent when the page has no tour). */
   onReplayIntro?: (() => void) | undefined;
 };
 
 type DeckSlabProps = {
   deck: (typeof DEPARTMENTS)[number];
   zh: boolean;
-  /** The deck the camera is on. */
   current: boolean;
-  /** The deck is the current one and the building is not exploded. */
   highlighted: boolean;
   entry: FloorCount;
   badge: FloorKpiBadge | null | undefined;
   onFloor: (floor: number) => void;
 };
 
-/** One deck of the switcher: its floor number, name, member count, a row of pips for how many work, and its KPIs. */
 function DeckSlab({ deck: d, zh, current, highlighted, entry, badge, onFloor }: DeckSlabProps) {
   const lit = entry.total
     ? Math.max(entry.working ? 1 : 0, Math.round((entry.working / entry.total) * PIPS))
@@ -182,7 +171,6 @@ function DeckSlab({ deck: d, zh, current, highlighted, entry, badge, onFloor }: 
   );
 }
 
-/** The decks from the top floor down, one slab each. */
 function DeckList({
   zh,
   floor,
@@ -210,7 +198,6 @@ function DeckList({
   );
 }
 
-/** Whether the panel is open, remembered between visits (a private window just forgets). */
 function useRememberedOpen(): [boolean, () => void] {
   const [open, setOpen] = useState(rememberedOpen);
   const toggle = () =>
@@ -235,7 +222,6 @@ type PanelToolsProps = {
   onHelp: () => void;
 };
 
-/** The panel's three switches: the exploded view, the director, and the key help. */
 function PanelTools({
   zh,
   exploded,
@@ -261,7 +247,6 @@ function PanelTools({
   );
 }
 
-/** The floor switcher: one slab per department, the exploded view, the tour and the key help. */
 export function BuildingPanel(props: BuildingPanelProps) {
   const { zh, onReplayIntro } = props;
   const t = sceneT(zh);

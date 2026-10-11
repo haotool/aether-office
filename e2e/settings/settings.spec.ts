@@ -24,7 +24,7 @@ test.describe('on a desktop', () => {
       'aria-current',
       'location',
     );
-    await page.goBack(); // the address history works
+    await page.goBack();
     await expect(page).toHaveURL(/\/settings$/);
   });
 
@@ -34,7 +34,7 @@ test.describe('on a desktop', () => {
     await expect(page.locator('#s-data')).toBeInViewport();
     await page.goto('/settings#models');
     await expect(page.locator('#s-models')).toBeInViewport();
-    await page.goto('/settings/nonsense'); // an unknown name is the home, not an error
+    await page.goto('/settings/nonsense');
     await expect(page.getByRole('heading', { name: '設定', level: 1 })).toBeVisible();
   });
 
@@ -56,7 +56,7 @@ test.describe('on a desktop', () => {
     await page.keyboard.press('/');
     const box = page.getByRole('searchbox', { name: '搜尋設定' });
     await expect(box).toBeFocused();
-    await box.fill('theme'); // English words find the Chinese row
+    await box.fill('theme');
     await expect(page.getByRole('heading', { name: '介面外觀', level: 3 })).toBeVisible();
     await expect(page.getByRole('heading', { name: '介面語言', level: 3 })).toHaveCount(0);
     await box.fill('動態');
@@ -78,6 +78,7 @@ test.describe('on a desktop', () => {
     await page.getByRole('radio', { name: '高', exact: true }).click();
     await page.getByRole('radio', { name: '2D 列表' }).click();
     await page.getByRole('combobox', { name: '介面語言' }).selectOption('en');
+    await expect.poll(() => prefs(page)).toMatchObject({ locale: 'en' });
     await page.reload();
     await expect(page.getByRole('switch', { name: 'Reduce motion' })).toBeChecked();
     await expect(page.getByRole('switch', { name: 'Auto camera' })).not.toBeChecked();
@@ -185,7 +186,7 @@ test.describe('on a phone', () => {
     await expect(page).toHaveURL(/\/settings\/notifications/);
     await expect(page.getByRole('heading', { name: '通知與核准', level: 1 })).toBeVisible();
     await expect(page.getByRole('switch', { name: '通知' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: '介面語言' })).toHaveCount(0); // only this group
+    await expect(page.getByRole('heading', { name: '介面語言' })).toHaveCount(0);
     await page.locator('.back-link').tap();
     await expect(page).toHaveURL(/\/settings(\?|$)/);
     await expect(nav(page)).toBeVisible();

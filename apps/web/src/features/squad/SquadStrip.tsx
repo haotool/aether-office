@@ -4,13 +4,8 @@ import type { SquadView } from '../feed/feed-squads.js';
 import { SubDot } from './SquadParts.js';
 import { rowName, squadSummary } from './squad-text.js';
 
-/** More chips than this and the rest are counted (the cards below list every subagent). */
 const MAX_CHIPS = 8;
 
-/**
- * The supervisor's conversation header, one line under it: its live subagents as chips with their status. A chip scrolls
- * to that subagent's card below the transcript and opens it; pressing it again lets go.
- */
 export function SquadStrip({
   view,
   picked,

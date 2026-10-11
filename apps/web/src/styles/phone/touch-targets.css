@@ -15,7 +15,6 @@ body {
   overscroll-behavior-y: none; /* a pull on the page must not move the 3D scene's page behind it */
 }
 
-/* Fingers: a button or field is drawn 36 to 40px and hit at 44px; a checkbox is reached through its row. */
 @media (pointer: coarse) {
   button,
   select,
@@ -30,7 +29,6 @@ body {
   .text-button {
     padding-inline: var(--space-6);
   }
-  /* A control may be drawn at 36 or 40px; a finger still gets 44px: an invisible area reaches past the edges. */
   .icon-button,
   .text-button,
   .primary,
@@ -79,7 +77,6 @@ body {
   }
 }
 
-/* Tables that stay tables scroll inside their own box and say so with an edge shadow. */
 .table-scroll {
   overflow-x: auto;
   max-width: 100%;

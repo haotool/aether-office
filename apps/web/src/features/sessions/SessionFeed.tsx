@@ -17,7 +17,6 @@ const HEADINGS: Record<FeedBucket, Key> = {
   idle: 'feedIdle',
 };
 
-/** Nothing to show: say what to do, in words (no picture). */
 function FeedEmpty() {
   const t = useT();
   return (
@@ -32,10 +31,6 @@ function FeedEmpty() {
   );
 }
 
-/**
- * The inbox: sessions grouped by what wants a person first, idle ones folded away. A session with subagents is a tree:
- * its row, and its subagents nested under it (they are never rows of their own).
- */
 export function SessionFeed({ feed, onOpen }: { feed: Feed; onOpen: (agentId: string) => void }) {
   const t = useT();
   const squadOpen = useSquadOpen();

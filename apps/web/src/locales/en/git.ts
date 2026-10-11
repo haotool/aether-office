@@ -1,4 +1,3 @@
-/** The git words, in English. */
 export const enGit = {
   gitClean: 'Clean merged, clean worktrees',
   gitCleanExplain:

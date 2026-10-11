@@ -9,7 +9,7 @@ it('reads both windows of the latest reading, shortest first, with the plan and 
   const tail = buffer(
     '{"cut line that',
     codexCount('2026-10-07T01:00:00.000Z', usage, usage, true),
-    codexCount('2026-10-07T01:05:00.000Z', usage, usage), // no limits on this one: the earlier reading stands
+    codexCount('2026-10-07T01:05:00.000Z', usage, usage),
   );
   expect(parseCodexLimits(tail, NOW)).toEqual({
     plan: 'pro',

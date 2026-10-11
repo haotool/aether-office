@@ -19,7 +19,6 @@ const lines = (prefix: string, text: string) =>
     .map((l) => `${prefix} ${l}`)
     .join('\n');
 
-/** One edit as a small diff, flagged when it replaces every occurrence; `of` is set when there are several edits. */
 function editBlock(
   edit: Record<string, unknown>,
   of: { n: number; total: number } | null,
@@ -47,9 +46,9 @@ function fileChange(o: Record<string, unknown>, path: string) {
 }
 
 /**
- * Pure. What a person sees of a tool call they are asked to allow: a one-line summary and a bounded preview (the
- * command, or the change as a small diff). Redacted and truncated here, so the raw input is never stored or sent on.
- * `needsReview` is true whenever the summary line is not the whole call, so a compact view cannot offer Allow for it.
+ * What a person sees of a tool call they are asked to allow: a one-line summary and a bounded preview, redacted and
+ * truncated so the raw input is never stored or sent on. `needsReview` is true whenever the summary is not the whole
+ * call, so a compact view cannot offer Allow for it.
  */
 export function summarize(
   tool: string,

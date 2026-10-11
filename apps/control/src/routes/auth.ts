@@ -16,7 +16,6 @@ import type { RouteContext } from './context.js';
 
 type Guards = ReturnType<typeof signInGuards>;
 
-/** The session cookie a sign-in sets, and the per-caller limit on failed sign-ins. */
 function signInGuards({ control, origin, attempts }: RouteContext) {
   // `request.protocol` is https only when a proxy that is trusted (AETHER_TRUST_PROXY) says it terminated TLS.
   const startCookie = (
@@ -32,7 +31,6 @@ function signInGuards({ control, origin, attempts }: RouteContext) {
       secure: origin.protocol === 'https:' || request.protocol === 'https',
       maxAge: Math.floor(ttlMs / 1000),
     });
-  /** Counts failed attempts per caller: the same limit for a typed token and a scanned code. */
   const limited = (key: string) => {
     const now = control.ctx.now();
     const last = attempts.get(key);
@@ -52,8 +50,7 @@ function loginRoute({ app, control, attempts }: RouteContext, { startCookie, lim
     const key = request.ip;
     limited(key);
     const { token, remember } = z
-      .object({ token: z.string().min(32).max(256), remember: z.boolean().optional() })
-      .strict()
+      .strictObject({ token: z.string().min(32).max(256), remember: z.boolean().optional() })
       .parse(request.body);
     const ttl = remember ? REMEMBERED_SESSION_MS : undefined;
     const session = login(control.ctx, token, ttl);
@@ -72,7 +69,6 @@ function pairingRoutes(
   { app, control, origin, options, attempts, pairings, actor }: RouteContext,
   { startCookie, limited }: Guards,
 ) {
-  // Signing a phone in by scanning (services/pairing.ts): a signed-in person asks for a code; the phone redeems it once.
   app.post('/api/pairings', async (request) => {
     const who = actor(request);
     if (!['owner', 'operator'].includes(who.role)) throw new DomainError('FORBIDDEN', 403);
@@ -82,7 +78,6 @@ function pairingRoutes(
       id: made.id,
       expiresAt: made.expiresAt,
       ttlSeconds: PAIRING_TTL_MS / 1000,
-      // Without LAN access there is no address a phone could reach: the page says how to turn it on.
       lan: !!options.lan,
       links: await pairingLinks(origins, made.code),
     };
@@ -95,10 +90,7 @@ function pairingRoutes(
   app.post('/api/pairings/redeem', async (request, reply) => {
     const key = request.ip;
     limited(key);
-    const { code } = z
-      .object({ code: z.string().min(16).max(64) })
-      .strict()
-      .parse(request.body);
+    const { code } = z.strictObject({ code: z.string().min(16).max(64) }).parse(request.body);
     const session = openSession(
       control.ctx,
       identityActor(control.ctx, pairings.redeem(code)),
@@ -118,15 +110,14 @@ function pairingRoutes(
 
 function sessionRoutes({ app, control, actor }: RouteContext, { limited }: Guards) {
   app.get('/api/session', async (request) => ({ actor: actor(request), mode: control.ctx.mode }));
-  // A page that is signed in but lost its CSRF token (a closed tab, an iOS-discarded tab) asks for a new one. The session
-  // cookie is the credential (HttpOnly, SameSite=Strict, the Host and Origin checks of every request), so a bearer token
-  // never counts, and the request must name its Origin: a cross-site page cannot send the cookie nor read the answer.
+  // A page that lost its CSRF token (a closed or iOS-discarded tab) may ask for a new one. The session cookie is the
+  // credential, so a bearer token never counts; a cross-site page can neither send the cookie nor read the answer.
   app.post('/api/session/csrf', async (request) => {
     if (request.headers['authorization']) throw new DomainError('COOKIE_SESSION_REQUIRED', 403);
     if (!request.headers.origin) throw new DomainError('ORIGIN_FORBIDDEN', 403);
     const session = request.cookies['aether_session'];
     if (!session) throw new DomainError('AUTH_REQUIRED', 401);
-    sessionActor(control.ctx, session); // an unknown or expired session is a 401 and is not counted below
+    sessionActor(control.ctx, session);
     limited(`csrf:${request.ip}`);
     const rotated = rotateCsrf(control.ctx, session);
     request.log.info({ event: 'session.csrf.rotated' }, 'a browser session got a new CSRF token');
@@ -142,7 +133,6 @@ function sessionRoutes({ app, control, actor }: RouteContext, { limited }: Guard
   });
 }
 
-/** Browser sign-in: a token becomes a cookie session; the session endpoint tells the page who it is. */
 export function authRoutes(context: RouteContext) {
   const guards = signInGuards(context);
   loginRoute(context, guards);

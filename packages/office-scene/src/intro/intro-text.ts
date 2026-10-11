@@ -3,11 +3,9 @@ import { sceneT } from '../i18n/scene-text.js';
 
 export type IntroCaptionKey = 'welcome' | 'history' | 'crown';
 
-/** Which caption a phase shows: the orbit welcomes, the rise names the history, the hold counts it. */
 export const captionKeyOf = (phase: IntroPhase): IntroCaptionKey =>
   phase === 'orbit' || phase === 'toExploded' ? 'welcome' : phase === 'rise' ? 'history' : 'crown';
 
-/** The words on screen (and read out once each by the live region). With no repository the crown has nothing to count. */
 export function introCaption(
   key: IntroCaptionKey,
   facts: { commits: number; tiers: number },

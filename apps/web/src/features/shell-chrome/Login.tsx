@@ -14,10 +14,6 @@ type LoginFormProps = {
   onLogin: (session: Session) => void;
 };
 
-/**
- * Opened from a pairing QR code: the code is in the address's fragment. It is taken out of the address bar before
- * anything else (so it is in no history, bookmark or screenshot), then swapped for a session. True while that runs.
- */
 function usePairingArrival(
   onLogin: (session: Session) => void,
   onFailed: (message: string) => void,
@@ -35,11 +31,10 @@ function usePairingArrival(
         latest.current.onFailed(latest.current.message);
         setPairing(false);
       });
-  }, [latest]); // once, on arrival
+  }, [latest]);
   return pairing;
 }
 
-/** The token field (and its problem, when the check found one) and the remember-this-device choice. */
 function TokenFields({ invalid }: { invalid: FieldErrors }) {
   const t = useT();
   return (
@@ -65,7 +60,6 @@ function TokenFields({ invalid }: { invalid: FieldErrors }) {
   );
 }
 
-/** The access token form: checks the fields, then signs in. */
 function LoginForm({ error, setError, onLogin }: LoginFormProps) {
   const t = useT();
   const whyNot = useWhy();

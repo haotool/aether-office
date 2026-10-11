@@ -17,22 +17,15 @@ import { groupStopper } from './process-control.js';
 import { processIdentity } from './process-identity.js';
 import type { ProviderResult } from './index.js';
 
-// Generic ACP client adapter. What it can do is decided by the agent's negotiated capabilities, not by
-// the fact that it speaks ACP: nothing is assumed beyond what `initialize` reports.
-
 type AcpVersions = {
-  /** ACP wire protocol version the agent selected during initialize. */
   wireProtocolVersion: number;
-  /** Wire version this client offered. */
   offeredProtocolVersion: number;
-  /** Semver of @agentclientprotocol/sdk in use. */
   sdkVersion: string;
   agent: { name: string; version: string } | null;
 };
 
 type AcpNegotiation = {
   versions: AcpVersions;
-  /** Only flags the agent actually advertised; unknown means false. */
   capabilities: {
     resume: boolean;
     image: boolean;
@@ -43,7 +36,6 @@ type AcpNegotiation = {
   authMethods: string[];
 };
 
-// Kept in step with the installed SDK by a test that reads its package.json.
 export const ACP_SDK_VERSION = '1.7.0';
 
 export function negotiationFrom(init: InitializeResponse): AcpNegotiation {
@@ -145,7 +137,6 @@ const outcomeOf = (stopReason: string): ProviderResult['outcome'] =>
   stopReason === 'end_turn' ? 'submitted' : stopReason === 'cancelled' ? 'cancelled' : 'failed';
 
 export class AcpAdapter {
-  /** What the agent advertised during the most recent run, for capability display. */
   negotiated: AcpNegotiation | null = null;
 
   constructor(
@@ -187,7 +178,6 @@ export class AcpAdapter {
     return { child, connection, close };
   }
 
-  /** Spawns the agent, runs `initialize` only, and reports what it advertises. No session, no model call. */
   async negotiate(signal: AbortSignal = new AbortController().signal): Promise<AcpNegotiation> {
     const { connection, close } = this.open(signal);
     try {
@@ -201,7 +191,6 @@ export class AcpAdapter {
   /** Each run owns and closes its own child process; present so all adapters share one shape. */
   close(): void {}
 
-  /** Approval is always the platform's human decision; with no mapping we select nothing. */
   private async decidePermission(
     request: RequestPermissionRequest,
     turnId: string,

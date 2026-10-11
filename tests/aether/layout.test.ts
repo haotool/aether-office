@@ -60,13 +60,13 @@ it('saving a layout is versioned, validated server-side, and bound to agents of 
         command('layout.save', layout(objects), f.projectId, version),
       );
     expect(save([desk('a', -10, -6, { agentId: f.senderId })], 0).result['version']).toBe(1);
-    expect(() => save([desk('a', -10, -6)], 0)).toThrow('VERSION_CONFLICT'); // stale editor
-    expect(() => save([desk('a', -10, -6), desk('b', -9.5, -6)], 1)).toThrow('LAYOUT_OVERLAP'); // the server re-validates what the editor allowed
+    expect(() => save([desk('a', -10, -6)], 0)).toThrow('VERSION_CONFLICT');
+    expect(() => save([desk('a', -10, -6), desk('b', -9.5, -6)], 1)).toThrow('LAYOUT_OVERLAP');
     expect(() =>
       save([desk('a', -10, -6, { agentId: '00000000-0000-4000-8000-000000000009' })], 1),
     ).toThrow('AGENT_NOT_FOUND');
     const stored = f.control.snapshot(f.owner.actor, f.projectId).layout;
-    expect(stored?.version).toBe(1); // every refusal left the saved layout alone
+    expect(stored?.version).toBe(1);
     expect(stored?.data.objects).toHaveLength(1);
   } finally {
     f.control.close();
@@ -84,7 +84,6 @@ it('a desk can be saved for a session AETHER only observes (a `local:` member), 
     expect(
       save([desk('seat', -10, -6, { agentId: 'local:claude:abc123' })], 0).result['version'],
     ).toBe(1);
-    // Anything else that is not a registered agent is refused: by the schema (a malformed id, a subagent) or the project.
     expect(() => save([desk('seat', -10, -6, { agentId: 'localx:abc' })], 1)).toThrow();
     expect(() => save([desk('seat', -10, -6, { agentId: 'local:claude:abc:sub:x' })], 1)).toThrow();
     expect(() =>

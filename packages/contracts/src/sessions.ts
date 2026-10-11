@@ -36,14 +36,12 @@ export const subagentSchema = z.object({
   id: z.string(),
   type: z.string(),
   lastSeen: z.number(),
-  // Where the facts come from: a hook record, a transcript file, or a Codex rollout.
   source: z.enum(['hook', 'transcript', 'rollout']).default('hook'),
   status: z.enum(['running', 'waiting_permission', 'finished', 'unknown']).default('unknown'),
   startedAt: z.number().nullable().default(null),
   endedAt: z.number().nullable().default(null),
   // Codex names its helpers; a short label, never free text from a prompt.
   nickname: z.string().max(40).nullable().default(null),
-  // Tool calls the subagent made (hook records only), with the last tool's name.
   tools: z
     .object({
       count: z.number().int().nonnegative(),
@@ -52,10 +50,7 @@ export const subagentSchema = z.object({
     })
     .nullable()
     .default(null),
-  // What the parent asked it to do, in a few words: the Task description, run through the text pipeline. Null when unknown.
   label: z.string().max(60).nullable().default(null),
-  // What it spent (transcript files only): new input, cache writes and output tokens, and the rate over the last minute
-  // measured between scans (0 until two samples exist).
   tokens: z
     .object({
       total: z.number().int().nonnegative(),
@@ -97,7 +92,6 @@ export const localSessionSchema = z.object({
       conflicts: z.number().int().nonnegative().default(0),
     })
     .nullable(),
-  // Canonical identity: sessions share a project when they share the Git common directory.
   worktree: z
     .object({ root: z.string(), main: z.string(), project: z.string(), linked: z.boolean() })
     .nullable(),
@@ -126,11 +120,9 @@ export const localSessionSchema = z.object({
     })
     .nullable(),
   subagents: z.array(subagentSchema),
-  // The title the provider itself gave the session (Claude ai-title, Codex thread_name); null when it has none.
   title: z.string().nullable(),
-  // Which engineering role the session's work belongs to, how sure that is (0 to 1) and why: the strongest reasons as
-  // short redacted `kind: detail` strings (a matched keyword, a kind of file or command), never the text they came from.
-  // Decided on the server; a session with no clear signal is a generalist.
+  // Which engineering role the session's work belongs to, how sure that is (0 to 1) and why: short redacted `kind:
+  // detail` strings, never the text they came from. Decided on the server; no clear signal means a generalist.
   classification: z.object({
     role: z.string(),
     department: z.string(),
@@ -145,15 +137,14 @@ export const localSessionSchema = z.object({
     // `[1m]` model or a context already past 200k). Null while unknown.
     contextWindow: z.number().nullable(),
     // How the window is known: the CLI's own figure (`observed`), a model catalog (`catalog`), a `[1m]` model id
-    // (`model`), Claude's 200k default (`assumed`: the transcript does not say), or 1M because the context already passed
-    // 200k (`inferred`). Null while the window is unknown; absent from an older control plane.
+    // (`model`), Claude's 200k default (`assumed`) or 1M because the context passed 200k (`inferred`). Null while
+    // unknown.
     contextWindowBasis: z
       .enum(['observed', 'catalog', 'model', 'assumed', 'inferred'])
       .nullable()
       .optional(),
     // Share of the window in use, 0 to 100, bounded; null while either side is unknown, never invented.
     contextPct: z.number().min(0).max(100).nullable(),
-    // When the CLI itself last wrote a compaction marker in the transcript tail (epoch ms); null when it has not.
     compactedAt: z.number().nullable(),
     // Tokens the session processed that the prompt cache did not already hold (cache reads are left out: the same
     // context is read again every turn, so counting it would make a long session look a hundred times bigger).
@@ -168,29 +159,20 @@ export const localSessionSchema = z.object({
       })
       .nullable(),
   }),
-  // Is an agent CLI process running for it? 'unknown' for Codex Desktop threads, which share one app server.
   process: z.enum(['running', 'none', 'unknown']),
-  // CPU (share of one core) and resident memory of the process behind it, when one was found.
   resources: z.object({ cpuPercent: z.number(), rssBytes: z.number() }).nullable(),
-  // How alive it is: working, waiting, long forgotten, or left without an owner; and when its process began
-  // (with the session, the identity a stop request must name) and how long nothing has happened in it.
   liveness: z.object({
     state: z.enum(['active', 'idle', 'dormant', 'orphaned', 'ended', 'unknown']),
     startedAt: z.number().nullable(),
     quietMs: z.number().nullable(),
-    // Finished processes under its process that nobody has collected: zombies, shown standing behind its seat.
     zombies: z.array(
       z.object({ pid: z.number().int(), startedAt: z.number(), program: z.string().nullable() }),
     ),
   }),
-  // Ports its process tree listens on: a dev server it started, for a preview link.
   ports: z.array(z.number().int()),
 });
 export type LocalSession = z.infer<typeof localSessionSchema>;
-// A session joined to the AETHER project whose root is its main checkout; null until that project exists.
 export type AttributedSession = LocalSession & { projectId: string | null };
-// A custom slash command or skill found for a session: what follows the slash (`team:review`), a one-line redacted
-// description, where it was found and what it is. Names and descriptions only, never the file.
 export type CustomCommand = {
   name: string;
   description: string;
@@ -206,7 +188,6 @@ export type ClaudeLimits = {
   plan: string | null;
   fiveHour: LimitWindow | null;
   sevenDay: LimitWindow | null;
-  /** When the numbers were fetched, and whether that is too long ago to still call current. */
   updatedAt: number;
   stale: boolean;
 };
@@ -232,40 +213,33 @@ export type ModelCatalog = {
 };
 export type ModelsResponse = { catalogs: ModelCatalog[] };
 
-// "Clock out": send the sessions that have sat idle for a day or more home in one request. The client names sessions by
-// the key the scanner gave them and the process start time it saw (never a pid); the server decides for each one.
 const DAY_MS = 24 * 60 * 60 * 1000;
 const CLOCK_OUT_MIN_IDLE_MS = DAY_MS;
 export { CLOCK_OUT_MAX_SESSIONS };
-export const clockOutRequestSchema = z
-  .object({
-    sessions: z
-      .array(
-        z
-          .object({
-            key: z.string().regex(/^(claude|codex):[A-Za-z0-9._-]{1,200}$/),
-            startedAt: z.number().int(),
-          })
-          .strict(),
-      )
-      .min(1)
-      .max(CLOCK_OUT_MAX_SESSIONS),
-    // Idle at least this long, checked again on the server against the session's own clock.
-    minIdleMs: z
-      .number()
-      .int()
-      .min(CLOCK_OUT_MIN_IDLE_MS)
-      .max(365 * DAY_MS),
-  })
-  .strict();
+export const clockOutRequestSchema = z.strictObject({
+  sessions: z
+    .array(
+      z.strictObject({
+        key: z.string().regex(/^(claude|codex):[A-Za-z0-9._-]{1,200}$/),
+        startedAt: z.number().int(),
+      }),
+    )
+    .min(1)
+    .max(CLOCK_OUT_MAX_SESSIONS),
+  minIdleMs: z
+    .number()
+    .int()
+    .min(CLOCK_OUT_MIN_IDLE_MS)
+    .max(365 * DAY_MS),
+});
 export type ClockOutRequest = z.infer<typeof clockOutRequestSchema>;
 export type ClockOutSkipReason =
-  | 'not_found' // the scanner no longer knows it
+  | 'not_found'
   | 'no_project'
   | 'forbidden'
   | 'not_running'
-  | 'active' // not idle long enough any more (or not idle at all): someone is working in it again
-  | 'changed' // not the process the person saw
+  | 'active'
+  | 'changed'
   | 'zombie'
   | 'own_ancestor';
 export type ClockOutItem =

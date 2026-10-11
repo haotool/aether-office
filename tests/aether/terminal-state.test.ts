@@ -38,7 +38,6 @@ describe('what an agent in a terminal is doing', () => {
   });
 
   it('is not fooled by prose that borrows the chrome words', () => {
-    // A settled answer that mentions the words, and a bullet that is not a spinner.
     expect(
       terminalAgentState(
         screen(
@@ -50,9 +49,7 @@ describe('what an agent in a terminal is doing', () => {
         ),
       ),
     ).toBe('idle');
-    // The effort footer has a dot and no gerund.
     expect(terminalAgentState(screen('⏺ ok', BAR, '❯', BAR, '● high · /effort'))).toBe('idle');
-    // A spinner with a reply between it and the prompt is history.
     expect(
       terminalAgentState(
         screen('✻ Cooking… (2s)', '⏺ Here is the answer', 'more text', BAR, '❯', BAR),

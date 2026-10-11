@@ -1,4 +1,3 @@
-// The scene's own words in Traditional Chinese: one line for every key of en.ts.
 import type { SceneKey } from './en.js';
 
 export const ZH: Record<SceneKey, string> = {

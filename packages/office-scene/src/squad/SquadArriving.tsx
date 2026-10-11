@@ -4,10 +4,6 @@ import type { Group } from 'three';
 import type { EmoteCue } from '../animals/Animal.js';
 import { arrivalAt, type Arrival, type ErrandPose } from './errand.js';
 
-/**
- * Moves its children along an arrival (see errand.ts): out of the core, to the pod, a turn to face the supervisor. The
- * children are told which clip to hold and, once there, to sit down. With no plan the member is simply seated.
- */
 export function Arriving({
   plan,
   startAt,

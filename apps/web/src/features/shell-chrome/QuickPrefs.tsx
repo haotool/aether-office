@@ -4,7 +4,6 @@ import { useT } from '../../ui/useT.js';
 import { PairPhoneButton } from '../integrations/ConnectPhone.js';
 import { QualitySelect, useLocaleToggle, useThemeToggle } from './PreferenceControls.js';
 
-/** Language, theme and 3D quality, at the foot of the drawer: the top bar has no room for them on a phone. */
 export function QuickPrefs({ canPair }: { canPair: boolean }) {
   const t = useT();
   const prefs = usePreferences();

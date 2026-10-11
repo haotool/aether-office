@@ -1,8 +1,3 @@
-/*
- * The settings kit (features/settings/kit.tsx): a row with its control, state chips, switch, segmented control,
- * command to copy, folds, skeleton and notice. A row lays itself out against the width of its group (a container
- * query), not the window's: the control sits at the right from 560px, and below the text when there is less room.
- */
 .ssection-body {
   container: srows / inline-size;
   position: relative;
@@ -11,7 +6,6 @@
   border-radius: var(--r-xl);
   background: color-mix(in srgb, var(--surface) 86%, transparent);
 }
-/* A hairline of light along the top edge, the way a glass panel catches it. */
 .ssection-body::before {
   content: '';
   position: absolute;
@@ -92,7 +86,6 @@
   }
 }
 
-/* The kinds of office-life moment: a name and its switch per line, in columns when the group is wide. */
 .skinds {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
@@ -119,7 +112,6 @@ mark {
   border-radius: var(--r-xs);
 }
 
-/* State, in a word and a mark. */
 .schip {
   display: inline-flex;
   align-items: center;
@@ -146,7 +138,6 @@ mark {
   color: var(--blue);
 }
 
-/* Switch: the native checkbox is the control (keyboard, forms, assistive technology), the track is drawn over it. */
 .switch {
   position: relative;
   flex: none;
@@ -155,7 +146,7 @@ mark {
 .switch::after {
   content: '';
   position: absolute;
-  inset: calc(-1 * var(--space-4)); /* a finger's 44px, past the drawn 36 */
+  inset: calc(-1 * var(--space-4));
 }
 .switch > input[type='checkbox'] {
   position: absolute;
@@ -221,7 +212,6 @@ mark {
   }
 }
 
-/* Segmented: a few exclusive choices, one tab stop, arrow keys inside. */
 .sseg {
   display: flex;
   gap: 0;
@@ -253,7 +243,6 @@ mark {
   }
 }
 
-/* A command to run: its own scrolling box, never the page's. */
 .copycmd {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

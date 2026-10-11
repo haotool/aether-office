@@ -240,7 +240,7 @@ describe('useSceneKeys', () => {
     press('f', { metaKey: true });
     press('x', { ctrlKey: true });
     press('w', { target: { tagName: 'INPUT', closest: () => null } });
-    press('a', { target: { tagName: 'DIV', closest: () => ({}) } }); // inside an action menu
+    press('a', { target: { tagName: 'DIV', closest: () => ({}) } });
     expect(calls).toEqual([]);
     expect(held.current.size).toBe(0);
   });

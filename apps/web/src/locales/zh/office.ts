@@ -1,4 +1,3 @@
-/** The office words, in Traditional Chinese. */
 export const zhOffice = {
   sceneFailed: '3D 無法載入，已切換至完整列表。',
   sceneLost: '裝置中斷了 3D 畫面。可以重新載入，或改用列表。',
@@ -19,7 +18,6 @@ export const zhOffice = {
   whyMix: '同時有',
   whyNone: '沒有明確訊號，歸為一般軟體工程師',
   layout: '辦公室配置',
-  editLayout: '編輯配置',
   object: '物件',
   rotate: '旋轉',
   remove: '移除',

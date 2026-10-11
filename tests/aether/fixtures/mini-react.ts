@@ -1,6 +1,3 @@
-// A synthetic stand-in for React's hook runtime (the repo has no DOM environment and no react-test-renderer). Installed with
-// `vi.mock('react', () => import('./fixtures/mini-react.js'))`. It implements only what the product hooks under test call:
-// state, refs, memo, effects with dependency comparison and cleanup, and external stores. One hook instance at a time.
 type Cell = { value?: unknown; deps?: readonly unknown[]; cleanup?: (() => void) | void };
 
 type Instance = { cells: Cell[]; pass: () => void };
@@ -28,7 +25,6 @@ export function useState<T>(initial: T | (() => T)) {
 }
 export function useReducer<S, A>(reducer: (state: S, action: A) => S, initial: S) {
   const [state, setState] = useState(initial);
-  // The reducer sees the latest state when several actions arrive before a render, as React's queue does.
   return [state, (action: A) => setState((previous) => reducer(previous, action))] as const;
 }
 export function useRef<T>(initial: T) {
@@ -74,12 +70,10 @@ export const useContext = <T>(context: { _value: T }) => context._value;
 
 export type Rendered<A extends unknown[], R> = {
   readonly current: R;
-  /** Renders again, with new arguments when given (as a parent re-render would). */
   rerender: (...next: A | []) => void;
   unmount: () => void;
 };
 
-/** Runs a hook once, then its effects; `update` re-runs it (with new arguments) the way a parent render would. */
 export function renderHook<A extends unknown[], R>(
   hook: (...args: A) => R,
   ...args: A

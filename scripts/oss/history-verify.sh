@@ -3,11 +3,13 @@
 # clone; it refuses any directory that history-apply did not create.
 #
 #   scripts/oss/history-verify.sh <clone> --plan plan.json [--private-patterns <file>] [--full] [--skip-install]
+#                                 [--evidence <file>]
 #
 # Checks: tip tree vs source, upstream authorship, root commits, subject length, .git size after gc --aggressive,
 # gitleaks, the readiness check over the whole history, then pnpm install --frozen-lockfile --offline, typecheck and a
 # quick vitest subset on a checkout of the tip (--full runs the whole suite). Set NODE and PNPM when they are not on PATH
-# (PNPM may be a command line such as "node /path/to/corepack pnpm").
+# (PNPM may be a command line such as "node /path/to/corepack pnpm"). --evidence writes the steps and the verdict, bound to
+# the clone's `main` commit, as JSON for scripts/oss/history-gate.mjs.
 set -euo pipefail
 
 usage() {
@@ -21,7 +23,7 @@ read -r -a pnpm <<<"${PNPM:-pnpm}"
 tools() { "$node_bin" "$here/history-tools.mjs" "$@"; }
 in_checkout() { (cd "$checkout" && "$@"); }
 
-clone="" plan="" private="" full=0 install=1 checkout=""
+clone="" plan="" private="" full=0 install=1 checkout="" evidence=""
 [ $# -ge 1 ] || usage
 clone=$1
 shift
@@ -31,6 +33,7 @@ while [ $# -gt 0 ]; do
     --private-patterns) private=${2:?}; shift 2 ;;
     --full) full=1; shift ;;
     --skip-install) install=0; shift ;;
+    --evidence) evidence=${2:?}; shift 2 ;;
     *) usage ;;
   esac
 done
@@ -39,7 +42,6 @@ tools guard "$clone"
 
 names=() states=()
 record() { names+=("$1"); states+=("$2"); }
-# step <name> <command...>: runs, prints the tail on failure, records PASS or FAIL.
 step() {
   local name=$1 log
   shift
@@ -106,4 +108,16 @@ for i in "${!names[@]}"; do
   [ "${states[$i]}" = PASS ] || verdict=NO-GO
 done
 echo "== $verdict"
+if [ -n "$evidence" ]; then
+  printf '%s\n' "${names[@]}" >"$work/names"
+  printf '%s\n' "${states[@]}" >"$work/states"
+  "$node_bin" -e '
+    const fs = require("fs");
+    const [out, head, verdict, names, states] = process.argv.slice(1);
+    const lines = (file) => fs.readFileSync(file, "utf8").split("\n").filter(Boolean);
+    const state = lines(states);
+    const steps = lines(names).map((name, i) => ({ name, state: state[i] }));
+    fs.writeFileSync(out, JSON.stringify({ schema: "aether-history-verify/1", cloneHead: head, verdict, steps }, null, 2) + "\n");
+  ' "$evidence" "$(git -C "$clone" rev-parse main)" "$verdict" "$work/names" "$work/states"
+fi
 [ "$verdict" = GO ]

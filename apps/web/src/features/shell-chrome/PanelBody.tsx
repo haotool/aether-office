@@ -6,20 +6,16 @@ import { SessionConversation } from '../sessions/SessionConversation.js';
 import { SessionFeed } from '../sessions/SessionFeed.js';
 
 export type PanelProps = {
-  /** The chosen member; none shows the feed. */
   agent: Agent | null;
   session: AttributedSession | null;
   snapshot: Snapshot;
   feed: Feed;
-  /** Choosing a row of the feed (selects the member; the camera follows, as with a click in the scene). */
   onOpen: (agentId: string) => void;
   onBack: () => void;
   onFocus: () => void;
-  /** Buttons at the end of the header: close on a desktop, collapse on a phone. */
   trailing?: ReactNode;
 };
 
-/** What the panel shows: the feed, or the chosen member's conversation. Shared by the desktop column and the phone sheet. */
 export function PanelBody({
   agent,
   session,

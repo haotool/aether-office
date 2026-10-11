@@ -1,8 +1,6 @@
-// Cases for security, review, data science, architecture and docs.
 import { type CorpusCase, edit, read, run, tool } from './corpus-types.js';
 
 export const ASSURANCE: CorpusCase[] = [
-  // Security
   {
     name: 'csrf and oauth',
     expect: 'security',
@@ -30,7 +28,6 @@ export const ASSURANCE: CorpusCase[] = [
     subagents: ['security-reviewer'],
     actions: [...read('src/auth/session.ts')],
   },
-  // Code review
   {
     name: 'pr review',
     expect: 'review',
@@ -50,7 +47,6 @@ export const ASSURANCE: CorpusCase[] = [
     prompt: 'look at what I just wrote',
     subagents: ['code-reviewer'],
   },
-  // Data / ML / analytics
   {
     name: 'rag tuning',
     expect: 'ml',
@@ -86,7 +82,6 @@ export const ASSURANCE: CorpusCase[] = [
     actions: [...edit('notebooks/churn.ipynb'), ...run('python analyze.py data/churn.csv')],
   },
   { name: 'zh analytics', expect: 'analytics', prompt: '產出本季數據分析報表與指標圖表' },
-  // Architecture
   {
     name: 'refactor boundaries',
     expect: 'architect',
@@ -112,7 +107,6 @@ export const ASSURANCE: CorpusCase[] = [
     prompt: 'deduplicate the three copies of the retry logic and simplify the abstraction',
     branch: 'refactor/retry',
   },
-  // Docs
   {
     name: 'readme update',
     expect: 'docs',

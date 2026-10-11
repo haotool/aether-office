@@ -1,4 +1,3 @@
-/** The telemetry words, in English. */
 export const enTelemetry = {
   executionPolicy: 'Native agent execution',
   emergencyStop: 'Emergency stop',

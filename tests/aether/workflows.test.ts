@@ -32,7 +32,7 @@ it('frontend/backend runs in parallel and the integration step waits for both', 
     const wf = start(f, 'frontend_backend');
     expect(wf.steps.map((s) => s.role)).toEqual(['frontend', 'backend', 'integration']);
     const [fe, be, integration] = wf.steps.map((s) => s.workId) as [string, string, string];
-    expect(wf.steps.map((s) => s.state)).toEqual(['ready', 'ready', 'backlog']); // two parallel starts, one blocked
+    expect(wf.steps.map((s) => s.state)).toEqual(['ready', 'ready', 'backlog']);
     expect(
       deps(f)
         .filter((d) => d.workId === integration)
@@ -41,13 +41,12 @@ it('frontend/backend runs in parallel and the integration step waits for both', 
     ).toEqual([fe, be].sort());
     expect(deps(f).filter((d) => d.workId === fe || d.workId === be)).toEqual([]);
 
-    // Completing one dependency does not release the integration step; completing both does.
     seedWork(f.control, fe, "state='completed'");
     seedWork(f.control, be, "state='completed'");
     f.control.execute(
       f.owner.actor,
       command('work.dependencies', { workId: integration, dependencies: [fe, be] }, f.projectId, 1),
-    ); // recompute readiness
+    );
     expect(
       (
         f.control.ctx.sqlite
@@ -102,7 +101,6 @@ it.each([
     expect(steps).toHaveLength(1);
     expect(steps[0]).toMatchObject({ engineerProvider: engineer, reviewerProvider: reviewer });
     const workId = steps[0]!.workId;
-    // The fixture agents use the demo provider, so assignment is refused: the workflow fixes the provider.
     expect(() =>
       f.control.execute(
         f.owner.actor,
@@ -115,7 +113,7 @@ it.each([
           state: string;
         }
       ).state,
-    ).toBe('ready'); // refusal leaves nothing behind
+    ).toBe('ready');
   } finally {
     f.control.close();
   }
@@ -133,7 +131,7 @@ it('a plain work item has no provider constraint, and workflow.start is for huma
     f.control.execute(
       f.owner.actor,
       command('work.assign', { workId: plain, agentId: f.senderId }, f.projectId, 1),
-    ); // no constraint, so a demo agent is fine
+    );
     expect(() =>
       f.control.execute(
         f.sender.actor,

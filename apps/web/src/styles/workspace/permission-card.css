@@ -1,7 +1,3 @@
-/*
- * Remote approvals: a permission prompt of Claude Code answered from the panel (ApprovalCard). Shown in the feed row of a
- * session that needs you, at the top of its conversation, and on a phone as a bar over the peek. Values are tokens.
- */
 .permission-card {
   position: relative;
   display: grid;
@@ -11,14 +7,13 @@
   background: var(--gold-tint);
   color: var(--text);
 }
-/* The time left, as a thin line along the top edge that runs out */
 .permission-progress {
   position: absolute;
   top: 0;
   left: 0;
   height: var(--space-2);
   background: var(--gold);
-  transition: width 1s linear; /* token-lint: animation */
+  transition: width var(--dur-tick) linear;
 }
 .permission-head {
   display: flex;
@@ -90,7 +85,6 @@
   padding: var(--space-8) var(--space-12) var(--space-12);
 }
 
-/* Phone, sheet at its peek height: the pending prompt rides over the 72px member bar. */
 .permission-peek {
   display: none;
 }

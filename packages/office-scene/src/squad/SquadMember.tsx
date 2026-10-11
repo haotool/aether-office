@@ -17,7 +17,6 @@ import type { PodSeat } from './squad-seats.js';
 import type { Point2 } from './squad-glide.js';
 import { Arriving } from './SquadArriving.js';
 
-/** What a click, a hover or a press on a subagent does: the same as on any member (the page decides). */
 export type MemberActions = {
   onActivate: (id: string, shift: boolean) => void;
   onMenu: (id: string) => void;
@@ -27,7 +26,6 @@ export type MemberActions = {
   onHoverEnd: (id: string) => void;
 };
 
-/** The agent a subagent is drawn as: it types while it works, waits when it asks a person, and rests when it is quiet. */
 const asSquadAgent = (agent: Agent, member: SquadMemberState): Agent => ({
   ...agent,
   activity: member.waiting ? 'waiting_permission' : member.working ? 'working' : 'idle',
@@ -40,7 +38,6 @@ type AnimalProps = Pick<
 
 type Origin = { x: number; z: number };
 
-/** A member carrying its result to the supervisor's desk on its way out. */
 function HandingMember({
   plan,
   member,
@@ -67,7 +64,6 @@ function HandingMember({
   );
 }
 
-/** A member on the plain way out through the core. */
 function LeavingMember({
   leave,
   member,
@@ -116,7 +112,6 @@ type SeatedMemberProps = {
   animal: AnimalProps;
 };
 
-/** The seat the member turns about: its desk, or the origin when it has no pod seat. */
 const deskSeat = (seat: PodSeat | undefined, origin: Origin) => ({
   x: seat?.deskX ?? origin.x,
   z: seat?.deskZ ?? origin.z,
@@ -124,11 +119,9 @@ const deskSeat = (seat: PodSeat | undefined, origin: Origin) => ({
   rotation: seat?.rotation ?? 0,
 });
 
-/** How fast the clips play: a walk at the plan's own speed, a working member a little quicker, else as authored. */
 const paceOf = (clip: string | null, arrival: Arrival | undefined, member: SquadMemberState) =>
   clip === 'walk' ? (arrival?.speed ?? 0) / WALK_STRIDE_SPEED : member.working ? 1.4 : 1;
 
-/** A member in its pod, walking in from the core first when it has just arrived; follows its pod as the zone grows. */
 function SeatedMember({
   member,
   seat,
@@ -146,7 +139,6 @@ function SeatedMember({
   const id = animal.agent.id;
   const press = useMemo(() => createLongPress(() => actions.onMenu(id)), [actions, id]);
   useFrame(() => {
-    // A seated member follows its pod as the zone grows; one on a walk keeps to its plan's own chair.
     const at = !arrival ? podPos.get(member.id) : undefined;
     if (at) frame.current?.position.set(at.x, baseY, at.z);
   });
@@ -181,14 +173,11 @@ function SeatedMember({
 type SquadMemberProps = {
   agent: Agent;
   member: SquadMemberState;
-  /** Its pod seat; a member that is leaving has only its plan. */
   seat: PodSeat | undefined;
   arrival: Arrival | undefined;
   leave: Leave | undefined;
-  /** Its way out by the supervisor's desk, with its result (instead of `leave`). */
   handover: HandoverPlan | undefined;
   baseY: number;
-  /** Where each sitter's pod is shown this frame (the zone glides as it grows). */
   podPos: ReadonlyMap<string, Point2>;
   engagements: readonly Engagement[] | undefined;
   ring: Ring | null;
@@ -201,7 +190,6 @@ type SquadMemberProps = {
   onFailure: () => void;
 };
 
-/** Where the member stands and how its frame is turned: by its way out, its walk in or its pod; null when it has none. */
 function standingOf({
   leave,
   handover,
@@ -221,10 +209,6 @@ function standingOf({
   return origin ? { origin, yaw } : null;
 }
 
-/**
- * One subagent: seated in its pod (Animal under a Poser, as a member at a desk), walking in from the core, or on its
- * way out through it. Sits in its own group at the pod, turned like a desk, so a seat faces its supervisor.
- */
 export function SquadMember(props: SquadMemberProps) {
   const { agent, member, seat, arrival, leave, handover, baseY, podPos, engagements } = props;
   const { emote, actions } = props;

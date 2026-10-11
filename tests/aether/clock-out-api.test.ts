@@ -56,7 +56,6 @@ it('clocks out for an owner only, with an idempotency key, and never touches a s
         })
       ).json() as { sessions: { key: string; liveness: { startedAt: number } }[] };
     };
-    // The process is found by the scan once `ps` lists it with its directory: wait for that, not for a fixed time.
     expect(
       await untilAsync(async () =>
         (await list()).sessions.some((s) => s.key === 'claude:busy-one' && s.liveness.startedAt),
@@ -68,10 +67,10 @@ it('clocks out for an owner only, with an idempotency key, and never touches a s
       sessions: [{ key: used.key, startedAt: used.liveness.startedAt }],
     };
     expect((await post(f.sender.token, body, 'key-owner-only')).statusCode).toBe(403);
-    expect((await post(f.owner.token, body)).statusCode).toBe(400); // no idempotency key
+    expect((await post(f.owner.token, body)).statusCode).toBe(400);
     expect(
       (await post(f.owner.token, { ...body, minIdleMs: 1000 }, 'key-too-short')).statusCode,
-    ).toBe(400); // less than a day is not allowed
+    ).toBe(400);
     expect(
       (
         await post(
@@ -86,12 +85,12 @@ it('clocks out for an owner only, with an idempotency key, and never touches a s
     expect(first.json()).toEqual({
       results: [{ key: used.key, outcome: 'skipped', reason: 'active' }],
     });
-    expect((await post(f.owner.token, body, 'key-first-call')).json()).toEqual(first.json()); // replayed
+    expect((await post(f.owner.token, body, 'key-first-call')).json()).toEqual(first.json());
     const other = { ...body, minIdleMs: 2 * DAY };
     const conflict = await post(f.owner.token, other, 'key-first-call');
     expect(conflict.statusCode).toBe(409);
     expect(JSON.stringify(conflict.json())).toContain('IDEMPOTENCY_CONFLICT');
-    expect(alive(inUse.pid!)).toBe(true); // in use: never signalled
+    expect(alive(inUse.pid!)).toBe(true);
   } finally {
     inUse.kill('SIGKILL');
     delete process.env['AETHER_LOCAL_SESSIONS_HOME'];

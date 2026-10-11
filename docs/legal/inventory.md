@@ -1,6 +1,6 @@
 # Licence inventory
 
-The audited inventory of everything AETHER OFFICE uses, derives from or ships, as of 2026-10-07 (version `0.4.0-dev.0`,
+The audited inventory of everything AETHER OFFICE uses, derives from or ships, as of 2026-10-07 (version `0.4.0`,
 `pnpm-lock.yaml` with 425 packages). Each finding names its source of truth. This is an engineering record, not legal advice;
 items that need a decision are collected in [Open items](#open-items).
 
@@ -52,17 +52,17 @@ items that need a decision are collected in [Open items](#open-items).
 | agent-office (upstream): `tools/blender/aokit.py`, part of `tools/blender/build_animals.py`, `packages/office-scene/src/environment/geometry.ts` | MIT | Derived; copyright kept in `LICENSE`, `NOTICE`, `REUSE.toml`, file headers. |
 | Orca: `apps/control/src/services/platform/redaction.ts` (secret patterns) | MIT | Derived; licence text in the notices, header, `REUSE.toml`. |
 | *mulberry32* in `apps/web/src/avatar/spec.ts` | Public domain (as published by its author) | Four lines, named in a comment. |
-| Contributor Covenant 2.1 in `CODE_OF_CONDUCT.md` | CC BY 4.0 | Adapted and credited; `LICENSES/CC-BY-4.0.txt`, `REUSE.toml`. |
+| Contributor Covenant 2.1 in `.github/CODE_OF_CONDUCT.md` | CC BY 4.0 | Adapted and credited; `LICENSES/CC-BY-4.0.txt`, `REUSE.toml`. |
 | Everything else, including all ideas from the 27 reference projects | — | Original. No copied code found; see [provenance](provenance.md). |
 
 ## Generated and vendored material
 
 | Path | Origin | Licence and notice |
 | --- | --- | --- |
-| `packages/providers/generated/codex-0.159.2*` (1,049 files) | Codex CLI 0.159.2 `generate-ts` / `generate-json-schema`, unmodified | Apache-2.0 (openai/codex, verified); `LICENSES/Apache-2.0.txt`, Codex NOTICE in `NOTICE` and the notices; types only, not in any build. |
+| `packages/providers/generated/codex-0.159.2-ts` (734 files) | Codex CLI 0.159.2 `generate-ts`, unmodified | Apache-2.0 (openai/codex, verified); `LICENSES/Apache-2.0.txt`, Codex NOTICE in `NOTICE` and the notices; types only, not in any build. |
 | `packages/providers/generated/compat.json` | Written by this project | MIT. |
 | Claude hook payloads | Described by hand-written Zod schemas in `packages/contracts`; no schema file was copied from Anthropic. | MIT. |
-| `fixtures/`, `tests/aether/fixtures/` | Synthetic (stated in the files); model-list fixtures reproduce the shape of local CLI caches | MIT; no personal data found. |
+| `tests/processes/`, `tests/aether/fixtures/` | Synthetic (stated in the files); model-list fixtures reproduce the shape of local CLI caches | MIT; no personal data found. |
 | `docs/research/` | The project's own comparison report (Traditional Chinese), a matrix and source index with links and pinned commits; no README or source file of another project is reproduced, quotations are short. | MIT. |
 
 ## Assets
@@ -79,7 +79,7 @@ third-party mesh, texture, HDR image, font, sound or logo file is in the tree.
 | `NOTICE` | Added: project copyright, upstream and Orca attribution, the Codex NOTICE required by Apache-2.0 section 4(d). |
 | SPDX / REUSE | `REUSE.toml` covers every tracked file by path; `LICENSES/` holds MIT, Apache-2.0 and CC-BY-4.0. `scripts/oss/reuse-check.mjs` checks coverage (the `reuse` tool is not required). |
 | Contributions | Inbound = outbound MIT; DCO sign-off recommended in [licence-policy](licence-policy.md#contributor-sign-off). |
-| `SECURITY.md`, `CODE_OF_CONDUCT.md`, issue and pull request templates | Present. Code of conduct credits the Contributor Covenant (CC BY 4.0). |
+| `.github/SECURITY.md`, `.github/CODE_OF_CONDUCT.md`, issue and pull request templates | Present. Code of conduct credits the Contributor Covenant (CC BY 4.0). |
 | GitHub Actions | `actions/checkout` and `actions/setup-node` pinned to commit SHAs (v4.4.0); Dependabot updates both npm and Actions weekly. |
 
 ## Open items

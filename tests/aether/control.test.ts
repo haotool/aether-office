@@ -63,7 +63,6 @@ describe('SQLite canonical state', () => {
   it('100 acknowledged messages cannot hide the 101st pending message', () => {
     const f = setup();
     for (let i = 0; i < 100; i++) {
-      // Separate authenticated senders avoid defeating the real per-sender rate limit in production.
       const sender = i < 50 ? f.sender.actor : f.owner.actor;
       const sent = f.send(`訊息 ${i}`, sender);
       f.control.execute(

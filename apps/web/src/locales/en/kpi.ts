@@ -1,4 +1,3 @@
-/** The kpi words, in English. */
 export const enKpi = {
   quotaUnknown: 'No Codex quota recorded yet',
   claudeQuotaUnknown:

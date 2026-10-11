@@ -1,11 +1,8 @@
-// A cheap duplicate-code detector: hash every window of WINDOW consecutive tokens, and report the runs of tokens that
-// occur in two or more places. Comments and import lines are ignored; identifiers and literals must match exactly.
 const WINDOW = 50;
 const MIN_LINES = 6;
 const TOKEN =
   /\/\/[^\n]*|\/\*[\s\S]*?\*\/|`(?:\\[\s\S]|[^`\\])*`|'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|[A-Za-z_$][\w$]*|\d[\w.]*|=>|[=!]==?|&&|\|\||\?\?|\S|\n/g;
 
-/** Tokens of one source text with their 1-based lines; comments and `import` statements are dropped. */
 export function tokenize(text) {
   const tokens = [];
   let line = 1;
@@ -21,7 +18,6 @@ export function tokenize(text) {
     else {
       if (lineStart && t === 'import') inImport = true;
       lineStart = false;
-      // The module specifier is the last token of an import statement.
       if (inImport) inImport = !/^['"]/.test(t);
       else tokens.push({ t, line });
       if (t.startsWith('`')) line += t.split('\n').length - 1;
@@ -32,10 +28,6 @@ export function tokenize(text) {
 
 const mix = (h, id, m) => Math.imul(h ^ id, m) >>> 0;
 
-/**
- * `sources` is [{ file, text }]. Returns { duplicatedLines, totalLines, clusters } where each cluster is
- * { lines, copies: [{ file, from, to }] } sorted by the lines a clean-up would save.
- */
 export function findDuplicates(sources) {
   const ids = new Map();
   const perFile = sources.map(({ file, text }) => {

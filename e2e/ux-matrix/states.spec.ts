@@ -9,8 +9,6 @@ import {
   type Tag,
 } from './ux.js';
 
-// The state matrix: what the pages look like while loading, failing, empty, offline, with reduced motion and with an
-// overlay open, on a phone and on a tablet, in the two extreme theme and language pairs.
 const SIZES = [
   [390, 844],
   [820, 1180],
@@ -36,7 +34,7 @@ async function loading({ page, tag, errors }: Env): Promise<Cell[]> {
   let release: () => void = () => undefined;
   const gate = new Promise<void>((resolve) => (release = resolve));
   await page.route('**/api/projects', async (route) => {
-    await gate; // the projects answer only after the screenshot
+    await gate;
     await route.continue().catch(() => undefined);
   });
   await page.goto('/office', { waitUntil: 'commit' });
@@ -89,7 +87,6 @@ async function reducedMotion({ page, tag, errors }: Env): Promise<Cell[]> {
   return [office, await record(page, 'state-reduced-motion-settings', tag, errors)];
 }
 
-/** The overlays of a phone: the conversation sheet and the drawer behind "More". */
 async function phoneOverlays({ page, tag, errors }: Env): Promise<Cell[]> {
   const cells: Cell[] = [];
   await openOffice(page);
@@ -101,7 +98,6 @@ async function phoneOverlays({ page, tag, errors }: Env): Promise<Cell[]> {
   return cells;
 }
 
-/** The dialogs a wider screen opens from the top bar; on a phone they sit behind "More". */
 async function dialogs({ page, tag, errors }: Env): Promise<Cell[]> {
   await openOffice(page);
   await page.getByRole('button', { name: NEW_PROJECT }).click();

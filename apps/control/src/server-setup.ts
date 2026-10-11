@@ -17,13 +17,11 @@ import type { AuthInput, RouteContext } from './routes/context.js';
 
 const RETENTION_INTERVAL_MS = 60 * 60 * 1000;
 
-/** The reads that carry an ETag: the session list, its speech and one session's transcript (not the stream). */
 const REVALIDATED = /^\/api\/(?:local-sessions(?:\/speech|\/[^/]+\/transcript)?|usage(?:\/git)?)$/;
 
 const CONTENT_SECURITY_POLICY =
   "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; frame-ancestors 'none'; base-uri 'none'";
 
-/** The periodic work (retention, message waits, schedules) starts when the server is ready and stops when it closes. */
 export function runHousekeeping(
   app: FastifyInstance,
   control: Control,
@@ -81,7 +79,6 @@ export function guardRequests(app: FastifyInstance, policy: ReturnType<typeof ho
   });
 }
 
-/** Who is calling: a bearer token, or the session cookie (with its CSRF token on a mutation). */
 export function requestActor(control: Control) {
   return (request: AuthInput): Actor => {
     const authorization = request.headers['authorization'];
@@ -99,7 +96,6 @@ export function requestActor(control: Control) {
   };
 }
 
-/** The heavy reads of the session panel are revalidated rather than resent: an unchanged answer is a 304 with no body. */
 export function revalidateReads(app: FastifyInstance) {
   app.addHook('onSend', async (request, reply, payload) => {
     const path = request.url.split('?')[0] ?? '';
@@ -124,7 +120,7 @@ export function revalidateReads(app: FastifyInstance) {
 /** API answers are JSON and compress about tenfold; a phone on Wi-Fi waits for the bytes, not for the CPU. */
 export function compressJson(app: FastifyInstance) {
   app.addHook('onSend', async (request, reply, payload) => {
-    if (typeof payload !== 'string' && !Buffer.isBuffer(payload)) return payload; // streams are left alone
+    if (typeof payload !== 'string' && !Buffer.isBuffer(payload)) return payload;
     const type = String(reply.getHeader('content-type') ?? '');
     const encoding = String(request.headers['accept-encoding'] ?? '');
     if (!type.includes('json') || !/\bgzip\b/.test(encoding) || reply.getHeader('content-encoding'))
@@ -135,7 +131,6 @@ export function compressJson(app: FastifyInstance) {
   });
 }
 
-/** Every failure becomes `{ error: { code, safeMessage, correlationId, retryable } }`; nothing else about it is sent. */
 export function answerErrors(app: FastifyInstance) {
   app.setErrorHandler((error, request, reply) => {
     const e = error as Error & { statusCode?: number };
@@ -172,16 +167,15 @@ function cacheControlOf(path: string): string | null {
   return path.endsWith('index.html') ? 'no-cache' : null;
 }
 
-/** Serves the built web app; any other path than the API and its assets falls back to the page. */
 export function serveWebApp(app: FastifyInstance) {
   const root = fileURLToPath(new URL('../../web/dist/', import.meta.url));
   if (!existsSync(root)) throw new Error('WEB_BUILD_REQUIRED');
   app.register(staticFiles, {
     root,
     wildcard: true,
-    preCompressed: true, // the build leaves a .br and a .gz beside each text and model file
+    preCompressed: true,
     setHeaders: (response, served) => {
-      const cache = cacheControlOf(served.replace(/\.(br|gz)$/, '')); // the pre-compressed copy is served under its own name
+      const cache = cacheControlOf(served.replace(/\.(br|gz)$/, ''));
       if (cache) response.header('cache-control', cache);
     },
   });

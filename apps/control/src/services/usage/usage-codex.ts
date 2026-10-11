@@ -1,4 +1,3 @@
-// Codex transcripts: token_count events (cumulative and per request), turn_context for the model.
 import {
   addTokens,
   bucketOf,
@@ -11,7 +10,6 @@ import {
   type ParseState,
 } from './usage-counters.js';
 
-// ---- Codex: token_count events (cumulative and per request), turn_context for the model -------------------------
 const TOKEN_COUNT = Buffer.from('"payload":{"type":"token_count"');
 const TURN_CONTEXT = Buffer.from('"type":"turn_context"');
 const TOOL_CALLS = ['function_call', 'custom_tool_call', 'local_shell_call'].map((t) =>
@@ -43,9 +41,8 @@ const minus = (a: Counters, b: Counters): Counters => ({
 });
 
 /**
- * The tokens one token_count adds. The total only grows, so the difference to the previous total is the spend; an
- * unchanged total is a repeat and adds nothing; a total that fell (the session was reset or compacted) or the first one
- * seen counts the request's own usage, so a session continued from another's history does not claim that history.
+ * The total only grows, so the difference to the previous total is the spend; a total that fell (reset or compacted) or
+ * the first one seen counts the request's own usage, so a continued session does not claim another's history.
  */
 export function deltaOf(
   previous: Counters | null,
@@ -75,12 +72,12 @@ function codexTokenCount(state: ParseState, line: string, at: number, day: strin
   try {
     payload = obj(obj(JSON.parse(line))['payload']);
   } catch {
-    state.skipped++; // a whole line that is not JSON
+    state.skipped++;
     return;
   }
   const info = obj(payload['info']);
   const totalUsage = obj(info['total_token_usage']);
-  if (!Object.keys(totalUsage).length) return; // rate limits only
+  if (!Object.keys(totalUsage).length) return;
   const total = codexCounters(totalUsage);
   const lastUsage = obj(info['last_token_usage']);
   const delta = deltaOf(

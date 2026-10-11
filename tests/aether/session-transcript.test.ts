@@ -66,7 +66,6 @@ it('reads a Claude transcript: messages, tools and results, never thinking, neve
     'result',
   ]);
   expect(JSON.stringify(entries)).not.toContain('PRIVATE REASONING');
-  // The injected reminder is a context notice, never a message and never raw tags.
   expect(entries[0]!.notice).toEqual({ kind: 'context', label: 'system', text: 'injected' });
   expect(entries[0]!.text).toBe('');
   expect(entries[5]!.error).toBe(true);
@@ -212,7 +211,7 @@ it('serves a transcript only to an owner, only by a key the scanner found, never
         url,
         headers: { host: '127.0.0.1:4502', authorization: `Bearer ${token}` },
       });
-    expect((await get('/api/local-sessions', f.owner.token)).statusCode).toBe(200); // the scan registers the key
+    expect((await get('/api/local-sessions', f.owner.token)).statusCode).toBe(200);
     const ok = await get('/api/local-sessions/claude:sess-9/transcript', f.owner.token);
     expect(ok.statusCode).toBe(200);
     expect(ok.body).toContain('hello');

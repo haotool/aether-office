@@ -94,7 +94,7 @@ describe('diff degrades safely', () => {
       const result = f.manager.diff(w.id);
       expect(result.untracked.sort()).toEqual(['image.bin', '新 檔案.txt']);
       expect(result.text).toContain('a changed');
-      expect(result.text).not.toContain('新 檔案'); // untracked content is never inlined
+      expect(result.text).not.toContain('新 檔案');
     } finally {
       f.cleanup();
     }
@@ -104,7 +104,7 @@ describe('diff degrades safely', () => {
     const f = setup();
     try {
       const w = f.create();
-      writeFileSync(join(w.path, 'a.txt'), 'line of text that repeats\n'.repeat(400_000)); // ~10 MB
+      writeFileSync(join(w.path, 'a.txt'), 'line of text that repeats\n'.repeat(400_000));
       expect(() => f.manager.diff(w.id)).toThrow(/DIFF_TOO_LARGE/);
     } finally {
       f.cleanup();

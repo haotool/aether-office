@@ -3,7 +3,6 @@ import { EYE_STYLES, MOUTH_STYLES, type EyeStyle, type MouthStyle } from './face
 import { GEAR, type Gear } from './gear.js';
 import { SPECIES, speciesOf, type Marking, type Species } from './species.js';
 
-/** Hues a seed may reach for an accessory; every one reads on fur and on both backdrops. */
 const GEAR_COLORS = [
   '#3C9AB0',
   '#E2493A',
@@ -41,7 +40,6 @@ export interface AvatarSpec {
   accent: string;
   inner: string;
   backdrop: string;
-  /** True when the backdrop is the dark one (so a mark drawn on it should be light). */
   backdropDark: boolean;
   marking: Marking;
   eyes: EyeStyle;
@@ -80,7 +78,6 @@ function weighted<T>(items: readonly T[], weight: (item: T) => number, r: number
   return last;
 }
 
-/** One of `items`, chosen by `r` in [0, 1). */
 function pickOf<T>(items: readonly T[], r: number): T {
   const item = items[Math.floor(r * items.length)];
   if (item === undefined) throw new Error('pickOf: empty items');
@@ -103,7 +100,6 @@ function pickGear(species: Species, rand: () => number): AvatarSpec['gear'] {
   return chosen.map((gear) => ({ gear, color: pickOf(GEAR_COLORS, rand()) }));
 }
 
-/** The portrait is a pure function of the seed (a member id or session key) and the species the 3D model uses. */
 export function avatarSpec(seed: string, speciesName: string): AvatarSpec {
   const species = speciesOf(speciesName, (n) => Math.floor(stream(`species|${seed}`)() * n));
   const art = SPECIES[species];

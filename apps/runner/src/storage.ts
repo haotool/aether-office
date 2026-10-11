@@ -5,9 +5,8 @@ const within = (parent: string, child: string) =>
   child === parent || child.startsWith(parent + sep);
 
 /**
- * A runner's journal, spool and checkouts must never live inside a repository it may use, so
- * runner state (and any SQLite file) can never be committed or shared through a .git directory.
- * Each machine works from its own clone; nothing here is ever shared between machines.
+ * Runner state (journal, spool, checkouts, any SQLite file) must never live inside a repository it may use, so it can
+ * never be committed or shared through a .git directory.
  */
 export function assertIndependentStorage(
   dataDirectory: string,

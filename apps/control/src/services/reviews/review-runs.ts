@@ -7,7 +7,6 @@ type Policy = { liveEnabled: number; maxTurns: number; timeoutMs: number };
 type Reviewer = ReturnType<typeof agent>;
 type Work = ReturnType<typeof task>;
 
-/** The reviewer must be another, native, live agent that the workflow allows; returns the project's execution policy. */
 function assertReviewerFits(
   ctx: Context,
   projectId: string,
@@ -27,7 +26,6 @@ function assertReviewerFits(
   return policy;
 }
 
-/** The machine and base of the implementation workspace at the commit under review. */
 function reviewSource(ctx: Context, workId: string, headSha: string) {
   if (
     ctx.sqlite
@@ -46,7 +44,6 @@ function reviewSource(ctx: Context, workId: string, headSha: string) {
   return source;
 }
 
-/** Creates the reviewer's session, its queued review run and runner command, and bumps the work item's version. */
 function queueReview(
   ctx: Context,
   projectId: string,

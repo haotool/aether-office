@@ -1,13 +1,5 @@
 #!/usr/bin/env node
-// Objective quality scorecard (see docs/quality/README.md).
-//
-//   node scripts/quality/score.mjs [--area <name>]... [--json] [--target <n>] [--details <n>]   print the scores
-//   node scripts/quality/score.mjs --report        write docs/quality/scorecard.{md,json} and raise the floors
-//   node scripts/quality/score.mjs --check         fail on a stale scorecard or an area below its floor
-//   node scripts/quality/score.mjs --release       CHARTER §5 release score (unmeasured = 0)
-//
-// Local only: no network, no browser, no new dependency. Run `pnpm build` first to include the bundle budgets.
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
@@ -61,24 +53,22 @@ async function main() {
   if (values.release) {
     if (values.report || values.check || values.json)
       throw new Error('--release cannot be combined with --report, --check, or --json');
-    const report = await scoreRelease(root, { gatesPath: values.gates ?? undefined });
-    const table = renderReleaseTable(report);
-    if (values.out) {
-      const outPath = path.resolve(root, values.out);
+    const outPath = values.out && path.resolve(root, values.out);
+    if (outPath) {
       try {
         mkdirSync(path.dirname(outPath), { recursive: true });
-        writeFileSync(outPath, `${JSON.stringify(report, null, 2)}\n`);
+        appendFileSync(outPath, '');
       } catch (err) {
-        const code = err && typeof err === 'object' && 'code' in err ? err.code : '';
-        const msg =
-          code === 'EEXIST' || code === 'EACCES' || code === 'EROFS'
-            ? `cannot write release report to ${values.out}: ${code}`
-            : `cannot write release report to ${values.out}: ${err instanceof Error ? err.message : err}`;
-        console.error(msg);
+        console.error(
+          `cannot write release report to ${values.out}: ${err instanceof Error ? err.message : err}`,
+        );
         process.exitCode = 2;
         return;
       }
     }
+    const report = await scoreRelease(root, { gatesPath: values.gates ?? undefined });
+    const table = renderReleaseTable(report);
+    if (outPath) writeFileSync(outPath, `${JSON.stringify(report, null, 2)}\n`);
     if (report.evidenceError) console.error(report.evidenceError);
     if (report.gatesError) console.error(report.gatesError);
     console.log(table);

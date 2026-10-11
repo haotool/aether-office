@@ -3,10 +3,9 @@ import { DITHER_END, DITHER_PARS } from '../environment/dither.js';
 import type { Stalk, Strand } from './stalk-types.js';
 import { itemAt, lastOf } from '../environment/checked.js';
 
-const TAPER = 3; // metres over which a strand swells from its end to full thickness
-const MEETING = 0.5; // how thick a strand still is where it meets another one
+const TAPER = 3;
+const MEETING = 0.5;
 
-/** The rings of one strand: a tube about its centerline, thinning towards a loose end and where it meets a fork or merge. */
 function rings(strand: Strand, sides: number, skip: number) {
   const points = strand.points.filter((_, i, all) => i % skip === 0 || i === all.length - 1);
   const along = points.map((p) => new THREE.Vector3(...p));
@@ -17,7 +16,6 @@ function rings(strand: Strand, sides: number, skip: number) {
   const swell = (distance: number, loose: boolean) =>
     (loose ? 0.1 : MEETING) +
     (loose ? 0.9 : 1 - MEETING) * THREE.MathUtils.smoothstep(distance, 0, TAPER);
-  // Parallel transport: the first ring's normal is any one square to the path, each next one is turned only as far as the path turns.
   let normal = new THREE.Vector3(1, 0, 0);
   return along.map((p, i) => {
     const tangent = itemAt(along, Math.min(i + 1, along.length - 1))
@@ -33,10 +31,6 @@ function rings(strand: Strand, sides: number, skip: number) {
   });
 }
 
-/**
- * One merged tube for every strand, each vertex carrying its colour and a seed that offsets the strand's energy pulses
- * from the others'. On `low` quality a tube has fewer sides and uses every other point of its path.
- */
 export function stalkTubes(stalk: Stalk, low: boolean): THREE.BufferGeometry | null {
   const sides = low ? 5 : 8;
   const position: number[] = [];
@@ -126,10 +120,8 @@ const STALK_FRAGMENT = `
       }`;
 
 /**
- * The strands' glass, faked without a transmission pass: a body that is nearly clear, a rim that burns at grazing angles
- * (fresnel), a vein of light down the middle that a viewer looks straight through, a faint shift of hue as if refracted, and
- * pulses running up the vein. Additive and depth-free, so entwined strands add up instead of hiding each other. Cut off
- * above `grow` (the growing tip burns white).
+ * Faked without a transmission pass: additive and depth-free, so entwined strands add up instead of hiding each other.
+ * Cut off above `grow` (the growing tip burns white).
  */
 export function stalkMaterial() {
   return new THREE.ShaderMaterial({

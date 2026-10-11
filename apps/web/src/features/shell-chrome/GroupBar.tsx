@@ -18,7 +18,6 @@ type GroupBarProps = {
   onNotice: (message: string) => void;
 };
 
-/** Which of the picked characters have a session, which qualify to be sent home, and what the bar offers for them. */
 function useGroupSelection(ctx: GroupBarContext, sessions: readonly AttributedSession[]) {
   const actor = useActor();
   const clock = new Set(clockOutKeys(sessions, ctx.ids));
@@ -34,7 +33,6 @@ function useGroupSelection(ctx: GroupBarContext, sessions: readonly AttributedSe
   return { clock, found, actions };
 }
 
-/** Copies the resume command of every picked session, one per line. */
 function useCopyResumes(found: Found, onNotice: (message: string) => void) {
   const t = useT();
   const [copied, setCopied] = useState(false);
@@ -57,7 +55,6 @@ type SendHomeProps = {
   t: ReturnType<typeof useT>;
 };
 
-/** Send-home control: owner-only clock-out for the selection. */
 function GroupBarSendHome({ count, reason, clock, onCommand, t }: SendHomeProps) {
   return (
     <button
@@ -73,10 +70,6 @@ function GroupBarSendHome({ count, reason, clock, onCommand, t }: SendHomeProps)
   );
 }
 
-/**
- * The floating bar for the characters picked with Shift or a rectangle: send them home (the clock-out flow for those that
- * qualify, owner only), pin them to the wall, copy their resume commands, clear the selection.
- */
 export function GroupBar({ ctx, sessions, onCommand, onNotice }: GroupBarProps) {
   const t = useT();
   const whyNot = useWhy();

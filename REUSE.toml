@@ -1,13 +1,10 @@
-# Licensing of every file, in the REUSE 3.x format (https://reuse.software/spec-3.3/), so that files do not each need a
-# header. When several annotations match a file, the last one applies. `node scripts/oss/reuse-check.mjs` (part of
-# `pnpm run oss:check`) verifies that every tracked file is covered, that each licence has its text in LICENSES/ and that
-# every path named below still exists. See docs/legal/licence-policy.md.
+# Licensing of every file in the REUSE 3.x format (https://reuse.software/spec-3.3/), so files need no header. The last
+# matching annotation applies; `node scripts/oss/reuse-check.mjs` verifies that every file is covered.
 version = 1
 SPDX-PackageName = "aether-office"
 SPDX-PackageSupplier = "haotool"
 SPDX-PackageDownloadLocation = "https://github.com/haotool/aether-office"
 
-# Everything not named below: written for this project.
 [[annotations]]
 path = "**"
 precedence = "aggregate"
@@ -35,16 +32,15 @@ precedence = "override"
 SPDX-FileCopyrightText = ["2026 Lovecast Inc.", "2026 haotool and the AETHER OFFICE contributors"]
 SPDX-License-Identifier = "MIT"
 
-# Generated, unmodified, by the OpenAI Codex CLI 0.159.2 (`codex app-server generate-ts` / `generate-json-schema`).
 [[annotations]]
-path = ["packages/providers/generated/codex-0.159.2/**", "packages/providers/generated/codex-0.159.2-ts/**"]
+path = "packages/providers/generated/codex-0.159.2-ts/**"
 precedence = "override"
 SPDX-FileCopyrightText = "2025 OpenAI"
 SPDX-License-Identifier = "Apache-2.0"
 
 # Adapted from the Contributor Covenant 2.1 (https://www.contributor-covenant.org).
 [[annotations]]
-path = "CODE_OF_CONDUCT.md"
+path = ".github/CODE_OF_CONDUCT.md"
 precedence = "override"
 SPDX-FileCopyrightText = ["Contributor Covenant contributors", "2026 haotool and the AETHER OFFICE contributors"]
 SPDX-License-Identifier = "CC-BY-4.0"

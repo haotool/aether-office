@@ -11,10 +11,9 @@ const picker = (name: string, en: string, zh: string): Builtin => ({
 });
 
 /**
- * The slash commands each CLI has built in, as far as they make sense typed from a browser. Each name was found in the
- * installed `claude` (2.1.289) and `codex` (0.160.0) programs; the descriptions are ours. A `text` command prints or acts
- * in the terminal and is done; a `picker` opens a list or dialog in the terminal itself, which this composer cannot
- * answer: it is sent, and the terminal shows the list.
+ * Names were found in the installed `claude` (2.1.289) and `codex` (0.160.0) programs; the descriptions are ours. A
+ * `picker` command opens a list in the terminal itself, which this composer cannot answer: it is sent and the terminal
+ * shows the list.
  */
 export const BUILTIN_COMMANDS: Record<'claude' | 'codex', readonly Builtin[]> = {
   claude: [
@@ -75,7 +74,6 @@ export const BUILTIN_COMMANDS: Record<'claude' | 'codex', readonly Builtin[]> = 
   ],
 };
 
-/** The slash menu's items for a session: the CLI's built-ins, then the custom commands and skills found for it. */
 export function slashItems(
   provider: 'claude' | 'codex',
   custom: readonly CustomCommand[],

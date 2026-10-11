@@ -46,7 +46,7 @@ it('requires accepted+verified work, serialises per project and records conflict
     run('work.integrate', { workId, baseBranch: 'main', expectedBase: sha('9') }, version());
   try {
     expect(() => request()).toThrow('INTEGRATION_REQUIRES_ACCEPTED_WORK');
-    accept(sha('b')); // verified a different commit than head
+    accept(sha('b'));
     expect(() => request()).toThrow('INTEGRATION_REQUIRES_ACCEPTED_WORK');
     accept(sha('a'));
     expect(() =>
@@ -97,9 +97,9 @@ it('requires accepted+verified work, serialises per project and records conflict
     ]);
     expect(
       f.control.ctx.sqlite.prepare('SELECT state FROM work_items WHERE id=?').get(workId),
-    ).toEqual({ state: 'completed' }); // conflict never changes acceptance
+    ).toEqual({ state: 'completed' });
 
-    const retry = request().result as { id: string }; // a new attempt is allowed after a conflict
+    const retry = request().result as { id: string };
     const second = claimJob(f.control.ctx, machine.actor)!;
     expect(second.id).toBe(retry.id);
     reportJob(f.control.ctx, machine.actor, {

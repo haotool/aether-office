@@ -1,4 +1,3 @@
-/** The shell words, in English. */
 export const enShell = {
   office: 'Office',
   agents: 'Team',
@@ -119,7 +118,6 @@ export const enShell = {
   navigation: 'Navigation',
   openMenu: 'Open menu',
   skipToMain: 'Skip to main content',
-  mainContent: 'Main content',
   sceneName: '3D office',
   sceneSummary: '{0} characters on {1} floors: {2} working, {3} waiting for you',
   sceneSummaryEmpty: 'No characters in the office yet',

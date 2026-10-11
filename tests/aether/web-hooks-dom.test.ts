@@ -9,8 +9,6 @@ import {
 } from './fixtures/browser-env.js';
 import { renderHook } from './fixtures/mini-react.js';
 
-// Hooks that touch the DOM, on a synthetic hook runtime (fixtures/mini-react.ts) and tiny element fakes: the repo's vitest
-// has no DOM environment. The preferences store is replaced by a plain store with the two fields the layout reads.
 const web = await vi.hoisted(async () => {
   const paths = await import('./fixtures/web-paths.js');
   return { react: paths.WEB_REACT };
@@ -61,7 +59,7 @@ describe('usePanelLayout', () => {
     prefs.setState({ panelWidth: 700 });
     const layout = renderHook(usePanelLayout);
     expect(layout.current.width).toBe(700);
-    resize(1100); // 60% of the window is the most the panel may take
+    resize(1100);
     expect(layout.current.width).toBe(660);
     resize(1400);
     expect(layout.current.width).toBe(700);
@@ -127,7 +125,7 @@ describe('useScrollSpy', () => {
     expect(spy.current).toBe('one');
     seen(['two', true]);
     expect(spy.current).toBe('two');
-    seen(['two', false]); // scrolled back up: the earlier one is the last still in view
+    seen(['two', false]);
     expect(spy.current).toBe('one');
   });
 
@@ -143,7 +141,7 @@ describe('useScrollSpy', () => {
   it('starts over when the list of sections changes, and lets go on unmount', () => {
     const spy = renderHook(useScrollSpy, ['one', 'two'], true);
     spy.rerender(['one', 'two'], true);
-    expect(observed).toHaveLength(2); // same content: no new observer
+    expect(observed).toHaveLength(2);
     spy.rerender(['one', 'two', 'three'], true);
     expect(disconnected).toBe(true);
     expect(observed).toHaveLength(5);
@@ -206,7 +204,7 @@ describe('useConvKeys', () => {
   it('moves between turns with j and k, starting from the first turn still on screen', () => {
     const handler = mount();
     press(handler, 'j');
-    expect(calls).toEqual(['prevented', 'stopGliding', 'focus:2', 'scroll:2']); // turn 1 ends below 150: current is 1
+    expect(calls).toEqual(['prevented', 'stopGliding', 'focus:2', 'scroll:2']);
     calls.length = 0;
     press(handler, 'k');
     expect(calls).toContain('focus:0');
@@ -216,7 +214,7 @@ describe('useConvKeys', () => {
     turns[2]!.contains = true;
     const handler = mount();
     press(handler, 'j');
-    expect(turns[2]!.focused).toBe(1); // already on the last turn
+    expect(turns[2]!.focused).toBe(1);
     press(handler, 'k');
     expect(turns[1]!.focused).toBe(1);
   });
@@ -238,7 +236,7 @@ describe('useConvKeys', () => {
     press(handler, 'j', { metaKey: true });
     turns.length = 0;
     press(handler, 'j');
-    expect(calls).toEqual(['prevented', 'stopGliding']); // taken, but with no turn there is nowhere to go
+    expect(calls).toEqual(['prevented', 'stopGliding']);
     root.current = null;
     calls.length = 0;
     press(handler, 'j');
@@ -260,7 +258,7 @@ describe('useConvScroll', () => {
     view.current.scroller.current = el as never;
     view.rerender([entry('a')], false);
     expect(el.scrollTo).toHaveBeenLastCalledWith({ top: 1000, behavior: 'auto' });
-    el.scrollTop = 0; // far from the bottom, but following
+    el.scrollTop = 0;
     view.rerender([entry('a'), entry('b')], false);
     expect(el.scrollTo).toHaveBeenLastCalledWith({ top: 1000, behavior: 'smooth' });
   });
@@ -279,12 +277,12 @@ describe('useConvScroll', () => {
     const el = box({ scrollTop: 0 });
     view.current.scroller.current = el as never;
     view.rerender([entry('a')], true);
-    view.current.onScroll(); // the reader scrolled up: 600px from the bottom
+    view.current.onScroll();
     expect(view.current.away).toBe(true);
     el.scrollTo.mockClear();
     view.rerender([entry('a'), entry('b'), entry('t', 'tool'), entry('c', 'user')], true);
     expect(el.scrollTo).not.toHaveBeenCalled();
-    expect(view.current.unseen).toBe(2); // tool traffic is not a message
+    expect(view.current.unseen).toBe(2);
   });
 
   it('jumps to the latest on request and forgets the unseen count', () => {
@@ -305,8 +303,8 @@ describe('useConvScroll', () => {
     const el = box();
     view.current.scroller.current = el as never;
     view.rerender([entry('a')], true);
-    view.current.onScroll(); // away
-    el.scrollTop = 580; // within 48px of the bottom again
+    view.current.onScroll();
+    el.scrollTop = 580;
     view.current.onScroll();
     expect(view.current.away).toBe(false);
     el.scrollTo.mockClear();

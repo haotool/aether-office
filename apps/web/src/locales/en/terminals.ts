@@ -1,4 +1,3 @@
-/** The terminals words, in English. */
 export const enTerminals = {
   terminalCommandState: 'Latest command status',
   terminals: 'Terminals',

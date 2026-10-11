@@ -1,5 +1,3 @@
-// Skill definitions are inert text. Parsing extracts metadata and flags executable-looking content
-// so it can be shown to the human; nothing here (or anywhere) ever runs a skill's content.
 type ParsedSkill = {
   name: string;
   description: string;

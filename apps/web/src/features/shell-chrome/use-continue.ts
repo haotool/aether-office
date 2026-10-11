@@ -13,7 +13,6 @@ type TerminalList = {
   profiles: { machineId: string; name: string; terminalProfiles: string }[];
 };
 
-/** The profile that runs this session's provider in this session's folder, on a machine that is up. */
 function profileFor(list: TerminalList | undefined, session: AttributedSession) {
   for (const machine of list?.profiles ?? []) {
     const found = (JSON.parse(machine.terminalProfiles) as Profile[]).find(
@@ -25,9 +24,8 @@ function profileFor(list: TerminalList | undefined, session: AttributedSession) 
 }
 
 /**
- * Starting a new AETHER terminal that resumes (or forks) a session AETHER only watches: through the same path as the
- * Terminals page (one tap, an owner or operator, the project's live execution on). The original terminal is not touched
- * and nothing is typed into it. Shared by the conversation's foot and the character menu.
+ * Starts a new AETHER terminal that resumes (or forks) a session AETHER only watches, through the same path as the
+ * Terminals page. The original terminal is not touched and nothing is typed into it.
  */
 export function useContinue(session: AttributedSession | null, projectId: string) {
   const t = useT();
@@ -48,7 +46,6 @@ export function useContinue(session: AttributedSession | null, projectId: string
   });
   const allowed = isOperator(me.data?.actor.role);
   const target = session ? profileFor(list.data, session) : null;
-  /** Starts the terminal; says what happened (the same line `message` holds). */
   const start = async (fork: boolean): Promise<string> => {
     if (!target || !session) return '';
     setBusy(true);

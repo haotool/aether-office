@@ -10,9 +10,8 @@ import { useLinkLive, useSessionStream } from '../../hooks/use-session-stream.js
 import { POLL, poll, pollBy, pollMs } from './polling.js';
 
 /**
- * The machine's local sessions for an owner or operator: kept fresh by the change stream, with polling as the net under
- * it (a few seconds while something works, slower otherwise, slower still while the stream is live). An owner's
- * repositories that are not projects yet are adopted.
+ * Polling is the net under the change stream: a few seconds while something works, slower otherwise, slower still while
+ * the stream is live.
  */
 export function useLocalSessions(session: Session | null) {
   const client = useQueryClient();
@@ -21,7 +20,6 @@ export function useLocalSessions(session: Session | null) {
     queryKey: ['local-sessions'],
     queryFn: () => api<LocalSessionsResponse>('/api/local-sessions').then(normalizeSessions),
     enabled: isOperator(session?.actor.role),
-    // Looked at more often while something is working, so how hard it works can be told (activity-rate.ts).
     ...pollBy((data: LocalSessionsResponse | undefined) =>
       pollMs(
         live,
@@ -42,10 +40,6 @@ export function useLocalSessions(session: Session | null) {
   return query;
 }
 
-/**
- * The project's approvals: how many wait for a decision, and the list the alerts are raised from. Shares the approvals
- * page's cache; the project's stream refreshes it, and it is looked at every few seconds only while that stream is down.
- */
 export function useApprovals(
   session: Session | null,
   projectId: string | undefined,

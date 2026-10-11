@@ -22,18 +22,14 @@ import {
 
 type Sessions = LocalSessionsResponse['sessions'];
 
-/** Columns a desk screen's title line gets before it is shortened. */
 const SCREEN_TITLE_WIDTH = 40;
 
-/** A subagent that has done something in the last half minute is still working for its parent. */
 const SUBAGENT_LIVE_MS = 20_000;
 
-/** A subagent that has not returned yet: the office seats it, tethers it and lets it pulse. */
 const isWorking = (c: Subagent) => c.status !== 'finished';
 
-/** What a squad member's facts are: everything the scene and the panel need, nothing they would have to derive. */
 export type SquadMemberFacts = {
-  id: string; // the member id, `local:<session>:sub:<id>`
+  id: string;
   type: string;
   nickname: string | null;
   status: Subagent['status'];
@@ -42,17 +38,12 @@ export type SquadMemberFacts = {
   lastSeen: number;
   toolCount: number;
   lastTool: string | null;
-  /** Tokens per minute from the subagent's transcript (Claude); null when no file gave a sample. The beam's rate. */
   tokensPerMinute: number | null;
-  /** When it last started a tool; the scene's puppet strings jerk when it changes. */
   toolAt: number | null;
-  /** What it handed back (only the error flag): the hand-over stamp reads it. Null while it runs or when unknown. */
   result: { error: boolean | null } | null;
 };
-/** A supervisor (its member id) and its subagents, finished ones included until the server drops them. */
 export type Squad = { supervisor: string; members: SquadMemberFacts[] };
 
-/** Every session that has subagents, as a squad: parent to children with their lifecycle facts. */
 export function squadsOf(sessions: Sessions): Squad[] {
   return sessions
     .filter((s) => s.subagents.length > 0)
@@ -75,7 +66,6 @@ export function squadsOf(sessions: Sessions): Squad[] {
     }));
 }
 
-/** How many subagents each supervisor has working now, by its member id. */
 const liveSquadsOf = (sessions: Sessions): Record<string, number> =>
   Object.fromEntries(
     squadsOf(sessions).map((s) => [
@@ -84,7 +74,6 @@ const liveSquadsOf = (sessions: Sessions): Record<string, number> =>
     ]),
   );
 
-/** Messages and subagent work, as the exchanges the camera can cut to and the scene can draw. */
 function pulsesOf(data: Snapshot | undefined, sessions: Sessions, now: number): Pulse[] {
   const messages = (data?.messages ?? []).flatMap((m) =>
     m.deliveries.map((d) => ({
@@ -109,7 +98,6 @@ function pulsesOf(data: Snapshot | undefined, sessions: Sessions, now: number): 
   return [...messages, ...subagents];
 }
 
-/** Each live subagent with its parent session's member: the office draws a faint tether between them. */
 function tethersOf(sessions: Sessions): { parent: string; child: string }[] {
   return sessions.flatMap((s) =>
     s.subagents.filter(isWorking).map((c) => ({
@@ -119,7 +107,6 @@ function tethersOf(sessions: Sessions): { parent: string; child: string }[] {
   );
 }
 
-/** What each observed member is doing right now, in a word: the tool its last hook named, or the state it waits in. */
 function doingOf(sessions: Sessions, locale: Locale): Record<string, string> {
   const out: Record<string, string> = {};
   for (const s of sessions) {
@@ -132,7 +119,6 @@ function doingOf(sessions: Sessions, locale: Locale): Record<string, string> {
   return out;
 }
 
-/** Each session member's full title and technical id: the name tag's tooltip, where the short label is not enough. */
 function namesOf(sessions: Sessions): Record<string, { title: string; tag: string; repo: string }> {
   return Object.fromEntries(
     sessions.map((s) => [
@@ -150,7 +136,6 @@ export function screensOf(sessions: Sessions, now: number): Record<string, Scree
     const { contextPct, model } = s.usage;
     out[`${LOCAL_PREFIX}${s.key}`] = {
       provider: s.provider,
-      // A desk screen has room for a short line: the title on a meaning boundary, not cut in the middle of a bracket.
       title: s.title && shortLabel(s.title, { maxWidth: SCREEN_TITLE_WIDTH, repo: s.repo }),
       repo: s.repo,
       branch: s.git?.branch ?? null,
@@ -163,10 +148,9 @@ export function screensOf(sessions: Sessions, now: number): Record<string, Scree
         ? (activity as ScreenFacts['state'])
         : 'unknown',
       tool: s.hook?.tool ?? null,
-      // A tool is only running until the next event, so its clock starts at the hook's last event.
       toolSince: s.hook?.tool ? s.hook.at : null,
       recent: (s.hook?.recent ?? [])
-        .filter((c) => !c.agentId) // the session's own calls; a helper's are shown with the helper
+        .filter((c) => !c.agentId)
         .map(({ tool, target }) => ({ tool, target })),
       quietMinutes: s.liveness.quietMs === null ? null : Math.floor(s.liveness.quietMs / 60_000),
       ports: s.ports,
@@ -175,7 +159,6 @@ export function screensOf(sessions: Sessions, now: number): Record<string, Scree
   return out;
 }
 
-/** What the compaction detector watches in each observed member: the context in use and the CLI's own marker. */
 function contextsOf(sessions: Sessions): Record<string, ContextReading> {
   return Object.fromEntries(
     sessions.map((s) => [
@@ -189,7 +172,6 @@ function contextsOf(sessions: Sessions): Record<string, ContextReading> {
   );
 }
 
-/** How hard each observed member is working (see activity-rate.ts); subagents work at least at the base level. */
 function intensitiesOf(
   sessions: Sessions,
   beats: ReadonlyMap<string, number>,
@@ -206,10 +188,6 @@ function intensitiesOf(
   return out;
 }
 
-/**
- * Everything the office draws about the machine's own sessions: the members they make, and how the scene dresses them
- * (floor, role, branch, sleeping rabbit, ghost, jiangshi) and who has been sent home. Recomputed on every render, because liveness depends on the clock.
- */
 export function officeModel(
   data: Snapshot | undefined,
   sessions: Sessions | undefined,

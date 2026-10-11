@@ -5,7 +5,6 @@ import { api } from '../../lib/api/api.js';
 const KEY = ['models'];
 const FIVE_MINUTES = 5 * 60_000;
 
-/** The models the Claude and Codex CLIs on this machine offer. `refresh` asks the server to look again right now. */
 export function useModels() {
   const client = useQueryClient();
   const query = useQuery({

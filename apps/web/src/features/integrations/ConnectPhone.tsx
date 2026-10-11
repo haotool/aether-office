@@ -3,10 +3,8 @@ import { Smartphone } from 'lucide-react';
 import { Modal } from '../../ui/Modal.js';
 import { useT } from '../../ui/useT.js';
 
-// The pairing panel (QR codes, expiry clock, status watch) loads when it is first opened, not with the app.
 const PairPanel = lazy(() => import('./PairPanel.js').then((m) => ({ default: m.PairPanel })));
 
-/** "Open on your phone": a button that opens the pairing panel from anywhere in the app, not only from Settings. */
 export function PairPhoneButton({ variant }: { variant: 'icon' | 'text' }) {
   const t = useT();
   const [open, setOpen] = useState(false);

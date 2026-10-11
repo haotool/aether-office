@@ -46,7 +46,6 @@ export const NAMED_DECLARATIONS = new Set([
 export const hasModifier = (node, kind) => Boolean(node.modifiers?.some((m) => m.kind === kind));
 export const nameOf = (node) => node.name?.text ?? '(anonymous)';
 
-/** Name of a function-like node, borrowing the variable or property it is assigned to. */
 export function functionName(node) {
   if (node.name) return node.name.text ?? '(computed)';
   const parent = node.parent;

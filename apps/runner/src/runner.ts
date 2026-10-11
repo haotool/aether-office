@@ -93,7 +93,6 @@ export class Runner {
         this.journal.save();
       }
   }
-  /** The journal entry `journal.accept` made for this run before it was started. */
   private acceptedRun(runId: string) {
     const run = this.journal.state.runs[runId];
     if (!run) throw new Error('RUN_NOT_JOURNALED');
@@ -110,7 +109,6 @@ export class Runner {
       processIdentity,
     });
   }
-  /** What a native provider reports while it runs: its process, its events and the permission prompts for a person. */
   private nativeSink(command: RunCommand, abort: AbortController): NativeSink {
     const base = { runId: command.runId, epoch: command.epoch };
     let processIdentity: string | undefined;
@@ -147,7 +145,6 @@ export class Runner {
       },
     };
   }
-  /** Runs the demo fixture or, with a native executor, the real provider; returns what to report. */
   private async runProvider(command: RunCommand, abort: AbortController): Promise<ProviderResult> {
     const base = { runId: command.runId, epoch: command.epoch };
     if (command.provider === 'demo')
@@ -207,7 +204,6 @@ export class Runner {
       this.active.delete(command.runId);
     }
   }
-  /** Tells control what this runner can do and learns what it must stop. */
   private async heartbeat() {
     const heartbeat = await this.api<{
       cancelRunIds: string[];
@@ -290,9 +286,8 @@ export class Runner {
     }
   }
   /**
-   * Before anything starts: stops what a runner that died left running. The journal holds each run's and terminal's
-   * `pid:start`; a process is stopped only if it is still that process and its owner is gone (see reapSurvivor), so a
-   * crash no longer leaves an agent burning quota with nobody to report to.
+   * Stops what a runner that died left running: a process is stopped only if it is still the journaled `pid:start` and
+   * its owner is gone (see reapSurvivor).
    */
   async reapSurvivors(): Promise<Reaped[]> {
     const targets = [

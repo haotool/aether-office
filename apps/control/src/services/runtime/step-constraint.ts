@@ -1,6 +1,5 @@
 import type { Context } from '../domain/context.js';
 
-/** The provider a step requires of its engineer or reviewer, if the step belongs to a workflow that fixes one. */
 export function stepConstraint(
   ctx: Context,
   workId: string,

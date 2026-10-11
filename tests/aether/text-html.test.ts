@@ -11,7 +11,6 @@ const REPORTED =
 const REPORTED_CLEAN =
   'confirm-rate 的有效設定除了 decision off→on，也包含 R4 false→true，不能僅憑 diff 將數字變化歸因於 decision。';
 
-// [name, input, expected]
 const CASES: [string, string, string][] = [
   ['the reported span with a class', REPORTED, REPORTED_CLEAN],
   ['span with several attributes', '<span class="a" style="color:red" data-x=1>hi</span>', 'hi'],
@@ -162,7 +161,6 @@ describe('neutralizeHtml corpus', () => {
 const ALLOWED_TAG =
   /<\/?(span|div|p|br|a|b|i|em|strong|code|pre|table|tr|td|th|ul|ol|li|details|summary|img|h[1-6]|script|style|font|center|sub|sup|blockquote)(\s[^<>]*)?\/?>/i;
 
-/** Strips code spans and fences, the only places an allowlisted tag may remain. */
 const withoutCode = (text: string) => text.replace(/```[\s\S]*?```/g, '').replace(/`[^`\n]*`/g, '');
 
 describe('neutralizeHtml properties', () => {

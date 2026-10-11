@@ -1,4 +1,3 @@
-/* The strip under the supervisor's header: the squad as chips */
 .squad-strip {
   display: grid;
   gap: var(--space-6);
@@ -39,7 +38,6 @@
   font-size: var(--fs-label);
 }
 
-/* The activity cards under the transcript */
 .sub-cards {
   display: grid;
   gap: var(--space-8);
@@ -54,7 +52,6 @@
 }
 .sub-card {
   border: 1px solid var(--line);
-  border-left: 3px solid var(--squad);
   border-radius: var(--r-lg);
   background: var(--surface);
 }
@@ -138,7 +135,6 @@
   font-size: var(--fs-small);
 }
 
-/* A subagent's own view: the conversation's scroll area, with the relation chip first */
 .u-chip.relation-chip {
   align-self: flex-start;
   max-width: 100%;
@@ -150,7 +146,6 @@
   color: var(--squad);
 }
 
-/* Hook not installed: why the squad cannot be seen, and the one command that changes it */
 .hook-note {
   display: grid;
   gap: var(--space-6);

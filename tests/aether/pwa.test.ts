@@ -53,7 +53,6 @@ it('answers only the page and hashed files, and never an API response', () => {
     '/sw.js',
   ])
     expect(handling(request(path), ORIGIN), path).toBe('network');
-  // a navigation to an API address, a write, and another origin are all left alone
   expect(handling(request('/api/export', 'navigate'), ORIGIN)).toBe('network');
   expect(handling(request('/assets/index-DrhTULmU.js', 'no-cors', 'POST'), ORIGIN)).toBe('network');
   expect(
@@ -67,7 +66,7 @@ it('answers only the page and hashed files, and never an API response', () => {
 it('registers only in a secure production page that has not been switched off', () => {
   const ok = { secure: true, supported: true, production: true, disabled: false };
   expect(canRegister(ok)).toBe(true);
-  expect(canRegister({ ...ok, secure: false })).toBe(false); // http://192.168.x.x
+  expect(canRegister({ ...ok, secure: false })).toBe(false);
   expect(canRegister({ ...ok, supported: false })).toBe(false);
   expect(canRegister({ ...ok, production: false })).toBe(false);
   expect(canRegister({ ...ok, disabled: true })).toBe(false);

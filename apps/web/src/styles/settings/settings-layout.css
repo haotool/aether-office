@@ -1,7 +1,6 @@
 /*
- * The Settings page: groups of rows beside a navigation (a column from 560px of page width, a row of tabs under that),
- * and on a phone a list of groups that each open a page of their own. The widths are the page's own (a container
- * query), because the sidebar and the session panel take their share of the window.
+ * The widths are the page's own (a container query), because the sidebar and the session panel take their share of the
+ * window.
  */
 .settings {
   container: settings / inline-size;
@@ -58,7 +57,6 @@
   right: var(--space-4);
 }
 
-/* The navigation: tabs in a row of their own under the content width where two columns do not fit. */
 .snav {
   position: sticky;
   top: 0;
@@ -128,12 +126,10 @@
       inset 0 0 0 1px var(--glass-accent-line);
   }
 }
-/* The last group can reach the top of the page, so the mark can reach it too. */
 .settings-layout:not(.single) .settings-main > .ssection:last-child {
   min-height: calc(100dvh - var(--space-64));
 }
 
-/* A phone: the groups are the page, each a large row; a group opens on its own page under a bar with a way back. */
 .shome ul {
   display: grid;
   gap: var(--space-8);
@@ -201,7 +197,6 @@
   color: var(--mint);
   font-size: var(--fs-small);
 }
-/* A phone on its side has no height to give to a bar that follows the page. */
 @media (max-height: 500px) {
   .settings-bar,
   .snav {

@@ -9,7 +9,6 @@ import type { RunCommand } from '../../packages/contracts/src/index.js';
 import { Journal } from '../../apps/runner/src/journal.js';
 import { Runner } from '../../apps/runner/src/runner.js';
 
-// A stub control: records what it receives, can refuse everything, and can "lose the response" once.
 const received: { path: string; body: { sourceEventId?: string; summary?: string } }[] = [];
 let mode: 'up' | 'down' | 'drop-response-once' = 'up';
 let dropped = false;
@@ -26,7 +25,7 @@ beforeAll(async () => {
       received.push({ path: req.url ?? '', body });
       if (mode === 'drop-response-once' && !dropped && body.summary === 'second') {
         dropped = true;
-        return void req.socket.destroy(); // processed, but the runner never hears back
+        return void req.socket.destroy();
       }
       res.setHeader('content-type', 'application/json');
       res.end(JSON.stringify({ duplicate: false, command: null }));
@@ -61,9 +60,8 @@ it('keeps committed events through an outage and a runner restart, then delivers
 
     mode = 'down';
     await expect(first.flush()).rejects.toThrow('CONTROL_HTTP_503');
-    expect(first.journal.state.pending).toHaveLength(3); // nothing dropped while disconnected
+    expect(first.journal.state.pending).toHaveLength(3);
 
-    // The runner process restarts: the spool is reloaded from disk and drained in the original order.
     const restarted = new Runner(url, 'token', new Journal(file));
     expect(restarted.journal.state.pending.map((e) => (e as { summary: string }).summary)).toEqual([
       'first',
@@ -73,7 +71,7 @@ it('keeps committed events through an outage and a runner restart, then delivers
     mode = 'up';
     await restarted.flush();
     expect(received.map((r) => r.body.summary)).toEqual(['first', 'second', 'third']);
-    expect(new Journal(file).state.pending).toEqual([]); // acknowledged events leave the spool
+    expect(new Journal(file).state.pending).toEqual([]);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -86,15 +84,15 @@ it('resends after a lost response, so control sees a duplicate it can deduplicat
     const events = ['first', 'second', 'third'].map(event);
     for (const e of events) runner.journal.enqueue(e);
     mode = 'drop-response-once';
-    await expect(runner.flush()).rejects.toThrow(); // the connection drops after control processed "second"
+    await expect(runner.flush()).rejects.toThrow();
     expect(runner.journal.state.pending.map((e) => (e as { summary: string }).summary)).toEqual([
       'second',
       'third',
-    ]); // "first" was acknowledged, "second" is retained
+    ]);
     await runner.flush();
     const ids = received.map((r) => r.body.sourceEventId);
-    expect(received.map((r) => r.body.summary)).toEqual(['first', 'second', 'second', 'third']); // at-least-once, in order
-    expect(new Set(ids).size).toBe(3); // every duplicate carries the same sourceEventId
+    expect(received.map((r) => r.body.summary)).toEqual(['first', 'second', 'second', 'third']);
+    expect(new Set(ids).size).toBe(3);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -127,7 +125,7 @@ it('after a crash the runner reports an unfinished run as indeterminate and neve
 
     const runner = new Runner(url, 'token', new Journal(file));
     runner.start();
-    runner.stop(); // only the recovery step matters here
+    runner.stop();
     const pending = runner.journal.state.pending as {
       runId: string;
       outcome: string;
@@ -136,8 +134,7 @@ it('after a crash the runner reports an unfinished run as indeterminate and neve
     expect(pending).toHaveLength(1);
     expect(pending[0]).toMatchObject({ runId: command.runId, outcome: 'indeterminate' });
     expect(pending[0]!.summary).toContain('no automatic retry');
-    expect(new Journal(file).state.runs[command.runId]!.state).toBe('finished'); // it will not be started again
-    // Starting once more must not report it a second time.
+    expect(new Journal(file).state.runs[command.runId]!.state).toBe('finished');
     const again = new Runner(url, 'token', new Journal(file));
     again.start();
     again.stop();

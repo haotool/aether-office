@@ -11,7 +11,6 @@ type ModelChipProps = {
   onCommand: (text: string) => void;
 };
 
-/** The model chip: what the session runs now, and a list to change it for the next message. */
 export function ModelChip({ session, onCommand }: ModelChipProps) {
   const t = useT();
   const [open, setOpen] = useState(false);
@@ -69,7 +68,6 @@ const QUICK_LABEL = {
   esc: 'composerEsc',
 } as const;
 
-/** One-tap replies for a phone: words that answer most prompts, and Esc, which backs out of one. */
 export function QuickReplies({
   onReply,
   onEsc,
@@ -85,7 +83,6 @@ export function QuickReplies({
           key={reply.id}
           type="button"
           className="u-chip"
-          // Keep the focus where it is, or the on-screen keyboard closes on every tap.
           onPointerDown={(e) => e.preventDefault()}
           onClick={() => (reply.send ? onReply(reply.send) : onEsc())}
         >

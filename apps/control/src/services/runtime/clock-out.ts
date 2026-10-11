@@ -7,7 +7,6 @@ import type {
 } from '@aether/contracts';
 import { stopLocalSession } from './stop-session.js';
 
-/** How many processes are asked to end at once: each may take its whole grace period, and the machine is theirs too. */
 const AT_ONCE = 4;
 const REFUSALS: Record<string, ClockOutSkipReason> = {
   SESSION_NOT_FOUND: 'not_found',
@@ -22,7 +21,6 @@ type Judges = {
   pidOf: (key: string) => number | null;
   mayStop: (projectId: string) => boolean;
 };
-/** Test seams of the stop: which process is "this server" and how long a process has to end before SIGKILL. */
 type Tuning = { controlPid?: number; graceMs?: number };
 const skipped = (key: string, reason: ClockOutSkipReason): ClockOutItem => ({
   key,
@@ -55,7 +53,7 @@ async function clockOutOne(
       return { key, outcome: 'cleared', freedBytes: session.resources?.rssBytes ?? null };
     return outcome === 'still_running'
       ? { key, outcome: 'failed', reason: 'still_running' }
-      : skipped(key, outcome); // 'changed' | 'zombie'
+      : skipped(key, outcome);
   } catch (error) {
     const reason = error instanceof DomainError ? REFUSALS[error.code] : undefined;
     if (!reason) throw error;
@@ -64,9 +62,8 @@ async function clockOutOne(
 }
 
 /**
- * Sends the named sessions home: each goes through the same checks and the same SIGTERM as stopping one by hand (see
- * stop-session.ts), plus a SIGKILL for one that ignores it, so the memory really is released, and a few at a time.
- * Never throws for one session's refusal: every session gets its own result, in the order asked.
+ * Each session goes through the same checks and SIGTERM as stopping one by hand (see stop-session.ts), plus a SIGKILL
+ * for one that ignores it. One session's refusal never throws: every session gets its own result, in the order asked.
  */
 export async function clockOutSessions({
   request,

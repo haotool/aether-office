@@ -2,7 +2,7 @@
 
 Where AETHER OFFICE's code and assets come from, and what it owes to the projects that came before it. The licence of every
 path is in [REUSE.toml](../../REUSE.toml); the notices that must travel with the software are in
-[THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md). This is a factual record, not legal advice.
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). This is a factual record, not legal advice.
 
 ## The upstream project: agent-office
 
@@ -26,6 +26,13 @@ No tracked file is byte-identical to any blob of `upstream/main`. Nine paths sha
 `.gitignore`, `AGENTS.md`, `CLAUDE.md`, `LICENSE`, `README.md`, `docs/configuration.md`, `docs/features.md`, `package.json`);
 apart from the licence text they were rewritten and show no overlap.
 
+## AI assistance
+
+Most of the code, tests and documentation of AETHER OFFICE was written with AI coding agents (Claude Code, Codex and
+Cursor) under the maintainer's direction, who reviews the changes and answers for them. Two controls address the licence
+risk of generated code: the overlap scan (`scripts/oss/overlap-scan.mjs`) against the studied projects, and the policy in
+[licence-policy](licence-policy.md#ai-assisted-contributions). The results are recorded in the sections below.
+
 ## Code adapted from other projects
 
 | Path                                      | Source                                                                                       | Licence | How it is credited |
@@ -38,9 +45,8 @@ document is the current record.
 
 ## Generated code
 
-`packages/providers/generated/codex-0.159.2` (JSON Schema) and `codex-0.159.2-ts` (TypeScript) are the unmodified output of
-the OpenAI Codex CLI 0.159.2 (`codex app-server generate-json-schema` and `generate-ts`, the TypeScript emitted through
-ts-rs). They derive from the protocol types and documentation comments of [openai/codex](https://github.com/openai/codex),
+`packages/providers/generated/codex-0.159.2-ts` is the unmodified output of the OpenAI Codex CLI 0.159.2
+(`codex app-server generate-ts`, the TypeScript emitted through ts-rs). It derives from the protocol types and documentation comments of [openai/codex](https://github.com/openai/codex),
 licensed Apache-2.0 (verified: `LICENSE` and `NOTICE` of openai/codex, "Copyright 2025 OpenAI"). Only types are imported, so
 nothing of it is in the built application. Obligations met: the licence text (`LICENSES/Apache-2.0.txt`), the upstream NOTICE
 (`NOTICE`, `THIRD_PARTY_NOTICES.md`), files unmodified, `REUSE.toml` records the licence for the folder.
@@ -64,7 +70,7 @@ nothing of it is in the built application. Obligations met: the licence text (`L
 ## Test data
 
 Fixtures are synthetic. `tests/aether/fixtures/session-corpus.ts` states that nothing comes from a real session; the process
-fixtures in `fixtures/processes` are scripts that imitate a CLI. `tests/aether/fixtures/models/*.json` reproduce the shape of the
+fixtures in `tests/processes` are scripts that imitate a CLI. `tests/aether/fixtures/models/*.json` reproduce the shape of the
 model lists that Claude Code and Codex cache locally (a handful of model names and one-line descriptions), which is factual
 interface data. No personal data was found in them.
 
@@ -120,7 +126,7 @@ Run on 2026-10-07 (`--exclude mcp_agent_mail --exclude agents-office`):
 | Window | Matching blocks (pairs of files) | Repository files involved | What they are |
 | --- | --- | --- | --- |
 | 50 tokens (about 300 characters, 8 to 10 lines) | 4 | 3 | `aokit.py` (2 blocks) and `geometry.ts` from agent-office; `redaction.ts` from Orca. All declared above. |
-| 30 tokens | 22 | 7 | The three above; `build_animals.py` (4 lines, agent-office); three sentences of the Contributor Covenant in `CODE_OF_CONDUCT.md` (shared with the codes of conduct of four other projects; CC BY 4.0, credited); the *mulberry32* generator in `spec.ts` (found in nine files of two projects, being a common snippet); one UUID-v4 regular expression in a test. |
+| 30 tokens | 22 | 7 | The three above; `build_animals.py` (4 lines, agent-office); three sentences of the Contributor Covenant in `.github/CODE_OF_CONDUCT.md` (shared with the codes of conduct of four other projects; CC BY 4.0, credited); the *mulberry32* generator in `spec.ts` (found in nine files of two projects, being a common snippet); one UUID-v4 regular expression in a test. |
 
 Nothing matched the AGPL projects (claude-squad, agent-teams-ai) or multiagents at either window. One earlier run during the
 same audit included the two excluded projects and found nothing in them either beyond the standard MIT text; they are excluded

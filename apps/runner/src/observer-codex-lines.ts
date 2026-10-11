@@ -3,9 +3,8 @@ import { z } from 'zod';
 import { codexRolloutVersion } from '@aether/providers';
 import { hash, type Observation } from './observer-source.js';
 
-// Rollout versions come from providers/generated/compat.json: anything else is reported as
-// unsupported_schema instead of being parsed on a guess.
-// Record types seen in real 0.159.2 and 0.160.0 rollouts that carry no conversation content.
+// Record types seen in real 0.159.2 and 0.160.0 rollouts that carry no conversation content. Other rollout versions
+// come from providers/generated/compat.json and are reported as unsupported_schema instead of being parsed on a guess.
 const NON_CONVERSATION_RECORDS = [
   'turn_context',
   'event_msg',
@@ -14,7 +13,6 @@ const NON_CONVERSATION_RECORDS = [
   'token_usage_record',
   'inter_agent_communication_metadata',
 ];
-/** Payload types of a `response_item` that carry no message and no tool name, and are known to be harmless. */
 const IGNORED_ITEMS = [
   'function_call_output',
   'custom_tool_call',
@@ -28,22 +26,19 @@ const metaSchema = z.object({
   cwd: z.string().refine(isAbsolute),
   cli_version: z.string().refine(codexRolloutVersion),
 });
-export const checkpointSchema = z
-  .object({
-    identity: z.string(),
-    offset: z.number().int().nonnegative(),
-    prefixLength: z.number().int().min(0).max(256),
-    prefixHash: z.string(),
-    meta: metaSchema.nullable(),
-    failure: z.enum(['unsupported_schema', 'limit_exceeded']).nullable(),
-  })
-  .strict();
+export const checkpointSchema = z.strictObject({
+  identity: z.string(),
+  offset: z.number().int().nonnegative(),
+  prefixLength: z.number().int().min(0).max(256),
+  prefixHash: z.string(),
+  meta: metaSchema.nullable(),
+  failure: z.enum(['unsupported_schema', 'limit_exceeded']).nullable(),
+});
 export type ObserverCheckpoint = z.infer<typeof checkpointSchema>;
 
 const jsonObject = z.record(z.string(), z.unknown());
 type Item = z.infer<typeof jsonObject>;
 
-/** One line is either nothing to record (null), a record, or a format this reader does not know. */
 type LineOutcome = Observation | null | 'unsupported_schema';
 const UNSUPPORTED = 'unsupported_schema';
 
@@ -85,7 +80,6 @@ function messageText(p: Item): string | null {
     .slice(0, 16000);
 }
 
-/** The record of one `response_item` payload: a user or assistant message, or the name of a tool called. */
 function conversationRecord(
   p: Item,
   base: Pick<Observation, 'sourceId' | 'sessionId'>,
@@ -103,7 +97,6 @@ function conversationRecord(
   return IGNORED_ITEMS.includes(String(p['type'])) ? null : UNSUPPORTED;
 }
 
-/** Decodes one rollout line at `offset`; a `session_meta` line updates `checkpoint.meta`. */
 export function decodeLine(
   line: Buffer,
   offset: number,

@@ -33,6 +33,8 @@ Only verified provider releases are accepted; a mismatched version refuses to st
 
 ## Execution model
 
+- **Your credentials stay yours.** AETHER neither stores nor forwards your Claude credentials: it runs your own Claude Code in
+  your environment.
 - **One worktree per writer.** Each agent works in its own Git worktree. Uncommitted changes in the source checkout are
   neither copied into it nor deleted. A worktree isolates work; it is not an OS sandbox.
 - **Provider settings.** Codex runs with `workspace-write`, `networkAccess=false` and user approvals. Claude uses the SDK's

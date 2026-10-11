@@ -5,7 +5,6 @@ import math
 from animal_geometry import HEAD_CENTRE, front_y, materials, mesh_part, smooth_path, ao, ellipsoids
 import bmesh
 
-# Where the ghost's body runs out: a wisp trailing down and back, in place of legs.
 GHOST_TAIL = smooth_path([((0, .03, .52), .2), ((0, .08, .36), .14), ((0, .16, .22), .085), ((0, .27, .1), .03)])
 
 
@@ -13,7 +12,6 @@ def undead_parts(P, mats, lay):
     """A jiangshi's face and hat: a talisman where the eyes were, fangs, an official's hat. All on the head bone."""
     cx, cy, cz = HEAD_CENTRE
     out = []
-    # The Qing official's hat: a black cone with a band and a red button, over a talisman paper hung from its rim.
     out.append(mesh_part('hat', mats['hat'], 'head', lambda bm: ao.cylinder(
         bm, (0, cy + .01, cz + .15), (0, cy + .01, cz + .36), .235, .165, segs=32)))
     out.append(mesh_part('hat_band', mats['seal'], 'head', lambda bm: ao.torus(
@@ -28,7 +26,6 @@ def undead_parts(P, mats, lay):
             bm, (0, face_y - .006, cz + z), (.075, .005, .018), bevel=.001)))
     out.append(mesh_part('seal_line', mats['seal'], 'head', lambda bm: ao.box(
         bm, (0, face_y - .006, cz + .1), (.014, .005, .24), bevel=.001)))
-    # The long robe: a flared skirt over the legs, a gold square on the chest.
     out.append(mesh_part('robe_skirt', mats['cloth'], 'pelvis', lambda bm: ao.cylinder(
         bm, (0, .0, .84), (0, .0, .17), .2, .31, segs=40, cap=False)))
     out.append(mesh_part('robe_hem', mats['seal'], 'pelvis', lambda bm: ao.torus(

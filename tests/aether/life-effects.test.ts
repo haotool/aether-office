@@ -114,7 +114,7 @@ describe('putting a cue on the stage', () => {
     const near = cueSprites(c, 2500, stage());
     expect(near.length).toBeGreaterThan(0);
     expect(near.every((s) => Math.abs(s.x - 2) < 1.2 && Math.abs(s.z - 3) < 1.2)).toBe(true);
-    expect(cueSprites(cue('rubber-duck', 'm5'), 2500, stage())).toEqual([]); // floor 1 is not in view
+    expect(cueSprites(cue('rubber-duck', 'm5'), 2500, stage())).toEqual([]);
     expect(
       cueSprites(cue('rubber-duck', 'm5'), 2500, stage({ exploded: true })).length,
     ).toBeGreaterThan(0);
@@ -137,7 +137,7 @@ describe('putting a cue on the stage', () => {
     expect(flat.x).toBeCloseTo(-1);
     expect(flat.z).toBeCloseTo(3);
     const confetti = cueSprites(cue('konami', null), 3000, stage());
-    expect(confetti.length).toBe(2 * EFFECTS['konami'](2000, 4500, 1, 0).length); // m1 and m2, not m5
+    expect(confetti.length).toBe(2 * EFFECTS['konami'](2000, 4500, 1, 0).length);
   });
 
   it('never claims every rule needs a drawing: each shipped rule has one', () => {

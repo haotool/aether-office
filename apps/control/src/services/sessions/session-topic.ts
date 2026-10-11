@@ -3,16 +3,14 @@ import { cleanTitle } from '@aether/kernel';
 import { readEdge } from '../platform/file-edge.js';
 import { redactSecrets } from '../platform/redaction.js';
 
-// What a session was asked to do. It classifies the session on the server and is then dropped, except that a Codex
-// session without a thread name (every `codex exec` run) is titled by its task's opening words, stripped of
-// credentials, for the owner and operators, the same audience that may read the live transcript. Never stored or logged.
+// A Codex session without a thread name (every `codex exec` run) is titled by its task's opening words, stripped of
+// credentials, for owners and operators only. Never stored or logged.
 const TAIL_BYTES = 256 * 1024;
 const HEAD_BYTES = 512 * 1024;
 const MAX_TOPIC = 400;
 
 const TITLE_LENGTH = 80;
 
-/** Pure. A title made from a task's opening words, for a session whose provider gave it none. */
 export function topicTitle(topic: string | null): string | null {
   if (!topic) return null;
   return cleanTitle(redactSecrets(topic), TITLE_LENGTH + 1) || null;
@@ -23,7 +21,6 @@ const clip = (v: unknown) =>
 const obj = (v: unknown): Record<string, unknown> =>
   typeof v === 'object' && v !== null ? (v as Record<string, unknown>) : {};
 
-/** Pure. Claude Code records the latest prompt as a `last-prompt` entry. */
 export function claudeTopic(tail: string): string | null {
   for (const line of tail.split('\n').reverse()) {
     if (!line.includes('"last-prompt"')) continue;
@@ -37,10 +34,8 @@ export function claudeTopic(tail: string): string | null {
   return null;
 }
 
-// Context Codex injects before the user's own words (instructions, environment) is not the task.
 const INJECTED = /^(<|# AGENTS\.md|AGENTS\.md instructions|<environment)/i;
 
-/** Pure. The first thing the user said in a Codex rollout. */
 export function codexTopic(head: string): string | null {
   for (const line of head.split('\n')) {
     if (!line.includes('"user"')) continue;

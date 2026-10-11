@@ -11,7 +11,7 @@ it('computes CPU busy share between samples and reads real memory and disk', asy
   const m = await systemMetrics([process.cwd(), process.cwd()]);
   expect(m.cpu.cores).toBeGreaterThan(0);
   expect(m.memory.totalBytes).toBeGreaterThan(m.memory.freeBytes);
-  expect(m.disks).toHaveLength(1); // the same volume through two paths is listed once
+  expect(m.disks).toHaveLength(1);
   expect(m.disks[0]!.totalBytes).toBeGreaterThan(m.disks[0]!.freeBytes);
 });
 

@@ -1,7 +1,3 @@
-// What the hand-over draws at a moment: the boxes (folders in hand, in flight and stacked in the in-trays, and the stamps)
-// and the seals. Pure: the book, the squads and the clock in, lists of instances out. The layer writes them into one
-// instanced mesh (the boxes) and two (the seals, one per word), so the whole hand-over is a handful of draw calls however
-// many folders there are.
 import { hashText } from '../../environment/hash.js';
 import { floorY } from '../../scene/scene-geometry.js';
 import { DESK_TOP } from '../squad-art.js';
@@ -12,7 +8,6 @@ import { FOLDER_THICKNESS, deskPlaces, folderAt, pressAt, type DeskPlaces } from
 import type { StampKind } from './stamp.js';
 import { itemAt } from '../../environment/checked.js';
 
-/** Boxes the mesh has room for: five folders (two boxes each) and a stamp (two) for each of 8 supervisors, and 16 more in hand. */
 export const BOX_CAPACITY = 160;
 export const SEAL_CAPACITY = 8;
 
@@ -28,15 +23,12 @@ type HandoverItems = { boxes: BoxItem[]; seals: Record<StampKind, SealItem[]> };
 const FOLDER = [0.3, FOLDER_THICKNESS, 0.22] as const;
 const TAB_SIZE = [0.1, FOLDER_THICKNESS, 0.04] as const;
 const TAB_AT = [0.08, 0, -0.13] as const;
-/** How high the stamp rises on its way over to the tray and back. */
 const STAMP_ARC_M = 0.03;
-/** How long the seal's pop lasts after the stamp touches. */
 const SEAL_POP_MS = 150;
 const ease = (k: number) => k * k * (3 - 2 * k);
 
 type At = readonly [number, number, number];
 
-/** A folder (the body and its tab) centred at `at`, turned by `yaw`. */
 function folder(out: BoxItem[], at: At, yaw: number, shade: string, tab: string, scale = 1): void {
   const cos = Math.cos(yaw);
   const sin = Math.sin(yaw);
@@ -58,10 +50,8 @@ function folder(out: BoxItem[], at: At, yaw: number, shade: string, tab: string,
   });
 }
 
-/** Each folder of a stack lies a little askew, picked by the seed (stable as the stack grows). */
 const askew = (seed: number, i: number) => (((hashText(`${seed}:${i}`) % 200) - 100) / 100) * 0.14;
 
-/** Folders on their way: in the carrier's hands, gliding into the tray, popping up in it. */
 function inFlight(
   boxes: BoxItem[],
   mine: readonly Book['entries'][string][],
@@ -95,7 +85,6 @@ export function handoverItems(
     const mine = Object.values(book.entries).filter((e) => e.supervisor === s.supervisor);
     const { count, seal } = trayView(book, s.supervisor, now);
     const slotY = (n: number) => base + home.tray[1] + n * FOLDER_THICKNESS;
-    // The stack: the folders delivered so far, the top one wearing the colour of the last stamp.
     for (let i = 0; i < count; i++)
       folder(
         boxes,
@@ -105,11 +94,9 @@ export function handoverItems(
         i === count - 1 && seal ? TAB[seal.kind] : TAB.received,
       );
     inFlight(boxes, mine, { base, now, count });
-    // The stamp rests on the desk; when the supervisor has read it goes over the in-tray, presses and comes back.
     const press = Math.min(1, Math.max(0, ...mine.map((e) => pressAt(e.plan, now - e.since))));
     const onPaper = slotY(Math.max(0, count - 1)) + FOLDER_THICKNESS / 2;
     stamp(boxes, home, press, base + DESK_TOP, onPaper);
-    // The seal on the top folder, from the moment the stamp touches it, with a small pop.
     const age = seal ? now - seal.at : -1;
     if (seal && count > 0 && age >= 0)
       seals[seal.kind].push({
@@ -121,7 +108,6 @@ export function handoverItems(
   return { boxes: boxes.slice(0, BOX_CAPACITY), seals };
 }
 
-/** The stamp: at rest on the desk, then over the in-tray, pressing (`press` 0 to 1) and back on its arc. */
 function stamp(
   boxes: BoxItem[],
   home: DeskPlaces,

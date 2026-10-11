@@ -1,6 +1,6 @@
 {
   "name": "aether-office",
-  "version": "0.4.0-dev.0",
+  "version": "0.4.0",
   "description": "A local-first workspace for coding agents: a 3D office for your Claude Code and Codex sessions, and a workbench to assign, review and verify their work.",
   "private": true,
   "type": "module",
@@ -25,6 +25,11 @@
   "packageManager": "pnpm@12.8.1",
   "engines": {
     "node": ">=24.21.0 <25"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "printWidth": 100,
+    "trailingComma": "all"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -64,6 +69,9 @@
     "quality:gates": "node scripts/quality/release/gates.mjs",
     "oss:check": "node scripts/oss/third-party-notices.mjs --check && node scripts/oss/reuse-check.mjs && node scripts/oss/readiness-check.mjs",
     "perf:mobile": "node --import tsx scripts/mobile-perf/run.ts",
+    "protocol:regen": "node scripts/regenerate-codex-protocol.mjs",
+    "perf:evidence": "node --import tsx scripts/mobile-perf/evidence.ts",
+    "perf:record": "node scripts/mobile-perf/record.mjs",
     "ux:matrix": "playwright test --config e2e/ux-matrix/playwright.config.ts",
     "ux:summary": "node scripts/ux-matrix-summary.mjs"
   },

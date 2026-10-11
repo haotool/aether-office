@@ -25,7 +25,6 @@ it('binds comments to commit and hunk, and marks them carried or stale when the 
       run(f.owner.actor, 'work.create', { title: 'Reviewed', description: '', acceptance: 'x' })
         .result['id'],
     );
-    // Seed a reviewing task and diff jobs directly: this test targets the comment domain rules.
     sql.pragma('foreign_keys = OFF');
     seedWork(
       f.control,
@@ -69,7 +68,7 @@ it('binds comments to commit and hunk, and marks them carried or stale when the 
     expect(() => run(f.owner.actor, 'work.comment', { ...base, hunkHash: '0'.repeat(64) })).toThrow(
       'HUNK_NOT_FOUND',
     );
-    expect(() => run(f.sender.actor, 'work.comment', base)).toThrow(); // assignee cannot review own work
+    expect(() => run(f.sender.actor, 'work.comment', base)).toThrow();
     const made = run(f.owner.actor, 'work.comment', base).result as { status: string };
     expect(made.status).toBe('current');
 
@@ -89,12 +88,12 @@ it('binds comments to commit and hunk, and marks them carried or stale when the 
     expect((await list()).comments.map((c) => c.status)).toEqual(['current']);
 
     sql.prepare('UPDATE work_items SET headSha=? WHERE id=?').run(sha('b'), workId);
-    expect((await list()).comments.map((c) => c.status)).toEqual(['unknown']); // no diff for the new head yet
+    expect((await list()).comments.map((c) => c.status)).toEqual(['unknown']);
 
-    job(sha('b'), diffText([' keep', '+added']), 2); // hunk unchanged: comment carries over
+    job(sha('b'), diffText([' keep', '+added']), 2);
     expect((await list()).comments.map((c) => c.status)).toEqual(['carried']);
 
-    job(sha('b'), diffText([' keep', '+rewritten']), 3); // hunk changed: comment is stale
+    job(sha('b'), diffText([' keep', '+rewritten']), 3);
     const after = await list();
     expect(after.comments.map((c) => c.status)).toEqual(['stale']);
     expect(after.hunks).toHaveLength(1);

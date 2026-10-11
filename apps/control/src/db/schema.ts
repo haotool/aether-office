@@ -2,8 +2,6 @@ import type { Activity, Mode, Provider } from '@aether/contracts';
 import type { Role, WorkState } from '@aether/kernel';
 import { table } from './query.js';
 
-// The shape of the rows the control plane reads and writes through db/query.ts. The tables themselves are created by
-// migration.sql and migrations/; a test keeps the two in step.
 type ProjectRow = {
   id: string;
   name: string;

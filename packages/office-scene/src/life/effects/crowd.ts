@@ -2,10 +2,6 @@ import { draw, envelope } from './shared.js';
 import type { Effect, Rgb, Sprite } from './types.js';
 import { itemAt } from '../../environment/checked.js';
 
-/**
- * A pile of boxes beside the desk for a session with many uncommitted files: one box more each time the count doubles,
- * at most six, stacked two wide and three high. `value` is the count of uncommitted files.
- */
 export const techDebt: Effect = (t, d, seed, value) => {
   const fade = envelope(t, d, 900);
   const boxes = Math.min(6, Math.max(1, Math.round(Math.log2(Math.max(2, value)))));
@@ -22,10 +18,6 @@ export const techDebt: Effect = (t, d, seed, value) => {
   }));
 };
 
-/**
- * A holographic circle on the floor where several idle members stand: a slow ring with a dot for each place. Laid out
- * round the group's centre (the layer anchors it there); nobody walks, it is only a picture.
- */
 export const standUp: Effect = (t, d) => {
   const fade = envelope(t, d, 900);
   const sprites: Sprite[] = [
@@ -53,10 +45,8 @@ const CONFETTI: readonly Rgb[] = [
   [0.8, 0.55, 1],
 ];
 
-/** How many pieces of confetti fall over a desk. */
 const CONFETTI_PER_DESK = 5;
 
-/** Confetti over a desk (the Konami code): a few pieces fall, spinning, each with its own start, colour and sway. */
 export const konami: Effect = (t, d, seed) => {
   const fade = envelope(t, d, 500);
   return Array.from({ length: CONFETTI_PER_DESK }, (_, i): Sprite => {

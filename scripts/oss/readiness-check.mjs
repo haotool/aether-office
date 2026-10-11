@@ -1,13 +1,7 @@
 #!/usr/bin/env node
-// Publishing-readiness check: scans the current tree and, with --history, the whole history of HEAD for things that must
-// not be published (personal paths, private strings, secrets, huge or path-embedding binaries, missing community files,
-// license problems, broken documentation links, untidy commit messages). No network. Exit 1 on any failure.
-//
-//   node scripts/oss/readiness-check.mjs [--root <repo>] [--history] [--private-patterns <file>]
-//        [--maintainer-email <e>]... [--max-history-mb 5] [--skip-gitleaks] [--gitleaks-config <file>] [--strict] [--json]
-//
-// Private strings (names, e-mail addresses, host names) live in the gitignored `.oss-private-patterns` (see
-// `.oss-private-patterns.example`); only generic patterns are built in.
+// Publishing-readiness check of the tree and, with --history, of the whole history of HEAD (personal paths, private
+// strings, secrets, big binaries, licence and link problems). No network; exit 1 on failure. Private strings live in
+// the gitignored `.oss-private-patterns` (see private-patterns.example).
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
@@ -58,7 +52,7 @@ export async function run(options) {
   add('private-patterns', 'Private patterns file', rules.length ? 'pass' : 'warn', [
     rules.length
       ? `${rules.length} private pattern(s) loaded`
-      : `no patterns: create ${path.basename(privateFile)} (see .oss-private-patterns.example) so names, e-mails and host names are checked`,
+      : `no patterns: create ${path.basename(privateFile)} (see scripts/oss/private-patterns.example) so names, e-mails and host names are checked`,
   ]);
   const files = listTracked(root);
   checkCommunityFiles(root, files);

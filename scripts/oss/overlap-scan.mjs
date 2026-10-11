@@ -1,13 +1,9 @@
 #!/usr/bin/env node
-// Copied-code scan: finds long verbatim overlaps between the tracked files of this repository and local clones of reference
 // projects, so a reviewer can tell "inspired by" from "copied from". Read-only, no network.
-//
-//   node scripts/oss/overlap-scan.mjs --refs <dir-of-clones> [--tokens 50] [--exclude <project>]... [--json]
-//
-// Files are reduced to their word tokens (identifiers, keywords, numbers, words in strings and comments); punctuation,
-// quotes, semicolons, line breaks and indentation are ignored, so reformatting (Prettier, re-wrapped Markdown) does not hide
-// a copy. Every run of `--tokens` consecutive tokens is hashed (two 32-bit rolling hashes); matching runs are merged into
-// blocks. 50 tokens is roughly 300 characters or 8 to 10 lines of code. The numbers are evidence, not a verdict: licence
+// Usage: node scripts/oss/overlap-scan.mjs --refs <dir-of-clones> [--tokens 50] [--exclude <project>]... [--json].
+// Files are reduced to word tokens, so reformatting does not hide a copy; every run of `--tokens` consecutive tokens is
+// hashed and matching runs are merged into blocks. The numbers are evidence, not a verdict: licence texts, the
+// Contributor Covenant and protocol schemas match legitimately.
 // texts, the Contributor Covenant and protocol schemas match legitimately and must be judged by reading the block.
 import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -43,9 +39,8 @@ const SKIP_DIRS = new Set([
   '.next',
   'coverage',
 ]);
-// Generated files and licence texts (which match every project under the same licence) are not indexed.
 const NOT_INDEXED =
-  /^(pnpm-lock\.yaml$|packages\/providers\/generated\/|LICENSE$|LICENSES\/|THIRD_PARTY_NOTICES\.md$)/;
+  /^(pnpm-lock\.yaml$|packages\/providers\/generated\/|LICENSE$|LICENSES\/|docs\/legal\/THIRD_PARTY_NOTICES\.md$)/;
 const MAX_BYTES = 512 * 1024;
 const B1 = 1000003;
 const B2 = 916_891;
@@ -71,7 +66,6 @@ const tokenHash = (t) => {
   return h >>> 0;
 };
 
-// Yields [position, key] for every window of W tokens; key fits in a safe integer.
 function* windows(tokens) {
   if (tokens.length < W) return;
   let p1 = 1;
@@ -124,7 +118,7 @@ const root = path.resolve(values.root);
 const tracked = execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf8' })
   .split('\n')
   .filter((f) => f && TEXT.test(f) && !NOT_INDEXED.test(f));
-const index = new Map(); // window key -> [file id, position] pairs, flattened
+const index = new Map();
 const repo = [];
 for (const file of tracked) {
   const text = readSmall(path.join(root, file));

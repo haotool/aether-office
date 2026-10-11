@@ -11,7 +11,6 @@ import { withoutObject, withPatchedObject, type PlainFurniture } from '../office
 
 const MAX_LAYOUT_FILE_BYTES = 128000;
 
-/** Offers the layout as a JSON file download. */
 function downloadLayout(layout: Layout) {
   const blob = new Blob([JSON.stringify(layout, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -22,7 +21,6 @@ function downloadLayout(layout: Layout) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/** Reads and validates an imported layout file. */
 async function readLayoutFile(file: File): Promise<Layout> {
   if (file.size > MAX_LAYOUT_FILE_BYTES) throw new Error('LAYOUT_FILE_TOO_LARGE');
   return layoutSchema.parse(JSON.parse(await file.text()));
@@ -36,11 +34,9 @@ type EditorProps = {
   liveSquads: Readonly<Record<string, number>>;
 };
 
-/** The undo history of the draft: every change is a new entry (and drops what was undone), and it is previewed live. */
 function useLayoutHistory(initial: Layout, onPreview: (layout: Layout | null) => void) {
   const [history, setHistory] = useState<Layout[]>([initial]);
   const [index, setIndex] = useState(0);
-  // The file is version 2 only while it holds a squad zone, so a layout without one stays readable by an older build.
   const change = (layout: Layout) => {
     const next = { ...layout, schemaVersion: layoutVersionOf(layout.objects) };
     setHistory([...history.slice(0, index + 1), next]);
@@ -61,7 +57,6 @@ function useLayoutHistory(initial: Layout, onPreview: (layout: Layout | null) =>
   };
 }
 
-/** Saves the draft at the project's current layout version; `onDone` runs once it is in, the error says why not. */
 function useSaveLayout(
   snapshot: Snapshot,
   draft: Layout,
@@ -84,7 +79,6 @@ function useSaveLayout(
   return { busy, save };
 }
 
-/** Adds a piece of furniture, or a squad zone beside a desk (or selects the one that is already there). */
 function useAddObjects(
   draft: Layout,
   change: (layout: Layout) => void,
@@ -115,7 +109,6 @@ function useAddObjects(
   return { addObject, addSquad };
 }
 
-/** Reads a layout file into the draft as a new history entry; the error says why a file was refused. */
 function useImportFile(change: (layout: Layout) => void, setError: (message: string) => void) {
   return async (file: File) => {
     try {
@@ -127,7 +120,6 @@ function useImportFile(change: (layout: Layout) => void, setError: (message: str
   };
 }
 
-/** The layout editor's state and actions: the undo history, the selection, and save/import/export. */
 export function useLayoutEditor(props: EditorProps) {
   const { snapshot, onClose, onSaved, onPreview, liveSquads } = props;
   const [initial] = useState(

@@ -20,7 +20,6 @@ it('prunes what is past its retention, keeps the newest event and every row stil
   now += RETENTION.eventsMs + DAY;
   create('new');
   const newest = (db.prepare('SELECT MAX(seq) AS seq FROM events').get() as { seq: number }).seq;
-  // Rows that reference parents the test does not build.
   db.pragma('foreign_keys = OFF');
   const old = (age: number) => now - age - DAY;
   db.prepare('INSERT INTO command_journal VALUES (?,?,?,?,?,?)').run(
@@ -66,7 +65,7 @@ it('prunes what is past its retention, keeps the newest event and every row stil
   expect(pruneRetention(f.control.ctx)).toBeGreaterThan(oldEvents - 1);
 
   expect(count('events')).toBe(before - oldEvents);
-  expect(count('outbox')).toBe(count('events')); // an outbox row never outlives or lacks its event
+  expect(count('outbox')).toBe(count('events'));
   expect((db.prepare('SELECT MAX(seq) AS seq FROM events').get() as { seq: number }).seq).toBe(
     newest,
   );
@@ -82,5 +81,5 @@ it('prunes what is past its retention, keeps the newest event and every row stil
   expect(db.prepare('SELECT tokenHash FROM browser_sessions').all()).toEqual([
     { tokenHash: 't-live' },
   ]);
-  expect(pruneRetention(f.control.ctx)).toBe(0); // idempotent
+  expect(pruneRetention(f.control.ctx)).toBe(0);
 });

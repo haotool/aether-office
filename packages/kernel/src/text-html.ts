@@ -4,22 +4,18 @@ import { htmlTable } from './text-table.js';
 import { factsOf, isWrapper, tagSets, TAG_NAME, type TagSets } from './text-tags.js';
 
 /**
- * Pure. HTML that a model or a CLI left in prose, turned into safe Markdown or plain text. The result is data for the
- * Markdown renderer, never markup. A tag from the HTML list is converted when it is well formed; any other `<name>` is a
- * wrapper to remove (its text kept) when `text-tags.ts` says so (a balanced pair, a stray closer, a `task-notification`
- * style name), so `Array<string>`, `Map<K, V>`, `a < b` and `x<y>z` are text and stay untouched. Code spans and fenced
- * blocks are left exactly as written. Running it on its own output changes nothing.
+ * A tag from the HTML list is converted when it is well formed; any other `<name>` is a wrapper to remove (text kept)
+ * only when `text-tags.ts` says so, so `Array<string>`, `a < b` and `x<y>z` stay text. Code spans and fences are
+ * untouched; running it on its own output changes nothing.
  */
 const FENCE_LINE = /^ {0,3}(`{3,}|~{3,})/;
 const CLOSING_FENCE = /^ {0,3}(`{3,}|~{3,})\s*$/;
 const NAME = TAG_NAME;
 const ATTR = `\\s+[^\\s"'<>/=]+(?:\\s*=\\s*(?:"[^"]*"|'[^']*'|[^\\s"'=<>\`]+))?`;
 const TAG = new RegExp(`<(/?)(${NAME})((?:${ATTR})*)\\s*(/?)>`, 'y');
-// A tag cut off inside its attributes (`<span class="tx`): nothing on the rest of the line is prose worth keeping.
 const CUT_TAG = new RegExp(`<(${NAME})\\s+[\\w:-]+\\s*=[^>\\n]{0,300}$`, 'my');
 const PLAIN = /[^\\`<]+/y;
 
-/** Emphasis and links nested deeper than this are dropped, which bounds the work of closing them. */
 const MAX_OPEN = 64;
 const DROP_WITH_CONTENT = new Set(['script', 'style', 'noscript', 'template']);
 const BLOCKS = new Set(
@@ -76,11 +72,6 @@ function wrapLink(inner: string, href: string | null): string {
 type Open = { name: string; start: number; href: string | null };
 type Tag = { name: string; closing: boolean; selfClosing: boolean; attrs: string };
 
-/**
- * The state of one `prose` run. Pieces, not one string: slicing a string that is being appended to copies it every time,
- * which made a long run of `<b>x</b>` quadratic. `last` is the final character written, for the spacing around a removed
- * wrapper.
- */
 type Run = {
   text: string;
   lower: string;
@@ -97,7 +88,6 @@ function put(run: Run, piece: string) {
   run.last = piece.slice(-1);
 }
 
-/** After a tag is removed at `at`: a space where it sat between two words, and no double space where it sat between two. */
 function dropped(run: Run, at: number): number {
   put(run, gap(run.last, run.text[at]));
   let next = at;
@@ -138,7 +128,6 @@ function prose(text: string, sets: TagSets): string {
   return run.out.join('');
 }
 
-/** Reads what starts at `i` and returns where the next read starts. */
 function step(run: Run, i: number): number {
   const { text } = run;
   const c = text[i];
@@ -160,12 +149,10 @@ function codeSpan(run: Run, i: number): number {
   const { text } = run;
   const n = /^`+/.exec(text.slice(i, i + 64))?.[0].length ?? 1;
   const end = closingTicks(text, i + n, n);
-  // A run of ticks that is not exactly closed is not a code span; the next candidate starts after it.
   put(run, end < 0 ? text.slice(i, i + n) : text.slice(i, end + n));
   return end < 0 ? i + n : end + n;
 }
 
-/** A `<` that starts something that may be a tag: a known tag is converted, a wrapper dropped, anything else is text. */
 function tag(run: Run, i: number): number {
   const { text } = run;
   TAG.lastIndex = i;
@@ -193,7 +180,6 @@ function literalOrCut(run: Run, i: number): number {
   return i + 1;
 }
 
-/** A tag of the HTML list that ended at `i`. */
 function knownTag(run: Run, i: number, t: Tag): number {
   const { name, closing } = t;
   if (DROP_WITH_CONTENT.has(name))
@@ -208,7 +194,6 @@ function knownTag(run: Run, i: number, t: Tag): number {
   return i;
 }
 
-/** `<pre>`, `<code>` and `<table>`: everything up to the closer is read as one piece. */
 function rawElement(run: Run, i: number, name: 'pre' | 'code' | 'table'): number {
   const { text } = run;
   const end = run.lower.indexOf(`</${name}`, i);
@@ -235,7 +220,6 @@ function codeInline(inner: string): string {
   return code ? `${ticks}${pad}${code}${pad}${ticks}` : '';
 }
 
-/** Emphasis and links: an opener is remembered, its closer wraps everything written since. */
 function inlineTag(run: Run, t: Tag) {
   const { name } = t;
   if (t.closing) {
@@ -267,7 +251,6 @@ function structureHeading(run: Run, name: string, closing: boolean): void {
   put(run, closing ? '\n\n' : `\n\n${'#'.repeat(Number(name.slice(1)))} `);
 }
 
-/** Lists, headings, quotes and block tags: they break the paragraph. Every other known tag is only a wrapper, dropped. */
 function structureTag(run: Run, i: number, t: Tag): number {
   const { name, closing } = t;
   if (name === 'ul' || name === 'ol') structureListRoot(run, name, closing);
@@ -275,7 +258,6 @@ function structureTag(run: Run, i: number, t: Tag): number {
   else if (/^h[1-6]$/.test(name)) structureHeading(run, name, closing);
   else if (name === 'summary') put(run, closing ? '\n\n' : '\n\n#### ');
   else if (name === 'blockquote') put(run, closing ? '\n\n' : '\n\n> ');
-  // A block tag breaks the paragraph; a closer that opens nothing in this text is only noise, and breaks nothing.
   else if (BLOCKS.has(name)) {
     if (closing && !run.sets.opens.has(name)) return dropped(run, i);
     put(run, '\n\n');
@@ -284,20 +266,17 @@ function structureTag(run: Run, i: number, t: Tag): number {
 }
 
 const WIDE_OR_END = /[\s.,;:!?)\]}\u2e80-\u9fff\uff00-\uffef\u3000-\u303f]/;
-/** A space where a removed wrapper sat between two words, so `<a-b>x</a-b><c-d>y</c-d>` does not glue `x` to `y`. */
 const gap = (last: string, next: string | undefined) =>
   last !== '' && !WIDE_OR_END.test(last) && next !== undefined && !WIDE_OR_END.test(next)
     ? ' '
     : '';
 
 const group = (name: string) => (name === 'a' ? 'a' : EMPHASIS[name]);
-/** The index just past the `>` that ends the tag starting at or after `from`. */
 const skipPast = (text: string, from: number) => {
   const end = text.indexOf('>', from);
   return end < 0 ? text.length : end + 1;
 };
 
-/** Whether each line is inside a fenced block (its fence lines included): tags are not read there. */
 function fencedLines(lines: string[]): boolean[] {
   let fence: string | null = null;
   return lines.map((line) => {

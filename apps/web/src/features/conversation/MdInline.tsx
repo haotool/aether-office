@@ -1,11 +1,9 @@
 import { Fragment, type ReactNode } from 'react';
 import { splitWords, type Span } from '@aether/kernel';
 
-/** A word fades in this long after the one before it; the stagger stops growing after STAGGER_MAX words. */
 const STAGGER_MS = 14;
 const STAGGER_MAX = 50;
 
-/** The words of a run as elements that fade in one after another: the stream-like reveal of a reply that just arrived. */
 const words = (text: string, delay: number): ReactNode[] =>
   splitWords(text).map((word, i) => (
     <span
@@ -17,7 +15,6 @@ const words = (text: string, delay: number): ReactNode[] =>
     </span>
   ));
 
-/** One run of text with its styles as nested elements. Only http(s) links reach here with an address. */
 function Run({ span, delay }: { span: Span; delay: number | null }) {
   let node: ReactNode = delay !== null && !span.code ? words(span.text, delay) : span.text;
   if (span.code) node = <code>{node}</code>;
@@ -33,7 +30,6 @@ function Run({ span, delay }: { span: Span; delay: number | null }) {
   return node;
 }
 
-/** Styled runs as elements; `delay` (ms) starts the word-by-word fade-in, null shows the text at once. */
 export function Inline({ spans, delay }: { spans: readonly Span[]; delay: number | null }) {
   return spans.map((span, i) => (
     <Fragment key={i}>

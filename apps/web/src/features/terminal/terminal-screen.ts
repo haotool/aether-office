@@ -7,7 +7,6 @@ import { useLatest } from '../../hooks/use-latest.js';
 import { inputBatcher } from './terminal-input.js';
 import type { TerminalAccess } from './terminal-model.js';
 
-/** The xterm instance of one terminal, with what is typed into it sent through `inputBatcher`. */
 export function useXterm(
   projectId: string,
   id: string,
@@ -15,7 +14,7 @@ export function useXterm(
   onDisarm: (message: string) => void,
   onError: (message: string) => void,
 ) {
-  const report = useLatest({ onDisarm, onError }); // a new callback never rebuilds the screen
+  const report = useLatest({ onDisarm, onError });
   const host = useRef<HTMLDivElement>(null);
   const terminal = useRef<Terminal | null>(null);
   const cursor = useRef(0);
@@ -57,7 +56,6 @@ export function useXterm(
   return { host, terminal, cursor };
 }
 
-/** Replays the server's snapshot into the screen: new chunks only, a reset when the cursor cannot be continued. */
 export function useSnapshotSync(
   snapshotText: string | null | undefined,
   screen: Pick<ReturnType<typeof useXterm>, 'terminal' | 'cursor'>,

@@ -16,7 +16,6 @@ import {
 
 const T0 = 1_800_000_000_000;
 const W = 200_000;
-/** Feeds readings one second apart; returns the events and the final tracker. */
 function run(readings: ContextReading[], start: Tracker = NEW_TRACKER, base = T0, step = 1000) {
   let tracker = start;
   const events: (Compaction | null)[] = [];
@@ -44,7 +43,7 @@ it('fires on the CLI marker even before the context number has dropped', () => {
   const { events } = run([
     reading(150_000),
     reading(150_000, { compactedAt: T0 + 1500 }),
-    reading(150_000, { compactedAt: T0 + 1500 }), // the same marker is not a second compaction
+    reading(150_000, { compactedAt: T0 + 1500 }),
   ]);
   expect(events[1]).toMatchObject({ kind: 'marker', key: T0 + 1500 });
   expect(events[2]).toBeNull();
@@ -69,15 +68,15 @@ it('fires again for a later compaction once the first has settled', () => {
 it('ignores noise: gradual falls, and falls under the token floor', () => {
   const { events } = run([
     reading(100_000),
-    reading(80_000), // less than half
-    reading(60_000), // still not under half of the previous reading
+    reading(80_000),
+    reading(60_000),
     reading(40_000),
     reading(30_000),
   ]);
   expect(events.every((e) => e === null)).toBe(true);
-  const tiny = run([reading(30_000), reading(5_000)]); // a fall of more than half and of 25k tokens
+  const tiny = run([reading(30_000), reading(5_000)]);
   expect(tiny.events[1]?.kind).toBe('drop');
-  const below = run([reading(30_000), reading(11_000)]); // 19k lost: under the floor
+  const below = run([reading(30_000), reading(11_000)]);
   expect(below.events[1]).toBeNull();
 });
 
@@ -96,7 +95,6 @@ it('treats a marker already in the tail when a session first appears as news onl
   expect(fresh.event?.kind).toBe('marker');
   const old = observe(NEW_TRACKER, { at: T0, used: 9_000, window: W, compactedAt: T0 - 3_600_000 });
   expect(old.event).toBeNull();
-  // and the old marker, now remembered, never fires later
   const later = observe(old.tracker, {
     at: T0 + 5000,
     used: 9_500,

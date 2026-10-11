@@ -4,13 +4,11 @@ import { readEdge } from '../platform/file-edge.js';
 import { redactSecrets } from '../platform/redaction.js';
 
 /**
- * A live view of what a local session is saying and doing, read from the provider's own transcript.
- * Safety, following the practice of the projects reviewed in docs/research: a transcript is opened only by the key
- * the scanner found it under (a path is never accepted from a client), reads are bounded, hidden reasoning is never
- * collected, every text is cut short and stripped of credentials, and the result is plain text for the browser.
+ * A transcript is opened only by the key the scanner found it under (a path is never accepted from a client). Reads are
+ * bounded, hidden reasoning is never collected, every text is cut short and stripped of credentials.
  */
 const TAIL_BYTES = 256 * 1024;
-const MAX_ENTRIES = 120; // a turn is mostly tool calls: enough to hold the last few turns whole
+const MAX_ENTRIES = 120;
 const MAX_TEXT = 1500;
 
 type TranscriptEntry = {
@@ -19,11 +17,8 @@ type TranscriptEntry = {
   name: string | null;
   text: string;
   error: boolean;
-  /** The provider's id for a tool call, the same on its result: how a call and its outcome are paired. */
   toolId: string | null;
-  /** A tool call's target in a few words (a file path, a command), redacted; null for everything else. */
   summary: string | null;
-  /** What a CLI wrapper carried (a finished background task, a slash command, injected context), redacted; else null. */
   notice: Notice | null;
 };
 type TranscriptAnalysis = {
@@ -44,16 +39,12 @@ const time = (v: unknown) => {
   return Number.isFinite(t) ? t : null;
 };
 const stringify = (v: unknown) => (typeof v === 'string' ? v : JSON.stringify(v ?? ''));
-// Context a provider injects ahead of the user's own words is not part of the conversation.
 const INJECTED = /^\s*(# AGENTS\.md|AGENTS\.md instructions)/i;
-// Bounds the work the sanitizer does on one message; the stored text is cut much shorter afterwards.
 const SANITIZE_CHARS = 12_000;
 
-/** The words of a message with CLI wrappers resolved and HTML neutralized, and the notices the wrappers carried. */
 const spoken = (raw: string) =>
   INJECTED.test(raw) ? { text: '', notices: [] } : structureWrappers(raw.slice(0, SANITIZE_CHARS));
 
-/** A notice with every free-text field redacted and cut: it is shown to people, so it is held to the same rules as a message. */
 function redactNotice(n: Notice): Notice {
   switch (n.kind) {
     case 'task':
@@ -81,7 +72,6 @@ const blank = (at: number | null, role: TranscriptEntry['role']): TranscriptEntr
   summary: null,
   notice: null,
 });
-/** The entries of one message: its notices first (what the tools added), then the words, when there are any. */
 function said(at: number | null, role: 'user' | 'assistant', raw: string): TranscriptEntry[] {
   const { text, notices } = spoken(raw);
   return [
@@ -117,7 +107,6 @@ const TARGET_KEYS = [
   'query',
   'url',
 ];
-/** The one field of a tool's input that says what it is about, cut short. Input may be a JSON string (Codex). */
 function summaryOf(input: unknown): string | null {
   let fields = obj(input);
   if (typeof input === 'string')
@@ -196,7 +185,6 @@ function noteToolEntry(
     files.add((match[1] ?? '').trim());
 }
 
-/** Pure. Parses a transcript tail into the latest entries and a short analysis of the work in it. */
 export function parseTranscript(provider: 'claude' | 'codex', tail: string) {
   const entries: TranscriptEntry[] = [];
   const toolCounts = new Map<string, number>();

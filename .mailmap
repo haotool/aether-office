@@ -1,9 +1,0 @@
-# Canonical identity of the maintainer. History cleanup (scripts/oss/history-plan.mjs) maps every other spelling to the
-# first entry below, and `git shortlog -sne` and `git blame` honor it.
-#
-# To publish under a GitHub noreply address, replace the line below by the two lines in the comment (the numeric ID is
-# the "id" field of https://api.github.com/users/haotool), then plan again; see docs/release/history-cleanup.md.
-#
-#   haotool <ID+haotool@users.noreply.github.com> haotool <88911350+s123104@users.noreply.github.com>
-#   haotool <ID+haotool@users.noreply.github.com> <ID+haotool@users.noreply.github.com>
-haotool <88911350+s123104@users.noreply.github.com>

@@ -44,7 +44,6 @@ type TaskDagProps = {
   onSelect: (work: Work) => void;
 };
 
-/** The nodes and edges of the work and its dependencies; null when the dependencies cannot be laid out (a cycle). */
 function taskGraph(snapshot: Snapshot, onSelect: (work: Work) => void) {
   try {
     const positions = taskPositions(

@@ -19,7 +19,6 @@ type AttentionSessionsProps = {
   onOpen: (session: AttributedSession) => void;
 };
 
-/** Reaps the zombie processes under a session and says what is left, per session. */
 function useReap() {
   const t = useT();
   const client = useQueryClient();
@@ -137,11 +136,6 @@ function AttentionChip({
   );
 }
 
-/**
- * The sessions that want a person for how they are alive (forgotten for hours, left without an owner, zombies under
- * them): a chip with the count and a sheet with the reason and what can be done, one tap each. Shown only when there is
- * something to do.
- */
 export function AttentionSessions({ sessions, owner, onOpen }: AttentionSessionsProps) {
   const t = useT();
   const locale = useLocale();

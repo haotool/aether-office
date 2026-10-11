@@ -16,7 +16,7 @@ import { reviewResultSchema, type RunCommand } from '@aether/contracts';
 import { Workspaces, type Workspace, type Harness } from './workspaces.js';
 const absolute = z.string().refine(isAbsolute, 'Absolute path required');
 const observationProfileSchema = z
-  .object({
+  .strictObject({
     projectId: z.string().uuid(),
     agentId: z.string().uuid(),
     provider: z.enum(['codex', 'claude']),
@@ -25,51 +25,41 @@ const observationProfileSchema = z
     files: z.array(z.string().min(1).max(4096)).max(64).default([]),
     discover: z.boolean().default(false),
   })
-  .strict()
   .refine((p) => p.discover || p.files.length > 0, 'Explicit files or discovery required');
 export type ObservationProfile = z.infer<typeof observationProfileSchema>;
-const nativeConfigSchema = z
-  .object({
-    enabled: z.literal(true),
-    repositories: z.array(absolute).min(1).max(32),
-    observations: z
-      .record(z.string().regex(/^[a-zA-Z0-9_-]{1,80}$/), observationProfileSchema)
-      .default({}),
-    terminals: z
-      .record(
-        z.string().regex(/^[a-zA-Z0-9_-]{1,80}$/),
-        z
-          .object({
-            binary: absolute,
-            args: z.array(z.string().max(4096)).max(64).default([]),
-            root: absolute,
-            timeoutMs: z.number().int().min(100).max(3600000).default(600000),
-          })
-          .strict(),
-      )
-      .default({}),
-    verifiers: z
-      .record(
-        z.string().regex(/^[a-zA-Z0-9_-]{1,80}$/),
-        z
-          .object({
-            file: absolute,
-            timeoutMs: z.number().int().min(100).max(120000).default(30000),
-          })
-          .strict(),
-      )
-      .default({}),
-    binaries: z.object({ codex: absolute.optional(), claude: absolute.optional() }).strict(),
-    // Offer each configured provider CLI as an interactive terminal in every granted repository, so its own commands
-    // (slash commands, /resume, its normal permission prompts) can be used from the browser. Off unless set.
-    cliTerminals: z.boolean().default(false),
-    // One generic ACP agent. Its capabilities come from negotiation; it cannot be used for read-only review.
-    acpAgent: z
-      .object({ command: absolute, args: z.array(z.string().max(4096)).max(32).default([]) })
-      .strict()
-      .optional(),
-  })
-  .strict();
+const nativeConfigSchema = z.strictObject({
+  enabled: z.literal(true),
+  repositories: z.array(absolute).min(1).max(32),
+  observations: z
+    .record(z.string().regex(/^[a-zA-Z0-9_-]{1,80}$/), observationProfileSchema)
+    .default({}),
+  terminals: z
+    .record(
+      z.string().regex(/^[a-zA-Z0-9_-]{1,80}$/),
+      z.strictObject({
+        binary: absolute,
+        args: z.array(z.string().max(4096)).max(64).default([]),
+        root: absolute,
+        timeoutMs: z.number().int().min(100).max(3600000).default(600000),
+      }),
+    )
+    .default({}),
+  verifiers: z
+    .record(
+      z.string().regex(/^[a-zA-Z0-9_-]{1,80}$/),
+      z.strictObject({
+        file: absolute,
+        timeoutMs: z.number().int().min(100).max(120000).default(30000),
+      }),
+    )
+    .default({}),
+  binaries: z.strictObject({ codex: absolute.optional(), claude: absolute.optional() }),
+  cliTerminals: z.boolean().default(false),
+  // One generic ACP agent. Its capabilities come from negotiation; it cannot be used for read-only review.
+  acpAgent: z
+    .strictObject({ command: absolute, args: z.array(z.string().max(4096)).max(32).default([]) })
+    .optional(),
+});
 type NativeConfig = z.infer<typeof nativeConfigSchema>;
 /** Machine-local opt-in and repository grants cannot be supplied by a task prompt. */
 /** Only CLI login/runtime variables enter the child; runner credentials and control configuration never cross the provider process boundary. */
@@ -92,7 +82,6 @@ const providerEnv = () =>
     ),
   );
 
-/** The collaboration MCP server the provider is given, scoped to this run (built output when present, else through tsx). */
 function mcpConfigFor(scope: McpScope) {
   const built = new URL('./mcp.js', import.meta.url);
   return {
@@ -117,7 +106,6 @@ function mcpConfigFor(scope: McpScope) {
   };
 }
 
-/** The commit a review is of and the base it is compared with; a review command always carries both. */
 function reviewTarget(command: RunCommand) {
   if (!command.reviewHead || !command.reviewBase) throw new Error('REVIEW_TARGET_REQUIRED');
   return { head: command.reviewHead, base: command.reviewBase };
@@ -223,7 +211,6 @@ export class NativeExecutor {
     )
       throw new Error('NATIVE_EXECUTION_NOT_GRANTED');
     const provider = command.provider as 'codex' | 'claude' | 'acp';
-    // A generic ACP agent cannot be held to a read-only protocol, and resume depends on negotiation.
     if (provider === 'acp' && (command.purpose === 'review' || command.resumeSessionId))
       throw new Error('CAPABILITY_UNSUPPORTED');
     const binary =
@@ -231,7 +218,6 @@ export class NativeExecutor {
     if (!binary) throw new Error('PROVIDER_NOT_GRANTED');
     return { provider, binary, root: command.root };
   }
-  /** The workspace the run works in: the one it resumes, or a new one (reported once through `onWorkspace`). */
   private async workspaceFor(
     command: RunCommand,
     root: string,
@@ -257,7 +243,6 @@ export class NativeExecutor {
     if (!command.workspaceId) await onWorkspace(workspace);
     return workspace;
   }
-  /** A review runs on exactly the commit it was asked about, with nothing changed in the checkout. */
   private assertReviewCheckout(command: RunCommand, workspace: Workspace) {
     if (
       command.purpose === 'review' &&
@@ -316,7 +301,6 @@ export class NativeExecutor {
       return { outcome: 'failed', summary: 'REVIEW_HEAD_MISMATCH' };
     return { ...result, headSha: state.head, review };
   }
-  /** What a finished run reports: the provider's result at the workspace head. */
   private finishRun(
     command: RunCommand,
     workspace: Workspace,

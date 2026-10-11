@@ -4,12 +4,9 @@ import { promisify } from 'node:util';
 import { mapPool } from '../runtime/pool.js';
 
 /**
- * Read-only health of a repository's worktrees and branches: which are already merged into the default branch but
- * still around, which worktrees are gone from disk, and how much space each worktree takes. Nothing is removed here;
- * the report says what would be safe to remove and the commands that would do it.
+ * Read-only: nothing is removed here; the report says what would be safe to remove and the commands that would do it.
  */
 const run = promisify(execFile);
-// Worktrees inspected at once: each is a few short git processes, mostly waiting on the disk.
 const WIDTH = Math.min(12, availableParallelism());
 /** The one way AETHER runs git: read-only, no fsmonitor hook (a repository's own config must not run code), no optional locks. */
 export const git = async (
@@ -39,7 +36,6 @@ type Worktree = {
   prunable: boolean;
 };
 
-/** Pure. `git worktree list --porcelain`. */
 export function parseWorktrees(text: string): Worktree[] {
   const out: Worktree[] = [];
   for (const block of text.split('\n\n')) {
@@ -51,7 +47,7 @@ export function parseWorktrees(text: string): Worktree[] {
       path,
       branch: ref?.replace(/^refs\/heads\//, '') ?? null,
       head: lines.find((l) => l.startsWith('HEAD '))?.slice(5) ?? '',
-      main: out.length === 0, // the first entry is always the main worktree
+      main: out.length === 0,
       locked: lines.some((l) => l === 'locked' || l.startsWith('locked ')),
       prunable: lines.some((l) => l === 'prunable' || l.startsWith('prunable ')),
     });
@@ -106,14 +102,13 @@ const movedSinceCreated = async (root: string, branch: string) =>
     await git(root, ['reflog', 'show', '--format=%H', `refs/heads/${branch}`]).catch(() => 'x\ny'),
   ).length > 1;
 
-/** Remote branches already part of the default branch; none when there is no remote. */
 async function remoteMergedBranches(root: string, base: string): Promise<string[]> {
   try {
     return list(
       await git(root, ['branch', '-r', '--merged', `origin/${base}`, '--format=%(refname:short)']),
     ).filter((b) => b !== `origin/${base}` && b !== 'origin/HEAD' && b !== 'origin');
   } catch {
-    return []; // no remote
+    return [];
   }
 }
 
@@ -149,15 +144,13 @@ async function inspectWorktree(survey: Survey, w: Worktree) {
     w.branch !== base &&
     merged.has(w.branch) &&
     (w.head !== baseHead || (await movedSinceCreated(root, w.branch)));
-  // Whether a worktree has uncommitted changes is only asked of the ones that could be removed: it is what decides
-  // that, and `git status` over hundreds of worktrees is most of the cost of the report.
   const [status, last] = await Promise.all([
     isMerged
       ? git(w.path, ['status', '--porcelain=v1', '--untracked-files=normal']).catch(() => null)
       : Promise.resolve(null),
     w.branch && tips.has(w.branch)
       ? Promise.resolve('')
-      : git(w.path, ['log', '-1', '--format=%ct']).catch(() => ''), // a detached checkout has no branch tip
+      : git(w.path, ['log', '-1', '--format=%ct']).catch(() => ''),
   ]);
   return {
     ...w,
@@ -187,7 +180,6 @@ export async function gitHealth(root: string) {
     staleBranches,
     remoteMerged,
     removable: removable.map((w) => w.path),
-    // What a person could run after reading the list: nothing here is executed.
     suggestions: [
       ...(rows.some((w) => w.prunable) ? ['git worktree prune'] : []),
       ...removable.map((w) => `git worktree remove ${JSON.stringify(w.path)}`),
@@ -198,8 +190,8 @@ export async function gitHealth(root: string) {
 }
 
 /**
- * How much disk each worktree takes (`du`), apart from the report because it is by far the slow part: the report is
- * useful at once, the sizes follow. A size that could not be read is null, never zero.
+ * Disk used by each worktree (`du`), kept apart from the report because it is the slow part. An unreadable size is
+ * null, never zero.
  */
 export async function worktreeSizes(
   root: string,
@@ -241,11 +233,9 @@ function skipCleanWorktreeReason(
 }
 
 /**
- * Removes worktrees that are merged into the default branch and have nothing uncommitted. Safety, in order:
- * every requested path is re-checked against a fresh report (merged, clean, not the main worktree, not locked);
- * a worktree a live agent process is working in is skipped; removal is `git worktree remove` without `--force`,
- * so Git itself refuses one with modified or untracked files; no branch is deleted; finally `git worktree prune`
- * drops the records of worktrees whose directories are already gone.
+ * Removes worktrees that are merged and clean, re-checking each path against a fresh report and skipping one a live
+ * agent works in. Uses `git worktree remove` without `--force`, so Git itself refuses modified or untracked files; no
+ * branch is deleted.
  */
 export async function cleanMergedWorktrees(
   root: string,

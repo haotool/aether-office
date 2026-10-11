@@ -1,4 +1,3 @@
-/** rAF deltas are only recorded while the document is visible (hidden tabs skew FPS). */
 export function mayAppendFieldPerfFrameDelta(
   visibilityState: DocumentVisibilityState,
   lastFrameAt: number | null,

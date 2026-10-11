@@ -31,6 +31,7 @@ from a global location unless stated.
 | `AETHER_MCP_*`                | MCP subprocess         | URL, token, project, agent, run and work of one run; set by the runner, never by hand                                                                            |                                                    |
 | `AETHER_E2E_LAN_ADDRESSES`    | e2e only               | Addresses that stand in for the machine's own, so pairing links and the LAN rules can be tested while listening on loopback                                      | unset                                              |
 | `AETHER_WEBKIT`               | e2e only               | Set to `1` to add the WebKit (iPhone) project to the Playwright run                                                                                              | unset                                              |
+| `AETHER_E2E_RETRIES`          | e2e only               | How many times Playwright retries a failing test; a test that passes on a retry is reported as flaky                                                             | `0`, or `2` when `CI` is set                       |
 
 `CODEX_HOME` is the Codex CLI's own variable; AETHER reads it only as the fallback of `AETHER_CODEX_HOME`. `pnpm run pair`
 reads `AETHER_DATA_DIR` (for the owner token), `AETHER_CONTROL_URL` and `PORT` (to find the server; `--demo` selects the demo data

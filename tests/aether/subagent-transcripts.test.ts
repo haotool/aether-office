@@ -25,7 +25,7 @@ const scan = async (home: string, spool = join(home, 'no-spool.jsonl')) => {
   resetLocalSessionCache();
   return (await scanLocalSessions(home, NOW(), 0, spool))[0]!;
 };
-const SECRET = 'ghp_EXAMPLE_NOT_A_SECRET';
+const SECRET = `ghp_${'0123456789abcdefghij'}0123456789abcdef`;
 
 let home: string;
 beforeEach(async () => {
@@ -80,7 +80,7 @@ describe('subagents known from their own transcript files', () => {
     expect(summary).not.toMatch(/[#*`]|<script|alert\(1\)/);
     expect(JSON.stringify(child)).not.toContain(SECRET);
     expect(child!.result!.chars).toBe(words.trim().length);
-    expect(child!.result!.error).toBeNull(); // the parent's own result for the call is not in this transcript
+    expect(child!.result!.error).toBeNull();
   });
 
   it('drops it after the grace period, and ignores files that are not agent transcripts', async () => {
@@ -185,7 +185,7 @@ describe('joining hooks and files', () => {
       description: 'Survey the module',
       lines: [assistantLine('ag1', toolBlock('Read'), ago(1000))],
     });
-    await writeSubagent(parent, { id: 'other', lines: [] }); // a file with no hook record stands alone
+    await writeSubagent(parent, { id: 'other', lines: [] });
     const spool = join(home, 'spool.jsonl');
     await writeFile(
       spool,
@@ -198,11 +198,11 @@ describe('joining hooks and files', () => {
     const kids = Object.fromEntries((await scan(home, spool)).subagents.map((c) => [c.id, c]));
     expect(kids['ag1']).toMatchObject({
       source: 'hook',
-      status: 'waiting_permission', // only the hook saw the permission request
+      status: 'waiting_permission',
       label: 'Survey the module',
-      tools: { count: 1, last: 'Read' }, // the hook's own count wins
+      tools: { count: 1, last: 'Read' },
       tokens: { total: FRESH_PER_MESSAGE },
-      result: null, // not finished yet: no result
+      result: null,
     });
     expect(kids['other']).toMatchObject({ source: 'transcript', status: 'running' });
   });
@@ -246,7 +246,7 @@ describe('token usage is read incrementally, within a budget, and never partial'
     await append(file, more);
     const second = await readSubagentUsage(file, await size(), t0 + 30_000, budget);
     expect(second).toMatchObject({ total: 2 * FRESH_PER_MESSAGE, tools: 2 });
-    expect(second!.perMinute).toBe(FRESH_PER_MESSAGE * 2); // 35 tokens in half a minute
+    expect(second!.perMinute).toBe(FRESH_PER_MESSAGE * 2);
   });
 
   it('reports null, not a partial total, while the byte budget has not reached a file', async () => {

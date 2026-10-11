@@ -1,4 +1,3 @@
-/** The composer words, in Traditional Chinese. */
 export const zhComposer = {
   composerLabel: '傳訊息給 session',
   composerPlaceholder: '輸入訊息，/ 開指令，@ 選檔案',

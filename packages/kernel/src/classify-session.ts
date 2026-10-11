@@ -1,32 +1,25 @@
 import { ROLE_LABELS, type DepartmentId, type RoleId } from './departments.js';
 import { COMMANDS, PATHS, TOOLS, WORDS, roleOfSubagent } from './role-signals.js';
 
-// Which engineering role a session's work belongs to. Pure and deterministic: every signal adds weighted points to the
-// roles it points at, the best role wins if it is clearly ahead, and otherwise the session stays a neutral generalist.
-// Each point comes with a short evidence string, so the answer can always say why. Nothing here keeps input text: the
-// evidence holds only the matched keyword or a label of the kind of file or command.
+// Pure and deterministic: every signal adds weighted points, the best role wins if it is clearly ahead, otherwise the
+// session stays a generalist. Evidence holds only the matched keyword or a label of the kind of file or command, never
+// input text.
 
-/** One tool call a session made: the tool's name and what it aimed at (a file path, a command, a subagent type). */
 export type ToolCall = { tool: string; target: string | null };
 
 export type ClassifyInput = {
   title?: string | null;
-  /** What the session was asked to do. Used to decide, never kept. */
   prompt?: string | null;
   branch?: string | null;
   repo?: string | null;
-  /** Its recent tool calls, oldest first. */
   actions?: readonly ToolCall[];
-  /** The types of the subagents it has running. */
   subagents?: readonly string[];
 };
 
 export type Classification = {
   role: RoleId;
   department: DepartmentId;
-  /** 0 to 1: how far the role is ahead of the next best. For a generalist, how close the best candidate came. */
   confidence: number;
-  /** The strongest reasons, best first, as `kind: detail` (kinds: title, prompt, branch, repo, edits, reads, runs, tool, subagent, mix). */
   evidence: string[];
 };
 
@@ -41,8 +34,6 @@ const ACTIVITY_CAP = 6;
 const RECENT_ACTIONS = 40;
 const MAX_EVIDENCE = 5;
 const EVIDENCE_CHARS = 80;
-// Words weigh most in a title, a little less in a prompt, and least in a repository's name.
-// What a prompt opens with states the task; what follows is usually context, so it weighs half as much.
 const PROMPT_HEAD_CHARS = 120;
 const SOURCE_WEIGHT = { title: 1, prompt: 0.8, promptRest: 0.4, branch: 1, repo: 0.5 } as const;
 const WRITES = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit', 'apply_patch']);
@@ -51,8 +42,6 @@ const SHELLS = new Set(['Bash', 'shell', 'exec_command', 'exec', 'local_shell'])
 const DELEGATES = new Set(['Task', 'Agent']);
 const LOOKUPS = new Set(['Read', 'NotebookRead', 'Grep', 'Glob', 'LS', 'WebSearch', 'WebFetch']);
 
-// Every kind of session sends out Explore and Plan agents, so they say little about their parent; a reviewer or a test
-// writer says more.
 const GENERIC_SUBAGENT_ROLES = new Set<RoleId>(['research', 'architect']);
 const FULLSTACK_MIN = 3;
 const FULLSTACK_BALANCE = 0.6;
@@ -66,7 +55,6 @@ class Ledger {
   readonly byRole = new Map<RoleId, Tally>();
   private readonly spent = new Map<string, number>();
 
-  /** Adds points for `role` from `source`, never taking that source past its cap for the role. */
   add(role: RoleId, source: string, points: number, evidence: string, cap = SOURCE_CAP): void {
     const key = `${source}:${role}`;
     const used = this.spent.get(key) ?? 0;
@@ -88,10 +76,8 @@ function addWords(
   text: string | null | undefined,
 ) {
   if (!text) return;
-  // Branch names are `type/some-words`; making the separators spaces lets whole-word patterns see each word.
   const haystack = source === 'branch' ? text.replace(/[/_.-]+/g, ' ') : text;
   for (const [role, strength, pattern] of GLOBAL_WORDS) {
-    // Several different words for one role count for more than one, up to the third.
     const hits = [...new Set([...haystack.matchAll(pattern)].map((m) => m[0].toLowerCase()))];
     if (!hits.length) continue;
     const reach = 1 + 0.5 * (Math.min(hits.length, 3) - 1);
@@ -178,7 +164,6 @@ function addActions(ledger: Ledger, actions: readonly ToolCall[]) {
     }
   }
   flushActionNotes(ledger, counts);
-  // Looking without touching is what research and exploration are.
   if (recent.length >= 5 && recent.every((a) => LOOKUPS.has(a.tool)))
     ledger.add('research', 'activity-lookups', 2, 'reads: read-only exploration');
 }
@@ -203,7 +188,6 @@ function addFullstack(ledger: Ledger) {
 
 const confidenceOf = (score: number, others: number) => score / (score + others + 1);
 
-/** The role's own points, and how far ahead of the best other role they put it (fullstack is not "behind" its halves). */
 function view(
   byRole: Scored['byRole'],
   role: RoleId,
@@ -230,7 +214,6 @@ const result = (role: RoleId, byRole: Scored['byRole'], best: RoleId | null): Sc
   };
 };
 
-/** Pure. Scores every role from every signal and picks the clear winner, or a generalist when nothing is clear. */
 export function scoreSession(input: ClassifyInput): Scored {
   const ledger = new Ledger();
   addWords(ledger, 'title', input.title);
@@ -262,31 +245,26 @@ export function scoreSession(input: ClassifyInput): Scored {
   return result(strong ? best : 'generalist', byRole, best);
 }
 
-/** Pure. The classification alone, for callers that decide once and keep nothing. */
 export function classifySession(input: ClassifyInput): Classification {
   const { role, department, confidence, evidence } = scoreSession(input);
   return { role, department, confidence, evidence };
 }
 
-/** The type of a subagent seen as a worker of its own: its role, or null when its name says nothing. */
 export { roleOfSubagent };
 
-// Stability. A character that changed department on every turn would be a character nobody could find. A session keeps
-// the role it has until a different one has been ahead on several separate looks, spaced apart in time, and, between two
-// specialities, by a clear margin.
+// A session keeps its role until a different one has been ahead on several separate looks, spaced apart in time, and,
+// between two specialities, by a clear margin; otherwise a character would change department every turn.
 export type Settled = {
   role: RoleId;
   candidate: RoleId | null;
   streak: number;
   at: number;
-  /** Why the held role was last seen to be right, kept for while the latest look shows nothing for it. */
   evidence: string[];
 };
 const SWITCH_LOOKS = 3;
 const LOOK_GAP_MS = 15_000;
 const SWITCH_MARGIN = 1.5;
 
-/** Pure. Folds one new look at a session into what was decided before; returns the held role's view and the new state. */
 export function settle(
   prev: Settled | undefined,
   next: Scored,

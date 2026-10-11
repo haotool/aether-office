@@ -1,5 +1,3 @@
-/** Pure stats and pass rules for mobile perf harness (unit-tested). */
-
 export const SCHEMA = 'aether-audit-perf-run/1';
 
 export type MetricSummary = { median: number; p95OfP95: number };

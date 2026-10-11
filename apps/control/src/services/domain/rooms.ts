@@ -12,7 +12,6 @@ const members = (ctx: Context, roomId: string) =>
       .all(roomId) as { memberId: string }[]
   ).map((m) => m.memberId);
 
-/** Every member must belong to this project: an agent here, or a human identity granted this project. */
 function assertMembers(ctx: Context, projectId: string, ids: readonly string[]) {
   if (new Set(ids).size !== ids.length) throw new DomainError('DUPLICATE_MEMBER', 400);
   for (const id of ids) {
@@ -78,7 +77,6 @@ export function roomCommand(
   return view(ctx, row);
 }
 
-/** Recipients of a room post, or an error if the sender may not post. Humans with write access may always post. */
 export function roomRecipients(
   ctx: Context,
   projectId: string,

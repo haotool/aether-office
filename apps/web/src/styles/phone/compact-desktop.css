@@ -33,7 +33,6 @@
     padding-inline: var(--space-12);
   }
 
-  /* Tables become cards: one block per row, each cell labelled by its column. */
   table.stack {
     display: block;
     font-size: var(--fs-small);
@@ -43,7 +42,7 @@
     width: 1px;
     height: 1px;
     overflow: hidden;
-    clip-path: inset(50%); /* still there for a screen reader */
+    clip-path: inset(50%);
   }
   table.stack tbody,
   table.stack tr {
@@ -68,7 +67,7 @@
     max-width: none;
   }
   .sessions-page table.stack td {
-    min-width: 0; /* outranks the tablet's column minimum above */
+    min-width: 0;
     max-width: none;
   }
   table.stack td:last-child {
@@ -81,10 +80,10 @@
     letter-spacing: 0.5px;
   }
   table.stack td > * {
-    grid-column: 2; /* a part of a value stays in the value column, under the first one */
+    grid-column: 2;
   }
   table.stack td:first-child {
-    display: block; /* the row's title spans the card */
+    display: block;
     font-size: var(--fs-body);
   }
   table.stack td:first-child::before {
@@ -115,7 +114,6 @@
     flex: 1 1 140px;
   }
 
-  /* Office: the scene takes the screen. */
   .office-page {
     padding: var(--space-12) calc(var(--space-12) + var(--safe-right)) 0
       calc(var(--space-12) + var(--safe-left));
@@ -135,7 +133,7 @@
   }
   .building-panel {
     right: var(--space-8);
-    bottom: calc(8px + var(--safe-bottom)); /* token-lint: geometry */
+    bottom: calc(var(--space-8) + var(--safe-bottom));
     width: min(260px, calc(100% - 16px)); /* token-lint: geometry */
   }
   .scene-footer {
@@ -143,13 +141,12 @@
   }
 }
 
-/* The top bar's numbers: in the sidebar instead whenever the top bar has no room for them (<= 1500px). */
 .sidebar .telemetry {
   display: none;
 }
 .telemetry dt,
 .telemetry dd {
-  white-space: nowrap; /* a label never wraps letter by letter */
+  white-space: nowrap;
 }
 .sidebar-backdrop {
   display: none;
@@ -163,7 +160,6 @@
     margin-top: auto;
     border-top: 1px solid var(--line);
   }
-  /* A row is the label and its number; a pair too wide for the sidebar (DISK FREE with a size) puts the number under the label, never over its neighbour. */
   .sidebar .telemetry div {
     display: flex;
     flex-wrap: wrap;
@@ -178,7 +174,6 @@
   }
 }
 
-/* A coarse pointer: the control tokens already switched to the touch sizes (tokens.css), so no selector lowers or raises a height here. */
 @media (pointer: coarse) {
   .primary {
     min-height: var(
@@ -191,9 +186,7 @@
     min-height: var(--target-touch);
   }
   .kpi-cell {
-    min-height: var(
-      --target-touch
-    ); /* the tablet's strip scrolls and clips, so its cells are the 44px themselves */
+    min-height: var(--target-touch);
   }
   /* Drawn smaller than a finger, hit at --target-touch: the same invisible area touch-targets.css gives the other controls. */
   .brand,

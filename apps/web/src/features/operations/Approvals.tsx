@@ -33,7 +33,6 @@ const stateOf = (a: Approval, expired: boolean) =>
       ? 'expired'
       : a.state;
 
-/** Decides pending approvals one at a time; a failed decision shows its error, and the list is read again either way. */
 function useDecide(projectId: string, refetch: () => Promise<unknown>) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -103,9 +102,7 @@ function ApprovalCard({
   );
 }
 
-/** The approvals to decide here: the permission prompts waiting on Claude Code sessions, the remote-approvals setting, and the project's own approvals. */
 function useApprovalData(projectId: string, live: boolean) {
-  // The prompts of Claude Code sessions waiting for an answer (Remote approvals), the same ones the feed and the conversation show.
   const prompts = usePermissionRequests().filter((r) => r.state === 'pending');
   const remote = useQuery({
     queryKey: ['remote-approvals'],

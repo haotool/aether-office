@@ -10,7 +10,6 @@ import {
 } from '../../packages/office-scene/src/environment/building-parts.js';
 import { THEMES } from '../../packages/office-scene/src/environment/building-themes.js';
 
-// The building is real three.js geometry; nothing needs a GPU to build it.
 const emptyModel = (): FloorModel => ({
   group: new THREE.Group(),
   spinners: [],
@@ -38,7 +37,7 @@ describe('building parts', () => {
     expect(mesh.material).toBe(m.accent);
     const size = boundsOf(mesh).getSize(new THREE.Vector3());
     expect(size.x).toBeCloseTo(6.2, 1);
-    expect(size.y).toBeLessThan(0.3); // lying flat
+    expect(size.y).toBeLessThan(0.3);
   });
 
   it('builds a cylinder of the height asked for, closed unless told to be open', () => {
@@ -49,8 +48,8 @@ describe('building parts', () => {
     expect(boundsOf(closed).getSize(new THREE.Vector3()).y).toBeCloseTo(3);
     expect(parent.children).toHaveLength(2);
     expect(open.position.x).toBe(4);
-    expect(closed.geometry.groups.length).toBe(3); // side and both caps
-    expect(open.geometry.groups.length).toBe(1); // side only
+    expect(closed.geometry.groups.length).toBe(3);
+    expect(open.geometry.groups.length).toBe(1);
   });
 });
 
@@ -114,7 +113,7 @@ describe('department themes', () => {
       expect(box.max.x).toBeLessThan(30);
       expect(box.min.z).toBeGreaterThan(-22);
       expect(box.max.z).toBeLessThan(22);
-      expect(box.max.y).toBeLessThan(8); // under the next floor
+      expect(box.max.y).toBeLessThan(8);
     },
   );
 

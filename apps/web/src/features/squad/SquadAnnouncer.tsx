@@ -9,13 +9,9 @@ import {
 import type { Feed } from '../feed/feed-model.js';
 import { fmt } from './squad-text.js';
 
-/** A burst of subagents starting is one sentence, not thirty: changes are gathered for this long, then announced once. */
 const ANNOUNCE_EVERY_MS = 4000;
 
-/**
- * A polite live region for the feed: "2 subagents started, 1 subagent finished". It says nothing about what was already
- * there when the feed opened, and never more often than every few seconds.
- */
+/** It says nothing about what was already there when the feed opened, and never more often than every few seconds. */
 export function SquadAnnouncer({ feed }: { feed: Feed }) {
   const t = useT();
   const [said, setSaid] = useState({ text: '', n: 0 });

@@ -1,7 +1,6 @@
 import { defineConfig } from '@playwright/test';
 import base from '../../playwright.config.js';
 
-// The UX matrix on its own: the root e2e config pointed at this folder, with room for a long run.
 const servers = [base.webServer ?? []].flat();
 
 export default defineConfig({

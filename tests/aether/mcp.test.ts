@@ -124,7 +124,6 @@ it('MCP stdio uses durable scoped inbox/replies, stable retries and expiring run
     expect(
       JSON.stringify(await client.callTool({ name: 'reservations_list', arguments: {} })),
     ).not.toContain('src/mcp/**');
-    // A malformed id never reaches the kernel as a success.
     expect(
       (
         await client.callTool({
@@ -146,7 +145,7 @@ it('MCP stdio uses durable scoped inbox/replies, stable retries and expiring run
     expect(proposal.isError).not.toBe(true);
     expect(
       control.ctx.sqlite.prepare("SELECT COUNT(*) AS n FROM knowledge WHERE title='Learned'").get(),
-    ).toEqual({ n: 1 }); // really persisted by the kernel, proposed and not approved
+    ).toEqual({ n: 1 });
     const nonce = randomUUID();
     const sent = control.execute(
       owner.actor,
@@ -185,8 +184,6 @@ it('MCP stdio uses durable scoped inbox/replies, stable retries and expiring run
       name: 'get_inbox',
       arguments: { recipientId: owner.actor.id },
     });
-    // Unknown fields can be stripped by MCP; the fixed authenticated recipient
-    // still prevents a payload from changing whose inbox is read.
     expect(JSON.stringify(forbidden)).not.toContain(`Nonce ${nonce}`);
     const resources = await client.listResources();
     expect(resources.resources[0]?.uri).toBe(`aether://session/${run.runId}`);

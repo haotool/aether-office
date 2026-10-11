@@ -42,7 +42,7 @@ describe('panel width', () => {
     expect(dragPanel(380, 1000, 900, 1440)).toBe(480);
     expect(dragPanel(380, 1000, 1100, 1440)).toBe(320);
     expect(dragPanel(380, 1000, 0, 1440)).toBe(720);
-    expect(dragPanel(380, 1000, 996, 1440)).toBe(380); // snapped
+    expect(dragPanel(380, 1000, 996, 1440)).toBe(380);
   });
 
   it('steps 16px with the arrows, 64px with Shift, and jumps to the ends', () => {

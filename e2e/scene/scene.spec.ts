@@ -79,9 +79,9 @@ test('quality levels change real resource use: low renders cheaper than high on 
   const high = await measure('high');
   expect(low.quality).toBe('low');
   expect(high.quality).toBe('high');
-  expect(low.devicePixelRatio).toBe(1); // low never renders above 1x
+  expect(low.devicePixelRatio).toBe(1);
   expect(high.devicePixelRatio).toBeGreaterThan(low.devicePixelRatio);
-  expect(high.drawCalls).toBeGreaterThan(low.drawCalls); // the shadow pass only exists above low
+  expect(high.drawCalls).toBeGreaterThan(low.drawCalls);
 });
 
 test('entering and leaving the 3D scene repeatedly does not accumulate GPU geometry or textures', async ({

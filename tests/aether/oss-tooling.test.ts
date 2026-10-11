@@ -90,6 +90,18 @@ describe('subjects', () => {
       'feat: x\n\nbody\n',
     );
   });
+
+  it('tells the lines an AI tool added from the trailers of human co-authors', () => {
+    const session = 'feat: x\n\nbody\n\nClaude-Session: https://claude.example/code/session_1\n';
+    const assistant = 'feat: x\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\n';
+    const person = 'feat: x\n\nCo-authored-by: Real Person <real@example.com>\n';
+    expect(lib.hasToolTrailers(session)).toBe(true);
+    expect(lib.hasToolTrailers(assistant)).toBe(true);
+    expect(lib.hasToolTrailers(person)).toBe(false);
+    expect(lib.hasToolTrailers('feat: x\n\nbody mentions Claude Code and anthropic.com\n')).toBe(
+      false,
+    );
+  });
 });
 
 describe('milestone grouping', () => {

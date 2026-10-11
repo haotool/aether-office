@@ -28,7 +28,6 @@ const SESSION_KEY = /^(claude|codex):[A-Za-z0-9._-]{1,200}$/;
 /** Clock-outs already answered, by caller and Idempotency-Key: a retry gets the same answer and kills nothing twice. */
 const REMEMBERED_CLOCK_OUTS = 50;
 
-/** This machine, read where it is: local sessions (list, stop, transcript), system load, Git health and graph. */
 export function localRoutes(context: RouteContext) {
   localSessionReadRoutes(context);
   localSessionActionRoutes(context);
@@ -57,14 +56,14 @@ async function ownedSession(
 ) {
   assertOwner(who);
   if (!SESSION_KEY.test(request.params.key)) throw new DomainError('INVALID_SESSION_KEY', 400);
-  const body = z.object({ startedAt: z.number().int() }).strict().parse(request.body);
+  const body = z.strictObject({ startedAt: z.number().int() }).parse(request.body);
   if (process.env['AETHER_LOCAL_SESSIONS'] === 'off')
     throw new DomainError('LOCAL_SESSIONS_OFF', 404);
   const sessions = await freshSessions(control, who);
   const session = sessions.find((s) => s.key === request.params.key);
   if (!session?.projectId)
     throw new DomainError(session ? 'SESSION_HAS_NO_PROJECT' : 'SESSION_NOT_FOUND', 404);
-  authorize(who, 'project.execution.configure', session.projectId); // owner-only action
+  authorize(who, 'project.execution.configure', session.projectId);
   return { session, projectId: session.projectId, startedAt: body.startedAt };
 }
 
@@ -103,7 +102,6 @@ function localSessionReadRoutes({ app, control, actor }: RouteContext) {
     );
     return { speech: await runningSpeech(sessions) };
   });
-  // Live transcript of one local session, by the key the scanner found it under. Same audience as the list above.
   app.get<{ Params: { key: string } }>('/api/local-sessions/:key/transcript', async (request) => {
     const who = actor(request);
     requireOperator(who);
@@ -116,7 +114,6 @@ function localSessionReadRoutes({ app, control, actor }: RouteContext) {
   });
 }
 
-/** Stopping a session's process and nudging its zombies away: owner only, audited. */
 function localSessionActionRoutes({ app, control, actor }: RouteContext) {
   // Stops the process behind a session that is dormant or orphaned. Owner only, audited, SIGTERM to that process alone.
   app.post<{ Params: { key: string } }>('/api/local-sessions/:key/stop', async (request) => {
@@ -146,7 +143,6 @@ function localSessionActionRoutes({ app, control, actor }: RouteContext) {
   );
 }
 
-/** Ends the sessions named, each re-checked and given its own result, and audits what was cleared per project. */
 async function runClockOut(
   control: Control,
   who: Actor,

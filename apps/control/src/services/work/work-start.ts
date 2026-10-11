@@ -8,7 +8,6 @@ type StartCommand = Extract<Command, { type: 'work.assign' | 'work.retry' }>;
 export type WorkRow = ReturnType<typeof task>;
 type AssignedAgent = ReturnType<typeof agent>;
 
-/** The run a retry continues from. */
 type PreviousRun = {
   id: string;
   state: string;
@@ -29,7 +28,6 @@ const previousRun = (ctx: Context, workId: string) =>
     )
     .get(workId) as PreviousRun | undefined;
 
-/** What must hold before an agent is picked: no run or workspace job in flight, and for a retry a finished run to continue. */
 function assertNothingInFlight(
   ctx: Context,
   c: StartCommand,
@@ -61,7 +59,6 @@ function assertNothingInFlight(
   return previous;
 }
 
-/** A retry keeps its workspace and, on request, its provider session: both need the same machine and provider. */
 function assertRetryContinues(
   ctx: Context,
   c: StartCommand,
@@ -90,7 +87,6 @@ function assertRetryContinues(
     throw new DomainError('SESSION_RESUME_UNAVAILABLE');
 }
 
-/** The remaining gates once the agent is known; returns the project's live-execution policy. */
 function assertCanStart(
   ctx: Context,
   c: StartCommand,
@@ -114,7 +110,6 @@ function assertCanStart(
   return policy;
 }
 
-/** Creates the session, the queued run and its runner command; a retry reuses the previous workspace. */
 function queueRun(
   ctx: Context,
   c: StartCommand,
@@ -166,7 +161,6 @@ function queueRun(
       .run(previous?.providerSessionId, runId);
 }
 
-/** work.assign and work.retry: validates, queues a run and returns the work item's next fields. */
 export function startAttempt(ctx: Context, c: StartCommand, row: WorkRow, now: number) {
   const previous = assertNothingInFlight(ctx, c, row);
   const agentId = c.type === 'work.assign' ? c.data.agentId : row.assignee;

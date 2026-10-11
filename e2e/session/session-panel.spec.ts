@@ -4,8 +4,6 @@ import AxeBuilder from '@axe-core/playwright';
 import { appendFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-// The session panel: a feed of sessions, then the chosen session's conversation. The fixture session is the one
-// playwright.config.ts writes (e2e-session); its transcript is given a conversation here.
 const transcript = join(
   process.env['AETHER_LOCAL_SESSIONS_HOME']!,
   '.claude/projects/p/e2e-session.jsonl',
@@ -40,7 +38,6 @@ test.beforeAll(() => {
 async function login(page: Page) {
   await signIn(page);
   await expect(page.locator('main')).toBeVisible();
-  // The fixture repository is adopted as its own project, where its session lives.
   const option = page.locator('.project-picker select option', { hasText: 'fixture-repo' });
   await expect(option).toBeAttached({ timeout: 15000 });
   const projects = (await (await page.request.get('/api/projects')).json()) as {
@@ -50,7 +47,6 @@ async function login(page: Page) {
   return projects.find((p) => p.name === 'fixture-repo')!.id;
 }
 
-/** The panel passes axe (contrast included) in the dark theme and the light one. */
 async function expectAccessible(page: Page) {
   for (const theme of ['dark', 'light'] as const) {
     await page.evaluate((t) => (document.documentElement.dataset['theme'] = t), theme);
@@ -78,7 +74,6 @@ test('desktop: a feed row opens the conversation, which follows the newest messa
   await row.click();
   await expect(page).toHaveURL(/agent=local%3Aclaude%3Ae2e-session/);
   const conversation = panel.locator('.conversation');
-  // The transcript comes first, newest at the bottom; the details are one closed fold at its end.
   await expect(conversation.getByText('Add retries to the upload')).toBeVisible({ timeout: 10000 });
   const scroll = conversation.locator('.conv-scroll');
   await expect(conversation.getByText('Done: retries added.')).toBeVisible();
@@ -86,7 +81,6 @@ test('desktop: a feed row opens the conversation, which follows the newest messa
     conversation.locator('.tool-summary', { hasText: '讀取 2 次 · 編輯 1 次' }),
   ).toBeVisible();
   await expect(conversation.locator('.session-details')).not.toHaveAttribute('open', '');
-  // An honest footer, not a composer: nothing here can type into the terminal that started the session.
   await expect(conversation.locator('.session-footer')).toContainText('唯讀');
   await expect(conversation.locator('textarea, input[type=text]')).toHaveCount(0);
   await conversation.locator('.tool-summary').first().click();
@@ -96,7 +90,6 @@ test('desktop: a feed row opens the conversation, which follows the newest messa
   await expectAccessible(page);
   await page.screenshot({ path: 'evidence/screenshots/e2e-session-conversation.png' });
 
-  // Scrolled up to read: a new message does not move the view, it adds a pill that takes you down.
   await scroll.evaluate((el) => (el.scrollTop = 0));
   appendFileSync(transcript, said('A new reply that arrived while you were reading.'));
   const pill = conversation.locator('.new-pill');
@@ -107,7 +100,6 @@ test('desktop: a feed row opens the conversation, which follows the newest messa
     conversation.getByText('A new reply that arrived while you were reading.'),
   ).toBeVisible();
   await expect(pill).toHaveCount(0);
-  // The selection stayed where the person put it through all of that.
   await expect(page).toHaveURL(/agent=local%3Aclaude%3Ae2e-session/);
 
   await conversation.getByRole('button', { name: '全部 session' }).click();
@@ -126,7 +118,6 @@ test('phone: the sheet peeks, opens to the feed, then to the conversation, and g
   const page = await context.newPage();
   const projectId = await login(page);
   await page.goto(`/office?project=${projectId}`);
-  // Peek: 72px, session chips and the newest reply line, above the tab bar.
   const peek = page.locator('.member-bar.feed-peek');
   await expect(peek).toBeVisible({ timeout: 15000 });
   const box = (await peek.boundingBox())!;
@@ -144,14 +135,12 @@ test('phone: the sheet peeks, opens to the feed, then to the conversation, and g
   const full = page.locator('.session-sheet.full');
   await expect(full.getByText('Add retries to the upload')).toBeVisible({ timeout: 10000 });
   await expect(page).toHaveURL(/agent=local%3Aclaude%3Ae2e-session/);
-  // Every control in the sheet can be hit with a finger.
   for (const control of await full.locator('button, summary').all()) {
     const size = await control.boundingBox();
     if (size) expect(Math.min(size.width, size.height)).toBeGreaterThanOrEqual(36);
   }
   await page.screenshot({ path: 'evidence/screenshots/e2e-sheet-full.png' });
 
-  // Collapsing keeps the member in hand: the bar shows who (and their newest reply line, for a running session).
   await full.getByRole('button', { name: '收合', exact: true }).tap();
   const bar = page.locator('.member-bar:not(.feed-peek)');
   await expect(bar).toBeVisible();

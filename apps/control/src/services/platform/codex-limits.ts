@@ -1,12 +1,10 @@
 import type { CodexLimits } from '@aether/contracts';
 import { withEdge } from './file-edge.js';
 
-// Codex writes its rate-limit windows into every token_count event of a session (`rate_limits.primary` and `.secondary`:
-// used percent, window length in minutes, reset time). The latest such event of the newest sessions is the freshest
-// reading this machine has; nothing is fetched and no credential is read.
+// Codex writes its rate-limit windows into every token_count event, so the latest one of the newest sessions is the
+// freshest reading; nothing is fetched and no credential is read.
 const TAIL_BYTES = 256 * 1024;
 const NEEDLE = Buffer.from('"rate_limits":{');
-/** Newest rollouts looked into: a quiet one has no reading, an idle machine's newest may be days old. */
 const LIMIT_FILES = 4;
 
 const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : null);
@@ -18,7 +16,6 @@ function windowOf(raw: unknown, now: number): CodexLimits['windows'][number] | n
   const usedPercent = num(w['used_percent']);
   const resets = num(w['resets_at']);
   if (usedPercent === null) return null;
-  // Once the reset has passed the figure describes a window that is over.
   if (resets !== null && resets * 1000 <= now) return null;
   return {
     minutes: num(w['window_minutes']),
@@ -27,7 +24,6 @@ function windowOf(raw: unknown, now: number): CodexLimits['windows'][number] | n
   };
 }
 
-/** Pure. The latest rate-limit reading in a transcript's tail: its windows, plan and when it was written. */
 export function parseCodexLimits(tail: Buffer, now: number): CodexLimits | null {
   for (let from = tail.length; from > 0;) {
     const hit = tail.lastIndexOf(NEEDLE, from - 1);
@@ -39,7 +35,7 @@ export function parseCodexLimits(tail: Buffer, now: number): CodexLimits | null 
     try {
       entry = obj(JSON.parse(tail.toString('utf8', start, stop < 0 ? tail.length : stop)));
     } catch {
-      continue; // the first line of a tail read is usually cut in half
+      continue;
     }
     const limits = obj(obj(entry['payload'])['rate_limits']);
     const at = Date.parse(String(entry['timestamp'] ?? ''));
@@ -58,7 +54,6 @@ export function parseCodexLimits(tail: Buffer, now: number): CodexLimits | null 
   return null;
 }
 
-/** The freshest reading among the newest Codex transcripts (`files`, newest first); null when none carries one. */
 export async function readCodexLimits(
   files: readonly string[],
   now: number,

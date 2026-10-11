@@ -14,7 +14,6 @@ type Commit = {
   edges: { to: number; parent: string }[];
 };
 
-/** The recent commit graph of a project's repository, shared by the graph page and the 3D beanstalk. */
 export function useGitGraph(projectId: string, enabled = true) {
   return useQuery({
     queryKey: ['git-graph', projectId],
@@ -43,7 +42,6 @@ const y = (row: number) => ROW / 2 + row * ROW;
 
 type Commits = Commit[];
 
-/** The lanes and the dots on them: one curve from each commit to its parent. */
 function LaneGraph({ commits, lanes }: { commits: Commits; lanes: number }) {
   const rowOf = new Map(commits.map((c, i) => [c.sha, i]));
   const width = x(Math.min(lanes, 24)) + 8;
@@ -98,7 +96,6 @@ function CommitList({ commits }: { commits: Commits }) {
   );
 }
 
-/** The repository's recent history as a lane graph: who branched where, and where work came back together. */
 export function GitGraph({ projectId }: { projectId: string }) {
   const t = useT();
   const query = useGitGraph(projectId);

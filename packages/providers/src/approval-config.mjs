@@ -1,6 +1,6 @@
-// Where Remote approvals keeps what the synchronous hook needs. Its own module: the control plane imports it, and a bundle
-// that contained the hook script itself would run that script as its main. The hook runs from a private copy of this
-// file and of hook-approval.mjs (see approval-install.ts), so nothing here may import from the repository.
+// Its own module: the control plane imports it, and a bundle containing the hook script itself would run that script as
+// its main. The hook runs from a private copy of this file and of hook-approval.mjs (see approval-install.ts), so
+// nothing here may import from the repository.
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import {
   chmodSync,
@@ -15,19 +15,16 @@ import { homedir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 
 export const DEFAULT_WAIT_MS = 45_000;
-/** What the server accepts for "Allow for this session": at most this many rules, each label at most this long. */
 export const MAX_RULES = 3;
 export const MAX_RULE_CHARS = 120;
 /** The random value the hook sends with a request; the server's proof is bound to it, so an answer cannot be replayed. */
 export const NONCE_PATTERN = /^[A-Za-z0-9_-]{16,64}$/;
 const LOOPBACK = new Set(['127.0.0.1', 'localhost', '[::1]']);
-/** AETHER's private directory: `AETHER_HOME`, else `~/.aether`. */
 export const aetherDir = (env = process.env) => env.AETHER_HOME ?? join(homedir(), '.aether');
 export function approvalConfigPath(env = process.env) {
   return env.AETHER_APPROVALS_CONFIG ?? join(aetherDir(env), 'approvals.json');
 }
 
-/** {url, token, verifyKey} from the file the control plane wrote when Remote approvals was switched on; null when unusable. */
 export function readApprovalConfig(file = approvalConfigPath()) {
   try {
     const { url, token, verifyKey } = JSON.parse(readFileSync(file, 'utf8'));

@@ -29,11 +29,9 @@ type HudProps = {
   onExplode: () => void;
   onFollow: () => void;
   onLabels: () => void;
-  /** Plays the first-visit tour again (absent when the page has no tour). */
   onReplayIntro?: (() => void) | undefined;
 };
 
-/** One button for each floor, the top floor first. */
 function FloorButtons({ zh, floor, exploded, perFloor, onFloor }: HudProps) {
   return Array.from({ length: FLOORS }, (_, i) => FLOORS - 1 - i).map((index) => {
     const d = departmentAt(index);
@@ -54,7 +52,6 @@ function FloorButtons({ zh, floor, exploded, perFloor, onFloor }: HudProps) {
   });
 }
 
-/** The switches that stay folded until asked for: the exploded view, the names, the tour. */
 function RailTools({ zh, exploded, labels, onExplode, onLabels, onReplayIntro }: HudProps) {
   const t = sceneT(zh);
   return (
@@ -92,7 +89,6 @@ function RailTools({ zh, exploded, labels, onExplode, onLabels, onReplayIntro }:
   );
 }
 
-/** The auto camera switch, and the chip with the floor's name and its head count. */
 function Dock({ zh, floor, exploded, follow, perFloor, onFollow }: HudProps) {
   const t = sceneT(zh);
   const department = departmentAt(floor);
@@ -127,12 +123,7 @@ function Dock({ zh, floor, exploded, follow, perFloor, onFollow }: HudProps) {
   );
 }
 
-/**
- * The scene's controls on a phone, as little as can do the job: a rail of floor buttons and three switches on the right
- * edge, and one small chip with the floor's name. No panels, no readouts: the 3D office is what is on screen.
- */
 export function CompactHud(props: HudProps) {
-  // The three switches stay folded until asked for: the rail is five floors and one button.
   const [toolsOpen, setToolsOpen] = useState(false);
   const t = sceneT(props.zh);
   return (

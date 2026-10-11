@@ -1,8 +1,3 @@
-/*
- * The feed of sessions in the panel (features/SessionFeed.tsx): groups, rows with their status rail, the empty state.
- * A row follows the panel's width (container queries named `panel`).
- */
-/* The feed */
 .panel-scroll {
   flex: 1;
   min-height: 0;
@@ -75,7 +70,6 @@
   text-align: left;
   outline-offset: calc(var(--focus-offset) * -1);
 }
-/* The status rail on the left edge: amber needs you, teal pulsing working, blue finished, dim idle */
 .feed-row::before {
   content: '';
   position: absolute;
@@ -133,7 +127,6 @@
   font-size: var(--fs-meta);
   font-weight: 650;
 }
-/* How full the session's context window is: a hairline bar under the row's text, in the gauge's steps. */
 .feed-ctx {
   grid-area: ctx;
   height: var(--bar);
@@ -248,7 +241,6 @@
   }
 }
 
-/* Nothing yet: words, no picture */
 .feed-empty {
   display: grid;
   gap: var(--space-8);
@@ -272,7 +264,6 @@
   line-height: var(--lh-body);
 }
 
-/* A wide panel: the row becomes two columns (who and where on the left, the newest reply on the right) */
 @container panel (min-width: 560px) {
   .feed-main {
     grid-template-columns: minmax(160px, 2fr) minmax(0, 3fr);
@@ -298,7 +289,6 @@
     flex: 0 1 auto;
   }
 }
-/* A narrow panel: the state line gives way to the title and the reply */
 @container panel (max-width: 359px) {
   .feed-state {
     display: none;

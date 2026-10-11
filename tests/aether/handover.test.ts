@@ -36,7 +36,7 @@ describe('the stamp never claims more than the real flag', () => {
     expect(stampOf({ error: false })).toBe('received');
     expect(stampOf({ error: true })).toBe('returned');
     expect(stampOf({ ok: false })).toBe('returned');
-    expect(stampOf({ ok: true })).toBe('received'); // a receipt, not a verdict
+    expect(stampOf({ ok: true })).toBe('received');
     expect(stampOf({ error: false, ok: false })).toBe('returned');
   });
 
@@ -69,8 +69,8 @@ describe('the stamp never claims more than the real flag', () => {
         number,
         number,
       ];
-      expect(r > g + 40 && r > b + 40).toBe(false); // not red
-      expect(g > r + 40 && g > b + 40).toBe(false); // not green
+      expect(r > g + 40 && r > b + 40).toBe(false);
+      expect(g > r + 40 && g > b + 40).toBe(false);
     }
     const grey = STAMP_INK.returned
       .slice(1)
@@ -151,7 +151,7 @@ describe('the timeline', () => {
     expect(folderAt(plan, t.walkEnd - 10, 0).state).toBe('held');
     const glide = folderAt(plan, t.turnEnd + GLIDE_MS / 2, 0);
     expect(glide.state).toBe('glide');
-    expect(glide.y).toBeGreaterThan(plan.places.tray[1]); // an arc over the paper
+    expect(glide.y).toBeGreaterThan(plan.places.tray[1]);
     expect(folderAt(plan, t.placeAt, 0).state).toBe('hidden');
     const landing = folderAt(plan, t.placeAt - 1, 2);
     expect(landing.x).toBeCloseTo(plan.places.tray[0], 1);
@@ -175,7 +175,6 @@ describe('the timeline', () => {
     expect(east.spot.x).toBeGreaterThan(east.tray[0]);
     expect(handoverSide({ x: 0, z: 0, rotation: 0 }, { x: 5, z: 0 })).toBe(1);
     expect(handoverSide({ x: 0, z: 0, rotation: 0 }, { x: -5, z: 0 })).toBe(-1);
-    // A desk turned a half turn has its +x on the world's -x.
     expect(handoverSide({ x: 0, z: 0, rotation: 2 }, { x: 5, z: 0 })).toBe(-1);
   });
 
@@ -191,6 +190,6 @@ describe('the timeline', () => {
     expect(still).toMatchObject({ placeAt: 0, stampAt: 0 });
     const trayPlan = { ...plan, mode: 'tray' as const, t: still };
     expect(folderAt(trayPlan, 0, 0).state).toBe('hidden');
-    expect(pressAt(trayPlan, 0)).toBe(0); // no press without motion: the seal is simply there
+    expect(pressAt(trayPlan, 0)).toBe(0);
   });
 });

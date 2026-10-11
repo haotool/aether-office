@@ -19,7 +19,6 @@ import {
   type Names,
 } from './screen-tokens.js';
 
-/** How one language writes its statements: the pieces screen-codegen.ts puts together into a file. */
 export type Dialect = {
   semi: string;
   nullish: string;

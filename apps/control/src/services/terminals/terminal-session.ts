@@ -1,7 +1,6 @@
 import { DomainError } from '@aether/kernel';
 import { type Context } from '../domain/context.js';
 
-/** A terminal session row, or a 404 when the project has no such terminal. */
 export type Session = {
   id: string;
   projectId: string;

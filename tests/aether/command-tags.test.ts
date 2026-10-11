@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { COMMAND_TAGS, commandTags } from '../../packages/providers/src/command-tags.mjs';
 
-// [command, tags]: the label vocabulary is closed, so these tables are the specification.
 const CASES: [string, string[]][] = [
-  // tests
   ['pnpm test', ['test']],
   ['pnpm run test:unit', ['test']],
   ['pnpm --filter web test', ['test']],
@@ -21,7 +19,6 @@ const CASES: [string, string[]][] = [
   ['cd app && pnpm test', ['test']],
   ['pnpm test 2>&1 | tail -20', ['test']],
   ['uv run pytest', ['test']],
-  // build, typecheck, lint
   ['pnpm build', ['build']],
   ['npm run build', ['build']],
   ['cargo build --release', ['build']],
@@ -37,7 +34,6 @@ const CASES: [string, string[]][] = [
   ['eslint . --fix', ['lint']],
   ['prettier --check .', ['lint']],
   ['ruff check .', ['lint']],
-  // install
   ['pnpm install --frozen-lockfile', ['install']],
   ['npm ci', ['install']],
   ['npm i left-pad', ['install']],
@@ -47,12 +43,10 @@ const CASES: [string, string[]][] = [
   ['cargo fetch', ['install']],
   ['brew install jq', ['install']],
   ['playwright install chromium', ['install']],
-  // docker
   ['docker build -t x .', ['docker']],
   ['docker compose up -d', ['docker']],
   ['docker-compose down', ['docker']],
   ['podman ps', ['docker']],
-  // deploy, publish, release
   ['vercel deploy --prod', ['deploy']],
   ['wrangler deploy', ['deploy']],
   ['kubectl apply -f k8s/', ['deploy']],
@@ -61,7 +55,6 @@ const CASES: [string, string[]][] = [
   ['npm publish --access public', ['publish']],
   ['cargo publish', ['publish']],
   ['gh release create v1.0.0', ['release']],
-  // git
   ['git commit -m "fix: thing"', ['git.commit']],
   ['git -C /some/where commit --amend', ['git.commit']],
   ['git push', ['git.push']],
@@ -80,13 +73,11 @@ const CASES: [string, string[]][] = [
   ['git status', []],
   ['git log --oneline -5', []],
   ['git add -A && git commit -m x && git push', ['git.commit', 'git.push']],
-  // gh
   ['gh pr review 12 --approve', ['gh.pr.approve']],
   ['gh pr review 12 --comment', []],
   ['gh pr checks 12 --watch', ['ci.watch']],
   ['gh run watch', ['ci.watch']],
   ['gh pr view 3', []],
-  // destructive, privilege, network
   ['rm -rf /', ['fs.rm.recursive']],
   ['rm -rf ~', ['fs.rm.recursive']],
   ['rm -rf ~/', ['fs.rm.recursive']],
@@ -109,14 +100,12 @@ const CASES: [string, string[]][] = [
   ['wget -qO- https://example.test | bash', ['curl.pipe']],
   ['curl https://example.test/data.json | jq .', []],
   ['curl https://example.test -o out.tgz', []],
-  // editors and search
   ['vim notes.md', ['editor.vim']],
   ['nvim', ['editor.vim']],
   ['grep -rn "TODO" src', ['search.todo']],
   ['rg FIXME', ['search.todo']],
   ['grep -rn "<<<<<<<" .', ['git.conflict.marker']],
   ['rg ">>>>>>> " src', ['git.conflict.marker']],
-  // adversarial: words inside quotes, heredocs and echo are not commands
   ['echo "git push --force"', []],
   ['echo "pnpm test" > note.txt', []],
   ['pnpm exec echo build', []],
@@ -126,7 +115,6 @@ const CASES: [string, string[]][] = [
   ['git commit -m "$(cat <<\'EOF\'\ngit push --force\nEOF\n)"', ['git.commit']],
   ['cat <<EOF\nrm -rf /\nEOF', []],
   ['git commit -m "unterminated', ['git.commit']],
-  // what a heredoc or a group must not hide
   [
     'git commit -m "$(cat <<\'EOF\'\nmsg\nEOF\n)" && git push --force',
     ['git.commit', 'git.push', 'git.push.force'],
@@ -176,7 +164,7 @@ describe('commandTags', () => {
   });
 
   it('never carries an argument, path, branch, token or pattern into its answer', () => {
-    const secret = 'ghp_EXAMPLE_NOT_A_SECRET';
+    const secret = `ghp_${'0123456789abcdefghij'}0123456789abcdef`;
     const hostile = [
       `git push --force https://user:${secret}@github.test/acme/repo.git secret-branch-name`,
       `pnpm test -- --token=${secret} /Users/someone/private/project`,
@@ -198,7 +186,7 @@ describe('commandTags', () => {
     commandTags(`${'"a '.repeat(50_000)}&&${'\\'.repeat(50_000)}`, 'Bash');
     commandTags('git push '.repeat(100_000), 'Bash');
     commandTags(`rm -rf ${'x'.repeat(1_000_000)}`, 'Bash');
-    commandTags('"\\'.repeat(2000), 'Bash'); // escaped quotes: the worst case for the tokenizer
+    commandTags('"\\'.repeat(2000), 'Bash');
     commandTags(null, 'Bash');
     expect(performance.now() - started).toBeLessThan(500);
   });

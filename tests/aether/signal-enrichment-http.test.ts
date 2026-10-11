@@ -22,7 +22,7 @@ import { freePort } from './timing.js';
 
 const PORT = await freePort();
 const BASE = `http://127.0.0.1:${PORT}`;
-const SECRET = 'ghp_EXAMPLE_NOT_A_SECRET';
+const SECRET = `ghp_${'0123456789abcdefghij'}0123456789abcdef`;
 const receiver = join(process.cwd(), 'packages/providers/src/hook-receiver.mjs');
 
 let closers: (() => Promise<void> | void)[] = [];
@@ -75,7 +75,7 @@ it('serves labels, outcomes, subagent facts and conflicts over real HTTP with no
     tool_use_id: 'toolu_build',
     tool_input: { command: 'pnpm build' },
   });
-  await append(parent, toolResultLine('toolu_build', false)); // the hook never saw it end; the transcript did
+  await append(parent, toolResultLine('toolu_build', false));
 
   const done = new Date(Date.now() - 3 * 60_000);
   await writeSubagent(parent, {
@@ -129,7 +129,7 @@ it('serves labels, outcomes, subagent facts and conflicts over real HTTP with no
   expect(session.hook!.recent.map((c) => [c.tags, c.ok])).toEqual([
     [['git.push', 'git.push.force'], true],
     [['test'], false],
-    [['build'], true], // the transcript's result, paired by tool id
+    [['build'], true],
   ]);
   const [child] = session.subagents;
   expect(child).toMatchObject({
@@ -143,5 +143,5 @@ it('serves labels, outcomes, subagent facts and conflicts over real HTTP with no
   expect(child!.label!.length).toBeLessThanOrEqual(60);
   expect(child!.result!.summary.length).toBeLessThanOrEqual(160);
   expect(child!.result!.summary).toContain('Found it.');
-  expect(session.git).toBeNull(); // not a repository: no conflict count, never an invented zero
+  expect(session.git).toBeNull();
 });

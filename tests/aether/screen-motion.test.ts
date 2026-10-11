@@ -101,5 +101,5 @@ it('eases toward a target without overshooting, and reading targets stay in rang
     expect(target).toBeGreaterThanOrEqual(0);
     expect(target).toBeLessThanOrEqual(400);
   }
-  expect(readTarget('a', 10_000, 400)).toBe(readTarget('a', 10_500, 400)); // steady within a bucket
+  expect(readTarget('a', 10_000, 400)).toBe(readTarget('a', 10_500, 400));
 });

@@ -4,10 +4,8 @@ import type { Group } from 'three';
 import { departureAt, type Departure, type DeparturePose } from '../animals/departure.js';
 
 /**
- * Moves its child along a member's departure (see departure.ts), `startAt` being the wall-clock moment it begins, so a
- * member that scrolls out of view or is drawn again later is where it would have been. The child is told which clip to
- * play and is not drawn once the member is out of the office. The bag is a plain box on the back: cheap, and enough
- * to read as "packed up".
+ * `startAt` is the wall-clock moment the departure begins, so a member that scrolls out of view or is drawn again later
+ * is where it would have been.
  */
 export function Departing({
   plan,
@@ -20,7 +18,6 @@ export function Departing({
   plan: Departure;
   startAt: number;
   reducedMotion: boolean;
-  /** Whether this member packs a bag (a ghost has nothing to carry). */
   bag: boolean;
   bagColor: string;
   children: (clip: DeparturePose['clip']) => ReactNode;
@@ -42,7 +39,7 @@ export function Departing({
     setState((now) =>
       now.clip === pose.clip && now.gone === pose.gone ? now : { clip: pose.clip, gone: pose.gone },
     );
-    if (!pose.gone) invalidate(); // until it is out, every frame; afterwards nothing is drawn for it
+    if (!pose.gone) invalidate();
   });
   if (state.gone) return null;
   return (

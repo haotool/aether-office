@@ -15,8 +15,6 @@ import { ENVELOPE_MS, distanceFade, envelopeProgress } from './interplay.js';
 import { toWorld, type V3 } from '../core/shot-camera.js';
 import { useByValue } from '../core/use-by-value.js';
 
-// What a request, a decision, a handoff looks like in the air between two members. Colours match the rest of the
-// scene: cyan is flow, amber wants an answer, violet hands something over.
 const COLOR: Record<PulseKind, string> = {
   inform: '#6aa8ff',
   request: '#ffc65c',
@@ -24,7 +22,7 @@ const COLOR: Record<PulseKind, string> = {
   handoff: '#a592ff',
   sub: '#8ea6b5',
 };
-const HEAD = 1.9; // links leave from just above a head
+const HEAD = 1.9;
 
 type LinkProps = {
   pulse: Pulse;
@@ -33,9 +31,8 @@ type LinkProps = {
   height: { from: number; to: number };
 };
 
-/** The arc between two heads: its curve, the tube drawn along it and where it peaks. */
 function useLinkCurve(from: V3, to: V3, height: LinkProps['height']) {
-  const start = useByValue(from); // the arrays are new on every render
+  const start = useByValue(from);
   const end = useByValue(to);
   const curve = useMemo(() => {
     const a = new Vector3(start[0], height.from + HEAD, start[2]);
@@ -58,7 +55,6 @@ type LinkRefs = {
   envelope: RefObject<Group | null>;
 };
 
-/** One frame of a link: the tube fades, the packets run along it, the ring spreads, the envelope flies and lands. */
 function stepLink(
   { tube, packets, ping, envelope }: LinkRefs,
   { pulse, curve, middle, aim, hands }: LinkShape,
@@ -66,7 +62,6 @@ function stepLink(
 ): number {
   const age = Date.now() - pulse.at;
   const fade = distanceFade(camera.position.distanceTo(middle));
-  // Full strength for most of the window, then a fade out over the last six seconds.
   const strength = Math.min(1, Math.max(0, (PULSE_WINDOW_MS - age) / 6000));
   const material = tube.current?.material as { opacity: number } | undefined;
   if (material) material.opacity = 0.55 * strength * fade;
@@ -78,13 +73,12 @@ function stepLink(
     mesh.visible = strength > 0.02 && fade > 0.02;
   });
   if (ping.current) {
-    const phase = (t * 0.9) % 1; // a ring that spreads from the receiver, again and again
+    const phase = (t * 0.9) % 1;
     ping.current.scale.setScalar(0.3 + phase * 1.6);
     (ping.current.material as { opacity: number }).opacity = (1 - phase) * 0.7 * strength * fade;
   }
   const post = envelope.current;
   if (post) {
-    // It leaves the sender's head, arcs to the receiver's and shrinks away once it has landed.
     const progress = envelopeProgress(age);
     const landed = Math.max(0, 1 - (age - ENVELOPE_MS) / 500);
     post.visible = hands && age >= 0 && landed > 0 && fade > 0.02;
@@ -100,11 +94,9 @@ type LinkShape = {
   curve: QuadraticBezierCurve3;
   middle: Vector3;
   aim: Vector3;
-  /** A message is handed over in an envelope; subagent work is a stream of light. */
   hands: boolean;
 };
 
-/** The letter that flies along the arc: a pale card inside a soft glow of the link's colour. */
 function Envelope({ color, group }: { color: string; group: RefObject<Group | null> }) {
   return (
     <group ref={group} visible={false}>
@@ -127,7 +119,6 @@ function Envelope({ color, group }: { color: string; group: RefObject<Group | nu
   );
 }
 
-/** The ring that spreads on the floor where the exchange lands. */
 function PingRing({ ring, at, color }: { ring: RefObject<Mesh | null>; at: V3; color: string }) {
   return (
     <mesh ref={ring} position={at} rotation={[-Math.PI / 2, 0, 0]}>
@@ -187,11 +178,6 @@ function Link({ pulse, from, to, height }: LinkProps) {
   );
 }
 
-/**
- * Messages and subagent work, drawn in the air: an arc between the two members with light travelling along it from the
- * sender, and a ring spreading where it lands, for as long as the exchange is current. Decoration over durable state:
- * it proves nothing about delivery (the delivery states do).
- */
 export function CommLinks({
   pulses,
   seats,
@@ -200,9 +186,7 @@ export function CommLinks({
 }: {
   pulses: readonly Pulse[];
   seats: ReadonlyMap<string, Seat>;
-  /** World height of a floor's ground. */
   heightOf: (floor: number) => number;
-  /** Whether a floor is drawn at all. */
   visible: (floor: number) => boolean;
 }) {
   const now = Date.now();
@@ -213,7 +197,6 @@ export function CommLinks({
         const a = seats.get(pulse.from);
         const b = seats.get(pulse.to);
         if (!a || !b || !visible(a.floor) || !visible(b.floor)) return null;
-        // The member sits a little in front of its desk.
         const from = toWorld(a, [0, 0, 0.86], 0);
         const to = toWorld(b, [0, 0, 0.86], 0);
         return (

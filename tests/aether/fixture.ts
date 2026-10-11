@@ -66,7 +66,6 @@ const guard = readFileSync(
   new URL('../../apps/control/src/db/migrations/017-work-state-guard.sql', import.meta.url),
   'utf8',
 );
-/** Test-only: put a work item into an arbitrary state, bypassing the transition guard, then restore it. */
 export function seedWork(control: Control, workId: string, set: string, ...values: unknown[]) {
   const sql = control.ctx.sqlite;
   sql.prepare('DROP TRIGGER work_state_transition').run();

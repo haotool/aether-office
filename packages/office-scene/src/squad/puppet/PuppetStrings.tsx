@@ -33,17 +33,13 @@ import {
 import type { StringPhase } from './string-motion.js';
 import { POINTS } from './verlet.js';
 
-/** Simulation rate by tier, and what it drops to past 45 m; past 90 m the strings keep their shape. */
 const HZ: Record<Quality, number> = { high: 30, balanced: 20, low: 0 };
 const FAR_HZ = 10;
 const FAR_M = 45;
 const FROZEN_M = 90;
-/** At the body end a string is this much of the cross's brightness (the light-string look). */
 const BODY_LIGHT = 0.25;
-/** The master thread is a little fainter than the strings on the body. */
 const MASTER_LIGHT = 0.7;
 const SEGMENTS = POINTS - 1;
-/** Still strings (reduced motion, Calm) are redrawn at most this often, when something moved. */
 const STILL_EVERY_S = 0.2;
 /** A frame that took longer than this is a stall: the strings do not owe it a burst. */
 const MAX_WAIT_S = 0.25;
@@ -54,7 +50,6 @@ const phaseOf = (m: { phase: string; waiting: boolean; working: boolean }): Stri
 type Rig = ReturnType<typeof createRig>;
 type SquadMembers = SquadFrame['state']['current']['members'];
 
-/** What the simulation needs of each live subagent, with its squad and how far the camera is from it. */
 type Gathered = {
   members: RigMember[];
   squadOfMember: DrawSquad[];
@@ -62,7 +57,6 @@ type Gathered = {
   nearest: number;
 };
 
-/** Every subagent that has strings (seated or leaving, not still arriving), and the distance of the nearest to the camera. */
 function gather(
   all: SquadMembers,
   seatOf: ReadonlyMap<string, SquadFrame['seats'][number]>,
@@ -98,10 +92,8 @@ function gather(
   return { members, squadOfMember, distances, nearest };
 }
 
-/** The line buffers the strings are written into: segment endpoints, and their colours. */
 type Buffers = { positions: Float32Array; rgb: Float32Array };
 
-/** One string's segments, each fading from the cross to the body end. Returns the next free segment. */
 function writeString(
   rig: Rig,
   b: Buffers,
@@ -127,7 +119,6 @@ function writeString(
   return segment;
 }
 
-/** Writes one visible member's four strings and its cross from `segment` on; returns the segment after them (the same when it is not visible). */
 function writeMember(
   rig: Rig,
   b: Buffers,
@@ -160,7 +151,6 @@ function writeMember(
   return segment;
 }
 
-/** Writes every visible member's four strings and its cross; returns how many segments were written. */
 function writeStrings(
   rig: Rig,
   b: Buffers,
@@ -183,7 +173,6 @@ type PuppetStringsProps = {
   podPos: ReadonlyMap<string, Point2>;
 };
 
-/** The one `LineSegments2` that holds every string of the scene, disposed with the layer. */
 function useStringLines() {
   const lines = useMemo(createStringLines, []);
   const { geometry, material } = lines;
@@ -197,7 +186,6 @@ function useStringLines() {
   return lines;
 }
 
-/** What `gather` looks members up in: the seat of each, the squad of each supervisor, and a scratch vector. */
 function useGatherInputs(frame: SquadFrame, squads: readonly DrawSquad[]) {
   const probe = useMemo(() => new Vector3(), []);
   const seatOf = useMemo(() => new Map(frame.seats.map((s) => [s.member, s])), [frame.seats]);
@@ -205,7 +193,6 @@ function useGatherInputs(frame: SquadFrame, squads: readonly DrawSquad[]) {
   return { seatOf, squadOf, probe };
 }
 
-/** The lines are a fixed number of CSS pixels wide, so their material is told the canvas's size in device pixels. */
 function fitToCanvas(
   material: ReturnType<typeof createStringLines>['material'],
   ratio: number,
@@ -215,7 +202,6 @@ function fitToCanvas(
   material.linewidth = STRING_WIDTH * ratio;
 }
 
-/** A colour by hex, made once and kept. */
 function useTone() {
   const colors = useMemo(() => new Map<string, Color>(), []);
   return (hex: string) => {
@@ -225,7 +211,6 @@ function useTone() {
   };
 }
 
-/** Writes the strings of this step into the line buffers and returns the control crosses to draw. */
 function writeLines(
   rig: Rig,
   { lines, geometry }: ReturnType<typeof createStringLines>,
@@ -247,12 +232,6 @@ function writeLines(
   return crossItems;
 }
 
-/**
- * Puppet strings: light strings from a control cross over each live subagent to its head and two hands, and a master
- * thread from the cross to the supervisor. Every string of the scene is one `LineSegments2` (one draw) plus one instanced
- * mesh for the crosses. The strings follow the subagent and never pull it. `simulate` off (reduced motion, Calm) draws
- * straight, still lines; the layer is not mounted at all on the low tier or when the person turned the strings off.
- */
 export function PuppetStrings(props: PuppetStringsProps) {
   const { squads, frame, exploded, simulate, quality, podPos } = props;
   const invalidate = useThree((s) => s.invalidate);
@@ -267,7 +246,7 @@ export function PuppetStrings(props: PuppetStringsProps) {
   // The simulation runs at its own rate (30 Hz, less far away): frames between two steps change nothing, so they cost nothing.
   const pace = useRef({ wait: Infinity, hz: HZ[quality] || FAR_HZ });
   useEffect(() => {
-    pace.current.wait = Infinity; // a new set of squads, or a new setting: draw at once
+    pace.current.wait = Infinity;
   }, [squads, simulate, quality, podPos]);
   useFrame(({ camera, gl, size }, delta) => {
     pace.current.wait += delta;
@@ -277,7 +256,6 @@ export function PuppetStrings(props: PuppetStringsProps) {
     fitToCanvas(stringLines.material, gl.getPixelRatio(), size);
     const members = frame.state.current.members;
     const gathered = gather(members, seatOf, squadOf, podPos, exploded, camera, probe);
-    // The nearest subagent sets the pace: far from the camera the simulation slows, and then holds.
     const hz = gathered.nearest > FAR_M ? FAR_HZ : HZ[quality] || FAR_HZ;
     pace.current.hz = hz;
     updateRig(rig, gathered.members, gathered.nearest > FROZEN_M ? 0 : dt, { simulate, hz });

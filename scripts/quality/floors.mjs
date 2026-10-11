@@ -9,7 +9,6 @@ export function parseFloors(text) {
 
 export const serializeFloors = (floors) => `${JSON.stringify(floors, null, 2)}\n`;
 
-/** New floors: each scored area's floor becomes the larger of its recorded floor and its current score. */
 export function raiseFloors(floors, report) {
   const next = { ...floors.floors };
   for (const area of report.areas)
@@ -17,7 +16,6 @@ export function raiseFloors(floors, report) {
   return { target: floors.target, floors: next };
 }
 
-/** Areas below their floor, and scored areas that have no floor yet. */
 export function floorProblems(report, floors) {
   const problems = [];
   for (const area of report.areas) {

@@ -1,7 +1,6 @@
 import { weighted } from '../environment/pick.js';
 import { type Rng } from '../environment/seeded.js';
 
-/** The languages a desk's code view can draw. The real file's extension decides; nothing else does. */
 export const LANGUAGES = [
   'ts',
   'tsx',
@@ -46,13 +45,11 @@ const EXTENSIONS: Record<string, LangId> = {
   zsh: 'sh',
 };
 
-/** The language of a real file name, or null when its extension is not one we draw (or it has none). */
 export function languageOf(file: string | null): LangId | null {
   const ext = file?.split('.').pop()?.toLowerCase();
   return ext && file?.includes('.') ? (EXTENSIONS[ext] ?? null) : null;
 }
 
-/** What a role writes when the real file says nothing (a call without a target): weights, not facts. */
 const ROLE_LANGUAGE_WEIGHTS: Record<string, Partial<Record<LangId, number>>> = {
   frontend: { tsx: 5, ts: 3, css: 2 },
   backend: { ts: 3, go: 3, java: 2, py: 2, sql: 1 },
@@ -78,12 +75,10 @@ const DEFAULT_WEIGHTS: Partial<Record<LangId, number>> = {
   js: 1,
 };
 
-/** A language for a desk whose file is unknown, from its role's habits. */
 export function fallbackLanguage(role: string, r: Rng): LangId {
   return weighted(r, (ROLE_LANGUAGE_WEIGHTS[role] ?? DEFAULT_WEIGHTS) as Record<LangId, number>);
 }
 
-/** Words a file's code draws on besides the real file's own name: verbs and nouns of ordinary software. */
 export const VOCAB = {
   verbs: [
     'load',
@@ -138,7 +133,6 @@ export const VOCAB = {
   ],
 } as const;
 
-/** Display names for the status bar. */
 export const LANGUAGE_NAME: Record<LangId, string> = {
   ts: 'TypeScript',
   tsx: 'TypeScript React',

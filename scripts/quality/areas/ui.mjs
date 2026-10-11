@@ -1,5 +1,3 @@
-// Area 4: UI system and design tokens. The existing token lint plus the rules proposed in docs/internal/ui-token-audit.md
-// section 5, counted per declaration; compared with scripts/design-token-baseline.json when that file exists.
 import { ROLE_VARIANCE_PATHS } from '../inputs.mjs';
 import { at, top } from '../lib.mjs';
 import { info, rule, skipped } from '../model.mjs';
@@ -16,13 +14,11 @@ const BASELINE = 'scripts/design-token-baseline.json';
 const PHYSICAL =
   /^(margin|padding)-(left|right)$|^(left|right)$|^border-(left|right)(-[a-z]+)*$|^text-align$/;
 
-// The rules themselves live in scripts/design-token-rules.mjs, shared with the gate (check-design-tokens.mjs).
 export { BREAKPOINTS, RULES, declarations, mediaViolations };
 
 export const physicalProperties = (text) =>
   declarations(text).filter(({ property }) => PHYSICAL.test(property));
 
-/** Counts per rule name over the style files: { counts, lines }. A line with the escape hatch is not counted. */
 export function measureStyles(repo, files) {
   const counts = {};
   const lines = {};

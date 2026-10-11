@@ -2,9 +2,8 @@ import { useEffect, useId, useRef } from 'react';
 import { useT } from '../../ui/useT.js';
 
 /**
- * Gives the 3D canvas an accessible name and a text equivalent: the canvas is an image of the office (`role="img"`) described
- * by one sentence that a screen reader announces politely when it changes. The sentence only changes when a count does, so
- * it is not read on every frame. The canvas belongs to the scene package, so it is found in the page instead of changed there.
+ * The sentence only changes when a count does, so a screen reader does not announce it on every frame. The canvas
+ * belongs to the scene package, so it is found in the page instead of changed there.
  */
 export function SceneSummary({ text }: { text: string }) {
   const t = useT();
@@ -22,7 +21,7 @@ export function SceneSummary({ text }: { text: string }) {
       }
     };
     label();
-    const watch = new MutationObserver(label); // the canvas is mounted after the scene's code has loaded
+    const watch = new MutationObserver(label);
     watch.observe(root, { childList: true, subtree: true });
     return () => watch.disconnect();
   }, [name, id]);

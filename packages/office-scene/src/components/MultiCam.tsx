@@ -5,7 +5,6 @@ import type { Seat } from '../environment/director.js';
 import type { Feed, Rect } from '../core/multi-view.js';
 import { poseAt } from '../core/shot-camera.js';
 
-/** A view pushes in over this many seconds and eases back out; each is a little out of step with the next. */
 const BREATH_SECONDS = 24;
 
 type MultiCamProps = {
@@ -16,14 +15,14 @@ type MultiCamProps = {
 };
 
 /**
- * Where each frame of the wall sits in `root`, by feed id. Layout positions (offset*), not the painted ones: the frames
- * animate in with a transform that must not move the picture.
+ * Layout positions (offset*), not the painted ones: the frames animate in with a transform that must not move the
+ * picture.
  */
 function measureWall(root: HTMLElement): Map<string, Rect> {
   const rects = new Map<string, Rect>();
   for (const el of root.querySelectorAll<HTMLElement>('.pip[data-feed]')) {
     const feed = el.dataset['feed'];
-    if (!feed || !el.offsetWidth) continue; // the stylesheet hides the wall here
+    if (!feed || !el.offsetWidth) continue;
     let x = 0;
     let y = 0;
     for (
@@ -46,7 +45,6 @@ type Target = {
   camera: PerspectiveCamera;
 };
 
-/** One feed's picture: its camera breathes in and out along the shot, and renders into the feed's frame. */
 function renderFeed(
   { renderer, scene, size, camera }: Target,
   feed: Feed,
@@ -70,11 +68,8 @@ function renderFeed(
 }
 
 /**
- * Renders the scene again for each feed, through its own camera, into the rectangle of its frame (the frames, which are
- * in PipWall, are laid out by the stylesheet; this reads where they ended up, so the picture and its frame cannot drift
- * apart whatever the canvas size, and a wall the stylesheet hides gets no renders). It takes over the render step, so it
- * is only mounted while there is a feed; with none, the canvas renders itself as usual. `wall` is where the rectangles
- * are kept for whoever must keep clear of the views (the name tags).
+ * Renders the scene again per feed through its own camera into the rectangle of its frame. The stylesheet lays the
+ * frames out and this reads where they ended up, so the picture and its frame cannot drift apart.
  */
 export function MultiCam({ feeds, seats, exploded, wall }: MultiCamProps) {
   const camera = useMemo(() => new PerspectiveCamera(32, 1.6, 0.4, 2400), []);
@@ -94,7 +89,7 @@ export function MultiCam({ feeds, seats, exploded, wall }: MultiCamProps) {
     return () => {
       observer.disconnect();
       wall.current = new Map();
-      invalidate(); // a frame without the views, so none is left painted
+      invalidate();
     };
   }, [gl, invalidate, feeds, wall]);
   useFrame(({ gl: renderer, scene, camera: main, size, clock }) => {

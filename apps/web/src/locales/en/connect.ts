@@ -1,4 +1,3 @@
-/** The connect words, in English. */
 export const enConnect = {
   pairTitle: 'Connect a phone',
   pairHint:

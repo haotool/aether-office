@@ -1,4 +1,3 @@
-// Optional local inputs that change area scores when present (see docs/quality/README.md).
 import { createHash } from 'node:crypto';
 
 export const ROLE_VARIANCE_PATHS = [

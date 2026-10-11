@@ -4,7 +4,6 @@ import { cleanTitle } from '@aether/kernel';
 type Session = LocalSessionsResponse['sessions'][number];
 type Subagent = Session['subagents'][number];
 
-/** The "not known" values of the fields a subagent gained after its first release (see subagentSchema in contracts). */
 const UNKNOWN_SUBAGENT: Omit<Subagent, 'id' | 'type' | 'lastSeen'> = {
   source: 'hook',
   status: 'unknown',
@@ -18,15 +17,13 @@ const UNKNOWN_SUBAGENT: Omit<Subagent, 'id' | 'type' | 'lastSeen'> = {
 };
 
 /**
- * A control plane that has not been restarted since an upgrade answers with the older shape of a session while this build
- * of the page is newer: the fields that were added later are filled in with their "unknown" values, so one stale field
- * cannot take the whole page down.
+ * A control plane not restarted since an upgrade answers with an older session shape: fields added later are filled
+ * with their unknown value, so one stale field cannot break the page.
  */
 function normalizeSession(s: Session): Session {
   const classification = s.classification as Partial<Session['classification']>;
   return {
     ...s,
-    // An older control plane sent titles as the provider stored them: clean them the same way (idempotent).
     title: s.title ? cleanTitle(s.title) || null : null,
     classification: {
       ...s.classification,
@@ -38,7 +35,6 @@ function normalizeSession(s: Session): Session {
       contextPct: s.usage?.contextPct ?? null,
       compactedAt: s.usage?.compactedAt ?? null,
     },
-    // Before the lifecycle fields existed a subagent was only an id, a type and a time: the rest is unknown.
     subagents: (s.subagents ?? []).map((c): Subagent => ({ ...UNKNOWN_SUBAGENT, ...c })),
     // Calls from before labels and outcomes existed carry none (`ok: null` is "not known", never a failure).
     hook: s.hook

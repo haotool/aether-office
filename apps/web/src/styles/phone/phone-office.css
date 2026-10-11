@@ -1,11 +1,5 @@
-/*
- * The phone office: a full-screen scene with a few small controls over it, navigation at the thumb, and nothing that
- * covers the scene with text. Portrait phones get the tab bar; a phone on its side keeps the drawer.
- */
 :root {
-  --hud-inset: var(
-    --space-12
-  ); /* every control over the scene keeps the same distance from the screen's edge */
+  --hud-inset: var(--space-12);
 }
 .tabbar,
 .quick-prefs,
@@ -23,13 +17,13 @@
 
 @media (max-width: 760px) and (min-height: 501px) {
   .topbar {
-    min-height: calc(48px + var(--safe-top)); /* token-lint: geometry */
+    min-height: calc(var(--space-48) + var(--safe-top));
     gap: var(--space-8);
   }
   .mobile-menu,
   .topbar-right > .icon-button,
   .brand > span {
-    display: none; /* the tab bar's "more" opens the drawer; language and theme live in it */
+    display: none;
   }
   .brand {
     width: auto;
@@ -118,8 +112,6 @@
   }
 }
 
-/* The KPI chips scroll sideways: the strip fades out at its right edge so a clipped chip reads as "more", and its end padding
-   lets the last chip scroll clear of the fade. The block padding is room inside the scroll box for the chips' 44px hit area. */
 @media (max-width: 760px) {
   .phone-kpi .kpi-strip {
     padding: var(--space-4) var(--space-24) var(--space-4) 0;

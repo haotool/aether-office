@@ -39,7 +39,6 @@ export type EffectId =
   | 'time-machine'
   | 'todo-notes';
 
-/** Every effect's timeline by id. The registry (../registry.ts) says when each one fires; this says what it looks like. */
 export const EFFECTS: Readonly<Record<EffectId, Effect>> = {
   'rubber-duck': rubberDuck,
   'ci-lamp': ciLamp,

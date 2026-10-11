@@ -25,9 +25,8 @@ import {
   registerDeskScreenHooks,
 } from './screen-view-desk-fixtures.js';
 
-// Desk screens: each view paints from the facts of a real session onto a recording canvas (fixtures/recording-canvas.ts).
-// The text it shows must be the session's own words; the picture around them is made up and must at least be complete,
-// repeatable and inside the screen.
+// The text a view shows must be the session's own words; the picture around it is made up and must at least be
+// complete, repeatable and inside the screen.
 registerDeskScreenHooks();
 
 describe('every view', () => {

@@ -15,7 +15,7 @@ it('plans one carrier per recipient and never replays a message already seen', (
   const first = planCarriers([message], new Set(), layout);
   expect(first.carriers.map((c) => c.key)).toEqual(['m1:b', 'm1:c']);
   expect(first.carriers.every((c) => c.length > 0)).toBe(true);
-  const again = planCarriers([message], first.seen, layout); // refetch / reconnect
+  const again = planCarriers([message], first.seen, layout);
   expect(again.carriers).toEqual([]);
 });
 
@@ -40,7 +40,7 @@ it('marks history seen without animating (reduced motion or first load) and skip
 
 it('reports an unreachable recipient instead of animating through walls', () => {
   const grid = gridFor(layout);
-  grid.blocked.fill(1); // nothing walkable: every route is unreachable
+  grid.blocked.fill(1);
   const plan = planCarriers(
     [{ id: 'm4', senderId: 'a', recipientIds: ['b'] }],
     new Set(),
