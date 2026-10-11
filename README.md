@@ -129,7 +129,7 @@ That part is secondary to the above; see [Native execution](docs/native-executio
 - **Not a sandbox.** An agent keeps the file permissions of the user who started it. AETHER OFFICE does not isolate agents
   and does not defend against code that already runs as you ([security](docs/security.md)).
 - **One trusted operator.** There is no multi-user or multi-tenant mode.
-- **Platforms.** macOS and Linux. The terminal supervisor does not support native Windows.
+- **Platforms.** macOS is the tested platform. Linux builds and passes the unit tests in CI; its browser tests are not verified yet. The terminal supervisor does not support native Windows.
 - **Token counts, not money.** No price table exists on the machine, so no cost is shown.
 - **Pre-release.** Many capabilities are verified only in part; the ledger says which.
 
