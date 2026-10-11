@@ -205,6 +205,7 @@ fails like a new finding. Add or renew an entry only with maintainer approval; p
 
 **CodeQL.** `.github/workflows/codeql.yml` analyzes JavaScript and TypeScript with `build-mode: none` on pushes to `main`,
 pull requests, and a weekly schedule. That job alone carries `security-events: write` (to upload results), `contents: read` and `actions: read` (a private repository needs it for the workflow-run lookup).
+While the repository is private and has no GitHub Advanced Security, the analysis finishes but the upload fails with "Advanced Security must be enabled"; code scanning is free for public repositories.
 
 **Dependabot.** `.github/dependabot.yml` opens weekly pull requests for npm (pnpm lockfile) and GitHub Actions, groups updates
 to reduce noise, prefixes commits with `chore(deps)`, and uses a one-day **cooldown** on version updates so proposed releases
