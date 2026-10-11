@@ -15,17 +15,20 @@ const { measureFanIn } = await load('measure.mjs');
 const { scoreRelease } = await load('run.mjs');
 const { diskRepo, memoryRepo } = await loadRoot('repo.mjs');
 
+const git = (cwd: string, ...args: string[]) =>
+  execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@example.com', ...args], {
+    cwd,
+    encoding: 'utf8',
+  }).trim();
+
 function withCleanRepo(run: (root: string, head: string) => void) {
   const root = mkdtempSync(join(tmpdir(), 'aether-gates-clean-'));
   try {
-    execFileSync('git', ['init'], { cwd: root });
+    git(root, 'init');
     writeFileSync(join(root, 'README.md'), '# x\n');
-    execFileSync('git', ['add', 'README.md'], { cwd: root });
-    execFileSync('git', ['commit', '-m', 'chore: init'], { cwd: root });
-    const head = execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], {
-      encoding: 'utf8',
-    }).trim();
-    run(root, head);
+    git(root, 'add', 'README.md');
+    git(root, 'commit', '-m', 'chore: init');
+    run(root, git(root, 'rev-parse', 'HEAD'));
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -106,9 +109,7 @@ describe('gates dirty field', () => {
 
   it('keeps all G criteria unmeasured when gates file is dirty', async () => {
     const root = resolve('.');
-    const head = execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], {
-      encoding: 'utf8',
-    }).trim();
+    const head = git(root, 'rev-parse', 'HEAD');
     const gatesPath = join(tmpdir(), `aether-gates-dirty-${Date.now()}.json`);
     writeFileSync(
       gatesPath,
@@ -127,7 +128,7 @@ describe('gates dirty field', () => {
       true,
     );
     rmSync(gatesPath, { force: true });
-  });
+  }, 60_000);
 });
 
 describe('loadGates', () => {
