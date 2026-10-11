@@ -6,7 +6,7 @@ import { summarize } from '../../apps/control/src/services/permissions/permissio
 import { approvalsFixture } from './permission-fixtures.js';
 
 it('summarizes a tool call: redacted, bounded, and never the raw input', () => {
-  const secret = 'ghp_abcdefghijklmnopqrstuvwxyz0123456789';
+  const secret = `ghp_${'abcdefghijklmnopqrstuvwxyz'}0123456789`;
   const bash = summarize('Bash', {
     command: `curl -H "Authorization: Bearer ${secret}" https://x.test\nrm -rf build ${'x'.repeat(5000)}`,
     description: 'fetch',

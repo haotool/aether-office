@@ -1,6 +1,6 @@
 {
   "schema": "aether-stability/1",
-  "measuredAt": "2026-10-11T21:40:07.875Z",
+  "measuredAt": "2026-10-11T21:54:24.651Z",
   "runs": 3,
   "tests": 2817,
   "perRun": [
@@ -24,7 +24,7 @@
   "trees": {
     "apps": "458ecd0a3226d877d504a6041d3ae07bdd6fb2dc",
     "packages": "ed25f1cca3469fb5fd533e12eae42cd47f05a03a",
-    "tests": "b9d26d7f64def5c06b09fc91089293a7acd4f56a",
+    "tests": "b88fee71c898efd3d9171fcc21e1333b6c87a07e",
     "vitest.config.ts": "92d8925750b3fa73cd006e5589cd1f10a1579eae"
   }
 }
