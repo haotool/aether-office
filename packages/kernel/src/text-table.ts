@@ -7,7 +7,7 @@ export function htmlTable(inner: string, clean: (html: string) => string): strin
       [...(row[1] ?? '').matchAll(CELL)].map((cell) =>
         clean(cell[1] ?? '')
           .replace(/\s*\n+\s*/g, ' ')
-          .replace(/\|/g, '\\|')
+          .replace(/[\\|]/g, '\\$&')
           .trim(),
       ),
     )
