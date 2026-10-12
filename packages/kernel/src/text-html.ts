@@ -205,7 +205,7 @@ function rawElement(run: Run, i: number, name: 'pre' | 'code' | 'table'): number
 }
 
 function preBlock(inner: string): string {
-  const lang = /<code[^>]*\sclass\s*=\s*["'][^"']*language-([\w+-]+)/i.exec(inner)?.[1] ?? '';
+  const lang = /<code[^<>]*\sclass\s*=\s*["'][^"']*language-([\w+-]+)/i.exec(inner)?.[1] ?? '';
   const code = decodeCodeEntities(stripTags(inner)).replace(/^\n|\n$/g, '');
   const fence = fenceFor(code, 3);
   return `\n\n${fence}${lang}\n${code}\n${fence}\n\n`;
@@ -314,5 +314,5 @@ export function neutralizeHtml(markdown: string): string {
     } else buffer.push(line);
   });
   flush();
-  return pieces.join('\n').replace(/^\n+|\s+$/g, '');
+  return pieces.join('\n').replace(/^\n+/, '').trimEnd();
 }

@@ -9,6 +9,8 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 - A cell of an HTML table in a reply that held a backslash before a pipe (`a\|b`) could split into an extra column once the table
   was turned into Markdown; the backslash is now escaped along with the pipe.
+- Neutralizing raw HTML in a very long reply no longer backtracks quadratically on thousands of `<code` openers inside `<pre>` or
+  on a long run of spaces in a code block (two regular expressions).
 
 ## [0.4.0] - 2026-10-13
 
