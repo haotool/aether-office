@@ -101,9 +101,9 @@ describe('htmlTable', () => {
     ]);
   });
 
-  it('keeps a cell on one line with its pipes escaped', () => {
-    const table = htmlTable('<tr><td>a|b\n  c</td></tr>', clean);
-    expect(table).toContain('| a\\|b c |');
+  it('keeps a cell on one line with its pipes and backslashes escaped', () => {
+    const table = htmlTable('<tr><td>a|b\\|\n  c</td></tr>', clean);
+    expect(table).toContain('| a\\|b\\\\\\| c |');
   });
 
   it('copes with unclosed rows and cells', () => {
