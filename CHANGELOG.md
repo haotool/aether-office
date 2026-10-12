@@ -11,6 +11,8 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   was turned into Markdown; the backslash is now escaped along with the pipe.
 - Neutralizing raw HTML in a very long reply no longer backtracks quadratically on thousands of `<code` openers inside `<pre>` or
   on a long run of spaces in a code block (two regular expressions).
+- Importing a skill whose frontmatter line held tens of thousands of spaces and a stray carriage return stalled the control
+  server for seconds; the line is now read in linear time.
 
 ## [0.4.0] - 2026-10-13
 
