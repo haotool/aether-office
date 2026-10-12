@@ -8,22 +8,14 @@ import {
   type PoseTurn,
 } from './pose-cues.js';
 
-/** A turn of the chair asked for: how far, for how long, and when (a new `at` starts it again). */
 export type TurnCue = PoseTurn & { at: number };
 
 export type PoseApi = {
-  /** The clip each member is asked to play (Animal's `emote`). */
   cues: Readonly<Record<string, EmoteCue>>;
-  /** The turn each member is asked to hold (Poser's `turn`). */
   turns: Readonly<Record<string, TurnCue>>;
-  /** Ask for a pose; true when it was taken (see pose-cues.ts for who wins and what is dropped). */
   request: (request: PoseRequest, now?: number) => boolean;
 };
 
-/**
- * The one registry of poses for the scene: the person's emotes, a hand-over's nod and the life effects' gestures all ask
- * here, and the answer is the cue maps the members read. `reducedMotion` drops every request.
- */
 export function usePoseCues(reducedMotion: boolean): PoseApi {
   const [cues, setCues] = useState<Readonly<Record<string, EmoteCue>>>({});
   const [turns, setTurns] = useState<Readonly<Record<string, TurnCue>>>({});

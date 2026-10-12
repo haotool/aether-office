@@ -6,39 +6,39 @@ this repository: every rewrite runs on a throwaway clone that the scripts create
 
 ## What is wrong with the current history
 
-Measured with `pnpm run oss:check --history` on 296 commits:
+Measured with `pnpm run oss:check --history` on 931 commits (30 upstream, 901 maintainer, 102 merges):
 
 | Problem                                                                                                    | Why it matters                                               |
 | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| About 433 MB for a single branch: every rebuild of the animals is kept (`.blend`, GLB, PNG; 517 old versions, 640 MB uncompressed) | A slow first clone, and GitHub warns above 100 MB per push   |
+| About 450 MB for a single branch: every rebuild of the animals is kept (`.blend`, GLB, PNG; 517 old versions, 643 MB uncompressed) | A slow first clone, and GitHub warns above 100 MB per push   |
 | The `.blend` files embed the builder's absolute home path; a few historical files and commit messages name it | Personal information in public, permanently                  |
-| One author identity with a personal address on about 260 commits                                           | The maintainer may prefer a GitHub noreply address           |
-| 203 maintainer subjects are longer than 72 characters (up to 500) and read as paragraphs                   | `git log --oneline`, blame and GitHub's UI truncate them     |
-| 31 merge commits named `Merge branch 'worktree-agent-...'`                                                 | Tool artifacts, no information                               |
+| One mailbox address on all 901 maintainer commits                                           | The maintainer may prefer a GitHub noreply address           |
+| 456 maintainer subjects are longer than 72 characters (up to 502) and read as paragraphs                   | `git log --oneline`, blame and GitHub's UI truncate them     |
+| 102 merge commits, 75 of them named `Merge branch 'worktree-agent-...'`                                                 | Tool artifacts, no information                               |
 | The first 30 commits belong to the upstream agent-office contributors (MIT)                                | Their attribution must stay                                  |
-| One commit carries a `Co-Authored-By` trailer                                                              | A maintainer decision (see `--drop-trailers`)                |
+| 396 maintainer commits carry a `Co-authored-by` trailer and 142 a session link; 22 upstream commits carry 37 AI co-author lines and 2 session links | A maintainer decision (see `--drop-trailers`)                |
 
-Secrets are not a problem: gitleaks reports only fixed fake values in test fixtures, which `.gitleaks.toml` allowlists.
+Secrets are not a problem: gitleaks reports only fixed fake values in test fixtures, which `.github/gitleaks.toml` allowlists.
 
 ## The three options
 
 | | A. Fresh milestone history | B. Cleaned history, commits kept | C. B plus our commits squashed into milestones |
 | --- | --- | --- | --- |
-| Commits after | 26 (1 upstream baseline + 25 milestones) | 295 | 55 (30 upstream + 25 milestones) |
-| Repository size (measured) | 37 MB | 42 MB | 37 MB |
-| Upstream commits | One baseline commit; the other contributors are named in the sync commit's body | All 30 kept, authors, dates and messages untouched | All 30 kept, authors, dates and messages untouched |
+| Commits after | 27 (1 upstream baseline + 26 milestones) | 930 | 56 (30 upstream, the sync merge and 25 milestones) |
+| Repository size (measured) | 39 MB | 47 MB | 39 MB |
+| Upstream commits | One baseline commit; the other contributors are named in the sync commit's body | All 30 kept, authors and dates untouched, messages untouched except for AI tool lines | All 30 kept, authors and dates untouched, messages untouched except for AI tool lines |
 | What you keep | The final tree and a readable story | Every commit, `git blame` and `git bisect` at full resolution | Upstream detail, a readable story of our work |
 | What you lose | Upstream commit detail (and `git shortlog` shows 2 authors, not 9); fine-grained blame and bisect | Nothing but the stripped binaries and the old subjects (kept in each body) | Our fine-grained blame and bisect; the story is 25 steps |
 | Hash changes | Every hash | Every hash (the upstream root contains stripped binaries, so all descendants change) | Every hash |
 | Subjects | Written by the plan, editable | Shortened to 72, the original in the body; merges renamed | Written by the plan, editable; the body lists each original subject |
-| Merge commits | None | 31 kept (renamed) | 1 (the upstream sync) |
+| Merge commits | None | 102 kept (renamed) | 1 (the upstream sync) |
 | Effort and risk | Lowest to review, highest loss | Highest volume to review, lowest loss | Middle; the milestone list is the one thing to review |
 | Choose it when | You want a clean slate and the upstream list is credited in NOTICE | You value `git bisect` and the fine-grained record | You want upstream intact and a history a newcomer can read |
 
 All three keep the final tree **byte-identical** for every file that is not stripped or rewritten (checked by
-`history-verify.sh`: 1943 of 1943 files on the measured tip) and none removes upstream credit from the repository: the
-`LICENSE`, `THIRD_PARTY_NOTICES.md` and, for A, the baseline commit and the sync commit's contributor list. The upstream
-baseline commit that `THIRD_PARTY_NOTICES.md` names (`665aeec`) stays valid because it points into the upstream
+`history-verify.sh`: 2402 of 2402 files on the measured tip) and none removes upstream credit from the repository: the
+`LICENSE`, `docs/legal/THIRD_PARTY_NOTICES.md` and, for A, the baseline commit and the sync commit's contributor list. The upstream
+baseline commit that `docs/legal/THIRD_PARTY_NOTICES.md` names (`665aeec`) stays valid because it points into the upstream
 repository, not into this one.
 
 C is the recommended default: it removes the noise and the personal data, keeps the people who are not us exactly as
@@ -71,7 +71,7 @@ steps and `history-verify.sh` refuse any directory without that marker, the curr
 - **Rewrite text** in text files and commit messages (binaries are never touched): home directories
   (`/Users/<name>`, `C:\Users\<name>`) become `/Users/dev` unless the name is a placeholder (`dev`, `a`, `sam`, ...), and every
   string from `.oss-private-patterns` becomes its replacement.
-- **Map identities** with a mailmap derived from `.mailmap`; upstream authors are never listed in it.
+- **Map identities** with a mailmap derived from the canonical identity; upstream authors are never listed in it.
 - **Subjects**: strategy B shortens subjects to 72 characters at a clause boundary and moves the original into the body;
   merge commits become `chore: merge <topic>`. Strategies C and A write milestone subjects and bodies.
 
@@ -90,7 +90,7 @@ Requirements: `git`, [`git-filter-repo`](https://github.com/newren/git-filter-re
 [`gitleaks`](https://github.com/gitleaks/gitleaks). Where `node` is not on `PATH`, set `NODE=/path/to/node` for the shell
 scripts; `PNPM="node /path/to/corepack pnpm"` does the same for `history-verify.sh`.
 
-1. **Write your private patterns.** Copy `.oss-private-patterns.example` to `.oss-private-patterns` (it is gitignored) and
+1. **Write your private patterns.** Copy `scripts/oss/private-patterns.example` to `.oss-private-patterns` (it is gitignored) and
    list the strings that must never be published: your account and host names, personal e-mail addresses, private paths.
    Generic patterns (home directories, host names, LAN addresses, tokens) are built in.
 
@@ -100,10 +100,10 @@ scripts; `PNPM="node /path/to/corepack pnpm"` does the same for `history-verify.
    pnpm run oss:check --history
    ```
 
-3. **Choose the canonical identity.** `.mailmap` names it. To publish under a GitHub noreply address, replace the
-   `.mailmap` entry as its comment shows (the numeric ID is the `id` field of `https://api.github.com/users/haotool`) and
-   commit it; the plan reads the first entry of `.mailmap` as the canonical identity. `--canonical-name` and
-   `--canonical-email` override it for one run.
+3. **Choose the canonical identity.** Pass `--canonical-name` and `--canonical-email` to the plan. To publish under a GitHub
+   noreply address use `<id>+<login>@users.noreply.github.com` (the numeric ID is the `id` field of
+   `https://api.github.com/users/<login>`, and the account must own the address). Without the flags the plan falls back to
+   the first entry of a `.mailmap`, if the repository has one.
 
 4. **Plan.** Pick one strategy. The plan is written to `plan.json` (the input) and `plan.md` (the readable version).
 
@@ -112,7 +112,9 @@ scripts; `PNPM="node /path/to/corepack pnpm"` does the same for `history-verify.
    ```
 
    `--target 24` sets the number of milestones for A and C, `--drop-trailers` removes `Co-Authored-By` and session-link
-   trailers from maintainer commits, `--maintainer-email` (repeatable) lists your identities (default: the author of `HEAD`).
+   trailers from maintainer commits and, from upstream commits, only the lines an AI tool added (session links and AI
+   co-author trailers; human co-authors stay), `--maintainer-email` (repeatable) lists your identities (default: the author
+   of `HEAD`).
 
 5. **Review and edit.** Read `plan.md`. In `plan.json` you can change any milestone's `subject` and `message`, or the strip
    rules. The plan is deterministic: the same repository and options always give the same plan.
@@ -143,61 +145,31 @@ The exact commands for each strategy differ only in `--strategy` and the directo
 
 ## Measured on this repository
 
-On the tip `c6d2a97` (296 commits, a 433 MB single-branch clone), on an Apple-silicon laptop:
+On the source history (931 commits, a 450 MB single-branch clone), on an Apple-silicon laptop:
 
 | Strategy | Plan | Apply | Commits | Pack after `gc --aggressive` | Verify |
 | --- | --- | --- | --- | --- | --- |
-| B | 4 s | 52 s | 296 to 295 (one became empty), 234 subjects rewritten | 42.1 MiB | 78 s with install, typecheck and tests |
-| C | 4 s | 77 s | 296 to 55, 25 milestones | 37.4 MiB | 74 s with install, typecheck and tests |
-| A | 4 s | 79 s | 296 to 26 | 36.6 MiB | 30 s with `--skip-install` |
+| B | 3 s | 20 s | 931 to 930 (one became empty), 790 subjects rewritten | 46.7 MiB | 25 s with install, typecheck and tests |
+| C | 8 s | 14 s | 931 to 56, 25 milestones | 39.2 MiB | 19 s with install, typecheck and tests |
+| A | 8 s | 17 s | 931 to 27 | 39.1 MiB | 21 s with install, typecheck and tests |
 
-Timings vary with the disk cache (strategy C applied in 25 s on a warm second run). The apply step stripped `*.blend`,
-`evidence/` and 256 to 517 historical binary versions (320 to 670 MB uncompressed, depending on strategy: squashing first
-leaves fewer versions to strip). Applying the same plan twice gives the same tip hash (checked for C), so the result is
+Timings vary with the disk cache and the machine load. The apply step stripped `*.blend`, `evidence/` and 174 to 517
+historical binary versions (200 to 675 MB uncompressed, depending on strategy: squashing first leaves fewer versions to
+strip). Applying the same plan twice gives the same tip hash (checked for C), so the result is
 reproducible and the plan can be reviewed instead of the output.
 
-Other runs on the same tip: strategy B with `--canonical-email 12345+haotool@users.noreply.github.com --drop-trailers`
-(all 267 maintainer commits carry the noreply identity as author and committer, no trailer is left, verify says `GO`), and
-strategy A with a full verify (`GO`).
+All three runs used `--canonical-email <id>+<login>@users.noreply.github.com --drop-trailers`: every maintainer commit
+carries the noreply identity as author and committer, no maintainer commit keeps a trailer or a session link, no commit at
+all keeps a session link or an AI co-author trailer (verify checks this), and verify says `GO`.
 
-## Milestones proposed for C
+## Milestone subjects
 
-What `history-plan.mjs --strategy C` proposed on `c6d2a97`, after the 30 upstream commits are set aside. The groups are
-chosen by dynamic programming over the commit log (cut where the subject keywords change, prefer day boundaries, keep
-groups near the same size) and each subject is the biggest commit of its group; this is a draft for the maintainer to edit
-in `plan.json`. `plan.md` also lists the next three biggest commits of every group.
-
-| # | Dates (2026) | Commits | Proposed subject |
-| --: | --- | --: | --- |
-| 1 | 09-30 | 1 | upstream baseline commit, kept as it is |
-| 2 | 10-03 | 8 | feat: Codex app-server and Claude adapters, hook installer |
-| 3 | 10-03 | 1 | chore: sync upstream agent-office main (29 commits) into the AETHER fork (kept, two parents) |
-| 4 | 10-03 | 6 | feat: attribute worktrees by Git common dir and subagents by hook events |
-| 5 | 10-03 | 14 | feat: integrate job with serial gating |
-| 6 | 10-03 | 9 | feat: wire carriers, tour, perf and notification controls into the app |
-| 7 | 10-03 | 6 | feat: idempotent schedules that create unassigned work |
-| 8 | 10-03 | 6 | feat: GitHub and Linear import with field ownership |
-| 9 | 10-04 | 11 | feat: generic ACP client with negotiated capabilities |
-| 10 | 10-04 | 12 | feat: workflow templates with enforced provider roles and dependency |
-| 11 | 10-04 | 10 | test: accessibility sweep of every page in both themes and viewports |
-| 12 | 10-04 | 5 | docs: record the 2026-10-04 convergence status and remaining blockers |
-| 13 | 10-04 | 9 | feat: detect the running agent CLI process behind each session |
-| 14 | 10-04 | 9 | feat: classify every session into an engineering role and department |
-| 15 | 10-04 | 12 | feat: a five-floor building, one department per floor |
-| 16 | 10-04 | 16 | feat: machine CPU, memory and free disk, per-session CPU and memory |
-| 17 | 10-04 | 10 | fix: restore the original dependency-policy tests |
-| 18 | 10-04 | 8 | feat: classify how alive each session |
-| 19 | 10-04 | 8 | refactor: split the 1200-line contracts index by domain |
-| 20 | 10-04 to 10-05 | 8 | feat: the camera directs itself |
-| 21 | 10-05 | 12 | feat: design system |
-| 22 | 10-05 | 16 | feat: sign a phone in by scanning a QR code |
-| 23 | 10-06 | 22 | feat: a garden of genome-grown glass flowers and twig trees on the crown |
-| 24 | 10-06 | 18 | feat: the panel beside the office is a live session feed |
-| 25 | 10-06 | 22 | feat: direct interaction with the characters |
-| 26 | 10-06 to 10-07 | 8 | test: cover the release kit with temporary repositories |
-
-Weak spots a human should fix: #10 and #18 end mid-phrase, #17 is a test repair that headlines a group about animals and
-dependency policy, and #26 is headed by the kit's own commits. Rename them in `plan.json` before applying.
+For strategies C and A, `history-plan.mjs` groups the maintainer's commits by dynamic programming over the commit log (cut
+where the subject keywords change, prefer day boundaries, keep groups near the same size). Each subject is the biggest
+commit of its group, so it is a draft: it can end mid-phrase or be a test repair that headlines a group about something
+else. `plan.md` also lists the next three biggest commits of every group. Rewrite the subjects and bodies in `plan.json`
+before applying. The history published with this repository came from plan C with every subject and body written by hand:
+a subject of at most 72 characters, a short paragraph on why the step happened, and its notable changes.
 
 ## Limits and residual risks
 

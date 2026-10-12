@@ -22,7 +22,7 @@ playwright-report/
 # The animals' Blender sources are rebuilt by tools/blender/build_animals.py (they embed the builder's local paths)
 assets-source/animals/*.blend
 
-# Agent worktrees and local agent settings (see MAINTAINERS.md; never commit secrets or session data)
+# Agent worktrees and local agent settings (see docs/maintainers.md; never commit secrets or session data)
 /.claude/
 /.cursor/
 /.codex/

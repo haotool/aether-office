@@ -87,7 +87,6 @@ describe('deriveLifeSignals: real outcomes', () => {
 
 describe('deriveLifeSignals: patterns made of real outcomes', () => {
   const MIN = 60_000;
-  /** Feeds a series of scans through the deriver, keeping its memory, and returns every kind it said. */
   const walk = (scans: readonly LifeSnapshot[]) => {
     let memory: LifeMemory = emptyLifeMemory;
     let prev: LifeSnapshot | null = null;

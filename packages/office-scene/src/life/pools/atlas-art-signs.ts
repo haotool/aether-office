@@ -1,5 +1,3 @@
-// The pictures of wave 2 (outcomes, danger and the programmer-culture signs). The ones an effect tints (tick, cross,
-// beetle) are drawn white; the signs carry their own colours. Text is code-culture English or a pictogram.
 import { C, CELL_PX, blob, label, rounded, type Ctx } from './atlas-draw.js';
 
 type SignCell =
@@ -27,7 +25,6 @@ const stroke = (g: Ctx, color: string, width: number) => {
   g.lineJoin = 'round';
 };
 
-/** A dark terminal chip with a green frame: the base of the command signs. */
 const chip = (g: Ctx) => {
   rounded(g, 6, 28, 116, 72, 14, '#1d2430');
   stroke(g, '#3fbf6f', 4);
@@ -95,7 +92,6 @@ export const SIGN_ART: Record<SignCell, (g: Ctx) => void> = {
     label(g, '<<<<<<<', 65, 25, '#ff7a90');
   },
   skull(g) {
-    // A cartoon skull with a bandage across the head: an "oops", never gore.
     blob(g, C, 56, 38, 36, '#f4f1ea');
     rounded(g, 42, 78, 44, 26, 8, '#f4f1ea');
     blob(g, 48, 56, 10, 11, '#2a2530');
@@ -114,7 +110,7 @@ export const SIGN_ART: Record<SignCell, (g: Ctx) => void> = {
     g.fillStyle = '#d99a6b';
     g.fillRect(-4, -9, 8, 18);
     g.restore();
-    rounded(g, 100, 6, 24, 20, 8, '#fff'); // a tiny speech balloon: "!"
+    rounded(g, 100, 6, 24, 20, 8, '#fff');
     label(g, '!', 17, 18, '#e0504a');
   },
   calendar(g) {
@@ -167,7 +163,6 @@ export const SIGN_ART: Record<SignCell, (g: Ctx) => void> = {
     label(g, 'curl | sh', 66, 20, '#7dffa8');
   },
   swirl(g) {
-    // A time-machine swirl: a spiral of white (the effect tints it) with a soft core.
     stroke(g, '#fff', 9);
     g.beginPath();
     for (let a = 0; a <= Math.PI * 5; a += 0.12) {

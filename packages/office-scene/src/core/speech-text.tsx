@@ -1,7 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { PreviewLine, Span } from '@aether/kernel';
 
-/** One run of a bubble's text as nested elements; a link is its label (a bubble never takes a click). */
 function Run({ span }: { span: Span }) {
   let node: ReactNode = span.text;
   if (span.code) node = <code className="chip">{node}</code>;
@@ -12,10 +11,6 @@ function Run({ span }: { span: Span }) {
   return node;
 }
 
-/**
- * The lines of a reply or prompt as a bubble shows them: bold and code chips as styling, bullets with a glyph, a heading as a
- * small label, a fenced block as its first line. `caret` follows the last word while the text is still being typed.
- */
 export function SpeechLines({ lines, caret }: { lines: readonly PreviewLine[]; caret: boolean }) {
   if (!lines.length)
     return caret ? (

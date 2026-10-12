@@ -1,4 +1,3 @@
-/** The office words, in English. */
 export const enOffice = {
   sceneFailed: '3D could not load. The complete list remains available.',
   sceneLost: 'The 3D view was interrupted by the device. Reload it, or use the list.',
@@ -19,7 +18,6 @@ export const enOffice = {
   whyMix: 'both',
   whyNone: 'no clear signal, so a general software engineer',
   layout: 'Office layout',
-  editLayout: 'Edit layout',
   object: 'Object',
   rotate: 'Rotate',
   remove: 'Remove',

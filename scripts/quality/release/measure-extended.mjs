@@ -1,5 +1,4 @@
-// Additional CHARTER §5.3 M criteria for release mode (static / recorded inputs only).
-import { execFileSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { parityGaps, inlinePairs } from '../areas/a11y.mjs';
 import { HISTORY } from '../areas/docs.mjs';
 import { ui } from '../areas/ui.mjs';
@@ -11,7 +10,6 @@ import { readCommits, upstreamSet } from '../../oss/history-groups.mjs';
 const COVERAGE_PATH = 'coverage/coverage-summary.json';
 const SKIP_SUBJECT = /^(Merge |Revert "|fixup! |squash! )|^Merge branch 'worktree-agent-/;
 
-/** Charter L3-03: shortfall in percentage points vs 80% lines / 70% branches. */
 export function coverageViolations(linePct, branchPct) {
   return Math.max(0, 80 - linePct, 70 - branchPct);
 }
@@ -161,7 +159,6 @@ const CHANGELOG_KINDS = new Set([
 const RELEASE_HEADING = /^## (\[Unreleased\]|\[\d+\.\d+\.\d+\] - \d{4}-\d{2}-\d{2})$/;
 const WORKING_WORDS = /\b(wave \d|track [A-F]|WP-?\d|PM-)\b/;
 
-/** Charter L6-05: Keep a Changelog layout, no working vocabulary, and a size a reader can finish (one violation per 4 KB over). */
 export function measureChangelog(repo) {
   if (!repo.exists(CHANGELOG)) return { unmeasured: true, detail: [`missing ${CHANGELOG}`] };
   const text = repo.read(CHANGELOG);
@@ -192,13 +189,17 @@ function subjectViolation(subject) {
   return null;
 }
 
+function ownCommits(root, range = 'HEAD') {
+  const commits = readCommits(root, range);
+  const maintainer = commits[0]?.author.email ?? '';
+  const upstream = upstreamSet(commits, maintainer ? [maintainer] : []);
+  return commits.filter((c) => !upstream.has(c.hash));
+}
+
 /** @param {string} root @param {string} [range] */
 export function measureConventionalCommits(root, range = 'HEAD') {
-  const out = execFileSync('git', ['-C', root, 'log', '--format=%s', range], {
-    encoding: 'utf8',
-  });
   const hits = [];
-  for (const subject of out.split('\n').filter(Boolean)) {
+  for (const { subject } of ownCommits(root, range)) {
     const problem = subjectViolation(subject);
     if (problem) hits.push(`${problem}: ${subject.slice(0, 72)}`);
   }
@@ -211,11 +212,7 @@ export function measureConventionalCommits(root, range = 'HEAD') {
 
 /** @param {string} root */
 export function measureAuthorIdentities(root) {
-  const commits = readCommits(root, 'HEAD');
-  const maintainer = commits[0]?.author.email ?? '';
-  const upstream = upstreamSet(commits, maintainer ? [maintainer] : []);
-  const own = commits.filter((c) => !upstream.has(c.hash));
-  const emails = new Set(own.map((c) => c.author.email.toLowerCase()));
+  const emails = new Set(ownCommits(root).map((c) => c.author.email.toLowerCase()));
   const violations = Math.max(0, emails.size - 1);
   return {
     violations,

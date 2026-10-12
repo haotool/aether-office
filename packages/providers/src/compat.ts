@@ -4,7 +4,7 @@ import compat from '../generated/compat.json' with { type: 'json' };
 // generated/compat.json so the doctor, the tests and the adapters all read one source of truth.
 
 export function codexVersion(output: string): string | null {
-  return /^codex-cli (\d+\.\d+\.\d+)$/.exec(output.trim())?.[1] ?? null; // anchored: a pre-release suffix is not a verified release
+  return /^codex-cli (\d+\.\d+\.\d+)$/.exec(output.trim())?.[1] ?? null;
 }
 
 export function assertCodexVersion(output: string): void {
@@ -26,6 +26,5 @@ export const claudeRolloutVersion = (version: string): boolean => {
   return !!match && compat.claudeCodeSeries.includes(match[1] ?? '');
 };
 
-/** Codex rollout files carry the CLI version that wrote them; only verified versions are decoded. */
 export const codexRolloutVersion = (version: string): boolean =>
   compat.verifiedCliVersions.includes(version);

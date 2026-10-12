@@ -27,21 +27,18 @@ import { requireOperator, type RouteContext } from './context.js';
 const SESSION_ID = /^[A-Za-z0-9._-]{1,200}$/;
 const MAX_LONG_POLL_MS = 25_000;
 const HOOK_FAILURES = 10;
-/** The hook runs on this machine: 127.0.0.0/8, ::1 and their IPv4-mapped form. */
 const LOOPBACK_ADDRESS = /^(127(\.\d{1,3}){3}|::1|::ffff:127(\.\d{1,3}){3})$/i;
 const nonceSchema = z.string().regex(NONCE_PATTERN);
 
-const createSchema = z
-  .object({
-    sessionId: z.string().regex(SESSION_ID),
-    cwd: z.string().min(1).max(4096),
-    tool: z.string().min(1).max(80),
-    input: z.unknown(),
-    rules: z.array(z.string().max(MAX_RULE_CHARS)).max(MAX_RULES).default([]),
-    waitMs: z.number().int().default(DEFAULT_WAIT_MS),
-    nonce: nonceSchema,
-  })
-  .strict();
+const createSchema = z.strictObject({
+  sessionId: z.string().regex(SESSION_ID),
+  cwd: z.string().min(1).max(4096),
+  tool: z.string().min(1).max(80),
+  input: z.unknown(),
+  rules: z.array(z.string().max(MAX_RULE_CHARS)).max(MAX_RULES).default([]),
+  waitMs: z.number().int().default(DEFAULT_WAIT_MS),
+  nonce: nonceSchema,
+});
 
 /**
  * The hook's caller: on this machine, with the right token, Remote approvals on. The token is compared first, so only a
@@ -68,7 +65,6 @@ function assertHook(control: Control, attempts: RouteContext['attempts'], reques
   throw new DomainError('AUTH_REQUIRED', 401);
 }
 
-/** The project a session belongs to, found the way every other session action finds it. */
 async function projectOf(control: Control, key: string): Promise<string> {
   const projects = control.ctx.sqlite.prepare('SELECT id,root FROM projects').all() as {
     id: string;
@@ -84,7 +80,6 @@ async function projectOf(control: Control, key: string): Promise<string> {
   return found.projectId;
 }
 
-/** The hook's three routes: create a request, poll it, fall back. Its own credential, loopback only. */
 function hookRoutes({ app, control, attempts }: RouteContext) {
   const requests = control.permissionRequests;
   app.post('/api/hook/permission-requests', async (request) => {
@@ -102,7 +97,6 @@ function hookRoutes({ app, control, attempts }: RouteContext) {
     });
     return { id: created.id, expiresAt: created.expiresAt };
   });
-  /** An answer for the hook: with the server's proof when there is one, bound to the hook's nonce. */
   const signed = (
     id: string,
     nonce: string,
@@ -123,7 +117,7 @@ function hookRoutes({ app, control, attempts }: RouteContext) {
     '/api/hook/permission-requests/:id/fallback',
     async (request) => {
       assertHook(control, attempts, request);
-      const { nonce } = z.object({ nonce: nonceSchema }).strict().parse(request.body);
+      const { nonce } = z.strictObject({ nonce: nonceSchema }).parse(request.body);
       return signed(request.params.id, nonce, requests.fallback(request.params.id));
     },
   );
@@ -140,7 +134,6 @@ function humanOf(actor: RouteContext['actor'], request: FastifyRequest): Actor {
   return who;
 }
 
-/** What a person at a browser sees and decides. */
 function humanRoutes({ app, control, actor, origin }: RouteContext) {
   const requests = control.permissionRequests;
   app.get('/api/permission-requests', async (request) => {
@@ -155,7 +148,7 @@ function humanRoutes({ app, control, actor, origin }: RouteContext) {
     if (approvalChannel(origin, request.headers.host) === 'blocked')
       throw new DomainError('REMOTE_APPROVALS_LAN_DISABLED', 403);
     const body = permissionDecisionSchema.parse(request.body);
-    const first = requests.get(request.params.id).state === 'pending'; // a repeated answer is not a second decision
+    const first = requests.get(request.params.id).state === 'pending';
     const result = requests.decide(request.params.id, body);
     if (!first) return result;
     const audit = randomUUID();
@@ -178,7 +171,6 @@ function humanRoutes({ app, control, actor, origin }: RouteContext) {
   });
 }
 
-/** The switch for Remote approvals itself. */
 function switchRoutes({ app, control, actor, origin }: RouteContext) {
   app.get('/api/remote-approvals', async (request) => {
     requireOperator(actor(request));
@@ -192,7 +184,7 @@ function switchRoutes({ app, control, actor, origin }: RouteContext) {
     const who = actor(request);
     if (who.role !== 'owner' || who.agentId || who.machineId)
       throw new DomainError('FORBIDDEN', 403);
-    const { enabled } = z.object({ enabled: z.boolean() }).strict().parse(request.body);
+    const { enabled } = z.strictObject({ enabled: z.boolean() }).parse(request.body);
     const state = enabled
       ? enableRemoteApprovals(control.ctx, origin.origin)
       : disableRemoteApprovals(control.ctx);
@@ -201,9 +193,8 @@ function switchRoutes({ app, control, actor, origin }: RouteContext) {
 }
 
 /**
- * Remote approvals. Two audiences with two credentials: the hook on this machine (loopback only, its own bearer token,
- * which can only create a request and read or close the requests it made) and a human owner or operator at a browser
- * session (who alone can list and decide; a bearer token cannot).
+ * Remote approvals, two audiences with two credentials: the hook on this machine (loopback only, own bearer token, can
+ * only create and read or close its own requests) and a human owner or operator session (alone may list and decide).
  */
 export function permissionRoutes(context: RouteContext) {
   hookRoutes(context);

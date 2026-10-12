@@ -39,7 +39,6 @@ function AgentCard({
   );
 }
 
-/** The fields of the add-agent form, uncontrolled: the form's submit reads them by name. */
 function AgentFields({ mode }: { mode: Snapshot['project']['mode'] }) {
   const t = useT();
   const providers = mode === 'demo' ? ['demo'] : ['claude', 'codex', 'acp', 'observe'];

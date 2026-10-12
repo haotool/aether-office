@@ -20,30 +20,23 @@ import { context2d } from '../core/canvas-2d.js';
 export { BAND };
 
 /**
- * What a member's own screen is told when the scene knows what the member is really doing: the session's title, where
- * it works, its state, its last tool calls, the tool it is in, the context it has used. Every field is a fact read from
- * the session; a field that is not known is left out, never filled in. What the screen draws around these facts is
- * made up (see docs/design-system.md, "Desk screens").
+ * Every field is a fact read from the session; a field that is not known is left out, never filled in. What the screen
+ * draws around the facts is made up (see docs/design-system.md, "Desk screens").
  */
 export type ScreenFacts = {
   provider: 'claude' | 'codex';
   title: string | null;
   repo: string;
   branch: string | null;
-  /** Commits ahead of and behind upstream, and files not committed. */
   ahead: number;
   behind: number;
   uncommitted: number;
   model: string | null;
-  /** Share of the context window in use, 0 to 100. */
   contextPercent: number | null;
   state: 'working' | 'idle' | 'waiting_permission' | 'offline' | 'unknown';
-  /** The tool its last hook named, and when that hook came (epoch ms). */
   tool: string | null;
   toolSince: number | null;
-  /** The last tool calls, oldest first. */
   recent: readonly ToolCall[];
-  /** Whole minutes since anything happened in it. */
   quietMinutes: number | null;
   ports: readonly number[];
 };
@@ -66,13 +59,9 @@ const NO_FACTS: ScreenFacts = {
   ports: [],
 };
 
-/** How a screen is painted: the pace the scene wants for it (nearer ones are painted more often) and the member's speed. */
 export type PaintOptions = {
-  /** Least ms between two paints of unchanged facts; Infinity paints only when the facts change. */
   interval: number;
-  /** False under reduced motion: still frames, no typing or scrolling. */
   moving: boolean;
-  /** How much faster than its own pace the member types, 1 to 2. */
   speed: number;
 };
 
@@ -96,7 +85,6 @@ function newScreenCanvas() {
   return { canvas, g: context2d(canvas), texture };
 }
 
-/** Points the context at the facts of this paint: the clock, how long the tool has run, the pace and the time since the last paint. */
 function readFacts(
   ctx: ViewCtx,
   facts: ScreenFacts,
@@ -129,7 +117,7 @@ function newViewCtx(
     now: 0,
     elapsed: 0,
     work: currentWork({ state: 'unknown', tool: null, recent: [] }),
-    facts: NO_FACTS, // replaced by the first paint, before any view reads it
+    facts: NO_FACTS,
     role,
     profile,
     speed: 1,
@@ -139,7 +127,6 @@ function newViewCtx(
   };
 }
 
-/** One frame of the current view with its chrome: title bar, footer, an approval dialog or a toast on top. */
 function drawView(ctx: ViewCtx, view: ViewId, department: DepartmentId): void {
   const { g, p, accent } = ctx;
   g.fillStyle = p.bg;
@@ -155,7 +142,6 @@ function drawView(ctx: ViewCtx, view: ViewId, department: DepartmentId): void {
   else if (ctx.moving && view !== 'lock') drawToast(ctx);
 }
 
-/** The old view sliding off while it fades; false once it is gone and the copy can be returned. */
 function drawGhost(
   g: CanvasRenderingContext2D,
   ghost: HTMLCanvasElement,
@@ -170,11 +156,6 @@ function drawGhost(
   return true;
 }
 
-/**
- * One member's screen: a canvas painted at the pace the scene asks, from the facts, the member's role and its desk
- * profile. Which view it shows follows the real work (screen-layout.ts); a change of view slides over a copy of the
- * old one. Call `paint` every frame, it does nothing until a paint is due. Dispose when the member leaves.
- */
 export function createFactsScreen(
   accent: string,
   department: DepartmentId,
@@ -193,7 +174,7 @@ export function createFactsScreen(
   return {
     texture,
     paint(facts: ScreenFacts, now: number, options: PaintOptions) {
-      if (drawnFacts && now - lastAt < MIN_GAP_MS) return; // new facts never repaint faster than this
+      if (drawnFacts && now - lastAt < MIN_GAP_MS) return;
       if (facts === drawnFacts && now - lastAt < options.interval) return;
       ctx.work = currentWork(facts);
       const next = chooseView(role, ctx.work, facts.state, seed, now);
@@ -201,7 +182,7 @@ export function createFactsScreen(
         if (view !== null && options.moving && options.interval <= FAST_MS) {
           ghost ??= borrowCanvas(SCREEN_W, SCREEN_H);
           context2d(ghost).drawImage(canvas, 0, 0);
-          ghostAt = now - TRANSITION_MS / 3; // the slide is already under way on its first frame
+          ghostAt = now - TRANSITION_MS / 3;
         }
         ctx.state.scroll = 0;
         view = next;

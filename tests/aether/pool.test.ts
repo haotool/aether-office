@@ -5,7 +5,6 @@ it('keeps input order, never exceeds the width, and lets a slow item not stall t
   let running = 0;
   let peak = 0;
   const finished: number[] = [];
-  // The first item holds on until the five others are done: no timer, so no load can reorder them.
   let release!: () => void;
   const others = new Promise<void>((resolve) => (release = resolve));
   const out = await mapPool([0, 1, 2, 3, 4, 5], 2, async (_, i) => {
@@ -19,7 +18,7 @@ it('keeps input order, never exceeds the width, and lets a slow item not stall t
   });
   expect(out).toEqual([0, 10, 20, 30, 40, 50]);
   expect(peak).toBe(2);
-  expect(finished.indexOf(0)).toBe(5); // the slow first item finished last; the others went on without it
+  expect(finished.indexOf(0)).toBe(5);
 });
 
 it('handles nothing, and a width larger than the work', async () => {

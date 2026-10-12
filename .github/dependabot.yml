@@ -5,7 +5,6 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
-    # Align with pnpm minimumReleaseAge (1440 minutes): wait a day before proposing new releases.
     cooldown:
       default-days: 1
     groups:

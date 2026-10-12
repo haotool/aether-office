@@ -3,7 +3,6 @@ import { SceneBridgeProbe } from './SceneBridge.js';
 import { SeatGhost } from './SeatGhost.js';
 import type { SceneInteraction } from '../core/use-scene-interaction.js';
 
-/** The parts of the interaction layer that live inside the canvas: the bridge, the carried desk's ghost and the three kinds of box pinned to world points. */
 export function InteractionProjections({
   ix,
   exploded,

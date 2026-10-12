@@ -2,19 +2,14 @@ import { useEffect, type RefObject } from 'react';
 import { useThree } from '@react-three/fiber';
 import { Plane, Raycaster, Vector2, Vector3 } from 'three';
 
-/** What the DOM layers over the canvas (marquee, seat drag) may ask of the 3D scene. */
 export type SceneBridge = {
-  /** The point on the horizontal plane `y` under a pointer position, as [x, z], or null when it looks at the sky. */
   groundAt: (clientX: number, clientY: number, y: number) => [number, number] | null;
-  /** Where world points are on the canvas, in CSS pixels from its top left; points behind the camera are left out. */
   screenOf: (
     points: ReadonlyMap<string, [number, number, number]>,
   ) => Map<string, [number, number]>;
-  /** The orbit controls listen to the pointer (off while a seat or a marquee is being dragged). */
   setOrbit: (enabled: boolean) => void;
 };
 
-/** Fills `bridge` with the camera's view of the world. Draws nothing. */
 export function SceneBridgeProbe({ bridge }: { bridge: RefObject<SceneBridge | null> }) {
   const camera = useThree((s) => s.camera);
   const gl = useThree((s) => s.gl);

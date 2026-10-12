@@ -8,7 +8,6 @@ export type SessionFilters = {
   liveness: string;
 };
 
-/** The sessions that pass the filters: running ones first (what you opened the page for), then by recency. */
 export function filterSessions(
   sessions: readonly AttributedSession[],
   { query, provider, department, runningOnly, liveness }: SessionFilters,

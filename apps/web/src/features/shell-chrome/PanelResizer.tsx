@@ -11,7 +11,6 @@ import {
 
 type Drag = { id: number; startX: number; startWidth: number; width: number; frame: number };
 
-/** The drag itself: the width goes to the app body's variable once per frame and is committed on release. */
 function usePanelDrag(width: number, viewport: number, onCommit: (width: number) => void) {
   const handle = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
@@ -57,11 +56,6 @@ function usePanelDrag(width: number, viewport: number, onCommit: (width: number)
   return { handle, drag, finish, pointer: { onPointerDown, onPointerMove, onPointerUp } };
 }
 
-/**
- * The drag handle on the panel's left edge: a hairline with a larger hit area, a separator for assistive tech and the
- * keyboard. While dragging, the width goes straight to the `--panel-w` variable of the app body once per frame, so
- * React does not render per pointer move and the office (a flex sibling) follows live; the choice is stored on release.
- */
 export function PanelResizer({
   width,
   viewport,
@@ -76,7 +70,6 @@ export function PanelResizer({
   const t = useT();
   const { handle, drag, finish, pointer } = usePanelDrag(width, viewport, onCommit);
 
-  /** Back to the default; already there, down to the rail. */
   const activate = () =>
     width === defaultPanelWidth(viewport) ? onCollapse() : onCommit(defaultPanelWidth(viewport));
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {

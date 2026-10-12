@@ -3,20 +3,14 @@ import type { LifeSignal } from '@aether/office-scene/model';
 
 type Call = NonNullable<AttributedSession['hook']>['recent'][number];
 
-/** How long a test result of another session counts as "the same time" for the works-on-my-machine sticker. */
 const MACHINE_MS = 30 * 60_000;
-/** A failed run, an edited test file and a pass within this long make "not a bug, a feature". */
 const FIX_MS = 20 * 60_000;
-/** A call seen for the first time at page load counts only if it is this fresh (the scheduler drops older news too). */
 const FRESH_MS = 30_000;
 const EDITS = new Set(['Edit', 'Write', 'MultiEdit']);
 const TEST_FILE = /\.(test|spec)\./i;
 
-/** A test run's real outcome, kept for the cross-session pairing. */
 type TestRun = { member: string; repo: string; ok: boolean; at: number };
-/** A session whose tests failed: since when, and when a test file was edited after that (null: not yet). */
 type Fixing = { failAt: number; editedAt: number | null };
-/** What the outcome deriver remembers between scans. */
 export type OutcomeMemory = {
   tests: readonly TestRun[];
   fixing: Readonly<Record<string, Fixing>>;
@@ -29,7 +23,6 @@ const callKey = (c: Call) => `${c.tool}|${c.at}`;
 
 type Event = { kind: 'edit'; at: number } | { kind: 'test'; at: number; ok: boolean };
 
-/** The calls that settled since the earlier scan, as signals (`tool.end`) and as the test and edit events the patterns are made of. */
 function settledEvents(
   input: {
     member: string;
@@ -65,12 +58,6 @@ function settledEvents(
   return events;
 }
 
-/**
- * The outcome signals one session's change between two scans makes. A call whose real outcome (`ok`) is newly known gives
- * a `tool.end`; a test outcome also feeds two patterns that are made only of real calls: the same repo failing in one session
- * while another passed (`tests.machine`, on the failing member), and a failed run followed by an edit to a test file and then a
- * pass (`tests.edited`). A call whose outcome is not known gives nothing here. Pure.
- */
 const applyTestEvent = (
   e: Extract<Event, { kind: 'test' }>,
   ctx: {
@@ -118,7 +105,6 @@ export function outcomeSignals(input: {
   old: AttributedSession | undefined;
   next: AttributedSession;
   at: number;
-  /** The newest call time of the previous scan (or, for a session not seen before, just before the fresh window). */
   seenUntil: number;
   memory: OutcomeMemory;
 }): { signals: LifeSignal[]; memory: OutcomeMemory } {

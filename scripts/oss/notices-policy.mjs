@@ -1,8 +1,3 @@
-// Licence policy of the third-party notices (scripts/oss/third-party-notices.mjs), as documented in docs/legal/licence-policy.md.
-
-// ---------------------------------------------------------------------------------------------------------------- policy
-
-/** Licences accepted without review, in order of preference when a package offers a choice (`A OR B`). */
 export const ALLOWED = [
   'MIT',
   'MIT-0',
@@ -28,7 +23,6 @@ export const CONDITIONAL = {
 /** Never accepted (strong or network copyleft, source-available, non-commercial or "ethical" riders). */
 export const DENIED =
   /^(A?GPL|LGPL|SSPL|BUSL|Elastic|EUPL|OSL|RPL|CPAL|Commons-Clause|CC-BY-NC|CC-BY-SA|CC-BY-ND|PolyForm|JSON$|Hippocratic|Parity|Prosperity)/i;
-/** Exceptions accepted after `WITH`. */
 export const ALLOWED_EXCEPTIONS = new Set(['LLVM-exception', 'Classpath-exception-2.0']);
 
 /**
@@ -67,15 +61,12 @@ export const PLATFORM_FAMILIES = [
   [/^lightningcss-/, 'lightningcss', 'MPL-2.0'],
   [/^fsevents$/, 'fsevents', 'MIT'],
 ];
-/** The licence a platform family declares in its package.json (to compare with an installed build). */
 export const FAMILY_DECLARED = {
   'LicenseRef-Anthropic-Commercial-Terms': 'SEE LICENSE IN LICENSE.md',
 };
 
-/** Shipped packages accepted under a CONDITIONAL licence, or with proprietary terms, and why. */
 export const APPROVED = {};
 
-/** Listed as dependencies of apps/web but used only to build it; nothing of them reaches the bundle. */
 export const BUILD_ONLY = new Set(['vite', '@vitejs/plugin-react']);
 
 export const ROOTS = { 'apps/web': 'web', 'apps/control': 'server', 'apps/runner': 'server' };

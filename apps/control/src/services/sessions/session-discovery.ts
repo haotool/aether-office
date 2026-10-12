@@ -8,12 +8,11 @@ import { mapPool } from '../runtime/pool.js';
 
 // Read-only discovery of local Claude Code / Codex session files: id, cwd, mtime. Transcript content is never kept.
 const HEAD_BYTES = 64 * 1024;
-const HEAD_WIDTH = 12; // heads read at once, the first time a file is seen
+const HEAD_WIDTH = 12;
 const STAT_WIDTH = 16;
-// Bounds one walk of a provider's session tree, however large the history grows.
 const MAX_SCAN_ENTRIES = 8 * 1024;
-// How many recent files are identified at all. Every one is, because a live process may own any of them: what is shown
-// is chosen later (local-sessions.ts), after it is known which sessions have a process.
+// Every recent file is identified because a live process may own any of them; local-sessions.ts chooses what to show
+// once it knows which sessions have a process.
 const MAX_CANDIDATES = 2000;
 const RECENT_MS = 7 * 24 * 3600 * 1000;
 const NICKNAME_CHARS = 40;
@@ -48,10 +47,8 @@ type CodexMeta = {
   };
 };
 
-/** Claude Code names a project's folder after its directory, every character but letters and digits a dash. */
 export const encodeRoot = (root: string) => root.replace(/[^A-Za-z0-9]/g, '-');
 
-// A Codex rollout names its origin; a spawned one also carries its parent's thread id and its own role.
 function codexMeta(text: string): {
   spawn: Spawn | null;
   shared: boolean;
@@ -73,7 +70,7 @@ function codexMeta(text: string): {
       shared: typeof source === 'string' && source !== 'exec' && source !== 'cli',
     };
   } catch {
-    return { spawn: null, shared: false }; // an oversized or cut first line is just an ordinary session
+    return { spawn: null, shared: false };
   }
 }
 
@@ -93,8 +90,6 @@ type Head = {
   sessionId: string;
   meta: ReturnType<typeof codexMeta> | null;
 };
-// A session's directory and id are fixed by its first lines, so each file is read once, ever. A file with no
-// directory yet is asked again when it has grown.
 const heads = new Map<string, { size: number; head: Head | null }>();
 const MAX_HEADS = 4096;
 
@@ -139,7 +134,6 @@ async function candidates(
   } catch {
     return;
   }
-  // Newest first (Codex shards by YYYY/MM/DD), so a spent budget drops the oldest sessions, not the latest.
   entries.sort((a, b) => (a.name < b.name ? 1 : -1));
   const files: string[] = [];
   for (const e of entries) {
@@ -204,7 +198,6 @@ function attachSpawnedRollouts(found: RawWithSpawn[], now: number): Raw[] {
   return roots.sort((a, b) => b.mtime - a.mtime).map(({ spawn: _s, ...r }) => r);
 }
 
-/** Every session file changed in the last week, identified. Which of them are shown is decided by the caller. */
 export async function discoverRaw(home: string, now = Date.now()): Promise<Raw[]> {
   const found: RawWithSpawn[] = [];
   for (const provider of ['claude', 'codex'] as const) {
@@ -224,7 +217,6 @@ export async function discoverRaw(home: string, now = Date.now()): Promise<Raw[]
   return attachSpawnedRollouts(found, now);
 }
 
-/** Collects the sessions found for processes, each file once: `add` reads a candidate and keeps it if it is a session. */
 function finder(have: ReadonlySet<string>) {
   const found: Raw[] = [];
   const taken = new Set(have);
@@ -245,7 +237,6 @@ function finder(have: ReadonlySet<string>) {
 }
 type Finder = ReturnType<typeof finder>;
 
-/** Named by --resume: the file is `<id>.jsonl` in whichever project folder it began in. */
 async function findNamedClaude(f: Finder, projects: string, named: readonly AgentProcess[]) {
   if (!named.length) return;
   const folders = await readdir(projects).catch(() => [] as string[]);
@@ -267,7 +258,7 @@ async function findUnnamedClaude(f: Finder, projects: string, unnamed: readonly 
       file: join(folder, name),
       mtime: (await stat(join(folder, name)).catch(() => null))?.mtimeMs ?? 0,
     }));
-    let wanted = count; // as many more files as there are processes without one
+    let wanted = count;
     for (const { file } of dated.sort((a, b) => b.mtime - a.mtime)) {
       if (wanted <= 0) break;
       if (f.taken.has(file)) continue;
@@ -278,7 +269,6 @@ async function findUnnamedClaude(f: Finder, projects: string, unnamed: readonly 
   }
 }
 
-/** A Codex process by the id in its rollout's name. */
 async function findCodex(f: Finder, home: string, ids: ReadonlySet<string>) {
   if (!ids.size) return;
   const walk = async (dir: string, depth: number): Promise<void> => {
@@ -293,10 +283,9 @@ async function findCodex(f: Finder, home: string, ids: ReadonlySet<string>) {
 }
 
 /**
- * Sessions older than the recent window (or lost to a read error) that a live process still owns. A process alive for
- * days in a quiet transcript is exactly the one worth finding, and its file is looked up from the process itself:
- * a Claude process by its resume id, or the newest files of its directory's own project folder; a Codex process by
- * the id in its rollout's name.
+ * Sessions older than the recent window (or lost to a read error) that a live process still owns: a process alive for
+ * days in a quiet transcript is exactly the one worth finding. Its file is looked up from the process itself (a Claude
+ * process by its resume id or its directory's newest files, a Codex process by the id in its rollout's name).
  */
 export async function sessionsOfProcesses(
   home: string,

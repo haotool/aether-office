@@ -2,9 +2,6 @@ import { test, expect, type Page } from '@playwright/test';
 import { signIn as signInTo } from '../support/sign-in.js';
 import { throughout } from '../support/settled.js';
 
-// The installable app: manifest, iOS and theme meta tags, safe areas, the install offer, and the service worker
-// (registered only in a secure context, never storing API answers, asking before it updates). 127.0.0.1 is a secure
-// context, like localhost; a phone on http://192.168.x.x is not, which the unit tests cover (tests/aether/pwa.test.ts).
 async function signIn(page: Page) {
   await signInTo(page);
   await expect(page.locator('main')).toBeVisible();
@@ -105,7 +102,6 @@ test.describe('phone hygiene', () => {
     page,
   }) => {
     await page.goto('/');
-    // computed values resolve to 0px without a notch, so look for the insets in the stylesheet itself
     const css = await page.evaluate(async () => {
       const href = document.querySelector('link[rel=stylesheet]')!.getAttribute('href')!;
       return (await fetch(href)).text();
@@ -153,7 +149,6 @@ test.describe('install offer', () => {
     page,
   }) => {
     await page.addInitScript(() => {
-      // The browser fires this on its own; stand in for it with the same shape, the moment the page starts listening.
       const listen = window.addEventListener.bind(window);
       window.addEventListener = ((...args: Parameters<typeof listen>) => {
         listen(...args);
@@ -171,7 +166,6 @@ test.describe('install offer', () => {
     await page.getByRole('button', { name: '關閉', exact: true }).first().click();
     await expect(page.getByText('把 AETHER 安裝到這台裝置。')).toHaveCount(0);
     await page.reload();
-    // The page has taken the new offer (it calls preventDefault) and had its frames to act on it.
     await page.waitForFunction(
       () => (window as unknown as { offer?: Event }).offer?.defaultPrevented,
     );
@@ -229,7 +223,6 @@ test.describe('service worker', () => {
     await signIn(page);
     expect(await page.evaluate(() => window.isSecureContext)).toBe(true);
     await expect.poll(() => controlled(page), { timeout: 15000 }).toBe('activated');
-    // use the API, then look at everything the worker has stored
     await page.evaluate(() => fetch('/api/projects').then((r) => r.text()));
     const stored = await page.evaluate(async () => {
       const urls: string[] = [];
@@ -251,8 +244,8 @@ test.describe('service worker', () => {
         { timeout: 10000 },
       )
       .toBe(0);
-    expect(await page.evaluate(async () => (await caches.keys()).length)).toBe(0);
-    await page.goto('/?sw=on'); // leave the origin as the next test expects it
+    await expect.poll(() => page.evaluate(() => caches.keys()), { timeout: 10000 }).toEqual([]);
+    await page.goto('/?sw=on');
   });
 
   test('a new version waits for the person: a toast, then a reload that takes it', async ({
@@ -261,7 +254,6 @@ test.describe('service worker', () => {
     await signIn(page);
     await expect.poll(() => controlled(page), { timeout: 15000 }).toBe('activated');
     await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
-    // a second script URL stands in for a rebuilt server's changed sw.js: the same worker under another address
     await page.evaluate(() => navigator.serviceWorker.register('/sw.js?v=2'));
     await expect(page.getByText('有新版本可用。')).toBeVisible({ timeout: 15000 });
     expect(
@@ -271,7 +263,7 @@ test.describe('service worker', () => {
     await expect
       .poll(
         () =>
-          page.evaluate(() => navigator.serviceWorker.controller?.scriptURL ?? '').catch(() => ''), // the page is reloading: ask again once it is back
+          page.evaluate(() => navigator.serviceWorker.controller?.scriptURL ?? '').catch(() => ''),
         { timeout: 15000 },
       )
       .toContain('/sw.js?v=2');
@@ -283,7 +275,7 @@ test.describe('service worker', () => {
   }) => {
     await signIn(page);
     await expect.poll(() => controlled(page), { timeout: 15000 }).toBe('activated');
-    await page.reload(); // now under the worker's control
+    await page.reload();
     await expect(page.locator('main')).toBeVisible();
     // the old version's chunk is in the cache; the rebuilt server has never heard of it
     const old = '/assets/Retired-AbCd1234.js';
@@ -299,7 +291,7 @@ test.describe('service worker', () => {
       return [answer.status, await answer.text()];
     }, old);
     expect(kept).toEqual([200, 'export default 1']);
-    expect((await page.request.get(old)).status()).toBe(404); // the server really lacks it
+    expect((await page.request.get(old)).status()).toBe(404);
     await page.goto('/?sw=off');
     await page.goto('/?sw=on');
   });

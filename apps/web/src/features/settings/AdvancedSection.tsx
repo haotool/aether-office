@@ -15,7 +15,6 @@ type AdvancedSectionProps = {
   canWrite: boolean;
 };
 
-/** The settings that exist only with Advanced on: the page leaves them out (and the search skips them) until then. */
 export const ADVANCED_ONLY: ReadonlySet<EntryId> = new Set([
   'schedules',
   'a2a',
@@ -23,7 +22,6 @@ export const ADVANCED_ONLY: ReadonlySet<EntryId> = new Set([
   'hosts',
 ]);
 
-/** What the Advanced switch brings: schedules, A2A clients, integrations and the way to the hosts. */
 function AdvancedPages({ projectId, owner, canWrite }: AdvancedSectionProps) {
   const t = useT();
   return (
@@ -51,7 +49,6 @@ function AdvancedPages({ projectId, owner, canWrite }: AdvancedSectionProps) {
   );
 }
 
-/** The switch for orchestrating several agents, and what it brings: schedules, A2A, integrations, hosts. */
 export function AdvancedSection({ projectId, owner, canWrite }: AdvancedSectionProps) {
   const t = useT();
   const prefs = usePreferences();

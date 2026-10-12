@@ -17,7 +17,6 @@ import {
 } from '../../packages/office-scene/src/squad/handover/plan.js';
 import type { DrawSquad } from '../../packages/office-scene/src/squad/squad-draw.js';
 
-// Shared by the hand-over specs: a default office, a supervisor's desk with a squad beside it, and plans and books on it.
 const agent = (id: string) => ({ id }) as Agent;
 export const layout = defaultLayout([agent('local:s1'), agent('local:s2')]);
 export const grid = buildNavGrid(layout.objects);
@@ -34,7 +33,6 @@ export const squad = {
   side: handoverSide(desk, { x: desk.x + 3, z: desk.z + 2 }),
 } as DrawSquad;
 export const T0 = 5_000_000;
-/** A wall-clock time `ms` after T0, whole milliseconds like a real clock (the plan's times are not). */
 export const at = (ms: number) => T0 + Math.ceil(ms);
 
 export const makePlan = (

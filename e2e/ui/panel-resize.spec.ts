@@ -2,16 +2,13 @@ import { test, expect, type Page } from '@playwright/test';
 import { signIn } from '../support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
 
-// The session panel's width: a drag handle on its left edge (mouse and keyboard), double-click to reset or fold to a
-// rail, persistence, the 3D canvas following, and no overflow at the smallest and the largest width.
 const MIN = 320;
-const DEFAULT = 380; // a 1440px-wide window
+const DEFAULT = 380;
 const MAX = 720;
 
 async function login(page: Page): Promise<string> {
   await signIn(page);
   await expect(page.locator('main')).toBeVisible();
-  // The fixture repository is adopted as its own project, where its session lives.
   await expect(
     page.locator('.project-picker select option', { hasText: 'fixture-repo' }),
   ).toBeAttached({
@@ -27,10 +24,8 @@ async function login(page: Page): Promise<string> {
 const handle = (page: Page) => page.getByRole('separator', { name: '調整 session 面板寬度' });
 const width = async (page: Page) =>
   Math.round((await page.locator('.session-panel').boundingBox())!.width);
-// The office (3D canvas, or the 2D list where WebGL is not available) is what gives the panel its room.
 const canvasWidth = async (page: Page) =>
   Math.round((await page.locator('.scene-shell').boundingBox())!.width);
-/** Drawing-buffer pixels per CSS pixel of the 3D canvas (0 without one): unchanged after a resize means it was not left stretched or blurry. */
 const sharpness = (page: Page) =>
   page.evaluate(() => {
     const canvas = document.querySelector<HTMLCanvasElement>('.scene-shell canvas');
@@ -39,11 +34,10 @@ const sharpness = (page: Page) =>
 const value = async (page: Page) => Number(await handle(page).getAttribute('aria-valuenow'));
 
 test.beforeEach(async ({ page }) => {
-  test.setTimeout(100000); // the first WebGL scene of a cold server is slow to mount
+  test.setTimeout(100000);
   const projectId = await login(page);
   await page.goto(`/office?project=${projectId}`);
   await expect(handle(page)).toBeVisible();
-  // The office has its width, and the fixture session is listed.
   await expect.poll(() => canvasWidth(page), { timeout: 45000 }).toBeGreaterThan(500);
   await expect(page.locator('.feed-row').first()).toBeVisible({ timeout: 20000 });
 });
@@ -61,7 +55,6 @@ test('dragging the handle with the mouse widens the panel and the canvas follows
   await page.mouse.down();
   await page.mouse.move(x - 60, y, { steps: 4 });
   await page.mouse.move(x - 120, y, { steps: 4 });
-  // Mid-drag: the app body carries the width, and React has not stored anything yet.
   await expect.poll(() => width(page)).toBe(DEFAULT + 120);
   await expect(page.locator('.app-body')).toHaveAttribute('data-resizing', '');
   await expect.poll(() => canvasWidth(page)).toBeLessThan(canvasBefore - 100);
@@ -69,9 +62,7 @@ test('dragging the handle with the mouse widens the panel and the canvas follows
   await expect(page.locator('.app-body')).not.toHaveAttribute('data-resizing', '');
   expect(await width(page)).toBe(DEFAULT + 120);
   expect(await value(page)).toBe(DEFAULT + 120);
-  // The canvas was re-measured, not stretched: the same pixels per CSS pixel as before.
   await expect.poll(async () => Math.abs((await sharpness(page)) - sharpBefore)).toBeLessThan(0.05);
-  // Past the limits it stops at them.
   const edge = (await handle(page).boundingBox())!;
   await page.mouse.move(edge.x + edge.width / 2, y);
   await page.mouse.down();
@@ -132,7 +123,6 @@ test('double-click resets to the default, and at the default folds to a rail and
   await page.getByRole('button', { name: '展開 session 面板' }).click();
   await expect.poll(() => width(page)).toBe(DEFAULT);
   expect(await canvasWidth(page)).toBeLessThan(canvasRail);
-  // The header button folds it too.
   await page.getByRole('button', { name: '收合成側欄' }).click();
   await expect.poll(() => width(page)).toBe(48);
 });
@@ -158,7 +148,7 @@ test('a shrinking window pulls a wide panel in and a growing one gives the width
   await page.keyboard.press('End');
   await expect.poll(() => width(page)).toBe(MAX);
   await page.setViewportSize({ width: 1100, height: 800 });
-  await expect.poll(() => width(page)).toBe(660); // 60% of 1100
+  await expect.poll(() => width(page)).toBe(660);
   await page.setViewportSize({ width: 1440, height: 900 });
   await expect.poll(() => width(page)).toBe(MAX);
 });

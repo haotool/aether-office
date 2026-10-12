@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
-# Applies a reviewed history-cleanup plan to a FRESH CLONE of this repository. The source repository is never
-# modified: the script creates its own bare clone (git clone --no-local), refuses any other target, and checks that the
-# source branch and HEAD are identical before and after.
-#
-#   scripts/oss/history-apply.sh --plan plan.json --out <dir> [--source <repo>] [--private-patterns <file>] [--dry-run]
-#
-# Needs git-filter-repo. Set NODE to a node binary when `node` is not on PATH.
+# Applies a reviewed history-cleanup plan to a FRESH CLONE: the source repository is never modified (the script creates
+# its own bare clone, refuses any other target and checks that the source branch and HEAD are identical before and
+# after). Usage: scripts/oss/history-apply.sh --plan plan.json --out <dir> [--source <repo>] [--private-patterns <file>]
+# [--dry-run]; needs git-filter-repo.
 set -euo pipefail
 
 usage() {
@@ -30,6 +27,7 @@ while [ $# -gt 0 ]; do
 done
 [ -n "$plan" ] && [ -n "$out" ] || usage
 [ -f "$plan" ] || { echo "plan not found: $plan" >&2; exit 2; }
+case "$out" in /*) ;; *) out="$PWD/$out" ;; esac # git -C changes directory below, so keep the target absolute
 source_repo=${source_repo:-$(git rev-parse --show-toplevel)}
 if [ -z "$private" ] && [ -f "$source_repo/.oss-private-patterns" ]; then private="$source_repo/.oss-private-patterns"; fi
 
@@ -78,7 +76,7 @@ fi
 inputs="$out/oss"
 echo "== preparing filter-repo inputs"
 tools filter-inputs "$out" "$plan" "$inputs" "$private"
-export OSS_RULES="$inputs/rules.json" OSS_MESSAGES="$inputs/messages.json"
+export OSS_RULES="$inputs/rules.json" OSS_MESSAGES="$inputs/messages.json" OSS_TOOL_TRAILER="$inputs/tool-trailer.txt"
 args=(--force --refs refs/heads/main --invert-paths --paths-from-file "$inputs/paths.txt"
   --blob-callback "$(cat "$inputs/blob-callback.py")" --commit-callback "$(cat "$inputs/commit-callback.py")")
 [ -s "$inputs/strip-blobs.txt" ] && args+=(--strip-blobs-with-ids "$inputs/strip-blobs.txt")

@@ -6,12 +6,12 @@ import { createServer } from '../../apps/control/src/server.js';
 it('only claims capabilities that are implemented; unknown providers support nothing', () => {
   expect(supports('codex', 'resume')).toBe(true);
   expect(supports('demo', 'resume')).toBe(false);
-  expect(supports('acp', 'start')).toBe(true); // via the negotiated generic adapter
-  expect(supports('acp', 'resume')).toBe(false); // only per-agent negotiation could enable this
+  expect(supports('acp', 'start')).toBe(true);
+  expect(supports('acp', 'resume')).toBe(false);
   expect(supports('acp', 'subagents')).toBe(false);
   expect(supports('mystery', 'start')).toBe(false);
   for (const provider of ['codex', 'claude'] as const) {
-    expect(capabilitiesOf(provider).subagents).toBe(false); // disabled in both adapters
+    expect(capabilitiesOf(provider).subagents).toBe(false);
     expect(capabilitiesOf(provider).fork).toBe(false);
   }
   // No adapter injects into a running turn, so messages must wait in the durable inbox.

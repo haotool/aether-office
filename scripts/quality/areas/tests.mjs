@@ -1,5 +1,3 @@
-// Area 3: tests. How much of the product source the unit tests import (directly and through the import graph), flaky
-// patterns, skipped tests, and line/branch coverage when a vitest coverage run left a summary behind.
 import { reachableFrom } from '../graph.mjs';
 import { SELF, scan, top } from '../lib.mjs';
 import { info, rule, skipped } from '../model.mjs';
@@ -31,10 +29,6 @@ export const FLAKY = [
 const SKIPPED =
   /\b(?:it|test|describe)\.(?:skip\(\s*(?:['"`]|\)|\w+\s*,\s*(?:async|\())|todo\(|fixme\()|\bxit\(|\bxdescribe\(/;
 
-/**
- * Modules a unit test imports by name, following re-exports through barrels (`index.ts`) to the module that defines the
- * name. A namespace import credits every module the barrel re-exports.
- */
 export function directlyImported(uses, fromTest) {
   const reexports = new Map();
   for (const u of uses.filter((x) => x.reexport))
@@ -55,7 +49,6 @@ export function directlyImported(uses, fromTest) {
   return found;
 }
 
-/** Product modules the unit tests import directly, and those reachable from them. */
 export function testedModules(facts, graph) {
   const product = facts
     .map((f) => f.file)
@@ -68,37 +61,20 @@ export function testedModules(facts, graph) {
 
 const packageOf = (file) => file.split('/').slice(0, 2).join('/');
 
+const COVERAGE = [
+  { id: 'coverage-lines', label: 'Line coverage', weight: 8, kind: 'lines', atLeast: 80 },
+  { id: 'coverage-branches', label: 'Branch coverage', weight: 7, kind: 'branches', atLeast: 70 },
+];
+
 function coverageRules(repo) {
-  if (!repo.exists(COVERAGE_SUMMARY))
-    return [
-      skipped(
-        'coverage',
-        'Line and branch coverage (vitest v8 provider)',
-        15,
-        `no ${COVERAGE_SUMMARY}: @vitest/coverage-v8 is not installed and no coverage run was recorded`,
-      ),
-    ];
+  if (!repo.exists(COVERAGE_SUMMARY)) {
+    const why = `no ${COVERAGE_SUMMARY}: run pnpm test:coverage`;
+    return COVERAGE.map((c) => skipped(c.id, c.label, c.weight, why));
+  }
   const total = JSON.parse(repo.read(COVERAGE_SUMMARY)).total;
-  return [
-    rule({
-      id: 'coverage-lines',
-      label: 'Line coverage',
-      weight: 8,
-      value: total.lines.pct,
-      atLeast: 80,
-      full: 40,
-      unit: '%',
-    }),
-    rule({
-      id: 'coverage-branches',
-      label: 'Branch coverage',
-      weight: 7,
-      value: total.branches.pct,
-      atLeast: 70,
-      full: 40,
-      unit: '%',
-    }),
-  ];
+  return COVERAGE.map(({ kind, ...c }) =>
+    rule({ ...c, value: Math.round(total[kind].pct), full: 40, unit: '%' }),
+  );
 }
 
 export function tests(repo, { facts, graph }) {

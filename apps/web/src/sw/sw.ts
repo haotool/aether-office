@@ -1,8 +1,7 @@
 import { CACHE_PREFIX, SKIP_WAITING, cacheName, handling } from './cache-rules.js';
 
-// The service worker (built by scripts/build.mjs into dist/sw.js, with the precache list and version filled in).
-// It keeps the page and its hashed files so that a page left open across a server rebuild still finds its chunks,
-// and it waits for the person to agree before a new version takes over. It never caches an API answer.
+// It keeps the page and its hashed files so that a page left open across a rebuild still finds its chunks, and waits
+// for the person to agree before a new version takes over. It never caches an API answer.
 declare const PRECACHE: readonly string[];
 declare const VERSION: string;
 
@@ -21,7 +20,6 @@ type Worker = {
   addEventListener(type: 'fetch', listener: (event: FetchEvent) => void): void;
   addEventListener(type: 'message', listener: (event: Event & { data: unknown }) => void): void;
 };
-/** A service worker has no `window`; its global scope is this `self`. */
 declare const self: Worker;
 const worker = self;
 const CACHE = cacheName(VERSION);

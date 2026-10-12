@@ -54,24 +54,19 @@ export type SceneViewProps = {
   preview: Layout | null;
   unread: ReadonlySet<string>;
   canWrite: boolean;
-  /** A phone: lighter rendering and a minimal HUD. */
   compact?: boolean;
   /** Something covers the scene (the phone's full sheet): it stops drawing meanwhile. */
   covered?: boolean;
-  /** Each floor's KPI badge (index = floor) for the floor switcher and the floor's plaque. */
   floorKpi?: readonly (FloorKpiBadge | null)[];
   onOpenFloorKpi?: (floor: number) => void;
   onSelect: (id: string) => void;
-  /** Open a member's conversation (the panel, or the full sheet on a phone). */
   onOpen: (id: string) => void;
-  /** Show a member's row in the feed (clears the choice). */
   onFeed: (id: string) => void;
   onTour: (action: TourAction) => void;
   onNotice: (message: string) => void;
   onRefresh: () => void;
 };
 
-/** The first-visit camera tour: whether it plays by itself and what finishing or declining it remembers. */
 function useSceneIntro(compact: boolean, covered: boolean): OfficeSceneProps['intro'] {
   const prefs = usePreferences();
   return {
@@ -92,7 +87,6 @@ function useSceneIntro(compact: boolean, covered: boolean): OfficeSceneProps['in
   };
 }
 
-/** Where everyone sits: the saved layout (or the preview being edited) merged with the members, and moving a seat. */
 function useSceneLayout(
   { data, model, preview, onRefresh }: SceneViewProps,
   observed: OfficeModel['observed'],
@@ -107,7 +101,7 @@ function useSceneLayout(
   const shown =
     preview ??
     mergeLayout(data.layout?.data ?? null, data.agents, observed, model.floorOf, {
-      squads: !squadLegacy, // subagents sit in their supervisor's squad zone, not at desks of their own
+      squads: !squadLegacy,
       seats,
     });
   const seat = useSeatMove({
@@ -122,7 +116,6 @@ function useSceneLayout(
   return { seat, layout: seat.layout ?? shown };
 }
 
-/** Everything the scene is told besides the layout: the model's own parts, or the URL previews' stand-ins. */
 function useSceneModelProps(
   { model, data }: SceneViewProps,
   sessions: readonly AttributedSession[],
@@ -135,10 +128,8 @@ function useSceneModelProps(
   const talk = useTalkPreview(model.agents, talkPreview);
   const standIn = useCompactPreview(model.agents, compactPreview);
   const realCompactions = useCompactions(model.contexts);
-  // Office life: decorative moments from real signals. Compaction is one of them (the "work" kind), so Calm mode and its switch apply.
   const life = useLifeInput(sessions, model, prefs.life);
   const compactionsShown = !prefs.life.calm && prefs.life.categories.work;
-  // No repository (or no access to it) means no beanstalk: the query just fails quietly.
   const graph = useGitGraph(data.project.id, prefs.beanstalk && prefs.view === '3d');
   return {
     pulses: talk?.pulses ?? model.pulses,
@@ -164,7 +155,6 @@ function useSceneModelProps(
   };
 }
 
-/** What the preferences decide for the scene, and the fall back to the 2D list when it fails. */
 function useScenePreferenceProps(onNotice: (message: string) => void) {
   const t = useT();
   const prefs = usePreferences();
@@ -188,12 +178,10 @@ function useScenePreferenceProps(onNotice: (message: string) => void) {
   };
 }
 
-// The menu is built when a character is first chosen, not with the office.
 const CharacterMenu = lazy(() =>
   import('../office/CharacterMenu.js').then((m) => ({ default: m.CharacterMenu })),
 );
 
-/** The menu over a character and the bar over a selected group. */
 function sceneMenus(
   props: SceneViewProps,
   sessions: readonly AttributedSession[],
@@ -222,7 +210,6 @@ function sceneMenus(
   };
 }
 
-/** The scene's props from the office model, the preferences and the people's actions on it. */
 export function useSceneProps(
   props: SceneViewProps,
   sessions: readonly AttributedSession[],
@@ -254,7 +241,6 @@ export function useSceneProps(
     selectedId,
     onSelect: props.onSelect,
     focus: focus ?? props.focus,
-    // Recomputed per render on purpose: MessageCarriers dedupes by messageId, so identity does not matter.
     messages: data.messages.map((m) => ({
       id: m.id,
       senderId: m.senderId,

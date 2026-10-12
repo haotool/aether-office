@@ -21,7 +21,6 @@ it('keeps the hook state, a waiting prompt and a running subagent across a spool
   while (!existsSync(file) || statSync(file).size < 1024 * 1024 - 8 * 1024) append(filler, file);
   append(rec('SubagentStart', 3_000, { agentId: 'a1', agentType: 'Explore' }), file);
   append(rec('PermissionRequest', 3_500, { tool: 'Bash' }), file);
-  // Another session's traffic crosses the threshold: the next append moves the spool to `.1`.
   while (!existsSync(`${file}.1`)) append(filler, file);
   expect(statSync(file).size).toBeLessThan(2_000);
   const states = await readHookState(file, 4_000);

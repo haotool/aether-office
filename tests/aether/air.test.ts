@@ -9,7 +9,7 @@ it('is dark at night, bright at midday and eases through dawn and dusk', () => {
   expect(daylight(6.5)).toBeLessThan(1);
   expect(daylight(18.5)).toBeGreaterThan(0);
   expect(daylight(18.5)).toBeLessThan(1);
-  expect(daylight(-11)).toBe(daylight(13)); // hours wrap
+  expect(daylight(-11)).toBe(daylight(13));
 });
 
 it('tints the air cool blue at night and warm gold in the day', () => {

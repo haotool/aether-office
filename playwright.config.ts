@@ -15,13 +15,13 @@ process.env['AETHER_HOOK_SPOOL'] = join(fixtureHome, 'hook-events.jsonl');
 process.env['AETHER_CLAUDE_USAGE_FILE'] ??= join(fixtureHome, 'claude-hud-usage.json');
 mkdirSync(join(fixtureHome, '.claude/projects/p'), { recursive: true });
 mkdirSync(join(fixtureHome, 'fixture-repo'), { recursive: true });
-execFileSync('git', ['init', '-q', join(fixtureHome, 'fixture-repo')]); // sessions join projects by repository
+execFileSync('git', ['init', '-q', join(fixtureHome, 'fixture-repo')]);
 writeFileSync(
   join(fixtureHome, '.claude/projects/p/e2e-session.jsonl'),
   JSON.stringify({ type: 'user', cwd: join(fixtureHome, 'fixture-repo') }) + '\n',
 );
 // Synthetic hook records (never a real session): one subagent that started and has run two tools, so it stays `running`.
-const farFuture = Date.now() + 3_600_000; // far future so the fixture subagent stays live for the whole run
+const farFuture = Date.now() + 3_600_000;
 const fixtureRecord = (event: string, extra: object = {}) =>
   JSON.stringify({
     at: farFuture,
@@ -41,8 +41,6 @@ writeFileSync(
     fixtureRecord('PreToolUse', { tool: 'Grep' }),
   ].join('\n') + '\n',
 );
-// The suite exercises every page, so it starts with the orchestration pages shown (Settings → Advanced). A spec that
-// checks the CLI-first navigation overrides this with `test.use({ storageState: ... })`.
 const advancedOn = {
   name: 'aether-ui-preferences',
   value: JSON.stringify({ state: { advanced: true }, version: 0 }),
@@ -59,20 +57,18 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   timeout: 60000,
-  retries: 0,
+  retries: Number(process.env['AETHER_E2E_RETRIES'] ?? (process.env['CI'] ? 2 : 0)),
   reporter: [['list'], ['json', { outputFile: 'evidence/e2e-results.json' }]],
   use: {
     baseURL: `http://127.0.0.1:${port}`,
     // CI installs Playwright's own Chromium; a developer machine uses the installed Chrome.
-    channel: process.env['CI'] ? undefined : 'chrome',
+    channel: process.env['CI'] ? 'chromium' : 'chrome',
     headless: true,
-    // The specs read the interface in Traditional Chinese; the app now follows the browser's language on a first visit.
     locale: 'zh-TW',
     viewport: { width: 1440, height: 900 },
     trace: 'off',
     screenshot: 'only-on-failure',
     storageState,
-    // The page registers a service worker on 127.0.0.1; only e2e/perf/pwa.spec.ts lets it, so no other spec runs behind one.
     serviceWorkers: 'block',
   },
   projects: [

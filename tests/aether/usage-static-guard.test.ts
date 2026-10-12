@@ -2,9 +2,9 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, it } from 'vitest';
 
-// The usage readers look at files that already sit on this machine and nothing else: no network, no process of their own
-// (git is reached only through git-health.ts, which has fixed read-only commands), no model SDK. The same patterns as the
-// classifier's guard, plus dynamic `import()`, which a `from '…'` check cannot see.
+// The usage readers look only at files already on this machine: no network, no process of their own (git is reached
+// only through git-health.ts), no model SDK. Same patterns as the classifier's guard, plus dynamic `import()`, which a
+// `from '…'` check cannot see.
 const FORBIDDEN =
   /from ['"](?:node:)?(?:child_process|http|https|http2|net|tls|dgram|dns|worker_threads)['"]|from ['"](?:@anthropic-ai|@openai|openai|@google|@aether\/providers|undici|node-fetch|axios|ws)[^'"]*['"]|\bimport\(|\brequire\(|(?<![.\w])(?:fetch|spawn|execFile|exec)\(|\bXMLHttpRequest\b|\bWebSocket\b|claude -p|codex exec/;
 

@@ -1,9 +1,3 @@
-/**
- * The flower genome: a deterministic map from a commit hash (and what happened around it) to the parameters of one flower.
- * Eight archetypes (lotus, orchid, lily, composite, tulip, helix, tech-lotus, crystal) are each a point in one shared space
- * of continuous shape parameters; a genome blends two of them by weight and jitters the result inside curated ranges, so the
- * variety is wide but every flower stays a believable flower. Pure: the same input always gives the same genome.
- */
 import { seeded } from '../environment/seeded.js';
 import { itemAt } from '../environment/checked.js';
 
@@ -19,26 +13,25 @@ export const ARCHETYPES = [
 ] as const;
 export type Archetype = (typeof ARCHETYPES)[number];
 
-/** The continuous shape parameters every archetype defines and every genome blends. */
 export const SHAPE_KEYS = [
-  'pitch', // angle of the outer whorl's petals from the flower axis (0 upright, pi/2 flat)
-  'pitchStep', // how much more upright each inner whorl is
-  'curl', // how far a petal bends along its length (negative: inwards, positive: reflexed)
-  'cup', // sideways bend of the petal's cross-section
-  'ruffle', // wave along the petal edge
-  'length', // petal length relative to the flower's size
-  'width', // petal width relative to its length
-  'taper', // where the petal is widest (above 1: towards the tip)
-  'belly', // how blunt (below 1) or pointed (above 1) the petal is
-  'twist', // turn of the petal about its own axis, radians over its length
-  'spiral', // 0: whorls of evenly spaced petals, 1: each whorl turned by the golden angle
-  'bilateral', // 0: radial symmetry, 1: a lip and a hood
-  'float', // 0: petals joined at the base, 1: whorls drift apart as hovering shards
-  'glass', // how translucent the petals are
-  'facet', // 0: smooth petals, 1: cut like crystal
-  'disc', // radius of the floret disc relative to the flower's size
-  'filaments', // how many glowing stamens stand in the middle
-  'veins', // how strongly the veins glow
+  'pitch',
+  'pitchStep',
+  'curl',
+  'cup',
+  'ruffle',
+  'length',
+  'width',
+  'taper',
+  'belly',
+  'twist',
+  'spiral',
+  'bilateral',
+  'float',
+  'glass',
+  'facet',
+  'disc',
+  'filaments',
+  'veins',
 ] as const;
 type ShapeKey = (typeof SHAPE_KEYS)[number];
 type Shape = Record<ShapeKey, number>;
@@ -67,7 +60,6 @@ export const SHAPE_RANGE: Record<ShapeKey, [number, number]> = {
 const row = (...v: number[]): Shape =>
   Object.fromEntries(SHAPE_KEYS.map((k, i) => [k, itemAt(v, i)])) as Shape;
 
-//                      pitch step  curl   cup  ruffle len  width taper belly twist spir  bil  float glass facet disc fil  veins
 const TABLE: Record<Archetype, Shape> = {
   lotus: row(
     0.68,
@@ -174,7 +166,6 @@ const TABLE: Record<Archetype, Shape> = {
   ),
 };
 
-/** Petal counts a flower of each archetype may have (Fibonacci numbers: the counts real petals favour). */
 const PETALS: Record<Archetype, readonly number[]> = {
   lotus: [8, 13, 21],
   orchid: [3, 5],
@@ -186,66 +177,45 @@ const PETALS: Record<Archetype, readonly number[]> = {
   crystal: [5, 8, 13],
 };
 
-/** Most petals one flower may carry, so its triangle count is bounded whatever the genome. */
 export const MAX_PETALS = 34;
-/** Floret counts of the Vogel disc: Fibonacci numbers, the more the wider the disc. */
 const FLORETS = [13, 21, 34, 55, 89] as const;
-/** The great bloom: thirteen or twenty-one petals in the outer whorl, thinning inwards, in five whorls. */
 const GRAND_PETALS = [13, 13, 21] as const;
 const GRAND_WHORLS = 5;
 
 export type Genome = {
-  /** A locale-neutral code name, e.g. "L-3C7A". */
   code: string;
   archetype: Archetype;
-  /** One weight per archetype, in ARCHETYPES order; they sum to 1. */
   weights: number[];
-  /** Picks the species' epithet (see flower-names.ts). */
   epithet: number;
   petals: number;
   whorls: number;
   shape: Shape;
-  /** Florets in the Vogel-spiral disc. */
   florets: number;
   filaments: number;
-  /** Orbiting pollen motes (none on low quality). */
   pollen: number;
-  /** 0: none, 1: a thin ring, 2: a hovering disc beneath. */
   halo: 0 | 1 | 2;
-  /** Hue turned from the branch colour to the petal tips, in turns (-0.5 to 0.5). */
   hueSpan: number;
-  /** How far the stem leans outwards, 0 to 1. */
   lean: number;
-  /** Side branches ending in buds (0 for most flowers). */
   twigs: number;
 };
 
 type GenomeInput = {
-  /** The commit hash (or any stable string) the flower grows from. */
   seed: string;
   merges: number;
   authors: number;
   branches: number;
-  /** The final bloom on the spire: always full, with a halo and many motes. */
   grand?: boolean;
 };
 
-/**
- * How far the outer petals' tips stand from the flower's axis, in units of the flower's size: the horizontal run of the petal's
- * centreline (it bends by `curl` along its length, from `pitch`) added to where it starts. A flower below `MIN_SPREAD` reads as
- * a closed bud from the default camera distance.
- */
 export function spreadOf(s: Shape, steps = 8): number {
   let run = 0;
   for (let i = 0; i < steps; i++) run += Math.sin(s.pitch + s.curl * ((i + 0.5) / steps)) / steps;
   return Math.max(0.05, s.disc * 0.8) + s.float * 0.22 + s.length * run;
 }
-/** The least spread a genome may have (see `spreadOf`). */
 export const MIN_SPREAD = 0.62;
 
 const clamp = (v: number, [lo, hi]: [number, number]) => Math.min(hi, Math.max(lo, v));
 
-/** The archetype weights: a primary, a secondary taking 12 to 45 percent of it, and nothing else. */
 function blend(random: () => number): { weights: number[]; primary: number } {
   const primary = Math.floor(random() * ARCHETYPES.length);
   const secondary =
@@ -255,7 +225,6 @@ function blend(random: () => number): { weights: number[]; primary: number } {
   return { weights, primary: mix > 0.5 ? secondary : primary };
 }
 
-/** The shape: each key the weighted mix of the archetypes' values, plus a jitter of its own. */
 function mixShape(weights: readonly number[], random: () => number): Shape {
   return Object.fromEntries(
     SHAPE_KEYS.map((key) => {
@@ -267,12 +236,9 @@ function mixShape(weights: readonly number[], random: () => number): Shape {
   ) as Shape;
 }
 
-/** Opens a shape that would be a closed bud, and bends the great bloom's to its own. */
 function openShape(shape: Shape, grand: boolean): void {
-  // No flower stays a closed bud: open the petals until the tips stand clear of the axis.
   while (spreadOf(shape) < MIN_SPREAD && shape.pitch < SHAPE_RANGE.pitch[1])
     shape.pitch = Math.min(SHAPE_RANGE.pitch[1], shape.pitch + 0.05);
-  // The great bloom always opens wide, radially, with glassy veined petals and a firm step between its whorls.
   if (!grand) return;
   shape.pitch = Math.max(shape.pitch, 0.85);
   shape.curl = Math.max(shape.curl, -0.2);
@@ -284,7 +250,6 @@ function openShape(shape: Shape, grand: boolean): void {
   shape.disc = Math.min(shape.disc, 0.3);
 }
 
-/** The florets a disc of this size holds: a bigger disc, more of them. */
 function floretsFor(disc: number): number {
   const [low, high] = SHAPE_RANGE.disc;
   return itemAt(
@@ -293,7 +258,6 @@ function floretsFor(disc: number): number {
   );
 }
 
-/** The flower's code name: its archetype's initial and four hex digits, "L-3F9A". */
 const codeOf = (archetype: Archetype, random: () => number) =>
   `${archetype.charAt(0).toUpperCase()}-${Math.floor(random() * 65536)
     .toString(16)

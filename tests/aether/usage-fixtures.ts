@@ -1,10 +1,8 @@
 import { mkdirSync, writeFileSync, appendFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-// Synthetic transcripts in the shapes the providers really write (counters, ids, timestamps, no real text).
 export type ClaudeUsage = { i: number; cw?: number; cr?: number; o: number };
 
-/** One line of a Claude transcript: an assistant message (or one content block of it) with its usage. */
 export function claudeLine(
   id: string,
   at: string,
@@ -56,7 +54,6 @@ const codexUsage = (u: CodexUsage) => ({
   total_tokens: u.input + u.output,
 });
 
-/** A Codex token_count event: the session's running total and this request's own usage. */
 export function codexCount(
   at: string,
   total: CodexUsage,
@@ -102,7 +99,6 @@ export const codexMeta = (at: string, cwd = '/work/repo') =>
 
 export const buffer = (...lines: string[]) => Buffer.from(lines.join('\n') + '\n');
 
-/** Writes (or appends) lines to a transcript file, creating its folders. */
 export function writeLines(file: string, lines: string[], append = false) {
   mkdirSync(dirname(file), { recursive: true });
   const text = lines.join('\n') + '\n';

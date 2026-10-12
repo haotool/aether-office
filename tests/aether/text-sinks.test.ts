@@ -4,15 +4,13 @@ import { describe, expect, it } from 'vitest';
 import allowlist from './text-sinks.allowlist.json' with { type: 'json' };
 
 /**
- * A guard on the text pipeline (docs/design-system.md, "Text pipeline"): text that comes from a session reaches the screen
- * only through the shared sanitizers, so a component that starts showing one of the known text fields has to say, in the
- * allowlist next to this file, which kind it is and why that is safe. A new use fails here until it is classified; an entry
- * nothing uses any more fails too, so the list stays true.
+ * A guard on the text pipeline (docs/design-system.md, "Text pipeline"): session text reaches the screen only through
+ * the shared sanitizers, so a component that starts showing one of the known text fields must name its sanitizer in the
+ * allowlist.
  */
 const ROOTS = ['apps/web/src', 'packages/office-scene/src'];
 const FIELD = /[A-Za-z_][A-Za-z0-9_?.]*\.(?:title|summary|prompt|reply|subject|topic|lastReply)\b/g;
 
-/** What each kind of field is, and what makes it safe to print as it is. */
 const KINDS: Record<string, string> = {
   'session-title':
     'a session title: `cleanTitle` on the server, normalized again by the web (local-session-compat)',
@@ -71,7 +69,6 @@ describe('text sinks', () => {
 
 describe('text sources', () => {
   const source = (file: string) => readFileSync(file, 'utf8');
-  // Where session text enters the product, and the sanitizer each must use.
   const WIRING: [string, string][] = [
     ['apps/control/src/services/sessions/session-transcript.ts', 'structureWrappers'],
     ['apps/control/src/services/sessions/session-title.ts', 'cleanTitle'],

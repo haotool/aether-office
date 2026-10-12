@@ -15,7 +15,6 @@ import { context2d } from '../core/canvas-2d.js';
 const PUFFS = 16;
 const SPARKS = 10;
 
-/** One of a desk's random phases (the index is always inside the array: it is taken modulo its length). */
 const phaseAt = (phase: Float32Array, i: number) => phase[i] ?? 0;
 
 function softDot(): CanvasTexture {
@@ -30,7 +29,6 @@ function softDot(): CanvasTexture {
   return new CanvasTexture(canvas);
 }
 
-/** Smoke puffs curl up from behind the screen, each on its own phase of the rise. */
 function curlSmoke(smoke: Float32Array, phase: Float32Array, t: number, rise: number, top: number) {
   for (let i = 0; i < PUFFS; i++) {
     const life = (t * 0.35 + phaseAt(phase, i)) % 1;
@@ -40,7 +38,6 @@ function curlSmoke(smoke: Float32Array, phase: Float32Array, t: number, rise: nu
   }
 }
 
-/** Sparks jump off the desk in short arcs. */
 function jumpSparks(sparks: Float32Array, phase: Float32Array, t: number) {
   for (let i = 0; i < SPARKS; i++) {
     const life = (t * 1.6 + phaseAt(phase, PUFFS + i)) % 1;
@@ -51,7 +48,6 @@ function jumpSparks(sparks: Float32Array, phase: Float32Array, t: number) {
   }
 }
 
-/** A cloud of soft dots whose positions the frame loop rewrites. */
 function Dots({
   innerRef,
   positions,
@@ -87,10 +83,6 @@ function Dots({
   );
 }
 
-/**
- * What a machine does when its member works flat out (intensity 3): grey smoke curls up from behind the screen and
- * sparks jump off the desk. At intensity 2 a thin wisp rises. Nothing at rest, so an idle office is calm.
- */
 export function DeskEffects({ intensity, seed }: { intensity: 0 | 1 | 2 | 3; seed: string }) {
   const smoke = useRef<Points>(null);
   const sparks = useRef<Points>(null);

@@ -13,7 +13,6 @@ type SquadFieldsProps = {
   patch: Patch;
 };
 
-/** Undo, redo, export and import. */
 export function LayoutFileTools({
   canUndo,
   canRedo,
@@ -55,7 +54,6 @@ export function LayoutFileTools({
   );
 }
 
-/** Position and rotation of the selected object. */
 export function PlacementFields({ object, patch }: { object: Furniture; patch: Patch }) {
   const t = useT();
   return (
@@ -96,7 +94,6 @@ export function PlacementFields({ object, patch }: { object: Furniture; patch: P
   );
 }
 
-/** A squad zone's desk anchor, width/depth and seats. */
 export function SquadFields({ squad, layout, patch }: SquadFieldsProps) {
   const t = useT();
   const desks = layout.objects.filter(
@@ -147,7 +144,6 @@ export function SquadFields({ squad, layout, patch }: SquadFieldsProps) {
   );
 }
 
-/** Which agent sits at a desk. */
 export function DeskAssignment({
   object,
   agents,
@@ -171,7 +167,6 @@ export function DeskAssignment({
   );
 }
 
-/** Buttons that add a squad zone to the selected desk, or a new piece of furniture. */
 export function AddObjectButtons({
   desk,
   live,
@@ -179,7 +174,6 @@ export function AddObjectButtons({
   onObject,
 }: {
   desk: Furniture | undefined;
-  /** Subagents working now at that desk: "Pin current squad" sizes the zone for them. */
   live: number;
   onSquad: (desk: Furniture, count: number) => void;
   onObject: (type: PlainFurniture) => void;

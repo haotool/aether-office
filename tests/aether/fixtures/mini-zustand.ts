@@ -1,5 +1,5 @@
-// A synthetic `zustand` for tests without a React renderer: the same `create` contract (state initialiser, selector hook,
-// getState/setState/subscribe), with the hook reading the current state instead of subscribing through React.
+// A synthetic `zustand` for tests without a React renderer: the same `create` contract, with the hook reading the
+// current state instead of subscribing through React.
 type Set<T> = (next: Partial<T> | ((state: T) => Partial<T>)) => void;
 type Init<T> = (set: Set<T>, get: () => T) => T;
 
@@ -19,7 +19,6 @@ function build<T>(init: Init<T>) {
   });
 }
 
-/** `create(init)` and the curried `create<T>()(init)` both work, as in zustand. */
 export function create<T>(init: Init<T>): ReturnType<typeof build<T>>;
 export function create<T>(): (init: Init<T>) => ReturnType<typeof build<T>>;
 export function create<T>(init?: Init<T>) {

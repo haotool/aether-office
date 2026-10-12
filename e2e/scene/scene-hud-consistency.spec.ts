@@ -1,11 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { signIn } from '../support/sign-in.js';
 
-/**
- * The 3D scene's own chrome (the toolbar over the canvas) is a compact HUD: its segments, buttons and select are all
- * --control-h-sm tall (32px with a mouse, 36px with a finger), the same as every other small control, never a one-off
- * height of their own. Measured on the office view at the three layouts of role-variance.spec.ts.
- */
 const LAYOUTS = {
   desktop: { viewport: { width: 1440, height: 900 }, touch: false, height: 32 },
   tablet: { viewport: { width: 820, height: 1180 }, touch: true, height: 36 },

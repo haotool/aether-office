@@ -1,4 +1,3 @@
-// Assembles the release-mode report (CHARTER §5).
 import { execFileSync } from 'node:child_process';
 import { buildContext } from '../context.mjs';
 import { CRITERIA, MEASURED_IDS, criteriaById } from './criteria.mjs';
@@ -12,6 +11,7 @@ import {
 } from './compute.mjs';
 import { evidenceForCriteria } from './evidence.mjs';
 import { gateRow, loadGates } from './gates-evidence.mjs';
+import { measureColdStart, measureSceneBudget, measureSoak } from './measure-perf.mjs';
 import {
   measureAuthorIdentities,
   measureChangelog,
@@ -41,6 +41,7 @@ import {
   measureTypeEscapes,
 } from './measure.mjs';
 import { measureStateMatrix, measureTouchTargets } from './measure-ux.mjs';
+import { measureStability } from './stability.mjs';
 
 function headSha(root) {
   return execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
@@ -150,6 +151,10 @@ export async function scoreRelease(root, options = {}) {
       ...measureCompactBlur(repo),
       source: 'rg compact/touch blur',
     }),
+    'L5-05': () => ({ ...measureSceneBudget(root), source: 'docs/verification/perf-mobile.json' }),
+    'L5-06': () => ({ ...measureColdStart(root), source: 'docs/verification/perf-mobile.json' }),
+    'L5-09': () => ({ ...measureSoak(root), source: 'docs/verification/perf-mobile.json' }),
+    'L3-09': () => ({ ...measureStability(root), source: 'docs/verification/stability.json' }),
     'L4-03': () => ({ ...measureTouchTargets(root), source: 'docs/verification/ux-matrix.json' }),
     'L4-08': () => ({ ...measureStateMatrix(root), source: 'docs/verification/ux-matrix.json' }),
     'L6-05': () => ({ ...measureChangelog(repo), source: 'CHANGELOG.md' }),

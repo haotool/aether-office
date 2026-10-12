@@ -4,8 +4,8 @@ import { useT } from '../../ui/useT.js';
 export type MenuRow = { id: string; label: string; hint?: string; badge?: string };
 
 /**
- * The list over the composer for `/` commands and `@` files. It never takes focus: the textarea keeps it and drives
- * the list with the arrow keys, so typing carries on while the list narrows.
+ * It never takes focus: the textarea keeps it and drives the list with the arrow keys, so typing carries on while the
+ * list narrows.
  */
 export function ComposerMenu({
   title,

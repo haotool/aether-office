@@ -84,7 +84,7 @@ describe('puppet parts', () => {
     expect(geometry.getAttribute('color').count).toBe(geometry.getAttribute('position').count);
     geometry.computeBoundingBox();
     const size = geometry.boundingBox!.getSize(new THREE.Vector3());
-    expect(size.x).toBeGreaterThan(0.34); // the bar plus the nodes at its ends
+    expect(size.x).toBeGreaterThan(0.34);
     expect(size.x).toBeLessThan(0.45);
     expect(size.y).toBeLessThan(0.1);
   });
@@ -95,7 +95,7 @@ describe('puppet parts', () => {
     expect(material.linewidth).toBe(STRING_WIDTH);
     expect(material.depthWrite).toBe(false);
     expect(material.vertexColors).toBe(true);
-    expect(geometry.instanceCount).toBe(0); // nothing drawn until the rig fills it
+    expect(geometry.instanceCount).toBe(0);
     expect(lines.frustumCulled).toBe(false);
     expect(SEGMENT_CAPACITY).toBeGreaterThan(0);
   });

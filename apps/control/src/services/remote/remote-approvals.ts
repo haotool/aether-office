@@ -30,8 +30,8 @@ const loopbackHost = (host: string | undefined) => {
 };
 
 /**
- * Can an answer be carried safely on this connection? A decision rides on a session cookie, which plain HTTP over a
- * network does not protect: only a loopback address or an HTTPS origin counts, unless AETHER_REMOTE_APPROVALS_LAN=1.
+ * A decision rides on a session cookie, which plain HTTP over a network does not protect: only a loopback address or an
+ * HTTPS origin counts, unless AETHER_REMOTE_APPROVALS_LAN=1.
  */
 export function approvalChannel(
   origin: URL,
@@ -43,9 +43,8 @@ export function approvalChannel(
 }
 
 /**
- * Switches Remote approvals on: a fresh token (its hash is the only copy kept here), a fresh key for the server's
- * proofs, and the file the hook reads them from, mode 0600 in a 0700 ~/.aether. Switching on again rotates both. Off by
- * default.
+ * Only the token's hash is kept here; the hook reads the token and the proof key from a file (mode 0600 in a 0700
+ * ~/.aether). Switching on again rotates both; off by default.
  */
 export function enableRemoteApprovals(ctx: Context, origin: string) {
   const token = randomBytes(32).toString('base64url');
@@ -55,7 +54,7 @@ export function enableRemoteApprovals(ctx: Context, origin: string) {
     ensurePrivateDir(dirname(file));
     writePrivateFile(file, `${JSON.stringify({ url: origin, token, verifyKey })}\n`);
   } catch {
-    throw new DomainError('APPROVALS_PATH_UNSAFE', 409); // a link or a bad path: nothing was written
+    throw new DomainError('APPROVALS_PATH_UNSAFE', 409);
   }
   ctx.sqlite
     .prepare(
@@ -65,7 +64,6 @@ export function enableRemoteApprovals(ctx: Context, origin: string) {
   return { enabled: true };
 }
 
-/** Off: the token stops working and the hook's file is removed, so the hook falls back to the terminal at once. */
 export function disableRemoteApprovals(ctx: Context) {
   ctx.sqlite
     .prepare(

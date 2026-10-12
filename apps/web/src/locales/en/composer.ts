@@ -1,4 +1,3 @@
-/** The composer words, in English. */
 export const enComposer = {
   composerLabel: 'Message the session',
   composerPlaceholder: 'Message, / for commands, @ for files',

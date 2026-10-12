@@ -3,7 +3,6 @@ import { useT } from '../../ui/useT.js';
 import { Row, Segmented, StatusChip, Switch } from './kit.js';
 import { OfficeAnimationsSettings } from './OfficeAnimationsSettings.js';
 
-/** How the office opens and what is drawn round it. */
 export function OfficeSection() {
   const t = useT();
   const prefs = usePreferences();

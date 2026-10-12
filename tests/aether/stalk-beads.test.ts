@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-// The scene package owns three; a test of a pure module of it reads the same build.
 import * as three from '../../packages/office-scene/node_modules/three/build/three.module.js';
 import {
   beadRadii,
@@ -19,7 +18,6 @@ const { Color, IcosahedronGeometry, InstancedMesh, Matrix4, MeshBasicMaterial } 
 const DAY = 86_400_000;
 const NOW = 1_800_000_000_000;
 
-/** main m0..m5, a feature branch f1, f2 forking at m2 and merged back by m5 (newest first). */
 function forked(): StalkCommit[] {
   const c = (sha: string, parents: string[], age: number): StalkCommit => ({
     sha,
@@ -47,7 +45,6 @@ const stalk = (): Stalk => {
   return built;
 };
 
-// The beads as the spire drew them before they moved out of Beanstalk.tsx: the reference the module is held to.
 function referenceRadii(s: Stalk): number[] {
   const heights = new Map<number, number[]>();
   for (const n of s.nodes) heights.set(n.strand, [...(heights.get(n.strand) ?? []), n.position[1]]);

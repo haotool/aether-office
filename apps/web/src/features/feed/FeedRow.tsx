@@ -7,7 +7,6 @@ import { FEED_AVATAR_STATE } from './feed-avatar.js';
 import { contextLabel } from '../sessions/context-label.js';
 import { noReplyKey, type FeedItem } from './feed-model.js';
 
-/** The thin bar under a row: how full the context window is. */
 function ContextMeter({ session, context }: { session: FeedItem['session']; context: number }) {
   const t = useT();
   const locale = useLocale();
@@ -27,7 +26,6 @@ function ContextMeter({ session, context }: { session: FeedItem['session']; cont
   );
 }
 
-/** What a session's row says: who, the newest thing it said, what it is doing, how long ago. `extra` goes under the meta line. */
 export function FeedRowBody({ item, extra }: { item: FeedItem; extra?: ReactNode }) {
   const t = useT();
   const locale = useLocale();
@@ -77,7 +75,6 @@ export function FeedRowBody({ item, extra }: { item: FeedItem; extra?: ReactNode
   );
 }
 
-/** One session without a squad: a button that opens its conversation. */
 export const FeedRow = memo(function FeedRow({
   item,
   onOpen,

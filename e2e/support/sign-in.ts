@@ -11,15 +11,13 @@ export const nativeOrigin = () =>
   `http://127.0.0.1:${(JSON.parse(readFileSync(NATIVE_SESSION, 'utf8')) as { port: number }).port}`;
 
 type Options = {
-  /** The session file of the server to sign in to (the native server writes `.data/e2e-native-session.json`). */
   session?: string;
-  /** Press the button with a touch tap instead of a click. */
   tap?: boolean;
 };
 
 /**
- * Opens `path` and signs in with the owner token. It returns once the login has answered (the token field is gone):
- * leaving the page earlier drops the CSRF token the page keeps from that answer, and the page's own writes are refused.
+ * Returns once the login has answered (the token field is gone): leaving the page earlier drops the CSRF token the page
+ * keeps from that answer, and the page's own writes are refused.
  */
 export async function signIn(
   page: Page,

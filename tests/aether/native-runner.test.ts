@@ -33,7 +33,7 @@ it('runs a synthetic app-server through real HTTP, isolated Git, durable approva
   const binary = join(directory, 'synthetic-codex');
   writeFileSync(
     binary,
-    `#!${process.execPath}\nif(process.argv.includes('--version'))console.log('codex-cli 0.159.2');else await import(${JSON.stringify(pathToFileURL(resolve('fixtures/processes/codex-app-server.mjs')).href)});\n`,
+    `#!${process.execPath}\nif(process.argv.includes('--version'))console.log('codex-cli 0.159.2');else await import(${JSON.stringify(pathToFileURL(resolve('tests/processes/codex-app-server.mjs')).href)});\n`,
     { mode: 0o700 },
   );
   const control = new Control(join(directory, 'control.sqlite'), { mode: 'live' });
@@ -274,7 +274,6 @@ it('runs a synthetic app-server through real HTTP, isolated Git, durable approva
     ).toEqual({ state: 'succeeded' });
     control.execute(owner.actor, command('work.accept', { workId }, projectId, verified.version));
     expect(control.snapshot(owner.actor, projectId).work[0]?.state).toBe('completed');
-    // Integrate the accepted commit through the real runner into a local candidate branch.
     const git = (...args: string[]) =>
       execFileSync('git', ['-C', repository, ...args], { encoding: 'utf8' }).trim();
     const baseBranch = git('rev-parse', '--abbrev-ref', 'HEAD');
@@ -303,8 +302,7 @@ it('runs a synthetic app-server through real HTTP, isolated Git, durable approva
       .get(integration.result['id']) as { candidate: string; mergeSha: string; headSha: string };
     expect(merged.headSha).toBe(accepted.headSha);
     expect(git('rev-parse', merged.candidate)).toBe(merged.mergeSha);
-    expect(git('rev-parse', baseBranch)).toBe(baseBefore); // base branch never moved
-    // Revoking project execution cancels queued work before any provider starts.
+    expect(git('rev-parse', baseBranch)).toBe(baseBefore);
     const next = control.execute(
       owner.actor,
       command(

@@ -2,20 +2,11 @@ import { parseMarkdown, type ListItem, type MdBlock } from './markdown-blocks.js
 import { spansText, type Span } from './markdown-inline.js';
 import { cutMarkdown, graphemes } from './markdown-cut.js';
 
-/**
- * Pure. A Markdown reply as the short, flat text that bubbles, list rows, notifications and titles show: the syntax is
- * gone and the meaning stays (headings become text, list items bullet lines, code spans keep their words, a fenced block is
- * its first line, links their label, tables compact rows). `toInlineSegments` keeps the styling as runs for a renderer;
- * `toPlainPreview` is the same content as a string.
- */
 type PreviewKind = 'text' | 'bullet' | 'heading' | 'code';
 export type PreviewLine = {
   kind: PreviewKind;
-  /** Nesting depth of a list item, 0 for everything else. */
   depth: number;
-  /** The glyph a bullet line starts with: •, 1., ☐ or ☑. */
   marker?: string;
-  /** A line break inside a paragraph or list item: the text continues the previous line. */
   soft?: true;
   spans: Span[];
 };
@@ -40,7 +31,6 @@ function itemLines(item: ListItem, marker: string, depth: number): PreviewLine[]
   return [...own, ...more.flatMap((b) => linesOf(b, depth + 1))];
 }
 
-/** The runs of a paragraph split at its line breaks; empty lines dropped. */
 function splitLines(spans: readonly Span[]): Span[][] {
   const lines: Span[][] = [[]];
   for (const span of spans) {
@@ -98,7 +88,6 @@ function linesOf(block: MdBlock, depth: number): PreviewLine[] {
   }
 }
 
-/** One line from many: phrases joined by " · ", or by a space inside a paragraph or after a sentence that ended. */
 function oneLine(lines: PreviewLine[]): PreviewLine[] {
   if (lines.length < 2) return lines;
   const spans: Span[] = [];
@@ -113,7 +102,6 @@ function oneLine(lines: PreviewLine[]): PreviewLine[] {
 const lengthOf = (line: PreviewLine) =>
   graphemes(`${line.marker ?? ''}${line.marker ? ' ' : ''}${spansText(line.spans)}`).length;
 
-/** The first `budget` characters of the runs, and whether anything was left out. */
 function clipSpans(spans: readonly Span[], budget: number): { spans: Span[]; cut: boolean } {
   const out: Span[] = [];
   let left = budget;
@@ -130,7 +118,6 @@ function clipSpans(spans: readonly Span[], budget: number): { spans: Span[]; cut
   return { spans: out, cut: false };
 }
 
-/** At most `maxLines` lines and `maxChars` characters (the ellipsis included), cut between characters. */
 function clip(lines: PreviewLine[], maxChars: number, maxLines: number): PreviewLine[] {
   const kept = lines.slice(0, maxLines);
   const out: PreviewLine[] = [];
@@ -141,7 +128,7 @@ function clip(lines: PreviewLine[], maxChars: number, maxLines: number): Preview
     const last = i === kept.length - 1;
     if (left > 0 && used + (last && more ? 1 : 0) <= left) {
       out.push(line);
-      left -= used + 1; // the line break
+      left -= used + 1;
       continue;
     }
     more = false;
@@ -157,7 +144,6 @@ function clip(lines: PreviewLine[], maxChars: number, maxLines: number): Preview
   return out;
 }
 
-/** The styled runs of a reply, line by line, with no Markdown syntax left in them. */
 export function toInlineSegments(markdown: string, options: PreviewOptions = {}): PreviewLine[] {
   const { maxChars = Infinity, maxLines = Infinity } = options;
   const source = Number.isFinite(maxChars) ? cutMarkdown(markdown, maxChars * 6 + 64) : markdown;
@@ -171,7 +157,6 @@ const lineText = (line: PreviewLine, oneLiner: boolean) => {
   return `${marker}${body}`;
 };
 
-/** A reply as plain text: no Markdown syntax, whitespace collapsed, at most `maxChars` characters and `maxLines` lines. */
 export function toPlainPreview(markdown: string, options: PreviewOptions = {}): string {
   const lines = toInlineSegments(markdown, { maxLines: 1, ...options });
   return lines

@@ -10,13 +10,11 @@ const smooth = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t);
 };
 
-/** A part's `order` (how late in the bloom it appears), 0 to 1 within the flower's own share of the bloom. */
 export const orderOf = (bloom: Bloom, x: number) =>
   (bloom.after ?? 0) + (1 - (bloom.after ?? 0)) * x;
 
 type Petal = { phi: number; whorl: number; scale: number; lip: number; order: number };
 
-/** A petal's grid of points in the flower's frame, with the directions and the foot it hinges on. */
 type PetalSurface = {
   along: number[];
   at: (i: number, j: number) => THREE.Vector3;
@@ -28,7 +26,6 @@ type PetalSurface = {
   theta0: number;
 };
 
-/** The centerline of a petal, row by row: how far out and up each row is and which way it points. */
 function centerline(
   along: readonly number[],
   {
@@ -52,7 +49,6 @@ function centerline(
   });
 }
 
-/** One petal as a grid of points: the centerline bends by `curl`, the cross-section cups, the edge ruffles, the whole twists. */
 function petalSurface(bloom: Bloom, p: Petal, [cols, rows]: [number, number]): PetalSurface {
   const { genome: g, size } = bloom;
   const s = g.shape;
@@ -95,7 +91,6 @@ function petalSurface(bloom: Bloom, p: Petal, [cols, rows]: [number, number]): P
   return { along, at, er, ey, et, r0, h0, theta0 };
 }
 
-/** The hinge a petal swings about and how it sways, in the world. */
 function petalStyle(
   bloom: Bloom,
   p: Petal,
@@ -131,7 +126,6 @@ function petal(
   const surface = petalSurface(bloom, p, grid);
   const { along, at } = surface;
   const style = petalStyle(bloom, p, surface, frame, tint);
-  // The petal closes to a point at both ends, where the grid has no width and no normal: those rows borrow their neighbour's.
   const normalAt = (i: number, j: number) => {
     const row = Math.min(cols - 2, Math.max(1, i));
     const du = at(row + 1, j)
@@ -142,7 +136,6 @@ function petal(
       .sub(at(row, j - 1));
     return new THREE.Vector3().crossVectors(dv, du).normalize().transformDirection(frame);
   };
-  // Vertices are laid out row by row along the length, `rows` across.
   const first = b.position.length / 3;
   for (let i = 0; i < cols; i++)
     for (let j = 0; j < rows; j++)
@@ -160,17 +153,14 @@ function petal(
     }
 }
 
-/** The great bloom's whorls bend differently: the outer ones turn their tips back, the inner ones cup inwards. */
 const grandCurl = (whorl: number, whorls: number) => 0.55 - 0.9 * (whorl / Math.max(1, whorls - 1));
 
-/** Points across and along a petal: a bud's few, a faceted or thinned flower's fewer, the great bloom's most. */
 function gridFor(bloom: Bloom, low: boolean, bud: boolean): [number, number] {
   if (bud) return [4, 2];
   if (bloom.grand) return low ? [6, 4] : [11, 6];
   return bloom.genome.shape.facet > 0.5 || low ? [4, 3] : [7, 4];
 }
 
-/** The petals: whorls of `petals` each, each whorl turned from the last (evenly, or by the golden angle), outer ones first. */
 export function petals(
   b: MeshBuilder,
   bloom: Bloom,
@@ -181,7 +171,6 @@ export function petals(
   const { genome: g } = bloom;
   const s = g.shape;
   const whorls = bud ? 1 : g.whorls;
-  // The great bloom thins its whorls towards the centre and draws each petal finer.
   const countOf = (j: number) =>
     bud ? 5 : bloom.grand ? Math.max(5, Math.round(g.petals * (1 - 0.17 * j))) : g.petals;
   const grid = gridFor(bloom, low, bud);

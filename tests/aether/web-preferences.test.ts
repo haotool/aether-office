@@ -6,8 +6,6 @@ import {
   type BrowserEnv,
 } from './fixtures/browser-env.js';
 
-// state.ts reads window.matchMedia and navigator when it is imported, so each case installs the browser it wants first
-// and imports the module afresh.
 const KEY = 'aether-ui-preferences';
 const REDUCED = '(prefers-reduced-motion: reduce)';
 const NARROW = '(max-width: 760px)';
@@ -103,7 +101,7 @@ describe('stored preferences', () => {
       })
     ).getState();
     expect(state.theme).toBe('light');
-    expect(state.life.calm).toBe(true); // reduced motion already asked for stillness
+    expect(state.life.calm).toBe(true);
   });
 
   it('start over from the defaults when storage holds something unreadable', async () => {

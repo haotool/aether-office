@@ -35,9 +35,8 @@ it('delivers a room post to every other member with its own delivery record, and
     const rows = f.control.ctx.sqlite
       .prepare('SELECT recipientId,state FROM recipient_deliveries WHERE messageId=?')
       .all(String(sent.result['id']));
-    expect(rows).toEqual([{ recipientId: f.recipientId, state: 'available' }]); // not the sender, not the non-member
+    expect(rows).toEqual([{ recipientId: f.recipientId, state: 'available' }]);
 
-    // One member acknowledging does not mark anyone else's delivery.
     const bigRoom = room(f, 'Everyone', [f.senderId, f.recipientId, third]);
     const broadcast = f.control.execute(
       f.sender.actor,
@@ -64,14 +63,12 @@ it('delivers a room post to every other member with its own delivery record, and
     );
     expect(states).toEqual({ [f.recipientId]: 'acknowledged', [third]: 'available' });
 
-    // A non-member agent cannot post, and sees nothing of the room.
     expect(() =>
       f.control.execute(
         thirdCredential.actor,
         command('message.send', { roomId: team.id, body: 'sneak', kind: 'inform' }, f.projectId),
       ),
     ).toThrow('ROOM_FORBIDDEN');
-    // A human owner may post without being a member.
     expect(
       f.control.execute(
         f.owner.actor,
@@ -83,7 +80,6 @@ it('delivers a room post to every other member with its own delivery record, and
       ).result['roomId'],
     ).toBe(team.id);
 
-    // Rooms and explicit recipients are mutually exclusive; unknown rooms and foreign members are refused.
     expect(() =>
       f.control.execute(
         f.sender.actor,
@@ -116,7 +112,7 @@ it('delivers a room post to every other member with its own delivery record, and
         f.sender.actor,
         command('room.create', { name: 'Mine', members: [f.senderId] }, f.projectId),
       ),
-    ).toThrow('FORBIDDEN'); // agents cannot create rooms
+    ).toThrow('FORBIDDEN');
   } finally {
     f.control.close();
   }
@@ -153,8 +149,8 @@ it('membership changes take effect immediately, and agents only list their own r
         })
       ).json().rooms as { name: string }[];
     expect((await list(f.owner.token)).map((r) => r.name)).toEqual(['Pair']);
-    expect((await list(f.sender.token)).map((r) => r.name)).toEqual(['Pair']); // still a member
-    expect(await list(f.recipient.token)).toEqual([]); // removed: the room is no longer visible
+    expect((await list(f.sender.token)).map((r) => r.name)).toEqual(['Pair']);
+    expect(await list(f.recipient.token)).toEqual([]);
   } finally {
     await app.close();
     f.control.close();
@@ -182,10 +178,10 @@ it('stops an agent ping-pong at the thread round limit and the per-sender rate l
       );
     thread = String(post(f.sender, f.recipientId).result['threadId']);
     for (let i = 1; i < 32; i++) {
-      now += 2_000; // stay under the per-minute rate limit while still looping
+      now += 2_000;
       post(i % 2 ? f.recipient : f.sender, i % 2 ? f.senderId : f.recipientId);
     }
-    expect(() => post(f.sender, f.recipientId)).toThrow('THREAD_ROUND_LIMIT'); // the 33rd message in one thread
+    expect(() => post(f.sender, f.recipientId)).toThrow('THREAD_ROUND_LIMIT');
     const fresh = f.control.execute(
       f.owner.actor,
       command(
@@ -198,7 +194,7 @@ it('stops an agent ping-pong at the thread round limit and the per-sender rate l
         f.projectId,
       ),
     );
-    expect(fresh.result['threadId']).not.toBe(thread); // a human escalation opens a new thread with its own budget
+    expect(fresh.result['threadId']).not.toBe(thread);
 
     now += 120_000;
     let blocked = 0;

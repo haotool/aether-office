@@ -27,7 +27,6 @@ type Sizes = Record<string, number | null> | undefined;
 
 const amount = (n: number | null) => (n === null ? '…' : bytes(n));
 
-/** The report, and the sizes that follow it (the slow part, asked for once the report is on screen). */
 function useGitHealthReport(projectId: string) {
   const query = useQuery({
     queryKey: ['git-health', projectId],
@@ -46,7 +45,6 @@ function useGitHealthReport(projectId: string) {
   return { query, sizes };
 }
 
-/** Removing the merged worktrees: the confirmation step, the request, and what the server did with each path. */
 function useCleanup(projectId: string, removable: readonly Worktree[]) {
   const client = useQueryClient();
   const [confirming, setConfirming] = useState(false);
@@ -204,7 +202,6 @@ function WorktreeTable({ worktrees, sizes, sizeOf }: WorktreeTableProps) {
             ? t('gitMergedDirty')
             : t('gitMerged')
           : t('gitActive');
-  // Largest first once the sizes are known; until then, most recently committed first.
   const sorted = [...worktrees].sort((a, b) =>
     sizes
       ? (sizes[b.path] ?? 0) - (sizes[a.path] ?? 0)
@@ -238,7 +235,6 @@ function WorktreeTable({ worktrees, sizes, sizeOf }: WorktreeTableProps) {
   );
 }
 
-/** The loaded report: counts, the clean-up, and the table of worktrees. */
 function GitHealthBody({ projectId, r, sizes }: { projectId: string; r: Report; sizes: Sizes }) {
   const t = useT();
   const sizeOf = (path: string) => (sizes ? bytes(sizes[path] ?? null) : '…');
@@ -269,7 +265,6 @@ function GitHealthBody({ projectId, r, sizes }: { projectId: string; r: Report; 
   );
 }
 
-/** Worktrees and branches already merged but still present, missing worktrees, and the space each takes. Read-only. */
 export function GitHealth({ projectId }: { projectId: string }) {
   const t = useT();
   const { query, sizes } = useGitHealthReport(projectId);

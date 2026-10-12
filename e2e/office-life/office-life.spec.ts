@@ -5,9 +5,6 @@ import AxeBuilder from '@axe-core/playwright';
 import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-// Office life (docs/design/office-life.md section 5): the little decorative moments, their settings and the aria log. The
-// preview address (`?preview=life&effect=<id>&t=<ms>`) holds one effect on a member of the demo office, so the scheduler,
-// the settings, the tier and the motion gates are seen end to end without waiting for a real session to do something.
 const LOG = '[role="log"]';
 
 type Seed = {
@@ -47,7 +44,6 @@ async function open(page: Page, path: string, seed: Seed = {}) {
   await page.goto(path);
 }
 
-/** A scenario on a page of its own: signed in, with these preferences, at this address. */
 async function scenario(browser: Browser, path: string, seed: Seed = {}) {
   const context = await browser.newContext();
   const page = await context.newPage();
@@ -58,7 +54,6 @@ async function scenario(browser: Browser, path: string, seed: Seed = {}) {
 const stored = (page: Page) =>
   page.evaluate(() => JSON.parse(localStorage.getItem('aether-ui-preferences') ?? '{}'));
 const logText = (page: Page) => page.locator(LOG).allInnerTexts();
-// `legacy=1`: no squad zones, so the fixture subagent's own join is not said ahead of the effect in the shared log.
 const duck = '/office?preview=life&effect=rubber-duck&t=4000&legacy=1';
 const heard = /is thinking it through with the rubber duck/;
 
@@ -69,7 +64,6 @@ test.describe('the aria log', () => {
     await expect(page.locator(LOG)).toHaveAttribute('aria-label', /Office activity \(decorative\)/);
     await expect(page.locator(`${LOG} p`)).toHaveCount(1, { timeout: 30_000 });
     expect((await logText(page)).join(' ')).toMatch(heard);
-    // Seats and camera settle: it is not announced again.
     await throughout(page, () => expect(page.locator(`${LOG} p`)).toHaveCount(1), 90);
   });
 
@@ -84,7 +78,6 @@ test.describe('the aria log', () => {
     const { page, close } = await scenario(browser, path, seed);
     await page.locator('canvas').first().waitFor({ timeout: 30_000 });
     await expect(page.locator('.scene-warming')).toHaveCount(0, { timeout: 30_000 });
-    // Long enough for an effect that was going to show to have been announced.
     await throughout(page, () => expect(page.locator(`${LOG} p`)).toHaveCount(0), 240);
     await close();
   };
@@ -154,7 +147,6 @@ test.describe('real signals', () => {
   });
 });
 
-/** The fixture session's project is selected in the office, so its hook spool is what the scene reads. */
 async function watchFixtureRepo(page: Page) {
   const picker = page.locator('.project-picker select');
   await expect(picker.locator('option', { hasText: 'fixture-repo' })).toBeAttached({
@@ -166,10 +158,7 @@ async function watchFixtureRepo(page: Page) {
   });
 }
 
-// A hook record exactly as the hook receiver writes one: the tool, the first words of the command, its labels and, when
-// the provider said so, how it ended. The fixture's own records sit an hour ahead, so these come after them.
 let spoolTick = 0;
-/** Back to the fixture's own records (the subagent's), so one test's calls are not another's news. */
 function resetSpool() {
   const file = process.env['AETHER_HOOK_SPOOL']!;
   const own = readFileSync(file, 'utf8')
@@ -207,7 +196,6 @@ test('a real test run is shown as the provider stated it: an unknown outcome say
   await watchFixtureRepo(page);
   const claimed = /tests were changed|exited successfully/;
 
-  // fail, an edit to a test file, then a pass whose outcome the provider did not state: nothing is claimed, however long we wait.
   bash('f1', 'make check', ['test']);
   spool('PostToolUseFailure', { tool: 'Bash', toolUseId: 'f1', ok: false });
   spool('PreToolUse', { tool: 'Edit', target: 'app.test.ts' });
@@ -216,9 +204,8 @@ test('a real test run is shown as the provider stated it: an unknown outcome say
   const nothingClaimed = () => expect(heardLines(page, claimed)).toHaveCount(0);
   await throughout(page, nothingClaimed, 360);
 
-  // The same pass, now with its real exit status: the sign flips from BUG to FEATURE (said, never claimed as a fix).
-  // No event marks the end of a moment, so the scene lets one go by (frames, so a loaded machine waits longer): a failure's
-  // own moment, if it was drawn, is over, and only one effect per member shows at a time.
+  // No event marks the end of a moment, so the scene lets one go by (counted in frames, so a loaded machine waits
+  // longer): a failure's own moment is over and only one effect per member shows at a time.
   await throughout(page, nothingClaimed, 240);
   bash('p1', 'make check', ['test']);
   spool('PostToolUse', { tool: 'Bash', toolUseId: 'p1', ok: true });
@@ -226,7 +213,6 @@ test('a real test run is shown as the provider stated it: an unknown outcome say
     timeout: 30_000,
   });
 
-  // The member's conversation lists the moment, closed by default and marked decorative.
   await page.locator('.session-panel .feed-row', { hasText: 'fixture-repo' }).first().click();
   const moments = page.locator('.conv-moments');
   await expect(moments).toBeVisible();
@@ -242,13 +228,11 @@ test('a push is "pushed" only once it exited successfully', async ({ page }) => 
   await open(page, '/office', { life: { calm: false } });
   await watchFixtureRepo(page);
   bash('g1', 'git push', ['git.push']);
-  // A push that has not exited has nothing to announce: started, nothing to say about the end.
   await throughout(page, () => expect(heardLines(page, /pushed/)).toHaveCount(0), 300);
   spool('PostToolUse', { tool: 'Bash', toolUseId: 'g1', ok: true });
   await expect(heardLines(page, /pushed/)).toHaveCount(1, { timeout: 30_000 });
 });
 
-// The wave 2 effects, held on a member by the preview address (which skips the draw and the cooldowns): what a screen reader hears.
 test.describe('wave 2 moments', () => {
   const heardFor: [string, RegExp][] = [
     ['ci-pass', /test command exited successfully/],
@@ -323,7 +307,7 @@ test.describe('settings', () => {
 
   test('the phone drawer has a Calm mode switch that is the same setting', async ({ browser }) => {
     const context = await browser.newContext({
-      viewport: { width: 844, height: 390 }, // on its side, a phone's navigation is the drawer
+      viewport: { width: 844, height: 390 },
       hasTouch: true,
       isMobile: true,
     });
@@ -354,7 +338,7 @@ test.describe('settings', () => {
   test('starts Calm mode on when the system asks for reduced motion', async ({ browser }) => {
     const context = await browser.newContext({
       reducedMotion: 'reduce',
-      storageState: { cookies: [], origins: [] }, // a first visit: nothing stored yet
+      storageState: { cookies: [], origins: [] },
     });
     const page = await context.newPage();
     await signIn(page);

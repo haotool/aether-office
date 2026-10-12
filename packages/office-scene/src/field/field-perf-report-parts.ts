@@ -225,7 +225,6 @@ export function buildNetworkBlock(
   };
 }
 
-/** Total Blocking Time: sum of (duration − 50 ms) for long tasks over the threshold. */
 export function longTaskTotalBlockingMs(tasks: FieldPerfLongTask[]): number {
   const threshold = 50;
   return tasks.reduce((s, t) => s + Math.max(0, t.durationMs - threshold), 0);

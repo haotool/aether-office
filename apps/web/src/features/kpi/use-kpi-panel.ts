@@ -5,10 +5,7 @@ import { floorBadges, runningSessions, type Range } from '../kpi/kpi-model.js';
 import { useGitKpi, useUsage } from './use-kpi.js';
 import { useLocale } from '../../ui/useT.js';
 
-/**
- * Everything the office page needs of the KPIs: the data for the strip, each floor's badge for the building, and whether the
- * dashboard is open and on which office and range. One hook so the desktop page and the phone page cannot differ.
- */
+/** One hook so the desktop page and the phone page cannot differ. */
 export function useKpiPanel() {
   const locale = useLocale();
   const sessions = useCachedSessions();

@@ -1,4 +1,3 @@
-/** The errors words, in English. */
 export const enErrors = {
   errRequestFailed: 'The request did not go through. Check the connection and try again.',
   errAuthRequired: 'Sign-in failed or has expired. Check the owner token and try again.',

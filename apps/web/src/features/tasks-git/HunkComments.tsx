@@ -44,7 +44,6 @@ type CommentFormProps = {
   queryKey: readonly unknown[];
 };
 
-/** A comment on one hunk of the diff the work is reviewed at. */
 function CommentForm({ projectId, work, data, queryKey }: CommentFormProps) {
   const t = useT();
   const client = useQueryClient();
@@ -53,7 +52,7 @@ function CommentForm({ projectId, work, data, queryKey }: CommentFormProps) {
     <form
       onSubmit={async (e) => {
         e.preventDefault();
-        const element = e.currentTarget; // React clears currentTarget after the first await
+        const element = e.currentTarget;
         const form = new FormData(element);
         const hunk = data.hunks[Number(form.get('hunk'))];
         if (!hunk) throw new Error('review hunk missing');

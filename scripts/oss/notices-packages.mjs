@@ -1,16 +1,12 @@
-// Everything known about each locked package, and the policy problems it raises (scripts/oss/third-party-notices.mjs).
 import { existsSync, lstatSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { APPROVED, EXCEPTIONS, FAMILY_DECLARED, PLATFORM_FAMILIES } from './notices-policy.mjs';
 import { parseLockfile, shippedClosure, splitKey } from './notices-lockfile.mjs';
 import { copyrightLines, declaredLicense, evaluate, sniffLicenses } from './notices-licences.mjs';
 
-// -------------------------------------------------------------------------------------------------------- the packages
-
 const LICENSE_FILE = /^(licen[cs]e|copying)([-._].*)?$/i;
 const NOTICE_FILE = /^notice([-._].*)?$/i;
 
-/** name@version -> package directory, for every real (non-symlinked) package under node_modules/.pnpm. */
 export function installedPackages(store) {
   const map = new Map();
   if (!existsSync(store)) return map;
@@ -35,7 +31,6 @@ export function installedPackages(store) {
 const authorOf = (manifest) =>
   typeof manifest.author === 'string' ? manifest.author : (manifest.author?.name ?? null);
 
-/** Everything known about one locked package; `dir` is null when it is not installed on this machine. */
 export function describePackage({ name, version, dir, platform, integrity }) {
   const family = platform ? PLATFORM_FAMILIES.find(([re]) => re.test(name)) : null;
   const pkg = {
@@ -69,7 +64,6 @@ export function describePackage({ name, version, dir, platform, integrity }) {
     const expected = FAMILY_DECLARED[family[2]] ?? family[2];
     if (manifest && declared !== expected)
       pkg.problems.push(`declares "${declared}", recorded "${expected}" for its platform family`);
-    // Platform builds are compared, not reproduced: their text is the same as the family's and may be absent here.
     pkg.licenseTexts = [];
     pkg.notices = [];
   } else if (exception) {
@@ -104,7 +98,6 @@ export function describePackage({ name, version, dir, platform, integrity }) {
   return pkg;
 }
 
-/** Reads the lockfile and node_modules and classifies every package. */
 export function collect(root) {
   const lock = parseLockfile(readFileSync(path.join(root, 'pnpm-lock.yaml'), 'utf8'));
   const installed = installedPackages(path.join(root, 'node_modules', '.pnpm'));
@@ -122,11 +115,9 @@ export function collect(root) {
   return all;
 }
 
-/** Problems that fail the check. */
 export function policyProblems(packages) {
   const out = [];
   for (const p of packages) {
-    // A build for another platform is not installed here; its licence is the recorded family one.
     const problems = p.problems.filter((x) => !(p.platform && x.startsWith('not installed')));
     for (const problem of problems) out.push(`${p.name}@${p.version}: ${problem}`);
     if (p.status === 'denied')

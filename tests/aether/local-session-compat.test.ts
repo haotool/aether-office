@@ -4,7 +4,6 @@ import type { LocalSessionsResponse } from '../../packages/contracts/src/index.j
 
 describe('a session from a control plane older than this page', () => {
   it('gets the later fields filled in so nothing reads undefined', () => {
-    // The shape before confidence/evidence, contextPct/compactedAt and hook.recent existed.
     const old = {
       enabled: true,
       sessions: [

@@ -19,10 +19,8 @@ import type { StampKind } from './stamp.js';
 const KINDS = ['received', 'returned'] as const satisfies readonly StampKind[];
 const UP = new Vector3(0, 1, 0);
 const turn = new Quaternion();
-/** An idle hand-over layer looks again this often (an in-tray clears itself after minutes, by the clock). */
 const IDLE_RECHECK_MS = 1000;
 
-/** The same in-trays (the book is made anew every tick, but a tray nobody touched is the same object). */
 const sameTrays = (a: Book['trays'], b: Book['trays']) => {
   const keys = Object.keys(a);
   return keys.length === Object.keys(b).length && keys.every((k) => a[k] === b[k]);
@@ -41,11 +39,9 @@ const asInstance = (b: ReturnType<typeof handoverItems>['boxes'][number]): Insta
   color: b.color,
 });
 
-/** What the layer saw when it last found nothing to draw. */
 type Parked = { trays: Book['trays']; squads: unknown; exploded: boolean; at: number };
 type SealMeshes = Record<(typeof KINDS)[number], RefObject<InstancedMesh | null>>;
 
-/** Whether what the layer saw when it parked still holds: the same trays, squads and view, looked at again only after a second. */
 function stillParked(parked: Parked | null, now: Parked): boolean {
   return (
     parked !== null &&
@@ -56,7 +52,6 @@ function stillParked(parked: Parked | null, now: Parked): boolean {
   );
 }
 
-/** Writes each seal that is on show; true while one is still popping (so the layer keeps looking every frame). */
 function writeSeals(meshes: SealMeshes, shown: ReturnType<typeof handoverItems>['seals']): boolean {
   let popping = false;
   for (const kind of KINDS) {
@@ -80,12 +75,6 @@ function writeSeals(meshes: SealMeshes, shown: ReturnType<typeof handoverItems>[
   return popping;
 }
 
-/**
- * Everything the hand-over puts on the desks: the folders (in a carrier's hands, in flight, stacked in the in-trays), the
- * stamps that press, and the seals they leave. One instanced mesh of boxes for the first two and one small mesh for each
- * of the two seals (a seal is drawn only while one is on show), so it costs three draw calls at most, however many
- * folders there are. Written every frame a hand-over is moving, and when the book changes.
- */
 export function Handover({ squads, frame, exploded, zh }: HandoverProps) {
   const invalidate = useThree((s) => s.invalidate);
   const { solid } = squadMaterials();
@@ -95,7 +84,6 @@ export function Handover({ squads, frame, exploded, zh }: HandoverProps) {
   const seals = { received, returned };
   useLayoutEffect(() => withColors(boxes.current), []);
   useEffect(() => invalidate(), [squads, frame, exploded, invalidate]);
-  // Nothing in hand and no seal popping: what is on the desks only changes with the book, the squads or the in-tray's clearing.
   const idle = useRef<Parked | null>(null);
   useFrame(() => {
     const now = Date.now();

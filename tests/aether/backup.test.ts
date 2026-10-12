@@ -29,7 +29,6 @@ it('backs up a live WAL database consistently and restores it into a new directo
       f.control.ctx.sqlite,
       join(directory, 'backups'),
     );
-    // Writes after the backup must not appear in it.
     f.control.execute(
       f.sender.actor,
       command(
@@ -49,7 +48,6 @@ it('backs up a live WAL database consistently and restores it into a new directo
         (control.ctx.sqlite.prepare('SELECT COUNT(*) AS n FROM messages').get() as { n: number }).n,
       ).toBe(3);
       expect(control.ctx.sqlite.pragma('integrity_check', { simple: true })).toBe('ok');
-      // The restored data is usable: the original owner token still authenticates.
       expect(control.authenticate(f.owner.token).role).toBe('owner');
     } finally {
       control.close();
@@ -73,7 +71,7 @@ it('refuses tampered backups, non-empty targets, unknown formats and newer schem
     expect(() => restoreBackup(manifestPath, join(directory, 'ok'))).not.toThrow();
     expect(() => restoreBackup(manifestPath, join(directory, 'ok'))).toThrow(
       'RESTORE_TARGET_NOT_EMPTY',
-    ); // never overwrites
+    );
 
     const backupFile = join(directory, 'backups', manifest.file);
     appendFileSync(backupFile, 'tamper');
@@ -106,7 +104,7 @@ it('refuses tampered backups, non-empty targets, unknown formats and newer schem
     expect(() => restoreBackup(clean.manifestPath, join(directory, 'future'))).toThrow(
       'SCHEMA_VERSION_OR_CHECKSUM_MISMATCH',
     );
-    expect(existsSync(join(directory, 'future', 'control.sqlite'))).toBe(false); // no half-restored database
+    expect(existsSync(join(directory, 'future', 'control.sqlite'))).toBe(false);
     f.control.close();
   } finally {
     rmSync(directory, { recursive: true, force: true });

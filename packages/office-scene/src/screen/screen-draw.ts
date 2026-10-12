@@ -1,6 +1,5 @@
 import { pick } from '../environment/pick.js';
 
-/** Drawing primitives shared by the role screens: the frame, text lines, charts, bars and tiles on a 640 by 400 canvas. */
 export const SCREEN_W = 640;
 export const SCREEN_H = 400;
 

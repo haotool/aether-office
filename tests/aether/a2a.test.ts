@@ -117,7 +117,7 @@ it('turns a remote request into an unassigned work item, deduplicates retries, r
     });
 
     const retry = (await client.sendMessage(request(message))) as any;
-    expect((retry.task ?? retry).id).toBe(task.id); // same messageId: same task, no second work item
+    expect((retry.task ?? retry).id).toBe(task.id);
     expect(t.works()).toHaveLength(1);
 
     const workId = t.works()[0]!.id;
@@ -159,11 +159,11 @@ it('authenticates every call, isolates clients, and refuses what it does not sup
 
     await expect(
       clientB.getTask({ tenant: '', id: task.id, historyLength: undefined }),
-    ).rejects.toThrow(); // not found for B
+    ).rejects.toThrow();
     await expect(
       clientB.cancelTask({ tenant: '', id: task.id, metadata: undefined }),
     ).rejects.toThrow();
-    expect(t.works().find((w) => w.title === 'A private request')!.state).toBe('ready'); // B could not cancel it
+    expect(t.works().find((w) => w.title === 'A private request')!.state).toBe('ready');
 
     const call = (token: string | null, body: object) =>
       fetch(`${t.ORIGIN}/a2a`, {
@@ -184,7 +184,7 @@ it('authenticates every call, isolates clients, and refuses what it does not sup
     const streaming = (await (
       await call(a.token, { jsonrpc: '2.0', id: 2, method: 'SendStreamingMessage', params: {} })
     ).json()) as { error: { code: number } };
-    expect(streaming.error.code).toBe(-32601); // not offered, so not routed
+    expect(streaming.error.code).toBe(-32601);
     const resubscribe = (await (
       await call(a.token, {
         jsonrpc: '2.0',
@@ -202,7 +202,6 @@ it('authenticates every call, isolates clients, and refuses what it does not sup
       filename: '',
       mediaType: '',
     };
-    // A refused request with no task yet is a protocol error; a refused follow-up is a FAILED task.
     await expect(
       clientA.sendMessage(request({ ...userMessage('x'), parts: [urlPart] })),
     ).rejects.toThrow();
@@ -210,7 +209,7 @@ it('authenticates every call, isolates clients, and refuses what it does not sup
       request(userMessage('follow up', undefined, { taskId: task.id })),
     )) as any;
     expect((followUp.task ?? followUp).status.state).toBe(TaskState.TASK_STATE_FAILED);
-    expect(t.works()).toHaveLength(before); // nothing was created, and no URL was ever fetched
+    expect(t.works()).toHaveLength(before);
 
     t.f.control.execute(
       t.f.owner.actor,

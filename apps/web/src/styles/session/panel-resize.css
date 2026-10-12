@@ -1,11 +1,3 @@
-/*
- * The session panel's width: the drag handle on its left edge and the collapsed rail (features/PanelResizer.tsx,
- * SessionPanel.tsx). The width itself is `--panel-w`, see session-panel.css.
- */
-/*
- * The drag handle: a 16px hit area over the panel's left edge with a hairline and a grip that show on hover and drag. It
- * sits above the sticky group headers (--z-base) that reach the panel's edge.
- */
 .panel-resizer {
   position: absolute;
   z-index: var(--z-label-hover);
@@ -21,7 +13,7 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 5px; /* token-lint: geometry */
+  left: calc((var(--space-16) - var(--space-6)) / 2);
   width: var(--space-6);
   background: linear-gradient(90deg, transparent, var(--glow), transparent);
   opacity: 0;
@@ -65,7 +57,6 @@
   outline-offset: var(--focus-offset);
 }
 
-/* Collapsed: a 48px rail with the way back in and what wants a look */
 .panel-rail {
   display: flex;
   flex-direction: column;

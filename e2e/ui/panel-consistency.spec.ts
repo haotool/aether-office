@@ -7,22 +7,12 @@ import {
   nativeFeedRow,
 } from '../support/native-fixture.js';
 
-/**
- * The session panel (and the phone sheet) keep to the control scale: the chips of the composer are one height, the
- * Send button and the text box are one height, and the conversation has a single vertical scroller. The native server is
- * used because its fixture session can be opened and answered by a fake CLI, never a model.
- * Set AETHER_SHOTS=<dir> to also save a dark and a light screenshot of each layout there.
- */
 const LAYOUTS = {
   desktop: { viewport: { width: 1440, height: 900 }, touch: false },
   phone: { viewport: { width: 390, height: 844 }, touch: true },
   tablet: { viewport: { width: 820, height: 1180 }, touch: true },
 } as const;
 
-/**
- * "Continue in AETHER" needs the project's live execution on, and the native server is shared: native-workflow.spec.ts ends
- * with the emergency stop, which switches it off for every spec that runs after it.
- */
 async function allowLiveExecution(page: Page, projectId: string) {
   await page.goto(`${nativeOrigin()}/settings/models?project=${projectId}`);
   const allow = page.getByRole('switch', { name: '允許此專案執行真實代理' });
@@ -51,7 +41,6 @@ async function openConversation(page: Page, phone: boolean) {
     return page.locator('.session-sheet.full');
   }
   const panel = page.locator('.session-panel');
-  // below 1000px the panel lies over the office and is closed until asked for
   if (page.viewportSize()!.width <= 1000)
     await page.getByRole('button', { name: '即時 session' }).click();
   const row = nativeFeedRow(panel, NATIVE_RESUMABLE_SESSION_ID);
@@ -69,14 +58,12 @@ for (const [layout, { viewport, touch }] of Object.entries(LAYOUTS))
     });
     const page = await context.newPage();
     const scope = await openConversation(page, viewport.width < 761);
-    // the first run of a server only reads the session; "Continue in AETHER" makes it drivable (the fake CLI)
     await continueNativeSessionIfNeeded(scope);
     const measured = await scope.evaluate((root) => {
       const heights = (selector: string) =>
         [...root.querySelectorAll<HTMLElement>(selector)]
           .map((el) => Math.round(el.getBoundingClientRect().height))
           .filter((h) => h > 0);
-      // a vertical scroller that sits inside another one is a double scrollbar
       const scrollers = [...root.querySelectorAll<HTMLElement>('*')].filter((el) => {
         const { overflowY } = getComputedStyle(el);
         return (
@@ -102,7 +89,6 @@ for (const [layout, { viewport, touch }] of Object.entries(LAYOUTS))
     }
     expect(measured.chips.length).toBeGreaterThan(0);
     expect(new Set(measured.chips).size, `chip heights ${measured.chips}`).toBe(1);
-    // the box grows with its line, Send is the control height; they sit on one baseline within a few px
     expect(
       Math.abs(measured.box[0]! - measured.send[0]!),
       `Send ${measured.send}, box ${measured.box}`,

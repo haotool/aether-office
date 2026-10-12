@@ -24,14 +24,12 @@ it('says in a few words why a session wants a person, and nothing for one that d
   expect(attentionReason(s('orphaned', 5 * 60_000), 'en')).toMatch(/^orphaned /);
   expect(
     attentionReason(s('active', 0, [{ program: 'node' }, { program: 'node' }, { program: null }])),
-  ).toBe(
-    '殭屍 ×3 (node)', // the program names that are known, once each, never arguments
-  );
+  ).toBe('殭屍 ×3 (node)');
   expect(attentionReason(s('dormant', 30 * HOUR, [{ program: 'sh' }]))).toBe(
     '休眠 30 小時 · 殭屍 ×1 (sh)',
   );
   expect(attentionReason(s('active', 0))).toBeNull();
-  expect(attentionReason(s('idle', 2 * HOUR))).toBeNull(); // quiet is not forgotten
+  expect(attentionReason(s('idle', 2 * HOUR))).toBeNull();
 });
 
 it('names the members by id', () => {

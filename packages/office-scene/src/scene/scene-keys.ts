@@ -23,14 +23,9 @@ type SceneKeyActions = {
   onFloor: (floor: number) => void;
   onToggleFollow: () => void;
   onToggleExploded: () => void;
-  /** Called when a key moves the camera, so automation like a tour can yield. */
   onCamera: () => void;
 };
 
-/**
- * Keyboard control of the scene. Movement keys are only recorded in `held` (the camera reads them each frame); the
- * rest act at once: 1-5 and [ ] change floor, F follows active members, X explodes the building, Home or 0 re-frames.
- */
 export function useSceneKeys(
   held: RefObject<Set<string>>,
   { floor, onFloor, onToggleFollow, onToggleExploded, onCamera }: SceneKeyActions,
@@ -39,11 +34,10 @@ export function useSceneKeys(
     const down = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (target && /^(input|textarea|select)$/i.test(target.tagName)) return;
-      if (target?.closest('[role="menu"]')) return; // the action menu keeps its own arrow keys
+      if (target?.closest('[role="menu"]')) return;
       const key = event.key.toLowerCase();
       if (event.metaKey || event.ctrlKey || event.altKey) return;
-      if (key === 'shift')
-        held.current.add(key); // speed only: a held Shift is no camera move (it also marks a group)
+      if (key === 'shift') held.current.add(key);
       else if (KEYS.has(key)) {
         held.current.add(key);
         onCamera();

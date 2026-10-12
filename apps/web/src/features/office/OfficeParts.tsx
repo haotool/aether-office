@@ -31,7 +31,6 @@ type SceneToolbarProps = {
   onEditLayout: () => void;
 };
 
-/** The page title and the actions beside it: fold the side panel, add work. */
 export function OfficeHeading({
   canWrite,
   onTogglePanel,
@@ -70,7 +69,6 @@ export function OfficeHeading({
   );
 }
 
-/** How many are on the floor, working and in review, and whether this is the demo. */
 export function OfficeStats({
   data,
   model,
@@ -101,7 +99,6 @@ export function OfficeStats({
   );
 }
 
-/** The tour's buttons: start while idle, otherwise pause or resume, skip and stop. */
 function TourControls({
   tour,
   focus,
@@ -151,7 +148,6 @@ function TourControls({
   );
 }
 
-/** 3D or 2D. */
 function ViewSwitch() {
   const t = useT();
   const prefs = usePreferences();
@@ -170,7 +166,6 @@ function ViewSwitch() {
   );
 }
 
-/** The scene's toolbar: 3D/2D, quality, beanstalk, the tour, the camera reset and the layout editor. */
 export function SceneToolbar({
   tour,
   focus,
@@ -219,7 +214,6 @@ export function SceneToolbar({
   );
 }
 
-/** The caption under the scene: which renderer and which mode. */
 export function SceneFooter({ mode }: { mode: Session['mode'] }) {
   const t = useT();
   const view = usePreferences((s) => s.view);
@@ -232,7 +226,6 @@ export function SceneFooter({ mode }: { mode: Session['mode'] }) {
   );
 }
 
-/** One chip per member under the scene; a click selects it. */
 export function TeamStrip({
   model,
   projectId,
@@ -280,7 +273,6 @@ export function TeamStrip({
   );
 }
 
-/** One session is on the floor: what its bubbles and the figures wait for. */
 export function FirstSessionHint() {
   const t = useT();
   return (

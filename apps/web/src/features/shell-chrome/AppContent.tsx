@@ -18,7 +18,6 @@ const FirstRun = lazy(() => import('./FirstRun.js').then((m) => ({ default: m.Fi
 const TaskForm = lazy(() =>
   import('../tasks-git/TaskForm.js').then((m) => ({ default: m.TaskForm })),
 );
-// Every page but the office is loaded on first visit: the first screen is the office.
 const ProjectPage = lazy(() =>
   import('../integrations/ProjectPage.js').then((m) => ({ default: m.ProjectPage })),
 );
@@ -36,10 +35,8 @@ type Props = {
   snapshot: UseQueryResult<Snapshot>;
   projectId: string | undefined;
   sessions: AttributedSession[];
-  /** Nothing runs anywhere yet: the first-run help instead of an empty building. */
   quiet: boolean;
   compact: boolean;
-  /** The conversation sheet covers the phone's office. */
   covered: boolean;
   model: OfficeModel;
   selectedId: string | null;
@@ -60,7 +57,6 @@ type Props = {
   onRefresh: () => void;
 };
 
-/** What stands in the main area while data or a page's code arrives, so the page never flashes empty. */
 function PageLoading() {
   const t = useT();
   return (
@@ -71,7 +67,6 @@ function PageLoading() {
   );
 }
 
-/** The body of the main area: loading, the error, an unknown page, first-run help, or the page itself with its dialogs. */
 export function AppContent(props: Props) {
   const { projects, snapshot, projectId, session } = props;
   const data = snapshot.data;
@@ -127,7 +122,6 @@ function LoadFailure({
   );
 }
 
-/** The office page: the phone's, or the desktop's. */
 type BodyProps = Props & {
   data: Snapshot;
   projectId: string;
@@ -189,7 +183,6 @@ function DesktopBody(props: BodyProps) {
   );
 }
 
-/** The office page: the phone's, or the desktop's. */
 function OfficeBody(props: BodyProps) {
   return props.compact ? <PhoneBody {...props} /> : <DesktopBody {...props} />;
 }

@@ -129,7 +129,7 @@ That part is secondary to the above; see [Native execution](docs/native-executio
 - **Not a sandbox.** An agent keeps the file permissions of the user who started it. AETHER OFFICE does not isolate agents
   and does not defend against code that already runs as you ([security](docs/security.md)).
 - **One trusted operator.** There is no multi-user or multi-tenant mode.
-- **Platforms.** macOS and Linux. The terminal supervisor does not support native Windows.
+- **Platforms.** macOS is the tested platform. Linux builds and passes the unit tests in CI; its browser tests are not verified yet. The terminal supervisor does not support native Windows.
 - **Token counts, not money.** No price table exists on the machine, so no cost is shown.
 - **Pre-release.** Many capabilities are verified only in part; the ledger says which.
 
@@ -140,6 +140,8 @@ That part is secondary to the above; see [Native execution](docs/native-executio
   from a CDN. Nothing is uploaded, and no paid model is called unless you assign work to a runner.
 - **Read-only discovery.** Session files and the process table are read; nothing is written under `~/.claude` or `~/.codex`.
   Transcript text is read only for the session you open and is redacted for known secret formats before it reaches the page.
+- **Yours to remove.** Everything AETHER writes is one data directory, a private `~/.aether` directory and the hook
+  entries you chose to install; [how to remove all of it](docs/how-to.md#run-it).
 - **Hooks record labels, not content:** session ids, event names, tool names and short targets such as a file's base name
   or a command's first word, in `~/.aether/hook-events.jsonl`. Never prompts, full commands, arguments or paths.
 - **Hardened by default:** exact Host and Origin checks (DNS-rebinding guard), HttpOnly session cookies with CSRF tokens,
@@ -147,7 +149,7 @@ That part is secondary to the above; see [Native execution](docs/native-executio
   squatting on the loopback port cannot answer for you.
 
 The threat model, every endpoint's audience and the LAN checklist are in [docs/security.md](docs/security.md). Report
-vulnerabilities through [SECURITY.md](SECURITY.md), not public issues.
+vulnerabilities through [SECURITY.md](.github/SECURITY.md), not public issues.
 
 ## How it works
 
@@ -187,15 +189,20 @@ Start at [docs/README.md](docs/README.md). The most used:
 
 ## Contributing
 
-Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
+Contributions are welcome. Read [CONTRIBUTING.md](.github/CONTRIBUTING.md) and the [Code of Conduct](.github/CODE_OF_CONDUCT.md).
+
+Most of this project was written with AI coding agents (Claude Code, Codex and Cursor) under the maintainer's direction.
+[AGENTS.md](AGENTS.md) is the rule file they follow, and their changes pass the same checks as any other. AI-assisted
+contributions are welcome under the same rules ([licence policy](docs/legal/licence-policy.md#ai-assisted-contributions)).
 
 ## License
 
 [MIT](LICENSE). Copyright (c) 2026 haotool; portions copyright (c) 2026 AgentSystemLabs, from which this project
 started ([agent-office](https://github.com/AgentSystemLabs/agent-office)). Third-party software and its terms are listed
-in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [NOTICE](NOTICE); the licence inventory, policy and provenance are in
+in [THIRD_PARTY_NOTICES.md](docs/legal/THIRD_PARTY_NOTICES.md) and [NOTICE](NOTICE); the licence inventory, policy and provenance are in
 [docs/legal](docs/legal/README.md).
 
 AETHER OFFICE is an independent project. It is not affiliated with, endorsed by or sponsored by Anthropic or OpenAI.
+AETHER neither stores nor forwards your Claude credentials: it runs your own Claude Code in your environment.
 Claude and Claude Code are trademarks of Anthropic, PBC; Codex and OpenAI are trademarks of OpenAI. All other marks belong
 to their owners.

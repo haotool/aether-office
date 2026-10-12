@@ -30,7 +30,6 @@ const actions = () => ({
   onHoverEnd: vi.fn(),
   onGrab: vi.fn(() => true),
 });
-// The handlers take three's event type; a plain object with the fields they read stands in for it.
 const wire = (a: ReturnType<typeof actions>) =>
   characterEvents(
     'm1',

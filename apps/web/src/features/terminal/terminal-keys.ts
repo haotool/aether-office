@@ -1,4 +1,3 @@
-/** The keys a phone's keyboard does not have, and what a terminal expects for each. */
 export const TERMINAL_KEYS = [
   { label: 'Esc', label_zh: 'Esc', send: '\x1b' },
   { label: 'Tab', label_zh: 'Tab', send: '\t' },

@@ -9,10 +9,8 @@ import { writeSteps } from '../terminal/terminal-driver.js';
 import type { Drive } from '../../hooks/use-drive.js';
 
 /**
- * Types into the AETHER terminal a session runs in, through the same driver as the composer (a lease, one ordered run of
- * writes). A message goes in at once: it is never queued behind a working session, so the menu offers it only when the
- * session can take it. A sent message is put in the session's outbox, so the conversation shows it as pending until the
- * transcript does.
+ * A message goes in at once: it is never queued behind a working session, so the menu offers it only when the session
+ * can take it.
  */
 export function useTerminalSend(
   session: AttributedSession | null,
@@ -57,7 +55,6 @@ export function useTerminalSend(
   };
 }
 
-/** The small inline composer of the character menu: one box, Enter sends, nothing queued. */
 export function MessageBubble({
   onSend,
   busy,

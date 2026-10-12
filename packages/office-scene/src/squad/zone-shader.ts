@@ -1,5 +1,3 @@
-// The squad zone's floor decal: a dashed rounded outline and a soft fill, drawn by one shader for every zone at once
-// (one instanced quad per zone, sized by an instanced attribute). Shader program 1 of the squad layer's four.
 import {
   AdditiveBlending,
   DoubleSide,
@@ -48,7 +46,6 @@ const fragmentShader = /* glsl */ `
 
 export const ZONE_CAPACITY = 16;
 
-/** The decal's geometry (a flat unit quad with one size, tone and alpha per instance) and its material. */
 export function createZoneDecal() {
   const geometry = new PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
   const size = new InstancedBufferAttribute(new Float32Array(ZONE_CAPACITY * 2), 2);

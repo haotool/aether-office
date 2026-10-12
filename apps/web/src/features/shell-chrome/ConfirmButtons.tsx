@@ -1,6 +1,5 @@
 import { useT, useWhy } from '../../ui/useT.js';
 
-/** A confirm dialog's failure line and its two buttons: the confirmation (busy while it runs) and Cancel. */
 export function ConfirmButtons({
   error,
   busy,

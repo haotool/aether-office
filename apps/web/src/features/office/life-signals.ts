@@ -3,14 +3,12 @@ import type { LifeSignal } from '@aether/office-scene/model';
 import { LOCAL_PREFIX } from '../../lib/sessions/session-names.js';
 import { emptyOutcomes, outcomeSignals, type OutcomeMemory } from './life-outcomes.js';
 
-/** What one scan of the machine's sessions showed, and the members' states at that moment. */
 export type LifeSnapshot = {
   at: number;
   sessions: readonly AttributedSession[];
   agents: readonly { id: string; activity: string }[];
 };
 
-/** What the deriver remembers between scans: since when a session has had many uncommitted files, and when it last said so. */
 export type LifeMemory = {
   dirtySince: Readonly<Record<string, number>>;
   debtAt: Readonly<Record<string, number>>;
@@ -32,7 +30,6 @@ const FRESH_MS = 30_000;
 
 const ownCalls = (s: AttributedSession) => (s.hook?.recent ?? []).filter((c) => !c.agentId);
 
-/** Is the model silent between tools for a while: working, no tool running, nothing heard for 45 s (up to 15 min)? */
 const thinking = (s: AttributedSession, at: number) =>
   s.hook?.activity === 'working' &&
   !s.hook.tool &&
@@ -44,7 +41,6 @@ const longWorking = (s: AttributedSession, at: number) =>
   s.liveness.startedAt !== null &&
   at - s.liveness.startedAt >= LONG_WORK_MS;
 
-/** How many times the same command ran in the last two minutes (the most repeated one), and its name. */
 function repeats(s: AttributedSession, at: number): { count: number; target: string | null } {
   const counts = new Map<string, number>();
   for (const c of ownCalls(s))
@@ -57,7 +53,6 @@ function repeats(s: AttributedSession, at: number): { count: number; target: str
 const idleLong = (s: AttributedSession) =>
   s.liveness.state === 'idle' && (s.liveness.quietMs ?? 0) >= IDLE_MS;
 
-/** What one scan accumulates while its sessions are read: the signals, the debt clocks and the outcome memory. */
 type Scan = {
   prev: LifeSnapshot | null;
   at: number;
@@ -127,7 +122,6 @@ const scanDebt = (
   }
 };
 
-/** The signals one session makes between the earlier scan and this one. */
 function scanSession(scan: Scan, s: AttributedSession, old: AttributedSession | undefined) {
   const { at, signals } = scan;
   const member = `${LOCAL_PREFIX}${s.key}`;
@@ -151,9 +145,8 @@ function scanSession(scan: Scan, s: AttributedSession, old: AttributedSession | 
 }
 
 /**
- * The office-life signals the change between two scans makes: a new tool call, a state that began holding, a pattern that
- * appeared. Pure, and cautious: with no earlier scan nothing that merely "holds" is news (a page load replays no history),
- * and a signal says what a command was started as or what state a session is in; how a command ended is said only by a
+ * Pure and cautious: with no earlier scan nothing that merely "holds" is news (a page load replays no history). A
+ * signal says what a command was started as or what state a session is in; how a command ended is said only by a
  * `tool.end`, and only for an outcome the provider stated (see life-outcomes.ts).
  */
 export function deriveLifeSignals(
@@ -186,7 +179,6 @@ export function deriveLifeSignals(
   };
 }
 
-/** The Konami code, as `KeyboardEvent.key` values (letters in lower case). */
 export const KONAMI = [
   'ArrowUp',
   'ArrowUp',

@@ -5,22 +5,17 @@ import { seeded } from '../environment/seeded.js';
 import { paletteAt } from './stalk-layout.js';
 import type { Stalk, StalkNode } from './stalk-types.js';
 
-/** Recent merge commits that bloom a small flower on the braid, newest first. */
 export const MAX_MERGE_FLOWERS = 16;
-/** Petals a merge flower may have: it is small, so a few big petals read better than many. */
 const MAX_MERGE_PETALS = 13;
-/** How far from the axis (metres) a flower stands, so it clears the strand's bead and stays inside the core's glass. */
 const STAND_OFF = 0.3;
 const MAX_REACH = 1.1;
 
-/** The branch colour, richer and a little darker, so a flower stands out from the bright glass behind it. */
 export const flowerColor = (css: THREE.ColorRepresentation) => {
   const hsl = { h: 0, s: 0, l: 0 };
   new THREE.Color(css).getHSL(hsl);
   return new THREE.Color().setHSL(hsl.h, Math.max(hsl.s, 0.85), Math.min(hsl.l, 0.55));
 };
 
-/** A smaller-scale genome: one whorl, at most 13 petals, no halo, pollen or twigs and a few stamens. */
 const smallOf = (g: Genome): Genome => ({
   ...g,
   petals: Math.min(g.petals, MAX_MERGE_PETALS),
@@ -33,11 +28,6 @@ const smallOf = (g: Genome): Genome => ({
 
 type MergeStand = { bloom: Bloom; node: StalkNode };
 
-/**
- * One small flower for each of the newest merge commits (at most `MAX_MERGE_FLOWERS`), grown from the commit's hash and
- * standing at its node on the strand, leaning outwards so it shows through the glass of the core. `first` is the shader index
- * of the first of them. Pure: the same stalk always gives the same flowers.
- */
 export function mergeStands(stalk: Stalk, first: number): MergeStand[] {
   return stalk.nodes
     .filter((n) => n.merge)

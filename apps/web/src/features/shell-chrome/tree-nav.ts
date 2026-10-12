@@ -1,7 +1,3 @@
-/**
- * Pure. The keyboard rules of a tree (the WAI-ARIA authoring practice): what a key does on the visible item at `index`.
- * `levels` is every visible item's depth in order; `expanded` is null for an item that cannot open.
- */
 type TreeAction = { focus: number } | { open: boolean } | null;
 
 const arrowRight = (

@@ -1,5 +1,3 @@
-// The squads of a scene as React sees them: the state machine stepped on a clock, and what it implies for the floor (the
-// zones, the pod seats, the walks). Everything drawn, and every seat lookup in the scene, reads the frame it returns.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Layout } from '@aether/contracts';
 import type { PoseApi } from '../core/use-pose-cues.js';
@@ -11,7 +9,6 @@ import { stepOnce, type Latest } from './squad-step.js';
 
 export type { SquadEvent, SquadFrame } from './squad-frame.js';
 
-/** How often the state machine is looked at: arrivals, the pod hand-over and the shrink all wait on the clock. */
 const TICK_MS = 250;
 
 type SquadSceneProps = Pick<
@@ -19,7 +16,6 @@ type SquadSceneProps = Pick<
   'squads' | 'quality' | 'reducedMotion' | 'agents' | 'locale' | 'squadPrefs'
 >;
 
-/** What each step of the machine reads, as of the latest render. */
 const mirrorOf = (
   layout: Layout,
   { squads, quality, reducedMotion, agents, locale, squadPrefs }: SquadSceneProps,
@@ -35,11 +31,6 @@ const mirrorOf = (
   prefs: squadPrefs,
 });
 
-/**
- * Steps the squads and returns the frame. `squads` undefined turns the whole feature off: the layout comes back as it
- * was given, so the page without squads is exactly what it was. Who joins and who leaves is handed to `say` (the scene's
- * aria log), one sentence each, in the page's language.
- */
 export function useSquad(
   layout: Layout,
   props: SquadSceneProps,

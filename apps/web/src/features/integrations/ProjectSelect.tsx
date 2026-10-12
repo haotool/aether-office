@@ -1,7 +1,6 @@
 import type { Project } from '@aether/contracts';
 import { useT } from '../../ui/useT.js';
 
-/** The project picker, shared by the top bar and the phone drawer. */
 export function ProjectSelect({
   projects,
   projectId,

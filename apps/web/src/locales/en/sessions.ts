@@ -1,8 +1,12 @@
-/** The sessions words, in English. */
 export const enSessions = {
   sessionsHint:
     'Every Claude and Codex session on this machine: search, filter, resume or fork it, and open the dev servers it started.',
   sessionsSearch: 'Search title, repo, branch, role, model…',
+  sessionsNone: 'No local sessions yet',
+  sessionsNoneHint:
+    'Start claude or codex in a terminal inside a project. It appears here within a few seconds.',
+  sessionsNoMatch: 'No session matches these filters',
+  sessionsShowAll: 'Show all sessions',
   allDepartments: 'All departments',
   runningOnly: 'Running only',
   zombieHint:

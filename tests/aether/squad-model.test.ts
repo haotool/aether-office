@@ -61,9 +61,8 @@ describe('seating', () => {
 
   it('never reorders: a seat is kept while held, and the lowest free one is given next', () => {
     let state = run(EMPTY_SQUAD, squads(member(1), member(2), member(3)), T0);
-    state = run(state, squads(member(1), member(3)), T0 + 1000); // 2 vanished without finishing
+    state = run(state, squads(member(1), member(3)), T0 + 1000);
     expect([seatOf(state, 1), seatOf(state, 3)]).toEqual([0, 2]);
-    // The leaver still holds its pod while it stands and waves, then gives it up.
     state = run(
       state,
       squads(member(1), member(3), member(4, { startedAt: T0 + 2000 })),
@@ -102,7 +101,7 @@ describe('leaving', () => {
     state = run(state, squads(member(1), member(2, { status: 'finished' })), T0 + 9000);
     expect(state.members[`${SUP}:sub:a2`]).toBeUndefined();
     state = run(state, squads(member(1), member(2, { status: 'finished' })), T0 + 20_000);
-    expect(state.members[`${SUP}:sub:a2`]).toBeUndefined(); // a finished one is never seated again
+    expect(state.members[`${SUP}:sub:a2`]).toBeUndefined();
   });
 
   it('does not seat a subagent that is already finished when first seen', () => {
@@ -115,13 +114,13 @@ describe('the zone', () => {
   it('grows at once and shrinks only after ten quiet seconds with no walk in flight', () => {
     let state = run(EMPTY_SQUAD, squads(member(1), member(2), member(3), member(4)), T0);
     expect(state.zones[SUP]?.seats).toBe(4);
-    const rest = squads(member(1), member(2)); // 3 and 4 vanish
+    const rest = squads(member(1), member(2));
     const seatsAt = (from: number, to: number) => {
       for (let t = from; t <= to; t += 250) state = run(state, rest, T0 + t);
       return state.zones[SUP]?.seats;
     };
-    expect(seatsAt(1000, 8000)).toBe(4); // the leavers are walking (until = +9 s), then the pods are free
-    const needed = 1000 + POD_FREE_MS - 250; // the last step that still needed four seats
+    expect(seatsAt(1000, 8000)).toBe(4);
+    const needed = 1000 + POD_FREE_MS - 250;
     expect(seatsAt(8250, needed + SHRINK_AFTER_MS - 250)).toBe(4);
     expect(seatsAt(needed + SHRINK_AFTER_MS, needed + SHRINK_AFTER_MS + 250)).toBe(2);
   });

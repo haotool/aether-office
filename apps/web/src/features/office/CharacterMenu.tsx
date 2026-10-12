@@ -42,7 +42,6 @@ import { useContinue } from '../shell-chrome/use-continue.js';
 import { MENU_KEYS, nextMenuIndex } from '../shell-chrome/menu-nav.js';
 import type { Drive } from '../../hooks/use-drive.js';
 
-/** What the menu hands the page to do, because it needs a dialog or the whole scene: the menu itself closes. */
 export type CharacterCommand =
   | { type: 'stop-terminal'; session: AttributedSession; drive: Drive }
   | { type: 'stop-process'; session: AttributedSession }
@@ -100,7 +99,6 @@ type MenuProps = {
 };
 type Panel = 'message' | 'replies' | null;
 
-/** What the menu knows about its character: the session, who is asking, the terminal, and the facts for the rules. */
 function useCharacterFacts({ ctx, sessions, projectId, leaving }: MenuProps) {
   const actor = useActor();
   const session = sessionOf(sessions, ctx.agent);
@@ -124,7 +122,6 @@ function useCharacterFacts({ ctx, sessions, projectId, leaving }: MenuProps) {
   return { session, terminal, resume, send, facts };
 }
 
-/** What each action does when chosen; most close the menu, with a notice when there is something to say. */
 function useActionRunners(
   props: MenuProps,
   known: ReturnType<typeof useCharacterFacts>,
@@ -282,7 +279,6 @@ function EmoteRow({ ctx }: { ctx: CharacterMenuContext }) {
   );
 }
 
-/** Arrow keys, Home and End move focus between the menu items (a textarea inside keeps its own keys). */
 function moveFocus(root: HTMLElement | null, e: KeyboardEvent) {
   if (!MENU_KEYS.includes(e.key) || e.target instanceof HTMLTextAreaElement) return;
   const items = [...(root?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])];
@@ -291,11 +287,6 @@ function moveFocus(root: HTMLElement | null, e: KeyboardEvent) {
   items[nextMenuIndex(e.key, at, items.length)]?.focus();
 }
 
-/**
- * The action menu of one character: what can really be done with it, each action enabled or disabled with its reason
- * (see character-actions.ts), and the emotes. Beside the character on a desktop (arrow keys move, Esc closes), in a
- * bottom sheet on a phone.
- */
 export function CharacterMenu(props: MenuProps) {
   const { ctx } = props;
   const t = useT();

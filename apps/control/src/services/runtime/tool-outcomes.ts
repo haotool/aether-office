@@ -3,15 +3,9 @@ import { deleteOldest } from '../platform/oldest-entry.js';
 import { withEdge } from '../platform/file-edge.js';
 
 /**
- * How tool calls ended, read from the tail of a provider's own transcript: tool id -> `true` when it succeeded, `false`
- * when it failed. Only the ids and the outcome are kept; no output text leaves this module. An id the tail does not hold,
- * or a result that does not say, is simply absent: an outcome is never guessed.
- *
- * Claude Code writes a `tool_result` block per call, with `is_error` when it knows (a command that exits non-zero is an error);
- * a block without the flag is skipped.
- * Codex writes `function_call_output` / `custom_tool_call_output` items keyed by `call_id`; when the output carries an exit
- * code it is read: a JSON object with `metadata.exit_code` or `exit_code` at its top level, or a text that begins with
- * `Exit code: N` / `Process exited with code N`.
+ * Tool id -> true when the call succeeded, false when it failed, read from the tail of a provider's own transcript.
+ * Only ids and outcomes are kept, and an outcome is never guessed: an id the tail does not hold, or a result that does
+ * not say, is absent.
  */
 const TAIL_BYTES = 256 * 1024;
 const MAX_LINE_BYTES = 512 * 1024;
@@ -25,7 +19,6 @@ const obj = (v: unknown): Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
 const exit = (v: unknown) => (typeof v === 'number' && Number.isInteger(v) ? v === 0 : undefined);
 
-/** Pure. Whether a Codex tool output says it succeeded: true, false, or undefined when it carries no exit code. */
 export function exitStatusOf(output: unknown): boolean | undefined {
   if (Array.isArray(output)) {
     for (const part of output) {
@@ -105,7 +98,6 @@ function mergeOutcomeLine(
   }
 }
 
-/** Pure. The outcomes of the whole lines in a transcript tail (the first, usually cut, line fails to parse and is skipped). */
 export function parseOutcomes(provider: 'claude' | 'codex', tail: Buffer): Map<string, boolean> {
   const found = new Map<string, boolean>();
   const needles =
@@ -130,7 +122,6 @@ export function parseOutcomes(provider: 'claude' | 'codex', tail: Buffer): Map<s
 const cache = new Map<string, { mtime: number; size: number; outcomes: Outcomes }>();
 export const resetOutcomeCache = () => cache.clear();
 
-/** The outcomes in a transcript's tail, read again only when the file changed. Empty when it cannot be read. */
 export async function readOutcomes(provider: 'claude' | 'codex', file: string): Promise<Outcomes> {
   try {
     const { mtimeMs, size } = await stat(file);

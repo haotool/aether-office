@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { syntheticRepo } from './oss-tooling-env.js';
 
 const load = (name: string) => import(pathToFileURL(resolve('scripts/quality/release', name)).href);
 const loadRoot = (name: string) => import(pathToFileURL(resolve('scripts/quality', name)).href);
@@ -65,10 +66,10 @@ describe('measureLocaleCompleteness', () => {
 });
 
 describe('measureConventionalCommits', () => {
-  it('flags overlong subjects in git history', () => {
-    const root = resolve('.');
-    const result = measureConventionalCommits(root, '-1');
-    expect(result.violations).toBeGreaterThanOrEqual(0);
+  it('counts maintainer subjects only and leaves upstream commits alone', () => {
+    const result = measureConventionalCommits(syntheticRepo('quality-conventional'));
+    expect(result.violations).toBe(6);
+    expect(result.detail.join('\n')).not.toContain('Initial upstream snapshot');
   });
 });
 

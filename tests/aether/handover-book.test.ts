@@ -64,7 +64,6 @@ describe('the throttle', () => {
     }
     expect(modes.filter((m) => m === 'walk')).toHaveLength(WALKERS_PER_FLOOR);
     expect(modes.slice(WALKERS_PER_FLOOR).every((m) => m === 'pop')).toBe(true);
-    // Another floor has its own two.
     expect(admit(book, request({ id: 'x', supervisor: 'local:s2', floor: 1 }), T0)?.mode).toBe(
       'walk',
     );
@@ -92,7 +91,6 @@ describe('the throttle', () => {
       book = withEntry(book, id, decision.mode, {}, decision.wait);
       stamps.push(book.entries[`${id}@${T0}`]!.plan.t.stampAt);
     }
-    // Every desk stamp is at least a press and a gap after the one before it.
     const sorted = [...stamps].sort((x, y) => x - y);
     for (let n = 1; n < sorted.length; n++)
       expect(sorted[n]! - sorted[n - 1]!).toBeGreaterThanOrEqual(PRESS_TOTAL_MS);
@@ -132,7 +130,7 @@ describe('the book over time', () => {
     ]);
     const stamped = advance(placed.book, at(t.stampAt), alive(book));
     expect(stamped.cues).toEqual([{ supervisor: 'local:s1', clip: 'nod' }]);
-    expect(stamped.told).toEqual([]); // said once
+    expect(stamped.told).toEqual([]);
     expect(advance(stamped.book, at(t.stampAt) + 50, alive(book)).cues).toEqual([]);
   });
 
@@ -238,11 +236,11 @@ describe('the book over time', () => {
     });
     const now = T0 + 1;
     const stepped = advance(book, now, alive(book));
-    expect(stepped.cues).toEqual([]); // the supervisor does not act it out
-    expect(stepped.told).toHaveLength(1); // but it is said
+    expect(stepped.cues).toEqual([]);
+    expect(stepped.told).toHaveLength(1);
     const items = handoverItems(stepped.book, [squad], now, false);
     expect(items.seals.received).toHaveLength(1);
-    expect(items.boxes.length).toBeGreaterThanOrEqual(4); // a folder (2) and the stamp (2)
+    expect(items.boxes.length).toBeGreaterThanOrEqual(4);
   });
 });
 
@@ -302,7 +300,6 @@ describe('the runtime, with a squad finishing all at once', () => {
 
 describe('the budget', () => {
   it('keeps the instance counts inside the meshes however many folders are around', () => {
-    // Eight squads, each with a full stack, two carriers walking and a stamp: 8 x (5 + 2) folders + 8 stamps.
     let book = emptyBook;
     const squads: DrawSquad[] = [];
     for (let s = 0; s < 8; s++) {
@@ -336,7 +333,6 @@ describe('the budget', () => {
     }).book;
     const items = handoverItems(folded, squads, now, false);
     expect(items.boxes.length).toBeLessThanOrEqual(BOX_CAPACITY);
-    // 8 stamps (2 boxes each), 8 stacks of 5 folders (2 boxes each) and two carriers a squad with a folder in hand.
     expect(items.boxes.length).toBe(16 + 80 + 32);
     expect(items.seals.received.length + items.seals.returned.length).toBeLessThanOrEqual(8);
   });

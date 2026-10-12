@@ -6,11 +6,9 @@ import { task, type Context } from '../domain/context.js';
 
 type Hashed = { path: string; header: string; hash: string };
 
-// Hash ignores line numbers in the header so a hunk that only moved keeps its identity.
 const hunkHash = (path: string, body: string) =>
   createHash('sha256').update(`${path}\0${body}`).digest('hex');
 
-/** Hunks of the newest successful diff job taken at exactly `head`, or null if none was loaded. */
 function hunksAt(ctx: Context, workId: string, head: string): Hashed[] | null {
   const row = ctx.sqlite
     .prepare(

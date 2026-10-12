@@ -1,9 +1,7 @@
-// Unified-diff hunk extraction for review comments. Pure, no I/O.
 type Hunk = { path: string; header: string; body: string };
 
 const stripPrefix = (p: string) => p.replace(/^[ab]\//, '');
 
-/** Splits `git diff` output into hunks. Binary and mode-only changes produce no hunks. */
 export function parseDiff(text: string): Hunk[] {
   const hunks: Hunk[] = [];
   let oldPath = '';
@@ -37,9 +35,8 @@ export function parseDiff(text: string): Hunk[] {
 type CommentStatus = 'current' | 'carried' | 'stale' | 'unknown';
 
 /**
- * `current`: written against today's head. `carried`: head moved but the identical hunk still
- * exists. `stale`: head moved and the hunk is gone or changed. `unknown`: no diff for the new head
- * has been loaded, so nothing can be claimed.
+ * `carried`: head moved but the identical hunk still exists; `stale`: the hunk is gone or changed; `unknown`: no diff
+ * for the new head is loaded, so nothing can be claimed.
  */
 export function commentStatus(
   comment: { headSha: string; path: string; hunkHash: string },

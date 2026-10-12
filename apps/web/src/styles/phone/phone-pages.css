@@ -1,5 +1,4 @@
 @media (max-width: 760px), (pointer: coarse) and (max-height: 500px) {
-  /* Explanations and long descriptions give way to the thing they explain. */
   .hint-text {
     display: none;
   }
@@ -48,7 +47,6 @@
   select[multiple] {
     max-height: 112px; /* a list to scroll, not a box that takes the screen token-lint: geometry */
   }
-  /* A dialog puts what you act on first and the explanations after, folded. */
   dialog.modal[open] {
     display: flex;
     flex-direction: column;
@@ -70,7 +68,7 @@
     align-items: center;
     justify-content: center;
     gap: var(--space-6);
-    min-width: 56px; /* token-lint: geometry */
+    min-width: var(--space-56);
     height: var(--target-touch);
     padding: 0 var(--space-12);
     border-radius: var(--r-3xl);

@@ -1,4 +1,3 @@
-// One look at the squads: the state machine stepped to now, the walks of whoever starts to leave, what is said about it.
 import type { Dispatch, RefObject, SetStateAction } from 'react';
 import type { Agent, Layout } from '@aether/contracts';
 import type { PoseApi } from '../core/use-pose-cues.js';
@@ -41,10 +40,6 @@ type Stepper = {
 
 type Fact = Parameters<NonNullable<Parameters<typeof stepSquad>[1]['leaveMs']>>[1];
 
-/**
- * A member that starts to leave plans its way out from its pod as it is now: by the supervisor's desk, with its
- * result, when it finished and the hand-over is shown (see handover/), else straight to the core. Returns how long it takes.
- */
 function planWayOut(s: Stepper, seen: SquadFrame | null, now: number, id: string, fact: Fact) {
   const seat = seen?.seats.find((p) => p.member === id);
   if (!seen || !seat) return 0;
@@ -77,7 +72,6 @@ function planWayOut(s: Stepper, seen: SquadFrame | null, now: number, id: string
   return leaveDuration(leave);
 }
 
-/** Says what happened: folders that reached a tray, the supervisors' nods, who joined and who left. */
 function announce(
   s: Stepper,
   seen: SquadFrame | null,
@@ -91,16 +85,14 @@ function announce(
     members: new Set(Object.keys(next.members)),
   });
   for (const told of placed.told) say(handoverLine(zh, told.type, told.kind));
-  // What each supervisor does about a result put on its desk: it reads, then nods (or scratches its head at a flagged one).
   for (const c of placed.cues) pose({ member: c.supervisor, source: 'handover', clip: c.clip });
   for (const event of eventsOf(prev, next, now))
     say(
       eventLine(zh, event, agents.find((a) => a.id === event.supervisor)?.name ?? event.supervisor),
     );
-  return placed.told.length > 0; // a folder reached a tray: draw it even when the seats did not change
+  return placed.told.length > 0;
 }
 
-/** The clock's one look: step the state to now, say what changed and, when the frame needs it, hand React a new view. */
 export function stepOnce(s: Stepper) {
   const now = Date.now();
   const prev = s.state.current;

@@ -139,18 +139,18 @@ describe('server trust boundaries', () => {
           payload: {},
         })
       ).statusCode,
-    ).toBe(401); // no cookie
-    expect((await write(old)).statusCode).toBe(200); // nothing above changed the token
+    ).toBe(401);
+    expect((await write(old)).statusCode).toBe(200);
     const rotated = await rotate();
     expect(rotated.statusCode).toBe(200);
     const { csrf, expiresAt } = rotated.json() as { csrf: string; expiresAt: number };
     expect(csrf).not.toBe(old);
     expect(expiresAt).toBeGreaterThan(Date.now());
     expect(rotated.body).not.toContain(cookie.value);
-    expect((await write(old)).statusCode).toBe(403); // the old token is dead
+    expect((await write(old)).statusCode).toBe(403);
     expect((await write(csrf)).statusCode).toBe(200);
     for (let i = 1; i < 10; i++) expect((await rotate()).statusCode).toBe(200);
-    expect((await rotate()).statusCode).toBe(429); // rate limited like a login
+    expect((await rotate()).statusCode).toBe(429);
   });
   it('does not accept sender spoofing, foreign inbox access, cursor scope substitution, or revoked identity', () => {
     const f = setup();

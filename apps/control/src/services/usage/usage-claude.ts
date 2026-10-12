@@ -1,5 +1,3 @@
-// Claude transcripts: message.usage on assistant lines. One message is several lines repeating its usage, and a
-// resumed or forked session copies earlier messages, so a message is counted once (see ClaimBook).
 import {
   ZERO,
   addTokens,
@@ -14,9 +12,9 @@ import {
 } from './usage-counters.js';
 
 /**
- * Which Claude messages were already counted, and by whom. A resumed or forked session copies earlier messages (the same
- * id) into a file of its own; the copy adds only what the first reading did not. Memory only (a restart reads appended
- * bytes only, so ids of files already rolled up are not known again), and bounded: past the bound it forgets.
+ * Which Claude messages were already counted, and by whom: a resumed or forked session copies earlier messages (the
+ * same id) into a file of its own, and the copy adds only what the first reading did not. Memory only, and bounded:
+ * past the bound it forgets.
  */
 const MAX_CLAIMED = 300_000;
 export class ClaimBook {
@@ -27,22 +25,18 @@ export class ClaimBook {
   set(id: string, owner: string, c: Counters) {
     if (!this.seen.has(id)) {
       if (this.seen.size >= MAX_CLAIMED) this.seen.clear();
-      // A match out of a long string is a slice that keeps the whole string alive: kept ids are copied.
       id = Buffer.from(id).toString();
     }
     this.seen.set(id, { owner, c });
   }
-  /** Forgets what `owners` counted: their files were rewritten or are gone, so their messages are counted again. */
   release(owners: ReadonlySet<string>) {
     for (const [id, claim] of this.seen) if (owners.has(claim.owner)) this.seen.delete(id);
   }
 }
 export type Claims = { book: ClaimBook; owner: string };
 
-// ---- Claude: message.usage on assistant lines -------------------------------------------------------------------
 const USAGE = Buffer.from('"usage"');
 const ASSISTANT = Buffer.from('"assistant"');
-/** A line longer than this that the fast path missed is counted as skipped rather than parsed. */
 const MAX_FALLBACK_LINE = 1 << 20;
 const TOOL_USE = Buffer.from('"type":"tool_use"');
 const MESSAGE_ID = /"message":\{[^{}]{0,300}?"id":"([^"]+)"/;
@@ -66,7 +60,7 @@ function claudeCounters(text: string): Counters {
 }
 
 function countOf(data: Buffer, needle: Buffer, from: number, to: number): number {
-  const span = data.subarray(from, to); // bounded: a search of the whole chunk for a needle that is absent is quadratic
+  const span = data.subarray(from, to);
   let n = 0;
   for (let at = span.indexOf(needle); at >= 0; at = span.indexOf(needle, at + 1)) n++;
   return n;
@@ -82,9 +76,8 @@ const maxOf = (a: Counters, b: Counters): Counters => ({
 
 type Msg = { id: string; model: string | undefined; counters: Counters; at: number; tools: number };
 
-/** The byte fast path: compact JSON with the message id near the front. Null when the line is not of that shape. */
 function fastMsg(data: Buffer, hit: number, start: number, end: number): Msg | null {
-  if (data[hit + USAGE.length] !== 0x3a || data[hit + USAGE.length + 1] !== 0x7b) return null; // `:{`
+  if (data[hit + USAGE.length] !== 0x3a || data[hit + USAGE.length + 1] !== 0x7b) return null;
   const head = data.toString('utf8', start, Math.min(start + 900, end));
   const id = MESSAGE_ID.exec(head)?.[1];
   const at = timestampOf(data, hit, start, end);
@@ -101,7 +94,6 @@ function fastMsg(data: Buffer, hit: number, start: number, end: number): Msg | n
   };
 }
 
-/** The tolerant path for one assistant line the fast path missed: any key order or spacing. Null when it has no usage. */
 function slowMsg(text: string): Msg | null {
   let line: Record<string, unknown>;
   try {
@@ -126,15 +118,12 @@ function slowMsg(text: string): Msg | null {
   };
 }
 
-/** Adds what of `msg` was not counted before, by this file or (through `claims`) by another. */
 function countMessage(state: ParseState, msg: Msg, dayOf: DayOf, claims?: Claims) {
   const { id, counters, at } = msg;
   const day = dayOf(at);
   const model = msg.model;
-  // A placeholder the CLI writes for an error (`<synthetic>`) is no request to a model and spent nothing.
   const synthetic = model?.startsWith('<') ?? false;
   const named = model && !synthetic ? model : null;
-  // What of this message was counted already: by this file (the previous line, or any earlier one) or by another.
   const known =
     claims?.book.get(id) ?? (id === state.lastId ? (state.lastUsage ?? undefined) : undefined);
   const prev = known ?? ZERO;

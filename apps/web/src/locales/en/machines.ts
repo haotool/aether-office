@@ -1,4 +1,3 @@
-/** The machines words, in English. */
 export const enMachines = {
   online: 'Online',
   machineOffline: 'Offline',

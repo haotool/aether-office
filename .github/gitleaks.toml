@@ -1,0 +1,38 @@
+# gitleaks configuration: the default rules, plus an allowlist for the synthetic values that tests use on purpose.
+# Anything else gitleaks reports is a real finding. Used by `pnpm run oss:check` and scripts/oss/history-verify.sh.
+title = "AETHER OFFICE"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Fixed fake values in unit-test fixtures (a cursor key, an idempotency key and the AWS documentation example)"
+regexTarget = "line"
+regexes = [
+  '''fixed-test-cursor-secret-32-characters''',
+  '''wJalrXUtnFEMI/K7MDENG''',
+  '''key-12345678''',
+]
+
+[[allowlists]]
+description = "Local, git-ignored folders that are never published: reference clones of other projects, data, tools, dependencies, build output"
+paths = [
+  '''(^|/)\.research/''',
+  '''(^|/)\.data/''',
+  '''(^|/)\.tools/''',
+  '''(^|/)\.claude/''',
+  '''(^|/)node_modules/''',
+  '''(^|/)dist/''',
+  '''(^|/)test-results/''',
+  '''(^|/)evidence/''',
+]
+
+[[allowlists]]
+description = "Synthetic GitHub-style tokens that the redaction tests feed on purpose (test files only)"
+condition = "AND"
+paths = [
+  '''(^|/)tests/aether/[^/]+\.test\.ts$''',
+]
+regexes = [
+  '''ghp_[A-Za-z0-9_]{20,}''',
+]

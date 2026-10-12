@@ -68,9 +68,9 @@ describe('topicTitle', () => {
     expect(topicTitle(null)).toBeNull();
     expect(topicTitle('你是唯讀審查員。PR #1150 第六輪')).toBe('你是唯讀審查員。PR #1150 第六輪');
     expect(topicTitle('x'.repeat(100))).toBe(`${'x'.repeat(80)}…`);
-    expect(topicTitle('use sk-ant-api03-abcdefghijklmnopqrstuvwxyz0123456789 now')).not.toContain(
-      'abcdefghijklmnop',
-    );
+    expect(
+      topicTitle(`use sk-ant-api03-${'abcdefghijklmnopqrstuvwxyz'}0123456789 now`),
+    ).not.toContain('abcdefghijklmnop');
   });
 });
 

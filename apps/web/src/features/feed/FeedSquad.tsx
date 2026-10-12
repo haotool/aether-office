@@ -36,7 +36,6 @@ type SquadRowProps = {
   onOpen: Open;
 };
 
-/** The status of a subagent, the tools it has used and the one it uses now. */
 function SubMeta({ row }: { row: SquadRow }) {
   const t = useT();
   const tools = toolsText(t, row);
@@ -51,12 +50,10 @@ function SubMeta({ row }: { row: SquadRow }) {
   );
 }
 
-/** One subagent under its supervisor: status dot, type, how long it has run, tool calls; a button-like tree item. */
 const SquadRowView = memo(
   function SquadRowView({ row, index, size, supervisorLabel, tabIndex, onOpen }: SquadRowProps) {
     const t = useT();
     const detail = row.result ?? row.task;
-    // A finished subagent has left the office, so there is no member to open: its supervisor holds the record.
     const target = row.status === 'finished' ? row.supervisor : row.id;
     return (
       <div
@@ -93,7 +90,6 @@ const SquadRowView = memo(
     a.onOpen === b.onOpen,
 );
 
-/** The roving focus and the keys of the squad tree: which item is the tab stop, and how the arrows and Enter act. */
 function useSquadTree(item: FeedItem, open: boolean, onToggle: Toggle) {
   const tree = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(item.agent.id);
@@ -130,7 +126,6 @@ function useSquadTree(item: FeedItem, open: boolean, onToggle: Toggle) {
   return { tree, tab, onKeyDown, onFocus };
 }
 
-/** The supervisor's own row (level 1): opens the supervisor; its chevron folds or unfolds the subagents. */
 function SupervisorRow({ item, squad, open, tabIndex, onToggle, onOpen }: SupervisorRowProps) {
   const t = useT();
   const toggle = (e: MouseEvent) => {
@@ -173,11 +168,6 @@ function SupervisorRow({ item, squad, open, tabIndex, onToggle, onOpen }: Superv
   );
 }
 
-/**
- * A supervisor and its subagents as a tree: the supervisor row (level 1, opens or folds) and one nested row per subagent
- * (level 2). One item is the tab stop; Up and Down, Home and End move, Right opens or enters, Left folds or goes to the
- * parent, Enter opens the item.
- */
 export function FeedSquad({
   item,
   open,

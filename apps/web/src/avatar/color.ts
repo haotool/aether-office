@@ -31,7 +31,6 @@ export function hslToHex([h, s, l]: Hsl): string {
 
 const clamp = (n: number) => Math.max(0, Math.min(1, n));
 
-/** The same color moved around the hue wheel and nudged in saturation and lightness. */
 export function shift(hex: string, hue: number, sat = 1, light = 0): string {
   const [h, s, l] = hexToHsl(hex);
   return hslToHex([h + hue, clamp(s * sat), clamp(l + light)]);

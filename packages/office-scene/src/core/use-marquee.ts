@@ -2,12 +2,9 @@ import { useEffect, useRef, useState, type RefObject } from 'react';
 import type { SceneBridge } from '../components/SceneBridge.js';
 import { listenWhileDragging } from './window-drag.js';
 
-/** A rectangle dragged out over the canvas, in CSS pixels from its top left. */
 type Marquee = { x: number; y: number; width: number; height: number };
-/** Less than this and the press was a click, not a rectangle. */
 const MIN_PX = 6;
 
-/** Pure. The ids whose screen position lies inside the rectangle. */
 export function insideMarquee(
   rect: Marquee,
   points: ReadonlyMap<string, readonly [number, number]>,
@@ -23,13 +20,11 @@ export function insideMarquee(
 type MarqueeOptions = {
   container: RefObject<HTMLElement | null>;
   bridge: RefObject<SceneBridge | null>;
-  /** Where each selectable character is in the world (head height), by id. */
   points: ReadonlyMap<string, [number, number, number]>;
   enabled: boolean;
   onSelect: (ids: string[]) => void;
 };
 
-/** The rectangle from where the press began to where the pointer is. */
 const spanned = (origin: { x: number; y: number }, x: number, y: number): Marquee => ({
   x: Math.min(origin.x, x),
   y: Math.min(origin.y, y),
@@ -40,10 +35,6 @@ const spanned = (origin: { x: number; y: number }, x: number, y: number): Marque
 const isRect = (rect: Marquee | null): rect is Marquee =>
   rect !== null && (rect.width > MIN_PX || rect.height > MIN_PX);
 
-/**
- * Shift + drag on the empty floor draws a rectangle and selects the characters in it. The press is taken before the
- * orbit controls see it (they are switched off for the drag); a bare Shift + click is left to the characters.
- */
 export function useMarquee({ container, bridge, points, enabled, onSelect }: MarqueeOptions) {
   const [rect, setRect] = useState<Marquee | null>(null);
   const latest = useRef({ points, onSelect });

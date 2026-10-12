@@ -1,8 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { signIn } from '../support/sign-in.js';
 
-// `?compact=1` gives every member a stand-in context that fills and is compacted every few seconds: the scene shows the
-// compaction chip over the member and the provider's mark on the name tag, without overflowing its canvas.
 async function login(page: Page, path: string) {
   await signIn(page, path);
 }
@@ -36,7 +34,6 @@ test('the compaction preview shows the chip in the scene, in both languages, wit
   const chip = page.locator('.compact-chip').first();
   await expect(chip).toBeAttached({ timeout: 20_000 });
   await expect(chip).toContainText('已壓縮 −64%');
-  // a placed chip lies inside the scene's canvas, and the page does not scroll sideways
   const placed = page.locator('.compact-chip').filter({ visible: true }).first();
   await expect(placed).toBeVisible({ timeout: 20_000 });
   const inside = await page.evaluate(() => {

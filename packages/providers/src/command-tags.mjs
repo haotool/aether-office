@@ -1,7 +1,5 @@
-// A closed-vocabulary classifier for shell commands and search patterns. It answers "what kind of thing is this?" with
-// labels from COMMAND_TAGS and nothing else: arguments, paths, patterns, branch names and values are only compared, never
-// returned, so a tag can be spooled and shown without a redaction pass. Dependency-free (the hook receiver runs alone),
-// bounded (the input is cut to 4000 characters, the worst case is milliseconds), and deliberately naive: it reads the words of a command, it does not run a shell.
+// A closed-vocabulary classifier: labels from COMMAND_TAGS and nothing else, arguments and paths are only compared,
+// never returned, so a tag needs no redaction. Dependency-free because the hook receiver runs alone.
 // ponytail: quotes are honoured but `bash -c "..."` payloads, aliases and shell functions are not looked into.
 
 export const COMMAND_TAGS = [
@@ -36,7 +34,7 @@ const MAX_TAGS = 4;
 const MAX_POSITIONAL = 3;
 
 // A word is a run of plain characters and quoted strings; the shell's separators are words of their own.
-const FD_DUP = /\d*[<>]&\d+/g; // `2>&1` is not a background `&`
+const FD_DUP = /\d*[<>]&\d+/g;
 const TOKEN = /(?:[^\s"';|&<>]|"(?:[^"\\]|\\.)*"|'[^']*')+|&&|\|\||[;|&\n]|[<>]+/g;
 const SEPARATOR = /^(?:&&|\|\||[;|&\n])$/;
 const ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*=/;
@@ -44,7 +42,6 @@ const unquote = (word) => word.replace(/["']/g, '');
 const positionals = (args) => args.filter((a) => !a.startsWith('-'));
 const hasFlag = (args, ...names) => args.some((a) => names.includes(a));
 
-/** Words per segment (a segment ends at && || ; | & or a newline), with the separator that ended it. */
 function segmentsOf(text) {
   const segments = [];
   let words = [];
@@ -53,7 +50,7 @@ function segmentsOf(text) {
       if (words.length) segments.push({ words, end: token });
       words = [];
     } else if (!/^[<>]+$/.test(token)) {
-      const word = unquote(token).replace(/^\(+|\)+$/g, ''); // a subshell's parentheses
+      const word = unquote(token).replace(/^\(+|\)+$/g, '');
       if (word) words.push(word);
     }
   }
@@ -61,7 +58,6 @@ function segmentsOf(text) {
   return segments;
 }
 
-// What a package script or a tool name stands for, wherever it appears among the first words after a launcher.
 const WORD_TAG = new Map([
   ...['test', 'tests', 'vitest', 'jest', 'pytest', 'mocha', 'e2e'].map((w) => [w, 'test']),
   ...['build', 'compile', 'bundle', 'assemble', 'webpack', 'rollup', 'esbuild', 'tsup'].map((w) => [
@@ -79,7 +75,6 @@ const WORD_TAG = new Map([
   ['release', 'release'],
 ]);
 const LAUNCHERS = new Set(['npm', 'pnpm', 'yarn', 'bun', 'npx', 'bunx', 'pnpx']);
-// make-like runners take a target; the target is read the same way as a script.
 const TARGET_RUNNERS = new Set([
   'make',
   'just',
@@ -111,7 +106,6 @@ const ALONE_TAG = new Map([
   ...['docker', 'docker-compose', 'podman', 'nerdctl'].map((p) => [p, 'docker']),
   ...['vim', 'vi', 'nvim', 'view'].map((p) => [p, 'editor.vim']),
 ]);
-// Programs whose own subcommand says it: program -> subcommand -> tag.
 const SUBCOMMAND_TAG = {
   go: { test: 'test', build: 'build', vet: 'lint', get: 'install' },
   cargo: {
@@ -154,7 +148,6 @@ const SUBCOMMAND_TAG = {
   cypress: { run: 'test' },
 };
 const WRAPPERS = new Set(['time', 'nohup', 'nice', 'env', 'command', 'exec', 'builtin']);
-// Words that open a command without being one: `if x; then cmd`, `! cmd`, `{ cmd; }`.
 const GROUPING = new Set(['then', 'do', 'else', 'elif', '!', '{']);
 const ESCALATORS = new Set(['sudo', 'doas']);
 const SHELLS = new Set(['sh', 'bash', 'zsh', 'dash', 'ksh']);
@@ -169,7 +162,6 @@ const DANGEROUS_OPERAND = /^(?:\/[^/]*\/?\*?|~\/?\*?|\*|\.\*|\.\.?\/?\*?|\$\{?HO
 
 const tscTag = (args) => (args.some((a) => a.toLowerCase() === '--noemit') ? 'typecheck' : 'build');
 
-/** The first of `args` (at most MAX_POSITIONAL non-flag words) that names a script or tool, as a tag. */
 function scriptTag(args) {
   for (const word of positionals(args).slice(0, MAX_POSITIONAL)) {
     const name = word.split(/[:/]/)[0].toLowerCase();
@@ -220,7 +212,6 @@ function rmTags(args) {
   return recursive && (reaches || hasFlag(args, '--no-preserve-root')) ? ['fs.rm.recursive'] : [];
 }
 
-/** The tags of one command (its words, program first). */
 function programTags(words, depth = 0) {
   const [program, ...args] = words;
   const name = program.split('/').pop().toLowerCase();
@@ -235,7 +226,6 @@ function programTags(words, depth = 0) {
   }
   if (name === 'npm' && sub === 'ci') return ['install'];
   if (depth < 2 && (TOOL_LAUNCHERS.has(name) || (LAUNCHERS.has(name) && EXEC_WORDS.has(sub)))) {
-    // `npx tool args` and `pnpm exec tool args` run the tool: classify it as if it had been typed alone.
     const rest = TOOL_LAUNCHERS.has(name) ? args : args.slice(args.indexOf(sub) + 1);
     const tool = rest.findIndex((a) => !a.startsWith('-'));
     return tool >= 0 ? programTags(rest.slice(tool), depth + 1) : [];
@@ -250,7 +240,6 @@ function programTags(words, depth = 0) {
   return ALONE_TAG.has(name) ? [ALONE_TAG.get(name)] : [];
 }
 
-/** Drops env assignments and wrappers in front of a command; reports whether an escalator (sudo) was among them. */
 function bareCommand(words) {
   let i = 0;
   let escalated = false;
@@ -259,7 +248,7 @@ function bareCommand(words) {
     if (ASSIGNMENT.test(word) || GROUPING.has(word)) i++;
     else if (WRAPPERS.has(word)) {
       i++;
-      while (i < words.length && (words[i].startsWith('-') || /^\d+$/.test(words[i]))) i++; // `env -i`, `nice -n 10`
+      while (i < words.length && (words[i].startsWith('-') || /^\d+$/.test(words[i]))) i++;
     } else if (ESCALATORS.has(word)) {
       escalated = true;
       i++;
@@ -281,16 +270,11 @@ function searchTags(text) {
   return tags;
 }
 
-/**
- * The tags (at most four, in order of appearance) of a command line or a search. `tool` is the tool's name (`Bash`,
- * `Grep`, ...); `pattern` is a search pattern, used only by the Grep tool. Nothing of the input is returned.
- */
 export function commandTags(command, tool, pattern) {
   const tags = new Set();
   if (tool === 'Grep' && typeof pattern === 'string')
     for (const t of searchTags(pattern.slice(0, MAX_PATTERN))) tags.add(t);
   if (typeof command === 'string') {
-    // A heredoc body is text, not commands; what follows it is kept.
     const text = command
       .slice(0, MAX_COMMAND)
       .replace(/(<<-?[ \t]*(['"]?)(\w+)\2[^\n]*)\n[\s\S]*?\n[ \t]*\3(?=\n|$)/g, '$1');

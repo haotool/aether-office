@@ -2,10 +2,6 @@ import { useState, type ReactNode } from 'react';
 import { usePhoneAny } from '../lib/preferences/phone.js';
 import { useT } from './useT.js';
 
-/**
- * A section that folds away: open on a screen with room, closed on a phone, where a dialog full of explanation would
- * hide what it is about. The summary is the whole control.
- */
 export function Fold({
   title,
   children,
@@ -13,7 +9,6 @@ export function Fold({
 }: {
   title: ReactNode;
   children: ReactNode;
-  /** Open on a phone too (the one section the dialog exists for). */
   open?: boolean;
 }) {
   const phone = usePhoneAny();
@@ -25,7 +20,6 @@ export function Fold({
   );
 }
 
-/** An explanation that a phone keeps behind an "i" instead of printing it above the content. */
 export function Hint({ children }: { children: ReactNode }) {
   const t = useT();
   return (
@@ -39,7 +33,6 @@ export function Hint({ children }: { children: ReactNode }) {
   );
 }
 
-/** Long text: three lines on a phone, the rest on a tap or Enter; whole on a larger screen. */
 export function Clamp({ children, className = '' }: { children: ReactNode; className?: string }) {
   const [open, setOpen] = useState(false);
   const phone = usePhoneAny();

@@ -1,4 +1,3 @@
-/** The models words, in English. */
 export const enModels = {
   modelsDetected: 'Detected models',
   modelsNote:

@@ -115,7 +115,7 @@ pnpm run pair     # 在第二個終端機：印出給手機相機掃描的一次
   見[開始使用](docs/getting-started.md#install-it-on-a-phone)（英文）。
 - **不是沙盒。** 代理保有啟動它的使用者的檔案權限。AETHER OFFICE 不隔離代理，也無法防禦已經以你的身分執行的程式碼（[安全](docs/security.md)）。
 - **單一受信任的操作者。** 沒有多使用者或多租戶模式。
-- **平台。** macOS 與 Linux。終端機監督器不支援原生 Windows。
+- **平台。** macOS 是實測平台；Linux 的建置與單元測試在 CI 通過，瀏覽器測試尚未驗證。終端機監督器不支援原生 Windows。
 - **只有 token 數量，沒有金額。** 本機沒有價格表，所以不顯示費用。
 - **預發行。** 許多功能只部分驗證，台帳會說明哪些。
 
@@ -125,12 +125,14 @@ pnpm run pair     # 在第二個終端機：印出給手機相機掃描的一次
   與選用的 A2A 閘道；網頁不從任何 CDN 載入資源。不上傳任何東西，除非你把工作指派給 runner，否則不會呼叫付費模型。
 - **唯讀發現。** 讀取 session 檔與程序表，不會寫入 `~/.claude` 或 `~/.codex`。transcript 文字只在你開啟該 session 時讀取，
   且在送到頁面前會遮蔽已知格式的密鑰。
+- **可完整移除。** AETHER 寫入的只有一個資料夾、私有的 `~/.aether` 目錄與你自己選擇安裝的 hook 項目；
+  [移除方式](docs/how-to.md#run-it)（英文）。
 - **Hooks 只記錄標籤，不記錄內容：** session id、事件名稱、工具名稱與簡短目標（例如檔案的 base name 或指令的第一個字），
   存在 `~/.aether/hook-events.jsonl`。不記錄提示、完整指令、參數或路徑。
 - **預設強化：** 精確的 Host 與 Origin 檢查（防 DNS rebinding）、HttpOnly session cookie 加 CSRF token、由測試固定的授權矩陣、
   代理的文字永遠不當 HTML 渲染，批准結果有簽章，因此佔用 loopback 連接埠的程序無法替你回答。
 
-威脅模型、每個端點的對象與區網檢查清單見 [docs/security.md](docs/security.md)（英文）。安全問題請透過 [SECURITY.md](SECURITY.md) 通報，不要開公開 issue。
+威脅模型、每個端點的對象與區網檢查清單見 [docs/security.md](docs/security.md)（英文）。安全問題請透過 [SECURITY.md](.github/SECURITY.md) 通報，不要開公開 issue。
 
 ## 運作方式
 
@@ -167,13 +169,16 @@ ACP 代理與 A2A 1.0 閘道為選用。完整對照與新增版本的方法見 
 
 ## 貢獻
 
-歡迎貢獻。請閱讀 [CONTRIBUTING.md](CONTRIBUTING.md) 與[行為準則](CODE_OF_CONDUCT.md)。
+歡迎貢獻。請閱讀 [CONTRIBUTING.md](.github/CONTRIBUTING.md) 與[行為準則](.github/CODE_OF_CONDUCT.md)。
+
+本專案大部分由 AI 程式代理（Claude Code、Codex 與 Cursor）在維護者的指揮下撰寫。它們遵守的規則在 [AGENTS.md](AGENTS.md)，
+它們的變更和其他變更通過同樣的檢查。歡迎以 AI 協助撰寫的貢獻，規則相同（[授權政策](docs/legal/licence-policy.md#ai-assisted-contributions)）。
 
 ## 授權
 
 [MIT](LICENSE)。Copyright (c) 2026 haotool；部分程式 Copyright (c) 2026 AgentSystemLabs（本專案的起點
-[agent-office](https://github.com/AgentSystemLabs/agent-office)）。第三方軟體與其條款見 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
+[agent-office](https://github.com/AgentSystemLabs/agent-office)）。第三方軟體與其條款見 [THIRD_PARTY_NOTICES.md](docs/legal/THIRD_PARTY_NOTICES.md)
 與 [NOTICE](NOTICE)；授權清冊、授權政策與來源紀錄見 [docs/legal](docs/legal/README.md)（英文）。
 
-AETHER OFFICE 是獨立專案，與 Anthropic 或 OpenAI 沒有隸屬、背書或贊助關係。Claude 與 Claude Code 是 Anthropic, PBC 的商標；
-Codex 與 OpenAI 是 OpenAI 的商標。其他商標屬於各自的擁有者。
+AETHER OFFICE 是獨立專案，與 Anthropic 或 OpenAI 沒有隸屬、背書或贊助關係。AETHER 不儲存也不轉送你的 Claude 憑證；它在你的環境執行你自己的 Claude Code。
+Claude 與 Claude Code 是 Anthropic, PBC 的商標；Codex 與 OpenAI 是 OpenAI 的商標。其他商標屬於各自的擁有者。

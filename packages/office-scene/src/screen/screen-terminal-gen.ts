@@ -6,11 +6,6 @@ import { generateFile } from './screen-codegen.js';
 import { lineText } from './screen-tokens.js';
 import { itemAt } from '../environment/checked.js';
 
-/**
- * What a desk's terminal prints under a real command: invented lines in the style of that command's output. Real facts
- * are used where we have them (the branch, the files really edited, a port really open) and nothing here says how a
- * command ended: no check marks, no counts of passed or failed, no exit code. Progress is drawn as bars and dots.
- */
 export type CommandKind =
   | 'install'
   | 'build'
@@ -28,9 +23,7 @@ export type Tone = 'text' | 'dim' | 'add' | 'del' | 'warn' | 'accent';
 type TermLine = { text: string; tone: Tone };
 export type TermContext = {
   branch: string | null;
-  /** File base names the session really edited, newest last. */
   edited: readonly string[];
-  /** Ports the session really has open. */
   ports: readonly number[];
   uncommitted: number;
 };
@@ -171,7 +164,6 @@ const MAKERS: Record<CommandKind, (r: Rng, c: TermContext, head: string, n: numb
 const STREAM = 80;
 const cache = new Map<string, readonly TermLine[]>();
 
-/** The first `count` lines of what `head` prints for this member, the same every time. */
 export function terminalOutput(
   seed: string,
   head: string | null,
@@ -193,7 +185,6 @@ export function terminalOutput(
   return lines.slice(0, count);
 }
 
-/** When each streamed line shows up, in ms after the command began: quick runs of lines, then a wait. */
 const arrivalTimes = memoized(new Map<string, number[]>(), MEMO_LIMIT, (seed: string): number[] => {
   const r = seeded(`${seed}:stream`);
   const times: number[] = [];
@@ -208,7 +199,6 @@ const arrivalTimes = memoized(new Map<string, number[]>(), MEMO_LIMIT, (seed: st
   return times;
 });
 
-/** How many lines of the stream a command has printed `ms` after it began. */
 export function revealedLines(seed: string, ms: number): number {
   const times = arrivalTimes(seed);
   let n = 0;

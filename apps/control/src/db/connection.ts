@@ -2,10 +2,8 @@ import Database from 'better-sqlite3';
 import { readFileSync, mkdirSync, chmodSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
-/** How many `.pre-migration-*` copies stay next to the database; older ones are deleted after a new one is made. */
 export const KEPT_PRE_MIGRATION_BACKUPS = 3;
 
-/** A full copy made before pending migrations run: owner-only like the database, and only the newest few are kept. */
 export function backupBeforeMigration(sqlite: Database.Database, filename: string) {
   const copy = `${filename}.pre-migration-${randomUUID()}.sqlite`;
   sqlite.prepare('VACUUM INTO ?').run(copy);
@@ -25,7 +23,6 @@ export function backupBeforeMigration(sqlite: Database.Database, filename: strin
 type Migration = { version: number; source: string };
 const checksumOf = (source: string) => createHash('sha256').update(source).digest('hex');
 
-/** The base schema and every numbered migration file, oldest first. */
 function loadMigrations(): Migration[] {
   return [
     { version: 1, source: readFileSync(new URL('./migration.sql', import.meta.url), 'utf8') },
@@ -38,7 +35,6 @@ function loadMigrations(): Migration[] {
   ].sort((a, b) => a.version - b.version);
 }
 
-/** Refuses a database written by a newer build, or whose applied migrations were edited afterwards. */
 function assertAppliedMatch(
   applied: { version: number; checksum: string }[],
   migrations: Migration[],

@@ -10,7 +10,6 @@ const run = (script = 'setInterval(()=>{},1000)') => startReady(script);
 const startOf = async (pid: number) =>
   (await readProcessTable()).find((r) => r.pid === pid)!.startedAt;
 
-/** A session as the scanner would report it, for a real process with a made-up idle age. */
 const session = (
   key: string,
   startedAt: number,
@@ -49,7 +48,7 @@ describe('clocking sessions out in bulk', () => {
         session('claude:used', start.used, 2 * DAY, {
           liveness: { state: 'active', startedAt: start.used, quietMs: 1000, zombies: [] },
         }),
-        session('claude:recent', start.recent, 5 * HOUR), // idle, but not for a day
+        session('claude:recent', start.recent, 5 * HOUR),
         session('claude:swapped', start.swapped, 2 * DAY),
         session('claude:foreign', start.foreign, 2 * DAY, { projectId: 'other' }),
         session('claude:headless', 1, 2 * DAY, { projectId: null }),
@@ -63,7 +62,7 @@ describe('clocking sessions out in bulk', () => {
         ['claude:foreign', start.foreign],
         ['claude:headless', 1],
         ['claude:nobody', 1],
-        ['claude:idle', start.idle], // asked twice: answered once
+        ['claude:idle', start.idle],
       ];
       const results = await clockOutSessions({
         request: {
@@ -89,7 +88,7 @@ describe('clocking sessions out in bulk', () => {
         true,
       );
       for (const k of ['used', 'recent', 'swapped', 'foreign'] as const)
-        expect(alive(children[k].pid!)).toBe(true); // untouched
+        expect(alive(children[k].pid!)).toBe(true);
     } finally {
       for (const c of Object.values(children)) c.kill('SIGKILL');
     }

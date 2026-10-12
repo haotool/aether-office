@@ -26,8 +26,6 @@ def args():
     return sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 
 
-# ---- Scene ----------------------------------------------------------------------------------------
-
 def clear():
     """An empty scene to build in (the startup cube, camera and light, or the last build, gone)."""
     if bpy.context.object and bpy.context.object.mode != 'OBJECT':
@@ -86,8 +84,6 @@ def join(target, others):
     target.select_set(True)
     bpy.context.view_layer.objects.active = target
     bpy.ops.object.join()
-    # Joining leaves something validate() tidies (no geometry changes); do it here so the
-    # exporter doesn't warn.
     target.data.validate()
     return target
 
@@ -99,8 +95,6 @@ def set_origin(ob, at):
     ob.data.transform(Matrix.Translation(-local))
     ob.matrix_world = ob.matrix_world @ Matrix.Translation(local)
 
-
-# ---- Shapes (added to a bmesh) --------------------------------------------------------------------
 
 def _place(bm, verts, center, rot, scale=(1, 1, 1)):
     m = Matrix.Translation(center) @ Euler(rot, 'XYZ').to_matrix().to_4x4() @ Matrix.Diagonal((*scale, 1))
@@ -207,8 +201,6 @@ def outline(bm, points, depth, center=(0, 0, 0), rot=(0, 0, 0), bevel=0.0):
     _merge(bm, part)
 
 
-# ---- One smooth skin ------------------------------------------------------------------------------
-
 def fuse(ob, voxel=0.0065, smooth=10, quads=4200):
     """Melts overlapping shapes into one skin, rounds off the seams, then lays even quads over it.
     Evenly sized quads bend cleanly at joints; thinning with Decimate instead leaves long slivers
@@ -272,7 +264,6 @@ def paint(ob, base, patches):
     bm.from_mesh(me)
     for _, field in patches:
         cut_along(bm, field)
-    # A cut that passes right by a vertex leaves slivers; fold them away.
     bmesh.ops.dissolve_degenerate(bm, dist=1e-4, edges=bm.edges[:])
     bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 4])
     for f in bm.faces:
@@ -282,8 +273,6 @@ def paint(ob, base, patches):
     bm.to_mesh(me)
     bm.free()
 
-
-# ---- Rigs and clips -------------------------------------------------------------------------------
 
 def armature(name, spec):
     """An armature from [(bone, head, tail, parent or None, deforms)]. Rolls are set so every bone's
@@ -301,7 +290,6 @@ def armature(name, spec):
         if parent:
             b.parent = data.edit_bones[parent]
     for b in data.edit_bones:
-        # align_roll points the bone's Z axis, so aim Z at +X cross the bone to get X along +X.
         b.align_roll(Vector((1, 0, 0)).cross((b.tail - b.head).normalized()))
     bpy.ops.object.mode_set(mode='OBJECT')
     for bone, _, _, _, deform in spec:
@@ -402,8 +390,6 @@ def show(arm, clips, clip, t):
     bpy.context.scene.frame_set(1 + round(t * clips[clip][0]))
 
 
-# ---- Export ---------------------------------------------------------------------------------------
-
 def export(name, arm=None, uvs=False):
     """Writes <name>.glb from everything in the scene. With a rig, its actions go
     in as clips (only bones that deform, so helper bones such as IK targets stay behind); `uvs` keeps
@@ -425,8 +411,6 @@ def export(name, arm=None, uvs=False):
         export_animation_mode='ACTIONS',
         export_force_sampling=True,
         export_anim_slide_to_zero=True,
-        # Drops repeated keyframes, but keeps every bone keyed in every clip, so a clip always
-        # sets the whole pose (a held sit keeps its legs).
         export_optimize_animation_size=True,
         export_optimize_animation_keep_anim_armature=True,
         export_reset_pose_bones=True,
@@ -434,8 +418,6 @@ def export(name, arm=None, uvs=False):
     )
     return path
 
-
-# ---- Review renders -------------------------------------------------------------------------------
 
 VIEWS = {
     "tq": (0.95, -1.0, 0.55),
@@ -498,7 +480,6 @@ def sheet(name, shots, cell=(420, 330), target=(0, 0, 0.35), dist=1.7):
     rows = [np.concatenate(tiles[i:i + 4], axis=1) for i in range(0, len(tiles), 4)]
     width = max(r.shape[1] for r in rows)
     rows = [np.pad(r, ((0, 0), (0, width - r.shape[1]), (0, 0))) for r in rows]
-    # Blender's pixels run bottom row first, so the first row of tiles goes last.
     full = np.concatenate(rows[::-1], axis=0)
     path = os.path.join(SHOT_DIR, name + ".png")
     out = bpy.data.images.new(name, full.shape[1], full.shape[0], alpha=True)

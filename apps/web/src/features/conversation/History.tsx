@@ -8,7 +8,6 @@ import { Empty } from '../../ui/Empty.js';
 import { useT } from '../../ui/useT.js';
 import { QueryStatus } from '../shell-chrome/QueryStatus.js';
 import { POLL, poll } from '../../lib/app/polling.js';
-/** Asks for a sequence number to replay up to, or shows the banner that says the history is read-only up to it. */
 function ReplayControl({
   replayTo,
   onChange,
@@ -43,7 +42,6 @@ function ReplayControl({
   );
 }
 
-/** The events, newest first; with a replay point, only those up to it. */
 function EventsTable({ events, replayTo }: { events: OfficeEvent[]; replayTo: string | null }) {
   const t = useT();
   return (

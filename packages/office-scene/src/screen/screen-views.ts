@@ -7,7 +7,6 @@ import { drawLock } from './screen-view-overlay.js';
 import { drawTerminal } from './screen-view-terminal.js';
 import { drawBrowser, drawDocs } from './screen-view-web.js';
 
-/** Every view a desk screen can show, by the id screen-layout.ts chooses. */
 export const VIEWS: Record<ViewId, (c: ViewCtx) => void> = {
   editor: drawEditor,
   terminal: drawTerminal,

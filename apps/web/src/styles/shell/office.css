@@ -79,20 +79,12 @@
   border-radius: var(--r-xs);
   border: 1px solid color-mix(in srgb, var(--mint) 28%, var(--line));
   box-shadow: inset 0 0 80px var(--vignette); /* token-lint: ring */
-  min-height: 380px; /* geometry: the shortest stage the camera framing and the HUD fit in token-lint: geometry */
+  min-height: var(--stage-min-h);
   height: calc(100dvh - 300px); /* token-lint: geometry */
   flex: 1;
   max-height: 880px; /* token-lint: geometry */
   overflow: hidden;
   isolation: isolate;
-}
-/* The KPI strip and the rest of the page's chrome would squeeze the scene below the control-room wall's minimum
-   (MIN_HEIGHT in multi-view.ts, measured inside the 1px borders): on a roomy window the page scrolls a little instead of
-   losing the wall. */
-@media (min-width: 1251px) and (min-height: 880px) {
-  .scene-shell {
-    min-height: 542px; /* token-lint: geometry */
-  }
 }
 .scene-toolbar {
   position: absolute;
@@ -138,7 +130,6 @@
   color: var(--on-glass);
   padding: var(--space-2);
 }
-/* .scene-toolbar in front: controls.css (later in the cascade) gives a class-less button the page's --control-h-md. */
 .scene-toolbar .scene-options > button,
 .scene-toolbar .scene-options select {
   min-width: var(--control-h-sm);
@@ -159,10 +150,9 @@
 }
 .scene-footer {
   position: absolute;
-  /* geometry: the footer line sits under the floor card (scene-hud.css, left 18 / bottom 38) and the camera wall (scene-pips.css) */
-  left: 18px; /* token-lint: geometry */
-  right: 18px; /* token-lint: geometry */
-  bottom: 14px; /* token-lint: geometry */
+  left: var(--stage-inset);
+  right: var(--stage-inset);
+  bottom: var(--stage-rail);
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -227,7 +217,7 @@
   border: 1px solid var(--line);
   padding: var(--space-8) var(--space-12);
   border-radius: var(--r-md);
-  min-width: 145px; /* token-lint: geometry */
+  min-width: var(--team-chip-w);
   background: var(--surface);
 }
 .team-chip.selected {

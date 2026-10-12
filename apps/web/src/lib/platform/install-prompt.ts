@@ -1,8 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
-// Installing the office on a phone's home screen. Chromium offers a prompt of its own (`beforeinstallprompt`) that the
-// page may hold back and show from a button. iOS has no such event: Safari only installs from its Share sheet, so the
-// page can only say how.
+// Chromium offers its own install prompt (`beforeinstallprompt`) that the page may hold back and show from a button.
+// iOS has no such event: Safari only installs from its Share sheet, so the page can only say how.
 
 const DISMISSED = 'aether-install-dismissed';
 
@@ -14,7 +13,6 @@ export function isIos(userAgent: string, touchPoints: number): boolean {
   return /iPhone|iPad|iPod/.test(userAgent) || (/Macintosh/.test(userAgent) && touchPoints > 1);
 }
 
-/** What to show: the install button where the browser offers one, the Share-sheet steps on iOS, never once installed or dismissed. */
 export function installHint(state: {
   canPrompt: boolean;
   ios: boolean;

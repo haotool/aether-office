@@ -1,15 +1,14 @@
 import { safeFetch, type FetchPolicy } from '../platform/safe-fetch.js';
 
-// Provider clients normalise external issues. They never touch the database and never read
-// secrets: the caller passes the token for one request. Live verification against the real
-// services needs credentials and is tracked separately from these fixture-tested contracts.
+// Provider clients normalise external issues. They never touch the database or read secrets: the caller passes the
+// token for one request.
 export type ExternalIssue = {
   externalId: string;
-  reference: string; // "#12" or "ENG-34": shown to humans
+  reference: string;
   title: string;
   body: string;
   url: string;
-  updatedAt: string; // ISO-8601
+  updatedAt: string;
 };
 
 export class RateLimited extends Error {
@@ -85,7 +84,7 @@ export async function githubIssues(
   const data = parse(response.body);
   if (!Array.isArray(data)) throw new ConnectorError('BAD_RESPONSE');
   return data
-    .filter((i) => i && typeof i === 'object' && !('pull_request' in i)) // the issues API also lists PRs
+    .filter((i) => i && typeof i === 'object' && !('pull_request' in i))
     .map((i: Record<string, unknown>) => {
       if (
         typeof i['id'] !== 'number' ||

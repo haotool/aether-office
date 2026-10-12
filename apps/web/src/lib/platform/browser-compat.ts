@@ -1,7 +1,6 @@
 // The page is also opened from a phone over plain HTTP on the local network, which browsers do not treat as a
 // secure context: `crypto.randomUUID` and `navigator.clipboard` are missing there, so each has a fallback.
 
-/** A random v4 UUID, from `crypto.getRandomValues` (available everywhere) when `randomUUID` is not. */
 export function uuid(): string {
   if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
   const bytes = crypto.getRandomValues(new Uint8Array(16));
@@ -11,7 +10,6 @@ export function uuid(): string {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
-/** Copies text to the clipboard; false when the browser refused. */
 export async function copyText(text: string): Promise<boolean> {
   try {
     if (navigator.clipboard) {

@@ -1,7 +1,6 @@
 import { Component, type ReactNode } from 'react';
 import { isChunkLoadError, mayReloadForChunk } from './lib/app/root-boundary.js';
 
-/** The last line of defense: any render error would otherwise leave a blank page. */
 export class RootBoundary extends Component<{ children: ReactNode }, { error: unknown }> {
   override state = { error: null as unknown };
   static getDerivedStateFromError(error: unknown) {

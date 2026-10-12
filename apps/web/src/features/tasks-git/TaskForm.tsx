@@ -6,7 +6,6 @@ import { Modal } from '../../ui/Modal.js';
 import { Field } from '../../ui/Field.js';
 import { useT, useWhy } from '../../ui/useT.js';
 
-/** Creating a work item from the form's values; the dialog closes once it is saved. */
 function useCreateTask(projectId: string, onSaved: () => void, onClose: () => void) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');

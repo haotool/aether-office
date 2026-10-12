@@ -3,12 +3,9 @@ import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 /**
- * Makes the animal models lighter to download: the exporter writes every bone on every frame of every clip, and most of
- * that is a straight line or no motion at all. This keeps only the keyframes that linear interpolation cannot stand in
- * for (within 1 mm, 0.11 degrees), always the first and last so a loop keeps its length and seam, and rewrites the
- * models' manifests (hash and size). Run it after tools/blender/build_animals.py; running it again changes nothing.
- *
- *     node scripts/optimize-animals.mjs
+ * Keeps only the keyframes that linear interpolation cannot stand in for (within 1 mm, 0.11 degrees), always the first
+ * and last so a loop keeps its length and seam, and rewrites the manifests. Run it after
+ * tools/blender/build_animals.py; running it again changes nothing.
  */
 const DIR = 'apps/web/public/assets/animals';
 const TOLERANCE = { translation: 0.001, rotation: 0.002, scale: 0.001 };
@@ -46,7 +43,6 @@ const readFloats = (json, bin, accessor) => {
   return out;
 };
 
-/** The error of leaving key `i` out between kept keys `a` and `b`. */
 function error(times, values, n, path, a, b, i) {
   const t = (times[i] - times[a]) / (times[b] - times[a]);
   if (path === 'rotation') {
@@ -66,7 +62,6 @@ function error(times, values, n, path, a, b, i) {
   return worst;
 }
 
-/** The indices of the keys to keep (Douglas-Peucker over time): the ends, and wherever a straight line is not enough. */
 function keep(times, values, path) {
   const n = COMPONENTS[path === 'rotation' ? 'VEC4' : 'VEC3'];
   const kept = new Set([0, times.length - 1]);
@@ -88,7 +83,6 @@ function keep(times, values, path) {
   return [...kept].sort((x, y) => x - y);
 }
 
-/** What a track says at time `t`: linear between its keys (rotations normalized), held at the ends. */
 function sample(times, values, n, path, t) {
   const last = times.length - 1;
   if (t <= times[0]) return Array.from(values.subarray(0, n));
@@ -110,7 +104,7 @@ const angle = (a, b) =>
 function reduce(json, bin) {
   // Every sampler gets its own, new time and value accessors: the exporter shares one time accessor between all the
   // channels of a clip, and each channel keeps different keys.
-  const fresh = []; // { accessor, data } in the order they are added
+  const fresh = [];
   const original = json.accessors.length;
   const made = (type, data) => {
     fresh.push({ type, data });
@@ -149,7 +143,6 @@ function reduce(json, bin) {
       if (off > TOLERANCE[c.path] * 1.5) throw new Error(`a ${c.path} track drifted by ${off}`);
     }
 
-  // Which accessors are still used, and by which views: everything but the replaced animation data.
   const stale = new Set();
   const referenced = new Set();
   const mark = (index) => index !== undefined && referenced.add(index);
@@ -173,7 +166,7 @@ function reduce(json, bin) {
     offset += padded.length;
     return start;
   };
-  const viewOf = new Map(); // old view -> new view
+  const viewOf = new Map();
   const views = [];
   const keepView = (index) => {
     if (viewOf.has(index)) return viewOf.get(index);
@@ -184,7 +177,7 @@ function reduce(json, bin) {
     return views.length - 1;
   };
   const accessors = [];
-  const accessorOf = new Map(); // old accessor -> new accessor
+  const accessorOf = new Map();
   json.accessors.forEach((a, i) => {
     if (stale.has(i)) return;
     accessorOf.set(i, accessors.length);
@@ -240,7 +233,7 @@ for (const manifestFile of (await readdir(DIR)).filter((f) => f.endsWith('.json'
     const next = writeGlb(json, reduce(json, bin));
     before += original.length;
     after += Math.min(original.length, next.length);
-    if (next.length >= original.length) continue; // already reduced
+    if (next.length >= original.length) continue;
     await writeFile(join(DIR, lod.file), next);
     lod.sha256 = sha(next);
     lod.bytes = next.length;

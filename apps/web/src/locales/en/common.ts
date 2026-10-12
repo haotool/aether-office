@@ -1,4 +1,3 @@
-/** The common words, in English. */
 export const enCommon = {
   retry: 'Retry',
   save: 'Save',

@@ -1,6 +1,6 @@
-# Mobile performance measurement (Phase 4 harness)
+# Mobile performance measurement
 
-This document describes how AETHER OFFICE measures **relative** mobile PWA performance for A/B experiments. It does not change product behavior. Formal baselines are run by the audit PM in an exclusive window; developers use the same harness locally.
+This document describes how AETHER OFFICE measures **relative** mobile PWA performance for A/B experiments. It does not change product behavior. Run baselines on an otherwise idle machine; the same harness works locally.
 
 See also [design-system.md](../design-system.md) (performance section), [mobile-gradient-perf.md](../internal/mobile-gradient-perf.md) (research), and `scripts/perf-matrix.mjs` (scene GPU matrix).
 
@@ -9,7 +9,7 @@ See also [design-system.md](../design-system.md) (performance section), [mobile-
 | Profile | Viewport | DPR | CPU throttle | Network | Notes |
 | --- | --- | --- | --- | --- | --- |
 | **M-LAB** | 390×844 touch | 3 | optional | none | Mac Chrome + Metal ANGLE; headless refuses software renderers |
-| **M-MID** | 390×844 touch | 3 | 4× | LAN dev/built server | Default for Phase 4 A/B |
+| **M-MID** | 390×844 touch | 3 | 4× | LAN dev/built server | Default for A/B runs |
 | **M-LOW** | same as M-MID | 3 | 6× | Slow 4G (CDP) | M-MID + heavier CPU + network |
 | **M-REAL** | device native | device | — | real radio | G5 field JSON via `?fieldperf=1` (human) |
 
@@ -21,7 +21,7 @@ See also [design-system.md](../design-system.md) (performance section), [mobile-
 pnpm run perf:mobile -- \
   --url-a http://127.0.0.1:4798 --token-a .data/perf-a.json \
   --url-b http://127.0.0.1:4799 --token-b .data/perf-b.json \
-  --rounds 12 --out evidence/audit/my-run
+  --rounds 12 --out evidence/perf/my-run
 ```
 
 - **Interleaved** order per round: A, B, A, B… (round index reverses case order on odd rounds).
@@ -31,7 +31,7 @@ pnpm run perf:mobile -- \
 
 ### Built servers (A vs B)
 
-Build each worktree once (`pnpm build`). Start **production** control+runner on allowed ports (4798–4799 for audit agents; never 3000, 3001, 4310, 4320, 4330):
+Build each worktree once (`pnpm build`). Start **production** control+runner on two free ports (the examples use 4798 and 4799):
 
 ```bash
 export AETHER_LOCAL_SESSIONS_HOME="$(mktemp -d)"
@@ -44,7 +44,7 @@ node --import tsx scripts/mobile-perf/serve-built.ts --port 4799 --token-out .da
 - **B** = candidate branch worktree (experiment build).
 - Stop servers with Ctrl+C; confirm no stray `node apps/control/dist/main.js` processes remain.
 
-Heavy commands (`pnpm build`, full test, harness runs) must use the audit lock wrapper from the main checkout path: `../aether-office-audit/integration/evidence/audit/with-lock.sh p4-0-perf-harness …`.
+Run heavy commands (`pnpm build`, the full test suite, harness runs) one at a time, so they do not disturb each other's numbers.
 
 ## Output schema (`aether-audit-perf-run/1`)
 
@@ -70,6 +70,27 @@ Configurable thresholds (defaults mirror AMENDMENTS A4.3 decorative 3D CUT):
 
 Functions live in `scripts/mobile-perf/stats.ts` with unit tests in `tests/aether/mobile-perf-stats.test.ts`.
 
+## Record for the release scorer
+
+`pnpm run perf:mobile` ranks A/B changes and needs an idle machine. The release scorer (`pnpm run quality:release`) reads
+a second, load-independent record: what the scene draws, what a cold start transfers and how the JS heap moves over a soak.
+Serve the built app as above, then:
+
+```bash
+pnpm run perf:evidence -- --url http://127.0.0.1:4798 --token-file .data/perf-a.json --out .data/perf-raw.json
+pnpm run perf:record -- --write .data/perf-raw.json
+```
+
+`perf:evidence` takes about twelve minutes (the 10-minute soak samples the heap every 30 seconds after a forced collection;
+growth is counted from the first minute on). `perf:record` writes `docs/verification/perf-mobile.json` beside the tree ids of
+the code it measured, so a later change to that code makes the record stale and the three criteria unmeasured again.
+
+| Criterion | Budget |
+| --- | --- |
+| L5-05 | at most 100 draw calls, 150k triangles, 64 MB of GPU memory and one WebGL context in the compact scene |
+| L5-06 | a cold start to the interactive scene transfers at most 3 MB (every 100 KB over is one violation) |
+| L5-09 | the JS heap grows at most 10% over a soak of at least 10 minutes |
+
 ## Interpreting results
 
 - M-MID can **rank** A/B changes on this Mac; it cannot prove absolute “smooth on phones” (no Safari compositor, no thermals/jetsam).
@@ -88,7 +109,7 @@ Use **`?fieldperf=1`** (not `?perf=N`, which only enables the scene probe rig).
 3. Append `?fieldperf=1` (or `&fieldperf=1` if the URL already has query params).
 4. Wait until the floating **Performance report** panel shows **Ready to copy** (~1–2 minutes; do not lock the screen).
 5. Use the app for ~2 minutes (change floor, open a character, scroll feed, open/close a sheet).
-6. Tap **Copy report**. Paste the JSON into your audit evidence file.
+6. Tap **Copy report**. Paste the JSON into your notes.
 7. Optional PWA: Share → **Add to Home Screen**, launch from the icon, add `fieldperf=1` again, repeat for ~1 minute.
 
 ### Android (Chrome)

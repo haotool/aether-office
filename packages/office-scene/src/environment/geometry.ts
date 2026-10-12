@@ -4,7 +4,12 @@
  */
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+// Furniture repeats a few dozen box sizes (51 sizes in 291 boxes on one floor): extrude each once per merge pass.
+const boxes = new Map<string, THREE.BufferGeometry>();
 function roundedBox(w: number, h: number, d: number, r = 0.06, hole = 0): THREE.BufferGeometry {
+  const key = `${w} ${h} ${d} ${r} ${hole}`;
+  const cached = boxes.get(key);
+  if (cached) return cached;
   const shape = new THREE.Shape();
   const x = -w / 2,
     y = -d / 2;
@@ -22,7 +27,7 @@ function roundedBox(w: number, h: number, d: number, r = 0.06, hole = 0): THREE.
   const geo = new THREE.ExtrudeGeometry(shape, { depth: h, bevelEnabled: false, curveSegments: 4 });
   geo.rotateX(-Math.PI / 2);
   geo.translate(0, -h / 2, 0);
-  geo.computeVertexNormals();
+  boxes.set(key, geo);
   return geo;
 }
 export function box(
@@ -31,7 +36,6 @@ export function box(
   size: [number, number, number],
   position: [number, number, number],
   radius = 0.03,
-  /** A round hole through the middle (radius), for the shaft the building is organised around. */
   hole = 0,
 ): THREE.Mesh {
   const mesh = new THREE.Mesh(roundedBox(...size, radius, hole), material);
@@ -47,12 +51,14 @@ export function mergeStatic(root: THREE.Group): THREE.Group {
   const originals = new Set<THREE.BufferGeometry>();
   root.traverse((object) => {
     if (!(object instanceof THREE.Mesh) || Array.isArray(object.material)) return;
-    const geo = object.geometry.index ? object.geometry.toNonIndexed() : object.geometry.clone();
+    const source = object.geometry;
+    // Not clone(): a subclass's clone() first builds its default shape (an extrusion, a torus), then overwrites it.
+    const geo = source.index ? source.toNonIndexed() : new THREE.BufferGeometry().copy(source);
     geo.applyMatrix4(object.matrixWorld);
     const values = groups.get(object.material) ?? [];
     values.push(geo);
     groups.set(object.material, values);
-    originals.add(object.geometry);
+    originals.add(source);
   });
   const merged = new THREE.Group();
   for (const [material, geometries] of groups) {
@@ -65,5 +71,6 @@ export function mergeStatic(root: THREE.Group): THREE.Group {
     for (const geo of geometries) geo.dispose();
   }
   for (const geometry of originals) geometry.dispose();
+  boxes.clear();
   return merged;
 }

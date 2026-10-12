@@ -3,7 +3,6 @@ import { nextKey, type KeyAction, type KeyState } from '../conversation/conv-key
 
 const turnsOf = (root: HTMLElement) => [...root.querySelectorAll<HTMLElement>('[data-turn]')];
 
-/** The turn the reader is at: the one holding focus, else the first whose end is still on screen. */
 function currentTurn(root: HTMLElement, turns: HTMLElement[]): number {
   const focused = turns.findIndex((t) => t.contains(document.activeElement));
   if (focused >= 0) return focused;
@@ -12,10 +11,6 @@ function currentTurn(root: HTMLElement, turns: HTMLElement[]): number {
   return visible < 0 ? turns.length - 1 : visible;
 }
 
-/**
- * The conversation's keyboard, for a reader with focus in it: j and k move between turns, `g g` goes to the top and `G` to
- * the bottom. A field the person is typing in keeps its keys.
- */
 export function useConvKeys(
   root: RefObject<HTMLElement | null>,
   toBottom: () => void,

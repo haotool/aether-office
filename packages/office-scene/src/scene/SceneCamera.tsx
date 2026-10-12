@@ -29,10 +29,8 @@ const blend = (a: Pose, b: Pose, u: number): Pose => ({
 });
 
 type Controls = NonNullable<ComponentRef<typeof OrbitControls>>;
-/** A flight in progress; `snap` is a move with no animation (reduced motion), taken as soon as the controls exist. */
 type Goal = { target: Vector3; position: Vector3; snap: boolean };
 type Glide = { from: Pose; startedAt: number };
-/** What the frame loop keeps between frames: the flight, the shot being played and the glide that brings the camera to it. */
 type Flight = { goal: Goal | null; shot: number; glide: Glide | null };
 
 /** Sets the lens angle (only when it differs, since a projection update is not free). */
@@ -43,7 +41,6 @@ function setFov(camera: Camera, fov: number) {
   }
 }
 
-/** The first-visit tour holds the camera exactly where its path says, like a shot: nothing chases, nothing is blended. */
 function holdTour(c: Controls, camera: Camera, tour: Pose) {
   camera.position.set(...tour.position);
   c.target.set(...tour.target);
@@ -51,7 +48,6 @@ function holdTour(c: Controls, camera: Camera, tour: Pose) {
   c.update();
 }
 
-/** Smooth fly-to: ease the camera and what it looks at toward the destination (at once under reduced motion). */
 function flyToGoal(f: Flight, c: Controls, camera: Camera, delta: number, invalidate: () => void) {
   const g = f.goal;
   if (!g) return;
@@ -73,10 +69,6 @@ function flyToGoal(f: Flight, c: Controls, camera: Camera, delta: number, invali
     f.goal = null;
 }
 
-/**
- * Following: once a flight is over, the camera and what it looks at slide together towards the member, keeping the
- * distance and bearing the person has. The seat is still, so this only moves when the seat does (a layout change, a floor).
- */
 function followMember(
   c: Controls,
   camera: Camera,
@@ -94,9 +86,8 @@ function followMember(
 }
 
 /**
- * The director's shot: the camera is put exactly where the shot's move says it is at this moment, never chased
- * towards it, so a held shot holds and a move is the move and nothing else. A near shot is reached by a timed,
- * eased glide from where the camera was; a far one by a cut.
+ * The camera is put exactly where the shot's move says, never chased towards it, so a held shot holds. A near shot is
+ * reached by a timed, eased glide, a far one by a cut.
  */
 function playShot(
   f: Flight,
@@ -139,7 +130,6 @@ function playShot(
 
 type Keyboard = { forward: Vector3; side: Vector3 };
 
-/** Keyboard flight: WASD or arrows glide over the ground, Q/E orbit, +/- dolly; Shift is faster. */
 function flyByKeys(
   keys: ReadonlySet<string>,
   f: Flight,
@@ -186,7 +176,6 @@ function flyByKeys(
   c.update();
 }
 
-/** A new command starts a flight to its target (at once under reduced motion); the frame loop carries it out. */
 function useFlyCommand(
   flight: RefObject<Flight>,
   command: FlyTo,
@@ -207,7 +196,6 @@ function useFlyCommand(
   }, [command, camera, invalidate, reducedMotion, flight, latestAspect]);
 }
 
-/** The person's hands on the controls end a flight at once: nothing pulls the camera on from under the hand. */
 function useUserTouch(
   controls: RefObject<Controls | null>,
   flight: RefObject<Flight>,
@@ -231,16 +219,13 @@ type SceneCameraProps = {
   reducedMotion: boolean;
   onUserCamera?: (() => void) | undefined;
   keyboardRef: RefObject<Set<string>>;
-  /** The shot the director is playing; null when the camera is the person's. */
   directed: Directed | null;
   seats: ReadonlyMap<string, Seat>;
   /** A member the person asked to follow: the camera keeps it in the middle (it moves with the seat, never against a hand on the controls). */
   followPoint?: V3 | null;
-  /** The first-visit tour's camera: its pose this frame, or null when the tour does not hold the camera (see intro/). */
   introPose?: ((aspect: number) => Pose | null) | undefined;
 };
 
-/** Handed back to the person: the lens returns to its usual angle of view. True while it is still moving. */
 function easeLensHome(camera: Camera, delta: number): boolean {
   if (!(camera instanceof PerspectiveCamera) || Math.abs(camera.fov - HOME_FOV) <= 0.05)
     return false;
@@ -288,7 +273,7 @@ export function SceneCamera({
       invalidate();
       return;
     }
-    const flying = f.goal !== null; // a flight that ends this frame still holds the shot back until the next
+    const flying = f.goal !== null;
     flyToGoal(f, c, camera, delta, invalidate);
     if (followed.current && !f.goal && !reducedMotion)
       followMember(c, camera, followed.current, delta, invalidate);
@@ -306,7 +291,6 @@ export function SceneCamera({
   return <CameraControls controls={controls} damping={!reducedMotion} />;
 }
 
-/** The orbit controls: how far in and out, how far down, and how quickly each gesture moves the camera. */
 function CameraControls({
   controls,
   damping,

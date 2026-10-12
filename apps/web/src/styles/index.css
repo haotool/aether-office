@@ -1,19 +1,6 @@
 /*
- * The web app's stylesheet, in cascade order: tokens first, then the desktop layers, then the touch and phone layers
- * (which win over the desktop sizes). Add a rule to the file of the thing it styles; a value comes from tokens.css.
- *
- *   core/tokens   every color, size, space, radius and layer (the only file that may hold a raw value)
- *   core/base     reset and typography
- *   shell         top bar, sidebar, connection state
- *   shell/office  the office page, 3D shell, toolbar, labels, team strip
- *   session       the session panel: feed and conversation column (the phone sheet is phone/phone-sheet); panel-resize its handle and rail,
- *                 session-feed its feed rows, squad the squad's tree, strip and cards, transcript-tools code blocks and tool chips, transcript-markdown the rendered reply, transcript-notices notice chips, find and day lines
- *   session/controls badges and buttons
- *   pages, forms, views, login   the pages and their forms
- *   pages/breakpoints   the desktop sizes (wide, narrow, tablet)
- *   pages/workbench ... workspace/quick-open     features: the scene HUD and speech bubbles, the character menu and its marks (character-menu), telemetry, transcript, git, sessions, clock out, approvals, quick open
- *   settings      Settings: the row kit (switch, segmented, chips, commands) and the page (navigation, phone list)
- *   phone         the touch and phone layers (UI rules in AGENTS.md)
+ * In cascade order: tokens first, then the desktop layers, then the touch and phone layers (which win over the desktop
+ * sizes). Add a rule to the file of the thing it styles; a value comes from tokens.css.
  */
 @import url('./core/tokens.css');
 @import url('./core/base.css');

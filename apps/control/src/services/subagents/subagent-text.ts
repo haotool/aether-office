@@ -1,14 +1,11 @@
 import { neutralizeHtml, stripCliWrappers, toPlainPreview } from '@aether/kernel';
 import { redactSecrets } from '../platform/redaction.js';
 
-/** Bounds the work the sanitizers do on one text (a transcript line is already capped at 200 KB; this is the same order). */
 const SANITIZE_CHARS = 200_000;
 
 /**
- * Pure. A subagent's words as the short plain text the panels show: secrets are redacted first (on the whole bounded input,
- * so a cut can never leave half a token that no pattern recognises, up to a bound that is a whole transcript line), then CLI wrappers are resolved and HTML neutralized
- * (`stripCliWrappers`, `neutralizeHtml`), Markdown becomes plain text on one line (`toPlainPreview`), and the result is cut to `max`
- * characters. Redaction runs again on the flattened text, before the cut, because removing markup can join pieces of a token.
+ * Secrets are redacted first, on the whole bounded input, so a cut can never leave half a token that no pattern
+ * recognises.
  */
 export function plainSummary(raw: string, max: number): string {
   const redacted = redactSecrets(raw.slice(0, SANITIZE_CHARS));

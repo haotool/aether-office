@@ -1,26 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
 import { signIn } from '../support/sign-in.js';
+import { PAGES } from '../support/pages.js';
 import { mkdirSync } from 'node:fs';
 
-// The UI rules (AGENTS.md → "UI rules") as a check, on every page at the widths below (the seven the charter names, 320 to
-// 1920, and a few awkward ones in between): nothing sideways, no control sitting on another, no text under the type floor,
-// and, where the pointer is a finger, every control a finger target.
-const PAGES = [
-  'office',
-  'agents',
-  'tasks',
-  'messages',
-  'workspace',
-  'terminals',
-  'sessions',
-  'observations',
-  'reviews',
-  'approvals',
-  'knowledge',
-  'machines',
-  'history',
-  'settings',
-] as const;
 const VIEWPORTS = [
   { name: 'phone-small', width: 320, height: 640, touch: true },
   { name: 'phone-narrow', width: 360, height: 800, touch: true },
@@ -34,7 +16,7 @@ const VIEWPORTS = [
   { name: 'desktop-wide', width: 1920, height: 1080, touch: false },
 ] as const;
 const TYPE_FLOOR = 11;
-const TOUCH_TARGET = 36; // the control itself; a finger's 44px comes from a hit area that extends past it (touch-targets.css)
+const TOUCH_TARGET = 36;
 
 async function login(page: Page) {
   await signIn(page);
@@ -43,7 +25,6 @@ async function login(page: Page) {
   return projects[0]!.id;
 }
 
-/** What breaks the rules on the page as it is now, one line per offender. */
 function audit({ touch, floor, target }: { touch: boolean; floor: number; target: number }) {
   const problems: string[] = [];
   const width = document.documentElement.clientWidth;
@@ -68,13 +49,12 @@ function audit({ touch, floor, target }: { touch: boolean; floor: number; target
   for (const el of document.querySelectorAll('body *')) {
     if (!shown(el) || el.closest('canvas, svg, .world-labels')) continue;
     const box = el.getBoundingClientRect();
-    let inScroller = false; // inside a box that scrolls sideways by design
+    let inScroller = false;
     for (let up = el.parentElement; up && up !== document.body; up = up.parentElement)
       if (['auto', 'scroll'].includes(getComputedStyle(up).overflowX)) inScroller = true;
     if (!inScroller && box.right > width + 1 && box.left < width)
       problems.push(`past the right edge: ${label(el)} (${Math.round(box.right)}px)`);
     const own = [...el.childNodes].some((n) => n.nodeType === 3 && (n.textContent ?? '').trim());
-    // Cut off: a text or a control partly outside an ancestor that clips it and does not scroll.
     if (own || el.matches('button, a[href], select, input, summary')) {
       for (
         let up = el.parentElement;
@@ -86,7 +66,7 @@ function audit({ touch, floor, target }: { touch: boolean; floor: number; target
           ['auto', 'scroll'].includes(style.overflowX) ||
           ['auto', 'scroll'].includes(style.overflowY)
         )
-          break; // it scrolls, so the rest is reachable
+          break;
         const clips =
           ['hidden', 'clip'].includes(style.overflowX) ||
           ['hidden', 'clip'].includes(style.overflowY);
@@ -109,7 +89,6 @@ function audit({ touch, floor, target }: { touch: boolean; floor: number; target
       'button, select, summary, input:not([type=hidden]), a[href], [role=button], [role=tab]',
     );
     if (!control) continue;
-    // A checkbox is operated through its row; a link inside running text is exempt (WCAG 2.5.8).
     const row =
       el.matches('input[type=checkbox], input[type=radio]') && el.closest('label')
         ? el.closest('label')!
@@ -126,8 +105,6 @@ function audit({ touch, floor, target }: { touch: boolean; floor: number; target
       }
     }
   }
-  // Two controls sitting on each other: more than a quarter of the smaller one covered, counting only the part of each
-  // that shows (a box that scrolls clips its content). A fixed bar is its own layer: the page scrolls under it by design.
   const fixed = (el: Element) => {
     for (let up: Element | null = el; up; up = up.parentElement)
       if (['fixed', 'sticky'].includes(getComputedStyle(up).position)) return true;
@@ -228,21 +205,55 @@ test('a phone shows the 3D office filling the screen, with a floor rail and no t
   await login(page);
   await page.goto('/office');
   const canvas = page.locator('canvas');
-  await expect(canvas).toBeVisible({ timeout: 20000 }); // the 3D chunk is loaded on demand
-  // The canvas is sized by the scene a moment after it appears.
-  await expect.poll(async () => (await canvas.boundingBox())!.height).toBeGreaterThan(844 * 0.7); // the scene is the screen, bar and tabs aside
+  await expect(canvas).toBeVisible({ timeout: 20000 });
+  await expect.poll(async () => (await canvas.boundingBox())!.height).toBeGreaterThan(844 * 0.7);
   const box = (await canvas.boundingBox())!;
   expect(box.x).toBeGreaterThanOrEqual(0);
   expect(box.x + box.width).toBeLessThanOrEqual(390.5);
   await expect(page.locator('.scene-rail')).toBeVisible();
   await expect(page.locator('.tabbar')).toBeVisible();
-  // No heading, stats or panels over or above the scene.
   await expect(page.locator('.office-heading, .office-stats, .building-panel')).toHaveCount(0);
-  // Without asking for names, no name tag is drawn over the scene.
   await expect(page.locator('.scene-label:visible')).toHaveCount(0);
-  await page.getByRole('button', { name: '更多控制' }).tap(); // the switches are folded away until asked for
+  await page.getByRole('button', { name: '更多控制' }).tap();
   await page.getByRole('button', { name: '顯示名稱' }).tap();
   await expect(page.locator('.scene-label').first()).toBeAttached();
+  await context.close();
+});
+
+test('a phone scrolls the 2D list below the view switch and the chips, down to a card above the new-task button', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    isMobile: true,
+  });
+  await context.addInitScript(() =>
+    window.localStorage.setItem(
+      'aether-ui-preferences',
+      JSON.stringify({ state: { advanced: true, intro: 'never' }, version: 1 }),
+    ),
+  );
+  const page = await context.newPage();
+  await login(page);
+  await page.goto('/office');
+  await page.getByRole('button', { name: '2D', exact: true }).tap();
+  const list = page.locator('.office-2d');
+  await expect(list.locator('.agent-card').first()).toBeVisible();
+  await list.evaluate((el) => el.scrollTo(0, el.scrollHeight));
+  const edges = await page.evaluate(() => {
+    const bottom = (selector: string) =>
+      document.querySelector(selector)!.getBoundingClientRect().bottom;
+    const cards = [...document.querySelectorAll('.office-2d .agent-card')];
+    return {
+      hud: Math.max(bottom('.phone-top'), bottom('.phone-kpi')),
+      listTop: document.querySelector('.office-2d')!.getBoundingClientRect().top,
+      lastCard: cards[cards.length - 1]!.getBoundingClientRect().bottom,
+      fab: document.querySelector('.fab')!.getBoundingClientRect().top,
+    };
+  });
+  expect(edges.listTop).toBeGreaterThanOrEqual(edges.hud - 0.5);
+  expect(edges.lastCard).toBeLessThanOrEqual(edges.fab + 0.5);
   await context.close();
 });
 
@@ -258,9 +269,9 @@ test('a phone on its side gives the scene the screen, and the drawer still switc
   await login(page);
   await page.goto('/office');
   await expect(page.locator('canvas')).toBeVisible({ timeout: 20000 });
-  await expect(page.locator('.mobile-menu')).toBeVisible(); // navigation is the drawer, not a column
+  await expect(page.locator('.mobile-menu')).toBeVisible();
   await expect(page.locator('.sidebar')).toBeHidden();
-  await expect(page.locator('.tabbar')).toBeHidden(); // no height to spare for it
+  await expect(page.locator('.tabbar')).toBeHidden();
   await expect
     .poll(async () => (await page.locator('canvas').boundingBox())!.height)
     .toBeGreaterThan(390 * 0.7);

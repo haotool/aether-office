@@ -11,7 +11,6 @@ const OPENING: FlyTo = { id: 0, target: [0, 0, 0], offset: OVERVIEW(false) };
 type Setter<T> = (value: T) => void;
 type FloorView = RefObject<{ floor: number; exploded: boolean }>;
 
-/** Start on the busiest floor (most work, then most members) until the user picks one themselves. */
 function useStartFloor(o: {
   perFloor: ReturnType<typeof floorCounts>;
   fly: (target: [number, number, number], offset: [number, number, number]) => void;
@@ -22,7 +21,7 @@ function useStartFloor(o: {
   const { perFloor, fly, userChoseFloor, view, setFloor } = o;
   useEffect(() => {
     if (userChoseFloor.current) return;
-    const best = busiestFloor(perFloor); // only the head count decides the starting floor
+    const best = busiestFloor(perFloor);
     if (best !== null && best !== view.current.floor) {
       setFloor(best);
       fly([0, lookY(best, view.current.exploded), 0], OVERVIEW(view.current.exploded));
@@ -30,7 +29,6 @@ function useStartFloor(o: {
   }, [perFloor, fly, userChoseFloor, view, setFloor]);
 }
 
-/** The tour sets the floor and the exploded view while it plays, and what it leaves is the person's from then on. */
 function useTourDrive(
   drive: IntroTour['drive'] | undefined,
   userChoseFloor: RefObject<boolean>,
@@ -47,10 +45,6 @@ function useTourDrive(
   }, [driveFloor, driveExploded, userChoseFloor, setFloor, setExploded]);
 }
 
-/**
- * The floor in view, the exploded view and the camera's flights: the floor starts on the busiest one, the first-visit tour
- * drives both while it plays, and every flight (to a floor, a zone, a desk) goes through `fly`.
- */
 export function useFloorCamera(
   agents: readonly Agent[],
   layout: Layout,
@@ -63,7 +57,6 @@ export function useFloorCamera(
   const sequence = useRef(0);
   const perFloor = useMemo(() => floorCounts(agents, layout), [agents, layout]);
 
-  // Any other flight (a floor, a zone, a double click) ends a follow; `follow` sets it again after its own.
   const fly = useCallback((target: [number, number, number], offset: [number, number, number]) => {
     sequence.current += 1;
     setFollowing(null);

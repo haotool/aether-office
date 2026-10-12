@@ -50,9 +50,8 @@ export function reconcileOffline(ctx: Context): number {
 export const STALL_FLOOR_MS = 10 * 60 * 1000;
 
 /**
- * Stall detection: a run that is `running` on a machine that is still heartbeating, but has reported nothing for twice
- * its time limit (and never less than ten minutes), is asked to stop. The runner aborts it on its next heartbeat; the
- * run then ends as cancelled through the usual path. A machine that went silent is the other sweep's job.
+ * Stall detection: a run on a machine that still heartbeats but has reported nothing for twice its time limit (never
+ * less than ten minutes) is asked to stop; the runner aborts it on its next heartbeat.
  */
 export function reconcileStalled(ctx: Context): number {
   return ctx.sqlite

@@ -113,7 +113,7 @@ it('folds an active spawned Codex rollout into its parent session as a subagent'
   );
   resetLocalSessionCache();
   const found = await scanLocalSessions(home, Date.now(), 0, join(home, 'none.jsonl'));
-  expect(found.map((s) => s.sessionId)).toEqual([parent]); // the child is not a session of its own
+  expect(found.map((s) => s.sessionId)).toEqual([parent]);
   expect(found[0]!.subagents.map((s) => s.type)).toEqual(['worker']);
 });
 
@@ -131,7 +131,7 @@ it('attributes a headless session in a Claude scratch directory to the project i
       hook: null,
       subagents: [],
     }) as never;
-  const projects = [{ id: 'p-bunny', root: '/Users/dev/Tools/ledger-api' }];
+  const projects = [{ id: 'p-ledger', root: '/Users/dev/Tools/ledger-api' }];
   const found = attributeSessions(
     [
       session('/private/tmp/claude-501/-Users-dev-Tools-ledger-api/abc/scratchpad/blind/out'),
@@ -140,7 +140,7 @@ it('attributes a headless session in a Claude scratch directory to the project i
     ],
     projects,
   );
-  expect(found.map((s) => s.projectId)).toEqual(['p-bunny', null, null]);
+  expect(found.map((s) => s.projectId)).toEqual(['p-ledger', null, null]);
 });
 
 it('finds Codex sessions in every YYYY/MM/DD shard', async () => {

@@ -8,25 +8,8 @@ import {
   type Cell,
   type Tag,
 } from './ux.js';
+import { PAGES } from '../support/pages.js';
 
-// The core matrix: every page at the seven widths of the design system, light and dark, English and Traditional Chinese.
-// Each cell is one screenshot plus the assertions of `record`; `pnpm run ux:summary` totals them.
-const PAGES = [
-  'office',
-  'agents',
-  'tasks',
-  'messages',
-  'workspace',
-  'terminals',
-  'sessions',
-  'observations',
-  'reviews',
-  'approvals',
-  'knowledge',
-  'machines',
-  'history',
-  'settings',
-] as const;
 const WIDTHS = [
   [320, 568],
   [360, 640],
@@ -38,7 +21,6 @@ const WIDTHS = [
 ] as const;
 const THEMES = ['light', 'dark'] as const;
 const LANGS = ['en', 'zh-TW'] as const;
-/** `UX_ONLY=390x844` runs one width. */
 const ONLY = process.env['UX_ONLY'];
 
 type Shot = (scene: string) => Promise<Cell>;
@@ -46,13 +28,13 @@ type Shot = (scene: string) => Promise<Cell>;
 async function signedOutCells(page: Page, shot: Shot) {
   await page.goto('/');
   const login = await shot('login');
-  await page.goto('/no-such-page'); // signed out, the 404 is the login too
+  await page.goto('/no-such-page');
   return [login, await shot('login-404')];
 }
 
 async function officeListCells(page: Page, project: string, shot: Shot) {
   await page.goto(`/office?project=${project}`);
-  await page.getByRole('button', { name: /^2D/ }).first().click(); // "2D" on a phone, "2D list" beside the sidebar
+  await page.getByRole('button', { name: /^2D/ }).first().click();
   const top = await shot('office-2d');
   await page.locator('.office-2d').evaluate((el) => el.scrollTo(0, el.scrollHeight));
   return [top, await shot('office-2d-end')];

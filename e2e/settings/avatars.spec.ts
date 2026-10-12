@@ -9,7 +9,6 @@ async function login(page: Page) {
   return projects[0]!.id;
 }
 
-// The team strip and the member cards show a drawn portrait for every member: loaded, a fixed token-sized box, decorative.
 for (const theme of ['dark', 'light'] as const)
   test(`${theme} theme: member portraits render, keep their size and pass axe`, async ({
     page,

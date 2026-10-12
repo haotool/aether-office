@@ -7,7 +7,6 @@ import { STATUS_KEY, rowName, toolsText } from '../squad/squad-text.js';
 
 type Call = ReturnType<typeof callsOf>[number];
 
-/** The facts of a subagent as a list: what the hook and the transcript know, and nothing they do not. */
 export function SubagentFacts({ row, calls }: { row: SquadRow; calls: readonly Call[] }) {
   const t = useT();
   const tools = toolsText(t, row);
@@ -50,7 +49,6 @@ export function SubagentFacts({ row, calls }: { row: SquadRow; calls: readonly C
   );
 }
 
-/** One spawn: a folded card (type, status, how long, tool calls) that opens to its facts and its own recent calls. */
 const SubagentCard = memo(
   function SubagentCard({
     row,
@@ -99,7 +97,6 @@ const SubagentCard = memo(
     }),
 );
 
-/** "Subagent activity": a card per spawn, under the transcript (the transcript itself is never behind a fold). */
 export function SubagentCards({
   view,
   session,

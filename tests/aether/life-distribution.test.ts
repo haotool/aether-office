@@ -18,8 +18,6 @@ import {
 } from '../../packages/office-scene/src/life/signals.js';
 import { env, floorOf, MEMBERS, office } from './life-fixtures.js';
 
-// A simulated working day: eight members on two floors, a busy stream of calls with the occasional pattern, the scheduler
-// reading it every 2 s. The point is the building does not feel spammy, whatever the signals do.
 const TICK_MS = 2_000;
 const HOUR = 3_600_000;
 const T0 = 1_700_000_000_000;
@@ -35,7 +33,6 @@ const CALLS = {
   ls: 17,
 };
 
-// How often per member per tick (2 s) each tagged start happens: a handful of each across the building in a working day.
 const DANGER: readonly (readonly [CommandTag, number])[] = [
   ['git.push.force', 0.00003],
   ['deploy', 0.0001],
@@ -70,14 +67,12 @@ function simulate(hours: number, prefs: LifePrefs, seed = 'day') {
           tool: 'Bash',
           target: weighted(random, CALLS),
         });
-      // Outcomes the provider stated: a real test run every few minutes of a busy member, now passing, now failing.
       if (random() < 0.002)
         signals.push({ ...end(member, now, 'test', random() < 0.6), target: 'pnpm test' });
       if (random() < 0.0008) signals.push(end(member, now, 'build', random() < 0.5));
       if (random() < 0.00015) signals.push(end(member, now, 'ci.watch', random() < 0.7));
       if (random() < 0.0006) signals.push(end(member, now, 'git.push', random() < 0.9));
       if (random() < 0.00005) signals.push(end(member, now, 'gh.pr.approve', true));
-      // Calls that deserve a raised eyebrow, started and never judged.
       for (const [tag, chance] of DANGER)
         if (random() < chance)
           signals.push({ kind: 'tool.start', member, at: now, tool: 'Bash', tags: [tag] });

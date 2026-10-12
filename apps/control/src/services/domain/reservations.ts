@@ -23,7 +23,6 @@ const view = (row: Row, now: number): FileReservation => ({
   fence: row.fence,
   state: row.state === 'released' ? 'released' : row.expiresAt <= now ? 'expired' : 'active',
   expiresAt: row.expiresAt,
-  // Coordination only: nothing here stops another process from writing a file.
   advisory: true,
 });
 

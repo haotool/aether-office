@@ -12,19 +12,13 @@ import { useSessionTerminal } from '../../hooks/use-drive.js';
 type SessionFooterProps = {
   session: AttributedSession | null;
   projectId: string;
-  /** Is the session working now: the composer offers Stop in place of Send. */
   working?: boolean;
   composer?: ReactNode;
 };
 
 /**
- * The foot of a conversation. A session that runs in an AETHER terminal gets the composer (the server says which
- * terminal, by the session's process). A session AETHER only watches (started in some other terminal) gets no composer:
- * AETHER cannot type into it, and a text box that pretended to would lose what was typed. It gets the honest
- * alternatives: start a new AETHER terminal that resumes or forks it, or the provider's own commands to continue it
- * where it lives.
- *
- * `composer` lets a caller supply its own input, which then replaces all of this.
+ * A session AETHER only watches gets no composer: AETHER cannot type into it, and a text box that pretended to would
+ * lose what was typed. It gets the honest alternatives instead.
  */
 export function SessionFooter({
   session,

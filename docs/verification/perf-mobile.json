@@ -1,0 +1,50 @@
+{
+  "schema": "aether-perf-mobile/1",
+  "measuredAt": "2026-10-12T05:44:18.279Z",
+  "profile": "M-MID",
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+  "load1min": 16.87,
+  "scene": {
+    "drawCalls": 111,
+    "triangles": 85674,
+    "gpuMegabytes": 49.3,
+    "webglContexts": 1
+  },
+  "coldStart": {
+    "transferBytes": 2654587
+  },
+  "soak": {
+    "minutes": 10,
+    "heapMegabytes": [
+      22.9,
+      24.1,
+      24.6,
+      24.5,
+      24.5,
+      24.9,
+      24.7,
+      25,
+      24.6,
+      24.6,
+      24.9,
+      24.7,
+      24.8,
+      25,
+      25,
+      25.1,
+      24.8,
+      25.1,
+      24.9,
+      25.1,
+      24.9
+    ],
+    "growthPct": 1.2
+  },
+  "trees": {
+    "apps/web": "f78e438358a1eb73d1250382ba7b8fca2e84a1e8",
+    "apps/control": "f9c2e45661e603ebb775d0a9f8323d82351a4fd3",
+    "packages/contracts": "44c41b86568c05d3a0af2d554cc7c56d1d51f5b2",
+    "packages/kernel": "354f2ed76c10f2a6e21ee34613e5103e236de541",
+    "packages/office-scene": "9e34f9bc0b9d5f399972f729b4e0561d2ebbd673"
+  }
+}

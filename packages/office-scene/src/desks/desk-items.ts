@@ -15,11 +15,10 @@ import type { DeskItem } from './desk-profile.js';
 import { itemAt } from '../environment/checked.js';
 
 /**
- * The small things on a desk, each a few low-poly parts in one colour per part. A desk's items are merged into one
- * geometry (one draw call) and share one material; the geometry is shared by every desk with the same things.
+ * A desk's items are merged into one geometry (one draw call) and share one material; the geometry is shared by every
+ * desk with the same things.
  */
 const TOP = SLAB_TOP;
-/** Corners of the desk's top where things sit, clear of the keyboard, the emitter bar and the character's arms. */
 const SLOTS = [
   { x: 0.66, z: 0.12 },
   { x: -0.66, z: 0.14 },
@@ -107,7 +106,6 @@ const PARTS: Record<DeskItem, (tint: number) => Part[]> = {
 const ORDER: readonly DeskItem[] = ['mug', 'plant', 'figure', 'headphones', 'notepad', 'sticky'];
 const cache = new Map<string, BufferGeometry>();
 
-/** One merged geometry for these items (in a fixed order, so the same set is the same geometry). `tint` picks the mug's colour. */
 export function deskItemsGeometry(items: readonly DeskItem[], tint: number): BufferGeometry | null {
   const sorted = ORDER.filter((i) => items.includes(i));
   if (!sorted.length) return null;
@@ -143,6 +141,5 @@ export function deskItemsGeometry(items: readonly DeskItem[], tint: number): Buf
 }
 
 let material: MeshStandardMaterial | null = null;
-/** The one material every desk's things share. */
 export const deskItemsMaterial = (): MeshStandardMaterial =>
   (material ??= new MeshStandardMaterial({ vertexColors: true, roughness: 0.75, metalness: 0.05 }));

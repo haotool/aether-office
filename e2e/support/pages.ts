@@ -1,0 +1,16 @@
+export const PAGES = [
+  'office',
+  'agents',
+  'tasks',
+  'messages',
+  'workspace',
+  'terminals',
+  'sessions',
+  'observations',
+  'reviews',
+  'approvals',
+  'knowledge',
+  'machines',
+  'history',
+  'settings',
+] as const;

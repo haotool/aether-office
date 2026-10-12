@@ -13,7 +13,7 @@ const ART: Record<CellId, (g: Ctx) => void> = {
   duck(g) {
     blob(g, 60, 80, 36, 26, '#f6c92b');
     blob(g, 82, 44, 20, 20, '#f6c92b');
-    blob(g, 46, 74, 16, 12, '#e5b218'); // wing
+    blob(g, 46, 74, 16, 12, '#e5b218');
     g.fillStyle = '#f08a24';
     g.beginPath();
     g.moveTo(98, 42);
@@ -165,7 +165,6 @@ function key(g: Ctx, letter: string) {
   label(g, letter, 76, 46, '#1d2430');
 }
 
-/** Draws every cell of the atlas onto a canvas: one picture per `CELLS` entry, in that order. */
 export function drawAtlas(canvas: HTMLCanvasElement): void {
   canvas.width = ATLAS_WIDTH;
   canvas.height = ATLAS_HEIGHT;

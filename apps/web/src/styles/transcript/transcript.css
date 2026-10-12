@@ -1,8 +1,3 @@
-/*
- * A conversation in the session panel: turns (a prompt and what the agent did about it), tool calls as slim chips,
- * code blocks, the "jump to latest" pill, the closed details fold and the foot. Shared by the desktop column and the phone
- * sheet. Sizes follow the panel's own width (container queries on `.conversation`, see session-panel.css).
- */
 .conv-body {
   position: relative;
   flex: 1;
@@ -76,16 +71,8 @@
   font-size: var(--fs-body);
   line-height: var(--lh-body);
 }
-/* The assistant speaks as plain text on the page with a quiet gutter that warms when you read it */
 .msg.assistant {
   max-width: 72ch;
-  padding-left: var(--space-12);
-  border-left: 2px solid var(--line);
-  transition: border-color var(--dur) var(--ease);
-}
-.msg.assistant:hover,
-.msg.assistant:focus-within {
-  border-left-color: var(--mint);
 }
 .msg.assistant .msg-who {
   color: var(--mint);
@@ -115,7 +102,7 @@
   background: var(--raised);
   color: var(--blue);
   font-family: var(--mono);
-  font-size: 0.9em; /* relative on purpose: inline code stays a notch under the text around it (body, heading, list) */
+  font-size: 0.9em;
 }
 @container panel (min-width: 560px) {
   .conv-scroll {
@@ -132,7 +119,6 @@
   }
 }
 
-/* Everything that is not the conversation: closed until asked for, at the end of what scrolls */
 .session-details {
   margin-top: auto;
   padding-top: var(--space-8);

@@ -3,8 +3,6 @@ import type { PermissionRequestView } from '../../packages/contracts/src/index.j
 import { installBrowserEnv, removeBrowserEnv } from './fixtures/browser-env.js';
 import { QueryClient, h, renderHtml, textOf } from './fixtures/ssr.js';
 
-// First paint of presentational components on the server renderer (fixtures/ssr.ts): effects do not run, so each case is
-// "these props, this markup". The phone hooks need a browser snapshot the server lacks and are replaced here.
 installBrowserEnv();
 vi.mock('../../apps/web/src/lib/preferences/phone.js', () => ({
   usePhone: () => false,
@@ -278,7 +276,6 @@ describe('NotFound', () => {
 });
 
 describe('ConnectionStatus', () => {
-  // The server renderer reads a store's initial state, so the link is at its first state: connecting.
   it('says connecting with a gold dot and how long ago the data was updated', () => {
     const html = renderHtml(h(ConnectionStatus, { updatedAt: Date.now() - 4_000, offline: false }));
     expect(html).toContain('dot gold');

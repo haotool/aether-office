@@ -28,20 +28,18 @@ const base: CharacterFacts = {
 };
 const facts = (change: Partial<CharacterFacts>): CharacterFacts => ({ ...base, ...change });
 
-/** The state of every action as `id` (enabled) or `!id:reason` (disabled), the way the table below reads. */
 const read = (f: CharacterFacts) =>
   Object.fromEntries(
     actionsFor(f).map((a) => [a.id, a.enabled ? 'on' : (a.reason ?? 'disabled without a reason')]),
   ) as Partial<Record<ActionId, string>>;
 
 describe('which actions a character really has', () => {
-  // [case, facts, what each action should be: only the ones that differ from "on" or are asserted]
   const table: [string, Partial<CharacterFacts>, Partial<Record<ActionId, string>>][] = [
     [
       'a session AETHER only observes (read-only): continue instead of a message box, nothing is typed into it',
       {},
       {
-        message: undefined, // not offered
+        message: undefined,
         continue: 'reasonRunningElsewhere',
         replies: 'reasonReadOnly',
         interrupt: 'reasonReadOnly',

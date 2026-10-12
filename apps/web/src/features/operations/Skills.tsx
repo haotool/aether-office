@@ -37,7 +37,6 @@ function SkillRow({
 
 type Run = ReturnType<typeof useCommandRunner>['run'];
 
-/** Imports a skill from its pasted content. */
 function SkillImportForm({
   projectId,
   error,

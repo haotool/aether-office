@@ -69,7 +69,7 @@ it('puts someone waiting on a human first, then error, then work', () => {
 it('shows every active agent in turn, whoever has been off screen longest first', () => {
   const agents = [agent('a', 'working'), agent('b', 'working'), agent('c', 'working')];
   const shown = new Map([
-    ['a', NOW - 3000], // just seen: held back
+    ['a', NOW - 3000],
     ['b', NOW - 40_000],
     ['c', NOW - 20_000],
   ]);
@@ -82,7 +82,7 @@ it('sweeps the busiest floor, a different one next time, when nothing is going o
   expect(first).toMatchObject({ kind: 'sweep', floor: 0, subjects: [] });
   const second = choose(agents, { previous: first as never });
   expect(second?.floor).toBe(1);
-  expect(choose([], {})).toMatchObject({ kind: 'sweep' }); // seats alone are enough to sweep
+  expect(choose([], {})).toMatchObject({ kind: 'sweep' });
   expect(
     chooseShot({ agents: [], seats: new Map(), pulses: [], now: NOW, shown: none, previous: null }),
   ).toBeNull();
@@ -102,8 +102,7 @@ it('moves the camera through a closeup, ending nearer to the desk than it began,
   const desk = seats.get('c')!;
   const dist = (p: [number, number, number]) => Math.hypot(p[0] - desk.x, p[2] - desk.z);
   expect(dist(end.position)).toBeLessThan(dist(start.position));
-  expect(end.fov).toBe(start.fov); // no zoom on top of the dolly
-  // The desk is turned a quarter: the same shot on an unturned desk sits on a different axis.
+  expect(end.fov).toBe(start.fov);
   const turned = poseAt(shot, new Map([['c', { ...desk, rotation: 0 }]]), 1, 0.6);
   expect(turned.position[0]).not.toBeCloseTo(end.position[0], 1);
   expect(end.position.every(Number.isFinite)).toBe(true);
@@ -112,8 +111,8 @@ it('moves the camera through a closeup, ending nearer to the desk than it began,
 it('frames a pair from beside the line between them and keeps both in front of the lens', () => {
   const shot = choose([agent('a', 'idle'), agent('b', 'idle')], { pulses: [pulse(500)] })!;
   const pose = poseAt(shot, seats, 0.5, 1.6);
-  expect(pose.target[0]).toBeCloseTo(-4, 0); // midway between the desks
-  expect(Math.abs(pose.position[2] - pose.target[2])).toBeGreaterThan(3); // off to the side, not between them
+  expect(pose.target[0]).toBeCloseTo(-4, 0);
+  expect(Math.abs(pose.position[2] - pose.target[2])).toBeGreaterThan(3);
 });
 
 it('looks in on a forgotten or ownerless member between the busy ones, but never ahead of real work', () => {
@@ -175,7 +174,6 @@ describe('a comfortable director', () => {
           angle(sub(start.target, start.position), sub(end.target, end.position)),
         ).toBeLessThan(1);
         expect(end.fov).toBe(start.fov);
-        // Halfway is on the straight line between the ends: one axis, not an arc.
         const mid = poseAt(s, map, 0.5, 1.6).position;
         const line = sub(end.position, start.position);
         const part = sub(mid, start.position);
@@ -197,13 +195,12 @@ describe('a comfortable director', () => {
   });
 
   it('never reverses: every move goes the same way on the screen', () => {
-    // Forward (into the picture) for a closeup and a sweep, always the same sideways direction for a pair.
     const along = (s: Shot, map: ReadonlyMap<string, Seat>) => {
       const start = poseAt(s, map, 0, 1.6);
       const end = poseAt(s, map, 1, 1.6);
       const view = sub(start.target, start.position);
       const move = sub(end.position, start.position);
-      const right: V3 = [-view[2], 0, view[0]]; // view x up
+      const right: V3 = [-view[2], 0, view[0]];
       return { forward: dot(move, view) / len(view), right: dot(move, right) / len(right) };
     };
     for (const s of shots.filter((x) => x.kind !== 'pair'))
@@ -234,10 +231,9 @@ describe('a comfortable director', () => {
     const a = shot('closeup', ['a'], 0);
     const b = shot('closeup', ['b'], 0);
     expect(chooseEntry(null, a, seats, 1.6)).toBe('cut');
-    expect(chooseEntry(a, b, seats, 1.6)).toBe('fly'); // four metres apart, moving on
-    expect(chooseEntry(a, shot('closeup', ['c'], 0, 1), seats, 1.6)).toBe('cut'); // another floor
-    expect(chooseEntry(a, b, wide, 1.6)).toBe('cut'); // the length of the building away
-    // Back the way the last shot came from (the same picture again starts where this one began) is a reversal: a cut.
+    expect(chooseEntry(a, b, seats, 1.6)).toBe('fly');
+    expect(chooseEntry(a, shot('closeup', ['c'], 0, 1), seats, 1.6)).toBe('cut');
+    expect(chooseEntry(a, b, wide, 1.6)).toBe('cut');
     const ended = poseAt(a, seats, 1, 1.6).position;
     expect(len(sub(poseAt(a, seats, 0, 1.6).position, ended))).toBeLessThanOrEqual(FLY_MAX);
     expect(chooseEntry(a, a, seats, 1.6)).toBe('cut');
@@ -253,17 +249,14 @@ describe('a comfortable director', () => {
     const first = choose(agents, { shown: new Map([['b', NOW - 40_000]]) })!;
     expect(first.seconds).toBeGreaterThanOrEqual(5);
     expect(first.subjects[0]).toBe('a');
-    // Both were on screen a moment ago: nothing to cut back to, so the floor is swept.
     expect(choose(agents, { shown: at(COOLDOWN_MS - 1000) })).toMatchObject({ kind: 'sweep' });
     expect(choose(agents, { shown: at(COOLDOWN_MS + 1000) })).toMatchObject({ kind: 'closeup' });
-    // A pair is not shown with a member who was on a moment ago: the other one alone is.
     expect(
       choose(agents, { pulses: [pulse(500)], shown: new Map([['a', NOW - 20_000]]) }),
     ).toMatchObject({
       kind: 'closeup',
       subjects: ['b'],
     });
-    // Someone waiting on a person is the exception.
     const urgent = [agent('a', 'waiting_permission'), agent('b', 'working')];
     expect(choose(urgent, { shown: new Map([['a', NOW - 20_000]]) })?.subjects[0]).toBe('a');
   });

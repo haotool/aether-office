@@ -12,7 +12,7 @@ test('with the A2A gateway off, the UI says so and no A2A endpoint exists', asyn
   const rpc = await page.request.post('/a2a', {
     data: { jsonrpc: '2.0', id: 1, method: 'ListTasks', params: {} },
   });
-  expect(await rpc.text()).not.toContain('jsonrpc'); // no JSON-RPC endpoint answers
+  expect(await rpc.text()).not.toContain('jsonrpc');
   expect(
     (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
       .violations,

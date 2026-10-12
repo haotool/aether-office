@@ -1,4 +1,4 @@
-// The scene's own words in English. Every key has a Chinese line in zh.ts (its type says so); `{name}` marks a value.
+// Every key has a Chinese line in zh.ts (its type says so); `{name}` marks a value.
 export const EN = {
   'hud.sentMessage': 'sent a message',
   'hud.buildingOverview': 'BUILDING OVERVIEW',

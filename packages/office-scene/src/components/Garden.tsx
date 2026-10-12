@@ -16,14 +16,12 @@ type GardenProps = {
   animate: boolean;
   low: boolean;
   built: { current: number };
-  /** The height the braid has climbed to, read every frame. */
   reach: { current: number };
   onBloom: (info: BloomInfo, event: ThreeEvent<PointerEvent | MouseEvent>) => void;
   onLeave: () => void;
 };
 type Garden = NonNullable<ReturnType<typeof gardenOf>>;
 
-/** Opens each flower whose time has come (its tier has risen or the braid has passed its merge); the rest keep their bud. */
 function openFlowers(
   opened: number[],
   garden: Garden | null,
@@ -41,7 +39,6 @@ function openFlowers(
   }
 }
 
-/** The flowers' geometry and the two materials that draw it, each disposed when it is replaced or the garden goes. */
 function useGardenParts(stalk: Stalk, low: boolean) {
   const garden = useMemo(() => gardenOf(stalk, low), [stalk, low]);
   const skin = useMemo(gardenMaterial, []);
@@ -63,12 +60,6 @@ function useGardenParts(stalk: Stalk, low: boolean) {
   return { garden, skin, dust };
 }
 
-/**
- * The flowers on the crown: one per tier and a great bloom on the spire, and a small one for each recent merge commit on the
- * braid, all in one mesh and one points object (two draw calls). Each flower opens from a bud once its tier has risen (`built`
- * is read every frame) or the braid has climbed past its merge commit (`reach`), in its own time, so one that arrives later
- * blooms later. With motion off or reduced every flower is simply open. Pointing at one names its species.
- */
 export function Garden(props: GardenProps) {
   const { stalk, animate, low, onBloom, onLeave } = props;
   const { garden, skin, dust } = useGardenParts(stalk, low);
@@ -84,7 +75,6 @@ export function Garden(props: GardenProps) {
     setUniform(dust, 'scale', height * 0.5 * (state.camera.projectionMatrix.elements[5] ?? 1));
   });
   if (!garden) return null;
-  // Pointing at a flower, or tapping it on a touch screen, names it once it is open.
   const name = (event: ThreeEvent<PointerEvent | MouseEvent>) => {
     if (!event.face) return;
     const index = garden.mesh.getAttribute('pose').getZ(event.face.a);

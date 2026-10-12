@@ -31,17 +31,12 @@ import type { SquadMemberState, SquadZoneState } from './squad-model.js';
 import { beamIntensity, beamRate } from './beam-rate.js';
 import type { SquadFrame } from './use-squad.js';
 
-/** The brightness follows the squad's rate with this lag (a time constant, seconds): the halo glows a little after the work. */
 const LAG_S = 0.6;
-/** A beam with nobody in the squad burns at this level. */
 const IDLE = 0.05;
-/** Band speed (cycles per second) at the dimmest and the brightest. */
 const SPEED = [0.2, 1.4] as const;
-/** The halo hangs this far over the floor: over a seated head. */
 const HALO_Y = 2.25;
 const POINTS_PER_SQUAD = 48;
 const UP = new Vector3(0, 1, 0);
-// Scratch for the frame loop: nothing is allocated per frame.
 const from = new Vector3();
 const along = new Vector3();
 const direction = new Vector3();
@@ -53,7 +48,6 @@ const spot: [number, number, number] = [0, 0, 0];
 const stretch: [number, number, number] = [1, 1, 1];
 const wide: [number, number, number] = [1, 1, 1];
 
-/** How much of the extras each tier shows (none of them on low). */
 type BeamTier = { filament: boolean; halo: boolean; points: number };
 export const beamTier = (quality: 'low' | 'balanced' | 'high'): BeamTier =>
   quality === 'high'
@@ -62,13 +56,11 @@ export const beamTier = (quality: 'low' | 'balanced' | 'high'): BeamTier =>
       ? { filament: true, halo: true, points: POINTS_PER_SQUAD / 2 }
       : { filament: false, halo: false, points: 0 };
 
-/** A squad's brightness as it is shown (it follows the squad's rate with a lag) and the phase of its moving bands. */
 type Lag = { level: number; phase: number };
 type Beam = ReturnType<typeof createBeam>;
 const ON_DUTY = 1;
 const WAITING = 2;
 
-/** Whether anyone in the squad is on duty (bit 1) and whether one of them waits on a person (bit 2). */
 function dutyOf(members: Readonly<Record<string, SquadMemberState>>, supervisor: string): number {
   let duty = 0;
   for (const id in members) {
@@ -79,7 +71,6 @@ function dutyOf(members: Readonly<Record<string, SquadMemberState>>, supervisor:
   return duty;
 }
 
-/** Moves the shown brightness towards `target`; true while it is still settling (the frame must be asked for again). */
 function approach(entry: Lag, target: number, delta: number, animate: boolean): boolean {
   entry.level += (target - entry.level) * (1 - Math.exp(-delta / LAG_S));
   const settling = Math.abs(target - entry.level) > 0.004;
@@ -88,7 +79,6 @@ function approach(entry: Lag, target: number, delta: number, animate: boolean): 
   return settling;
 }
 
-/** One squad's funnel: from its zone, up into the core. */
 function writeFunnel(
   beam: Beam,
   i: number,
@@ -110,7 +100,6 @@ function writeFunnel(
   beam.tone.setXYZ(i, tone.r, tone.g, tone.b);
 }
 
-/** The return filament from the core to the supervisor's halo (`from` and `along` hold that stretch). */
 function writeFilament(mesh: InstancedMesh, i: number, tone: Color, brightness: number): boolean {
   spot[0] = from.x + along.x / 2;
   spot[1] = from.y + along.y / 2;
@@ -127,7 +116,6 @@ function writeFilament(mesh: InstancedMesh, i: number, tone: Color, brightness: 
   );
 }
 
-/** The halo over the supervisor's head: gold, breathing a little. */
 function writeHalo(
   mesh: InstancedMesh,
   i: number,
@@ -144,7 +132,6 @@ function writeHalo(
   return writeInstance(mesh, i, spot, NO_TURN, wide, shade);
 }
 
-/** The points drifting along the filament, from `first`; returns the index after the last one written. */
 function writeDots(
   positions: Float32BufferAttribute,
   first: number,
@@ -173,7 +160,6 @@ type BeamProps = {
   tier: BeamTier;
 };
 
-/** The beam's meshes and buffers, made once: the funnel, the filament, the halo and the drifting points. */
 type BeamRig = {
   beam: Beam;
   funnel: RefObject<InstancedMesh | null>;
@@ -206,16 +192,12 @@ function useBeamRig(): BeamRig {
   );
 }
 
-/** How bright a squad's beam wants to be: its supervisor's rate when it is on duty, else the idle glow. */
 const targetLevel = (duty: number, zone: SquadZoneState | undefined, now: number) =>
   duty ? Math.max(IDLE, beamIntensity(beamRate(zone, now))) : IDLE;
-/** The halo's slow breathing (still when the layer is not animated). */
 const breathing = (animate: boolean, time: number) => (animate ? 1 + 0.04 * Math.sin(time * 2) : 1);
-/** How many drifting points a squad shows at a beam level. */
 const pointsFor = (animate: boolean, tier: BeamProps['tier'], level: number) =>
   animate ? Math.round(tier.points * level) : 0;
 
-/** One frame of the beams: every squad's funnel, filament, halo and points, written only where something changed. */
 function updateBeams(rig: BeamRig, p: BeamProps, time: number, delta: number): boolean {
   const { beam, funnel, filament, halo, dots, lag, dotPositions, dotGeometry } = rig;
   const { squads, exploded, animate, tier } = p;
@@ -238,7 +220,6 @@ function updateBeams(rig: BeamRig, p: BeamProps, time: number, delta: number): b
     lag.set(s.supervisor, entry);
     const tone = colorOf(s.accent);
     writeFunnel(beam, i, s, y, tone, entry, (duty & WAITING) !== 0);
-    // The return filament runs from the core to the supervisor's halo; the points drift along it.
     from.set(0, y + BEAM_TO_Y, 0);
     along.set(s.chairX, y + HALO_Y, s.chairZ).sub(from);
     const brightness = 0.25 + 0.75 * entry.level;
@@ -261,12 +242,6 @@ function updateBeams(rig: BeamRig, p: BeamProps, time: number, delta: number): b
   return settling;
 }
 
-/**
- * The squad's beam into the core: a funnel of light from the zone (brightness and band speed follow the squad's tokens per
- * minute, or its tool calls per minute when no token rate is known: see beam-rate.ts), a thin filament and drifting points
- * from the core to the supervisor's halo, and the halo itself.
- * Squad, core, supervisor. Still (no band motion, no amber breathing, no points) when `animate` is off.
- */
 export function SquadBeam(props: BeamProps) {
   const { squads, tier } = props;
   const invalidate = useThree((s) => s.invalidate);

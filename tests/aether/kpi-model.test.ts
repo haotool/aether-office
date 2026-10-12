@@ -28,7 +28,6 @@ const totals = (over: Partial<UsageTotals> = {}): UsageTotals => ({
   sessions: 0,
   ...over,
 });
-/** A scope whose last day (today) is `today`. */
 const scope = (today: Partial<UsageTotals>, days = 3): UsageScope => ({
   totals: totals(today),
   daily: [...Array.from({ length: days - 1 }, () => totals()), totals(today)],
@@ -91,7 +90,7 @@ describe('numbers', () => {
   it('draws a sparkline with the largest value at the top, and nothing for no values', () => {
     expect(sparkPoints([0, 5, 10], 80, 20)).toBe('0.0,20.0 40.0,10.0 80.0,0.0');
     expect(sparkPoints([], 80, 20)).toBe('');
-    expect(sparkPoints([0, 0], 80, 20)).toBe('0.0,20.0 80.0,20.0'); // all zero: a flat line, not NaN
+    expect(sparkPoints([0, 0], 80, 20)).toBe('0.0,20.0 80.0,20.0');
   });
 
   it('shares models out of their total', () => {
@@ -125,7 +124,6 @@ describe('rate-limit windows', () => {
       ['claude-5h', 40],
       ['codex-10080', 78],
     ]);
-    // Each reading carries its age; Claude's own stale flag is passed on, Codex's is worked out from the age.
     expect(windows.map((w) => [w.updatedAt, w.stale])).toEqual([
       [1, false],
       [1, null],
@@ -217,10 +215,9 @@ describe('a control plane older than this page', () => {
     } as unknown as UsageResponse;
     const fixed = normalizeUsage(old);
     expect(fixed.building.daily).toHaveLength(3);
-    expect(fixed.building.daily[2]!.input).toBe(5); // the one day it sent is the latest
+    expect(fixed.building.daily[2]!.input).toBe(5);
     expect(fixed.building.totals).toMatchObject({ input: 5, output: 0, requests: 0 });
     expect(fixed.offices[0]!.scope.daily).toHaveLength(3);
-    // No scan from an old server is not a complete one, and not one that cut nothing short either.
     expect(fixed.scan).toEqual({
       complete: false,
       files: 0,

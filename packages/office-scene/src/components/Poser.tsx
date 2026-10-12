@@ -8,19 +8,14 @@ import { animationInterval } from '../perf/perf-control.js';
 import { turnWeight } from '../core/pose-cues.js';
 import type { TurnCue } from '../core/use-pose-cues.js';
 
-/** How quickly a member's turn follows its target, per second (an exponential approach, so it never snaps). */
 const FOLLOW = 7;
-/** A nod is a bob of the whole upper body about the seat; this much of it also dips the seat. */
 const DIP = 0.15;
-/** A turn this big (radians) has taken over from the idle sway entirely. */
 const SWAY_YIELD = 0.25;
 
 type PoserProps = {
   seat: Seat;
-  /** The member's id: its sway is its own. */
   seed: string;
   engagements: readonly Engagement[] | undefined;
-  /** A turn of the chair a life effect asked for; a message to a neighbour takes precedence. */
   turn?: TurnCue | undefined;
   reducedMotion: boolean;
   children: ReactNode;
@@ -28,7 +23,6 @@ type PoserProps = {
 
 type Gaze = { wanted: number; pitch: number };
 
-/** Where a member wants to turn (radians) and how far it nods this frame: toward its partner while a message is current, else where a life effect asked. Written into `out`: a frame allocates nothing. */
 function gazeOf(
   { seat, engagements, turn: asked, reducedMotion }: PoserProps,
   now: number,
@@ -42,12 +36,6 @@ function gazeOf(
   return out;
 }
 
-/**
- * Turns a seated member toward the one it is talking with (while a message is current) and nods the receiver when the
- * envelope lands. A rigid turn of the character about its seat, limited to a glance (see interplay.ts); the animation
- * underneath keeps playing. Between messages the member sways a little in its chair (a slow turn of up to 10 degrees and
- * a slight lean, each member's own, see behavior.ts), at the rate its distance from the camera allows.
- */
 export function Poser(props: PoserProps) {
   const { seed, reducedMotion, children } = props;
   const group = useRef<Group>(null);
@@ -63,7 +51,6 @@ export function Poser(props: PoserProps) {
     const calm = wanted === 0 && turn.current === 0 && pitch === 0;
     if (calm && reducedMotion) return;
     owed.current += Math.min(delta, 0.05);
-    // A member at rest sways at its distance's rate; one turning to a neighbour moves every frame.
     if (
       calm &&
       owed.current <
@@ -79,7 +66,7 @@ export function Poser(props: PoserProps) {
     target.rotation.y = turn.current + yawAt(drift, t) * sway;
     target.rotation.x = pitch + leanAt(drift, t) * sway;
     target.position.y = -pitch * DIP;
-    if (!calm) invalidate(); // a quiet sway rides on the frames the ambient clock already asks for
+    if (!calm) invalidate();
   });
   return <group ref={group}>{children}</group>;
 }

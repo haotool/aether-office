@@ -4,7 +4,6 @@ import { forgetCsrf } from '../../lib/api/api-csrf.js';
 import { useT } from '../../ui/useT.js';
 import { DangerZone, InlineHelp, Row } from './kit.js';
 
-/** Where the browser keeps the preferences (state.ts). */
 const PREFS_KEY = 'aether-ui-preferences';
 
 const readPrefs = () => {
@@ -23,7 +22,6 @@ function exportPrefs() {
   URL.revokeObjectURL(link.href);
 }
 
-/** Resetting asks twice: the first press only asks. */
 function ResetPrefs() {
   const t = useT();
   const [asking, setAsking] = useState(false);
@@ -57,11 +55,10 @@ async function signOut() {
     await api('/api/logout', { method: 'POST', body: '{}' });
   } finally {
     forgetCsrf();
-    window.location.assign('/'); // a fresh start: nothing of this session stays in memory
+    window.location.assign('/');
   }
 }
 
-/** What is stored where, and the ways to take it with you or clear it. */
 export function DataSection() {
   const t = useT();
   return (

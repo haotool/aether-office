@@ -55,9 +55,9 @@ it('never gives a machine more concurrent runs than its limit, and frees the slo
     assign(f, f.recipientId, 'second');
     const first = claim(f.control.ctx, machine.actor, ['demo'])!;
     expect(first).toBeTruthy();
-    expect(claim(f.control.ctx, machine.actor, ['demo'])).toBeNull(); // at its limit
+    expect(claim(f.control.ctx, machine.actor, ['demo'])).toBeNull();
     finish(f, machine, first);
-    expect(claim(f.control.ctx, machine.actor, ['demo'])).toBeTruthy(); // slot freed
+    expect(claim(f.control.ctx, machine.actor, ['demo'])).toBeTruthy();
   } finally {
     f.control.close();
   }
@@ -85,12 +85,12 @@ it('only offers work a runner can actually run: capability filter, and no two ru
     const codex = agent(f, 'Codex-like');
     f.control.ctx.sqlite.prepare("UPDATE agents SET provider='codex' WHERE id=?").run(codex);
     assign(f, codex, 'needs codex');
-    expect(claim(f.control.ctx, machine.actor, ['demo'])).toBeNull(); // a demo-only runner is never handed a codex run
+    expect(claim(f.control.ctx, machine.actor, ['demo'])).toBeNull();
 
     assign(f, f.senderId, 'agent busy 1');
     assign(f, f.senderId, 'agent busy 2');
     expect(claim(f.control.ctx, machine.actor, ['demo'])).toBeTruthy();
-    expect(claim(f.control.ctx, machine.actor, ['demo'])).toBeNull(); // the same agent is already working
+    expect(claim(f.control.ctx, machine.actor, ['demo'])).toBeNull();
   } finally {
     f.control.close();
   }

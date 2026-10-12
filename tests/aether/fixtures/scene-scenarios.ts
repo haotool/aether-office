@@ -1,7 +1,6 @@
-// Characterization scenarios for the scene's pure modules: each runs a fixed, seeded set of inputs through the code and
-// reduces the outputs to a short digest. The digests in scene-characterization.test.ts were taken from the code before the
-// types-and-structure pass; a refactor that keeps behaviour keeps them. Numbers are rounded to 1e-6 so a last-place
-// difference in a platform's maths cannot fail a test.
+// Each scenario runs a fixed, seeded set of inputs through the scene's pure modules and reduces the outputs to a short
+// digest, so a refactor that keeps behaviour keeps them. Numbers are rounded to 1e-6 so a last-place difference in a
+// platform's maths cannot fail a test.
 import { createHash } from 'node:crypto';
 import type { Agent } from '../../../packages/contracts/src/index.js';
 import type * as Building from '../../../packages/office-scene/src/environment/building.js';
@@ -282,7 +281,6 @@ function deskItems(m: SceneModules) {
   );
 }
 
-/** One digest for each scenario. */
 export function runScenarios(m: SceneModules): Record<string, string> {
   return {
     genomes: digest(genomes(m)),

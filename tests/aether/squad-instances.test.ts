@@ -1,4 +1,3 @@
-// The scene package owns three (and its types); a test of a pure module of it reads the same build.
 import { describe, expect, it } from 'vitest';
 import {
   finishInstances,
@@ -8,7 +7,6 @@ import {
   type Instance,
 } from '../../packages/office-scene/src/squad/squad-art.js';
 
-// A variable specifier: the build file has no declaration of its own, and @types/three describes it.
 const THREE_BUILD = '../../packages/office-scene/node_modules/three/build/three.module.js';
 const three = (await import(THREE_BUILD)) as typeof import('three');
 const { BoxGeometry, Color, InstancedMesh, MeshBasicMaterial } = three;
@@ -45,7 +43,7 @@ describe('instance writes', () => {
     const color = m.instanceColor!.version;
     writeInstances(m, [item(1, '#00ff88')]);
     expect(m.instanceColor!.version).toBeGreaterThan(color);
-    expect(m.instanceMatrix.version).toBeGreaterThan(matrix); // both buffers go up together
+    expect(m.instanceMatrix.version).toBeGreaterThan(matrix);
     const before = m.instanceMatrix.version;
     writeInstances(m, []);
     expect(m.count).toBe(0);
@@ -57,7 +55,7 @@ describe('instance writes', () => {
     const m = mesh();
     writeInstances(m, [item(3)]);
     const e = m.instanceMatrix.array;
-    expect([e[12], e[13], e[14]]).toEqual([3, 1, 2]); // the position
+    expect([e[12], e[13], e[14]]).toEqual([3, 1, 2]);
     const c = new Color('#ff8800');
     expect(m.instanceColor!.array[0]).toBeCloseTo(c.r, 5);
     expect(m.instanceColor!.array[1]).toBeCloseTo(c.g, 5);

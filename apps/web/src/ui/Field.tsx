@@ -7,7 +7,6 @@ export function Field({
   children,
 }: {
   label: string;
-  /** Why the field cannot be submitted, shown under it (the form's own check, see form-errors.ts). */
   error?: string | undefined;
   hint?: string;
   children: ReactNode;

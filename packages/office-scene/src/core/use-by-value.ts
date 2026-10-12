@@ -1,6 +1,5 @@
 import { useRef } from 'react';
 
-/** `prev` while `next` holds the same numbers, else `next`: what makes a fresh-every-render tuple a stable dependency. */
 export function keepIfEqual<T extends readonly number[]>(prev: T, next: T): T {
   return prev.length === next.length && prev.every((n, i) => n === next[i]) ? prev : next;
 }

@@ -76,11 +76,9 @@ function GitTiles({ kpi }: { kpi: GitKpi }) {
 type KpiGitProps = {
   kpi: GitKpi | null | undefined;
   loading: boolean;
-  /** Repositories left out of the building's figures (only the most recently active are read). */
   omitted?: number;
 };
 
-/** Commits, merges, merged and open branches, authors, lines and the oldest open branch of a scope's repositories. */
 export function KpiGit({ kpi, loading, omitted = 0 }: KpiGitProps) {
   const t = useT();
   return (

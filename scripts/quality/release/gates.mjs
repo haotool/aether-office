@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// Runs repo gate commands and writes aether-quality-gates/1 JSON (SSOT for G criteria producers).
 import { execFileSync, spawnSync } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -12,6 +11,7 @@ const root = path.resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 /** @type {Record<string, { argv: string[] }>} */
 export const GATE_COMMANDS = {
   'L1-01': { argv: ['pnpm', 'typecheck'] },
+  'L1-07': { argv: ['node', 'scripts/quality/release/gate-l1-07.mjs'] },
   'L2-01': { argv: ['pnpm', 'lint'] },
   'L2-07': { argv: ['node', 'scripts/check-boundaries.mjs'] },
   'L3-01': { argv: ['pnpm', 'test'] },
@@ -26,8 +26,14 @@ export const GATE_COMMANDS = {
   'L7-01': { argv: ['node', 'scripts/quality/release/gate-l7-01.mjs'] },
   'L7-02': { argv: ['pnpm', 'run', 'oss:check'] },
   'L7-05': { argv: ['node', 'scripts/clean-room.mjs', '--e2e'] },
+  'L8-01': { argv: ['node', 'scripts/oss/history-gate.mjs', 'L8-01'] },
+  'L8-02': { argv: ['node', 'scripts/oss/history-gate.mjs', 'L8-02'] },
+  'L8-04': { argv: ['node', 'scripts/oss/history-gate.mjs', 'L8-04'] },
+  'L8-08': { argv: ['node', 'scripts/oss/history-gate.mjs', 'L8-08'] },
   'L9-01': { argv: ['pnpm', 'run', 'oss:check'] },
   'L9-02': { argv: ['pnpm', 'run', 'oss:check'] },
+  'L9-03': { argv: ['node', 'scripts/oss/ci-check.mjs'] },
+  'L9-05': { argv: ['node', 'scripts/oss/ci-check.mjs'] },
 };
 
 function headSha() {

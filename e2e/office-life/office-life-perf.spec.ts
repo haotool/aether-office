@@ -2,20 +2,8 @@ import { test, expect, type Page } from '@playwright/test';
 import { signIn } from '../support/sign-in.js';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
-// The office-life performance gate (docs/design/office-life.md section 10): a baseline scene against a variant scene, each
-// mounted several times in turn (A, B, A, B, ...) so a loaded machine hits both alike, on a real GPU. Skipped unless
-// PERF_GPU=1, so an ordinary run reports "skipped", never "passed".
-//
-//   PERF_GPU=1 [PERF_BASELINE=''] [PERF_VARIANT='talk=1'] [PERF_ROUNDS=5] [PERF_FRAMES=240] pnpm exec playwright test e2e/office-life/office-life-perf.spec.ts
-//
-// PERF_VARIANT is the query added to the variant scene; it defaults to the existing `talk=1` stand-in traffic. For the
-// office-life effects use `preview=life&effect=a,b,c&t=1500` and, so the camera is the same in both scenes (a preview
-// flies to a member, which culls most of the building), a baseline of the same preview with no effect:
-// PERF_BASELINE='preview=life&effect=off&t=0'. The report is evidence/office-life-perf.json.
 const RUN = process.env['PERF_GPU'] === '1';
 const VARIANT = process.env['PERF_VARIANT'] ?? 'talk=1';
-// PERF_BASELINE is the query of the scene the variant is compared with (default: the plain scene), for a variant that
-// only changes how something already there is drawn (`squad=8&legacy=1` against `squad=8`).
 const BASELINE = process.env['PERF_BASELINE'] ?? '';
 const ROUNDS = Number(process.env['PERF_ROUNDS'] ?? 3);
 const FRAMES = Number(process.env['PERF_FRAMES'] ?? 240);
@@ -31,7 +19,6 @@ type Report = {
   viewport: { width: number; height: number };
 };
 
-/** The limits of section 10 (desktop); the phone tier is stricter on the median frame only. */
 const GATES = {
   medianMs: 1.0,
   p95Ms: 2.0,
@@ -61,7 +48,7 @@ test.describe('office-life perf harness', () => {
   test('the variant scene costs no more than the gate allows over the baseline', async ({
     browser,
   }) => {
-    test.setTimeout(60_000 + ROUNDS * 20_000); // every round mounts the scene twice
+    test.setTimeout(60_000 + ROUNDS * 20_000);
     const baseline: Report[] = [];
     const variant: Report[] = [];
     for (let round = 0; round < ROUNDS; round += 1) {

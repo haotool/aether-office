@@ -13,10 +13,8 @@ type Pairing = {
 };
 type PairStatus = 'pending' | 'paired' | 'expired';
 
-/** An SVG as an image source: shown as a picture, so nothing in it can run. */
 const asImage = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 
-/** Asks the server for a pairing (once, when the panel opens), counts down its expiry and watches for the phone using it. */
 function usePairing() {
   const [pairing, setPairing] = useState<Pairing | null>(null);
   const [status, setStatus] = useState<PairStatus>('pending');
@@ -34,7 +32,7 @@ function usePairing() {
   }
   const start = useLatest(generate);
   useEffect(() => {
-    void start.current(); // asked for once, when the panel opens
+    void start.current();
   }, [start]);
   useEffect(() => {
     if (!pairing || !pairing.lan) return;
@@ -57,7 +55,6 @@ function usePairing() {
   return { pairing, status, seconds, error, generate };
 }
 
-/** The QR code of the chosen address, a way to copy its link, a picker when there are several, and the time left. */
 function PairCodes({ links, seconds }: { links: Pairing['links']; seconds: number }) {
   const t = useT();
   const [copied, setCopied] = useState(false);
@@ -99,10 +96,7 @@ function PairCodes({ links, seconds }: { links: Pairing['links']; seconds: numbe
   );
 }
 
-/**
- * Signs a phone in without typing the token: a QR code that works once and expires in five minutes (the server enforces
- * both). The person sees when the phone has used it.
- */
+/** A QR code that works once and expires in five minutes (the server enforces both). */
 export function PairPanel() {
   const t = useT();
   const { pairing, status, seconds, error, generate } = usePairing();

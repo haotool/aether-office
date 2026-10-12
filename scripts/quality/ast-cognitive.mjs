@@ -19,7 +19,6 @@ import {
   visitWhileDo,
 } from './ast-cognitive-visit.mjs';
 
-/** Sonar-style cognitive complexity for one function body (nested functions measured separately). */
 export function cognitiveComplexity(body) {
   let total = 0;
   const add = (n) => {
@@ -87,7 +86,6 @@ export function cognitiveComplexity(body) {
   return total;
 }
 
-/** Whether this function gets its own SonarJS cognitive-complexity report (black-box rules). */
 export function isSonarFunction(node) {
   if (!FUNCTIONS.has(node.kind)) return false;
   if (

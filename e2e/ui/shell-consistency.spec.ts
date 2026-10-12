@@ -1,10 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { signIn } from '../support/sign-in.js';
 
-/**
- * The app shell and its pages (top bar, sidebar, Settings, KPI, local sessions) draw each control role at one height
- * from the control scale (--control-h-*, --bar-h) and never at a literal one. Same probe style as role-variance.spec.ts.
- */
 const PREFERENCES = JSON.stringify({
   state: { theme: 'dark', locale: 'zh-TW', quality: 'low', view: '2d', advanced: true },
   version: 0,
@@ -17,7 +13,6 @@ async function open(page: Page, view: string) {
   await page.waitForLoadState('networkidle');
 }
 
-/** The distinct rounded heights of the visible elements matching `selector`. */
 const heights = (page: Page, selector: string) =>
   page.evaluate((sel) => {
     const out = new Set<number>();

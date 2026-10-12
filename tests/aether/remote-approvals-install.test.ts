@@ -35,26 +35,25 @@ const user = {
 
 it('Remote approvals adds one synchronous PermissionRequest hook, only on request, and every path removes it', async () => {
   const off = installHooks(user, script);
-  expect(JSON.stringify(off)).not.toContain('approval.mjs'); // default off
+  expect(JSON.stringify(off)).not.toContain('approval.mjs');
   const on = installHooks(user, script, undefined, 'claude', node, approvals);
   const sync = (on.hooks?.PermissionRequest ?? [])
     .flatMap((g) => g.hooks ?? [])
     .filter((c) => String(c.command).includes('approval.mjs'));
   expect(sync).toHaveLength(1);
-  expect(sync[0]).toMatchObject({ type: 'command', timeout: 60 }); // wait 45 s plus 15 s of slack
-  expect(sync[0]).not.toHaveProperty('async'); // an async hook cannot decide
+  expect(sync[0]).toMatchObject({ type: 'command', timeout: 60 });
+  expect(sync[0]).not.toHaveProperty('async');
   expect(sync[0]!.command).toBe(
     '"/usr/bin/node" "/opt/aether/approval.mjs" 45000 # aether-office-hook:PermissionRequest:wait',
   );
-  expect(installHooks(on, script, undefined, 'claude', node, approvals)).toEqual(on); // idempotent
-  // Installing again without the option turns it off.
+  expect(installHooks(on, script, undefined, 'claude', node, approvals)).toEqual(on);
   expect(installHooks(on, script, undefined, 'claude', node)).toEqual(
     installHooks(user, script, undefined, 'claude', node),
   );
-  expect(removeHooks(on)).toEqual(user); // the user's own PermissionRequest hook is untouched
+  expect(removeHooks(on)).toEqual(user);
   expect(
     JSON.stringify(installHooks({}, script, undefined, 'codex', node, approvals)),
-  ).not.toContain('approval.mjs'); // Claude only
+  ).not.toContain('approval.mjs');
   expect(() =>
     installHooks({}, script, undefined, 'claude', node, { ...approvals, waitSeconds: 1 }),
   ).toThrow('APPROVAL_WAIT_INVALID');
@@ -94,7 +93,6 @@ it('installs the hook into a private copy outside the worktree, and reports a ch
   }
   expect(await approvalScriptsStatus(dir)).toBe('installed');
 
-  // Something edited the installed helper: it is reported, and installing again restores it.
   await chmod(join(dir, 'approval-config.mjs'), 0o700);
   await writeFile(join(dir, 'approval-config.mjs'), 'export {}');
   expect(await approvalScriptsStatus(dir)).toBe('modified');
@@ -102,7 +100,6 @@ it('installs the hook into a private copy outside the worktree, and reports a ch
   expect(await approvalScriptsStatus(dir)).toBe('installed');
   expect((await stat(join(dir, 'approval-config.mjs'))).mode & 0o777).toBe(0o500);
 
-  // A linked directory is not followed.
   const elsewhere = await mkdtemp(join(tmpdir(), 'aether-approval-elsewhere-'));
   await symlink(elsewhere, join(dot, 'linked'));
   await expect(installApprovalScripts(join(dot, 'linked'))).rejects.toThrow('APPROVAL_DIR_LINKED');

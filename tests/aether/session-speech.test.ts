@@ -65,7 +65,7 @@ it('cuts long text on a character boundary and re-reads only when the file chang
   expect(chars).toHaveLength(401);
   expect(chars.slice(0, 400).every((c) => c === '😀')).toBe(true);
   expect(chars[400]).toBe('…');
-  expect(await readSpeech('claude', file)).toBe(first); // cached: the same object
+  expect(await readSpeech('claude', file)).toBe(first);
   await appendFile(file, reply('two'));
   expect((await readSpeech('claude', file)).assistant?.text).toBe('two');
 });
@@ -83,7 +83,6 @@ it('never cuts a reply inside a Markdown construct, and redacts before it cuts',
   const text = first.assistant!.text;
   expect((text.match(/\*\*/g) ?? []).length % 2).toBe(0);
   expect((text.match(/```/g) ?? []).length % 2).toBe(0);
-  // The second reply is the latest: its link is cut inside the address, so only its label survives.
   await appendFile(
     file,
     reply(`${'y'.repeat(385)} [the docs](https://example.com/very/long/address)`),

@@ -14,14 +14,13 @@ import {
 } from 'three';
 import { useByValue } from '../core/use-by-value.js';
 
-const IDLE_TINT = new Color('#8196ab'); // a member who is not working: the branch colour cooled and greyed
+const IDLE_TINT = new Color('#8196ab');
 const IDLE_HZ = 0.3;
-const DASHES = 14; // dashes along an idle beam
+const DASHES = 14;
 
-/** One dash and one gap along the tube's length, repeated, as an alpha map: the idle beam reads as segments. */
 function dashTexture() {
   const texture = new DataTexture(
-    Uint8Array.from({ length: 32 }, (_, i) => (i < 16 ? 255 : 0)), // the alpha map reads green, so fill all channels
+    Uint8Array.from({ length: 32 }, (_, i) => (i < 16 ? 255 : 0)),
     8,
     1,
   );
@@ -40,7 +39,6 @@ type BeamProps = {
   animate: boolean;
 };
 
-/** The arc from the desk up and into the core, and the tube drawn along it (thicker while the member works). */
 function useBeamCurve(from: BeamProps['from'], to: BeamProps['to'], flowing: boolean) {
   const start = useByValue(from);
   const end = useByValue(to);
@@ -65,7 +63,6 @@ function useBeamCurve(from: BeamProps['from'], to: BeamProps['to'], flowing: boo
   return { curve, geometry };
 }
 
-/** Three beads of light spaced along the beam; the frame loop moves them toward the core. */
 function Packets({
   curve,
   color,
@@ -89,12 +86,6 @@ function Packets({
   ));
 }
 
-/**
- * Each member's branch as a beam of light from the desk into the elevator core, which stands for the default branch.
- * A linked worktree is cyan, the main checkout white, uncommitted work amber; while the member works the beam flows
- * toward the core; an idle member's beam is thin, cool and dashed, and only breathes. Only real Git state is drawn: no
- * beam without a branch.
- */
 function BranchBeam({ from, to, color, flowing, animate }: BeamProps) {
   const { curve, geometry } = useBeamCurve(from, to, flowing);
   const dashes = useMemo(() => (flowing ? null : dashTexture()), [flowing]);
@@ -141,12 +132,6 @@ function BranchBeam({ from, to, color, flowing, animate }: BeamProps) {
 
 type Beam = Omit<BeamProps, 'animate'> & { id: string };
 
-/**
- * Each member's branch as a tube of light from the desk into the elevator core, which stands for the default branch.
- * A linked worktree is cyan, the main checkout white, a detached checkout violet, uncommitted work amber; while the
- * member works, packets travel
- * along it into the core. Only real Git state is drawn: no beam outside a repository.
- */
 export function BranchBeams({ beams, animate }: { beams: Beam[]; animate: boolean }) {
   return (
     <>

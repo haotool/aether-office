@@ -1,4 +1,3 @@
-/** The shell words, in Traditional Chinese. */
 export const zhShell = {
   office: '辦公室',
   agents: '團隊成員',
@@ -118,7 +117,6 @@ export const zhShell = {
   navigation: '主要導覽',
   openMenu: '開啟選單',
   skipToMain: '跳到主要內容',
-  mainContent: '主要內容',
   sceneName: '3D 辦公室',
   sceneSummary: '{1} 層樓共 {0} 個角色：{2} 個工作中，{3} 個等你處理',
   sceneSummaryEmpty: '辦公室裡還沒有角色',

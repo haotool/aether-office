@@ -1,11 +1,9 @@
 import { execFileSync } from 'node:child_process';
 
 /**
- * Stopping the processes AETHER starts, in one place. The rules, from the projects reviewed and from POSIX itself:
- * a child is started as the leader of its own process group, so one signal reaches it and everything it started; a stop
- * is SIGTERM, a bounded wait, then SIGKILL, because a process that ignores SIGTERM must not live forever; a pid is only
- * ever signalled while it is still the process that was started (a pid is reused, a pid and its start time are not);
- * and Node reaps its own children, so a zombie under AETHER is a bug to see, not something to paper over.
+ * A child leads its own process group, so one signal reaches everything it started. A stop is SIGTERM, a bounded wait,
+ * then SIGKILL. A pid is signalled only while it is still the process that was started (pids are reused; a pid and its
+ * start time are not).
  */
 type Stoppable = {
   pid?: number | undefined;
@@ -17,9 +15,8 @@ type Stoppable = {
 const STOP_GRACE_MS = 1000;
 
 /**
- * Signals a process group. A group already gone is not an error, and neither is EPERM: a group AETHER started is the
- * user's own, so EPERM can only be macOS answering for a group whose members have all exited and are waiting to be
- * collected. Returns whether anything was left to signal.
+ * A group already gone is not an error, and neither is EPERM: a group AETHER started is the user's own, so EPERM can
+ * only be macOS answering for a group whose members have all exited.
  */
 export function signalGroup(pid: number, signal: NodeJS.Signals): boolean {
   try {
@@ -32,7 +29,6 @@ export function signalGroup(pid: number, signal: NodeJS.Signals): boolean {
   }
 }
 
-/** Is any process of the group still running? (signal 0 only checks; see signalGroup for EPERM) */
 export function groupAlive(pid: number): boolean {
   try {
     process.kill(-pid, 0);
@@ -45,8 +41,7 @@ export function groupAlive(pid: number): boolean {
 /**
  * SIGTERM to the child's group now, SIGKILL after `graceMs` unless `cancel()` was called first. `stop` is idempotent:
  * asking twice does not restart the wait. The caller cancels once the child has closed (all its pipes shut), not merely
- * exited: a group can outlive its leader while a descendant holds a pipe open, and that is what the wait is for. After
- * that nothing may signal the group again, because its id is the leader's pid and pids are reused.
+ * exited.
  */
 export function groupStopper(
   child: Stoppable,
@@ -76,7 +71,6 @@ export function groupStopper(
 
 type Inspected = { ppid: number; stat: string; startedAt: string; command: string };
 
-/** What `ps` says about one pid right now, or null when there is no such process. */
 export function inspectProcess(pid: number): Inspected | null {
   try {
     const out = execFileSync('ps', ['-p', String(pid), '-o', 'lstart=,ppid=,stat=,command='], {
@@ -89,14 +83,13 @@ export function inspectProcess(pid: number): Inspected | null {
     const [, startedAt = '', ppid, stat = '', command = ''] = m;
     return { startedAt: startedAt.trim(), ppid: Number(ppid), stat, command };
   } catch {
-    return null; // ps exits 1 when the pid does not exist
+    return null;
   }
 }
 
 // The manager that adopts a user's orphans on Linux, in place of init.
 const ORPHAN_ADOPTER = /(?:^|\/)systemd\s.*--user\b/;
 
-/** Has the process lost whatever started it: its parent gone, init, or a manager that adopts orphans? */
 export function isOrphan(
   info: Pick<Inspected, 'ppid'>,
   parent: Pick<Inspected, 'command'> | null,
@@ -136,10 +129,9 @@ export type Reaped = {
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /**
- * Stops what a previous run left behind, for runs the journal says were still going when the runner died. The process
- * is signalled only if it is still the one recorded and has been orphaned by that death; the group gets SIGTERM, a
- * bounded wait, then SIGKILL; and the identity is checked again before each signal, so a pid reused in the meantime is
- * never hit. Never by name, never by command line: a command line is not an identity.
+ * Signals a process only if it is still the recorded one and was orphaned by the runner's death: SIGTERM to the group,
+ * a bounded wait, then SIGKILL, with the identity checked again before each signal so a reused pid is never hit. Never
+ * by name or command line: a command line is not an identity.
  */
 export async function reapSurvivor(identity: string, graceMs = 3000): Promise<Reaped> {
   const recorded = parseIdentity(identity);
@@ -159,7 +151,7 @@ export async function reapSurvivor(identity: string, graceMs = 3000): Promise<Re
     await sleep(100);
     if (look() !== 'orphaned') return { identity, verdict, action: 'terminated' };
   }
-  if (look() !== 'orphaned') return { identity, verdict, action: 'terminated' }; // gone, or no longer ours
+  if (look() !== 'orphaned') return { identity, verdict, action: 'terminated' };
   signalGroup(recorded.pid, 'SIGKILL');
   await sleep(300);
   return { identity, verdict, action: look() === 'orphaned' ? 'survived' : 'killed' };

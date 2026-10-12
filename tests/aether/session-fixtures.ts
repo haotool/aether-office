@@ -1,0 +1,30 @@
+import type { LocalSession } from '../../packages/contracts/src/index.js';
+
+export const localSession = (over: Partial<LocalSession> = {}): LocalSession => ({
+  key: 'claude:s',
+  provider: 'claude',
+  sessionId: 's',
+  cwd: '/x',
+  repo: 'x',
+  mtime: 0,
+  git: null,
+  worktree: null,
+  hook: null,
+  subagents: [],
+  process: 'unknown',
+  resources: null,
+  liveness: { state: 'unknown', startedAt: null, quietMs: null, zombies: [] },
+  ports: [],
+  title: null,
+  classification: { role: 'generalist', department: 'product', confidence: 0, evidence: [] },
+  usage: {
+    model: null,
+    contextTokens: null,
+    contextWindow: null,
+    contextPct: null,
+    compactedAt: null,
+    freshTokens: null,
+    limit: null,
+  },
+  ...over,
+});

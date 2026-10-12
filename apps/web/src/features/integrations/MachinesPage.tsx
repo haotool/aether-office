@@ -6,7 +6,6 @@ import { Badge } from '../../ui/Badge.js';
 import { Empty } from '../../ui/Empty.js';
 import { MachineInvite } from './MachineInvite.js';
 
-/** The runners that have enrolled, and how to enrol one more. */
 export function MachinesPage({
   data,
   projectId,

@@ -1,4 +1,3 @@
-/** The approvals words, in Traditional Chinese. */
 export const zhApprovals = {
   reqTitle: '權限請求',
   reqCountdown: '終端機將詢問，剩',
@@ -13,12 +12,10 @@ export const zhApprovals = {
   reqSessionRules: '本次工作階段將加入：',
   reqTooLate: '來不及了：終端機正在詢問，請在那裡回答。',
   reqFailed: '無法送出回答，請再試一次。',
-  remoteApprovalsTitle: '遠端核准',
   remoteApprovalsToggle: '在這裡回答 Claude Code 的權限提示',
   remoteApprovalsHint:
     '預設關閉。開啟後，已安裝遠端核准 hook 的 Claude Code session 發出權限提示時，這裡會出現允許與拒絕。若在等待時間內（預設 45 秒）沒人回答，Claude 會照常在終端機詢問，所以終端機提示會延後這麼久才出現。AETHER 不會自行允許任何事：只有你按下按鈕才算數。',
   remoteApprovalsInstall: '在專案安裝 hook（加上 --scope user 則套用到所有 session）：',
-  remoteApprovalsOwner: '只有擁有者能變更這個設定。',
   remoteApprovalsBlocked:
     '這個頁面是透過區域網路上的明文 HTTP 開啟的，因此無法從這裡回答：答案會連同你的登入 cookie 以未加密方式傳送。請在這台電腦上開啟 AETHER（localhost），或改用 HTTPS（例如 Tailscale 通道）。在你做到其中一項之前，同一個 Wi-Fi 上的手機無法核准；或者以 AETHER_REMOTE_APPROVALS_LAN=1 啟動控制平面，並在你信任的網路上自行承擔風險。',
   remoteApprovalsLanOn:

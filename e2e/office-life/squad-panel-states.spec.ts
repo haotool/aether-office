@@ -21,7 +21,6 @@ const sub = (id: string, over: Sub = {}, now = Date.now()): Sub => ({
   ...over,
 });
 
-/** Serves the session list with the fixture session's subagents (and optionally its hook) swapped by `shape`. */
 async function mockSquad(page: Page, shape: { subagents: (now: number) => Sub[]; hook?: null }) {
   await page.route(
     (url) => url.pathname === '/api/local-sessions',
@@ -70,7 +69,6 @@ const busy = (now: number) => [
   sub('w1', { type: 'code-reviewer', status: 'waiting_permission' }, now),
   sub('r1', { type: 'general-purpose', nickname: null }, now),
   sub('r2', { type: 'Explore' }, now),
-  // A Codex helper: a name and a state, no tool count.
   sub('c1', { type: 'worker', source: 'rollout', nickname: 'Hubble', tools: null }, now),
   sub('f1', { type: 'Plan', status: 'finished', endedAt: now - 20_000 }, now),
   sub('f2', { type: 'Plan', status: 'finished', endedAt: now - 75_000 }, now),
@@ -89,7 +87,6 @@ test('a mixed squad: waiting first, finished last and fading, no tool count wher
   const panel = page.locator('.session-panel');
   const rows = panel.getByRole('treeitem', { level: 2 });
   await expect(rows).toHaveCount(6, { timeout: 15000 });
-  // A subagent waits for approval, so the squad is open although it has more than three, and that row leads.
   await expect(rows.first()).toHaveAttribute('data-status', 'waiting_permission');
   await expect(rows.first()).toContainText(/等待批准/);
   await expect(panel.locator('.squad-chip')).toContainText('6');
@@ -104,7 +101,6 @@ test('a mixed squad: waiting first, finished last and fading, no tool count wher
   await expectAccessible(page, '.session-panel');
   await page.screenshot({ path: 'evidence/screenshots/e2e-squad-mixed.png' });
 
-  // The supervisor's conversation: a chip per subagent and a card per spawn that opens to its facts.
   await panel.locator('[role="treeitem"][aria-level="1"]').click();
   await expect(panel.locator('.squad-chip-button')).toHaveCount(6);
   await panel.locator('.squad-chip-button', { hasText: 'Hubble' }).click();
@@ -165,7 +161,6 @@ test('a finished squad is dimmed and its rows open the supervisor; the live regi
   await expect(panel.locator('.squad-chip')).toContainText('全部完成', { timeout: 15000 });
   const live = panel.locator('[aria-live="polite"]');
   await expect(live).toHaveText('');
-  // A finished row has left the office: pressing it opens the supervisor, which holds its record.
   await panel.getByRole('treeitem', { level: 2 }).click();
   await expect(page).not.toHaveURL(/%3Asub%3A/);
   await expect(panel.locator('.sub-card')).toHaveCount(1);
@@ -174,7 +169,6 @@ test('a finished squad is dimmed and its rows open the supervisor; the live regi
     .first()
     .click();
   phase = 'more';
-  // The list refetches when the page is looked at again, so the test does not wait for the poll.
   await page.evaluate(() => {
     window.dispatchEvent(new Event('visibilitychange'));
     document.dispatchEvent(new Event('visibilitychange'));

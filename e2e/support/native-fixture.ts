@@ -4,10 +4,8 @@ import { randomUUID } from 'node:crypto';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { NATIVE_SESSION, nativeOrigin } from './sign-in.js';
 
-/** Matches `scripts/e2e-native-server.ts` resumable terminal fixture (shared, read-only until continued). */
 export const NATIVE_RESUMABLE_SESSION_ID = '11111111-2222-4333-8444-555555555555';
 
-/** Same horizon as `playwright.config.ts` farFuture: transcript mtime stays "fresh" for long e2e runs. */
 export const NATIVE_TRANSCRIPT_KEEPALIVE_MS = 3_600_000;
 
 export function nativeDataDirectory() {

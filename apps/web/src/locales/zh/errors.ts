@@ -1,4 +1,3 @@
-/** The errors words, in Traditional Chinese. */
 export const zhErrors = {
   errRequestFailed: '請求沒有成功，請檢查連線後再試一次。',
   errAuthRequired: '登入失敗或已過期。請確認存取權杖後再試一次。',

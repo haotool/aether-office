@@ -1,21 +1,11 @@
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { spawn } from 'node:child_process';
+import { runStack } from '../run-stack.ts';
 import { setup } from '../setup.ts';
+import { flags } from './flags.ts';
 
 const FORBIDDEN = new Set(['3000', '3001', '4310', '4320', '4330']);
-const flags = (argv: string[]) => {
-  const out: Record<string, string | boolean> = {};
-  for (let i = 0; i < argv.length; i += 1) {
-    const token = argv[i];
-    if (token === undefined || !token.startsWith('--')) continue;
-    const next = argv[i + 1];
-    out[token.slice(2)] = next === undefined || next.startsWith('--') ? true : next;
-  }
-  return out;
-};
-
 const args = flags(process.argv.slice(2));
 const port = String(args.port ?? '4798');
 if (FORBIDDEN.has(port)) throw new Error(`port ${port} is forbidden for audit perf`);
@@ -37,22 +27,5 @@ const env = {
   AETHER_E2E_LAN_ADDRESSES: '127.0.0.1,localhost',
   AETHER_CONTROL_URL: `http://127.0.0.1:${port}`,
 };
-const children = ['control', 'runner'].map((name) =>
-  spawn(process.execPath, [`apps/${name}/dist/main.js`], { env, stdio: 'inherit' }),
-);
-let stopped = false;
-const stop = () => {
-  if (stopped) return;
-  stopped = true;
-  for (const child of children) child.kill('SIGTERM');
-};
-process.once('SIGINT', stop);
-process.once('SIGTERM', stop);
-for (const child of children)
-  child.once('exit', (code) => {
-    if (!stopped) {
-      process.exitCode = code ?? 1;
-      stop();
-    }
-  });
+runStack(env);
 console.error(`perf server listening on http://127.0.0.1:${port} token file ${tokenOut}`);

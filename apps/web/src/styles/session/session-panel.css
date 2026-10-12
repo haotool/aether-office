@@ -1,11 +1,3 @@
-/*
- * The session panel: a column beside the office on a desktop (the phone's sheet is phone-sheet.css). It is a feed of
- * sessions until a member is chosen, then that member's conversation. The conversation's messages are transcript.css.
- *
- * Width: `--panel-w` on the app body (features/panel-width.ts, PanelResizer.tsx; the handle and the rail are
- * panel-resize.css). Layout inside the panel follows the panel's own width through container queries on `.panel-feed` and
- * `.conversation` (named `panel`), not the window's. The feed rows are session-feed.css.
- */
 .session-panel {
   position: relative;
   z-index: var(--z-panel);
@@ -35,12 +27,11 @@
   container: panel / inline-size;
 }
 
-/* Headers: compact, quiet icon buttons, truncation with a tooltip */
 .panel-head {
   display: flex;
   align-items: center;
   gap: var(--space-8);
-  min-height: 48px; /* token-lint: geometry */
+  min-height: var(--space-48);
   padding: var(--space-6) var(--space-12);
   border-bottom: 1px solid var(--line);
 }
@@ -99,7 +90,6 @@
   font-weight: 650;
   white-space: nowrap;
 }
-/* Feed | Session */
 .panel-tabs {
   display: inline-flex;
   padding: var(--space-2);
@@ -178,7 +168,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* The office's recent little moments for this member: a closed fold, every line marked decorative */
 .conv-moments {
   font-size: var(--fs-label);
 }
@@ -216,7 +205,6 @@
   color: var(--dim);
   font-variant-numeric: tabular-nums;
 }
-/* The context window: a thin gradient bar, the unused part covered */
 .ctx-meter {
   position: absolute;
   right: 0;
@@ -247,7 +235,6 @@
   }
 }
 
-/* A narrow window: the panel lies over the office (closed until asked for) at a fixed width; no resizing, no rail. */
 @media (max-width: 1000px) {
   .session-panel {
     position: absolute;

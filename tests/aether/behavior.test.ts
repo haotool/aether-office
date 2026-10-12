@@ -21,7 +21,6 @@ const base: BehaviorInput = {
   recent: [],
 };
 
-/** The first `count` actions of a member, feeding each choice back as history the way the scene does. */
 function run(over: Partial<BehaviorInput>, count: number) {
   const out: { clip: ClipName; waitMs: number; holdMs?: number }[] = [];
   let recent: ClipName[] = [];
@@ -77,7 +76,7 @@ describe('the behavior director', () => {
     for (const activity of ['idle', 'working', 'reviewing', 'error'] as const)
       for (let s = 0; s < 40; s++) {
         const picks = run({ activity, seed: `seed-${s}` }, 40).map((m) => m.clip);
-        const window = activity === 'error' ? 1 : COOLDOWN; // a table of two can only alternate
+        const window = activity === 'error' ? 1 : COOLDOWN;
         for (let i = 0; i < picks.length; i++)
           for (let j = Math.max(0, i - window); j < i; j++) expect(picks[i]).not.toBe(picks[j]);
       }
@@ -132,7 +131,6 @@ describe('the behavior director', () => {
         counts.set(m.clip, (counts.get(m.clip) ?? 0) + 1);
         all++;
       }
-    // Cool-down and species bias move the shares, but the order of the table holds: the heaviest clip stays the most frequent.
     const heaviest = Object.entries(weights).sort((a, b) => b[1] - a[1])[0]![0];
     const most = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]![0];
     expect(most).toBe(heaviest);
@@ -212,7 +210,7 @@ describe('posture drift', () => {
       const d = driftOf('member-1', t);
       expect(Math.abs(d.yaw)).toBeLessThanOrEqual((10 * Math.PI) / 180 + 1e-9);
       expect(Math.abs(d.lean)).toBeLessThanOrEqual(0.035);
-      expect(Math.abs(d.yaw - previous.yaw)).toBeLessThan(0.01); // radians per 50 ms
+      expect(Math.abs(d.yaw - previous.yaw)).toBeLessThan(0.01);
       previous = d;
     }
   });

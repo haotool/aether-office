@@ -5,11 +5,9 @@ import { mkdirSync, realpathSync, rmSync, utimesSync, writeFileSync } from 'node
 import { join } from 'node:path';
 import { enter, home } from '../support/seats.js';
 
-// The conversation's wrappers end to end: a synthetic Claude transcript holding the wrappers a real session leaves in its
-// text (a background task notification, a slash command and its output, a system reminder, an interrupt marker, stray
-// closing tags) next to generics in prose and code. The DOM must never show a raw wrapper tag outside code, the typed
-// notices must appear as chips, and the reader's tools (find, keys, the jump pill, the unread line) must work.
-// No process and no model: the transcripts are files in the fixture home.
+// A synthetic Claude transcript with the wrappers a real session leaves in its text, next to generics in prose and
+// code: the DOM must never show a raw wrapper tag outside code. No process and no model: the transcripts are files in
+// the fixture home.
 const REPO = 'fixture-conv';
 const ID = 'dddddddd-0000-4000-8000-000000000001';
 const repo = join(realpathSync(home), REPO);
@@ -33,7 +31,6 @@ const REPLY = [
   ),
 ].join('\n');
 
-// The wrappers a real transcript leaves behind; generics such as `<int>` are text and are checked on their own.
 const RAW =
   /<\/?(task-notification|task-id|tool-use-id|output-file|status|summary|result|system-reminder|command-name|command-args|command-message|local-command-stdout|div)\b/;
 
@@ -62,7 +59,6 @@ test.beforeAll(() => {
         role: 'assistant',
         content: [{ type: 'text', text: 'An older answer.' }],
       }),
-      // Enough older turns that the conversation is several screens tall.
       ...Array.from({ length: 8 }, (_, i) => [
         user((200 - i) * MIN, `Older question ${i + 1}`),
         line((199 - i) * MIN, {
@@ -95,7 +91,6 @@ test.afterAll(() => {
   rmSync(folder, { recursive: true, force: true });
 });
 
-/** The conversation's visible text with code removed: where a raw wrapper would be a bug. */
 const proseText = (page: Page) =>
   page.locator('.conversation').evaluate((el) => {
     const copy = el.cloneNode(true) as HTMLElement;
@@ -104,14 +99,12 @@ const proseText = (page: Page) =>
   });
 
 async function open(page: Page, theme: 'dark' | 'light' = 'dark') {
-  // Looked at an hour ago: what happened after it is "new since you looked".
   await page.addInitScript(
     ([key, at]) => window.localStorage.setItem('aether.sessionSeen', JSON.stringify({ [key]: at })),
     [`claude:${ID}`, Date.now() - 60 * MIN] as const,
   );
   await enter(page, 'en', REPO, theme);
   const row = page.locator('.feed-row', { hasText: 'Conversation wrappers' }).first();
-  // A phone keeps the feed behind a button.
   if ((page.viewportSize()?.width ?? 1440) < 760)
     await page.getByRole('button', { name: 'Open the session list' }).tap();
   await row.click();
@@ -134,7 +127,6 @@ for (const theme of ['dark', 'light'] as const) {
       'system-reminder',
     ])
       expect(text).not.toContain(leaked);
-    // Generics in prose and in code stay.
     await expect(chat).toContainText('Map<K, V>');
     await expect(chat).toContainText('std::vector<int>');
     await expect(chat).toContainText('Promise<void>');
@@ -143,7 +135,6 @@ for (const theme of ['dark', 'light'] as const) {
       chat.locator('pre', { hasText: '</task-notification> in code stays' }),
     ).toBeVisible();
 
-    // Chips: the task with its real exit code, the failed one in the failed tone, the command, the output, the interrupt.
     await expect(
       chat.locator('.sys-notice.ok', { hasText: 'Background task finished · exit 0' }),
     ).toBeVisible();
@@ -159,7 +150,6 @@ for (const theme of ['dark', 'light'] as const) {
       chat.locator('.msg.user', { hasText: 'Please summarize the build' }),
     ).toBeVisible();
 
-    // The injected reminder is one chip that opens into clean text.
     const context = chat.locator('.sys-notice', { hasText: 'Context added' });
     await expect(context).toBeVisible();
     await context.getByRole('button').click();
@@ -174,7 +164,6 @@ for (const theme of ['dark', 'light'] as const) {
     );
     await expect(page.locator('body')).not.toContainText('b3k9x2');
 
-    // Day and unread lines.
     await expect(chat.locator('.day-separator').first()).toBeVisible();
     await expect(chat.locator('.unread-divider')).toHaveText('New since you looked');
 
@@ -202,7 +191,6 @@ test('find, keys, the jump pill and density work in the conversation', async ({ 
   const scroller = chat.locator('.conv-scroll');
   await scroller.focus();
 
-  // Find: Ctrl+F in the focused panel opens the conversation's own bar, with prev and next, and Escape closes it.
   await page.keyboard.press('Control+f');
   const bar = chat.locator('.find-bar');
   await expect(bar).toBeVisible();
@@ -229,7 +217,6 @@ test('find, keys, the jump pill and density work in the conversation', async ({ 
     ),
   ).toBe(0);
 
-  // Keys: j and k between turns, gg and G to the ends.
   const turns = chat.locator('[data-turn]');
   const focusedIndex = () =>
     page.evaluate(() =>
@@ -246,7 +233,6 @@ test('find, keys, the jump pill and density work in the conversation', async ({ 
   await page.keyboard.press('k');
   expect(await focusedIndex()).toBe(0);
 
-  // Scrolled to the top, the pill offers the way back; it lands at the bottom.
   const pill = chat.locator('.new-pill');
   await expect(pill).toHaveText('Jump to latest');
   await pill.click();
@@ -255,7 +241,6 @@ test('find, keys, the jump pill and density work in the conversation', async ({ 
     .toBeLessThan(48);
   await expect(pill).toBeHidden();
 
-  // Density.
   await chat.getByRole('button', { name: 'Compact view' }).click();
   await expect(chat.locator('.conv-body')).toHaveAttribute('data-density', 'compact');
   await chat.getByRole('button', { name: 'Comfortable view' }).click();

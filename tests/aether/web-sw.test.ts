@@ -1,8 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { installGlobal, removeBrowserEnv } from './fixtures/browser-env.js';
 
-// The worker script run against a synthetic worker scope: a Map-backed Cache Storage, real Request/Response objects, and
-// `self` that records the listeners it registers. The routing rules themselves live in cache-rules.ts.
 type Listener = (event: Record<string, unknown>) => void;
 const ORIGIN = 'https://office.test';
 const VERSION = 'v9';
@@ -37,7 +35,6 @@ function install(options: { failFetch?: boolean } = {}) {
     addEventListener: (type: string, listener: Listener) => listeners.set(type, listener),
   };
   installGlobal('self', worker);
-  // A worker resolves a relative request URL against its own origin; Node's Request wants an absolute one.
   const Native = Request;
   installGlobal(
     'Request',
@@ -73,7 +70,6 @@ function install(options: { failFetch?: boolean } = {}) {
   });
 }
 
-/** Dispatches an event the way the browser does and returns the work it asked to wait for / respond with. */
 function dispatch(type: string, extra: Record<string, unknown> = {}) {
   const work: Promise<unknown>[] = [];
   let response: Promise<Response> | undefined;

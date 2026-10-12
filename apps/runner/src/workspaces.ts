@@ -75,7 +75,6 @@ export function environment(): NodeJS.ProcessEnv {
     GIT_CONFIG_GLOBAL: '/dev/null',
   };
 }
-/** The outcome of a verification run: cancelled, invalidated by a change, passed, or failed (with why, when known). */
 function verdictOf(r: {
   aborted: boolean;
   changed: boolean;
@@ -112,7 +111,6 @@ export class Workspaces {
     for (const dir of ['registry', 'checkouts', 'harnesses', 'artifacts'])
       mkdirSync(join(this.root, dir), { recursive: true, mode: 0o700 });
   }
-  /** Managed scratch directory under the runner root, created on demand. */
   scratch(name: string): string {
     const directory = join(this.root, name);
     mkdirSync(directory, { recursive: true, mode: 0o700 });
@@ -251,7 +249,6 @@ export class Workspaces {
       .filter(Boolean);
     return { baseSha: workspace.baseSha, headSha: state.head, text, untracked };
   }
-  /** Registers an external immutable verifier script, outside all agent worktrees. */
   registerHarness(
     source: string,
     executable: string = process.execPath,
@@ -282,7 +279,6 @@ export class Workspaces {
     createFileOnce(join(this.root, 'harnesses', id + '.json'), JSON.stringify(harness), 0o400);
     return harness;
   }
-  /** The registered harness, checked against its recorded hash and its source file. */
   private loadHarness(harnessId: string): Harness {
     const harness = JSON.parse(
       readFileSync(join(this.root, 'harnesses', identifier(harnessId) + '.json'), 'utf8'),

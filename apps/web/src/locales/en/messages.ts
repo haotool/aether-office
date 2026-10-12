@@ -1,4 +1,3 @@
-/** The messages words, in English. */
 export const enMessages = {
   recipients: 'Recipients',
   messageBody: 'Message',

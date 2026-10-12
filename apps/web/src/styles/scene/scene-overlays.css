@@ -1,9 +1,8 @@
-/* The director's caption: one line, who the camera is on and what they are doing. */
 .shot-caption {
   position: absolute;
   z-index: var(--z-hud-caption);
   left: 50%;
-  top: 14px; /* token-lint: geometry */
+  top: var(--stage-rail);
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
@@ -80,7 +79,6 @@
   }
 }
 
-/* The provider's mark on a name tag and in the panel: its own color, from tokens. */
 .provider-mark {
   flex: none;
 }
@@ -93,7 +91,6 @@
 .scene-label .provider-mark[data-provider='codex'] {
   color: var(--on-glass-muted);
 }
-/* The share of the context window in use, on a hovered or selected tag: calm, warm, hot (the scene's own gauge steps). */
 .label-ctx {
   font-variant-numeric: tabular-nums;
   font-weight: 650;
@@ -107,13 +104,12 @@
 .label-ctx[data-level='hot'] {
   color: var(--red);
 }
-/* "compacted -31%" over a member's head while its context is being tidied; the scene places it, this fades it in and out. */
 .compact-chip {
   position: absolute;
   top: 0;
   left: 0;
-  margin-top: var(--space-32); /* just under the name tag, which it is anchored with */
-  visibility: hidden; /* shown once the scene has placed it */
+  margin-top: var(--space-32);
+  visibility: hidden;
   padding: var(--space-2) var(--space-8);
   border: 1px solid var(--glass-accent-line);
   border-radius: var(--r-pill);
@@ -141,9 +137,7 @@
     translate: 0 calc(var(--space-8) * -1);
   }
 }
-/* With reduced motion the global rule removes the animation: the chip simply stays until the scene drops it. */
 
-/* A commit on the beanstalk: a glass card by the pointer that never takes it, so the camera keeps orbiting under it. */
 .stalk-tip {
   position: absolute;
   z-index: var(--z-hud-chip);
@@ -198,7 +192,6 @@
   color: var(--on-glass);
 }
 
-/* Opt-in field performance report (`?fieldperf=1`); sits under the top bar, clear of the phone tab bar. */
 .field-perf {
   position: fixed;
   z-index: var(--z-drawer);

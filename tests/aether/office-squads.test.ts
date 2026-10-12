@@ -75,7 +75,7 @@ it('groups subagents under their supervisor with status, times and tool facts; s
           toolCount: 0,
           lastTool: null,
           toolAt: null,
-          result: { error: true }, // only the flag crosses into the scene, never the summary
+          result: { error: true },
         }),
       ],
     },
@@ -99,6 +99,5 @@ it('draws tethers, pulses and desks only for subagents that are still working', 
   ]);
   const ids = sessionsToAgents([s], 'p1', Date.now(), 'en').map((a) => a.id);
   expect(ids).toEqual(['local:claude:a', 'local:claude:a:sub:live', 'local:claude:a:sub:waiting']);
-  // squadsOf still reports the finished one, so a later scene can show its return.
   expect(squadsOf([s])[0]!.members).toHaveLength(3);
 });

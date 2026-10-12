@@ -4,7 +4,6 @@ import { cognitiveComplexity, isSonarFunction } from './ast-cognitive.mjs';
 import { nestingOf } from './ast-nesting.mjs';
 import { functionName, hasModifier, nameOf, NAMED_DECLARATIONS } from './ast-shared.mjs';
 
-/** Facts about one parsed source file. `file` is the repository-relative path used in reports. */
 export function analyzeFile(sourceFile, file) {
   const lineOf = (pos) => sourceFile.getLineAndCharacterOfPosition(pos).line + 1;
   const facts = {
@@ -77,7 +76,6 @@ export function analyzeFile(sourceFile, file) {
   return facts;
 }
 
-/** Opens `tsconfig.json` under `root` and returns { facts, compilerOptions, programFiles } for the files kept by `keep`. */
 export async function analyzeProject(root, keep) {
   const { API } = await import('typescript/unstable/sync');
   const api = new API({ cwd: root });

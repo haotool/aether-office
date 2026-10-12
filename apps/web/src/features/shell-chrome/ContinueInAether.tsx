@@ -2,10 +2,6 @@ import type { AttributedSession } from '@aether/contracts';
 import { useT, useWhy } from '../../ui/useT.js';
 import { useContinue } from './use-continue.js';
 
-/**
- * For a session AETHER only watches: start a new terminal in AETHER that resumes (or forks) it (see use-continue.ts). The
- * new session then shows here with a composer.
- */
 export function ContinueInAether({
   session,
   projectId,

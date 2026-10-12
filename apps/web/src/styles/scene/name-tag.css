@@ -1,12 +1,3 @@
-/*
- * A member's name tag over the scene (packages/office-scene NameTag.tsx): a small glass chip with the provider's mark, a status
- * dot that glows in the state's colour and the short label. `--accent` is the member's department colour (its neon edge).
- * By camera distance (`data-density`, set each frame by the projection): far, the mark and the dot only; mid and near, the
- * label. Hovered or selected, the chip opens into a card with a second line (repository, role, what it is doing) and the
- * context share. States: working shimmers teal, waiting for a person pulses amber, an error pulses red, idle is calm and
- * offline is dim. Position and visibility are the projection's (workbench.css); motion is off under `data-still` and
- * `prefers-reduced-motion`. The technical id is only in the native tooltip.
- */
 .scene-label {
   --accent: var(--scene-mint);
   --state: var(--scene-mint);
@@ -74,7 +65,6 @@
   animation: tag-meta-in var(--dur) var(--ease) both;
 }
 
-/* State: the dot's colour, and how the whole chip behaves */
 .scene-label[data-state='reviewing'],
 .scene-label[data-state='waiting_peer'] {
   --state: var(--scene-blue);
@@ -83,7 +73,6 @@
   --state: var(--scene-gold);
   border-color: color-mix(in srgb, var(--scene-gold) 75%, transparent);
 }
-/* The amber breath is a glow on a pseudo-element that only fades (opacity runs on the compositor; animating box-shadow repaints) */
 .scene-label[data-state='waiting_permission']::before {
   content: '';
   position: absolute;
@@ -120,7 +109,7 @@
     transparent
   );
   pointer-events: none;
-  animation: tag-sheen 2.8s linear infinite; /* token-lint: loop */
+  animation: tag-sheen var(--dur-sheen) linear infinite;
 }
 /* The band slides by `translate` (compositor, no repaint), so the chip clips it; a finger's 44px area hangs outside the chip and
    would be clipped too, so on touch the band breathes in place instead */
@@ -135,7 +124,6 @@
   }
 }
 
-/* Density by distance: far, only the mark and the dot (a hovered or selected tag always opens) */
 .scene-label[data-density='far']:not(.selected):not(.hovered) {
   padding: var(--space-4);
   min-width: var(
@@ -152,7 +140,6 @@
   display: none;
 }
 
-/* Opened: hovered lifts and brightens the edge, selected holds it, a group member is edged in gold */
 .scene-label.hovered {
   z-index: var(--z-label-hover);
   border-color: color-mix(in srgb, var(--accent) 85%, var(--white));
@@ -175,7 +162,6 @@
   border-color: var(--scene-gold);
 }
 
-/* A finger needs 44px: the chip stays small, its touch area grows around it */
 @media (pointer: coarse) {
   .scene-label::after {
     content: '';

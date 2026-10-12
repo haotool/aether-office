@@ -5,10 +5,6 @@ import { RelationChip } from '../squad/SquadParts.js';
 import { fmt } from '../squad/squad-text.js';
 import { SubagentFacts } from './SubagentCards.js';
 
-/**
- * A subagent's own view (it was selected as a member): who spawned it, what it is doing, its recent calls. It has no
- * transcript of its own to read, so this replaces the conversation, and the supervisor is one press away.
- */
 export function SubagentView({
   row,
   session,
@@ -41,7 +37,6 @@ export function SubagentView({
   );
 }
 
-/** The foot of a subagent's view: it cannot be written to, so the way on is its supervisor. */
 export function SubagentFoot({ onOpenSupervisor }: { onOpenSupervisor: () => void }) {
   const t = useT();
   return (

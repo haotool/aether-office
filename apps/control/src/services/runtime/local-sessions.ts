@@ -28,18 +28,13 @@ import { resetRoles } from '../sessions/session-role.js';
 import { detectModels } from '@aether/providers/models';
 import type { AttributedSession, LocalSession } from '@aether/contracts';
 
-// Read-only discovery of local Claude Code / Codex sessions. Metadata only: id, cwd, mtime.
-// Transcript content is never retained or returned. Every session with a live process is shown; of the rest, the newest
-// MAX_SESSIONS.
 export const MAX_SESSIONS = 60;
-const MAX_REPOS = 400; // every shown session's directory is classified, none is left unowned by a cap
-const GIT_BATCH = 10; // bounds concurrent git processes
-const READ_WIDTH = 6; // transcripts read at once
-// Bytes of subagent transcripts a scan may read in all; a larger backlog is caught up over the next scans.
+const MAX_REPOS = 400;
+const GIT_BATCH = 10;
+const READ_WIDTH = 6;
 const SUBAGENT_BYTES_PER_SCAN = 32 * 1024 * 1024;
 const cpuWatch = new CpuWatch();
 
-// The two-letter codes `git status --porcelain=v1` uses for a path with an unresolved merge.
 const UNMERGED = /^(?:DD|AU|UD|UA|DU|AA|UU) /;
 
 export function parseGitStatus(text: string): NonNullable<LocalSession['git']> {
@@ -64,8 +59,6 @@ const git = (cwd: string, args: string[]) => readGit(cwd, args, 4000, 1024 * 102
 
 type RepoInfo = { git: LocalSession['git']; worktree: LocalSession['worktree'] };
 
-// Which repository a directory belongs to hardly ever changes; its branch and changes do, but a scan every few
-// seconds need not ask Git again each time (that was two processes per directory per scan).
 const IDENTITY_TTL_MS = 5 * 60 * 1000;
 const STATUS_TTL_MS = 30 * 1000;
 const MAX_CACHED_DIRECTORIES = 512;
@@ -120,10 +113,8 @@ const hookSpoolFile = () =>
   process.env['AETHER_HOOK_SPOOL'] ??
   join(process.env['AETHER_HOME'] ?? join(homedir(), '.aether'), 'hook-events.jsonl');
 
-// What the latest scan found, for the home and spool it read; a scan still running is shared by whoever asks meanwhile.
 let cache: { key: string; at: number; value: LocalSession[] } | null = null;
 let inflight: { key: string; scan: Promise<LocalSession[]> } | null = null;
-// Which transcript each session key was found in by the latest scan. The only way a transcript is opened.
 let files = new Map<string, { provider: 'claude' | 'codex'; file: string }>();
 export const sessionFile = (key: string) => files.get(key) ?? null;
 // Which process the latest scan found behind each session. Kept server-side: a stop names a session, never a pid.
@@ -145,7 +136,6 @@ export async function scanLocalSessions(
   return scan;
 }
 
-/** Every session with a process is shown, however old; of the rest, the newest few. Also the process found behind each. */
 async function selectSessions(home: string, now: number) {
   // Processes first: they decide which sessions are shown. A no-ps host says 'unknown', never 'none'.
   const [found, live] = await Promise.all([
@@ -156,7 +146,6 @@ async function selectSessions(home: string, now: number) {
   let sessions = found;
   let running = live ? assignProcesses(sessions, live.processes, live.desktopCodex) : null;
   if (live && running) {
-    // A process alive for days in a quiet transcript has no recent file: look its session up from the process.
     const owned = new Set([...running.values()].flatMap((v) => (v.process ? [v.process.pid] : [])));
     const lost = live.processes.filter((p) => !owned.has(p.pid));
     const older = lost.length
@@ -177,7 +166,6 @@ async function selectSessions(home: string, now: number) {
   return { raw, running };
 }
 
-/** What each transcript is read for, a few at a time, keyed by file: a buffer of a few hundred KB to a few MB each. */
 const readEach = async <T>(raw: readonly Raw[], read: (r: Raw) => Promise<T>) =>
   new Map(await mapPool(raw, READ_WIDTH, async (r) => [r.file, await read(r)] as const));
 
@@ -197,7 +185,6 @@ function rememberLookups(
   );
 }
 
-// The model catalogs say how big each model's window is (remembered for a short time, never fatal when missing).
 async function scanOnce(
   home: string,
   now: number,
@@ -230,7 +217,7 @@ async function scanOnce(
     const sessionKey = `${r.provider}:${r.sessionId}`;
     const signal = signals.get(r.file);
     const usage = usages.get(r.file);
-    if (!signal || !usage) return []; // read for every transcript above: never missing
+    if (!signal || !usage) return [];
     const reads: SessionReads = {
       info: infos.get(r.cwd),
       hook: hooks.get(sessionKey),
@@ -267,11 +254,8 @@ const canonical = (path: string) => {
   }
 };
 
-// Claude Code names a project's scratch directory /tmp/claude-<uid>/<root with every non-alphanumeric as '-'>/…;
-// agents launched there (for example headless Codex reviews) belong to that project even outside any repository.
 const scratchOwner = /^(?:\/private)?\/tmp\/claude-\d+\/([^/]+)\//;
 
-/** Joins each session to the project whose root is its main checkout, so worktrees share one project. */
 export function attributeSessions(
   sessions: readonly LocalSession[],
   projects: readonly { id: string; root: string | null }[],

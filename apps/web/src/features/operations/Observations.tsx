@@ -81,7 +81,6 @@ function RecordCard({ record }: { record: ObservationRecord }) {
   );
 }
 
-/** Back to the newest page, or on to the next older one. */
 function PageButtons({
   before,
   next,

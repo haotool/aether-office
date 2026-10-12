@@ -1,4 +1,3 @@
-// CHARTER §5.1 credit and layer/overall scores for release mode.
 import { CRITERIA, LAYER_WEIGHTS, criteriaById } from './criteria.mjs';
 
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));

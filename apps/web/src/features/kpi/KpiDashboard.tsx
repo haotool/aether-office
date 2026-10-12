@@ -19,7 +19,6 @@ type KpiDashboardProps = {
   onClose: () => void;
 };
 
-/** The dashboard bound to the page's KPI state (see use-kpi-panel.ts). */
 export function KpiDashboardHost({ kpi }: { kpi: KpiPanel }) {
   return (
     <KpiDashboard
@@ -33,7 +32,6 @@ export function KpiDashboardHost({ kpi }: { kpi: KpiPanel }) {
   );
 }
 
-/** Modal behaviour of a native dialog: opened on mount, closed on unmount, with focus given back to what opened it. */
 function useModalDialog() {
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -111,10 +109,6 @@ function OfficeTabs({
   );
 }
 
-/**
- * The KPI dashboard: a dialog (a side panel on a desktop, a bottom sheet on a phone) with the building and each office
- * as tabs and the range as a switch. `office` null is the whole building.
- */
 export function KpiDashboard({
   office,
   range,

@@ -9,7 +9,7 @@ it('synthetic Codex process handles approval before turn/start response without 
   const sent: string[] = [];
   const rpc = new JsonRpcProcess(
     process.execPath,
-    [resolve('fixtures/processes/codex-app-server.mjs')],
+    [resolve('tests/processes/codex-app-server.mjs')],
     { cwd: process.cwd() },
   );
   const adapter = new CodexAdapter(

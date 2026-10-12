@@ -37,8 +37,8 @@ it('marks old readings stale, and keeps showing the last good one while the plug
     NOW,
   );
   expect(held?.sevenDay?.usedPercent).toBe(90);
-  expect(held?.stale).toBe(true); // shown, but marked
-  expect(parseHudCache(JSON.stringify({ data: failing, timestamp: NOW }), NOW)).toBeNull(); // nothing good to show
+  expect(held?.stale).toBe(true);
+  expect(parseHudCache(JSON.stringify({ data: failing, timestamp: NOW }), NOW)).toBeNull();
 });
 
 it('says nothing about a window whose reset has passed, and never clamps an overage', () => {
@@ -54,8 +54,8 @@ it('refuses anything that is not a plausible reading', () => {
     '',
     'not json',
     '[]',
-    JSON.stringify({ data: reading }), // no timestamp
-    JSON.stringify({ data: reading, timestamp: NOW + 3_600_000 }), // from the future
+    JSON.stringify({ data: reading }),
+    JSON.stringify({ data: reading, timestamp: NOW + 3_600_000 }),
     file({ ...reading, fiveHour: -1, sevenDay: 'lots' }),
     file({ ...reading, fiveHour: null, sevenDay: null }),
   ])
@@ -66,8 +66,8 @@ it('refuses anything that is not a plausible reading', () => {
 it('reads the file when it exists and reports nothing when it does not or is huge', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'aether-limits-'));
   const path = join(dir, 'cache.json');
-  await writeFile(path, file(reading, {}, Date.now() - 1000));
-  const limits = await readClaudeLimits(path, Date.now());
+  await writeFile(path, file(reading, {}, NOW - 1000));
+  const limits = await readClaudeLimits(path, NOW);
   expect(limits?.plan).toBe('Max');
   expect(JSON.stringify(limits)).not.toContain('accessToken');
   expect(await readClaudeLimits(join(dir, 'missing.json'))).toBeNull();

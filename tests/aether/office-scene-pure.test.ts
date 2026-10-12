@@ -158,6 +158,19 @@ describe('geometry', () => {
     expect(dispose).toHaveBeenCalled();
   });
 
+  it('extrudes boxes of one size once per merge pass and still places every copy on its own', () => {
+    const material = new THREE.MeshBasicMaterial();
+    const root = new THREE.Group();
+    const a = box(root, material, [3, 1, 3], [0, 0, 0]);
+    expect(box(root, material, [3, 1, 3], [9, 0, 0]).geometry).toBe(a.geometry);
+    expect(box(root, material, [3, 2, 3], [0, 0, 0]).geometry).not.toBe(a.geometry);
+    const [merged] = mergeStatic(root).children as THREE.Mesh[];
+    merged!.geometry.computeBoundingBox();
+    expect(merged!.geometry.boundingBox!.min.x).toBeCloseTo(-1.5);
+    expect(merged!.geometry.boundingBox!.max.x).toBeCloseTo(10.5);
+    expect(box(new THREE.Group(), material, [3, 1, 3], [0, 0, 0]).geometry).not.toBe(a.geometry);
+  });
+
   it('does not merge transparent materials into the shadow pass', () => {
     const root = new THREE.Group();
     box(root, new THREE.MeshBasicMaterial({ transparent: true }), [1, 1, 1], [0, 0, 0]);
@@ -240,7 +253,7 @@ describe('useSceneKeys', () => {
     press('f', { metaKey: true });
     press('x', { ctrlKey: true });
     press('w', { target: { tagName: 'INPUT', closest: () => null } });
-    press('a', { target: { tagName: 'DIV', closest: () => ({}) } }); // inside an action menu
+    press('a', { target: { tagName: 'DIV', closest: () => ({}) } });
     expect(calls).toEqual([]);
     expect(held.current.size).toBe(0);
   });

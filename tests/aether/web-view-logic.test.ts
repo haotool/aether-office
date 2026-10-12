@@ -124,7 +124,7 @@ describe('terminal control', () => {
 
   it('is held by another person only while their lease runs', () => {
     expect(heldByOther(control('them', NOW + 1), 'me', NOW)).toBe(true);
-    expect(heldByOther(control('them', NOW), 'me', NOW)).toBe(false); // expired
+    expect(heldByOther(control('them', NOW), 'me', NOW)).toBe(false);
     expect(heldByOther(control('them', null), 'me', NOW)).toBe(false);
     expect(heldByOther(control('me', NOW + 1), 'me', NOW)).toBe(false);
     expect(heldByOther(control(null, null), 'me', NOW)).toBe(false);

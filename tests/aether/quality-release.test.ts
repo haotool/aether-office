@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { unlinkSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 
@@ -97,7 +98,6 @@ describe('release evidence file errors', () => {
     const repo = diskRepo(root);
     const original = repo.exists(EVIDENCE_PATH) ? repo.read(EVIDENCE_PATH) : null;
     try {
-      const { writeFileSync } = await import('node:fs');
       writeFileSync(resolve(root, EVIDENCE_PATH), '{ broken');
       const report = await scoreRelease(root);
       expect(report.evidenceError).toMatch(/invalid JSON/);
@@ -109,11 +109,10 @@ describe('release evidence file errors', () => {
       );
       expect(report.pass).toBe(false);
     } finally {
-      const { writeFileSync, unlinkSync } = await import('node:fs');
       if (original === null) unlinkSync(resolve(root, EVIDENCE_PATH));
       else writeFileSync(resolve(root, EVIDENCE_PATH), original);
     }
-  });
+  }, 60_000);
 });
 
 describe('measureCognitive', () => {

@@ -6,14 +6,11 @@ import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
 import { distanceFade, type Edge } from '../environment/interplay.js';
 
-// Threads (members of one repository, from the one in hand) are cyan; tethers (a session and its subagents) are violet.
 const COLOR = { thread: new Color('#43e6df'), tether: new Color('#a592ff') } as const;
 const BRIGHTNESS = { thread: 1, tether: 0.9 } as const;
 const BREATH_HZ = 0.35;
-/** Line width in CSS pixels (a plain GL line is one device pixel: invisible on a dense screen). */
 const WIDTH = 1.8;
 
-/** The fat-line object for `edges`, all in one draw call; its colours start dark and are set every frame. */
 function buildLines(edges: readonly Edge[]) {
   const geometry = new LineSegmentsGeometry();
   geometry.setPositions(edges.flatMap((e) => [...e.a, ...e.b]));
@@ -31,7 +28,6 @@ function buildLines(edges: readonly Edge[]) {
   return { lines, material, geometry };
 }
 
-/** Writes each edge's colour: its kind's, scaled by its strength, the distance from the camera and the breath. */
 function glowEdges(array: Float32Array, edges: readonly Edge[], camera: Camera, breath: number) {
   edges.forEach((e, i) => {
     const mx = (e.a[0] + e.b[0]) / 2;
@@ -48,12 +44,7 @@ function glowEdges(array: Float32Array, edges: readonly Edge[], camera: Camera, 
   });
 }
 
-/**
- * Every edge in one fat-line object (one draw call), brightness set per frame by its strength, a slow breath and the
- * distance from the camera (additive blending, so dimmer means fainter). Rebuilt only when a position changes.
- */
 export function RelationLines({ edges, animate }: { edges: readonly Edge[]; animate: boolean }) {
-  // The edges are new objects on every render; the geometry is rebuilt only when a position changes.
   const shape = edges.map((e) => `${e.a}|${e.b}`).join(';');
   const latest = useRef(edges);
   latest.current = edges;
@@ -73,7 +64,7 @@ export function RelationLines({ edges, animate }: { edges: readonly Edge[]; anim
     const breath = animate
       ? 0.75 + 0.25 * Math.sin(clock.elapsedTime * BREATH_HZ * Math.PI * 2)
       : 1;
-    glowEdges(start.data.array as Float32Array, edges, camera, breath); // six floats per edge: start rgb, end rgb
+    glowEdges(start.data.array as Float32Array, edges, camera, breath);
     start.data.needsUpdate = true;
   });
   if (edges.length === 0) return null;

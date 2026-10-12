@@ -6,9 +6,8 @@ import { sessionFile } from '../runtime/local-sessions.js';
 import { parseTranscript } from './session-transcript.js';
 
 /**
- * The last thing each running session was told and the last thing it answered, for the speech bubbles over the
- * members' heads. Only the tail of a transcript is read, text is already redacted by the transcript parser, each text is
- * cut on a character boundary, and nothing is stored beyond a per-file cache keyed by (mtime, size).
+ * Only the tail of a transcript is read, text is already redacted by the parser, each text is cut on a character
+ * boundary, and nothing is stored beyond a per-file cache keyed by (mtime, size).
  */
 const TAIL_BYTES = 128 * 1024;
 const MAX_TEXT = 400;
@@ -38,7 +37,6 @@ export async function readSpeech(provider: 'claude' | 'codex', file: string): Pr
   return speech;
 }
 
-/** Speech by session key for the sessions whose process is running (at most MAX_SPEECH_SESSIONS). */
 export async function runningSpeech(sessions: readonly LocalSession[]) {
   const out: Record<string, Speech> = {};
   const live = new Set<string>();

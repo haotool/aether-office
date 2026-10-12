@@ -15,16 +15,13 @@ import type { SeatCheck } from './seat-drag.js';
 import { useSeatDrag, type SeatMove } from './use-seat-drag.js';
 import { useWallFeeds } from './use-wall-feeds.js';
 
-/** What the page's menu may ask of the scene for one character. */
 export type SceneActions = {
   followed: boolean;
   toggleFollow: () => void;
   lookAtScreen: () => void;
   pinned: boolean;
-  /** The wall of small views can take this member (it is on, has room, or already shows it). */
   canPin: boolean;
   togglePin: () => void;
-  /** Why this character cannot emote now, or null. */
   emoteBlocked: 'apparition' | 'leaving' | null;
   emote: (id: EmoteId) => EmoteResult | 'blocked';
 };
@@ -32,7 +29,6 @@ export type SceneActions = {
 export type CharacterMenuContext = {
   id: string;
   agent: Agent;
-  /** A phone: the page shows the menu in a sheet instead of beside the character. */
   compact: boolean;
   close: () => void;
   scene: SceneActions;
@@ -49,13 +45,11 @@ type Params = {
   compact: boolean;
   layout: Layout;
   nav: ReturnType<typeof useSceneNavigation>;
-  /** The members drawn now (the floor on screen, or all of them when the building is spread apart). */
   sceneAgents: readonly Agent[];
   agents: readonly Agent[];
   selectedId: string | null;
   onSelect: (id: string) => void;
   hovered: string | null;
-  /** The name tags by member id: the keyboard's way to a character, and where focus returns when the menu closes. */
   tags: RefObject<Map<string, HTMLElement>>;
   roleOf: ((agent: Agent) => string) | undefined;
   screens: Readonly<Record<string, { contextPercent: number | null }>> | undefined;
@@ -68,7 +62,6 @@ type Params = {
   canArrange: boolean;
   onMoveSeat: ((move: SeatMove) => void) | undefined;
   hasGroupBar: boolean;
-  /** The pose registry the emotes ask (see use-pose-cues.ts). */
   pose: PoseApi['request'];
 };
 
@@ -77,7 +70,6 @@ type Wall = ReturnType<typeof useWallFeeds>;
 type Emotes = ReturnType<typeof useEmotes>;
 type Words = ReturnType<typeof wordsFor>;
 
-/** Where each member's head is over its desk, for the marquee to pick by. */
 function headsOf(agents: readonly Agent[], layout: Layout, exploded: boolean) {
   return new Map(
     agents.flatMap((a): [string, [number, number, number]][] => {
@@ -87,7 +79,6 @@ function headsOf(agents: readonly Agent[], layout: Layout, exploded: boolean) {
   );
 }
 
-/** The card over the character the pointer is on (not while a menu is open or a desk is carried). */
 function hoverFactsOf(p: Params, hoverId: string | null, menuId: string | null, carrying: boolean) {
   const agent =
     hoverId && !menuId && !carrying ? p.sceneAgents.find((a) => a.id === hoverId) : undefined;
@@ -101,7 +92,6 @@ function hoverFactsOf(p: Params, hoverId: string | null, menuId: string | null, 
   return facts;
 }
 
-/** Where DOM boxes for members go: over their desks, `lift` metres higher than their name tags. */
 function anchorsFor(p: Params) {
   return (ids: readonly string[], lift = 0) =>
     labelsOf(
@@ -114,7 +104,6 @@ function anchorsFor(p: Params) {
       .map((l) => ({ ...l, y: l.y + lift }));
 }
 
-/** What the page's menu may ask of the scene for one character, and the pins on the wall of small views. */
 function characterActions(o: {
   p: Params;
   marks: Marks;
@@ -160,7 +149,6 @@ function characterActions(o: {
   return { pinnable, pinIds, actionsFor };
 }
 
-/** The boxes the scene places each frame, by member id (an emote icon by "s" and its key): one registry for each kind. */
 function useElementRegistries() {
   const cardElements = useRef(new Map<string, HTMLElement>()).current;
   const menuElements = useRef(new Map<string, HTMLElement>()).current;
@@ -168,7 +156,6 @@ function useElementRegistries() {
   return { cardElements, menuElements, spriteElements };
 }
 
-/** The menu closes when the person chooses someone else; opening it chooses its character first, so only a change counts. */
 function useCloseStaleMenu(selectedId: string | null, marks: ReturnType<typeof useCharacterMarks>) {
   const closeStaleMenu = useEffectEvent(() => {
     if (marks.menuId && selectedId !== marks.menuId) marks.closeMenu(false);
@@ -176,7 +163,6 @@ function useCloseStaleMenu(selectedId: string | null, marks: ReturnType<typeof u
   useEffect(() => closeStaleMenu(), [selectedId]);
 }
 
-/** Carrying a desk to another seat, and the rectangle that picks a group: both take the pointer, so orbit is off meanwhile. */
 function useDragAndMarquee(
   p: Params,
   o: {
@@ -205,7 +191,6 @@ function useDragAndMarquee(
   return { seatDrag, marquee };
 }
 
-/** What is said when a carried desk is dropped or the drag is given up. */
 const dragLine = (words: Words, outcome: 'moved' | 'cancelled' | SeatCheck) =>
   outcome === 'moved'
     ? words.dragMoved
@@ -213,7 +198,6 @@ const dragLine = (words: Words, outcome: 'moved' | 'cancelled' | SeatCheck) =>
       ? words.dragCancelled
       : words.dragBlocked[outcome.reason];
 
-/** The control-room wall: the members it shows (not the ones the main shot or the person's choice is on), and whether the person closed it. */
 function useWall(
   p: Params,
   pinned: ReadonlySet<string>,
@@ -236,11 +220,6 @@ function useWall(
   return { wall, setWallClosed };
 }
 
-/**
- * Everything the person can do to the characters directly: the hover card, the action menu, emotes, the group picked
- * with Shift or a rectangle, pins on the wall of small views, carrying a desk to another seat. The state lives here so
- * OfficeScene only draws it.
- */
 export function useSceneInteraction(p: Params) {
   const words = wordsFor(p.zh);
   const { line, announce } = useAnnouncer();

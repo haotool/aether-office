@@ -4,7 +4,6 @@ import { sceneText } from '../i18n/scene-text.js';
 
 type PipWallProps = {
   feeds: readonly Feed[];
-  /** Members the person pinned: their view is marked and stays. */
   pinned: ReadonlySet<string>;
   agents: readonly Agent[];
   doing: Readonly<Record<string, string>> | undefined;
@@ -24,7 +23,6 @@ type PipProps = {
   onSelect: (id: string) => void;
 };
 
-/** One small view's frame: the camera number, how hard the member works (one to three bars) and its caption. */
 function Pip({ agent, index, pinned, level, caption, zh, onSelect }: PipProps) {
   return (
     <button
@@ -50,11 +48,6 @@ function Pip({ agent, index, pinned, level, caption, zh, onSelect }: PipProps) {
   );
 }
 
-/**
- * The control-room wall: a frame over each small live view (MultiCam draws what is inside it, at the frame's own
- * rectangle): which camera, who it is on, what they are doing and how hard. Choosing one hands the main camera to that
- * member (the director gives way to the person).
- */
 export function PipWall({
   feeds,
   pinned,

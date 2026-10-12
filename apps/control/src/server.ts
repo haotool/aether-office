@@ -37,13 +37,11 @@ export const PUBLIC_ROUTES: ReadonlySet<string> = new Set([
   'POST /api/webhooks/github/:integrationId', // authenticated by HMAC signature
   'GET /.well-known/agent-card.json', // public by the A2A spec
   'POST /a2a', // its own bearer scheme
-  // The hook's own bearer token (Remote approvals): it can create a request and read or close that one request.
   'POST /api/hook/permission-requests', // the hook's bearer token
   'GET /api/hook/permission-requests/:id', // the hook's bearer token, for that one request
   'POST /api/hook/permission-requests/:id/fallback', // the hook's bearer token, for that one request
 ]);
 
-/** Records every registered route (not HEAD or OPTIONS), for the test that sweeps them. */
 function logRoutes(app: FastifyInstance, routeLog: { method: string; url: string }[]) {
   app.addHook('onRoute', (route) => {
     for (const method of [route.method].flat())

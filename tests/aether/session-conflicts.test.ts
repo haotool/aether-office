@@ -42,7 +42,7 @@ it('counts the files a real merge left conflicted, from the status read the scan
   const clean = (await scanLocalSessions(home, Date.now(), 0, join(home, 'none')))[0]!;
   expect(clean.git).toMatchObject({ branch: 'main', conflicts: 0 });
 
-  expect(() => git(repo, 'merge', 'feature')).toThrow(); // two files conflict
+  expect(() => git(repo, 'merge', 'feature')).toThrow();
   await writeFile(join(repo, 'untracked.txt'), 'x');
   resetLocalSessionCache();
   const merging = (await scanLocalSessions(home, Date.now(), 0, join(home, 'none')))[0]!;

@@ -2,7 +2,6 @@ import { NavLink } from 'react-router-dom';
 import { Empty } from '../../ui/Empty.js';
 import { useT } from '../../ui/useT.js';
 
-/** An address that is no page: said plainly, with the way back. */
 export function NotFound({ home }: { home: string }) {
   const t = useT();
   return (

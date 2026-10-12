@@ -10,7 +10,6 @@ const HEAD_BYTES = 2048;
 const DESCRIPTION_CHARS = 140;
 const NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 
-/** Pure. The one-line description of a command or skill file: its `description:` field, else its first line of prose. */
 function describe(head: string): string {
   const text = head.replace(/^﻿/, '');
   const front = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text);
@@ -58,7 +57,6 @@ async function commandsIn(dir: string, prefix: string, depth: number): Promise<[
   return found;
 }
 
-/** Skills: `<dir>/<name>/SKILL.md`. A skill folder may be a link (installed skills are); only that one file is read. */
 async function skillsIn(dir: string): Promise<[string, string][]> {
   const entries = (await readdir(dir, { withFileTypes: true }).catch(() => [])).slice(
     0,
@@ -75,9 +73,8 @@ async function skillsIn(dir: string): Promise<[string, string][]> {
 }
 
 /**
- * The custom slash commands and skills of a session: those in its directory and those in the user's Claude folder.
- * Names and one-line descriptions only, bounded, redacted. `cwd` is the session's own (looked up on the server, never
- * supplied by the browser). Codex keeps its prompts elsewhere, so only Claude sessions have any.
+ * Names and one-line descriptions only, bounded and redacted. `cwd` is the session's own, looked up on the server and
+ * never supplied by the browser.
  */
 export async function listCustomCommands(
   provider: 'claude' | 'codex',

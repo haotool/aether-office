@@ -6,7 +6,6 @@ import { createServer } from '../../apps/control/src/server.js';
 import { resetLocalSessionCache } from '../../apps/control/src/services/runtime/local-sessions.js';
 import { command, fixture } from './fixture.js';
 
-/** A control plane with one project whose repository holds one Claude session, all under a temporary home. */
 export function approvalsFixture(
   port: number,
   sessionId = 'sess-one',
@@ -42,7 +41,6 @@ export function approvalsFixture(
     host,
     as,
     configFile: join(home, 'approvals.json'),
-    /** A browser session for a token: the cookie for reads, and the cookie plus CSRF for answers. */
     signIn: async (token: string) => {
       const login = await app.inject({
         method: 'POST',

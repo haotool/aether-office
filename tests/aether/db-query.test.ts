@@ -32,14 +32,14 @@ describe('typed queries', () => {
         .map((p) => p.id)
         .sort(),
     ).toEqual(['a', 'c']);
-    expect(selectIn(sqlite, schema.projects, 'id', [])).toEqual([]); // nothing asked, nothing returned
+    expect(selectIn(sqlite, schema.projects, 'id', [])).toEqual([]);
     updateRows(sqlite, schema.projects, { id: 'b' }, { name: 'renamed', version: 2 });
     expect(selectOne(sqlite, schema.projects, { id: 'b' })).toMatchObject({
       name: 'renamed',
       version: 2,
     });
-    expect(selectOne(sqlite, schema.projects, { id: 'a' })?.name).toBe('a'); // only the matching row changed
-    updateRows(sqlite, schema.projects, { id: 'b' }, {}); // an empty patch is no statement
+    expect(selectOne(sqlite, schema.projects, { id: 'a' })?.name).toBe('a');
+    updateRows(sqlite, schema.projects, { id: 'b' }, {});
   });
 
   it('keeps JSON columns as values, and ignores undefined conditions', () => {

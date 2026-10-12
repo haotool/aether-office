@@ -9,7 +9,6 @@ type TerminalCommand = Extract<Command, { type: `terminal.${string}` }>;
 type Project = ReturnType<typeof project>;
 const LEASE_MS = 30000;
 
-/** The profile the machine grants for this project's root; the machine must be live, in the project and under its capacity. */
 function grantedProfile(
   ctx: Context,
   p: Project,
@@ -37,7 +36,6 @@ function grantedProfile(
   return profile;
 }
 
-/** terminal.start: records the new session and returns its id. */
 function createSession(
   ctx: Context,
   actor: Actor,
@@ -89,7 +87,6 @@ function takeOver(ctx: Context, actor: Actor, row: Session, now: number) {
   };
 }
 
-/** terminal.stop: drops what is queued; an unstarted session exits at once, a running one is asked to stop. */
 function requestStop(ctx: Context, row: Session, now: number) {
   if (row.state === 'stopping') return { id: row.id, state: 'stopping' };
   ctx.sqlite
@@ -120,10 +117,6 @@ function releaseControl(ctx: Context, row: Session, now: number) {
   return { id: row.id, controlEpoch: row.controlEpoch + 1, controlOwner: null };
 }
 
-/**
- * Input, resize and release need the caller's live control lease; input and resize also renew it.
- * Returns the final answer when the command completes here (takeover, release, a stop that ends the session).
- */
 function applyToSession(ctx: Context, actor: Actor, c: TerminalCommand, row: Session, now: number) {
   if (c.type === 'terminal.takeover') return takeOver(ctx, actor, row, now);
   if (c.type === 'terminal.stop') return requestStop(ctx, row, now);

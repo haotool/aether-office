@@ -3,7 +3,6 @@ import { signIn } from '../support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
 import { mkdirSync } from 'node:fs';
 
-// Every primary page, in both themes, on desktop and phone: accessible, not clipped, not blank.
 const PAGES = [
   'office',
   'agents',

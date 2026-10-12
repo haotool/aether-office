@@ -4,7 +4,6 @@ Face numbers are offsets from the head centre: (sideways, forward, up). Forward 
 the geometry turns it into -Y.
 """
 
-# One team look: the uniform is shared, the animal and its bow tie are not.
 UNIFORM = {'cloth': '#3F6F78', 'cloth_light': '#5E9096', 'pants': '#2F3F4C', 'boots': '#E6DCCB', 'sole': '#1F2A31', 'trim': '#E2C27D'}
 
 PROFILES = {
@@ -72,7 +71,6 @@ PROFILES = {
         'hands': 'fur', 'brow': .0, 'whiskers': False, 'bulk': 1.12, 'nose': (.042, .028, .032), 'nose_color': '#1F1814',
         'light_face': 'muzzle', 'ear_color': 'fur',
     },
-    # A jiangshi, for a session whose process is a zombie. It shares the animals' body; see animal_forms.py.
     'zombie': {
         'fur': '#8DB59B', 'light': '#C4DACB', 'dark': '#3F5648', 'accent': '#B01E23', 'ear_inner': '#8DB59B',
         'head': (.265, .235, .24), 'muzzle': [((0, .12, -.075), (.075, .07, .055))],

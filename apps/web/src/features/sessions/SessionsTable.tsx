@@ -10,11 +10,9 @@ import { LIVENESS_LABEL } from './sessions-filter.js';
 
 type Locale = 'zh-TW' | 'en';
 
-/** What a zombie was, for a tooltip: "node (pid 123), ?" — the program it was last seen as, or ? when it never was. */
 const zombieTitle = (zombies: LocalSession['liveness']['zombies'], hint: string) =>
   `${zombies.map((z) => `${z.program ?? '?'} (pid ${z.pid})`).join(', ')}\n${hint}`;
 
-/** The liveness line under a status: how long quiet, zombies left over, how long it has run. */
 function LivenessNote({ s, now, locale }: { s: AttributedSession; now: number; locale: Locale }) {
   const t = useT();
   const { liveness } = s;

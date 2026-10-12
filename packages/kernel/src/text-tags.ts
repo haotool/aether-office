@@ -1,12 +1,6 @@
 /**
- * Pure. Which `<name>` in prose is a wrapper (markup a model or a CLI left in text, never shown) and which is plain text
- * (`Array<string>`, `<your-key>` in a sentence). The rule, for a tag that is not an HTML tag `neutralizeHtml` knows:
- *  - a closing tag is always a wrapper: balanced with an opener, or stray;
- *  - an opening tag is a wrapper when its name has a matching closing tag somewhere in the text (a balanced pair), or when
- *    its name holds `-`, `_` or `:` (`task-notification`, `antml:invoke`) and it stands at the start or end of a line;
- *  - never when it is an inline generic: no attributes, directly attached to an identifier (`Array<string>`, `a<b>c`), and
- *    with no closing counterpart.
- * Code spans and fences are not looked at by the caller, so generics and JSX inside code always survive.
+ * A closing tag is always a wrapper; an opening tag is one when it has a matching closer or a `-`, `_` or `:` name at a
+ * line edge (`task-notification`), never an inline generic (`Array<string>`, `a<b>c`).
  */
 export const TAG_NAME = '[a-zA-Z][\\w:.-]*';
 
@@ -14,7 +8,6 @@ export type TagSets = { opens: Set<string>; closes: Set<string> };
 
 const SCAN = new RegExp(`(\`+)[^\`]*?\\1(?!\`)|<(/?)(${TAG_NAME})(?:\\s[^<>]*)?>`, 'g');
 
-/** The names that open and close in prose (code spans skipped), lower-cased, for the balanced-pair test. */
 export function tagSets(prose: string): TagSets {
   const sets: TagSets = { opens: new Set(), closes: new Set() };
   if (!prose.includes('<')) return sets;
@@ -29,15 +22,12 @@ type TagFacts = {
   closing: boolean;
   selfClosing: boolean;
   hasAttrs: boolean;
-  /** The character before `<` belongs to an identifier. */
   attached: boolean;
-  /** Only whitespace on the line before the tag, or after it. */
   atLineEdge: boolean;
 };
 
 const SEPARATED = /[-_:]/;
 
-/** Whether an unknown tag is a wrapper to remove (true) or text to keep (false). `name` is lower-case. */
 export function isWrapper(name: string, tag: TagFacts, sets: TagSets): boolean {
   if (tag.closing) return true;
   const balanced = sets.closes.has(name) && sets.opens.has(name);
@@ -46,7 +36,6 @@ export function isWrapper(name: string, tag: TagFacts, sets: TagSets): boolean {
   return SEPARATED.test(name) && (tag.atLineEdge || tag.hasAttrs || tag.selfClosing);
 }
 
-/** Facts about the tag that spans `text[from, to)`. */
 export function factsOf(
   text: string,
   from: number,

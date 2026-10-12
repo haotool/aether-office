@@ -2,8 +2,6 @@ import { test, expect, type Page } from '@playwright/test';
 import { signIn } from '../support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
 
-// The squad in the panel. playwright.config.ts writes synthetic hook records for the fixture session (a SubagentStart
-// and two PreToolUse with an agent_id), so it has one running Explore subagent for the whole run.
 async function login(page: Page) {
   await signIn(page);
   await expect(page.locator('main')).toBeVisible();
@@ -16,7 +14,6 @@ async function login(page: Page) {
   return projects.find((p) => p.name === 'fixture-repo')!.id;
 }
 
-/** The panel or sheet passes axe (contrast included) in the dark theme and the light one. */
 async function expectAccessible(page: Page, scope: string) {
   for (const theme of ['dark', 'light'] as const) {
     await page.evaluate((t) => (document.documentElement.dataset['theme'] = t), theme);
@@ -43,13 +40,11 @@ test('desktop: the supervisor row carries its subagent as a nested tree row, wit
   await expect(parent.locator('.squad-chip')).toContainText('1');
   await expect(child).toHaveCount(1);
   await expect(child).toContainText('Explore');
-  await expect(child).toContainText('2'); // its two tool calls
-  // A subagent is never a feed row of its own: one top-level row for the session.
+  await expect(child).toContainText('2');
   await expect(panel.locator('.feed-row')).toHaveCount(1);
   await expectAccessible(page, '.session-panel');
   await page.screenshot({ path: 'evidence/screenshots/e2e-squad-feed.png' });
 
-  // One tab stop: the parent. Down enters the squad, Left goes back, Left again folds, Right opens.
   await parent.focus();
   await page.keyboard.press('ArrowDown');
   await expect(child).toBeFocused();
@@ -64,7 +59,6 @@ test('desktop: the supervisor row carries its subagent as a nested tree row, wit
   await page.keyboard.press('ArrowRight');
   await expect(child).toHaveCount(1);
 
-  // The polite live region exists and starts empty: nothing is announced for what was already there.
   await expect(panel.locator('[aria-live="polite"]').first()).toHaveText('');
 });
 
@@ -79,13 +73,11 @@ test('desktop: a subagent row opens its own view with a spawned-by link; the sup
   const relation = panel.locator('.relation-chip');
   await expect(relation).toBeVisible();
   await expect(panel.locator('.sub-facts')).toContainText('Grep');
-  // No task description is shown: the server sends none yet, and nothing is made up.
   await expect(panel.locator('.sub-facts')).not.toContainText(/任務|Task/);
   await expect(panel.locator('.conv-footer, .session-footer textarea')).toHaveCount(0);
   await expectAccessible(page, '.session-panel');
   await page.screenshot({ path: 'evidence/screenshots/e2e-squad-subagent.png' });
 
-  // The relation chip selects the supervisor.
   await relation.click();
   await expect(page).not.toHaveURL(/%3Asub%3A/);
   const strip = panel.locator('.squad-strip');

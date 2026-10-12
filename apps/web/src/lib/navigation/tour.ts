@@ -1,4 +1,3 @@
-// Guided camera tour: a pure state machine so skip, pause, interrupt and restore are testable.
 export const TOUR_STOPS = [
   'engineering',
   'review',
@@ -17,8 +16,8 @@ export type TourAction =
   | { type: 'start'; restore: string }
   | { type: 'pause' }
   | { type: 'resume' }
-  | { type: 'skip' } // advance to the next stop immediately
-  | { type: 'interrupt' } // the user touched the camera: stop without moving it
+  | { type: 'skip' }
+  | { type: 'interrupt' }
   | { type: 'stop' };
 
 export const idle: TourState = { status: 'idle' };
@@ -40,7 +39,6 @@ export function tourReducer(state: TourState, action: TourAction): TourState {
   }
 }
 
-/** Focus the tour wants, or null when it should not move the camera. */
 export const tourFocus = (state: TourState): string | null => {
   if (state.status === 'idle') return null;
   const stop = TOUR_STOPS[state.index];
@@ -48,7 +46,6 @@ export const tourFocus = (state: TourState): string | null => {
   return stop;
 };
 
-/** Where the camera returns when the tour ends on its own or is stopped explicitly. */
 export const restoreFocus = (
   before: TourState,
   action: TourAction,

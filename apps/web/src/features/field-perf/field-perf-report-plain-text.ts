@@ -4,7 +4,6 @@ import type { FieldPerfCollector } from './collector.js';
 
 type FieldPerfPlainTextOutcome = 'idle' | 'ok' | 'manual';
 
-/** Formats the live collector snapshot as indented JSON plain text and tries the clipboard. */
 export async function serializeFieldPerfReportPlainText(
   collector: RefObject<FieldPerfCollector | null>,
   messages: {

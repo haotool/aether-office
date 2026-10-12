@@ -1,4 +1,3 @@
-/** The knowledge words, in Traditional Chinese. */
 export const zhKnowledge = {
   knowledgeTrustNote: '批准記錄人類審核結果；測試證據仍須另外查核。',
   knowledgeAuthor: '提案作者',

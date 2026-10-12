@@ -27,7 +27,6 @@ type PerfMemoryWindow = Performance & {
 
 const API_PREFIX = '/api';
 
-/** Records rAF deltas, observers, and /api fetch counts until `snapshot()` is called. */
 export class FieldPerfCollector {
   readonly startedAtMs = performance.now();
   private frameSamples = new FrameDeltaBuffer();

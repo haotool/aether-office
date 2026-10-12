@@ -7,10 +7,6 @@ import {
   type Tracker,
 } from '../conversation/compaction.js';
 
-/**
- * The compactions happening now, by member id, for the scene: each is kept for COMPACTION_LIVE_MS after it is detected
- * (the effect plays once, the chip fades) and then dropped. A tracker per member sees every reading of the session.
- */
 export function useCompactions(
   readings: Readonly<Record<string, ContextReading>>,
 ): Record<string, SceneCompaction> {

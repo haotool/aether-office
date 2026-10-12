@@ -1,7 +1,6 @@
 import { clamp01, envelope, lerp, SPOT } from './shared.js';
 import type { Effect, Sprite } from './types.js';
 
-/** An infinite-loop ring turning over the head: the same command ran again and again. */
 export const retryLoop: Effect = (t, d) => {
   const fade = envelope(t, d, 500);
   const [x, y, z] = SPOT.overHead;
@@ -10,7 +9,6 @@ export const retryLoop: Effect = (t, d) => {
   ];
 };
 
-/** Ctrl+C then Ctrl+V: two keycaps hop from the screen down to the keyboard, one after the other. */
 export const ctrlCv: Effect = (t, d) => {
   const fade = envelope(t, d, 250);
   const hop = (start: number, cell: 'keyc' | 'keyv', x: number): Sprite => {
@@ -25,7 +23,6 @@ export const ctrlCv: Effect = (t, d) => {
   return [hop(0, 'keyc', -0.14), hop(900, 'keyv', 0.14)];
 };
 
-/** A `:q!` sign leans on the screen while the member looks for the way out of vim. */
 export const vimTrap: Effect = (t, d) => {
   const fade = envelope(t, d, 400);
   return [

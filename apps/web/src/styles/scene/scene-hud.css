@@ -1,9 +1,7 @@
-/* ── Scene HUD: floor readout and the deck selector, drawn as instruments rather than cards ─────────────────── */
-/* The HUD plaques are geometry over the canvas: fixed insets and widths so they clear the toolbar (top) and the camera wall (right). */
 .floor-hud {
   position: absolute;
-  left: 18px; /* token-lint: geometry */
-  bottom: 38px; /* token-lint: geometry */
+  left: var(--stage-inset);
+  bottom: var(--stage-floor-bottom);
   z-index: var(--z-hud);
   display: grid;
   gap: var(--space-2);
@@ -83,7 +81,6 @@
   margin: 0;
   gap: var(--space-12);
 }
-/* A deck is a slab seen edge-on: slanted ends, its own tint, a row of pips for how much of it is busy. */
 .slab {
   display: grid;
   grid-template-columns: 30px 1fr auto;
@@ -188,8 +185,8 @@
 @media (max-width: 760px) {
   .building-panel {
     top: auto;
-    bottom: 10px; /* token-lint: geometry */
-    right: 10px; /* token-lint: geometry */
+    bottom: var(--hud-inset);
+    right: var(--hud-inset);
     width: 196px; /* token-lint: geometry */
   }
   .floor-hud {

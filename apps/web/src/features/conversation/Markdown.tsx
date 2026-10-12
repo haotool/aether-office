@@ -5,7 +5,6 @@ import { CodeBlock } from './CodeBlock.js';
 import { Inline } from './MdInline.js';
 import { parseMarkdown } from './md-parse.js';
 
-/** Each block of a reply that is revealed starts its fade a little after the one above it. */
 const BLOCK_STAGGER_MS = 120;
 const BLOCK_STAGGER_MAX = 10;
 
@@ -113,8 +112,7 @@ function Blocks({ blocks, delay }: { blocks: readonly MdBlock[]; delay: number |
 
 /**
  * An agent's reply, rendered as elements (never as HTML), so nothing it says can inject markup: links are http(s) only,
- * images show their alt text and are never fetched. `reveal` fades the words in one after another, for a reply that has
- * just arrived.
+ * images show their alt text and are never fetched.
  */
 export const Markdown = memo(function Markdown({
   text,
@@ -123,7 +121,6 @@ export const Markdown = memo(function Markdown({
   text: string;
   reveal?: boolean;
 }) {
-  // Parsed once per text: a poll that changes nothing about this message re-renders nothing here.
   const blocks = useMemo(() => parseMarkdown(text), [text]);
   return (
     <div className={`markdown ${reveal ? 'reveal' : ''}`}>

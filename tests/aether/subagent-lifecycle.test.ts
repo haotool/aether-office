@@ -47,7 +47,6 @@ it('tracks a subagent lifecycle: running with its tool count, finished for 90 s,
   expect(done.tools?.count).toBe(3);
   expect(deriveHookState(stopped, 7_000 + 89_000).get('claude:s1')!.subagents).toHaveLength(1);
   expect(deriveHookState(stopped, 7_000 + 90_000).get('claude:s1')!.subagents).toEqual([]);
-  // The parent's own activity and current tool are untouched by its helpers' calls.
   const parent = deriveHookState(records, 6_000).get('claude:s1')!;
   expect(parent.tool).toBeNull();
   expect(parent.activity).toBe('working');

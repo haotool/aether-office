@@ -1,7 +1,6 @@
 import { clamp01, draw, envelope, lerp, SPOT } from './shared.js';
 import type { Effect, Sprite } from './types.js';
 
-/** "Ship it": a rocket (or, now and then, a paper plane) lifts off the desk and climbs, leaving a few sparks. */
 export const shipIt: Effect = (t, d, seed) => {
   const p = clamp01(t / d);
   const plane = draw(seed, 0) < 0.35;
@@ -30,7 +29,6 @@ export const shipIt: Effect = (t, d, seed) => {
   return sprites;
 };
 
-/** A pager bell over the head shakes and settles (the member hit an error): two rings spread from it. */
 export const pager: Effect = (t, d) => {
   const fade = envelope(t, d, 250);
   const shake = Math.sin(t / 55) * 0.4 * Math.exp(-t / 900);

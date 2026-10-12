@@ -29,13 +29,9 @@ type KpiStripProps = {
   onOpen: () => void;
 };
 
-/**
- * The building's KPIs in one line over the office: tokens today with a week's sparkline, sessions running, commits today
- * and branches merged this week. Every cell opens the dashboard. On a phone the line scrolls sideways.
- */
 export function KpiStrip({ usage, git, running, onOpen }: KpiStripProps) {
   const t = useT();
-  if (!usage) return null; // not known yet, or this server or role has none: no empty frame
+  if (!usage) return null;
   if (!usage.enabled)
     return (
       <div className="kpi-strip" role="group" aria-label={t('kpiTitle')}>

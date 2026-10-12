@@ -1,4 +1,3 @@
-/** The feed words, in Traditional Chinese. */
 export const zhFeed = {
   panelTitle: '即時 session',
   panelBack: '全部 session',

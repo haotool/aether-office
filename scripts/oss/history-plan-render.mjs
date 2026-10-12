@@ -1,4 +1,3 @@
-// The Markdown rendering of a history-cleanup plan (scripts/oss/history-plan.mjs).
 import { SUBJECT_MAX } from './lib.mjs';
 
 const mb = (n) => `${(n / 1048576).toFixed(1)} MB`;

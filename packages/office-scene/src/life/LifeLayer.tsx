@@ -10,7 +10,6 @@ import type { LifeCue, ScheduleEnv } from './schedule.js';
 import type { LifeInput } from './signals.js';
 import { useLifeRun } from './use-life-run.js';
 
-/** The pace pictures animate at: about 30 a second is plenty for small props, and half what a full-rate frame costs. */
 const FRAME_MS = 33;
 
 type LifeLayerProps = {
@@ -21,13 +20,10 @@ type LifeLayerProps = {
   quality: Quality;
   reducedMotion: boolean;
   zh: boolean;
-  /** The scene's shared aria log (see use-aria-log.ts). */
   say: (text: string) => void;
-  /** The pose registry: an effect's gesture is asked of it (see poses.ts). */
   pose: PoseApi['request'];
 };
 
-/** The cues on show now: a preview's frozen ones (a looped one plays on from `t`), else the live ones that have not ended. */
 function cuesOnShow(
   preview: NonNullable<LifeInput['preview']> | undefined,
   held: readonly LifeCue[],
@@ -36,17 +32,11 @@ function cuesOnShow(
   loopedAt: number,
 ): readonly LifeCue[] {
   if (!preview) return live.filter((c) => now < c.startedAt + c.durationMs);
-  // A looped preview plays on from `t`: the measurement of what motion costs.
   return preview.loop
     ? held.map((c) => ({ ...c, frozenT: (preview.t + now - loopedAt) % c.durationMs }))
     : held;
 }
 
-/**
- * The office's little moments: reads the signals the page derived, lets the scheduler decide which effects start, and
- * draws them as sprites in one draw call. Everything it shows is decorative and is also announced, politely and
- * sparingly, in the scene's hidden log for screen readers. With no input, or in Calm mode, it draws nothing.
- */
 export function LifeLayer({
   input,
   seats,

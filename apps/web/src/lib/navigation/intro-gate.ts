@@ -1,20 +1,13 @@
-// The page's side of the first-visit camera tour: whether it may start by itself, and what is remembered afterwards.
-// The tour itself (path, state machine, caption) lives in packages/office-scene/src/intro.
-
 const PLAYED_KEY = 'aether.intro.played';
 
 type IntroGateInput = {
-  /** The persisted preference: `auto` or "don't show again". */
   pref: 'auto' | 'never';
-  /** The tour already ran in this browser session. */
   playedThisSession: boolean;
   /** The browser is driven by automation (a test, a crawler): a camera that moves on its own is never wanted there. */
   automated: boolean;
-  /** `?intro=force`: the test override that plays it regardless of the rest. */
   force: boolean;
 };
 
-/** May the tour start by itself? Replay does not ask. */
 export const shouldAutoplayIntro = ({
   pref,
   playedThisSession,
@@ -24,16 +17,13 @@ export const shouldAutoplayIntro = ({
 
 export const introForced = (search: string) => new URLSearchParams(search).get('intro') === 'force';
 
-/** On a phone the tour plays once, ever: finishing or leaving it turns the preference off (Replay stays in the controls). */
 export const phoneRemembersIntro = (compact: boolean, force: boolean) => compact && !force;
 
 let replayAsked = false;
-/** Settings → Replay intro: the tour is asked for, and the next office page plays it (the scene lives on another page). */
 export const requestIntroReplay = () => {
   replayAsked = true;
 };
 export const introReplayRequested = () => replayAsked;
-/** The tour has run (however it ended): the request is met. */
 export const clearIntroReplayRequest = () => {
   replayAsked = false;
 };
@@ -42,7 +32,7 @@ export function introPlayedThisSession(): boolean {
   try {
     return window.sessionStorage.getItem(PLAYED_KEY) !== null;
   } catch {
-    return false; // storage blocked: the tour may repeat, which is the harmless side to err on
+    return false;
   }
 }
 

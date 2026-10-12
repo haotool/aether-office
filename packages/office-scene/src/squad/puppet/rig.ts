@@ -1,6 +1,3 @@
-// The rig of the whole scene: a slot of four strings for each live subagent (head, left hand, right hand, and the master
-// thread from the cross to the supervisor), the motion of each, and the pins they are tied to. Pure and typed-array
-// backed; PuppetStrings.tsx reads the points and draws them.
 import {
   HAND_LIFT,
   calmMotion,
@@ -19,11 +16,8 @@ import {
   type Vec3,
 } from './verlet.js';
 
-/** Strings per subagent: the head, the two hands and the master thread. */
 export const STRINGS_PER_MEMBER = 4;
-/** Subagents the rig carries at once (a floor's character budget is 16; an exploded building shows them all). */
 export const MEMBER_CAPACITY = 48;
-/** Line segments the one draw needs room for. */
 export const SEGMENT_CAPACITY = MEMBER_CAPACITY * STRINGS_PER_MEMBER * (POINTS - 1);
 
 export type RigMember = {
@@ -31,18 +25,14 @@ export type RigMember = {
   phase: StringPhase;
   toolAt: number | null;
   chair: Chair;
-  /** The character's own head and hand sockets, when it has registered them (see anchors.ts). */
   sockets?: Sockets | null;
-  /** Where the master thread ends: over the supervisor (its halo). */
   master: Vec3;
 };
 
 type Rig = {
   strings: Strings;
-  /** Slot of each live member (its strings are `slot * STRINGS_PER_MEMBER` and the three after it). */
   slots: Map<string, number>;
   motions: Map<string, StringMotion>;
-  /** The round each member was last listed in, to find the ones that went (no allocation per frame). */
   seen: Map<string, number>;
   round: number;
 };
@@ -60,18 +50,17 @@ export function createRig(): Rig {
 function slotOf(rig: Rig, id: string): number | null {
   const known = rig.slots.get(id);
   if (known !== undefined) return known;
-  const taken = new Set(rig.slots.values()); // only when a member is new
+  const taken = new Set(rig.slots.values());
   for (let slot = 0; slot < MEMBER_CAPACITY; slot++)
     if (!taken.has(slot)) {
       rig.slots.set(id, slot);
       for (let k = 0; k < STRINGS_PER_MEMBER; k++)
-        rig.strings.started[slot * STRINGS_PER_MEMBER + k] = 0; // a new tenant starts straight
+        rig.strings.started[slot * STRINGS_PER_MEMBER + k] = 0;
       return slot;
     }
-  return null; // full: this one has no strings
+  return null;
 }
 
-/** Gives back the slots of the members that are no longer listed this round: the next tenant starts straight. */
 function releaseGone(rig: Rig): void {
   for (const [id, slot] of rig.slots)
     if (rig.seen.get(id) !== rig.round) {
@@ -83,13 +72,11 @@ function releaseGone(rig: Rig): void {
     }
 }
 
-/** Advances one member's motion and pins its four strings (head, both hands, the master's) to the cross above it. */
 function tieMember(rig: Rig, m: RigMember, slot: number, dt: number, simulate: boolean): void {
   const before = rig.motions.get(m.id) ?? calmMotion(m.toolAt);
   const motion = simulate
     ? stepMotion(before, { phase: m.phase, toolAt: m.toolAt }, dt)
-    : // Still: no jerk, no sway, no slack: strings are there or not.
-      {
+    : {
         ...calmMotion(m.toolAt),
         slack: 0,
         alpha: m.phase === 'working' || m.phase === 'waiting' ? 1 : 0,
@@ -106,11 +93,6 @@ function tieMember(rig: Rig, m: RigMember, slot: number, dt: number, simulate: b
   pinString(rig.strings, base + 3, cross, m.master, motion.slack, frozen);
 }
 
-/**
- * Ties the strings of `members` to their pins for this frame and advances the simulation by `dt`. A member that is no
- * longer listed gives its slot back. With `simulate` off (reduced motion, Calm) the strings are laid straight and nothing
- * moves. Returns the steps run (0: the points are as they were).
- */
 export function updateRig(
   rig: Rig,
   members: readonly RigMember[],

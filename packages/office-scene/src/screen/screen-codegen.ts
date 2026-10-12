@@ -25,14 +25,8 @@ import {
 
 export { lineText, type CodeLine, type CodeToken, type TokenKind } from './screen-tokens.js';
 
-/**
- * Plausible code for a desk's editor: made up, never read from anything. A real file's name and extension seed it (its
- * words become the identifiers, its extension the language); the rest is a small grammar per language that keeps
- * brackets balanced and indentation regular. The same (seed, file, language) always gives the same lines.
- */
 const MAX_WIDTH = 86;
 
-/** An expression: a literal, a name or, at the top, a call whose arguments are plain. */
 function expr(d: Dialect, n: Names, top: boolean, call = false): CodeToken[] {
   const kind = call
     ? 'call'
@@ -56,7 +50,6 @@ function condition(d: Dialect, n: Names): CodeToken[] {
   return [id(d.varCase(nameParts(n, false))), pun(` ${pick(n.r, [d.eq, '!=', '>', '<'])} `), right];
 }
 
-/** Adds a line, or a comment in its place when it came out too wide to look like code. */
 function emit(out: CodeLine[], l: CodeLine): void {
   out.push(lineText(l).length > MAX_WIDTH ? line(l.indent, com('// ...')) : l);
 }
@@ -200,7 +193,6 @@ function pythonFile(n: Names, total: number): CodeLine[] {
 const cache = new Map<string, readonly CodeLine[]>();
 const CACHE_LIMIT = 32;
 
-/** About `total` lines of code for `file` (whose words seed the names) in `lang`, balanced and indented. */
 export function generateFile(
   seed: string,
   file: string,

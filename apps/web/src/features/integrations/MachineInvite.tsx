@@ -5,7 +5,6 @@ import { useT } from '../../ui/useT.js';
 
 type Invitation = { token: string; expiresAt: number };
 
-/** The machine's name, where it may work, how many jobs at once, and which providers it offers. */
 function InviteFields() {
   const t = useT();
   return (

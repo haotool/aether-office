@@ -1,7 +1,6 @@
 import { createServer } from 'node:net';
 import { setTimeout as delay } from 'node:timers/promises';
 
-/** Wall-clock budgets measure speed, which a loaded machine changes: they are asserted only with `AETHER_TIMING_TESTS=1`. */
 export const timingTests = process.env['AETHER_TIMING_TESTS'] === '1';
 
 /** `tight` with timing tests on; otherwise `loose`, a bound that still fails if the code under test hangs or never yields. */
@@ -19,7 +18,6 @@ export function freePort(): Promise<number> {
   });
 }
 
-/** Polls `read` until it returns something truthy, or fails once `ms` have passed (a deadline, not a guess at how long it takes). */
 export async function eventually<T>(
   read: () => T | undefined | false | Promise<T | undefined | false>,
   ms = 30_000,

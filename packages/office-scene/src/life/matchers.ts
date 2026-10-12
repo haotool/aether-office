@@ -1,9 +1,6 @@
 import type { CommandTag } from '@aether/contracts';
 import type { LifeSignal } from './signals.js';
 
-// What the hook receiver keeps of a command is its first word, plus a plain subcommand after a launcher such as git or
-// pnpm (packages/providers/src/hook-receiver.mjs): "pnpm test", "git push", "vim". These read that and nothing more, so
-// they say what a command was started as, never how it ended.
 const TESTS = new Set([
   'pnpm test',
   'npm test',
@@ -43,9 +40,8 @@ export const isQaSite = (s: LifeSignal) =>
   !!s.target &&
   QA_HOSTS.some((host) => s.target === host || targetOf(s).endsWith(`.${host}`));
 
-// Since I7 the hook receiver labels a call from a closed vocabulary (`tags`) and the provider's own exit status reaches
-// `ok`. A rule that claims how a command ended reads `ok === true` or `ok === false` here: an unknown outcome (null or
-// absent) matches nothing, so no outcome effect can start from a guess.
+// An unknown outcome (`ok` null or absent) matches nothing, so no outcome effect can start from a guess; a rule that
+// claims how a command ended reads `ok === true` or `ok === false`.
 const tagged = (s: LifeSignal, ...tags: CommandTag[]) => !!s.tags?.some((t) => tags.includes(t));
 const started = (s: LifeSignal, ...tags: CommandTag[]) =>
   s.kind === 'tool.start' && tagged(s, ...tags);
@@ -70,7 +66,6 @@ export const hardReset = (s: LifeSignal) => started(s, 'git.reset.hard');
 export const todoSearch = (s: LifeSignal) => started(s, 'search.todo');
 export const prApproved = (s: LifeSignal) => ended(s, true, 'gh.pr.approve');
 
-/** Friday from this hour on is "Friday afternoon". */
 const FRIDAY_FROM_HOUR = 15;
 /** The viewer's own clock (the browser's local time zone), taken at the moment of the call. */
 export const fridayAfternoon = (at: number) => {

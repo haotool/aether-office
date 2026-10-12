@@ -3,19 +3,13 @@ import type { Agent } from '@aether/contracts';
 import type { ClipName } from '../animals/animal-states.js';
 import { COOLDOWN, microAction, type WorkMode } from '../environment/behavior.js';
 
-/** What the director needs to know about the member's desk and work (see behavior.ts). */
 export type BehaviorScene = {
   mode: WorkMode;
   intensity: 0 | 1 | 2 | 3;
   secondMonitor: boolean;
-  /** Whole minutes since anything happened in its session; null when not known. */
   quietMinutes: number | null;
 };
 
-/**
- * Schedules a member's small actions: after the director's wait the action plays once over the base clip (`play`), and a
- * pause in typing is cut short after its hold. Idle while `busy` (an action is already playing) or `enabled` is false.
- */
 export function useMicroActions({
   enabled,
   busy,

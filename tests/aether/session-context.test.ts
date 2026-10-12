@@ -59,11 +59,9 @@ it('reads the time of the CLI own compaction marker from the tail, the latest on
 it('finds no marker, or none with a time, as null', () => {
   expect(compactedAtOf('claude', Buffer.from(claudeAssistant(1, 1)))).toBeNull();
   expect(compactedAtOf('claude', Buffer.from(''))).toBeNull();
-  // the marker's line lost its start to the tail cut: no time to read
   expect(
     compactedAtOf('claude', Buffer.from('"subtype":"compact_boundary","level":"info"}')),
   ).toBeNull();
-  // a provider's marker is not the other's
   expect(compactedAtOf('codex', Buffer.from(claudeBoundary))).toBeNull();
 });
 

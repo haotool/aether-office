@@ -43,7 +43,6 @@ export async function fileHookStatus(path: string, provider: 'claude' | 'codex')
   };
 }
 
-/** Is the opt-in synchronous PermissionRequest hook of Remote approvals in this Claude settings file? */
 export async function fileRemoteApprovals(path: string): Promise<boolean> {
   try {
     const parsed: unknown = JSON.parse(await readFile(path, 'utf8'));
@@ -64,7 +63,6 @@ export async function fileRemoteApprovals(path: string): Promise<boolean> {
 
 type CodexHookTrust = { event: string; trusted: boolean; enabled: boolean };
 
-/** Asks Codex itself (read-only `hooks/list`) which of our hooks it will run. */
 export async function codexHookTrust(
   binary: string,
   cwd: string,

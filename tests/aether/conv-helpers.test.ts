@@ -44,7 +44,7 @@ describe('conversation time', () => {
 
 describe('seen baseline', () => {
   it('keeps the time from before a visit while it lasts, and forgets it after', () => {
-    expect(seenBaseline('claude:x')).toBe(0); // nothing stored, nothing held
+    expect(seenBaseline('claude:x')).toBe(0);
     holdBaseline('claude:x', 1234);
     expect(seenBaseline('claude:x')).toBe(1234);
     releaseBaseline('claude:x');

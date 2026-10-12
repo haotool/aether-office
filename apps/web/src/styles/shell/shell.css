@@ -20,14 +20,14 @@
   display: flex;
   align-items: center;
   gap: var(--space-8);
-  width: 158px; /* the brand column: wide enough for the wordmark, the sidebar's edge is 204px token-lint: geometry */
+  width: var(--brand-w);
   flex-shrink: 0;
 }
 .brand > span {
   font-size: var(--fs-heading);
   letter-spacing: 3.5px;
   font-weight: 650;
-  line-height: var(--lh-none); /* a wordmark, not running text */
+  line-height: var(--lh-none);
 }
 .brand small {
   display: block;
@@ -38,7 +38,7 @@
   color: var(--muted);
 }
 .top-divider {
-  height: var(--icon-xl); /* a hairline between the brand and the picker, not a control */
+  height: var(--icon-xl);
   width: 1px;
   background: var(--line);
 }
@@ -67,7 +67,7 @@
   max-width: 230px; /* token-lint: geometry */
   min-height: var(--control-h-sm);
   overflow: hidden;
-  text-overflow: ellipsis; /* a long project name ends in an ellipsis; the select's title carries the whole name */
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 .topbar-right {
@@ -98,7 +98,7 @@
   min-height: 0;
 }
 .sidebar {
-  width: 204px; /* the navigation column token-lint: geometry */
+  width: var(--sidebar-w);
   flex-shrink: 0;
   background: color-mix(in srgb, var(--surface) 94%, transparent);
   border-right: 1px solid var(--line);
@@ -136,7 +136,7 @@
 .nav-link.active {
   background: color-mix(in srgb, var(--mint) 11%, transparent);
   color: var(--mint);
-  box-shadow: var(--ring-inset) color-mix(in srgb, var(--mint) 38%, transparent); /* not an outline: the focus ring stays the token's */
+  box-shadow: var(--ring-inset) color-mix(in srgb, var(--mint) 38%, transparent);
 }
 .nav-link small {
   margin-left: auto;
@@ -166,7 +166,7 @@
   font-size: var(--fs-label);
 }
 .connection > span {
-  width: var(--space-6); /* a status dot */
+  width: var(--space-6);
   height: var(--space-6);
   border-radius: 50%;
   background: var(--mint);

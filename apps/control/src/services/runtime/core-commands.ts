@@ -6,10 +6,8 @@ import { insertRow, selectOne, updateRows } from '../../db/query.js';
 import { agents, knowledge, projects } from '../../db/schema.js';
 import { agent, type Context } from '../domain/context.js';
 
-/** The commands that touch one table or one policy row directly: no service of their own. */
 type Of<T extends Command['type']> = Extract<Command, { type: T }>;
 
-/** The real path of a project's authorized folder, or a 400 that says what is wrong with it. */
 function projectRoot(path: string): string {
   let real: string;
   try {
@@ -39,7 +37,6 @@ export function createProject(ctx: Context, c: Of<'project.create'>) {
   return row;
 }
 
-/** Turning live execution off cancels what is queued and asks what is running to stop. */
 function cancelLiveRuns(ctx: Context, projectId: string) {
   ctx.sqlite
     .prepare(
@@ -101,7 +98,6 @@ export function registerAgent(ctx: Context, c: Of<'agent.register'>) {
 
 export function saveLayout(ctx: Context, c: Of<'layout.save'>) {
   validateLayout(c.data.objects);
-  // A session AETHER only observes sits at a desk too (`local:` members are not registered agents).
   for (const object of c.data.objects)
     if (object.agentId && !object.agentId.startsWith('local:'))
       agent(ctx, c.projectId, object.agentId);

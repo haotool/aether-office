@@ -4,9 +4,6 @@ import { fresh, type Bucket } from './usage-counters.js';
 import type { Entry } from './usage-store.js';
 import type { Transcript } from './usage-files.js';
 
-// Turns what was read of each transcript (a bucket per file per day) into the numbers a person looks at: the building,
-// each office (department), each project and the heaviest sessions, per day and over a range. Pure.
-
 export type Attribution = { department: string | null; repo: string };
 export type Tracked = { transcript: Transcript; entry: Entry };
 const RANGE_DAYS = { today: 1, '7d': 7, '30d': 30 } as const;
@@ -27,7 +24,6 @@ const empty = (): UsageTotals => ({
   sessions: 0,
 });
 
-/** Tokens the headline counts: everything but cache reads. */
 const tokensOf = (t: UsageTotals) => t.input + t.output + t.cacheWrite + t.reasoning;
 
 function add(into: UsageTotals, b: Bucket, ms: { carry: number }) {
@@ -38,12 +34,11 @@ function add(into: UsageTotals, b: Bucket, ms: { carry: number }) {
   into.reasoning += b.r;
   into.requests += b.req;
   into.toolCalls += b.tools;
-  ms.carry += b.ms; // minutes are rounded once per scope and day, not per file
+  ms.carry += b.ms;
 }
 
 type Day = { totals: UsageTotals; millis: { carry: number }; seen: Set<string> };
 
-/** One scope's running sums: a total per day, the sessions seen each day, and tokens per model over the range. */
 class Scope {
   private days: Day[];
   private rangeSeen = new Set<string>();
@@ -144,7 +139,6 @@ function addBucketToRow(row: Row, bucket: Bucket): void {
     row.models.set(model, (row.models.get(model) ?? 0) + tokens);
 }
 
-/** Every scope of the answer, filled from what was read. */
 function fold(input: AggregateInput, days: string[], from: number) {
   const index = new Map(days.map((d, i) => [d, i]));
   const building = new Scope(WINDOW_DAYS);

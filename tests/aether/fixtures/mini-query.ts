@@ -1,6 +1,6 @@
-// A synthetic `@tanstack/react-query` for hook tests without a React renderer: `useQuery` records the options it was given
-// (so a test can read the polling rule, the `enabled` flag and run the `queryFn`) and answers from a cache the test fills.
-// There is no fetching, no staleness and no retry: that is the library's own behaviour, not the app's.
+// A synthetic `@tanstack/react-query` for hook tests without a React renderer: `useQuery` records the options it was
+// given (so a test can read the polling rule and the `enabled` flag) and answers from a cache the test fills. There is
+// no fetching, staleness or retry.
 export type QueryOptions = {
   queryKey: readonly unknown[];
   queryFn?: () => unknown;
@@ -24,10 +24,8 @@ export function resetQueries() {
   store.errors.clear();
   store.invalidated = [];
 }
-/** Puts an answer in the cache, as a finished fetch would. */
 export const seed = (key: readonly unknown[], data: unknown) =>
   void store.data.set(keyOf(key), data);
-/** The options of the latest `useQuery` call for this key. */
 export const optionsFor = (key: readonly unknown[]): QueryOptions => {
   const found = [...store.calls].reverse().find((c) => keyOf(c.queryKey) === keyOf(key));
   if (!found) throw new Error(`no useQuery for ${keyOf(key)}`);

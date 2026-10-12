@@ -22,7 +22,6 @@ type Work = Snapshot['work'][number];
 type WorkspaceData = NonNullable<ReturnType<typeof useWorkspaces>['data']>;
 type Perform = (fn: () => Promise<unknown>) => Promise<void>;
 
-/** Runs one review command, then refreshes the snapshot and the workspaces; keeps the last error and busy flag. */
 function useReviewActions(onSaved: () => void, refetch: () => Promise<unknown>) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -173,7 +172,6 @@ function VerifyEvidence({
 
 type Permissions = { canReview: boolean; canAccept: boolean; canRequestReview: boolean };
 
-/** What the reviewer can do at this state: decide, or run a verifier. */
 function ReviewForms({
   work,
   projectId,
@@ -188,7 +186,6 @@ function ReviewForms({
   can: Permissions;
   busy: boolean;
   verifying: boolean;
-  /** The workspace's verifiers as the server sent them; read only when the verify form is drawn. */
   verifiers: string | undefined;
   perform: Perform;
 }) {

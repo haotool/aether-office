@@ -19,7 +19,6 @@ const toneColor = (p: Palette, tone: Tone, accent: string): string =>
 
 type Row = { text: string; tone: Tone };
 
-/** The terminal's context from real facts: the branch, the files really edited, the ports really open. */
 export function termContext(c: ViewCtx): TermContext {
   const edited = c.facts.recent.flatMap((call) =>
     kindOf(call) === 'edit' && call.target ? [call.target] : [],
@@ -58,7 +57,6 @@ function appendActiveCommand(
   for (const l of terminalOutput(c.seed, target, context, count)) rows.push(l);
 }
 
-/** The rows of output: the earlier commands with a few lines each, then the running one streaming (or the last one's head). */
 function terminalRows(c: ViewCtx, running: boolean): Row[] {
   const { facts } = c;
   const context = termContext(c);
@@ -74,7 +72,6 @@ function terminalRows(c: ViewCtx, running: boolean): Row[] {
   return rows;
 }
 
-/** A shell: the commands the member really ran (their first words) with made-up output under them, the current one streaming. */
 export function drawTerminal(c: ViewCtx): void {
   const { g, p, box, facts } = c;
   g.fillStyle = p.bg;

@@ -1,8 +1,6 @@
-// Cases for product-facing and data work: UI, backend, mobile and databases.
 import { type CorpusCase, edit, run, tool } from './corpus-types.js';
 
 export const PRODUCT: CorpusCase[] = [
-  // Frontend
   {
     name: 'ui polish by title and files',
     expect: 'frontend',
@@ -50,7 +48,6 @@ export const PRODUCT: CorpusCase[] = [
     title: 'Tune the three.js camera easing in the 3D scene',
     actions: [...edit('packages/scene/src/Camera.tsx')],
   },
-  // Backend
   {
     name: 'rest endpoint',
     expect: 'backend',
@@ -91,7 +88,6 @@ export const PRODUCT: CorpusCase[] = [
       ...run('go test ./...'),
     ],
   },
-  // Full-stack
   {
     name: 'full-stack feature',
     expect: 'fullstack',
@@ -106,7 +102,6 @@ export const PRODUCT: CorpusCase[] = [
     ],
   },
   { name: 'zh fullstack', expect: 'fullstack', prompt: '全端功能：新增收藏清單' },
-  // Mobile
   {
     name: 'ios onboarding',
     expect: 'mobile',
@@ -133,7 +128,6 @@ export const PRODUCT: CorpusCase[] = [
     prompt: 'add a pull to refresh to the flutter list',
     actions: [...edit('lib/screens/list.dart')],
   },
-  // Database / data engineering
   {
     name: 'sql migration',
     expect: 'data',

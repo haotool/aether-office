@@ -10,8 +10,9 @@ import {
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { spawn, execFileSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import { runStack } from './run-stack.js';
 import { setup } from './setup.js';
 import { Control } from '../apps/control/src/control.js';
 const directory = mkdtempSync(join(tmpdir(), 'aether-synthetic-browser-'));
@@ -113,7 +114,7 @@ setup('live', directory);
 const binary = join(directory, 'synthetic-codex');
 writeFileSync(
   binary,
-  `#!${process.execPath}\nif(process.argv.includes('--version'))console.log('codex-cli 0.159.2');else await import(${JSON.stringify(pathToFileURL(resolve('fixtures/processes/codex-app-server.mjs')).href)});\n`,
+  `#!${process.execPath}\nif(process.argv.includes('--version'))console.log('codex-cli 0.159.2');else await import(${JSON.stringify(pathToFileURL(resolve('tests/processes/codex-app-server.mjs')).href)});\n`,
   { mode: 0o700 },
 );
 const verifier = join(directory, 'verify.mjs');
@@ -127,8 +128,7 @@ writeFileSync(
   terminalFixture,
   "if(!process.stdin.isTTY)process.exit(98);process.stdin.setRawMode(true);process.stdin.setEncoding('utf8');console.log('PTY READY 狐狸');process.stdin.on('data',s=>console.log('PTY ECHO:'+s+' SIZE:'+process.stdout.columns+'x'+process.stdout.rows));",
 );
-// A fake interactive `claude` (never the real one): it shows up as a Claude session, writes its own transcript and hook
-// events under its own home, and `exec -a` gives the process the name the session scanner looks for.
+// A fake interactive `claude` (never the real one): `exec -a` gives the process the name the session scanner looks for.
 const home = join(directory, 'home');
 const spool = join(home, 'hook-events.jsonl');
 const resumable = '11111111-2222-4333-8444-555555555555';
@@ -163,13 +163,12 @@ writeFileSync(
     .map((entry) => JSON.stringify(entry))
     .join('\n') + '\n',
 );
-// Far-future mtime (same idea as playwright.config.ts farFuture) so the fixture stays in the feed for long runs.
 const keepAliveAt = new Date(Date.now() + 3_600_000);
 utimesSync(transcriptPath, keepAliveAt, keepAliveAt);
 const claude = join(directory, 'claude');
 writeFileSync(
   claude,
-  `#!/bin/bash\nexec -a claude ${JSON.stringify(process.execPath)} ${JSON.stringify(resolve('fixtures/processes/claude-tui.mjs'))} --home ${JSON.stringify(home)} --spool ${JSON.stringify(spool)} "$@"\n`,
+  `#!/bin/bash\nexec -a claude ${JSON.stringify(process.execPath)} ${JSON.stringify(resolve('tests/processes/claude-tui.mjs'))} --home ${JSON.stringify(home)} --spool ${JSON.stringify(spool)} "$@"\n`,
   { mode: 0o700 },
 );
 const config = join(directory, 'native.json');
@@ -202,7 +201,7 @@ writeFileSync(
   }),
   { mode: 0o600 },
 );
-const port = process.env['AETHER_E2E_NATIVE_PORT'] ?? '4330'; // playwright.config.ts reads the same variable
+const port = process.env['AETHER_E2E_NATIVE_PORT'] ?? '4330';
 mkdirSync('.data', { recursive: true, mode: 0o700 });
 writeFileSync('.data/e2e-native-session.json', JSON.stringify({ directory, port: Number(port) }), {
   mode: 0o600,
@@ -217,21 +216,4 @@ const env = {
   AETHER_LOCAL_SESSIONS_HOME: home,
   AETHER_HOOK_SPOOL: spool,
 };
-const children = ['control', 'runner'].map((name) =>
-  spawn(process.execPath, [`apps/${name}/dist/main.js`], { env, stdio: 'inherit' }),
-);
-let stopping = false;
-const stop = () => {
-  if (stopping) return;
-  stopping = true;
-  for (const child of children) child.kill('SIGTERM');
-};
-process.once('SIGINT', stop);
-process.once('SIGTERM', stop);
-for (const child of children)
-  child.once('exit', (code) => {
-    if (!stopping) {
-      process.exitCode = code ?? 1;
-      stop();
-    }
-  });
+runStack(env);

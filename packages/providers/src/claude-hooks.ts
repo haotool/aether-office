@@ -2,8 +2,6 @@ import { mkdir, readFile, realpath, copyFile } from 'node:fs/promises';
 import { dirname, isAbsolute } from 'node:path';
 import { writePrivateFile } from './approval-config.mjs';
 
-// Claude Code and Codex hook installer (both use the same hooks.json event/group/command shape). Opt-in, namespaced, atomic, reversible.
-// Our entries are identified only by MARKER inside `command`; everything else is left untouched.
 export const HOOK_MARKER = 'aether-office-hook';
 export const HOOK_EVENTS = [
   'SessionStart',
@@ -22,7 +20,6 @@ const CLAUDE_ONLY_EVENTS = ['Notification', 'PostToolUseFailure'] as const;
 export const eventsFor = (provider: 'claude' | 'codex') =>
   provider === 'claude' ? [...HOOK_EVENTS, ...CLAUDE_ONLY_EVENTS] : [...HOOK_EVENTS];
 
-/** The synchronous PermissionRequest entry of "Remote approvals" carries this suffix after the event name. */
 export const APPROVAL_TAG = 'PermissionRequest:wait';
 /** The hook's own timeout is the wait plus this, so Claude never cuts the hook off before it has closed its request. */
 const APPROVAL_SLACK_S = 15;
@@ -44,7 +41,7 @@ export function removeHooks(settings: Settings): Settings {
   const hooks: Record<string, Group[]> = {};
   for (const [event, groups] of Object.entries(settings.hooks)) {
     const kept = (groups ?? []).flatMap((g) => {
-      if (!(g.hooks ?? []).some(ours)) return [g]; // untouched user group
+      if (!(g.hooks ?? []).some(ours)) return [g];
       const rest = (g.hooks ?? []).filter((c) => !ours(c));
       return rest.length ? [{ ...g, hooks: rest }] : [];
     });
@@ -60,9 +57,7 @@ export function installHooks(
   script: string,
   events: readonly string[] | undefined = undefined,
   provider: 'claude' | 'codex' = 'claude',
-  // Run through an explicit node: a hook starts without the user's shell, so neither PATH nor the file's exec bit is reliable.
   runtime: string = process.execPath,
-  // Opt-in, Claude only: also a synchronous PermissionRequest hook that waits for an answer from the panel.
   approvals?: RemoteApprovals,
 ): Settings {
   assertScript(script);
@@ -83,7 +78,7 @@ export function installHooks(
     const command = `${JSON.stringify(runtime)} ${JSON.stringify(approvals.script)} ${wait * 1000} # ${HOOK_MARKER}:${APPROVAL_TAG}`;
     hooks['PermissionRequest'] = [
       ...(hooks['PermissionRequest'] ?? []),
-      { hooks: [{ type: 'command', command, timeout: wait + APPROVAL_SLACK_S }] }, // synchronous: no `async`
+      { hooks: [{ type: 'command', command, timeout: wait + APPROVAL_SLACK_S }] },
     ];
   }
   return { ...base, hooks };
@@ -109,7 +104,6 @@ async function load(path: string): Promise<Settings> {
 }
 
 async function save(link: string, next: Settings) {
-  // A settings file that is a symlink (dotfiles managers do this) is written through, so the link survives.
   const path = await realpath(link).catch(() => link);
   await mkdir(dirname(path), { recursive: true });
   try {

@@ -17,10 +17,9 @@ import { identityActor } from '../domain/identity.js';
 import type { A2AClient } from './a2a-clients.js';
 import { createWork } from '../work/work.js';
 
-// A2A gateway. Remote agents get exactly one capability: submit a text request that becomes an
-// ordinary, unassigned WorkItem in one project, then read or cancel their own tasks. The platform
-// remains the authority: no remote caller can start a process, read knowledge, or reach another
-// project, and nothing is fetched from URLs a remote agent supplies.
+// A2A gateway: a remote agent can only submit a text request (an unassigned WorkItem in one project) and read or cancel
+// its own tasks. It cannot start a process, read knowledge or reach another project, and nothing is fetched from URLs
+// it supplies.
 
 const A2A_METHODS = ['SendMessage', 'GetTask', 'CancelTask', 'ListTasks'] as const;
 const MAX_TEXT = 16000;
@@ -44,7 +43,7 @@ function taskStateOf(work: string): TaskState {
       return TaskState.TASK_STATE_CANCELED;
     case 'blocked':
     case 'indeterminate':
-      return TaskState.TASK_STATE_INPUT_REQUIRED; // a human must look at it
+      return TaskState.TASK_STATE_INPUT_REQUIRED;
     default:
       return TaskState.TASK_STATE_WORKING;
   }
@@ -88,7 +87,6 @@ function textOf(message: Message): string {
 type Sql = Context['sqlite'];
 type StoredTask = WorkRow & { taskId: string; contextId: string };
 
-/** The client the call is authenticated as, if it has not been revoked. */
 function activeClient(sql: Sql, request: RequestContext): Client {
   const client = sql
     .prepare(
@@ -109,7 +107,6 @@ function openTaskCount(sql: Sql, clientId: string): number {
   ).n;
 }
 
-/** The task for a limit that is reached: refused, nothing created. */
 const rejectedTask = (request: RequestContext, now: number) =>
   Task.fromJSON({
     id: request.taskId,
@@ -127,7 +124,6 @@ const rejectedTask = (request: RequestContext, now: number) =>
     history: [],
   });
 
-/** Creates the unassigned work item for a request and records the task and message that map to it. */
 function openWork(
   ctx: Context,
   client: Client,
@@ -209,8 +205,6 @@ export class A2AGateway {
     this.transport = new JsonRpcTransportHandler(handler);
   }
 
-  // --- protocol ------------------------------------------------------------------------------
-  /** Handles one JSON-RPC call. Only the declared methods are reachable; streaming is not offered. */
   async handle(client: Client, body: unknown): Promise<unknown> {
     const method = (body as { method?: unknown } | null)?.method;
     if (typeof method !== 'string' || !(A2A_METHODS as readonly string[]).includes(method))
@@ -229,8 +223,6 @@ export class A2AGateway {
     return result;
   }
 
-  // --- storage and execution: the work item is the source of truth ---------------------------
-  /** Cancels the work item behind a task through the normal command path (human policy applies). */
   private cancelWork(taskId: string): { contextId: string; after: WorkRow } {
     const sql = this.control.ctx.sqlite;
     const row = sql
@@ -273,7 +265,6 @@ export class A2AGateway {
       // Scoped to the authenticated client: another client's task id behaves as if it does not exist.
       load: async (taskId, context) => load(taskId, context.user?.userName ?? ''),
       // State is derived from the work item, so nothing is cached. The one write the SDK performs
-      // for a cancel request arrives here as a CANCELED status: it is applied to the real work item.
       save: async (task, context) => {
         if (task.status?.state !== TaskState.TASK_STATE_CANCELED) return;
         const owned = load(task.id, context.user?.userName ?? '');
@@ -298,7 +289,7 @@ export class A2AGateway {
     return {
       execute: async (request: RequestContext, bus: ExecutionEventBus) => {
         const client = activeClient(sql, request);
-        if (request.task) throw new DomainError('A2A_FOLLOW_UP_UNSUPPORTED', 400); // one request, one work item
+        if (request.task) throw new DomainError('A2A_FOLLOW_UP_UNSUPPORTED', 400);
         const message = request.userMessage;
         const finish = (taskId: string, contextId: string, work: WorkRow) => {
           bus.publish({ kind: 'task', data: buildTask(taskId, contextId, work) });
@@ -320,7 +311,7 @@ export class A2AGateway {
           bus.publish({ kind: 'task', data: rejectedTask(request, ctx.now()) });
           return bus.finished();
         }
-        identityActor(ctx, client.createdBy); // a revoked or expired creator cannot open work
+        identityActor(ctx, client.createdBy);
         finish(request.taskId, request.contextId, openWork(ctx, client, request, message, text));
       },
       cancelTask: async (taskId: string, bus: ExecutionEventBus) => {

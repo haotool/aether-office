@@ -13,7 +13,6 @@ function startEventStream(reply: FastifyReply) {
   });
 }
 
-/** Server-sent events of a project: what happened after `after`, a heartbeat when nothing did, a fault if access is lost. */
 function streamEvents(
   { control, actor, streams }: RouteContext,
   request: FastifyRequest<{ Params: { projectId: string }; Querystring: { after?: string } }>,
@@ -61,7 +60,6 @@ function streamEvents(
   tick();
 }
 
-/** A project's own state: its policy, command intake, snapshot, event log and live stream, inbox, knowledge, approvals. */
 export function projectRoutes(context: RouteContext) {
   projectStateRoutes(context);
   projectRecordRoutes(context);
@@ -104,7 +102,6 @@ function projectStateRoutes(context: RouteContext) {
   );
 }
 
-/** A project's messages, knowledge and approvals. */
 function projectRecordRoutes({ app, control, actor }: RouteContext) {
   app.get<{ Params: { projectId: string } }>('/api/projects/:projectId/inbox', async (request) =>
     control.inbox(actor(request), request.params.projectId, request.query),

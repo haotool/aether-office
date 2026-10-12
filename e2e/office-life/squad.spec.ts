@@ -3,10 +3,6 @@ import { frames, throughout } from '../support/settled.js';
 import { signIn } from '../support/sign-in.js';
 import AxeBuilder from '@axe-core/playwright';
 
-// Squads: a supervisor's subagents sit in a zone beside its desk, and arrivals and departures are announced in a live
-// region (relation rows R1 and R6 of docs/design/office-life.md). The fixture session has one real (synthetic) subagent;
-// the `?squad=N` preview adds stand-in subagents that come and go on a clock, labelled as such in scene-preview terms.
-
 async function enter(page: Page, query: string, prefs: Record<string, unknown> = {}) {
   await page.addInitScript((state) => {
     window.localStorage.setItem(
@@ -36,9 +32,8 @@ test('the fixture subagent sits in a squad zone with a focusable label', async (
   const zone = page.getByRole('button', { name: /^Squad of .*, 1 working$/ });
   await expect(zone).toBeAttached({ timeout: 15000 });
   await expect(page.locator('.scene-label', { hasText: 'Explore' })).toBeAttached();
-  // It has no desk of its own: it is not a member of the floor's desks.
   await expect(page.getByRole('log', { name: 'Office activity (decorative)' })).toBeAttached();
-  await expect(page.getByRole('log')).toHaveCount(1); // the squads speak through the office's one log
+  await expect(page.getByRole('log')).toHaveCount(1);
   expect(errors).toEqual([]);
 });
 
@@ -49,7 +44,6 @@ test('arrivals and departures are announced, and the zone label counts the squad
   page.on('pageerror', (e) => errors.push(e.message));
   await enter(page, 'squad=3&arrive=3000&leave=9000');
   const log = page.getByRole('log', { name: 'Office activity (decorative)' });
-  // The first subagent was there when the page opened; the next two walk in, and each leaves nine seconds later.
   await expect(log).toContainText('joined', { timeout: 20000 });
   await expect(log).toContainText('squad', { timeout: 20000 });
   await expect(page.getByRole('button', { name: /^Squad of .*, \d+ working/ })).toBeAttached();
@@ -91,9 +85,6 @@ test('the Chinese interface names the squad and its moments', async ({ page }) =
   await expect(page.getByRole('button', { name: /的小隊，\d+ 位運作中/ })).toBeAttached();
 });
 
-// Puppet strings and the hand-over of a result (docs/design/office-life.md sections 4.5 to 4.8). A stand-in subagent that
-// finishes walks its folder to the supervisor's desk; the stamp is a receipt (RECEIVED, or a grey RETURNED when the result is
-// flagged as an error), never a verdict. The log says so once. `?perf=1` leaves the scene on `window` to count what is drawn.
 const LOG = (page: Page) => page.getByRole('log', { name: /Office activity|辦公室動態/ });
 
 test.describe('hand-over', () => {
@@ -153,7 +144,6 @@ test.describe('hand-over', () => {
     });
 });
 
-/** How many puppet-string layers the scene is drawing (one line object of render order 3 that has segments). */
 const stringLayers = (page: Page) =>
   page.evaluate(() => {
     const rig = (window as unknown as { __aetherPerfRig?: { scene: import('three').Object3D } })
@@ -167,7 +157,6 @@ const stringLayers = (page: Page) =>
 
 test.describe('puppet strings', () => {
   const base = 'perf=1&squad=3&tools=900';
-  /** Opens the scene and checks how many string layers it draws: once they have appeared, or, for none, over a stretch of frames. */
   const drawn = async (
     page: Page,
     expected: 0 | 1,

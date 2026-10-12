@@ -4,12 +4,6 @@ import { assignSeats, type Seat } from '@aether/office-scene/model';
 import { useLatest } from '../../hooks/use-latest.js';
 import { loadSeats, saveSeats, serializeSeats } from './seat-store.js';
 
-/**
- * The desks of the members in the building: each keeps its desk while it stays, a new arrival takes the first free one, and
- * the desks are remembered per project in the browser so a reload seats the same people where they sat. `agents` are the
- * members that get a desk of their own (the caller leaves out those a squad zone seats). While the list is empty (nothing
- * loaded yet) the remembered desks are kept, not forgotten.
- */
 export function useSeats(
   projectId: string,
   agents: readonly Agent[],
@@ -28,7 +22,7 @@ export function useSeats(
     if (!now.current.seated || saved.current === `${projectId}${text}`) return;
     saved.current = `${projectId}${text}`;
     saveSeats(projectId, now.current.seats);
-  }, [projectId, text, now]); // `text` is `seats`' content
+  }, [projectId, text, now]);
   held.current = { projectId, seats };
   return seats;
 }

@@ -1,7 +1,6 @@
 import { DomainError, type Actor } from '@aether/kernel';
 import type { Context } from './context.js';
 
-/** Enforced on every send into a meeting thread. Humans may always conclude; agents are bounded. */
 export function assertMeetingOpen(
   ctx: Context,
   projectId: string,
@@ -15,7 +14,7 @@ export function assertMeetingOpen(
     )
     .get(threadId, projectId) as
     { maxRounds: number; deadlineAt: number; concludedAt: number | null } | undefined;
-  if (!meeting || !actor.agentId) return; // not a meeting, or a human speaking
+  if (!meeting || !actor.agentId) return;
   if (meeting.concludedAt || ctx.now() > meeting.deadlineAt)
     throw new DomainError('MEETING_CLOSED', 409);
   if (rounds >= meeting.maxRounds) throw new DomainError('MEETING_ROUND_LIMIT', 409);

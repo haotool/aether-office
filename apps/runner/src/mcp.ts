@@ -2,16 +2,14 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { APP_VERSION } from '@aether/contracts';
 import { registerCollaborationTools, type ControlClient } from './mcp-tools.js';
-const mcpScopeSchema = z
-  .object({
-    url: z.url(),
-    token: z.string().min(32),
-    projectId: z.string().uuid(),
-    agentId: z.string().uuid(),
-    workId: z.string().uuid(),
-    runId: z.string().uuid(),
-  })
-  .strict();
+const mcpScopeSchema = z.strictObject({
+  url: z.url(),
+  token: z.string().min(32),
+  projectId: z.string().uuid(),
+  agentId: z.string().uuid(),
+  workId: z.string().uuid(),
+  runId: z.string().uuid(),
+});
 export type McpScope = z.infer<typeof mcpScopeSchema>;
 function controlClient(scope: McpScope, url: URL): ControlClient {
   async function api<T>(path: string, body?: unknown, signal?: AbortSignal): Promise<T> {

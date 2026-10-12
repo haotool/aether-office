@@ -33,10 +33,6 @@ const MAX_LINES_PER_READ = 128;
 const MAX_READ_BYTES = 256 * 1024;
 const MAX_CLAUDE_MESSAGES = 128;
 
-/**
- * The checkpoint to continue from. A file that is another file, shorter than the cursor or whose first bytes changed
- * was rotated: reading starts again from the top. The prefix fingerprint is refreshed either way.
- */
 function resumeCheckpoint(
   previous: ObserverCheckpoint | null,
   identity: string,
@@ -58,7 +54,6 @@ function resumeCheckpoint(
   return { checkpoint, rotated };
 }
 
-/** Where a read of `count` bytes stopped without a whole line: more to come, or a line past the limit. */
 function incompleteStatus(
   checkpoint: ObserverCheckpoint,
   pending: number,
@@ -84,7 +79,6 @@ export class CodexObserver {
     this.projectRoot = source.projectRoot;
   }
 
-  /** Decodes the whole lines in `buffer[0..count)` that start at file offset `startOffset`. */
   private decodeLines(
     buffer: Buffer,
     count: number,
@@ -163,7 +157,6 @@ const claudeMeta = z.object({
   version: z.string().refine(claudeRolloutVersion),
 });
 
-/** The transcript entries of the whole lines, and the session they belong to; null when one is another project's or session. */
 function claudeEntries(complete: Buffer, projectRoot: string) {
   const entries: SessionStoreEntry[] = [];
   let sessionId: string | null = null;
@@ -181,7 +174,6 @@ function claudeEntries(complete: Buffer, projectRoot: string) {
   return { entries, sessionId };
 }
 
-/** The text of a Claude message body: a string, or the text blocks of a content list (thinking and tool blocks are dropped). */
 function claudeText(content: unknown): string {
   if (typeof content === 'string') return content;
   if (!Array.isArray(content)) return '';
@@ -230,7 +222,6 @@ async function claudeRecords(
   return records;
 }
 
-/** Claude's official SDK reconstructs parentUuid chains; this wrapper supplies only one approved file. */
 export async function observeClaudeFile(
   approvedRoot: string,
   relativeFile: string,

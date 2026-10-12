@@ -9,7 +9,6 @@ import { ClockOutLazy } from '../operations/ClockOutLazy.js';
 import { StopSession } from '../operations/StopSession.js';
 import { stopTerminal } from '../terminal/terminal-driver.js';
 
-/** Confirms, then ends the AETHER terminal a session runs in (the same call as the composer's "Stop process"). */
 function StopTerminal({
   command,
   onClose,
@@ -50,11 +49,6 @@ function StopTerminal({
   );
 }
 
-/**
- * The dialog behind a menu or group action that needs one: stopping a terminal or a forgotten process (each with its
- * confirm), and sending sessions home (the clock-out flow, offered just these sessions; the server and the dialog keep
- * their guards: only a running session idle for a day or more, and only an owner).
- */
 export function CharacterCommands({
   command,
   sessions,

@@ -11,7 +11,6 @@ import {
 } from './screen-draw.js';
 import { pick } from '../environment/pick.js';
 
-/** Engineering screens: an editor, a browser, API logs, phones, a pipeline, monitoring and releases. */
 export const editor: Draw = (g, r, a) => {
   frame(g, 'workspace / src / module.ts', a);
   tile(g, 0, 31, 120, SCREEN_H - 31);

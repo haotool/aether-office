@@ -23,7 +23,6 @@ type TaskDetailProps = {
   canExtend: boolean;
 };
 
-/** "Prerequisite (state)" for each dependency of the task, or a dash when it has none. */
 function dependencyLine(snapshot: Snapshot, work: Work, t: ReturnType<typeof useT>): string {
   return (
     snapshot.dependencies
@@ -70,7 +69,6 @@ function TaskFacts({ snapshot, work }: { snapshot: Snapshot; work: Work }) {
   );
 }
 
-/** The task's details and the actions its state allows, in a modal. */
 export function TaskDetail({
   snapshot,
   work,

@@ -1,17 +1,18 @@
-// Policy lists of the publishing-readiness check (scripts/oss/readiness-check.mjs): required files, ignores, licence families.
 import { fileURLToPath } from 'node:url';
 
 export const MB = 1024 * 1024;
-export const KIT_GITLEAKS_CONFIG = fileURLToPath(new URL('../../.gitleaks.toml', import.meta.url));
+export const KIT_GITLEAKS_CONFIG = fileURLToPath(
+  new URL('../../.github/gitleaks.toml', import.meta.url),
+);
 export const SELF = /^(?:scripts\/oss\/|tests\/aether\/oss-)/;
 export const DETAIL_LIMIT = 12;
 
 export const REQUIRED_FILES = [
   'LICENSE',
   'README.md',
-  'CONTRIBUTING.md',
-  'CODE_OF_CONDUCT.md',
-  'SECURITY.md',
+  '.github/CONTRIBUTING.md',
+  '.github/CODE_OF_CONDUCT.md',
+  '.github/SECURITY.md',
   '.github/PULL_REQUEST_TEMPLATE.md',
   '.github/CODEOWNERS',
 ];
@@ -21,7 +22,7 @@ export const RECOMMENDED_FILES = [
   '.editorconfig',
   '.gitattributes',
   '.github/dependabot.yml',
-  'THIRD_PARTY_NOTICES.md',
+  'docs/legal/THIRD_PARTY_NOTICES.md',
 ];
 export const REQUIRED_IGNORES = [
   'node_modules',

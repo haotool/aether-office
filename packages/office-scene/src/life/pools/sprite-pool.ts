@@ -50,7 +50,6 @@ const FRAGMENT = `
     #include <colorspace_fragment>
   }`;
 
-/** The atlas every picture is read from, painted once. */
 function atlasTexture() {
   const canvas = document.createElement('canvas');
   drawAtlas(canvas);
@@ -61,7 +60,6 @@ function atlasTexture() {
   return texture;
 }
 
-/** One quad, instanced `POOL_CAPACITY` times, with a place, a look and a tint for each instance. */
 function instancedQuads() {
   const quad = new PlaneGeometry(1, 1);
   const geometry = new InstancedBufferGeometry();
@@ -79,10 +77,6 @@ function instancedQuads() {
   return { quad, geometry, place, look, tint };
 }
 
-/**
- * All of the office-life pictures in one draw call: instanced quads (camera-facing, or flat on a surface) that read
- * their picture from one small atlas. One shader program, one texture of 1024 x 512, no geometry per effect.
- */
 export function createSpritePool() {
   const texture = atlasTexture();
   const { quad, geometry, place, look, tint } = instancedQuads();
@@ -99,12 +93,11 @@ export function createSpritePool() {
     side: DoubleSide,
   });
   const mesh = new Mesh(geometry, material);
-  mesh.frustumCulled = false; // the instances are anywhere in the building; the pool has no meaningful bounds
+  mesh.frustumCulled = false;
   mesh.renderOrder = 10;
 
   return {
     mesh,
-    /** Replaces the pool's contents; returns how many sprites fit. */
     write(sprites: readonly PlacedSprite[]): number {
       const count = Math.min(sprites.length, POOL_CAPACITY);
       for (let i = 0; i < count; i += 1) {

@@ -1,15 +1,12 @@
 import type { FieldPerfLoaf, FieldPerfLongTask } from './field-perf-types.js';
 
-/** ~10 minutes of visible 60 Hz rAF deltas (maintainer captures rarely run longer). */
 const FIELD_PERF_MAX_FRAME_SAMPLES = 10 * 60 * 60;
 
-/** Long-task and LoAF entry caps for the same session length (events are far less frequent than rAF). */
 const FIELD_PERF_MAX_LONG_TASK_SAMPLES = 600;
 const FIELD_PERF_MAX_LOAF_SAMPLES = 3_600;
 
 const LONG_TASK_BLOCKING_THRESHOLD_MS = 50;
 
-/** O(1) ring: drops oldest retained samples once full; `totalCount` keeps the true session totals. */
 export class BoundedRetainBuffer<T> {
   readonly maxRetained: number;
   private slots: T[] = [];

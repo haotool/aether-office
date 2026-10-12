@@ -10,7 +10,6 @@ type RunRow = {
   revokedAt: number | null;
 };
 
-/** Why a running run is or is not making progress: a waiting approval, a peer, or how recent its events are. */
 function runningReason(ctx: Context, projectId: string, run: RunRow, now: number): string {
   const approval = ctx.sqlite
     .prepare(
@@ -32,7 +31,6 @@ function runningReason(ctx: Context, projectId: string, run: RunRow, now: number
   return now - (run.lastSeen ?? run.createdAt) >= 60000 ? 'no_recent_events' : 'recent_events';
 }
 
-/** The latest run's state, refined for a live one by its machine and, when running, by what it is waiting for. */
 function reasonFor(
   ctx: Context,
   projectId: string,

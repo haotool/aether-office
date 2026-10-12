@@ -1,4 +1,3 @@
-/** The models words, in Traditional Chinese. */
 export const zhModels = {
   modelsDetected: '偵測到的模型',
   modelsNote:

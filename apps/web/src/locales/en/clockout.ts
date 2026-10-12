@@ -1,4 +1,3 @@
-/** The clockout words, in English. */
 export const enClockout = {
   clockOut: 'Clock out',
   clockOutTitle: 'Send idle sessions home',

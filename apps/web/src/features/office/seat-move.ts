@@ -7,11 +7,8 @@ import { LOCAL_PREFIX } from '../../lib/sessions/session-names.js';
 type Desk = Layout['objects'][number];
 
 /**
- * Pure. The layout to save when a member's desk is dropped on a new seat, and the one that undoes it.
- *
- * A saved layout is changed by that one desk only (a member whose desk was seated automatically gets it written now); with
- * no saved layout yet the layout the person sees is what is saved, so nothing else jumps. Desks of sessions that are no
- * longer in the office are dropped, so remembered seats do not pile up and crowd out new sessions.
+ * A saved layout is changed by that one desk only; with no saved layout the layout the person sees is saved, so nothing
+ * else jumps. Desks of sessions no longer in the office are dropped, so remembered seats do not pile up.
  */
 export function seatMoveLayout({
   saved,
@@ -31,7 +28,6 @@ export function seatMoveLayout({
   if (existing && existing.agentId === move.agentId)
     objects = previous.objects.map((o) => (o === existing ? { ...o, ...at } : o));
   else {
-    // The desk was seated automatically (or its id is taken by another member's saved desk): write it now, under a free id.
     const desk = shown.objects.find((o) => o.id === move.deskId);
     if (!desk) throw new Error('seat move: desk missing from shown layout');
     const used = new Set(previous.objects.map((o) => o.id));
@@ -57,10 +53,6 @@ type SeatMoveOptions = {
   words: { moved: string; undone: string; failed: string };
 };
 
-/**
- * Saves a dropped desk through the layout API and offers to undo it. The moved layout is drawn at once and kept until the
- * saved one arrives (its version changes), or the save fails and it is dropped.
- */
 export function useSeatMove({
   projectId,
   saved,
@@ -74,7 +66,7 @@ export function useSeatMove({
   const [toast, setToast] = useState<SeatToast | null>(null);
   const versionRef = useRef(version);
   useEffect(() => {
-    versionRef.current = version; // the saved layout arrived
+    versionRef.current = version;
     setOptimistic(null);
   }, [version]);
   useEffect(() => {
@@ -87,7 +79,7 @@ export function useSeatMove({
     setOptimistic(layout);
     try {
       const reply = await execute('layout.save', layout, projectId, versionRef.current);
-      versionRef.current = Number(reply.result['version'] ?? versionRef.current + 1); // an undo right away needs the new one
+      versionRef.current = Number(reply.result['version'] ?? versionRef.current + 1);
       setToast({ text, undo });
       onRefresh();
     } catch (e) {
@@ -101,7 +93,6 @@ export function useSeatMove({
   const move = (m: SeatMove) => {
     if (!shown) return;
     const { next, previous } = seatMoveLayout({ saved, shown, move: m, liveIds });
-    // The undo runs against the version the move produced: by then the page has refreshed.
     void save(next, words.moved, () => {
       setToast(null);
       void save(previous, words.undone, null);

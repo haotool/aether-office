@@ -61,7 +61,6 @@ export async function createBackup(
   const target = join(directory, file);
   await source.backup(target);
   chmodSync(target, 0o600);
-  // Read-only: the backup is described as it is, never migrated.
   const copy = new Database(target, { readonly: true });
   const { schemaVersions, rows } = (() => {
     try {
@@ -84,7 +83,6 @@ export async function createBackup(
   return { manifestPath, manifest };
 }
 
-/** Restores into a NEW directory only; an existing database is never overwritten. */
 export function restoreBackup(
   manifestPath: string,
   targetDirectory: string,
@@ -100,7 +98,6 @@ export function restoreBackup(
   copyFileSync(source, database);
   chmodSync(database, 0o600);
   try {
-    // Opening through connect() applies pending migrations (an older backup) and refuses a newer schema.
     const migrated = connect(database).sqlite;
     const restored = (() => {
       try {
@@ -112,7 +109,7 @@ export function restoreBackup(
     for (const [table, count] of Object.entries(manifest.rows))
       if (restored.rows[table] !== count) throw new Error(`BACKUP_ROW_COUNT_MISMATCH:${table}`);
   } catch (error) {
-    for (const suffix of ['', '-wal', '-shm']) rmSync(`${database}${suffix}`, { force: true }); // leave no half-restored database
+    for (const suffix of ['', '-wal', '-shm']) rmSync(`${database}${suffix}`, { force: true });
     throw error;
   }
   return { database, manifest };

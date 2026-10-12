@@ -1,8 +1,3 @@
-/**
- * Pure. The inside of an HTML `<table>` as a Markdown table (the first row is the header). `clean` turns each cell's own
- * HTML into Markdown; a cell is one line, its pipes escaped. Without a row there is nothing to tabulate and the text of
- * the cells is returned as it is.
- */
 const ROW = /<tr\b[^>]*>([\s\S]*?)(?:<\/tr\s*>|(?=<tr\b)|$)/gi;
 const CELL = /<t[hd]\b[^>]*>([\s\S]*?)(?:<\/t[hd]\s*>|(?=<t[hd]\b)|$)/gi;
 

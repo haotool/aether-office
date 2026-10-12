@@ -9,8 +9,8 @@ Agent SDK, ACP, and the hook mechanisms of Claude Code and Codex. It does not pa
 and `pnpm run doctor` accept.
 
 - **Codex** is matched by exact release. The generated protocol types for 0.160.0 are byte-identical to 0.159.2, which
-  `tests/aether/codex-schema.test.ts` checks against the installed binary. Generated artifacts live in
-  `packages/providers/generated/`.
+  `tests/aether/codex-schema.test.ts` checks against the installed binary. The generated types live in
+  `packages/providers/generated/`; `pnpm run protocol:regen` rewrites them for the pinned release.
 - **Claude Code** is matched per minor series (2.1.x), because the contract is the exactly pinned
   `@anthropic-ai/claude-agent-sdk`.
 
@@ -18,6 +18,15 @@ and `pnpm run doctor` accept.
 
 To add a release: install it, run `pnpm run doctor` and the provider tests, then add it to `compat.json`. A version that is not
 listed is refused rather than assumed compatible.
+
+### Known unverified: Codex 0.162.x
+
+`codex app-server generate-ts` from Codex 0.162.1 differs from the pinned 0.159.2 types in 30 entries. It adds `RequestHeader`, `EnvironmentSkillsParams`,
+`ThreadAttachmentOwner*`, `ThreadPrediction*`, `ThreadGoalMutationOrigin` and `BrowserUseExtensionRequirements`, and changes
+`ThreadItem`, `Turn`, `TurnStartParams`, `ServerNotification`, `ResponseItem` and `CodexErrorInfo`. Listing it in `compat.json` is not
+enough: the types have to be regenerated for that release and the adapters checked against the changed shapes first. Until then
+`assertCodexVersion` refuses it and `pnpm run doctor` reports it as not verified. The check against the installed binary in
+`tests/aether/codex-schema.test.ts` is skipped for an unlisted release, so updating Codex does not fail the unit tests.
 
 Reference documentation: [Codex App Server](https://learn.chatgpt.com/docs/app-server),
 [Claude programmatic CLI](https://code.claude.com/docs/en/headless) and

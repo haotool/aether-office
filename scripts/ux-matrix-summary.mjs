@@ -1,7 +1,6 @@
 #!/usr/bin/env node
-// Totals one run of the UX matrix (`pnpm run ux:matrix`) from its index-*.json files. With --write the totals go to
-// docs/verification/ux-matrix.json beside the tree ids of the code they describe, so a later change to that code shows
-// the record is stale; with --check <qa|axe|responsive> the record is judged against HEAD. See docs/verification/ux-matrix.md.
+// With --write the totals go to docs/verification/ux-matrix.json beside the tree ids of the code they describe, so a
+// later change to that code shows the record is stale.
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -10,7 +9,6 @@ import { parseArgs } from 'node:util';
 
 export const SCHEMA = 'aether-ux-matrix/1';
 export const RECORD = 'docs/verification/ux-matrix.json';
-/** The code whose tree ids stamp a record: what the matrix looks at, and what answers it. */
 export const CODE_PATHS = [
   'apps/web',
   'apps/control',
@@ -18,7 +16,6 @@ export const CODE_PATHS = [
   'packages/kernel',
   'packages/office-scene',
 ];
-// What e2e/ux-matrix runs: 7 widths x 2 themes x 2 languages, and 2 sizes x 2 pairs of theme and language.
 const COMBINATIONS = { core: 28, states: 4 };
 const SIGNED_OUT_401 = /401 \(Unauthorized\)/;
 
@@ -91,7 +88,6 @@ const nonzero = (record, keys) =>
     keys.filter((key) => part[key] > 0).map((key) => `${name}: ${part[key]} cells with ${key}`),
   );
 
-/** What each rule demands of a complete record: `qa` nothing broken, `axe` no serious violation, `responsive` no overflow. */
 export const RULES = {
   qa: (record) => [
     ...incomplete(record),
@@ -101,11 +97,9 @@ export const RULES = {
   responsive: (record) => [...incomplete(record), ...nonzero(record, ['overflow'])],
 };
 
-/** The code paths whose tree id differs from the one the record was made at. */
 export const staleTrees = (record, trees) =>
   CODE_PATHS.filter((p) => record.trees?.[p] !== trees[p]);
 
-/** Why a record fails a rule at the current tree ids; empty when it holds. */
 export function problems(record, trees, rule) {
   if (!record) return [`no ${RECORD}: run pnpm run ux:matrix, then pnpm run ux:summary -- --write`];
   const stale = staleTrees(record, trees);

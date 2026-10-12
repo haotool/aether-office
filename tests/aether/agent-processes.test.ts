@@ -25,7 +25,6 @@ import { eventually } from './timing.js';
 
 const UUID = '374456c6-9009-a172-ac17-4aa8f7535e70';
 
-// One line of `ps -axo lstart=,pid=,ppid=,stat=,time=,%cpu=,rss=,tty=,command=`.
 const ps = (
   pid: number,
   command: string,
@@ -78,7 +77,7 @@ it('reads start times, CPU times and whole ps lines in every form ps prints them
     rssBytes: 2048 * 1024,
     tty: '??',
   });
-  expect(row!.command).toBe('/bin/zsh -c echo "a  b"'); // the command keeps its own spacing
+  expect(row!.command).toBe('/bin/zsh -c echo "a  b"');
   expect(parseProcessTable('not a ps line\n\n')).toEqual([]);
 });
 
@@ -117,11 +116,11 @@ it('calls a process an orphan when whatever started it is gone, not merely when 
     [
       ps(1, '/sbin/launchd', { ppid: 0, tty: '??' }),
       ps(100, '/bin/zsh', { ppid: 1, tty: 'ttys001' }),
-      ps(200, 'claude', { ppid: 100 }), // started by a live shell
-      ps(201, 'claude -p', { ppid: 1, tty: '??' }), // its parent died: init has it
-      ps(202, 'claude -p', { ppid: 9999, tty: '??' }), // its parent is not in the table at all
+      ps(200, 'claude', { ppid: 100 }),
+      ps(201, 'claude -p', { ppid: 1, tty: '??' }),
+      ps(202, 'claude -p', { ppid: 9999, tty: '??' }),
       ps(300, '/usr/lib/systemd/systemd --user', { ppid: 1 }),
-      ps(301, 'claude -p', { ppid: 300, tty: '??' }), // adopted by the user manager (a subreaper), not by init
+      ps(301, 'claude -p', { ppid: 300, tty: '??' }),
       ps(302, 'claude', { ppid: 100, stat: 'Z' }),
       ps(303, 'claude', { ppid: 1, stat: 'Z' }),
     ].join('\n'),
@@ -174,12 +173,12 @@ it('names the session by --resume, otherwise gives N processes to the N newest s
     'claude:newest': 'running',
     'claude:middle': 'running',
     'claude:oldest': 'none',
-    'codex:desktop-thread': 'unknown', // inside the shared app server, not provably gone
-    'codex:finished-exec': 'none', // its own process is gone
+    'codex:desktop-thread': 'unknown',
+    'codex:finished-exec': 'none',
   });
   expect(assignProcesses(sessions, processes, false).get('codex:desktop-thread')?.state).toBe(
     'none',
-  ); // no app server at all
+  );
 });
 
 it('finds a real running agent process and its working directory through ps and lsof', async () => {
@@ -231,11 +230,11 @@ it('counts the zombies under each process, which is the only way to say whose th
     [
       ps(100, 'claude', { ppid: 5 }),
       ps(101, '/bin/zsh -c build', { ppid: 100 }),
-      ps(102, '<defunct>', { ppid: 100, stat: 'ZN' }), // a child the agent never collected
-      ps(103, '<defunct>', { ppid: 101, stat: 'Z' }), // a grandchild its shell never collected
+      ps(102, '<defunct>', { ppid: 100, stat: 'ZN' }),
+      ps(103, '<defunct>', { ppid: 101, stat: 'Z' }),
       ps(104, '<defunct>', { ppid: 101, stat: 'Z' }),
       ps(200, 'codex', { ppid: 5 }),
-      ps(300, '<defunct>', { ppid: 5, stat: 'Z' }), // somebody else's
+      ps(300, '<defunct>', { ppid: 5, stat: 'Z' }),
     ].join('\n'),
   );
   expect(
@@ -246,7 +245,6 @@ it('counts the zombies under each process, which is the only way to say whose th
 it('sees a real zombie as <defunct> with no name or directory, and attributes it to the parent that never collected it', async () => {
   const bin = realpathSync(mkdtempSync(join(tmpdir(), 'aether-zombie-')));
   symlinkSync(process.execPath, join(bin, 'claude'));
-  // The parent's event loop is stuck, so nobody collects the child that has already exited.
   const parent = spawn(
     process.execPath,
     [
@@ -263,7 +261,7 @@ it('sees a real zombie as <defunct> with no name or directory, and attributes it
     const table = await readProcessTable();
     const zombie = table.find((row) => row.ppid === parent.pid && row.stat.startsWith('Z'));
     expect(zombie).toBeDefined();
-    expect(zombie!.command).not.toMatch(/claude/); // no name survives
+    expect(zombie!.command).not.toMatch(/claude/);
     expect(zombiesUnder(table, [parent.pid!]).get(parent.pid!)).toHaveLength(1);
   } finally {
     parent.kill();
@@ -275,7 +273,7 @@ it('remembers what a process under an agent was called, so a zombie can say what
     [
       ps(100, 'claude --secret=hunter2', { ppid: 5 }),
       ps(102, '/usr/local/bin/node /work/build.js --token abc', { ppid: 100 }),
-      ps(999, '/bin/zsh unrelated', { ppid: 5 }), // not under an agent: never remembered
+      ps(999, '/bin/zsh unrelated', { ppid: 5 }),
     ].join('\n'),
   );
   const names = new ProcessNames();
@@ -288,11 +286,11 @@ it('remembers what a process under an agent was called, so a zombie can say what
     ].join('\n'),
   );
   names.remember(dead, new Set([100, 102, 999]));
-  expect(names.programOf(dead[1]!)).toBe('node'); // it was a node process
-  expect(names.programOf(dead[2]!)).toBeNull(); // never seen alive
+  expect(names.programOf(dead[1]!)).toBe('node');
+  expect(names.programOf(dead[2]!)).toBeNull();
   expect(JSON.stringify([...zombiesUnder(dead, [100], names)])).not.toMatch(
     /build\.js|token|hunter2/,
   );
-  names.remember([], new Set()); // once the table no longer has it, it is forgotten
+  names.remember([], new Set());
   expect(names.programOf(dead[1]!)).toBeNull();
 });

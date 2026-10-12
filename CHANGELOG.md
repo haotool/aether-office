@@ -5,7 +5,7 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
-## [0.4.0] - 2026-10-08
+## [0.4.0] - 2026-10-13
 
 The first public release. AETHER OFFICE started from [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT; see
 `THIRD_PARTY_NOTICES.md`) and is now a local-first office for the Claude Code and Codex sessions on your machine: a live session
@@ -187,6 +187,11 @@ For anyone who ran a development build before this release.
 - The provider marks are small decorative indicators, never branding (Codex's mark is tinted to the muted text colour);
   [docs/legal/trademarks.md](docs/legal/trademarks.md) says so.
 - The transcript endpoint returns each tool call's id and a short redacted target, and the last 120 entries.
+- A 3D floor now builds about a third faster. Furniture of the same size shares one extruded shape per build, and merging no longer constructs a throwaway default shape for every piece. In a lab run (Chrome, CPU slowed 4×, load not controlled) the longest task of the first load fell from about 323 to 269 ms and the total blocking time from about 304 to 262 ms. That is not a measurement on a real phone.
+- README and `docs/native-execution.md` state that AETHER neither stores nor forwards your Claude credentials.
+- The quality scorecard caps code lines at a recorded budget that only goes down; comments were cut to the few that explain why.
+- README states that macOS is the tested platform and that the browser tests on Linux are not verified yet. CI does not run the browser suite (it needs a GPU), so `pnpm exec playwright test` is a local and release check.
+- With `CI=1` the browser suite runs in Playwright's Chromium in its new headless mode; the headless shell it used before reports notification permission as denied, which failed one spec.
 
 ### Fixed
 
@@ -212,16 +217,18 @@ For anyone who ran a development build before this release.
   to copy. A project id in the address that is not available falls back to the first project with a short notice; unknown pages
   show "Page not found". The tab title is `<page> · AETHER OFFICE` in the interface language.
 - Create task, Propose knowledge and the login mark required fields and show their own inline errors.
-- On a phone: the 2D office list starts below the view switch and the KPI chips and ends above the new-task button; the floor rail
+- On a phone: the 2D office list scrolls below the view switch and the KPI chips, so no card passes under them, and ends above the new-task button; the floor rail
   scrolls instead of climbing over the top row on a short screen; a table row drawn as a card keeps every part of a value beside its
   label; the connection says "reconnecting" or "offline" in words; the top bar keeps language and theme on screen from 320 to
   1920 px.
+- The Sessions page says when there is no session yet, or when the filters hide every one, and a button shows them all.
 - Members beyond a floor's 48 desks take a desk on the next floor with room instead of vanishing; "Show in office" brings the
   camera to the member on a phone too.
 - Scene fixes: close-up camera shots push in, members sent home walk with planted feet, pointing at the crown works, the
   control-room wall no longer disappears at 1440x900 or goes black when its members change, a name tag no longer draws over a
   speech bubble, and office chairs no longer flicker. An idle phone's pixel ratio no longer drops from 1.5 to 0.75 within seconds.
 - The layout editor is labelled experimental and docks at the side of the screen.
+- The 3D office no longer rebuilds every floor's geometry each time the session list refreshes (about every two seconds while sessions are live). A floor is rebuilt only when its furniture changes, not when someone sits down or leaves. In a lab run (Chrome, CPU slowed 4×, seven live sessions, load not controlled) the main thread had about 30 tasks over 50 ms per minute before and none after. That is not a measurement on a real phone.
 
 ### Security
 

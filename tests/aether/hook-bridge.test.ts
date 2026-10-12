@@ -35,7 +35,7 @@ it('derives parent state and live subagents; subagent traffic never idles the pa
   const s = states.get('claude:s1')!;
   expect(s.activity).toBe('working');
   expect(s.subagents.map((x) => [x.id, x.status])).toEqual([
-    ['a1', 'finished'], // kept for the grace period, so the page sees the transition
+    ['a1', 'finished'],
     ['a2', 'running'],
   ]);
   expect(deriveHookState([rec('Stop', 1)], 2).get('claude:s1')?.activity).toBe('idle');
@@ -122,11 +122,9 @@ it('groups linked worktrees under one project and attaches hook state and subage
   expect(by['w1']!.subagents.map((s) => s.type)).toEqual(['Explore']);
   expect(by['m1']!.hook).toBeNull();
 
-  // Both checkouts belong to the one project rooted at the main checkout; with no such project they are unowned.
   const projectId = '11111111-1111-4111-8111-111111111111';
   const owned = attributeSessions(out, [{ id: projectId, root: main }]);
   expect(owned.map((s) => s.projectId)).toEqual(out.map(() => projectId));
-  // A project rooted at a linked worktree is not the main checkout, so it owns nothing.
   expect(
     attributeSessions(out, [{ id: projectId, root: linked }]).every((s) => s.projectId === null),
   ).toBe(true);
@@ -232,7 +230,7 @@ it("lists the last tool calls of a session, newest last, at most eight, a subage
     ...unknown,
   });
   expect(state.recent[7]).toEqual({ tool: 'Bash', target: 'ls', at: 20, agentId: 'a', ...unknown });
-  expect(state.tool).toBe('Edit'); // the session's own current tool is not a helper's
+  expect(state.tool).toBe('Edit');
 });
 
 it('redacts and bounds a target read from the spool', () => {

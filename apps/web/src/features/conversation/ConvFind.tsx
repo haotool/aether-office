@@ -11,9 +11,8 @@ import { useT, useWhy } from '../../ui/useT.js';
 import { canHighlight, findRanges, paintMatches } from './conv-find.js';
 
 /**
- * Find in the conversation: matches in the loaded messages, painted with the browser's highlight API (no DOM is touched, so
- * nothing re-renders). `content` changes when the conversation does, which re-runs the search. Where the highlight API is
- * missing the browser's own find stays as it is.
+ * Find in the conversation, painted with the browser's highlight API (no DOM is touched, so nothing re-renders). Where
+ * that API is missing the browser's own find stays as it is.
  */
 export function useConvFind(root: RefObject<HTMLElement | null>, content: unknown) {
   const [open, setOpen] = useState(false);
@@ -30,7 +29,6 @@ export function useConvFind(root: RefObject<HTMLElement | null>, content: unknow
     paintMatches(ranges, index);
     return () => paintMatches([], 0);
   }, [ranges, index]);
-  // Scrolls to the match when the person moves to it, not every time a poll refreshes the same conversation.
   const latest = useRef(ranges);
   latest.current = ranges;
   const found = ranges.length > 0;
@@ -63,7 +61,6 @@ export function useConvFind(root: RefObject<HTMLElement | null>, content: unknow
 
 type ConvFindState = ReturnType<typeof useConvFind>;
 
-/** An icon button of the find row; `off` is a step with no match to go to. */
 function FindStep({
   label,
   off = false,
@@ -91,7 +88,6 @@ function FindStep({
   );
 }
 
-/** The find row: a field, "3 / 12", previous and next, close. Enter goes on, Shift+Enter back, Escape closes. */
 export function FindBar({ find, onClose }: { find: ConvFindState; onClose: () => void }) {
   const t = useT();
   const input = useRef<HTMLInputElement>(null);

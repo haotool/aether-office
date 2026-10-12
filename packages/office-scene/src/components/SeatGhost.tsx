@@ -2,11 +2,10 @@ import { Edges } from '@react-three/drei';
 import { floorY } from '../scene/scene-geometry.js';
 import type { SeatDrag } from '../core/use-seat-drag.js';
 
-const FOOT = [2.2, 0.06, 1.8] as const; // the desk's footprint (objectSize.desk in the kernel)
+const FOOT = [2.2, 0.06, 1.8] as const;
 const OK = '#43e6df';
 const BLOCKED = '#ff7a85';
 
-/** The desk being carried: its footprint on the floor where it would land, green when the seat is allowed and red when not, and a mark where it came from. */
 export function SeatGhost({ drag, exploded }: { drag: SeatDrag; exploded: boolean }) {
   const y = floorY(drag.floor, exploded);
   const color = drag.check.ok ? OK : BLOCKED;

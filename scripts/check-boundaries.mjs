@@ -3,7 +3,6 @@ import { readdir, readFile } from 'node:fs/promises';
 import { isBuiltin } from 'node:module';
 import path from 'node:path';
 const violations = [];
-// scripts, tests and e2e only get the hygiene rules below: they may use Node and any dev dependency.
 const HYGIENE_ONLY = /^(scripts|tests|e2e)\//;
 const LINE_HYGIENE = [
   [/^\s*\/\/\s*@ts-(ignore|nocheck)/m, 'suppressed type safety'],

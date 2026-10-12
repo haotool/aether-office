@@ -1,11 +1,10 @@
-/** How long a finger rests on a character before it counts as a press-and-hold, and how far it may wander meanwhile. */
 const LONG_PRESS_MS = 520;
 const LONG_PRESS_SLOP_PX = 10;
 
 /**
- * A press-and-hold detector for one pointer at a time. `start` arms it, a move beyond the slop (the finger is dragging
- * the camera) or `end` disarms it, and when the time runs out `onLong` fires once. The click that follows a hold is
- * the hold's own: `consumeClick` says so, once, so the caller can ignore it.
+ * A press-and-hold detector for one pointer at a time: `start` arms it, a move beyond the slop (the finger is dragging
+ * the camera) or `end` disarms it, and when the time runs out `onLong` fires once. The click that follows a hold is the
+ * hold's own: `consumeClick` says so, once.
  */
 export function createLongPress(onLong: () => void, ms = LONG_PRESS_MS, slop = LONG_PRESS_SLOP_PX) {
   let timer: ReturnType<typeof setTimeout> | undefined;

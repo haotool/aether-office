@@ -1,12 +1,8 @@
 import { clamp01, draw, envelope, SPOT } from './shared.js';
 import type { Effect, Rgb, Sprite } from './types.js';
 
-// Effects for commands that deserve a raised eyebrow. They are jokes and warnings drawn from what a command was started
-// as (its tags); nothing here says that anything ran to the end, was blocked or went wrong.
-
 const AMBER: Rgb = [1, 0.7, 0.15];
 
-/** Danger stripes: a yellow and black ring on the floor round the desk and two amber beacons circling it. */
 export const forcePush: Effect = (t, d, seed) => {
   const fade = envelope(t, d, 500);
   const spin = draw(seed, 0) < 0.5 ? 1 : -1;
@@ -21,7 +17,7 @@ export const forcePush: Effect = (t, d, seed) => {
     },
   ];
   for (let i = 0; i < 2; i += 1) {
-    const a = (spin * t) / 1600 + i * Math.PI; // about 0.6 turns a second: a beacon sweep, not a strobe
+    const a = (spin * t) / 1600 + i * Math.PI;
     sprites.push(
       {
         cell: 'glow',
@@ -42,10 +38,6 @@ export const forcePush: Effect = (t, d, seed) => {
   return sprites;
 };
 
-/**
- * A tug-of-war over the desk: a `<<<<<<<` block and its mirror pull a rope of light back and forth, and the knot of it
- * swings from one to the other. The seed picks who pulls first.
- */
 export const mergeConflict: Effect = (t, d, seed) => {
   const fade = envelope(t, d, 700);
   const first = draw(seed, 0) < 0.5 ? 1 : -1;
@@ -88,7 +80,6 @@ export const mergeConflict: Effect = (t, d, seed) => {
   return sprites;
 };
 
-/** A cartoon skull with a bandage over the head wobbles in over the member: an "oops" balloon, only a picture. */
 export const skullGag: Effect = (t, d, seed) => {
   const fade = envelope(t, d, 350);
   const [x, y, z] = SPOT.overHead;
@@ -111,7 +102,6 @@ export const skullGag: Effect = (t, d, seed) => {
   ];
 };
 
-/** `sudo`: a "root?" prompt chip hovers by the screen and its edge pulses once. */
 export const sudoPrompt: Effect = (t, d, seed) => {
   const fade = envelope(t, d, 350);
   const x = draw(seed, 0) < 0.5 ? -0.55 : 0.55;
@@ -123,7 +113,6 @@ export const sudoPrompt: Effect = (t, d, seed) => {
   ];
 };
 
-/** `curl | sh`: the pipe chip hovers by the screen with a small amber warning ring that pulses twice. */
 export const curlPipe: Effect = (t, d, seed) => {
   const fade = envelope(t, d, 350);
   const x = draw(seed, 0) < 0.5 ? 0.55 : -0.55;

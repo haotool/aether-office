@@ -20,7 +20,6 @@ type StopSessionProps = {
   onClose: () => void;
 };
 
-/** Confirms, then asks the server to end the process behind a dormant or orphaned session (see stop-session.ts). */
 export function StopSession({ session, locale, onClose }: StopSessionProps) {
   const t = useT();
   const client = useQueryClient();

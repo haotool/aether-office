@@ -1,4 +1,3 @@
-/** The kpi words, in Traditional Chinese. */
 export const zhKpi = {
   quotaUnknown: '尚無 Codex 額度紀錄',
   claudeQuotaUnknown:

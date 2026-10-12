@@ -1,14 +1,7 @@
 /**
- * Live smoke: two real agents, Claude Code and Codex, talk to each other through AETHER's durable messages.
- *
- * It runs the installed CLIs under the logins already on this machine (a Claude.ai subscription and a ChatGPT login):
- * no API key is read, written or required, and the runner is only handed the variables listed in apps/runner/src/native.ts.
- * It uses a few turns of subscription quota, so it does nothing unless asked:
- *
- *   tsx scripts/live-smoke.ts --confirm-subscription-quota [--only claude|codex|exchange]
- *
- * Everything happens in a throwaway directory and a throwaway Git repository. Tool approvals are decided here by an
- * explicit allow-list: the AETHER collaboration tools are allowed, anything else is denied.
+ * Spends a few turns of subscription quota on the installed Claude Code and Codex logins (no API key is read), so it
+ * does nothing unless asked: tsx scripts/live-smoke.ts --confirm-subscription-quota [--only claude|codex|exchange].
+ * Runs in a throwaway directory; only the AETHER collaboration tools are approved.
  */
 import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
@@ -104,7 +97,7 @@ const seeded = (() => {
     control.close();
   }
 })();
-setup('live', directory); // now the runner token is scoped to the project
+setup('live', directory);
 
 const env = {
   ...process.env,
@@ -190,7 +183,6 @@ const snapshotOf = (projectId: string) =>
 const nonceA = `A-${randomUUID().slice(0, 8)}`;
 const nonceB = `B-${randomUUID().slice(0, 8)}`;
 
-/** Starts the control plane and the runner, then waits (up to 20 s) until the control plane answers. */
 async function startProcesses() {
   for (const name of ['control', 'runner'])
     children.push(
@@ -242,7 +234,6 @@ async function assign(projectId: string, workId: string, agentId: string) {
   await command('work.assign', { workId, agentId }, projectId, work.version);
 }
 
-/** The two agents write to each other: Codex waits for Claude's nonce and answers with its own. */
 async function startExchange(
   projectId: string,
   claudeId: string,
@@ -269,7 +260,6 @@ async function startExchange(
   ];
 }
 
-/** One agent calls `whoami` and reports its id. */
 async function startIdentity(projectId: string, agentId: string): Promise<Work[]> {
   const id = await createWork(
     projectId,
@@ -281,7 +271,6 @@ async function startIdentity(projectId: string, agentId: string): Promise<Work[]
   return [{ id, label: only }];
 }
 
-/** Decides every new pending approval: only the AETHER collaboration tools are approved. */
 async function decideApprovals(projectId: string, decided: Set<string>) {
   const approvals = await http<Approval[]>('GET', `/api/projects/${projectId}/approvals`);
   for (const a of approvals.filter((x) => x.state === 'pending' && !decided.has(x.id))) {
@@ -311,7 +300,6 @@ const FINAL_STATES = [
   'indeterminate',
 ];
 
-/** Decides approvals and logs each state change of the works until all are final (at most 8 minutes). */
 async function watch(projectId: string, works: Work[]) {
   const decided = new Set<string>();
   const seen = new Map<string, string>();

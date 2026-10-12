@@ -9,7 +9,6 @@ import {
 } from '../environment/director.js';
 import { chooseEntry } from './shot-camera.js';
 
-/** The shot on screen, when it began, and how the camera came to it: a glide from where it was, or a hard cut. */
 export type Directed = { shot: Shot; startedAt: number; entry: 'cut' | 'fly' };
 /** A shot is never cut short by a message sooner than this: two cuts in a breath is what makes people dizzy. */
 const MIN_HOLD_MS = 5000;
@@ -27,10 +26,6 @@ type Stage = {
   setExploded: (exploded: boolean) => void;
 };
 
-/**
- * A glide only between shots that are near each other; anything else is a hard cut (the camera is not asked to fly
- * across the building). With no shot before it (or the person's hands just off the camera) it is a cut.
- */
 const directShot = (
   shot: Shot,
   previous: Shot | null,
@@ -38,11 +33,6 @@ const directShot = (
   now: number,
 ): Directed => ({ shot, startedAt: now, entry: chooseEntry(previous, shot, seats, 1.6) });
 
-/**
- * The director: shot after shot, with no one at the controls. It cuts to whoever is talking, waiting on a person, in
- * error or working, and sweeps a floor when nothing is going on. A touch of the camera, a chosen member or a focus
- * request hands it over to the person (`running` is false); after a quiet spell the page takes it back.
- */
 export function useDirector(inputs: Inputs, running: boolean, { setFloor, setExploded }: Stage) {
   const [directed, setDirected] = useState<Directed | null>(null);
   const latest = useRef(inputs);
@@ -59,7 +49,7 @@ export function useDirector(inputs: Inputs, running: boolean, { setFloor, setExp
     playing.current = next ? directShot(next, previous, latest.current.seats, now) : null;
     setDirected(playing.current);
     if (!next) {
-      timer.current = setTimeout(cut, 4000); // nothing to show yet: look again shortly
+      timer.current = setTimeout(cut, 4000);
       return;
     }
     shown.current.set(next.key, now);
@@ -84,7 +74,6 @@ export function useDirector(inputs: Inputs, running: boolean, { setFloor, setExp
   return directed;
 }
 
-/** A message that arrives while something less interesting is on screen is cut to at once (after a beat). */
 function useCutOnMessage(
   pulses: readonly Pulse[],
   running: boolean,

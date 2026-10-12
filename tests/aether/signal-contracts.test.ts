@@ -43,6 +43,6 @@ describe('the signal enrichment fields', () => {
     expect(parse([call(['rm -rf /'])])).toBe(false);
     expect(parse([call(['test', 'build', 'lint', 'install', 'docker'])])).toBe(false);
     expect(commandTagSchema.safeParse('git.push.force').success).toBe(true);
-    expect(parse([{ tool: 'Bash', target: null, at: 1 }])).toBe(true); // an older call: no tags, ok not known
+    expect(parse([{ tool: 'Bash', target: null, at: 1 }])).toBe(true);
   });
 });

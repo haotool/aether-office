@@ -7,8 +7,8 @@ import { useT } from '../../ui/useT.js';
 type Policy = { liveEnabled: boolean; maxTurns: number; timeoutMs: number; version: number };
 
 /**
- * One step to halt live execution of a project: the same policy change as switching it off in settings (it cancels
- * queued runs, asks running ones to stop and stops terminals), without having to edit the other fields.
+ * One step to halt live execution of a project: the same policy change as switching it off in settings (cancels queued
+ * runs, asks running ones to stop, stops terminals).
  */
 export function EmergencyStop({ projectId }: { projectId: string }) {
   const t = useT();

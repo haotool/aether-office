@@ -2,12 +2,9 @@ import { DomainError } from '@aether/kernel';
 import type { LocalSession } from '@aether/contracts';
 import { descendants, readProcessTable, zombiesUnder, type ProcessRow } from './agent-processes.js';
 
-// A zombie is a finished process whose parent has not collected it. It cannot be killed: it is already dead. All that
-// can be done is to remind its parent to collect it, which is what SIGCHLD is for; a parent that is still running and
-// still listening reaps at once. One that is stuck, or never listens, keeps the zombie until it ends itself, and ending
-// an agent session over a zombie is not done from here (stop is for sessions nobody is working in).
+// A zombie cannot be killed, only reaped: SIGCHLD reminds its parent to collect it. A parent that is stuck keeps it
+// until it ends; stopping an agent session over a zombie is not done from here.
 
-/** Pure. The living parents of the zombies under `root` (the root itself or something it started), with how many each holds. */
 export function nudgeTargets(
   rows: readonly ProcessRow[],
   root: number,
@@ -31,10 +28,6 @@ export function nudgeTargets(
 
 type Reaped = { nudged: number; before: number; after: number };
 
-/**
- * Reminds the parents of a session's zombies to collect them, then looks again. The session's process is named by pid
- * and start time and checked against the live table before any signal, as in stop-session.ts.
- */
 export async function reapSessionZombies(input: {
   session: LocalSession | undefined;
   pid: number | null;

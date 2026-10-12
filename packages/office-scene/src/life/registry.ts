@@ -6,49 +6,29 @@ import { COMMAND_OUTCOME_RULES } from './registry-command-outcomes.js';
 import type { LifeCategory, LifeContext, LifeSignal } from './signals.js';
 import { sceneText } from '../i18n/scene-text.js';
 
-/**
- * What a member does while the effect plays, asked of the pose registry (pose-cues.ts) `atMs` into it: a clip the model
- * already has, or a turn of the chair (radians; negative is toward the desk's right) held for a while. A gesture, not a
- * claim: it never says more than the effect does.
- */
 type LifePose = { clip: ClipName; atMs: number } | { turn: number; holdMs: number; atMs: number };
 
 /**
- * Every office-life effect that fires from the data the server already provides: when it fires, how rarely, and what a
- * screen reader hears. The registry is the source; docs/design/office-life.md section 5.3 lists the same rows (`row`),
- * and a test keeps the two in step. Every effect is decorative: it says what a command was started as or what state a
- * session is in, and how anything ended only when the rule is marked `claimsOutcome` and the provider stated it.
+ * The registry is the source; docs/design/office-life.md section 5.3 lists the same rows and a test keeps the two in
+ * step. Every effect is decorative: how anything ended is said only when the rule is marked `claimsOutcome` and the
+ * provider stated it.
  */
 export type LifeRule = {
   id: EffectId;
-  /** The row of the spec's registry table this implements (R8, R9, ...). */
   row: string;
   category: LifeCategory;
   decorative: true;
-  /**
-   * The effect would claim a result (passed, failed, pushed). Such a rule needs a real `ok`: its matcher reads `ok === true`
-   * or `ok === false`, and the scheduler drops its signal again when `ok` is null or missing.
-   */
   claimsOutcome: boolean;
-  /** Is this signal a trigger? Pure: it reads the signal and the office, nothing else. */
   when: (signal: LifeSignal, ctx: LifeContext) => boolean;
   durationMs: number;
-  /** The same effect may not repeat within this long, per member, per floor or in the building. */
   cooldownMs: number;
   scope: 'member' | 'floor' | 'building';
-  /** The share of eligible triggers that show (seeded, so a replay chooses the same way). */
   chance: number;
-  /** The lowest quality tier that shows it. */
   minTier: Quality;
-  /** With reduced motion: a still picture, or nothing. */
   reduced: 'static' | 'none';
-  /** Where the effect is drawn: on the member's desk, over a group of idle members, or on every desk in view. */
   anchor: 'desk' | 'group' | 'each-desk';
-  /** Caused by the viewer themselves (a key sequence): not held back by the arbiter. */
   direct?: boolean;
-  /** The gesture of the member (or of each member the effect stands over) while it plays. */
   pose?: LifePose;
-  /** What a screen reader hears; `who` is the member's name. */
   aria: (who: string, zh: boolean, signal: LifeSignal) => string;
 };
 
@@ -110,7 +90,7 @@ const WAVE_1_RULES: readonly LifeRule[] = [
     row: 'R17',
     category: 'git',
     decorative: true,
-    claimsOutcome: true, // "pushed": the push command exited successfully (a force push has its own row, R18)
+    claimsOutcome: true,
     when: pushed,
     durationMs: 2_600,
     cooldownMs: 10 * MINUTE,
@@ -258,7 +238,6 @@ const WAVE_1_RULES: readonly LifeRule[] = [
   },
 ];
 
-/** Every rule, wave 1 (what the office already showed) then wave 2 (the outcome rows). The first rule an arbiter admits wins a shared call. */
 export const LIFE_RULES: readonly LifeRule[] = [...WAVE_1_RULES, ...COMMAND_OUTCOME_RULES];
 
 export const ruleOf = (id: string): LifeRule | undefined => LIFE_RULES.find((r) => r.id === id);

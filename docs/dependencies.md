@@ -2,7 +2,7 @@
 
 Direct runtime and development dependencies are pinned in each package manifest and in `pnpm-lock.yaml`. `pnpm-workspace.yaml` sets supply-chain controls: a release younger than a day is not installed, a package whose publish
 evidence is weaker than an earlier version's is refused, and dependencies may not come from git or tarball URLs.
-Licenses and attributions are in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md), generated from the lockfile by
+Licenses and attributions are in [THIRD_PARTY_NOTICES.md](legal/THIRD_PARTY_NOTICES.md), generated from the lockfile by
 `pnpm run notices`; the audited inventory and the licence policy (which licences are allowed, and how to add a dependency) are in
 [docs/legal](legal/README.md). `pnpm run notices:check` (CI) fails when a dependency has an unknown or denied licence or the
 notices are stale. No dependency in the lockfile is GPL, LGPL or AGPL.

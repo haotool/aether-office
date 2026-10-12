@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLatest } from '../../hooks/use-latest.js';
 
-/**
- * The last of the sections that reach the upper part of the scrolling page (its `s-<id>` element), so the navigation
- * can say where the person is. Null until one does.
- */
 export function useScrollSpy<T extends string>(ids: readonly T[], enabled: boolean): T | null {
   const [active, setActive] = useState<T | null>(null);
   const key = ids.join();
@@ -28,6 +24,6 @@ export function useScrollSpy<T extends string>(ids: readonly T[], enabled: boole
       if (element) observer.observe(element);
     }
     return () => observer.disconnect();
-  }, [key, enabled, idList]); // `key` is the content of `ids`
+  }, [key, enabled, idList]);
   return active;
 }

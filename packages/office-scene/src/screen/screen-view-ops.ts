@@ -53,7 +53,6 @@ export function drawTests(c: ViewCtx): void {
   }
 }
 
-/** A suite that has started: its name and a bar (a marching one while it runs, its outcome being unknown). */
 function drawSuite(c: ViewCtx, name: string, y: number, width: number, active: boolean): void {
   const { g, p, box } = c;
   const barW = box.w - 250;
@@ -70,7 +69,6 @@ function drawSuite(c: ViewCtx, name: string, y: number, width: number, active: b
 
 const TILES = ['load', 'throughput', 'queue', 'memory', 'requests', 'cache'];
 
-/** A dashboard of sparklines: shapes of the kind of series an operator watches, with no numbers (it is not their data). */
 export function drawDashboard(c: ViewCtx): void {
   const { g, p, box } = c;
   g.fillStyle = p.bg;
@@ -89,7 +87,7 @@ export function drawDashboard(c: ViewCtx): void {
   });
   text(g, 'overview', box.x + 12, box.y + 20, p.text, 13, MONO, '700');
   c.facts.ports.slice(0, 4).forEach((port, i) => {
-    g.fillStyle = p.panel; // the ports this session really has open
+    g.fillStyle = p.panel;
     g.fillRect(box.x + box.w - 200 + i * 48, box.y + 8, 44, 18);
     text(g, `:${port}`, box.x + box.w - 196 + i * 48, box.y + 21, c.accent, 11);
   });
@@ -97,7 +95,6 @@ export function drawDashboard(c: ViewCtx): void {
 
 const LANES = 3;
 
-/** The commit graph: the branch, its distance from upstream and the uncommitted files are real; the history is made up. */
 export function drawGitGraph(c: ViewCtx): void {
   const { g, p, box, facts } = c;
   const r = viewRng(c, 'graph');
@@ -122,7 +119,6 @@ export function drawGitGraph(c: ViewCtx): void {
   for (let i = 0; i < 11; i++) drawCommit(c, r, i);
 }
 
-/** One row of the graph: the lanes running through it, its dot on one of them, a made-up hash and message. */
 function drawCommit(c: ViewCtx, r: Rng, i: number): void {
   const { g, p, box, facts } = c;
   const y = box.y + 44 + i * 24;
@@ -152,7 +148,6 @@ function drawCommit(c: ViewCtx, r: Rng, i: number): void {
   );
 }
 
-/** A diff: the file name is the member's real one; the changed lines are made up. */
 export function drawGitDiff(c: ViewCtx): void {
   const { g, p, box } = c;
   g.fillStyle = p.bg;

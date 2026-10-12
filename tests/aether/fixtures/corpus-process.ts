@@ -1,8 +1,6 @@
-// Cases for product management, research, hygiene, subagents and thin signals.
 import { type CorpusCase, edit, read, run, tool } from './corpus-types.js';
 
 export const PROCESS: CorpusCase[] = [
-  // Product management
   {
     name: 'roadmap',
     expect: 'product-manager',
@@ -22,7 +20,6 @@ export const PROCESS: CorpusCase[] = [
     prompt: 'triage the open tickets and estimate the backlog',
     actions: [...tool('mcp__jira__search')],
   },
-  // Research / exploration
   {
     name: 'compare options',
     expect: 'research',
@@ -55,14 +52,12 @@ export const PROCESS: CorpusCase[] = [
     prompt:
       'spike: is it feasible to stream the export instead of buffering, evaluate the memory cost',
   },
-  // Git / release hygiene vs generalist
   {
     name: 'git housekeeping',
     expect: 'release',
     prompt: 'merge the feature branch, rebase onto main and tag the build',
     actions: [...run('git rebase main', 'git tag build-45', 'git merge --no-ff feat/x')],
   },
-  // Subagent types as the session's own agent
   {
     name: 'build error resolver',
     expect: 'platform',
@@ -77,7 +72,6 @@ export const PROCESS: CorpusCase[] = [
     subagents: ['tdd-guide'],
     actions: [...edit('tests/feature.test.ts')],
   },
-  // Headless / thin signals
   {
     name: 'headless codex review',
     expect: 'review',
@@ -89,7 +83,6 @@ export const PROCESS: CorpusCase[] = [
     prompt: 'run the full test suite and report failing tests',
     actions: [...run('npm test')],
   },
-  // Honest generalist: no real signal
   { name: 'hello', expect: 'generalist', prompt: 'hello' },
   { name: 'continue', expect: 'generalist', prompt: 'continue' },
   { name: 'fix it', expect: 'generalist', prompt: 'fix it please' },

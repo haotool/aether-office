@@ -59,6 +59,7 @@ describe('history-apply end to end', () => {
         target: 2,
         maintainerEmails: [MAINTAINER.email],
         canonicalEmail: NOREPLY,
+        dropTrailers: true,
       });
       const planFile = join(scratch, 'plan.json');
       writeFileSync(planFile, JSON.stringify(plan));
@@ -79,7 +80,6 @@ describe('history-apply end to end', () => {
       );
       expect(real.status, real.stdout + real.stderr).toBe(0);
       expect(git(source, ['rev-parse', 'HEAD'])).toBe(sourceHead);
-      // the tip differs from the source only by the text rule that replaced the personal path in note.md
       expect(git(out, ['show', 'main:note.md'])).toBe('see /Users/dev/code');
       expect(git(out, ['rev-parse', 'main:src/f6.ts'])).toBe(
         git(source, ['rev-parse', 'main:src/f6.ts']),
@@ -97,7 +97,10 @@ describe('history-apply end to end', () => {
       expect(verify.status, verify.stdout + verify.stderr).toBe(0);
       expect(verify.stdout).toContain('1/1 intact');
       expect(verify.stdout).toContain('1 rewritten by text rules');
-      // a second apply into the same directory is refused
+      expect(verify.stdout).toContain('no session links or AI co-author trailers in any commit');
+      const upstream = git(out, ['log', '--format=%B', '--author=up@example.org', 'main']);
+      expect(upstream).not.toMatch(/claude|anthropic/i);
+      expect(upstream).toContain('Co-authored-by: Real Person <real@example.com>');
       const again = spawnSync(
         'bash',
         [apply, '--plan', planFile, '--out', out, '--source', source],

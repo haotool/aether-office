@@ -4,7 +4,6 @@ import type { Agent } from '@aether/contracts';
 import { Field } from '../../ui/Field.js';
 import { useT, useWhy } from '../../ui/useT.js';
 
-/** Props of the project panels that list agents (rooms, meetings). */
 export type AgentPanelProps = {
   projectId: string;
   agents: readonly Agent[];
@@ -13,10 +12,7 @@ export type AgentPanelProps = {
 
 type QueryKey = readonly unknown[];
 
-/**
- * Runs one command for a project panel: clears the last error, shows a new one, and refreshes the listed queries.
- * `refreshOnFailure` also refreshes after a failure (the server may have moved on); otherwise only after success.
- */
+/** `refreshOnFailure` also refreshes after a failure (the server may have moved on); otherwise only after success. */
 export function useCommandRunner(keys: readonly QueryKey[], refreshOnFailure: boolean) {
   const client = useQueryClient();
   const [error, setError] = useState('');
@@ -37,7 +33,6 @@ export function useCommandRunner(keys: readonly QueryKey[], refreshOnFailure: bo
   return { error, run };
 }
 
-/** The enable/disable button of a listed item; it needs the owner. */
 export function EnableToggle({
   enabled,
   canManage,
@@ -56,7 +51,6 @@ export function EnableToggle({
   );
 }
 
-/** A required multi-select of agents, submitted under `name`. */
 export function AgentPicker({
   name,
   label,
@@ -75,7 +69,6 @@ export function AgentPicker({
   );
 }
 
-/** One `<option>` per agent, valued by its id. */
 export function AgentOptions({ agents }: { agents: readonly Agent[] }) {
   return (
     <>

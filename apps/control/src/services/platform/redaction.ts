@@ -13,14 +13,11 @@ const SECRET_PATTERNS = [
   /\bAKIA[0-9A-Z]{16}\b/g,
   /\bBearer\s+[A-Za-z0-9._~+/-]{20,}/gi,
   /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?(?:-----END [A-Z ]*PRIVATE KEY-----|$)/g,
-  // AETHER additions: JSON web tokens and Google API keys.
   /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g,
   /\bAIza[0-9A-Za-z_-]{35}\b/g,
 ];
 const CREDENTIAL_URL_PATTERN = /\b[A-Za-z0-9._%+-]+:[A-Za-z0-9._%+-]+@(?=[^/\s]+)/g;
 const SECRET_WORD = 'token|secret|password|passwd|api[_-]?key|account[_-]?key|private[_-]?key';
-// A name that contains one of those words (`password`, `AWS_SECRET_ACCESS_KEY`, `PGPASSWORD`, `MY_TOKEN`), plain,
-// shell-style or quoted as JSON (`"password": "..."`), then its value.
 const SECRET_ASSIGNMENT_PATTERN = new RegExp(
   `(["']?)\\b([A-Za-z0-9_-]{0,64}(?:${SECRET_WORD})[A-Za-z0-9_-]{0,64})\\1\\s*[:=]\\s*(?:"[^"\\r\\n]*"|'[^'\\r\\n]*'|[^&\\s,;]+)`,
   'gi',
@@ -38,7 +35,6 @@ export function redactSecrets(value: string): string {
   return text;
 }
 
-/** A tool input with the value of every key named like a secret replaced, before it is stringified. Pure; bounded depth. */
 export function redactStructured(value: unknown, depth = 0): unknown {
   if (typeof value !== 'object' || value === null) return value;
   if (depth >= MAX_DEPTH) return '[nested]';

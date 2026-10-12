@@ -8,7 +8,6 @@ const icons = new Map<string, (typeof nav)[number][1]>(nav);
 import { useT } from '../../ui/useT.js';
 import { ProjectSelect } from '../integrations/ProjectSelect.js';
 
-/** The pages, grouped, each with its live count when it has one. */
 function NavGroups({
   advanced,
   projectId,
@@ -52,7 +51,7 @@ function SidebarBottom({ offline, onLogout }: { offline: boolean; onLogout: () =
         <span />
         {offline ? t('offline') : t('connected')}
       </div>
-      <small>LOCAL-FIRST · v0.4 DEV</small>
+      <small>LOCAL-FIRST · v0.4</small>
       <button className="text-button" onClick={onLogout}>
         <LogOut size={14} />
         {t('logout')}
@@ -65,7 +64,6 @@ type SidebarProps = {
   open: boolean;
   projects: readonly Project[];
   projectId: string | undefined;
-  /** Show the pages for orchestrating several agents too (Settings → Advanced). */
   advanced: boolean;
   workCount: number;
   approvalCount: number;
@@ -75,11 +73,9 @@ type SidebarProps = {
   onNavigate: () => void;
   onLogout: () => void;
   onProject: (projectId: string) => void;
-  /** Shown above the sign-out row; on a phone this is where the top bar's numbers live. */
   footer?: ReactNode;
 };
 
-/** Page navigation with live counts, the connection state and sign-out. A drawer on a phone. */
 export function Sidebar({
   open,
   projects,
@@ -98,7 +94,6 @@ export function Sidebar({
   const t = useT();
   return (
     <nav className={`sidebar ${open ? 'open' : ''}`} aria-label={t('navigation')}>
-      {/* The top bar's project picker has no room on a phone; it lives here instead. */}
       {projects.length > 0 && (
         <label className="drawer-project">
           <span className="nav-title">{t('project')}</span>

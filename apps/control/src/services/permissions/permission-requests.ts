@@ -12,7 +12,6 @@ const MAX_REMEMBERED = 100;
 const CREATES_PER_MINUTE = 60;
 const MIN_WAIT_MS = 5_000;
 const MAX_WAIT_MS = 120_000;
-/** A closed request stays readable this long, so a hook that polls a moment late still gets its answer. */
 const KEEP_CLOSED_MS = 5 * 60_000;
 
 type Decision = { behavior: 'allow' | 'deny'; sessionRules: boolean; message?: string };
@@ -27,7 +26,6 @@ type NewRequest = {
   waitMs: number;
 };
 
-/** The request as it is held: the tool and its input summarised and redacted, the wait clamped. */
 function newEntry(r: NewRequest, t: number): Entry {
   const waitMs = Math.min(MAX_WAIT_MS, Math.max(MIN_WAIT_MS, r.waitMs));
   return {
@@ -58,7 +56,6 @@ function decisionOf(input: {
   };
 }
 
-/** Resolves when the request `id` changes, or after `ms` (never past its own expiry); never rejects. */
 function waitForChange(
   changed: EventEmitter,
   id: string,
@@ -92,7 +89,6 @@ class PermissionRequests {
     e.decidedAt = this.now();
     this.changed.emit('change', e.id);
   }
-  /** Expires what is overdue and forgets what has been closed for long; called before every read. */
   private sweep() {
     const t = this.now();
     for (const e of this.entries.values()) {
@@ -117,7 +113,6 @@ class PermissionRequests {
     return e;
   }
 
-  /** Throws when another request may not be created now; returns the time it was checked at. */
   private admit(sessionKey: string): number {
     this.sweep();
     const t = this.now();
@@ -137,7 +132,6 @@ class PermissionRequests {
     return t;
   }
 
-  /** The limits alone, so a caller can refuse before it does anything expensive for a request that would be refused. */
   checkRate(sessionKey: string): void {
     this.admit(sessionKey);
   }
@@ -159,7 +153,6 @@ class PermissionRequests {
   projectOf(id: string): string {
     return this.need(id).projectId;
   }
-  /** The answer a human gave, or null while there is none. */
   outcome(id: string): { state: PermissionState; decision: Decision | null } {
     const e = this.need(id);
     return { state: e.state, decision: e.decision };
@@ -180,13 +173,11 @@ class PermissionRequests {
       throw new DomainError('PERMISSION_REQUEST_CLOSED', 409);
     return view(e);
   }
-  /** The hook gave up (its deadline, or it could not keep waiting): Claude asks in the terminal. */
   fallback(id: string) {
     const e = this.need(id);
     if (e.state === 'pending') this.settle(e, 'fallback');
     return { state: e.state, decision: e.decision };
   }
-  /** Resolves when the request leaves `pending`, or after `ms`; never rejects. */
   waitFor(id: string, ms: number): Promise<void> {
     const e = this.need(id);
     if (e.state !== 'pending') return Promise.resolve();
@@ -197,8 +188,7 @@ class PermissionRequests {
 const view = ({ projectId: _p, decision: _d, ...v }: Entry): PermissionRequestView => v;
 
 /**
- * Pending permission requests, in memory and bounded: they only matter while a hook is waiting for an answer, so
- * nothing is persisted. A request is never decided by anything but `decide`, which only a human route calls; once the
- * hook's deadline passes it is `expired` and the terminal prompt has taken over.
+ * Pending permission requests live in memory, bounded: they only matter while a hook waits. Only `decide`, which only a
+ * human route calls, decides one; past the hook's deadline it is `expired` and the terminal prompt takes over.
  */
 export const createPermissionRequests = (now: () => number) => new PermissionRequests(now);

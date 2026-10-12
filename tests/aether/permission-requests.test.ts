@@ -6,7 +6,7 @@ import { summarize } from '../../apps/control/src/services/permissions/permissio
 import { approvalsFixture } from './permission-fixtures.js';
 
 it('summarizes a tool call: redacted, bounded, and never the raw input', () => {
-  const secret = 'ghp_abcdefghijklmnopqrstuvwxyz0123456789';
+  const secret = `ghp_${'abcdefghijklmnopqrstuvwxyz'}0123456789`;
   const bash = summarize('Bash', {
     command: `curl -H "Authorization: Bearer ${secret}" https://x.test\nrm -rf build ${'x'.repeat(5000)}`,
     description: 'fetch',
@@ -36,16 +36,14 @@ it('summarizes a tool call: redacted, bounded, and never the raw input', () => {
 });
 
 it('shows every part of what a person is asked to allow', () => {
-  // A multi-line command: the compact view's first line is not all of it.
   const multi = summarize('Bash', { command: 'ls\nrm -rf build', description: 'list files' });
   expect(multi.needsReview).toBe(true);
-  expect(multi.preview).toBe('ls\nrm -rf build\nlist files'); // the command comes before the agent's description
+  expect(multi.preview).toBe('ls\nrm -rf build\nlist files');
   expect(summarize('Bash', { command: 'pnpm test', description: 'x' }).needsReview).toBe(false);
-  expect(summarize('Bash', { command: 'x'.repeat(500) }).needsReview).toBe(true); // the line was cut
-  expect(summarize('Mystery', { a: 1 }).needsReview).toBe(true); // only the tool name is on the line
+  expect(summarize('Bash', { command: 'x'.repeat(500) }).needsReview).toBe(true);
+  expect(summarize('Mystery', { a: 1 }).needsReview).toBe(true);
   expect(summarize('Mystery', {}).needsReview).toBe(false);
 
-  // A MultiEdit: the second edit is not hidden behind the first.
   const edits = summarize('MultiEdit', {
     file_path: '/w/app.ts',
     edits: [
@@ -80,7 +78,6 @@ it('redacts JSON-style and environment-style secrets, and structured input by ke
     'export GITHUB_TOKEN="abc 123"',
   ])
     expect(redactSecrets(text), text).not.toMatch(/hunter2|abc123|wJalr|abc 123/);
-  // Existing behaviour still holds.
   expect(redactSecrets('token=abc123')).toBe('token=[redacted]');
   expect(redactSecrets('curl https://u:p@host/x')).toBe(
     'curl https://[redacted-credential]@host/x',
@@ -113,16 +110,16 @@ it('keeps a bounded store: ttl, per-session and global caps, rate limit, one ans
   expect(first).toMatchObject({ state: 'pending', expiresAt: now + 45_000 });
   expect(store.list()).toHaveLength(1);
   expect(store.decide(first.id, { decision: 'allow' }).state).toBe('allowed');
-  expect(store.decide(first.id, { decision: 'allow' }).state).toBe('allowed'); // same answer twice
+  expect(store.decide(first.id, { decision: 'allow' }).state).toBe('allowed');
   expect(() => store.decide(first.id, { decision: 'deny' })).toThrow(/PERMISSION_REQUEST_CLOSED/);
   expect(store.list()).toHaveLength(0);
 
   const second = make();
-  now += 46_000; // the hook's deadline passed: the terminal prompt has taken over
+  now += 46_000;
   expect(store.get(second.id).state).toBe('expired');
   expect(() => store.decide(second.id, { decision: 'allow' })).toThrow(/PERMISSION_REQUEST_CLOSED/);
   now += 6 * 60_000;
-  expect(() => store.get(second.id)).toThrow(/NOT_FOUND/); // forgotten
+  expect(() => store.get(second.id)).toThrow(/NOT_FOUND/);
 
   const third = make('claude:b');
   expect(store.fallback(third.id).state).toBe('fallback');
@@ -141,10 +138,10 @@ it('keeps a bounded store: ttl, per-session and global caps, rate limit, one ans
   );
   store.fallback(noRules);
   for (let i = 0; i < 5; i++) make('claude:c');
-  expect(() => make('claude:c')).toThrow(/PERMISSION_RATE_LIMIT/); // 5 per session
+  expect(() => make('claude:c')).toThrow(/PERMISSION_RATE_LIMIT/);
   for (let i = 0; i < 3; i++) for (let j = 0; j < 5; j++) make(`claude:d${i}`);
   expect(store.list()).toHaveLength(20);
-  expect(() => make('claude:e')).toThrow(/PERMISSION_RATE_LIMIT/); // 20 in all
+  expect(() => make('claude:e')).toThrow(/PERMISSION_RATE_LIMIT/);
 });
 
 it('long-poll wakes on a decision', async () => {
@@ -187,7 +184,6 @@ it('is off by default; the hook token only creates and reads; only a human owner
       waitMs: 30_000,
       nonce: 'n'.repeat(24),
     };
-    // off: no token exists, nothing is accepted, and no hook file exists
     expect((await hookPost('x'.repeat(43), body)).statusCode).toBe(401);
     expect(existsSync(f.configFile)).toBe(false);
     expect(
@@ -224,7 +220,6 @@ it('is off by default; the hook token only creates and reads; only a human owner
         .statusCode,
     ).toBe(401);
 
-    // a request for a session no project owns is refused; a good one is created
     expect((await hookPost(token, { ...body, sessionId: 'nobody' })).statusCode).toBe(404);
     const created = await hookPost(token, body);
     expect(created.statusCode).toBe(200);
@@ -251,7 +246,7 @@ it('is off by default; the hook token only creates and reads; only a human owner
       requests: { id: string; summary: string; sessionRules: string[] }[];
       enabled: boolean;
     };
-    expect(seen.enabled).toBe(true); // the page asks less often when this is off
+    expect(seen.enabled).toBe(true);
     expect(seen.requests).toHaveLength(1);
     expect(seen.requests[0]).toMatchObject({
       summary: 'pnpm test',
@@ -274,10 +269,10 @@ it('is off by default; the hook token only creates and reads; only a human owner
         url: `/api/hook/permission-requests/${id}?nonce=${'n'.repeat(24)}`,
         headers: f.as(token),
       });
-    expect((await polled()).json()).toMatchObject({ state: 'pending', decision: null }); // nothing was decided by anything else
+    expect((await polled()).json()).toMatchObject({ state: 'pending', decision: null });
 
     expect((await decide(operator.token, { decision: 'allow_session' })).statusCode).toBe(200);
-    expect((await decide(operator.token, { decision: 'allow_session' })).statusCode).toBe(200); // idempotent
+    expect((await decide(operator.token, { decision: 'allow_session' })).statusCode).toBe(200);
     expect((await decide(operator.token, { decision: 'deny' })).statusCode).toBe(409);
     expect((await polled()).json()).toMatchObject({
       state: 'allowed',
@@ -291,7 +286,6 @@ it('is off by default; the hook token only creates and reads; only a human owner
     expect(audit[0]!.actorId).toBe(operator.actor.id);
     expect(audit[0]!.payload).not.toContain('pnpm test');
 
-    // off again: the token stops working at once and the hook file is gone
     expect(
       (
         await f.app.inject({

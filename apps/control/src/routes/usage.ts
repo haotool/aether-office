@@ -13,7 +13,6 @@ import { createUsageStats, type UsageStats } from '../services/usage/usage-stats
 import { requireOperator, type RouteContext } from './context.js';
 
 const query = z.object({ range: z.enum(['today', '7d', '30d']).default('7d') });
-/** How long a request waits for a scan still reading history before it answers with what is known. */
 const WAIT_MS = 400;
 const MAX_REPOS = 12;
 const GIT_WIDTH = 3;
@@ -24,7 +23,6 @@ const off = () => process.env['AETHER_LOCAL_SESSIONS'] === 'off';
 type Who = Parameters<RouteContext['control']['listProjects']>[0];
 type Sessions = Awaited<ReturnType<typeof attributeSessions>>;
 
-/** One usage tracker per home directory, created on first use. */
 function usageStatsStore(dataDir: string | undefined) {
   const stats = new Map<string, UsageStats>();
   return (home: string) => {
@@ -40,7 +38,6 @@ function usageStatsStore(dataDir: string | undefined) {
   };
 }
 
-/** The projects with a repository, the most recently worked in first, and the newest session time of each. */
 function rankProjects(
   projects: ReturnType<RouteContext['control']['listProjects']>,
   sessions: Sessions,
@@ -55,14 +52,13 @@ function rankProjects(
   return [...withRoot.values()].sort((a, b) => (latest.get(b.id) ?? 0) - (latest.get(a.id) ?? 0));
 }
 
-// Commits, merges and branches per project, per office (the projects its sessions work in) and for the building.
 async function gitUsage(
   { control }: RouteContext,
   who: Who,
   timeZone: string,
   sessionsOf: (who: Who) => Promise<Sessions>,
 ): Promise<GitKpiResponse> {
-  const dayOf = dayKeyOf(timeZone); // the zone the token days follow, so the two agree
+  const dayOf = dayKeyOf(timeZone);
   const days = windowDays(dayOf(Date.now()));
   const base = { days, generatedAt: Date.now() };
   if (off())
@@ -101,7 +97,6 @@ async function gitUsage(
   };
 }
 
-/** Token KPIs and Git KPIs of the local sessions, for the office's dashboards. Owner and operator only; read-only. */
 export function usageRoutes(context: RouteContext) {
   const { app, control, actor, options } = context;
   const statsFor = usageStatsStore(options.dataDir);

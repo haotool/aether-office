@@ -2,24 +2,19 @@ import type { Context } from './context.js';
 
 const DAY = 24 * 60 * 60 * 1000;
 /**
- * How long each append-only table keeps its rows. A client whose event cursor predates the kept events is told to fetch
- * a snapshot (`SNAPSHOT_REQUIRED`), so pruning the log never skips events silently.
+ * A client whose event cursor predates the kept events is told to fetch a snapshot (`SNAPSHOT_REQUIRED`), so pruning
+ * never skips events silently.
  */
 export const RETENTION = {
-  /** The event log and its outbox rows (nothing consumes the outbox). The newest event of every project always stays. */
   eventsMs: 90 * DAY,
-  /** Idempotency receipts: a command key replayed after this is run again instead of answered from the journal. */
   commandJournalMs: 90 * DAY,
-  /** Runner report ids (de-duplication), only for runs that are over. */
   runnerReportsMs: 30 * DAY,
   /** GitHub redelivers within days, so a delivery id older than this can never be a duplicate. */
   webhookDeliveriesMs: 30 * DAY,
 };
-/** Rows removed per table per pass, so one pass stays short; the next pass continues. */
 const BATCH = 2000;
 const ACTIVE_RUN = "('claimed','running','cancel_requested','indeterminate')";
 
-/** Deletes what is past its retention (and expired browser sessions). Returns the number of rows removed. */
 export function pruneRetention(ctx: Context): number {
   const now = ctx.now();
   const db = ctx.sqlite;

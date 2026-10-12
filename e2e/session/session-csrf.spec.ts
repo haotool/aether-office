@@ -6,7 +6,6 @@ const signIn = async (page: Page) => {
   await expect(page.getByRole('button', { name: '在手機上開啟' })).toBeVisible();
 };
 
-/** A write the person makes from the top bar of every page: a cookie session plus a CSRF token. */
 const writeFromPage = async (page: Page) => {
   const made = page.waitForResponse(
     (r) => r.url().endsWith('/api/pairings') && r.request().method() === 'POST',
@@ -26,9 +25,8 @@ test('a signed-in browser that lost its tab can still write: the page asks for a
 
   const back = await context.newPage();
   await back.goto('/');
-  await expect(back.getByRole('button', { name: '在手機上開啟' })).toBeVisible(); // looks signed in
+  await expect(back.getByRole('button', { name: '在手機上開啟' })).toBeVisible();
   expect(await writeFromPage(back)).toBe(200);
-  // not kept beyond the tab: a sign-in that was not remembered stays in sessionStorage
   expect(await back.evaluate(() => localStorage.getItem('aether-csrf'))).toBeNull();
 });
 

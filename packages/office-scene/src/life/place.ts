@@ -8,16 +8,13 @@ import type { LifeCue } from './schedule.js';
 
 export type Stage = {
   seats: ReadonlyMap<string, Seat>;
-  /** The floor shown (stacked) and whether the building is spread apart: only desks in view get pictures. */
   floor: number;
   exploded: boolean;
   floorY: (floor: number, exploded: boolean) => number;
   reducedMotion: boolean;
 };
 
-/** The most desks a building-wide effect dresses at once. */
 export const EACH_DESK_MAX = 24;
-/** With reduced motion an effect is one still picture, taken this far through it (its pictures are fully in by then). */
 const STILL_AT = 0.4;
 
 const inView = (stage: Stage, seat: Seat) => stage.exploded || seat.floor === stage.floor;
@@ -34,7 +31,6 @@ const placed = (s: Sprite, at: readonly [number, number, number]): PlacedSprite 
   tint: s.tint ?? [1, 1, 1],
 });
 
-/** The sprites of a cue `now`, in the world: its effect's timeline put on the desk, the group or every desk it belongs to. */
 export function cueSprites(cue: LifeCue, now: number, stage: Stage): PlacedSprite[] {
   const rule = ruleOf(cue.rule);
   if (!rule) return [];

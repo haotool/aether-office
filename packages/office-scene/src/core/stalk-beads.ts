@@ -3,15 +3,13 @@ import { paletteAt, type Stalk } from './stalk-layout.js';
 
 const MERGE_COLOR = '#ffffff';
 const WHITE = new Color('#ffffff');
-const BEAD_SHINE = 0.45; // how far a bead's colour is taken towards white
+const BEAD_SHINE = 0.45;
 
-// Scratch objects for placing beads: one pass fills every instance, so nothing is allocated per bead.
 const matrix = new Matrix4();
 const noTurn = new Quaternion();
 const spot = new Vector3();
 const scale3 = new Vector3();
 
-/** A bead is as big as its strand's tube, but never so big that it runs into its neighbours on a crowded stretch. */
 export function beadRadii(stalk: Stalk): number[] {
   const heights = new Map<number, number[]>();
   for (const n of stalk.nodes)
@@ -29,7 +27,6 @@ export function beadRadii(stalk: Stalk): number[] {
   });
 }
 
-/** Each bead takes its strand's colour (a merge stays white), taken a little towards white. */
 export function paintBeads(mesh: InstancedMesh, stalk: Stalk): void {
   const color = new Color();
   stalk.nodes.forEach((n, i) =>
@@ -41,7 +38,6 @@ export function paintBeads(mesh: InstancedMesh, stalk: Stalk): void {
   if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
 }
 
-/** Puts every bead up to the height `reach` at its place and size; the ones above it have no size yet. */
 export function placeBeads(
   mesh: InstancedMesh,
   stalk: Stalk,

@@ -12,11 +12,6 @@ import {
   seedSeatSessions,
 } from '../support/seats.js';
 
-// Interacting with the characters of the 3D office directly: the action menu (click, keyboard, right click, press and
-// hold), emotes, following the camera, pinning to the wall, carrying a desk to another seat (and undoing it), and a group
-// picked with Shift. The sessions are synthetic transcripts in the fixture home (no process, no model); the repository is
-// adopted as a project of its own, which is why this file runs last: it leaves no state that another spec reads.
-
 test.beforeAll(seedSeatSessions);
 test.afterAll(removeSeatSessions);
 
@@ -31,7 +26,7 @@ test('the action menu opens on a second click, a right click and Enter; Esc clos
   });
   await enter(page);
   const tag = await bringIntoView(page, 1);
-  await expect(page.locator('.char-menu')).toHaveCount(0); // choosing it is not opening its menu
+  await expect(page.locator('.char-menu')).toHaveCount(0);
   await tag.click();
   const menu = page.getByRole('menu');
   await expect(menu).toBeVisible();
@@ -41,12 +36,11 @@ test('the action menu opens on a second click, a right click and Enter; Esc clos
   await page.keyboard.press('Escape');
   await expect(menu).toHaveCount(0);
   await expect(tag).toBeFocused();
-  await page.keyboard.press('Enter'); // a keyboard press opens it at once
+  await page.keyboard.press('Enter');
   await expect(menu).toBeVisible();
   await page.keyboard.press('Escape');
   await tag.click({ button: 'right' });
   await expect(menu).toBeVisible();
-  // Honest: a session AETHER only watches cannot be typed into; each disabled action says why.
   await expect(menu.getByRole('menuitem', { name: /Continue in AETHER/ })).toBeVisible();
   await expect(menu.getByRole('menuitem', { name: /Quick message/ })).toHaveCount(0);
   const reply = menu.getByRole('menuitem', { name: /Quick replies/ });
@@ -78,42 +72,37 @@ test('the 3D model answers like its tag: a pointer cursor and a card on hover, a
   const tag = await bringIntoView(page, 1);
   const box = (await tag.boundingBox())!;
   const [cx, cy] = [box.x + box.width / 2, box.y + box.height / 2];
-  // The model stands below its tag: look for it with the pointer, as a person would.
-  const over = async (x: number, y: number) => {
-    await page.mouse.move(x, y);
-    // The scene sets the cursor as the pointer enters a model; its card follows after a moment.
-    if ((await page.evaluate(() => document.body.style.cursor)) !== 'pointer') return false;
-    return page
-      .getByRole('tooltip')
-      .filter({ hasText: NAME(1) })
-      .waitFor({ timeout: 5000 })
-      .then(
-        () => true,
-        () => false,
-      );
-  };
-  let hit: [number, number] | null = null;
-  for (const dy of [100, 130, 160, 190]) {
-    for (const dx of [-80, -55, -30]) {
-      if (await over(cx + dx, cy + dy)) hit = [cx + dx, cy + dy];
-      if (hit) break;
-    }
-    if (hit) break;
-  }
-  // The first point that answers is the model's outline, which its idle sway moves a pixel either way: click further in.
-  for (const deeper of hit ? [60, 40, 20] : []) {
-    if (await over(hit![0], hit![1] + deeper)) {
-      hit = [hit![0], hit![1] + deeper];
-      break;
+  const cursor = () => page.evaluate(() => document.body.style.cursor);
+  // The scene sets the cursor as the pointer enters a model, whose outline sways a few pixels: sweep the area as a
+  // person would and take a point only when its whole 3 x 3 patch answered.
+  const at = (col: number, row: number): [number, number] => [
+    cx - 110 + col * 10,
+    cy + 100 + row * 20,
+  ];
+  const answered = new Set<string>();
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 15; col++) {
+      await page.mouse.move(...at(col, row));
+      if ((await cursor()) === 'pointer') answered.add(`${col},${row}`);
     }
   }
-  if (hit) await over(...hit);
-  expect(hit).not.toBeNull();
-  expect(await page.evaluate(() => document.body.style.cursor)).toBe('pointer');
-  await page.mouse.click(...hit!);
-  await expect(page.getByRole('menu')).toBeVisible(); // it was already chosen: a second click opens its menu
+  const cells = [...answered].map((key) => key.split(',').map(Number) as [number, number]);
+  const patch = (col: number, row: number) =>
+    [-1, 0, 1].every((dc) => [-1, 0, 1].every((dr) => answered.has(`${col + dc},${row + dr}`)));
+  const mean = (pick: (cell: [number, number]) => number) =>
+    cells.reduce((sum, cell) => sum + pick(cell), 0) / cells.length;
+  const [midCol, midRow] = [mean(([c]) => c), mean(([, r]) => r)];
+  const distance = ([c, r]: [number, number]) => (c - midCol) ** 2 + (r - midRow) ** 2;
+  const body = cells.filter(([c, r]) => patch(c, r)).sort((a, b) => distance(a) - distance(b))[0];
+  expect(body, 'a body answers, not only a sliver of it').toBeDefined();
+  const hit = at(...body!);
+  await page.mouse.move(...hit);
+  await expect.poll(cursor).toBe('pointer');
+  await expect(page.getByRole('tooltip').filter({ hasText: NAME(1) })).toBeVisible();
+  await page.mouse.click(...hit);
+  await expect(page.getByRole('menu')).toBeVisible();
   await page.keyboard.press('Escape');
-  await page.mouse.click(...hit!, { button: 'right' });
+  await page.mouse.click(...hit, { button: 'right' });
   await expect(page.getByRole('menu')).toBeVisible();
 });
 
@@ -122,7 +111,7 @@ test('hovering shows a card after a moment and never takes the pointer', async (
   const tag = await bringIntoView(page, 2);
   await page.mouse.move(5, 5);
   await tag.hover();
-  await expect(page.locator('.char-card')).toHaveCount(0); // not at once
+  await expect(page.locator('.char-card')).toHaveCount(0);
   const card = page.getByRole('tooltip');
   await expect(card).toBeVisible({ timeout: 2000 });
   await expect(card).toContainText(NAME(2));
@@ -145,7 +134,7 @@ test('an emote plays once with an icon and an announcement; a second one inside 
   await page.getByRole('menuitem', { name: 'Cheer' }).click();
   await expect(live(page)).toContainText('Give it a moment');
   await expect(page.locator('.emote-sprite')).toHaveCount(1);
-  await expect(page.locator('.emote-sprite')).toHaveCount(0, { timeout: 5000 }); // gone by itself
+  await expect(page.locator('.emote-sprite')).toHaveCount(0, { timeout: 5000 });
 });
 
 test('Follow camera holds until the camera is dragged; Pin to wall adds a view that stays', async ({
@@ -178,7 +167,7 @@ test('Follow camera holds until the camera is dragged; Pin to wall adds a view t
     .locator('.team-chip', { hasText: NAME(2) })
     .first()
     .click();
-  await expect(page.locator('.pip.pinned')).toHaveCount(1); // choosing someone else does not unpin
+  await expect(page.locator('.pip.pinned')).toHaveCount(1);
 });
 
 test('Alt + drag carries a desk to a free seat, saves it, and the undo puts it back; Esc cancels', async ({
@@ -207,14 +196,12 @@ test('Alt + drag carries a desk to a free seat, saves it, and the undo puts it b
   const box = (await tag.boundingBox())!;
   const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
 
-  // Without Alt a press on a tag is only a click: nothing is carried.
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.mouse.move(x + 150, y + 140, { steps: 4 });
   await page.mouse.up();
   await expect(page.locator('.seat-hint')).toHaveCount(0);
 
-  // Esc cancels a carry.
   await page.keyboard.down('Alt');
   await page.mouse.move(x, y);
   await page.mouse.down();
@@ -226,7 +213,6 @@ test('Alt + drag carries a desk to a free seat, saves it, and the undo puts it b
   await expect(page.locator('.seat-hint')).toHaveCount(0);
   expect((await layout()).version).toBe(before.version);
 
-  // The main aisle is refused (red), a free seat is accepted and saved.
   await page.keyboard.down('Alt');
   await page.mouse.move(x, y);
   await page.mouse.down();
@@ -256,7 +242,6 @@ test('Alt + drag carries a desk to a free seat, saves it, and the undo puts it b
 test('Shift picks a group; Send home asks for confirmation and sends nothing until it is given', async ({
   page,
 }) => {
-  // The page is told these sessions have been forgotten for days (see `pretend`).
   await pretend(page, {
     state: 'dormant',
     startedAt: 1_700_000_000_000,
@@ -268,11 +253,10 @@ test('Shift picks a group; Send home asks for confirmation and sends nothing unt
   await enter(page);
   await bringIntoView(page, 1);
   const tags = page.locator('button.scene-label');
-  // Tags of members off camera cannot be clicked: the same click, delivered straight to the tag.
   await tags.filter({ hasText: NAME(2) }).dispatchEvent('click', { shiftKey: true, detail: 1 });
   await tags.filter({ hasText: NAME(3) }).dispatchEvent('click', { shiftKey: true, detail: 1 });
   const bar = page.getByRole('toolbar', { name: 'Selected characters' });
-  await expect(bar).toContainText('3 selected'); // the chosen member joined the group
+  await expect(bar).toContainText('3 selected');
   await bar.getByRole('button', { name: /Send home \(3\)/ }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog).toContainText(NAME(1));
@@ -299,13 +283,12 @@ test.describe('on a phone', () => {
       name: string;
     }[];
     const project = projects.find((p) => p.name === 'fixture-seats')!;
-    // What a link from an alert does: the project, the member, the camera on its desk.
     await page.goto(
       `/office?project=${project.id}&agent=${encodeURIComponent(`local:claude:${ids[0]}`)}&focus=1`,
     );
     const tag = page.locator('button.scene-label.selected');
     await expect(tag).toBeVisible({ timeout: 15000 });
-    await settled(tag); // the flight ends
+    await settled(tag);
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await tag.tap();
     const sheet = page.getByRole('dialog', { name: new RegExp(NAME(1)) });
@@ -331,7 +314,6 @@ test.describe('on a phone', () => {
     await tag.dispatchEvent('pointerdown', at);
     await expect(sheet).toBeVisible();
     await tag.dispatchEvent('pointerup', at);
-    // The hold's own click is not another tap: the menu is still there, once.
     await expect(page.getByRole('dialog')).toHaveCount(1);
   });
 });

@@ -10,7 +10,6 @@ import { fit, roundRect, text, textBars } from './screen-ui.js';
 const URL_H = 30;
 const MAX_DT = 400;
 
-/** The address bar, with a progress line while the page is still loading. */
 function drawUrlBar(c: ViewCtx, url: string): void {
   const { g, p, box } = c;
   g.fillStyle = p.panel;
@@ -23,12 +22,11 @@ function drawUrlBar(c: ViewCtx, url: string): void {
   g.fillStyle = p.text;
   g.fillText(fit(g, url, box.w - 100), box.x + 70, box.y + 19);
   if (c.moving && c.elapsed < 4000) {
-    g.fillStyle = c.accent; // the page is still loading
+    g.fillStyle = c.accent;
     g.fillRect(box.x, box.y + URL_H - 2, box.w * Math.min(0.92, c.elapsed / 4000), 2);
   }
 }
 
-/** The page body from `y0` down: a header band, a heading, sections of text bars with the odd code sample, a side column. */
 function drawPage(c: ViewCtx, r: Rng, host: string, y0: number): void {
   const { g, p, box } = c;
   g.fillStyle = c.accent;
@@ -36,10 +34,10 @@ function drawPage(c: ViewCtx, r: Rng, host: string, y0: number): void {
   g.fillRect(box.x, y0, box.w, 46);
   g.globalAlpha = 1;
   g.fillStyle = p.text;
-  g.fillRect(box.x + 16, y0 + 16, 60 + (hashText(host) % 40), 12); // the site's name
+  g.fillRect(box.x + 16, y0 + 16, 60 + (hashText(host) % 40), 12);
   [0, 1, 2, 3].forEach((i) => g.fillRect(box.x + box.w - 190 + i * 44, y0 + 19, 30, 6));
   g.fillStyle = p.text;
-  g.fillRect(box.x + 24, y0 + 66, box.w * (0.35 + r() * 0.3), 16); // a heading
+  g.fillRect(box.x + 24, y0 + 66, box.w * (0.35 + r() * 0.3), 16);
   textBars(g, r, box.x + 24, y0 + 94, box.w * 0.62, 4, p.line);
   for (let section = 0; section < 5; section++) {
     const y = y0 + 168 + section * 118;
@@ -47,7 +45,7 @@ function drawPage(c: ViewCtx, r: Rng, host: string, y0: number): void {
     g.fillRect(box.x + 24, y, 90 + r() * 120, 9);
     textBars(g, r, box.x + 24, y + 18, box.w * 0.62, 3 + Math.floor(r() * 3), p.line);
     if (section % 2 === 0) {
-      g.fillStyle = p.panel; // a code sample
+      g.fillStyle = p.panel;
       g.fillRect(box.x + 24, y + 62, box.w * 0.6, 34);
       g.fillStyle = c.accent;
       g.fillRect(box.x + 32, y + 70, 70 + r() * 80, 4);
@@ -55,12 +53,11 @@ function drawPage(c: ViewCtx, r: Rng, host: string, y0: number): void {
       g.fillRect(box.x + 32, y + 80, 100 + r() * 120, 4);
     }
   }
-  g.fillStyle = p.panel; // a side column
+  g.fillStyle = p.panel;
   g.fillRect(box.x + box.w * 0.72, y0 + 66, box.w * 0.24, 200);
   textBars(g, r, box.x + box.w * 0.74, y0 + 80, box.w * 0.2, 9, p.line, 18);
 }
 
-/** A web page as a browser would show it: the host is the member's real target; the page is shapes, not text. */
 export function drawBrowser(c: ViewCtx): void {
   const { g, p, box } = c;
   const target = c.work.target ?? '';
@@ -84,7 +81,6 @@ export function drawBrowser(c: ViewCtx): void {
   g.restore();
 }
 
-/** One source line as the preview shows it, from `y` down: a heading, a bullet, a code fence gap or a paragraph line. Returns the next y. */
 function drawPreviewLine(c: ViewCtx, line: CodeLine, raw: string, x: number, y: number): number {
   const { g, p, box } = c;
   const half = box.w / 2;
@@ -109,7 +105,6 @@ function drawPreviewLine(c: ViewCtx, line: CodeLine, raw: string, x: number, y: 
   return y + 15;
 }
 
-/** A markdown file: its source on the left, the page it makes on the right, both from made-up text under the real file name. */
 export function drawDocs(c: ViewCtx): void {
   const { g, p, box } = c;
   const file = c.work.file ?? 'notes.md';

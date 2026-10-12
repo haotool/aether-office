@@ -31,7 +31,6 @@ const cell = (scene: string, viewport: string, theme: string, lang: string): Cel
   errors: [],
 });
 
-/** A complete, clean run: 7 widths x 2 themes x 2 languages of two scenes, and 4 combinations of two states. */
 function cleanRun(): Cell[] {
   const cells: Cell[] = [];
   for (const [w, h] of [
@@ -80,12 +79,12 @@ describe('ux matrix summary', () => {
 
   it('leaves out the errors a signed-out login and an injected failure are meant to cause', () => {
     const cells = cleanRun();
-    cells[0]!.errors = ['Failed to load resource: 401 (Unauthorized)']; // a login cell
+    cells[0]!.errors = ['Failed to load resource: 401 (Unauthorized)'];
     const injected = cells.find((c) => c.scene === 'state-error')!;
     injected.errors = ['Failed to load resource: 500'];
     injected.expectsErrors = true;
     expect(problems(stamped(cells), trees, 'qa')).toEqual([]);
-    cells[2]!.errors = ['TypeError: x is undefined']; // a login cell with a real error
+    cells[2]!.errors = ['TypeError: x is undefined'];
     expect(problems(stamped(cells), trees, 'qa')).toEqual(['core: 1 cells with unexpectedErrors']);
   });
 

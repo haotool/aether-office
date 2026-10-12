@@ -5,16 +5,11 @@ import { mergeSubagents, readSubagentTranscripts } from '../subagents/subagent-t
 import type { ReadBudget } from '../subagents/subagent-usage.js';
 import { readOutcomes, type Outcomes } from '../runtime/tool-outcomes.js';
 
-/** What one session's own files add to its hook state: tool outcomes and the subagents (hook, transcript and rollout). */
 export type SessionSignals = {
   subagents: Subagent[];
   recent: NonNullable<LocalSession['hook']>['recent'];
 };
 
-/**
- * Pure join of what is known about a session's tool calls: the hook's call list (with the outcome the hook reported)
- * gets the transcript's outcome for the calls the hook could not settle, matched by the provider's tool id only.
- */
 function withOutcomes(
   calls: HookState['recent'],
   outcomes: Outcomes,

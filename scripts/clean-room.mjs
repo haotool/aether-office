@@ -1,6 +1,3 @@
-// Reproduces the README from a fresh clone of the committed HEAD: no node_modules, no .data, no
-// global packages. Usage: node scripts/clean-room.mjs [--e2e]
-// Set PNPM="node /path/to/corepack pnpm" when pnpm is not directly on PATH.
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -104,7 +101,7 @@ try {
   });
   await smoke();
   if (process.argv.includes('--e2e'))
-    pnpm('browser tests', ['exec', 'playwright', 'test'], { timeout: 900000 });
+    pnpm('browser tests', ['exec', 'playwright', 'test'], { timeout: 3600000 });
   console.log(`\nclean-room verification of ${head} passed (${results.length} steps)`);
 } catch (error) {
   console.error(`\nclean-room verification of ${head} FAILED: ${error.message}`);

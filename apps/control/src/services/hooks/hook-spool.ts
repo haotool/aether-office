@@ -21,8 +21,6 @@ const recordSchema = z.object({
   tool: z.string().optional(),
   target: z.string().optional(),
   notification: z.string().optional(),
-  // Added later (older spools lack them): an opaque id pairing a call with its result, the receiver's labels (any other
-  // string is dropped on the way out) and whether the tool succeeded, when the provider said so.
   toolUseId: z.string().max(80).optional(),
   tags: z.array(z.string().max(40)).max(8).optional(),
   ok: z.boolean().optional(),
@@ -33,10 +31,9 @@ export type HookState = {
   activity: 'working' | 'idle' | 'waiting_permission' | 'ended';
   lastEvent: string;
   at: number;
-  tool: string | null; // the tool being run, from PreToolUse until the next event
-  // The last tool calls, oldest first: the tool and a short redacted target (a file's base name, a command's first word).
-  // `agentId` names the subagent that made the call; null for the session's own.
-  // `toolUseId` stays on the server: it pairs a call with its result (here and in the transcript) and is not sent on.
+  tool: string | null;
+  // `toolUseId` stays on the server: it pairs a call with its result and is not sent on. Targets are short and redacted
+  // (a file's base name, a command's first word).
   recent: HookCall[];
   subagents: Subagent[];
 };
@@ -63,7 +60,6 @@ const newChild = (id: string, r: HookRecord, startedAt: number | null): Child =>
   waiting: false,
 });
 
-// Folds one record of a subagent into its facts. After a stop only a new start brings it back.
 function foldChild(children: Map<string, Child>, r: HookRecord, id: string) {
   if (r.event === 'SubagentStart') return void children.set(id, newChild(id, r, r.at));
   const child = children.get(id) ?? newChild(id, r, r.event === 'SubagentStop' ? null : r.at);
@@ -101,12 +97,11 @@ export function parseSpool(text: string): HookRecord[] {
       const parsed = recordSchema.safeParse(JSON.parse(line));
       return parsed.success ? [parsed.data] : [];
     } catch {
-      return []; // partial first line of a tail read, or foreign content
+      return [];
     }
   });
 }
 
-// The tool call a record makes, for the session's recent list; null for any other event.
 const callOf = (r: HookRecord): HookCall | null =>
   r.event === 'PreToolUse' && r.tool
     ? {
@@ -133,7 +128,6 @@ const settled = (recent: HookCall[], r: HookRecord): HookCall[] => {
   return recent.map((c) => (c.toolUseId === toolUseId ? { ...c, ok } : c));
 };
 
-/** The state after one record of the session itself; subagent traffic only proves the parent is alive (see below). */
 function stateAfter(before: HookState | undefined, r: HookRecord, recent: HookCall[]): HookState {
   if (r.agentId) {
     // Subagent traffic never changes the parent's activity; it only proves the parent is alive.
@@ -158,7 +152,6 @@ function stateAfter(before: HookState | undefined, r: HookRecord, recent: HookCa
   };
 }
 
-/** The subagents of a session that are still worth showing; none once the session has ended. */
 function visibleSubagents(state: HookState, running: Map<string, Child> | undefined, now: number) {
   if (state.activity === 'ended') return [];
   return [...(running ?? []).values()]
@@ -174,7 +167,6 @@ function visibleSubagents(state: HookState, running: Map<string, Child> | undefi
     }));
 }
 
-// Pure: records are chronological. A session/subagent is only ever "active" from observed events.
 export function deriveHookState(
   records: readonly HookRecord[],
   now: number,
@@ -198,7 +190,6 @@ export function deriveHookState(
   return states;
 }
 
-// The last TAIL_BYTES of a spool file; null when there is none.
 async function tail(file: string): Promise<string | null> {
   try {
     const { size } = await stat(file);
@@ -223,5 +214,5 @@ export async function readHookState(
   now = Date.now(),
 ): Promise<Map<string, HookState>> {
   const parts = [await tail(`${file}.1`), await tail(file)].filter((p) => p !== null);
-  return deriveHookState(parseSpool(parts.join('\n')), now); // no spool: hooks not installed
+  return deriveHookState(parseSpool(parts.join('\n')), now);
 }

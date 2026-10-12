@@ -10,11 +10,9 @@ function run(args, cwd = process.cwd()) {
 }
 run(['node_modules/typescript/bin/tsc', '--noEmit']);
 run(['node_modules/vite/bin/vite.js', 'build'], 'apps/web');
-// The web build inlines third-party code, so its licence and notices travel with it (Settings, About links to them).
 await copyFile('LICENSE', 'apps/web/dist/LICENSE.txt');
-await copyFile('THIRD_PARTY_NOTICES.md', 'apps/web/dist/THIRD_PARTY_NOTICES.txt');
-// The service worker, with the page and its hashed files to keep (see apps/web/src/sw). Written before the files are
-// pre-compressed so that it gets a .br and a .gz like the rest.
+await copyFile('docs/legal/THIRD_PARTY_NOTICES.md', 'apps/web/dist/THIRD_PARTY_NOTICES.txt');
+// Written before the files are pre-compressed so that it gets a .br and a .gz like the rest.
 const shell = precacheUrls(await readdir('apps/web/dist', { recursive: true }));
 await build({
   entryPoints: ['apps/web/src/sw/sw.ts'],
@@ -30,9 +28,8 @@ await build({
     ),
   },
 });
-// Next to every text and model file of the web build, a .br and a .gz copy for the server to hand out as they are
-// (@fastify/static preCompressed). A phone on Wi-Fi gets the 3D engine in 280 KB instead of 1 MB, a character in 290 KB
-// instead of 970 KB. Only a copy that is smaller is kept.
+// A .br and a .gz copy of every text and model file for the server to hand out as they are (@fastify/static
+// preCompressed): a phone on Wi-Fi gets the 3D engine in 280 KB instead of 1 MB. Only a copy that is smaller is kept.
 async function precompress(directory) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const path = join(directory, entry.name);

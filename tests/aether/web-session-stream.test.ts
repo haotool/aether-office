@@ -9,8 +9,6 @@ import {
 } from './fixtures/browser-env.js';
 import { renderHook } from './fixtures/mini-react.js';
 
-// The hook under test runs on synthetic stand-ins (labelled in fixtures/): React's hook runtime, zustand's hook, and a
-// query client that records which keys were invalidated. The EventSource is driven by the test.
 const web = await vi.hoisted(async () => {
   const paths = await import('./fixtures/web-paths.js');
   return { react: paths.WEB_REACT, zustand: paths.WEB_ZUSTAND, query: paths.WEB_QUERY };
@@ -66,7 +64,7 @@ describe('useSessionStream', () => {
     expect(useLink.getState().status).toBe('live');
     expect(useLinkLive()).toBe(true);
     expect(keys()).toEqual(['local-sessions', 'speech', 'transcript']);
-    vi.advanceTimersByTime(0); // the token KPIs go through the throttle, whose first slot is free
+    vi.advanceTimersByTime(0);
     expect(keys()).toEqual(['local-sessions', 'speech', 'transcript', 'usage']);
   });
 
@@ -90,7 +88,7 @@ describe('useSessionStream', () => {
   it('throttles the token KPIs to one refetch per gap', () => {
     renderHook(useSessionStream, true);
     latest().emit('hello', { seq: 1 });
-    vi.advanceTimersByTime(0); // the baseline refresh's own usage refetch fires
+    vi.advanceTimersByTime(0);
     invalidated.length = 0;
     latest().emit('session', change(2, ['transcript']));
     vi.advanceTimersByTime(120);
@@ -128,7 +126,7 @@ describe('useSessionStream', () => {
   it('ignores an error from a connection it has already replaced', () => {
     renderHook(useSessionStream, true);
     const old = latest();
-    env.window.dispatchEvent(new Event('online')); // resume: a new connection replaces the old one
+    env.window.dispatchEvent(new Event('online'));
     const failures = useLink.getState().failures;
     old.fail();
     expect(useLink.getState().failures).toBe(failures);

@@ -59,7 +59,6 @@ const closeAll = async () => {
   }
 };
 afterEach(closeAll);
-/** Listens on `port` (0: any free one) and resolves to the port taken. */
 const serve = (port: number, handler: Parameters<typeof listen>[1]) =>
   new Promise<number>((done) => {
     const s = listen(handler);
@@ -76,7 +75,6 @@ const configIn = (dir: string) => {
   return file;
 };
 
-/** A process squatting the port: it answers the create and every poll with an allow that `sign` may sign. */
 const squatter = (sign: (id: string, nonce: string) => Record<string, unknown>) =>
   serve(PORT, (request, response) => {
     let body = '';
@@ -101,21 +99,21 @@ const squatter = (sign: (id: string, nonce: string) => Record<string, unknown>) 
 it('trusts only a decision the real server signed: an unsigned, wrongly signed or mis-bound allow prints nothing', async () => {
   const config = configIn(tmp());
   const fields = { behavior: 'allow' as const, sessionRules: false };
-  await squatter(() => ({})); // an unsigned allow
+  await squatter(() => ({}));
   expect(await runHook(config, payload())).toMatchObject({ code: 0, out: '', err: '' });
   await closeAll();
   await squatter((id, nonce) => ({
-    proof: approvalProof('x'.repeat(43), { id, nonce, ...fields }), // a key it does not have
+    proof: approvalProof('x'.repeat(43), { id, nonce, ...fields }),
   }));
   expect(await runHook(config, payload())).toMatchObject({ code: 0, out: '' });
   await closeAll();
   await squatter((id, nonce) => ({
-    proof: approvalProof(KEY, { id, nonce, behavior: 'deny', sessionRules: false }), // another answer
+    proof: approvalProof(KEY, { id, nonce, behavior: 'deny', sessionRules: false }),
   }));
   expect(await runHook(config, payload())).toMatchObject({ code: 0, out: '' });
   await closeAll();
   await squatter((id, nonce) => ({ proof: approvalProof(KEY, { id, nonce, ...fields }) }));
-  const ok = await runHook(config, payload()); // the holder of the key
+  const ok = await runHook(config, payload());
   expect(JSON.parse(ok.out).hookSpecificOutput.decision).toEqual({ behavior: 'allow' });
 });
 
@@ -163,7 +161,7 @@ it('the real server signs a decision for the nonce it was given, and the key fol
         url: `/api/hook/permission-requests/${id}${query}`,
         headers: f.as(first.token),
       });
-    expect((await poll('')).statusCode).toBe(400); // a nonce is required
+    expect((await poll('')).statusCode).toBe(400);
     expect(((await poll(`?nonce=${NONCE}`)).json() as { proof?: string }).proof).toBeUndefined();
     const browser = await f.signIn(f.owner.token);
     await f.app.inject({
@@ -176,7 +174,7 @@ it('the real server signs a decision for the nonce it was given, and the key fol
     const bound = { id, nonce: NONCE, behavior: 'allow' as const, sessionRules: true };
     expect(proof).toBe(approvalProof(first.verifyKey, bound));
     expect(proof).not.toBe(approvalProof(first.verifyKey, { ...bound, nonce: 'o'.repeat(24) }));
-    await f.enable(); // switching on again rotates the key
+    await f.enable();
     expect(f.readConfig().verifyKey).not.toBe(first.verifyKey);
     await f.app.inject({
       method: 'PUT',
@@ -184,7 +182,7 @@ it('the real server signs a decision for the nonce it was given, and the key fol
       headers: f.as(f.owner.token),
       payload: { enabled: false },
     });
-    expect(existsSync(f.configFile)).toBe(false); // the key goes with the file
+    expect(existsSync(f.configFile)).toBe(false);
   } finally {
     await f.app.close();
     f.control.close();
@@ -205,8 +203,7 @@ it('a decision needs a browser session with CSRF: neither an owner bearer token 
     expect((await post(f.as(f.owner.token))).statusCode).toBe(403);
     expect((await list(f.as(f.owner.token))).statusCode).toBe(403);
     const browser = await f.signIn(f.owner.token);
-    expect((await post(browser.read)).statusCode).toBe(403); // no CSRF token
-    // A cookie together with a bearer header is still a bearer request.
+    expect((await post(browser.read)).statusCode).toBe(403);
     const both = { ...browser.write, authorization: `Bearer ${f.owner.token}` };
     expect((await post(both)).statusCode).toBe(403);
     expect((await list(browser.read)).statusCode).toBe(200);
@@ -231,7 +228,7 @@ it('a correct hook token is never locked out; wrong ones are, and only loopback 
       });
     for (let i = 0; i < 10; i++) expect((await poll('g'.repeat(43))).statusCode).toBe(401);
     expect((await poll('g'.repeat(43))).statusCode).toBe(429);
-    expect((await poll(token)).statusCode).toBe(404); // authenticated: only the unknown id is wrong
+    expect((await poll(token)).statusCode).toBe(404);
     for (const near of ['127.0.0.2', '::1', '::ffff:127.0.0.1'])
       expect((await poll(token, near)).statusCode).toBe(404);
     for (const far of ['192.168.1.9', '10.0.0.4', '::ffff:192.168.1.9', '2001:db8::1'])
@@ -249,7 +246,7 @@ it('the failed-attempts map is pruned and capped', () => {
   pruneAttempts(map, 100, 1000);
   expect(map.size).toBe(1000);
   expect([...map.keys()].some((k) => k.startsWith('old:'))).toBe(false);
-  expect(map.has('live:1499')).toBe(true); // the newest survive
+  expect(map.has('live:1499')).toBe(true);
 });
 
 it('checks the rate limit before it scans for the session project', async () => {
@@ -302,7 +299,7 @@ it('offers "allow for this session" only for rules the server will show whole', 
       shown = list.requests[0];
       if (!shown) await new Promise((done) => setTimeout(done, 50));
     }
-    expect(shown).toBeDefined(); // the request was not rejected for its long label
+    expect(shown).toBeDefined();
     expect(shown!.sessionRules).toEqual([]);
     await f.app.inject({
       method: 'POST',
@@ -330,7 +327,6 @@ it('writes approvals.json privately: a 0700 directory even when it exists, and n
     await f.enable();
     expect(statSync(dot).mode & 0o777).toBe(0o700);
     expect(statSync(file).mode & 0o777).toBe(0o600);
-    // A link planted where the file goes is refused, and what it points to is left alone.
     const target = join(f.home, 'victim');
     writeFileSync(target, 'keep');
     const planted = join(dot, 'planted.json');
@@ -338,7 +334,6 @@ it('writes approvals.json privately: a 0700 directory even when it exists, and n
     process.env['AETHER_APPROVALS_CONFIG'] = planted;
     expect((await f.enable()).statusCode).toBeGreaterThanOrEqual(400);
     expect(readFileSync(target, 'utf8')).toBe('keep');
-    // So is a linked directory.
     const linked = join(f.home, 'linked');
     symlinkSync(dot, linked);
     process.env['AETHER_APPROVALS_CONFIG'] = join(linked, 'approvals.json');

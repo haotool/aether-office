@@ -14,12 +14,10 @@ import {
 import { PermissionPeek } from '../operations/PermissionCard.js';
 import { PanelBody, type PanelProps } from './SessionPanel.js';
 
-/** The three heights of the phone's sheet: a 72px peek over the tab bar, the feed, the conversation. */
 export type SheetHeight = 'peek' | 'half' | 'full';
 
 const CHIPS = 12;
 
-/** Who is in hand: avatar, name and their newest reply line, focus, open, close. */
 function MemberPeek({
   agent,
   item,
@@ -65,7 +63,6 @@ function MemberPeek({
   );
 }
 
-/** Nothing chosen: a chip for every session that wants a look, and the newest reply of the one that wants it most. */
 function FeedPeek({
   feed,
   onChip,
@@ -117,7 +114,6 @@ function FeedPeek({
 
 type SheetBodyProps = Omit<PanelProps, 'trailing'>;
 
-/** The collapsed sheet: the permission peek, and the chosen member's line or the feed's chips. */
 function PeekView({
   onHeight,
   ...props
@@ -142,7 +138,6 @@ function PeekView({
   );
 }
 
-/** The panel on a phone: a sheet over the tab bar at one of three heights. */
 export function SessionSheet({
   height,
   onHeight,

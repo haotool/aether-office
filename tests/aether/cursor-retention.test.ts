@@ -13,7 +13,6 @@ it('requires a new snapshot when the cursor predates retained events, instead of
       );
     const all = f.control.events(f.owner.actor, f.projectId, '0', 200);
     expect(all.length).toBeGreaterThan(4);
-    // Simulate retention: drop everything up to the third event.
     const cutoff = all[2]!.seq;
     f.control.ctx.sqlite
       .prepare(
@@ -25,9 +24,8 @@ it('requires a new snapshot when the cursor predates retained events, instead of
     expect(() => f.control.events(f.owner.actor, f.projectId, all[0]!.seq)).toThrow(
       'SNAPSHOT_REQUIRED',
     );
-    // A cursor at the retention edge still resumes without a gap.
     expect(f.control.events(f.owner.actor, f.projectId, cutoff)[0]!.seq).toBe(all[3]!.seq);
-    expect(f.control.events(f.owner.actor, f.projectId, '0').length).toBeGreaterThan(0); // '0' = from the start
+    expect(f.control.events(f.owner.actor, f.projectId, '0').length).toBeGreaterThan(0);
 
     const response = await app.inject({
       method: 'GET',

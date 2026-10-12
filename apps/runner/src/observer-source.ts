@@ -34,7 +34,6 @@ export function approvedSource(approvedRoot: string, relativeFile: string, proje
   return { root, file, projectRoot: realpathSync(projectRoot) };
 }
 
-/** Opens a regular file without following links and proves it is still the same file once open. */
 export function openSource(file: string) {
   const blocked = () =>
     Object.assign(new Error('OBSERVATION_PATH_CHANGED'), { code: 'OBSERVATION_PATH_CHANGED' });
@@ -61,7 +60,6 @@ export function openSource(file: string) {
   }
 }
 
-/** The status a failed open or read stands for when the cause is the file or its path; null for anything else. */
 export function pathFailureStatus(error: unknown): 'missing' | 'blocked_path' | null {
   const code = (error as NodeJS.ErrnoException).code;
   if (code === 'ENOENT') return 'missing';

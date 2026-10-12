@@ -87,7 +87,7 @@
     ],
     "evidencePaths": [],
     "blockers": [
-      "Run on macOS arm64 with Node 24.21.0 and pnpm 12.8.1; CI runs typecheck, lint and build on Ubuntu with the Node of .node-version; Windows was not run."
+      "Run on macOS arm64 with Node 24.21.0 and pnpm 12.8.1; CI runs typecheck, lint and build on Ubuntu with the Node of .nvmrc; Windows was not run."
     ]
   },
   {
@@ -2959,7 +2959,7 @@
       "evidence/e2e-full-workflow-first.log"
     ],
     "blockers": [
-      "Unit, contract, integration and browser suites run in CI (the unit suite also on macOS); the live provider smoke and the GPU gates are outside the default run and recorded as not run."
+      "Unit, contract and integration suites run in CI (the unit suite also on macOS); the browser suite is a local and release gate that CI does not run; the live provider smoke and the GPU gates are outside the default run and recorded as not run."
     ]
   },
   {

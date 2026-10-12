@@ -1,8 +1,3 @@
-/*
- * The squad in the panel: a supervisor's subagents nested under its feed row (features/FeedSquad.tsx), the strip and the
- * activity cards in its conversation (SquadStrip, SubagentCards), a subagent's own view and the hook note. Every part of
- * one squad shares an accent (`data-squad`, picked from the supervisor's key), which also edges the portraits.
- */
 [data-squad='0'] {
   --squad: var(--mint);
 }
@@ -22,7 +17,6 @@
   --squad: var(--provider-claude);
 }
 
-/* The portraits: the accent edge, and the tether glyph on a subagent's corner */
 .avatar-icon[data-squad] {
   position: relative;
   border-color: var(--squad);
@@ -41,7 +35,6 @@
   color: var(--bg);
 }
 
-/* The status dot of a subagent: running pulses, waiting is amber, finished is blue */
 .sub-dot {
   display: inline-block;
   flex: none;
@@ -62,7 +55,6 @@
   background: var(--blue);
 }
 
-/* The tree in the feed */
 .squad-tree {
   border-bottom: 1px solid var(--line);
 }
@@ -106,7 +98,6 @@
   place-items: center;
   width: var(--control-h-sm);
   height: var(--control-h-sm);
-  /* the control is 32 to 36px, the line stays the chip's height */
   margin-block: calc(var(--space-8) * -1);
   margin-left: auto;
   border-radius: var(--r-sm);
@@ -125,7 +116,6 @@
   }
 }
 
-/* A nested row: indented under the supervisor, a rail and a tick in the squad's accent */
 .squad-row {
   position: relative;
   display: grid;
@@ -177,7 +167,6 @@
 .sub-card[data-status='finished'] > summary strong {
   color: var(--muted);
 }
-/* The last seconds of the grace: the row is on its way out */
 .squad-row[data-fading] strong,
 .squad-row[data-fading] .sub-meta,
 .squad-chip-button.u-chip[data-fading],
@@ -244,7 +233,6 @@
   overflow-wrap: anywhere;
 }
 
-/* A wide panel keeps the squad line beside the reply */
 @container panel (min-width: 560px) {
   .squad-tree .feed-main {
     grid-template-areas:

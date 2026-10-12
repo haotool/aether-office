@@ -10,7 +10,6 @@ const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ['minute', 60_000],
 ];
 
-/** "3 days ago", "2 hours ago", "just now", in the person's language. */
 function ago(at: number, now: number, locale: string): string {
   const age = now - at;
   const format = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
@@ -18,7 +17,6 @@ function ago(at: number, now: number, locale: string): string {
   return format.format(-Math.floor(age / ms), unit);
 }
 
-/** "12 commits · 2 merges · 3 authors" and the like, in the person's language. */
 function counts(tier: Tier, zh: boolean): string {
   const unit = (n: number, one: SceneKey, many: SceneKey) =>
     sceneText(zh, n === 1 ? one : many, { n });
@@ -34,14 +32,12 @@ type BloomHover = Extract<Hover, { bloom: unknown }>;
 type CommitHover = Exclude<Hover, BloomHover>;
 type Strands = readonly { name: string; color: string }[];
 
-/** The label of a flower: a merge's, the tier's, or the crown's. */
 function bloomLabel({ bloom }: BloomHover, zh: boolean): string {
   if (bloom.merge) return sceneText(zh, 'tip.mergeFlower');
   if (bloom.tier) return sceneText(zh, 'tip.tier', { n: bloom.tier.index + 1 });
   return sceneText(zh, 'tip.crownBloom');
 }
 
-/** A flower of the crown: its code name and tier, its species, the dates and counts of the history that built it, and its seed commit. */
 function BloomTip({
   hover,
   strands,
@@ -85,7 +81,6 @@ function BloomTip({
   );
 }
 
-/** A commit: short hash, subject, author, age, and the branches it carries (or the branch it belongs to). */
 function CommitTip({
   hover,
   strands,
@@ -129,14 +124,6 @@ type TooltipProps = {
   locale: string;
 };
 
-/**
- * What the spire says under the pointer. A commit: short hash, subject, author, age, and the branches it carries (or, for a
- * commit in the middle of a branch, the branch it belongs to). A flower of the crown (one for each tier of
- * history): its code name and tier, its species (named from its genome, in the person's language), the dates its commits span and
- * how many commits, merges and authors built it, and the commit that seeded it (a merge commit's flower says what the merge says). A plain overlay that never takes the pointer, so the camera keeps
- * orbiting under it. The scene feeds it through `show`, which this component fills in, so a moving pointer redraws
- * only the tooltip and not the whole scene.
- */
 export function StalkTooltip({ show, strands, locale }: TooltipProps) {
   const [hover, setHover] = useState<StalkHover>(null);
   useEffect(() => {

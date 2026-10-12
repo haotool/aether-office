@@ -1,8 +1,3 @@
-/**
- * Pure. Brackets in a label: never left open. A pair is closed when its opener starts the text (the rest is the
- * label of that pair), and the opener with whatever follows it is dropped otherwise; a closer with no opener is dropped
- * when it is a CJK one (an ASCII `)` is usually a list marker such as `1)`).
- */
 const PAIRS: Record<string, string> = {
   '(': ')',
   '[': ']',
@@ -21,7 +16,6 @@ const PAIRS: Record<string, string> = {
 const CJK_CLOSER = /[）］｝】」』》〉〕”]/;
 const TRAILING_JOINER = /[\s,，、:：;；\-–—·|/]+$/u;
 
-/** The bracket depth before each grapheme index (and after the last one). */
 export function brackets(gs: readonly string[]): number[] {
   const out: number[] = [];
   const stack: string[] = [];

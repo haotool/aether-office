@@ -18,7 +18,6 @@ const DOT: Record<LinkStatus, string> = {
 };
 const TICK_MS = 5000;
 
-/** A dot and a word for the link to the control plane, with how long ago anything last arrived. */
 export function ConnectionStatus({ updatedAt, offline }: { updatedAt: number; offline: boolean }) {
   const t = useT();
   const locale = useLocale();

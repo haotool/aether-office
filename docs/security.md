@@ -1,7 +1,7 @@
 # Security
 
 This document describes the threat model, the trust boundaries and the safety properties AETHER OFFICE maintains.
-To report a vulnerability, see [SECURITY.md](../SECURITY.md).
+To report a vulnerability, see [SECURITY.md](../.github/SECURITY.md).
 
 ## Threat model
 
@@ -204,7 +204,8 @@ id (for example a GHSA id), a `package` name, a written `reason`, and an `expire
 fails like a new finding. Add or renew an entry only with maintainer approval; prefer upgrading the dependency.
 
 **CodeQL.** `.github/workflows/codeql.yml` analyzes JavaScript and TypeScript with `build-mode: none` on pushes to `main`,
-pull requests, and a weekly schedule. That job alone carries `security-events: write` (to upload results) and `contents: read`.
+pull requests, and a weekly schedule. That job alone carries `security-events: write` (to upload results), `contents: read` and `actions: read` (a private repository needs it for the workflow-run lookup).
+Findings are listed under Security, Code scanning.
 
 **Dependabot.** `.github/dependabot.yml` opens weekly pull requests for npm (pnpm lockfile) and GitHub Actions, groups updates
 to reduce noise, prefixes commits with `chore(deps)`, and uses a one-day **cooldown** on version updates so proposed releases

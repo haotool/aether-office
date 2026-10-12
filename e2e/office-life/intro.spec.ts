@@ -7,7 +7,7 @@ import { frames, throughout } from '../support/settled.js';
 // The first-visit camera tour. Browser automation never starts it by itself, so every test asks for it with
 // `?intro=force`; `?perf=1` leaves the scene's camera on `window.__aetherPerfRig` so the tests can see where it is.
 const CAPTION = /歡迎來到辦公室|Welcome to the office/;
-const HOME_RADIUS = Math.hypot(30, 44); // the ordinary overview's distance from the building's axis, before the portrait factor
+const HOME_RADIUS = Math.hypot(30, 44);
 const ORBIT_RADIUS = 84;
 
 async function open(page: Page, theme: 'dark' | 'light' = 'dark') {
@@ -39,10 +39,8 @@ const camera = (page: Page) =>
       aspect: canvas.clientWidth / canvas.clientHeight,
     };
   });
-/** The factor a portrait screen stands the camera farther back by. */
 const portrait = (aspect: number) => Math.min(2.4, Math.max(1, 1.25 / aspect));
-const LAST = /五層樓，一棟建築|個提交|Five decks|commits/; // the caption of the tour's last still
-/** Looks at the camera over and over until `begun()` says the next still has: every look before that must be `still`. */
+const LAST = /五層樓，一棟建築|個提交|Five decks|commits/;
 async function holds(page: Page, still: Look, begun: () => Promise<boolean>) {
   for (;;) {
     const seen = await camera(page);
@@ -60,20 +58,20 @@ test('the tour orbits the building at its radius and height, and Esc lands on th
   await open(page);
   await expect(caption(page).getByRole('status')).toHaveText(CAPTION, { timeout: 40000 });
   const a = await camera(page);
-  await expect // the orbit is moving
+  await expect
     .poll(async () => Math.abs((await camera(page)).bearing - a.bearing))
     .toBeGreaterThan(0.01);
   const b = await camera(page);
   const k = portrait(b.aspect);
   expect(b.radius).toBeCloseTo(ORBIT_RADIUS * k, 0);
-  expect(b.y).toBeCloseTo(38, 1); // a level orbit: the height never changes
+  expect(b.y).toBeCloseTo(38, 1);
   await expect(explode(page)).toHaveAttribute('aria-pressed', 'false');
 
   await page.keyboard.press('Escape');
   await expect(caption(page)).toHaveCount(0, { timeout: 5000 });
   await expect(explode(page)).toHaveAttribute('aria-pressed', 'false');
   const end = await camera(page);
-  expect(end.radius).toBeCloseTo(HOME_RADIUS * portrait(end.aspect), -1); // the ordinary overview
+  expect(end.radius).toBeCloseTo(HOME_RADIUS * portrait(end.aspect), -1);
   expect(await page.evaluate(() => window.sessionStorage.getItem('aether.intro.played'))).toBe('1');
 });
 
@@ -83,7 +81,7 @@ test('any input interrupts the tour and leaves the camera exactly where it is', 
   await open(page);
   await expect(caption(page)).toBeVisible({ timeout: 40000 });
   const start = await camera(page);
-  await expect // the orbit is under way
+  await expect
     .poll(async () => Math.abs((await camera(page)).bearing - start.bearing))
     .toBeGreaterThan(0.01);
   const box = (await page.locator('canvas').boundingBox())!;
@@ -96,13 +94,13 @@ test('any input interrupts the tour and leaves the camera exactly where it is', 
     async () => {
       const later = await camera(page);
       for (const key of ['radius', 'y', 'bearing'] as const)
-        expect(later[key]).toBeCloseTo(stopped[key], 6); // the controls' own rounding is all that may differ
+        expect(later[key]).toBeCloseTo(stopped[key], 6);
     },
     54,
   );
-  expect(stopped.y).toBeCloseTo(38, 1); // still on the orbit, not flung to a start view
+  expect(stopped.y).toBeCloseTo(38, 1);
   const stored = await page.evaluate(() => window.localStorage.getItem('aether-ui-preferences')!);
-  expect(JSON.parse(stored).state.intro ?? 'auto').toBe('auto'); // an interruption is not "don't show again"
+  expect(JSON.parse(stored).state.intro ?? 'auto').toBe('auto');
 });
 
 test("'Don't show again' is remembered, and Replay plays the tour again", async ({ page }) => {
@@ -127,7 +125,6 @@ test('with reduced motion the tour is three stills, the building spread apart fo
   await open(page);
   await expect(caption(page).getByRole('status')).toHaveText(CAPTION, { timeout: 40000 });
   const first = await camera(page);
-  // A still does not move: every look at the camera, until the next still has begun, is the same look.
   await holds(
     page,
     first,
@@ -159,13 +156,13 @@ test('a phone in portrait frames the whole building and the caption clears the c
   await expect(caption(page)).toBeVisible({ timeout: 40000 });
   const view = await camera(page);
   expect(view.aspect).toBeLessThan(0.7);
-  expect(view.radius).toBeCloseTo(ORBIT_RADIUS * portrait(view.aspect), 0); // farther back, so the width fits
+  expect(view.radius).toBeCloseTo(ORBIT_RADIUS * portrait(view.aspect), 0);
   const box = (await caption(page).boundingBox())!;
   expect(box.x).toBeGreaterThanOrEqual(0);
   expect(box.x + box.width).toBeLessThanOrEqual(390);
-  expect(box.y + box.height).toBeLessThanOrEqual(844 - 72); // above the session sheet's peek
+  expect(box.y + box.height).toBeLessThanOrEqual(844 - 72);
   const rail = (await page.locator('.scene-rail').boundingBox())!;
-  expect(box.x + box.width).toBeLessThanOrEqual(rail.x); // clear of the floor rail
+  expect(box.x + box.width).toBeLessThanOrEqual(rail.x);
   for (const button of await caption(page).getByRole('button').all())
     expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await context.close();
@@ -175,7 +172,7 @@ for (const theme of ['dark', 'light'] as const)
   test(`${theme} theme: the caption passes axe and announces itself politely`, async ({ page }) => {
     await open(page, theme);
     await expect(caption(page)).toBeVisible({ timeout: 40000 });
-    expect(await caption(page).getByRole('status').getAttribute('aria-live')).toBeNull(); // role=status is polite by itself
+    expect(await caption(page).getByRole('status').getAttribute('aria-live')).toBeNull();
     const axe = await new AxeBuilder({ page })
       .include('.intro-caption')
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
@@ -186,7 +183,7 @@ for (const theme of ['dark', 'light'] as const)
 test('with a repository the closing caption counts its commits and tiers', async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: 'reduce' });
   const page = await context.newPage();
-  await mockGitGraph(page, 40); // 40 commits make 4 tiers of 12
+  await mockGitGraph(page, 40);
   await open(page);
   await expect(caption(page).getByRole('status')).toHaveText('40 個提交 · 4 層', {
     timeout: 40000,

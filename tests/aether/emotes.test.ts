@@ -66,8 +66,8 @@ describe('press and hold', () => {
     const fired = vi.fn();
     const press = createLongPress(fired, 500, 10);
     press.start(100, 100);
-    press.move(104, 104); // within the slop
-    press.move(130, 100); // beyond it
+    press.move(104, 104);
+    press.move(130, 100);
     vi.advanceTimersByTime(600);
     expect(fired).not.toHaveBeenCalled();
     press.start(0, 0);

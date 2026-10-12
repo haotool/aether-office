@@ -20,7 +20,6 @@ import {
 } from './animal-states.js';
 
 export type { EmoteCue } from './animal-hooks.js';
-/** The ring on the floor under a character: chosen (cyan), hovered (white) or part of a group selection (gold). */
 export type Ring = 'selected' | 'hover' | 'group';
 const RING_COLOR: Record<Ring, string> = {
   selected: '#67d3d0',
@@ -37,13 +36,9 @@ const CALM: BehaviorScene = {
 export type AnimalProps = {
   agent: Agent;
   apparition?: Apparition | undefined;
-  /** A clip the member is held to whatever it is doing: stand_up and wave play once, the rest loop (a member leaving). */
   override?: ClipName | undefined;
-  /** How fast the clips play: a member working flat out types faster. */
   pace?: number;
-  /** What the director needs: the kind of work, the intensity, the second monitor (behavior.ts). */
   behavior?: BehaviorScene;
-  /** A phone: smaller models and textures (the selected one a step down, the rest the smallest). */
   light?: boolean;
   selected: boolean;
   ring?: Ring | null;
@@ -53,11 +48,9 @@ export type AnimalProps = {
   onError: () => void;
 };
 
-/** Where each apparition stands: a ghost floats just over its seat, a jiangshi stands behind the chair, a sleeping rabbit sits where the member does. */
 const offsetOf = (apparition: Apparition | undefined): [number, number, number] =>
   apparition === 'ghost' ? [0, 0.18, 0] : apparition === 'zombie' ? [0, 0, 0.95] : [0, 0, 0];
 
-/** The character's model for its species and level of detail, with its one-shots, clip and mixer. */
 function useAnimalRig(props: AnimalProps, ring: Ring | null) {
   const { agent, selected, emote, reducedMotion, quality, apparition, override, onError } = props;
   const { light = false, behavior = CALM } = props;
@@ -68,7 +61,7 @@ function useAnimalRig(props: AnimalProps, ring: Ring | null) {
   const [oneShot, setOneShot] = useState<ClipName | null>(null);
   const mixer = useRef<AnimationMixer | null>(null);
   const current = useRef<AnimationAction | null>(null);
-  const held = apparition ?? override; // something other than the activity decides what the member does
+  const held = apparition ?? override;
   const clip = apparition
     ? APPARITION_CLIP[apparition]
     : (override ?? oneShot ?? BASE_CLIP[agent.activity]);

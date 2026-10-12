@@ -23,7 +23,6 @@ type Locale = 'zh-TW' | 'en';
 type Flow = ReturnType<typeof useClockOutFlow>;
 const nameOf = (s: AttributedSession) => s.title ?? s.repo;
 
-/** The idle threshold and who is picked among the sessions that have been idle that long. */
 function usePicking(sessions: readonly AttributedSession[]) {
   const [days, setDays] = useState<IdleDays>(1);
   const idle = useMemo(() => idleSessions(sessions, days), [sessions, days]);
@@ -34,12 +33,11 @@ function usePicking(sessions: readonly AttributedSession[]) {
     choose(picked.has(key) ? [...picked].filter((k) => k !== key) : [...picked, key]);
   const changeDays = (next: IdleDays) => {
     setDays(next);
-    choose(idleSessions(sessions, next).map((s) => s.key)); // a new threshold starts from "everyone who is idle that long"
+    choose(idleSessions(sessions, next).map((s) => s.key));
   };
   return { days, idle, picked, chosen, choose, toggle, changeDays };
 }
 
-/** The state of one clock-out: the threshold, who is picked, the step, and the server's per-session answers. */
 function useClockOutFlow(all: readonly AttributedSession[], only: readonly string[] | undefined) {
   const client = useQueryClient();
   const send = useLeaving((s) => s.send);
@@ -73,7 +71,6 @@ function useClockOutFlow(all: readonly AttributedSession[], only: readonly strin
 
 type Results = Flow['results'];
 
-/** How many left, how many stayed, and how much memory that freed. */
 function ClearedSummary({
   results,
   cleared,
@@ -158,7 +155,6 @@ function DonePanel({ flow, onClose }: { flow: Flow; onClose: () => void }) {
   );
 }
 
-/** Select all, clear, invert. */
 function PickTools({
   idle,
   picked,
@@ -331,11 +327,6 @@ function ConfirmPanel({ flow, locale }: { flow: Flow; locale: Locale }) {
   );
 }
 
-/**
- * "Clock out": the running sessions that have been idle for a day or more, picked all at once or one by one and sent
- * home together. Pick, confirm (what will happen), then each session's own result; the ones that went are shown
- * leaving the office. The server re-checks every session (see services/clock-out.ts).
- */
 export function ClockOut({
   sessions,
   only,
@@ -343,7 +334,6 @@ export function ClockOut({
   onClose,
 }: {
   sessions: readonly AttributedSession[];
-  /** Offer just these sessions (by key): the character menu and the group bar send chosen ones home. The same guards apply. */
   only?: readonly string[];
   locale: Locale;
   onClose: () => void;

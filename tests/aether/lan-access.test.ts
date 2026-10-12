@@ -53,9 +53,9 @@ describe('host policy', () => {
     expect(p.host('127.0.0.1:8780')).toBe(true);
     expect(p.host('192.168.1.20:8780')).toBe(true);
     expect(p.host('mac-mini.local:8780')).toBe(true);
-    expect(p.host('192.168.1.20:8781')).toBe(false); // another service on that machine
-    expect(p.host('192.168.1.20')).toBe(false); // no port: not this server
-    expect(p.host('evil.example:8780')).toBe(false); // DNS rebinding arrives under a public name
+    expect(p.host('192.168.1.20:8781')).toBe(false);
+    expect(p.host('192.168.1.20')).toBe(false);
+    expect(p.host('evil.example:8780')).toBe(false);
     expect(p.host('8.8.8.8:8780')).toBe(false);
     expect(p.host(undefined)).toBe(false);
     expect(p.origin('http://192.168.1.20:8780')).toBe(true);

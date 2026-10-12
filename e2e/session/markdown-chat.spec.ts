@@ -5,9 +5,7 @@ import { spawn, execFileSync, type ChildProcess } from 'node:child_process';
 import { appendFileSync, mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-// A running session whose reply is full of Markdown: the feed row, the conversation and the speech endpoint must show it as
-// text and elements, never as raw syntax, and an unsafe link or a remote image must not become a link or a request.
-const home = realpathSync(process.env['AETHER_LOCAL_SESSIONS_HOME']!); // the scanner sees real paths
+const home = realpathSync(process.env['AETHER_LOCAL_SESSIONS_HOME']!);
 const repo = join(home, 'md-repo');
 const transcript = join(home, '.claude/projects/md/md-chat-session.jsonl');
 let claude: ChildProcess | undefined;
@@ -58,13 +56,11 @@ test.beforeAll(() => {
       timestamp: new Date().toISOString(),
       message: { role: 'assistant', content: [{ type: 'text', text }] },
     });
-  // An older, very tall reply (folded behind "show more"), then the Markdown one (the newest, shown whole).
   const tall = Array.from(
     { length: 60 },
     (_, i) => `Step ${i + 1}: a line of the long answer.`,
   ).join('\n\n');
   writeFileSync(transcript, turn('explain everything', tall) + turn('clean up', REPLY));
-  // A process named claude standing in the repository: the scanner finds a running session by name and directory.
   claude = spawn('bash', ['-c', 'exec -a claude sleep 900'], { cwd: repo, stdio: 'ignore' });
 });
 
@@ -96,11 +92,10 @@ test('the feed row, the conversation and the speech endpoint show Markdown as te
   await signIn(page);
   const row = page.locator('.feed-row', { hasText: 'md-repo' }).first();
   await expect(row).toBeVisible({ timeout: 45_000 });
-  await expect(row.locator('.feed-reply')).toContainText('Cleanup done'); // the replies arrive after the rows
+  await expect(row.locator('.feed-reply')).toContainText('Cleanup done');
   const preview = (await row.locator('.feed-reply').textContent()) ?? '';
   expect(preview).not.toMatch(RAW);
 
-  // The server cuts a long reply on a safe boundary: no fence, emphasis or link is left open.
   const speech = await page.request.get('/api/local-sessions/speech');
   const said = (await speech.json()).speech['claude:md-chat-session'].assistant.text as string;
   expect(said.length).toBeLessThanOrEqual(460);
@@ -114,14 +109,13 @@ test('the feed row, the conversation and the speech endpoint show Markdown as te
   expect(await body.locator('.md-heading').first().textContent()).toBe('Cleanup done');
   await expect(body.locator('strong').first()).toContainText('我已做的');
   await expect(body.locator('li code').first()).toHaveText('fix/stale-chunk-blank-page');
-  await expect(body.locator('ul ul li')).toHaveCount(1); // the nested list
+  await expect(body.locator('ul ul li')).toHaveCount(1);
   await expect(body.locator('del')).toHaveText('過期');
   await expect(body.locator('.md-task')).toHaveCount(2);
   await expect(body.locator('ol li')).toHaveCount(2);
   await expect(body.locator('table th')).toHaveText(['file', 'change']);
   await expect(body.locator('blockquote')).toContainText('quoted line');
   await expect(body.locator('.code-block figcaption span').first()).toHaveText('ts');
-  // Links: http(s) only, opened safely; the unsafe one is just its text; an image is its alt text and is never fetched.
   const links = body.locator('a');
   await expect(links).toHaveCount(1);
   await expect(links.first()).toHaveAttribute('href', 'https://example.com/docs');
@@ -150,12 +144,11 @@ test('a tall older reply folds, and a reply that arrives live fades in word by w
   await signIn(page);
   await page.locator('.feed-row', { hasText: 'md-repo' }).first().click();
   const folded = page.locator('.long.folded');
-  await expect(folded).toHaveCount(1, { timeout: 20_000 }); // only the older, tall reply
-  await expect(page.locator('.msg.enter')).toHaveCount(0); // what was there at the first look is not animated
+  await expect(folded).toHaveCount(1, { timeout: 20_000 });
+  await expect(page.locator('.msg.enter')).toHaveCount(0);
   await page.locator('.long-toggle').click();
   await expect(folded).toHaveCount(0);
   await expect(page.locator('.long-toggle')).toHaveText('Show less');
-  // A new reply is appended to the transcript while the conversation is open.
   appendFileSync(
     transcript,
     JSON.stringify({

@@ -4,12 +4,10 @@ import type { Seat } from '../environment/director.js';
 import { chooseFeeds, feedCapacity, type Feed, type Rect } from './multi-view.js';
 
 type WallOptions = {
-  /** Not on a phone, not on low quality, not with reduced motion, and the person has not closed the wall. */
   allowed: boolean;
   agents: readonly Agent[];
   seats: ReadonlyMap<string, Seat>;
   intensity: Readonly<Record<string, number>> | undefined;
-  /** Members already on the main screen or chosen by the person. */
   taken: ReadonlySet<string>;
   pinned: ReadonlySet<string>;
   floor: number;
@@ -18,7 +16,6 @@ type WallOptions = {
   stage: { current: HTMLDivElement | null };
 };
 
-/** The scene box's size, kept as the box resizes; `container` is the one stable ref callback that measures it. */
 function useCanvasSize(stage: WallOptions['stage']) {
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const container = useCallback(
@@ -41,10 +38,6 @@ function useCanvasSize(stage: WallOptions['stage']) {
   return { canvasSize, container };
 }
 
-/**
- * The control-room wall: which members get a small live view beside the main camera (the busiest ones the main shot is
- * not on, and the ones the person pinned), how much room the canvas has for them, and the canvas's size.
- */
 export function useWallFeeds({
   allowed,
   agents,
@@ -57,7 +50,6 @@ export function useWallFeeds({
   stage,
 }: WallOptions) {
   const feedsRef = useRef<Feed[]>([]);
-  /** Where the small views are on the canvas (MultiCam writes it). */
   const wall = useRef<ReadonlyMap<string, Rect>>(new Map());
   const { canvasSize, container } = useCanvasSize(stage);
   const capacity = allowed ? feedCapacity(canvasSize.width, canvasSize.height) : 0;

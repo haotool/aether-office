@@ -34,7 +34,6 @@ type Send = Extract<Command, { type: 'message.send' }>;
 type SendData = Send['data'];
 type Sent = { id: string; expiresAt: number };
 
-/** Every recipient and the sender become participants of the project; a recipient that is nobody here is AGENT_NOT_FOUND. */
 function registerParticipants(
   ctx: Context,
   actor: Actor,
@@ -57,7 +56,6 @@ function registerParticipants(
   if (actor.agentId) agent(ctx, projectId, actor.agentId);
 }
 
-/** The thread the message joins: its parent's, an existing one the actor may read, or a new one. */
 function threadOf(ctx: Context, actor: Actor, projectId: string, data: SendData): string {
   const threadId = data.threadId ?? randomUUID();
   if (data.replyTo) {
@@ -75,7 +73,6 @@ function threadOf(ctx: Context, actor: Actor, projectId: string, data: SendData)
   return threadId;
 }
 
-/** A thread is limited in rounds and a sender in messages per minute; an open meeting may also restrict who speaks. */
 function assertMayPost(
   ctx: Context,
   actor: Actor,
@@ -94,7 +91,6 @@ function assertMayPost(
   if (rate.n >= 60) throw new DomainError('MESSAGE_RATE_LIMIT', 429);
 }
 
-/** The message row, a delivery per recipient and, for a request, a reply wait per recipient. */
 function storeMessage(
   ctx: Context,
   actor: Actor,
@@ -139,7 +135,6 @@ function storeMessage(
   return message;
 }
 
-/** A reply answers the waits and deliveries of the message it replies to (when the replier was a recipient). */
 function settleReply(
   ctx: Context,
   actor: Actor,
@@ -176,7 +171,6 @@ function settleReply(
 export function sendMessage(ctx: Context, actor: Actor, command: Send) {
   const { projectId, data: input } = command;
   const senderId = actor.agentId ?? actor.id;
-  // A room post is delivered to the room's other members, each with its own delivery record.
   const data = input.roomId
     ? { ...input, recipients: roomRecipients(ctx, projectId, input.roomId, actor) }
     : input;
@@ -244,7 +238,6 @@ function currentHigh(ctx: Context, projectId: string, recipientId: string): stri
       .get(projectId, recipientId) as { value: string }
   ).value;
 }
-/** Checks the cursor's signature and that it was made for this project, recipient and filter; returns where it resumes. */
 function decodeCursor(
   ctx: Context,
   cursor: string,
@@ -324,9 +317,7 @@ export function inbox(ctx: Context, actor: Actor, projectId: string, input: unkn
   };
 }
 
-// The persisted deadline survives restarts; a bounded sweep also runs without an open browser.
 export function refreshMessageWaits(ctx: Context, projectId?: string) {
-  // The server's once-a-second pass takes the write lock only when a wait is open.
   if (
     !projectId &&
     !ctx.sqlite.prepare("SELECT 1 FROM message_waits WHERE state='pending' LIMIT 1").get()

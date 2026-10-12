@@ -3,14 +3,9 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import type { ClaudeLimits } from '@aether/contracts';
 
-// Claude Code keeps its 5-hour and 7-day subscription limits out of every file it writes. They reach this machine
-// only through whatever fetched them: the claude-hud status line plugin asks Anthropic's usage endpoint about every
-// five minutes while Claude Code runs and keeps the answer in `.usage-cache.json`. This reads that answer and nothing
-// else. It never reads Claude's credential store and never calls the network itself (agent-deck, which feeds on the
-// documented `rate_limits` status-line payload, makes the same choice; nimbalyst, which replays the OAuth token from
-// the keychain, is the one deliberately not followed).
+// Claude Code writes its 5-hour and 7-day subscription limits to no file. They only arrive through the claude-hud
+// status line plugin, which caches the usage endpoint's answer in `.usage-cache.json`; this reads that cache.
 const MAX_BYTES = 64 * 1024;
-/** The plugin refreshes about every 5 minutes while Claude Code is running; older than three of those is stale. */
 export const STALE_MS = 15 * 60 * 1000;
 
 const percent = (v: unknown) =>
@@ -26,15 +21,10 @@ function window(used: unknown, resetAt: unknown, now: number) {
   const usedPercent = percent(used);
   const resetsAt = instant(resetAt);
   if (usedPercent === null) return null;
-  // Once the reset has passed the figure describes a window that is over; saying nothing beats showing it.
   if (resetsAt !== null && resetsAt <= now) return null;
   return { usedPercent, resetsAt };
 }
 
-/**
- * Pure. The limits in a claude-hud cache file: the latest reading, or the last good one while the plugin is backing
- * off from a failed or rate-limited request. Null when the file holds no usable number.
- */
 export function parseHudCache(text: string, now: number): ClaudeLimits | null {
   let cache: Record<string, unknown>;
   try {
@@ -59,7 +49,6 @@ export function parseHudCache(text: string, now: number): ClaudeLimits | null {
   };
 }
 
-/** Where the plugin keeps its cache: next to Claude Code's own config, or wherever AETHER_CLAUDE_USAGE_FILE points. */
 const usageCacheFile = () =>
   process.env['AETHER_CLAUDE_USAGE_FILE'] ??
   join(

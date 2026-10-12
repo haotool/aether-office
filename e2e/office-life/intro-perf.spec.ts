@@ -2,11 +2,6 @@ import { test, expect, type Page } from '@playwright/test';
 import { signIn } from '../support/sign-in.js';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
-// The intro tour's frame gate (docs/design/office-life-work-plan.md, I2): the longest frame of the whole tour, outside the
-// 400 ms dips that hide its cuts, may exceed the same scene without the tour by at most 120 ms on a desktop and 200 ms on a
-// phone. Frames are the browser's own (requestAnimationFrame) on a real GPU. Skipped unless PERF_GPU=1: "not run", never "passed".
-//
-//   PERF_GPU=1 [PERF_ROUNDS=2] pnpm exec playwright test e2e/office-life/intro-perf.spec.ts
 const RUN = process.env['PERF_GPU'] === '1';
 const ROUNDS = Number(process.env['PERF_ROUNDS'] ?? 2);
 const BASELINE_MS = 12000;
@@ -19,7 +14,6 @@ test.use({
 
 type Frames = { outside: number[]; inside: number[]; renderer: string };
 
-/** Records every frame's length (and whether a tour dip was on screen) until `done` says stop. */
 async function record(page: Page, stopWhen: 'tour-over' | number): Promise<Frames> {
   return page.evaluate(
     ({ stop, limit }) =>
@@ -78,7 +72,6 @@ test.describe('intro tour frame gate', () => {
           : { viewport: { width: 1440, height: 900 } };
       const runs: { baseline: Frames; tour: Frames }[] = [];
       for (let round = 0; round < ROUNDS; round += 1) {
-        // Interleaved: the plain scene, then the scene with the tour, so a loaded machine hits both alike.
         const quiet = await browser.newContext(options);
         const base = await quiet.newPage();
         await enter(base, 'perf=1');

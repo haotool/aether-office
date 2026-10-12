@@ -1,7 +1,6 @@
 import { SyntaxKind } from 'typescript/unstable/ast';
 import { BRANCHES, FUNCTIONS, LOOPS } from './ast-shared.mjs';
 
-/** Walks one function body; returns its deepest control-flow nesting. Nested functions are measured on their own. */
 export function nestingOf(body) {
   let deepest = 0;
   const visit = (node, depth) => {

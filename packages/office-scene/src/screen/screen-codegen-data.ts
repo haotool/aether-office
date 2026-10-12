@@ -21,7 +21,6 @@ import {
 } from './screen-tokens.js';
 import { lastOf } from '../environment/checked.js';
 
-/** Generators for the languages that are not statements in braces: stylesheets, data files, SQL, shell and prose. */
 const word = (n: Names) => pick(n.r, VOCAB.nouns);
 const sentence = (n: Names) =>
   Array.from({ length: 4 + Math.floor(n.r() * 6) }, () =>

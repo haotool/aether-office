@@ -4,11 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { AdditiveBlending, CanvasTexture, SRGBColorSpace, type MeshBasicMaterial } from 'three';
 import { context2d } from '../core/canvas-2d.js';
 
-// Small, cheap touches around a desk: light from the screen on the desk, a soft footprint under the character where
-// there are no real shadows, and a pulsing ring on the floor when the member wants a person. One plane each.
-
 let softDisc: CanvasTexture | null = null;
-/** One soft radial gradient (opaque white centre, clear edge) shared by every desk. */
 function disc(): CanvasTexture {
   if (softDisc) return softDisc;
   const canvas = document.createElement('canvas');
@@ -26,11 +22,9 @@ function disc(): CanvasTexture {
 }
 
 const DESK_TOP = SEATING.slab.at[1] + 0.03;
-/** How much of the screen's light reaches the desk, by how hard the member works (0 to 3). */
 const GLOW = [0.14, 0.22, 0.3, 0.4] as const;
 const FLAT: [number, number, number] = [-Math.PI / 2, 0, 0];
 
-/** The screen's light spilled on the desk, in the department's colour; stronger the harder the member works. */
 export function ScreenGlow({
   accent,
   level,
@@ -57,7 +51,6 @@ export function ScreenGlow({
   );
 }
 
-/** A soft dark footprint under the seated member, for the tiers that draw no real shadows. */
 export function ContactShadow({ z }: { z: number }) {
   return (
     <mesh position={[0, 0.04, z]} rotation={FLAT} renderOrder={1}>
@@ -75,7 +68,6 @@ export function ContactShadow({ z }: { z: number }) {
 
 const RING_HZ = 0.8;
 
-/** A ring of amber light on the floor round the desk, breathing, when the member wants a person. */
 export function AttentionRing({ z, animate }: { z: number; animate: boolean }) {
   const material = useRef<MeshBasicMaterial>(null);
   useFrame(({ clock }) => {

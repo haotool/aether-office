@@ -33,7 +33,6 @@ type IntegrateFormProps = {
   onSaved: () => void;
 };
 
-/** Starts an integration of the work into a base branch, pinned to the commit the person expects it to be at. */
 function IntegrateForm({ projectId, work, queryKey, onSaved }: IntegrateFormProps) {
   const t = useT();
   const client = useQueryClient();

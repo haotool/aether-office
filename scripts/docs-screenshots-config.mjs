@@ -1,4 +1,3 @@
-// Command-line options and limits of the documentation screenshots (scripts/docs-screenshots.mjs).
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 

@@ -1,0 +1,30 @@
+{
+  "schema": "aether-ux-matrix/1",
+  "trees": {
+    "apps/web": "f78e438358a1eb73d1250382ba7b8fca2e84a1e8",
+    "apps/control": "f9c2e45661e603ebb775d0a9f8323d82351a4fd3",
+    "packages/contracts": "44c41b86568c05d3a0af2d554cc7c56d1d51f5b2",
+    "packages/kernel": "354f2ed76c10f2a6e21ee34613e5103e236de541",
+    "packages/office-scene": "9e34f9bc0b9d5f399972f729b4e0561d2ebbd673"
+  },
+  "core": {
+    "cells": 532,
+    "combinations": 28,
+    "complete": true,
+    "overflow": 0,
+    "blank": 0,
+    "axeSerious": 0,
+    "unexpectedErrors": 0,
+    "smallTargets": 0
+  },
+  "states": {
+    "cells": 36,
+    "combinations": 4,
+    "complete": true,
+    "overflow": 0,
+    "blank": 0,
+    "axeSerious": 0,
+    "unexpectedErrors": 0,
+    "smallTargets": 0
+  }
+}

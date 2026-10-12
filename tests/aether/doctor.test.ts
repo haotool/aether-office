@@ -22,7 +22,7 @@ function probe(overrides: Partial<Probe> & { runs?: Record<string, Exec> } = {})
       file.endsWith('compat.json')
         ? JSON.stringify({ verifiedCliVersions: ['0.159.2', '0.160.1'] })
         : JSON.stringify({ engines: { node: '>=24.21.0 <25' }, packageManager: 'pnpm@12.8.1' }),
-    list: () => ['codex-0.159.2', 'codex-0.159.2-ts'],
+    list: () => ['codex-0.159.2-ts'],
   };
 }
 const byId = (checks: ReturnType<typeof checkEnvironment>) =>
@@ -40,7 +40,7 @@ it('tells apart a missing CLI, a CLI that needs sign-in, a broken native module 
         runs: {
           'claude --version': { kind: 'enoent', stdout: '', code: null },
           'codex login status': { kind: 'failed', stdout: 'Not logged in', code: 1 },
-          'codex --version': ok('codex-cli 0.170.0'), // newer than anything verified
+          'codex --version': ok('codex-cli 0.170.0'),
         },
         load: (module) => (module === 'node-pty' ? 'posix_spawnp failed' : null),
       }),

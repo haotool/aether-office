@@ -1,5 +1,3 @@
-/* The phone office, continued: the controls over the scene, shared by a portrait phone and one on its side. */
-/* Shared by a portrait phone and a phone on its side. */
 @media (max-width: 760px), (pointer: coarse) and (max-height: 500px) {
   .main-content.immersive {
     overflow: hidden;
@@ -9,16 +7,12 @@
     position: relative;
     height: 100%;
     background: var(--scene-bg);
-    --fab-bottom: calc(
-      var(--hud-inset) + var(--peek-h) + var(--space-8)
-    ); /* above the session sheet's peek */
-    --fab-clear: calc(
-      var(--fab-bottom) + var(--fab-size) + var(--space-8)
-    ); /* the first free line above the new-task button */
+    --fab-bottom: calc(var(--hud-inset) + var(--peek-h) + var(--space-8));
+    --fab-clear: calc(var(--fab-bottom) + var(--fab-size) + var(--space-8));
     --hud-clear: calc(
       var(--hud-inset) + var(--control-h-sm) + var(--space-8) + var(--control-touch) +
         var(--space-8)
-    ); /* the first free line under the view switch and the chips */
+    );
   }
   .phone-office .canvas-container {
     position: absolute;
@@ -52,7 +46,7 @@
     pointer-events: none;
   }
   .phone-top .segmented button {
-    min-width: 48px; /* token-lint: geometry */
+    min-width: var(--space-48);
     font: 600 var(--fs-meta) var(--mono);
   }
   .chip-active,
@@ -68,7 +62,7 @@
   }
   .chip-active {
     gap: var(--space-8);
-    min-width: 56px; /* token-lint: geometry */
+    min-width: var(--space-56);
     height: var(--control-h-sm);
     padding: 0 var(--space-12);
     border-radius: var(--r-3xl);
@@ -102,7 +96,6 @@
     color: var(--on-accent);
   }
 
-  /* Floor rail and switches on the edge, a chip for the floor's name: the only things over the 3D scene. */
   .scene-rail {
     position: absolute;
     z-index: var(--z-hud-tools);
@@ -157,15 +150,12 @@
     margin: var(--space-2) var(--space-8);
     background: var(--glass-line);
   }
-  /* The bottom row: the camera switch and the floor's name, level with the new-task button. */
   .scene-dock {
     position: absolute;
     z-index: var(--z-hud-chip);
     left: var(--hud-inset);
     right: calc(var(--hud-inset) * 2 + var(--fab-size));
-    bottom: calc(
-      var(--hud-inset) + var(--space-6) + var(--peek-h) + var(--space-8)
-    ); /* the button is 56 tall, the controls 44: one centre line; both stand above the session sheet's peek */
+    bottom: calc(var(--hud-inset) + var(--space-6) + var(--peek-h) + var(--space-8));
     display: flex;
     align-items: center;
     gap: var(--space-8);
@@ -202,7 +192,6 @@
     font-family: var(--mono);
   }
 
-  /* Sheets: from the bottom edge, thumb height rows, over the tab bar. */
   .sheet-backdrop {
     display: block;
     position: fixed;
@@ -282,7 +271,6 @@
     text-align: center;
   }
 
-  /* The drawer's foot: language, theme and quality. */
   .quick-prefs {
     display: grid;
     gap: var(--space-8);

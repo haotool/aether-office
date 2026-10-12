@@ -90,7 +90,6 @@ async function cognitiveByName(dir: string, name: string) {
 
 describe('Sonar cognitive complexity (white paper v1.7)', () => {
   it('getWords = 1 (switch counts once, not per case)', async () => {
-    // SonarSource Cognitive Complexity white paper §Switches / Appendix C
     expect(await cognitiveByName(fixtureProject(), 'getWords')).toBe(1);
   });
 
@@ -103,33 +102,26 @@ describe('Sonar cognitive complexity (white paper v1.7)', () => {
   });
 
   it('sumOfPrimes = 7 (labeled continue adds +1)', async () => {
-    // SonarSource Cognitive Complexity white paper §Jumps to labels / Appendix C
     expect(await cognitiveByName(fixtureProject(), 'sumOfPrimes')).toBe(7);
   });
 
   it('ifElse = 2 (if + else hybrid increments)', async () => {
-    // SonarSource Cognitive Complexity white paper Appendix B1 (else)
     expect(await cognitiveByName(fixtureProject(), 'ifElse')).toBe(2);
   });
 
   it('andChain = 2 (one logic sequence in if condition)', async () => {
-    // SonarSource Cognitive Complexity white paper §Sequences of logical operators
     expect(await cognitiveByName(fixtureProject(), 'andChain')).toBe(2);
   });
 
   it('myMethod = 9 (try/catch nesting example)', async () => {
-    // SonarSource Cognitive Complexity white paper §Increment for nested flow-break structures
     expect(await cognitiveByName(fixtureProject(), 'myMethod')).toBe(9);
   });
 
   it('mixedLogic = 2 (SonarJS 4.2.2: if + one && group; || ignored)', async () => {
-    // SonarJS 4.2.2 black-box oracle (differs from white-paper || sequences)
     expect(await cognitiveByName(fixtureProject(), 'mixedLogic')).toBe(2);
   });
 
   it('nullishCoalesce = 0 (?? ignored; no JS goto/break NUMBER)', async () => {
-    // SonarSource Cognitive Complexity white paper §Ignore shorthand (null-coalescing)
-    // Labeled break/continue NUMBER not in JS/TS — N/A per language appendix A
     expect(await cognitiveByName(fixtureProject(), 'nullishCoalesce')).toBe(0);
   });
 

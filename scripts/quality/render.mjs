@@ -1,4 +1,3 @@
-// Text output: the console table, the `--target` blocker list and the generated docs/quality/scorecard.md.
 import { formatQualityInputs } from './inputs.mjs';
 import { blockers } from './model.mjs';
 
@@ -11,7 +10,6 @@ const limitText = (r) =>
   r.limit === null ? '-' : `${r.minimum ? '>= ' : ''}${r.limit}${r.unit === '%' ? '%' : ''}`;
 const escapeCell = (text) => String(text).replaceAll('|', '\\|');
 
-/** "label x12 (-3.4)" for the largest penalties of an area. */
 export function topPenalties(area, count = 5) {
   return blockers(area)
     .slice(0, count)

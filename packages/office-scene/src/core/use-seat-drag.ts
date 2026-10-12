@@ -5,7 +5,6 @@ import type { SceneBridge } from '../components/SceneBridge.js';
 import { checkSeat, snapSeat, type SeatCheck } from './seat-drag.js';
 import { listenWhileDragging } from './window-drag.js';
 
-/** A member's desk dropped on a new seat: what the page saves (and can undo from `from`). */
 export type SeatMove = {
   agentId: string;
   deskId: string;
@@ -14,7 +13,6 @@ export type SeatMove = {
   to: { x: number; z: number };
 };
 
-/** The desk being carried: where it would land and whether that seat is allowed. */
 export type SeatDrag = {
   agentId: string;
   deskId: string;
@@ -30,14 +28,12 @@ type SeatDragOptions = {
   layout: Layout;
   exploded: boolean;
   bridge: RefObject<SceneBridge | null>;
-  /** May a press start a drag now (arrange rights, not on a phone)? Alt is checked by the caller. */
   allowed: boolean;
   onMove: ((move: SeatMove) => void) | undefined;
   onEnd: (outcome: 'moved' | 'cancelled' | SeatCheck) => void;
 };
 type DragHooks = Pick<SeatDragOptions, 'onMove' | 'onEnd'>;
 
-/** The drag of `desk` as it begins: carried nowhere yet, on a seat that is allowed. */
 function beginDrag(agentId: string, desk: Layout['objects'][number]): SeatDrag {
   return {
     agentId,
@@ -51,7 +47,6 @@ function beginDrag(agentId: string, desk: Layout['objects'][number]): SeatDrag {
   };
 }
 
-/** The drag with its desk snapped to the grid under `ground` and the seat checked; null while the snapped seat has not changed. */
 function carriedTo(
   d: SeatDrag,
   ground: readonly [number, number],
@@ -62,7 +57,6 @@ function carriedTo(
   return x === d.x && z === d.z ? null : { ...d, x, z, check: checkSeat(layout, d.deskId, x, z) };
 }
 
-/** Reports how a drag ended: a cancel, a release where it began or on a bad seat is 'cancelled' or the check; a good seat is a move. */
 function reportEnd(d: SeatDrag, outcome: 'drop' | 'cancel', { onMove, onEnd }: DragHooks): void {
   const moved = d.x !== d.from.x || d.z !== d.from.z;
   if (outcome === 'cancel' || !moved) onEnd('cancelled');
@@ -79,12 +73,6 @@ function reportEnd(d: SeatDrag, outcome: 'drop' | 'cancel', { onMove, onEnd }: D
   }
 }
 
-/**
- * Drag a member's desk to another seat. `grab` starts it from a press (the page decides when a press may: layout
- * editing is allowed, and Alt is held unless the editor is open); the desk follows the pointer on the floor, snapped to
- * the editor's grid and checked with the layout validation the API uses. Release on a valid seat reports the move,
- * release on an invalid one or Esc cancels it. Orbit is off meanwhile.
- */
 export function useSeatDrag({ layout, exploded, bridge, allowed, onMove, onEnd }: SeatDragOptions) {
   const [drag, setDrag] = useState<SeatDrag | null>(null);
   const current = useRef<SeatDrag | null>(null);
@@ -125,13 +113,12 @@ export function useSeatDrag({ layout, exploded, bridge, allowed, onMove, onEnd }
         endedAt.current = Date.now();
         setDrag(null);
       };
-      move(new PointerEvent('pointermove', start)); // the ghost is under the pointer from the first frame
+      move(new PointerEvent('pointermove', start));
       return true;
     },
     [allowed, onMove, bridge],
   );
   useEffect(() => () => stop.current?.(), []);
-  /** A drag just ended: the click that follows its release is not a choice. */
   const justEnded = useCallback(() => Date.now() - endedAt.current < 300, []);
   return { drag, grab, justEnded };
 }

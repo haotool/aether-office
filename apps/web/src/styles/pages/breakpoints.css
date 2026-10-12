@@ -2,25 +2,10 @@
   .office-page {
     padding: var(--space-32) var(--space-40) 0;
   }
-  .scene-shell {
-    min-height: 540px; /* token-lint: geometry */
-  }
-  .sidebar {
-    width: 220px; /* token-lint: geometry */
-  }
-  .team-chip {
-    min-width: 160px; /* token-lint: geometry */
-  }
 }
 @media (max-width: 1250px) {
-  .sidebar {
-    width: 172px; /* token-lint: geometry */
-  }
   .topbar {
     padding: 0 var(--space-16);
-  }
-  .brand {
-    width: 132px; /* token-lint: geometry */
   }
   .office-page {
     padding: var(--space-20) var(--space-16) 0;
@@ -34,9 +19,6 @@
   .compose {
     max-width: none;
   }
-  .scene-shell {
-    min-height: 380px; /* token-lint: geometry */
-  }
   .page-padding {
     padding: var(--space-24);
   }
@@ -49,7 +31,6 @@
     font-size: var(--fs-wordmark-md);
     letter-spacing: 8px;
   }
-  /* The top bar keeps every control on screen: the stop shows its icon only, the decorative initial goes. */
   .topbar-right {
     gap: var(--space-8);
   }
@@ -61,7 +42,7 @@
 @media (max-width: 760px) {
   .link-text,
   .link-status small {
-    display: none; /* a live link is a dot; the sidebar has the words */
+    display: none;
   }
   /* A link that is not live says so in words: a touch screen has no tooltip to explain a red dot. */
   .link-status:is([data-status='reconnecting'], [data-status='offline']) .link-text {
@@ -124,7 +105,7 @@
     position: absolute;
     bottom: 0;
     left: 0;
-    z-index: var(--z-drawer); /* top and width: phone-drawer.css */
+    z-index: var(--z-drawer);
     box-shadow: 30px 0 60px var(--shade); /* token-lint: shadow */
   }
   .main-content {
@@ -159,14 +140,13 @@
     padding: var(--space-16) 0 var(--space-12);
   }
   .scene-shell {
-    min-height: 400px; /* token-lint: geometry */
     height: 60dvh;
     flex: 0 0 auto;
   }
   .scene-toolbar {
-    left: 10px; /* token-lint: geometry */
-    right: 10px; /* token-lint: geometry */
-    top: 10px; /* token-lint: geometry */
+    left: var(--hud-inset);
+    right: var(--hud-inset);
+    top: var(--hud-inset);
     gap: var(--space-8);
   }
   .segmented button {
@@ -177,9 +157,6 @@
     letter-spacing: 0.5px;
     left: var(--space-12);
     right: var(--space-12);
-  }
-  .team-chip {
-    min-width: 140px; /* token-lint: geometry */
   }
   .team-strip {
     padding-top: var(--space-16);
@@ -310,18 +287,14 @@
 }
 
 /*
- * User preferences (the viewport queries above are the layout; these are what the person's system asks for). Each is
- * checked with Playwright's emulateMedia in e2e/settings/preferences.spec.ts. Colors for them live in tokens.css.
+ * Forced colors (Windows high contrast): the system paints colors, so what a border or a fill said must be said by a
+ * border or an outline.
  */
-/* Forced colors (Windows high contrast): the system paints colors, so what a border or a fill said must be said by a
-   border or an outline: a button without a border gets one, the cut corner goes, a selected control is outlined, the
-   focus ring is the system highlight. */
 @media (forced-colors: active) {
   .primary,
   .secondary,
   .icon-button,
   .text-button,
-  .u-btn,
   .u-chip,
   .badge,
   .tab,
@@ -360,7 +333,6 @@
   .intro-caption {
     border: 1px solid CanvasText;
   }
-  /* last, so a selected control that is also focused still shows the ring */
   :root :focus-visible {
     outline: 3px solid Highlight;
     outline-offset: var(--focus-offset);

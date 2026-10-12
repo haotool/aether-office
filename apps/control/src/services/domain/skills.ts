@@ -17,7 +17,6 @@ type Row = {
 const view = (row: Row): Skill =>
   skillSchema.parse({ ...row, warnings: JSON.parse(row.warnings), enabled: row.enabled === 1 });
 
-/** Humans see every imported skill; agents only ever see the enabled ones. */
 export function listSkills(ctx: Context, actor: Actor, projectId: string): Skill[] {
   const rows = ctx.sqlite
     .prepare(
@@ -30,7 +29,6 @@ export function listSkills(ctx: Context, actor: Actor, projectId: string): Skill
 
 type ParsedSkill = ReturnType<typeof parseSkill>;
 
-/** Inserts a new skill (disabled), or replaces the content of an existing one; changed content returns to disabled. */
 function writeSkill(
   ctx: Context,
   actor: Actor,

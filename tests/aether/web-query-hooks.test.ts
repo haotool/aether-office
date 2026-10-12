@@ -5,9 +5,6 @@ import { renderHook } from './fixtures/mini-react.js';
 import { create } from './fixtures/mini-zustand.js';
 import { optionsFor, resetQueries, seed, store } from './fixtures/mini-query.js';
 
-// The data hooks on synthetic stand-ins (fixtures/): React's hook runtime, zustand's hook, and a query library that records
-// the options it is given and answers from a cache the test fills. What is checked is the app's own rules: which requests,
-// when they run, how often they repeat, and what the hooks make of the answers.
 const env = installBrowserEnv();
 const web = await vi.hoisted(async () => {
   const paths = await import('./fixtures/web-paths.js');
@@ -99,7 +96,7 @@ describe('usage hooks', () => {
       scan: { complete: boolean };
     };
     expect(normalized.days).toEqual([]);
-    expect(normalized.scan.complete).toBe(false); // unknown is never "complete"
+    expect(normalized.scan.complete).toBe(false);
   });
 
   it('git KPIs wait longer once a building is known', () => {
@@ -133,7 +130,7 @@ describe('useKpiPanel', () => {
     expect(hook.current.sessions).toHaveLength(3);
     hook.current.setRange('30d');
     expect(hook.current.range).toBe('30d');
-    expect(hook.current.badges).toEqual([]); // no usage yet: no number it does not have
+    expect(hook.current.badges).toEqual([]);
   });
 });
 
@@ -174,7 +171,6 @@ describe('useLocalSessions and useApprovals', () => {
     seed(['approvals', 'p1'], [{ state: 'pending' }, { state: 'approved' }, { state: 'pending' }]);
     const hook = renderHook(useApprovals, operator as never, 'p1', false);
     expect(hook.current.pending).toBe(2);
-    // the project's stream refreshes it: asked for every few seconds only while that stream is down
     expect(optionsFor(['approvals', 'p1'])).toMatchObject({
       enabled: true,
       refetchInterval: 30_000,
@@ -193,7 +189,7 @@ describe('usePermissionRequests', () => {
     expect(interval(['permission-requests'], undefined)).toBe(2_500);
     expect(interval(['permission-requests'], { requests: [], enabled: true })).toBe(2_500);
     expect(interval(['permission-requests'], { requests: [], enabled: false })).toBe(30_000);
-    expect(interval(['permission-requests'], { requests: [] })).toBe(2_500); // an older server does not say
+    expect(interval(['permission-requests'], { requests: [] })).toBe(2_500);
     expect(interval(['permission-requests'], undefined, new Error('forbidden'))).toBe(false);
   });
 });
@@ -219,7 +215,7 @@ describe('useAdoptRepos', () => {
     expect(adopted).toHaveBeenCalledTimes(1);
     hook.rerender([...sessions], true, adopted);
     await flush();
-    expect(sent).toHaveLength(1); // adopted: not asked again
+    expect(sent).toHaveLength(1);
   });
 
   it('does nothing while disabled or before the sessions are known', async () => {
@@ -273,8 +269,8 @@ describe('character-session hooks', () => {
         leaseUntil: Date.now() + 60_000,
       };
       expect(state(lease)).toBe('held');
-      expect(state({ ...lease, controlOwner: 'u1' })).toBe('free'); // my own lease
-      expect(state({ ...lease, leaseUntil: Date.now() - 1 })).toBe('free'); // the lease ran out
+      expect(state({ ...lease, controlOwner: 'u1' })).toBe('free');
+      expect(state({ ...lease, leaseUntil: Date.now() - 1 })).toBe('free');
     });
   });
 });

@@ -9,5 +9,6 @@
   "claudeCodeSeries": [
     "2.1"
   ],
-  "claudeMethod": "Claude Code 2.1.x is accepted as one series: the contract is @anthropic-ai/claude-agent-sdk, which is pinned exactly; the series check only refuses a different minor release until it is verified"
+  "claudeMethod": "Claude Code 2.1.x is accepted as one series: the contract is @anthropic-ai/claude-agent-sdk, which is pinned exactly; the series check only refuses a different minor release until it is verified",
+  "sha256": "c79e0261d85c98229105c65fd117a890b08f9b4b8e4a31de7797a08921270d0d"
 }

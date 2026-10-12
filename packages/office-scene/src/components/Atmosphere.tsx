@@ -20,12 +20,10 @@ const HALF_W = 24;
 const HALF_D = 16;
 const CEILING = 5.4;
 const WINDOW_Z = -18.2;
-/** The window panels (x of their centres) a shaft may fall from, in the order they are used. */
 const PANELS = [-15, 9, -3, 21, -21] as const;
 
 const tint = () => new Color(...tintAt(hourOf(new Date())));
 
-/** Frees an effect's geometry and material on the GPU when they are replaced or the effect goes. */
 function useDisposed(geometry: BufferGeometry, material: ShaderMaterial) {
   useEffect(
     () => () => {
@@ -60,7 +58,6 @@ const MOTE_FRAGMENT = `
     gl_FragColor = vec4(color, a);
   }`;
 
-/** Dust motes drifting in the room's volume, tinted by the hour. */
 export function DustMotes({ quality, animate }: { quality: AirQuality; animate: boolean }) {
   const count = AIR[quality].motes;
   const { geometry, material } = useMemo(() => {
@@ -117,7 +114,6 @@ const SHAFT_FRAGMENT = `
     ${DITHER_END}
   }`;
 
-/** A few soft shafts of light falling from the rear windows across the room, in one draw call. */
 export function LightShafts({ quality, animate }: { quality: AirQuality; animate: boolean }) {
   const count = AIR[quality].shafts;
   const { geometry, material } = useMemo(() => {
@@ -125,7 +121,6 @@ export function LightShafts({ quality, animate }: { quality: AirQuality; animate
     const uvs: number[] = [];
     const indices: number[] = [];
     PANELS.slice(0, count).forEach((x, i) => {
-      // Top edge on the window panel, bottom edge splayed and shifted into the room, as sun through glass.
       const reach = 13 + (i % 3) * 2;
       const drift = 3 + i * 0.6;
       const quad = [

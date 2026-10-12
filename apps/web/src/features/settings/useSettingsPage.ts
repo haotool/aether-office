@@ -14,7 +14,6 @@ const NOTICE_MS = 6000;
 const isTyping = (target: EventTarget | null) =>
   target instanceof HTMLElement && target.closest('input, textarea, select, [contenteditable]');
 
-/** The ids of the rows that match the query among those the person may see; null when not searching. */
 function useMatches(query: string) {
   const advanced = usePreferences((s) => s.advanced);
   return useMemo(() => {
@@ -23,7 +22,6 @@ function useMatches(query: string) {
   }, [query, advanced]);
 }
 
-/** Pressing "/" outside a field focuses the search box. */
 function useSearchShortcut() {
   const searchBox = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -38,7 +36,6 @@ function useSearchShortcut() {
   return searchBox;
 }
 
-/** The notice shown for a few seconds, then cleared. */
 function useNotice() {
   const [notice, setNotice] = useState<Notice | null>(null);
   useEffect(() => {
@@ -49,7 +46,6 @@ function useNotice() {
   return [notice, setNotice] as const;
 }
 
-/** Brings the group the address names into view (a link, the back button); a phone's page starts at its top. */
 function useScrollToSection(requested: SectionId | null, phone: boolean, searching: boolean) {
   const reducedMotion = usePreferences((s) => s.reducedMotion);
   const scrollTo = useCallback(
@@ -59,16 +55,14 @@ function useScrollToSection(requested: SectionId | null, phone: boolean, searchi
         ?.scrollIntoView({ block: 'start', behavior: reducedMotion ? 'auto' : 'smooth' }),
     [reducedMotion],
   );
-  // An address that names a group (a link, the back button) brings it into view; a phone's page starts at its top.
   const bring = useLatest({ scrollTo, searching });
   useEffect(() => {
     if (phone) document.querySelector('.main-content')?.scrollTo(0, 0);
-    else if (requested && !bring.current.searching) bring.current.scrollTo(requested); // only a change of address moves the page
+    else if (requested && !bring.current.searching) bring.current.scrollTo(requested);
   }, [requested, phone, bring]);
   return scrollTo;
 }
 
-/** The Settings page's state: the search, which groups show, the marked one, and navigation between them. */
 export function useSettingsPage(projectId: string) {
   const phone = usePhoneAny();
   const location = useLocation();

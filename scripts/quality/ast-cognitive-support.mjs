@@ -6,7 +6,6 @@ export const isElseIf = (node) =>
   node.parent?.kind === SyntaxKind.IfStatement &&
   node.parent.elseStatement === node;
 
-// SonarJS 4.2.2 (black-box): `else { if … }` after `else if` skips the +1 else wrapper when nesting > 2.
 export function loneIfInElseBlock(elseStatement) {
   if (elseStatement?.kind !== SyntaxKind.Block) return null;
   const [only] = elseStatement.statements;

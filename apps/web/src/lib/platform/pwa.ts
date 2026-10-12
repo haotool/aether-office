@@ -1,9 +1,8 @@
 import { useSyncExternalStore } from 'react';
 import { CACHE_PREFIX, SKIP_WAITING } from '../../sw/cache-rules.js';
 
-// The service worker's side of the page: register it where the browser allows, and tell the person when a new version
-// is waiting. Service workers need a secure context (https, or localhost / 127.0.0.1): a phone that opens the office
-// at http://192.168.x.x gets the plain page, and nothing here runs.
+// Service workers need a secure context (https, localhost or 127.0.0.1): a phone that opens the office at
+// http://192.168.x.x gets the plain page, and nothing here runs.
 
 const FLAG = 'aether-sw';
 const INSTALL_DELAY_MS = 3000;
@@ -18,7 +17,6 @@ type Environment = {
 export const canRegister = (env: Environment): boolean =>
   env.secure && env.supported && env.production && !env.disabled;
 
-/** The kill switch: `?sw=off` turns the worker off on this device for good (it is removed), `?sw=on` turns it back on. */
 export function switchedOff(
   search: string,
   store: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>,
@@ -41,7 +39,6 @@ const hold = (worker: ServiceWorker | null) => {
   listeners.forEach((notify) => notify());
 };
 
-/** True while a new version is installed and waiting for the person to agree to it. */
 export const useUpdateReady = () =>
   useSyncExternalStore(
     (notify) => {
@@ -51,7 +48,6 @@ export const useUpdateReady = () =>
     () => waiting !== null,
   );
 
-/** Lets the waiting version take over; the page reloads itself once it has. */
 export function applyUpdate() {
   updating = true;
   waiting?.postMessage(SKIP_WAITING);
@@ -67,7 +63,6 @@ async function remove() {
 async function register() {
   const registration = await navigator.serviceWorker.register('/sw.js');
   const track = () => {
-    // Without a controller this is the first install: nothing to update from.
     if (registration.waiting && navigator.serviceWorker.controller) hold(registration.waiting);
   };
   track();

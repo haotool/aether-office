@@ -6,7 +6,6 @@ import { context2d } from '../core/canvas-2d.js';
 const LETTERS = 3;
 const CYCLE_SECONDS = 3.3;
 
-/** "Z z z" drifting up from a sleeper's head, each fading as it goes. Decoration for a dormant session, nothing more. */
 export function Zzz({ reducedMotion }: { reducedMotion: boolean }) {
   const sprites = useRef<(Sprite | null)[]>([]);
   const texture = useMemo(() => {

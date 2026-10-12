@@ -3,7 +3,6 @@ import type { SceneSpeech } from '../components/Speech.js';
 
 const SPEECH_AT_ONCE = 6;
 
-/** Bubbles go to the selected member and the camera's subjects first, then the busiest working ones (not on a phone). */
 export function pickSpeakers(input: {
   agents: readonly Agent[];
   speech: Readonly<Record<string, SceneSpeech>> | undefined;

@@ -25,7 +25,6 @@ import { beaconsOf, beamsOf, labelsOf } from '../scene/scene-markers.js';
 import { LifeLayer } from '../life/index.js';
 import { SquadLayer, SquadWarm, isPodSeat } from '../squad/index.js';
 
-/** One member at its desk (a squad's pod seats are drawn by the squad layer, not here). */
 function memberAt(m: SceneModel, agent: Agent) {
   const { props, nav, pose } = m;
   const { marks, seatDrag } = m.ix;
@@ -73,7 +72,6 @@ function memberAt(m: SceneModel, agent: Agent) {
   );
 }
 
-/** The lights, the air above the floor in view, and every floor drawn. */
 function SceneAmbience({ m }: { m: SceneModel }) {
   const { props, exploded, compact, floor, y, animate } = m;
   return (
@@ -92,14 +90,12 @@ function SceneAmbience({ m }: { m: SceneModel }) {
           floor={index}
           y={floorY(index, exploded)}
           animate={animate && (exploded || index === floor)}
-          detail={props.quality === 'high'}
         />
       ))}
     </>
   );
 }
 
-/** The labels drawn over the scene each frame from where things are: names, compaction chips, speech. */
 function SceneProjections({ m }: { m: SceneModel }) {
   const { props, layout, floor, exploded, compact } = m;
   const spread = exploded && !compact;
@@ -126,7 +122,6 @@ function SceneProjections({ m }: { m: SceneModel }) {
   );
 }
 
-/** What keeps the scene running: the context loss handler, the warm-up, the pixel ratio and shadow pacing, the probe. */
 function SceneControllers({ m }: { m: SceneModel }) {
   const { props, shadowsOn } = m;
   return (
@@ -150,7 +145,6 @@ function SceneControllers({ m }: { m: SceneModel }) {
   );
 }
 
-/** Branch beams into the core, the commit spire, the beacons over members, and the wall's extra cameras. */
 function SceneMarkers({ m }: { m: SceneModel }) {
   const { props, layout, exploded, sceneAgents, nav } = m;
   return (
@@ -182,7 +176,6 @@ function SceneMarkers({ m }: { m: SceneModel }) {
   );
 }
 
-/** The camera: where it flies to, what the director and the tour ask of it, and who it follows. */
 function SceneEye({ m }: { m: SceneModel }) {
   const { props, nav, intro } = m;
   return (
@@ -199,7 +192,6 @@ function SceneEye({ m }: { m: SceneModel }) {
   );
 }
 
-/** What is drawn in the air between members: messages, the lines between desks, and the office's little moments. */
 function SceneRelations({ m }: { m: SceneModel }) {
   const { props, nav, floor, exploded } = m;
   return (
@@ -226,7 +218,6 @@ function SceneRelations({ m }: { m: SceneModel }) {
   );
 }
 
-/** The 3D half of the scene: everything inside the canvas, in the order it is drawn. */
 export function SceneCanvas({ m }: { m: SceneModel }) {
   const { props, exploded, compact } = m;
   return (

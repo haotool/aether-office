@@ -32,14 +32,14 @@ describe('the pairing codes', () => {
     const store = createPairingStore(() => now);
     const { code, id } = store.create('owner-1');
     expect(store.status(id, 'owner-1')).toBe('pending');
-    expect(store.status(id, 'someone-else')).toBe('expired'); // nobody else learns whether it exists
+    expect(store.status(id, 'someone-else')).toBe('expired');
     expect(store.redeem(code)).toBe('owner-1');
     expect(store.status(id, 'owner-1')).toBe('paired');
-    expect(() => store.redeem(code)).toThrow('PAIRING_INVALID'); // not twice
+    expect(() => store.redeem(code)).toThrow('PAIRING_INVALID');
     const late = store.create('owner-1');
     now += PAIRING_TTL_MS + 1;
-    expect(() => store.redeem(late.code)).toThrow('PAIRING_INVALID'); // not after five minutes
-    expect(() => store.redeem('x'.repeat(22))).toThrow('PAIRING_INVALID'); // the same answer for a guess
+    expect(() => store.redeem(late.code)).toThrow('PAIRING_INVALID');
+    expect(() => store.redeem('x'.repeat(22))).toThrow('PAIRING_INVALID');
   });
 
   it('are limited to a few waiting at a time', () => {
@@ -80,9 +80,8 @@ describe('the QR code in the terminal', () => {
     const rows = lines.map((line) => stripVTControlCharacters(line));
     const side = size + 8;
     expect(rows.length).toBe(Math.ceil(side / 2));
-    for (const row of rows) expect([...row]).toHaveLength(side); // every row as wide as the rest
+    for (const row of rows) expect([...row]).toHaveLength(side);
     expect(lines.every((l) => l.startsWith('\u001b[30;47m') && l.endsWith('\u001b[0m'))).toBe(true);
-    // decode: top and bottom module of every character
     const dark = (r: number, c: number) => {
       const glyph = [...rows[Math.floor(r / 2)]!][c]!;
       return r % 2 === 0 ? '█▀'.includes(glyph) : '█▄'.includes(glyph);
@@ -124,9 +123,8 @@ describe('signing a phone in by scanning', () => {
     };
     expect(body.ttlSeconds).toBe(300);
     const link = body.links[0]!;
-    expect(link.url).toMatch(/^http:\/\/192\.168\.1\.20:8780\/#pair=[A-Za-z0-9_-]{22}$/); // fragment, not query
+    expect(link.url).toMatch(/^http:\/\/192\.168\.1\.20:8780\/#pair=[A-Za-z0-9_-]{22}$/);
     expect(link.svg).toContain('<svg');
-    // one code for every address: the links differ only by host, and only one code is waiting
     expect(body.links.map((l) => l.url.split('#pair=')[1])).toEqual([
       link.url.split('#pair=')[1],
       link.url.split('#pair=')[1],
@@ -146,7 +144,7 @@ describe('signing a phone in by scanning', () => {
     expect(cookie).toMatch(/aether_session=/);
     expect(cookie).toMatch(/HttpOnly/i);
     expect(cookie).toMatch(/SameSite=Strict/i);
-    expect(cookie).toMatch(/Max-Age=2592000/); // a remembered device keeps its session for a month
+    expect(cookie).toMatch(/Max-Age=2592000/);
 
     const again = await f.app.inject({
       method: 'POST',
@@ -154,9 +152,9 @@ describe('signing a phone in by scanning', () => {
       headers: HOST,
       payload: { code },
     });
-    expect(again.statusCode).toBe(401); // single use
+    expect(again.statusCode).toBe(401);
     const status = await f.app.inject({ url: `/api/pairings/${body.id}`, headers: bearer(f) });
-    expect(status.json()).toEqual({ status: 'paired' }); // the desktop sees that it was used
+    expect(status.json()).toEqual({ status: 'paired' });
   });
 
   it('refuses a stranger, a guess and a role that cannot pair', async () => {

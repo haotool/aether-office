@@ -4,17 +4,16 @@ import { realpathSync } from 'node:fs';
 import { isAbsolute } from 'node:path';
 import { groupStopper, processIdentity } from '@aether/providers';
 import { z } from 'zod';
-const size = z
-  .object({ cols: z.number().int().min(10).max(400), rows: z.number().int().min(2).max(200) })
-  .strict();
-const profileSchema = z
-  .object({
-    binary: z.string().refine(isAbsolute),
-    args: z.array(z.string().max(4096)).max(64),
-    cwd: z.string().refine(isAbsolute),
-    timeoutMs: z.number().int().min(100).max(3600000).default(600000),
-  })
-  .strict();
+const size = z.strictObject({
+  cols: z.number().int().min(10).max(400),
+  rows: z.number().int().min(2).max(200),
+});
+const profileSchema = z.strictObject({
+  binary: z.string().refine(isAbsolute),
+  args: z.array(z.string().max(4096)).max(64),
+  cwd: z.string().refine(isAbsolute),
+  timeoutMs: z.number().int().min(100).max(3600000).default(600000),
+});
 export type PtyProfile = z.input<typeof profileSchema>;
 export type TerminalUser = {
   id: string;
@@ -79,7 +78,6 @@ export class PtySession {
     this.deadline = setTimeout(() => this.stop(), p.timeoutMs);
     this.deadline.unref();
   }
-  /** Keeps the output in a bounded buffer: oldest chunks go first, and a gap is noted when something was dropped. */
   private record(data: string) {
     const seq = ++this.seq;
     let chunk = Buffer.from(data);

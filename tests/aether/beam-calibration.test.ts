@@ -5,13 +5,12 @@ import { BEAM_REFERENCE, beamIntensity } from '../../packages/office-scene/src/s
 const doc = readFileSync('docs/design/office-life.md', 'utf8');
 const number = (text: string) => Number(text.replaceAll(',', ''));
 
-/** The documented squad percentiles (p25..p99) of a row of the calibration table, as numbers. */
 function squadRow(label: string, skip = 1): number[] {
   const row = doc.match(new RegExp(`^\\s*\\| ${label} \\|([^\\n]*)\\|$`, 'm'));
   expect(row, `${label} is in the calibration table of section 4.4`).not.toBeNull();
   return row![1]!
     .split('|')
-    .slice(skip) // the active-minutes column of the rate rows
+    .slice(skip)
     .map((cell) => number(cell.trim()));
 }
 
@@ -37,9 +36,9 @@ describe('the beam reference rates are the documented, measured ones', () => {
     const [p25, p50, , , , p99] = squadRow('Squad, tokens');
     const at = (perMinute: number) => beamIntensity({ source: 'tokens', perMinute });
     expect(at(p50!)).toBeCloseTo(0.7, 1);
-    expect(at(p25!)).toBeLessThan(0.8); // with the old 20,000 even the p25 read 0.85
+    expect(at(p25!)).toBeLessThan(0.8);
     expect(at(p99!)).toBeLessThan(0.95);
-    expect(at(p99!)).toBeGreaterThan(at(p50!)); // the busiest minutes still read brighter
+    expect(at(p99!)).toBeGreaterThan(at(p50!));
   });
 
   it('documents the intensities it quotes', () => {

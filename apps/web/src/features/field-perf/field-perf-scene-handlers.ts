@@ -2,7 +2,6 @@ type FieldPerfHookWindow = Window & {
   __aetherFieldPerfHook?: { onContextLost: () => void; onContextRestored: () => void };
 };
 
-/** Forwards WebGL context events to the opt-in field perf collector when present. */
 export function fieldPerfOfficeSceneHandlers(onContextLost: () => void) {
   return {
     onContextLost: () => {

@@ -15,7 +15,6 @@ const OfficeScene = lazy(() =>
   import('@aether/office-scene').then((m) => ({ default: m.OfficeScene })),
 );
 
-/** The card that replaces the scene when the GPU took its WebGL context away: mount it again, or use the list. */
 function ContextLostCard({ onReload }: { onReload: () => void }) {
   const t = useT();
   const prefs = usePreferences();
@@ -33,7 +32,6 @@ function ContextLostCard({ onReload }: { onReload: () => void }) {
   );
 }
 
-/** The office itself: the 3D scene (loaded when first shown) or, by choice or when WebGL fails, the 2D list. */
 function SceneLoading() {
   const t = useT();
   return (

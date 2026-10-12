@@ -8,3 +8,9 @@ export const envelope = {
 };
 export const projectEnvelope = { ...envelope, projectId: id };
 export const version = z.number().int().nonnegative();
+
+export const command = <T extends string, D extends z.ZodType>(type: T, data: D) =>
+  z.strictObject({ ...projectEnvelope, type: z.literal(type), data });
+
+export const versionedCommand = <T extends string, D extends z.ZodType>(type: T, data: D) =>
+  z.strictObject({ ...projectEnvelope, type: z.literal(type), expectedVersion: version, data });

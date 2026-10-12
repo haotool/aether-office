@@ -1,11 +1,7 @@
 import { useT, useLocale } from '../../ui/useT.js';
 import { useMoments } from './life-moments.js';
 
-/**
- * The little moments the 3D office showed for this member, newest first, closed by default: the same lines the scene's
- * hidden log says, kept for a few minutes of looking back. Marked decorative, because they are pictures and jokes, not
- * facts about the work. Nothing shows until the office has shown one.
- */
+/** Marked decorative: they are pictures and jokes, not facts about the work. */
 export function RecentMoments({ member }: { member: string }) {
   const t = useT();
   const locale = useLocale();

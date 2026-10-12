@@ -11,11 +11,10 @@ import {
 import { fixture } from './fixture.js';
 
 const FIXTURES = join(import.meta.dirname, 'fixtures', 'models');
-const FRESH = Date.parse('2026-10-06T05:00:00Z'); // an hour after both fixture caches were fetched
+const FRESH = Date.parse('2026-10-06T05:00:00Z');
 const HOUR = 3_600_000;
 
 type Home = { env: NodeJS.ProcessEnv; claudeDir: string; codexDir: string; bin: string };
-/** An empty machine: no caches, and a PATH holding only a directory of our own. */
 function emptyHome(): Home {
   const root = mkdtempSync(join(tmpdir(), 'aether-models-'));
   const claudeDir = join(root, 'claude');
@@ -44,7 +43,6 @@ const detect = async (home: Home, now = FRESH) => {
   const [claude, codex] = await detectModels(home.env, { refresh: true, now });
   return { claude: claude!, codex: codex! };
 };
-/** A stand-in `codex` on PATH that prints the fixture the way `codex debug models` does. */
 function fakeCodex(home: Home, output = join(FIXTURES, 'codex-models.json')) {
   const file = join(home.bin, 'codex');
   writeFileSync(file, `#!/bin/sh\n/bin/cat '${output}'\n`);

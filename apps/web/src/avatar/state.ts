@@ -1,7 +1,6 @@
 import type { Agent } from '@aether/contracts';
 import type { EyeStyle, MouthStyle } from './face.js';
 
-/** What the person looking at the portrait should read at a glance. `idle` is the base, unchanged. */
 export type AvatarState = 'idle' | 'working' | 'needs' | 'sleeping' | 'error' | 'finished';
 
 export function avatarState(activity: Agent['activity'] | undefined): AvatarState {
@@ -25,14 +24,12 @@ export function avatarState(activity: Agent['activity'] | undefined): AvatarStat
 interface StateLook {
   eyes?: EyeStyle;
   mouth?: MouthStyle;
-  /** Drawn over everything; `fg` reads on the portrait's backdrop. */
   overlay: string;
 }
 
 const badge = (fill: string, mark: string) =>
   `<circle cx="53" cy="11" r="7.5" fill="${fill}" stroke="#fff" stroke-width="1.2"/>${mark}`;
 
-/** A state swaps the eyes and mouth and adds a mark; the species, colors, markings and accessories never change. */
 export function stateLook(state: AvatarState, fg: string): StateLook {
   switch (state) {
     case 'working':

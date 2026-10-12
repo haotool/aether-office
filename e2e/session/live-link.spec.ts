@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { signIn } from '../support/sign-in.js';
 
-test.use({ storageState: { cookies: [], origins: [] } }); // a new user: Advanced is off
+test.use({ storageState: { cookies: [], origins: [] } });
 
 test('the office offers task and layout editing only with Advanced on', async ({ page }) => {
   await signIn(page);
-  await expect(page.getByRole('button', { name: '重設視角' })).toBeVisible(); // the office is up
+  await expect(page.getByRole('button', { name: '重設視角' })).toBeVisible();
   await expect(page.getByRole('button', { name: '建立任務' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: '編輯配置（實驗性）', exact: true })).toHaveCount(
     0,

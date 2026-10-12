@@ -52,7 +52,7 @@ describe('deriveLifeSignals', () => {
       kinds(deriveLifeSignals(quiet(NOW, NOW - 60_000), quiet(NOW + 10_000, NOW - 60_000))),
     ).toEqual([]);
     const running = snap(NOW + 10_000, [session('a', { hookAt: NOW - 60_000, tool: 'Bash' })]);
-    expect(kinds(deriveLifeSignals(quiet(NOW, NOW - 40_000), running))).toEqual([]); // a tool is running: not thinking
+    expect(kinds(deriveLifeSignals(quiet(NOW, NOW - 40_000), running))).toEqual([]);
   });
 
   it('says a session has worked for hours when it crosses two hours of work', () => {

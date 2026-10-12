@@ -14,7 +14,6 @@ CREATE TABLE schedules (
   createdAt INTEGER NOT NULL
 );
 CREATE INDEX schedules_due ON schedules(enabled,nextRunAt);
--- One row per dispatched occurrence: the primary key makes a restart or a second ticker unable to dispatch twice.
 CREATE TABLE schedule_runs (
   scheduleId TEXT NOT NULL REFERENCES schedules(id),
   occurrence INTEGER NOT NULL,

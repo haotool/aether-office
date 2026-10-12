@@ -41,15 +41,15 @@ it('reports merged worktrees and branches, missing worktrees and sizes, and sugg
     g(join(dir, 'wt-done'), 'commit', '-qm', 'done work');
     g(repo, 'merge', '-q', 'done');
     g(repo, 'worktree', 'add', '-q', '-b', 'wip', join(dir, 'wt-wip'));
-    writeFileSync(join(dir, 'wt-wip', 'c.txt'), 'c\n'); // unmerged and dirty
+    writeFileSync(join(dir, 'wt-wip', 'c.txt'), 'c\n');
     g(repo, 'worktree', 'add', '-q', '-b', 'lost', join(dir, 'wt-lost'));
-    rmSync(join(dir, 'wt-lost'), { recursive: true }); // deleted without `git worktree remove`
+    rmSync(join(dir, 'wt-lost'), { recursive: true });
     g(repo, 'branch', 'old-merged');
     const report = await gitHealth(repo);
     const by = Object.fromEntries(report.worktrees.map((w) => [w.branch ?? w.path, w]));
     expect(report.defaultBranch).toBe('main');
     expect(by['done']).toMatchObject({ merged: true, dirty: 0 });
-    expect(by['wip']).toMatchObject({ merged: false, dirty: null }); // changes are only counted where removal is possible
+    expect(by['wip']).toMatchObject({ merged: false, dirty: null });
     expect(by['wip']!.lastCommitAt).toBeGreaterThan(0);
     expect(by['lost']).toMatchObject({ prunable: true });
     expect(report.staleBranches).toEqual(['old-merged']);
@@ -59,12 +59,10 @@ it('reports merged worktrees and branches, missing worktrees and sizes, and sugg
       'git branch -d old-merged',
     ]);
     expect(report.removable).toEqual([join(dir, 'wt-done')]);
-    // The sizes come apart from the report: every worktree still on disk, none for the one that is gone.
     const { sizes } = await worktreeSizes(repo);
     expect(sizes[repo]).toBeGreaterThan(0);
     expect(sizes[join(dir, 'wt-done')]).toBeGreaterThan(0);
     expect(Object.keys(sizes)).not.toContain(join(dir, 'wt-lost'));
-    // Nothing was removed.
     expect(g(repo, 'worktree', 'list')).toContain('wt-done');
   } finally {
     rmSync(dir, { recursive: true, force: true });
@@ -92,7 +90,7 @@ it('cleans only merged, clean, unused worktrees, re-checking each and never forc
     g(repo, 'commit', '-qm', 'base');
     merge('clean');
     merge('dirty');
-    writeFileSync(join(dir, 'dirty', 'scratch.txt'), 'not committed'); // untracked file: must survive
+    writeFileSync(join(dir, 'dirty', 'scratch.txt'), 'not committed');
     merge('busy');
     g(repo, 'worktree', 'add', '-q', '-b', 'open', join(dir, 'open'));
     writeFileSync(join(dir, 'open', 'o.txt'), 'o');
@@ -108,7 +106,7 @@ it('cleans only merged, clean, unused worktrees, re-checking each and never forc
         repo,
         '/nowhere',
       ],
-      [join(dir, 'busy', 'src')], // a live agent is working inside it
+      [join(dir, 'busy', 'src')],
     );
     expect(Object.fromEntries(results.map((r) => [r.path, r.reason ?? r.outcome]))).toEqual({
       [join(dir, 'clean')]: 'removed',
@@ -120,7 +118,7 @@ it('cleans only merged, clean, unused worktrees, re-checking each and never forc
     });
     expect(existsSync(join(dir, 'clean'))).toBe(false);
     expect(existsSync(join(dir, 'dirty', 'scratch.txt'))).toBe(true);
-    expect(g(repo, 'branch', '--list', 'clean')).toContain('clean'); // branches are never deleted
+    expect(g(repo, 'branch', '--list', 'clean')).toContain('clean');
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

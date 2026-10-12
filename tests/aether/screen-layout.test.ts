@@ -108,7 +108,7 @@ describe('the screen does not flicker when unrelated facts change', () => {
     expect(currentWork(a)).toEqual(currentWork(b));
     expect(view('backend', base, 1000)).toBe(view('backend', base, 99_000));
     const code = generateFile('seed-1', 'auth.ts', 'ts');
-    expect(generateFile('seed-1', 'auth.ts', 'ts')).toBe(code); // the very same lines, not a recomputation
+    expect(generateFile('seed-1', 'auth.ts', 'ts')).toBe(code);
     const ctx = { branch: 'main', edited: ['auth.ts'], ports: [], uncommitted: 1 };
     expect(terminalOutput('seed-1', 'pnpm build', ctx, 30)).toEqual(
       terminalOutput('seed-1', 'pnpm build', { ...ctx, uncommitted: 9 }, 30),

@@ -1,25 +1,15 @@
 /**
- * What a coding agent running in a terminal is doing, read off the screen's last lines: working, waiting for a person
- * to choose, or idle at its prompt. The terminal screens of Claude Code and Codex are the only thing a managed
- * terminal shows of them, and what they draw is chrome around prose, so the rules are conservative:
- *
- *  - only the bottom of the screen counts (a prompt or spinner scrolled far up is history);
- *  - a spinner is a glyph, a gerund and an ellipsis ("✻ Cooking…"), not any line that starts with a bullet;
- *  - a footer such as "Enter to confirm ·" counts, the same words inside a sentence do not;
- *  - a spinner that is directly above the input box means working; one with a reply between it and the prompt is over.
- *
- * The shapes follow what cli-agent-orchestrator (Apache-2.0) learned from live Claude Code and Codex screens; the
- * code is written here. Unknown wording is `unknown`, never a guess.
+ * Conservative rules over the screen's last lines: only the bottom counts, a spinner is a glyph, a gerund and an
+ * ellipsis, and a footer counts only on its own line. The shapes follow cli-agent-orchestrator (Apache-2.0); the code
+ * is written here. Unknown wording is `unknown`, never a guess.
  */
 export type TerminalAgentState = 'working' | 'waiting' | 'idle' | 'unknown';
 
 const WINDOW_LINES = 15;
 const OSC = /\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g;
-// Cursor moves that redraw a line in place (up, down, line starts, column, position) end the line they leave.
 const REDRAW = /\x1b\[[0-9;]*[ABEFGHf]/g;
 const OTHER_CSI = /\x1b\[[0-9;?]*[ -/]*[@-~]/g;
 
-/** The text of a terminal stream as lines: colors and modes gone, in-place redraws turned into line breaks. */
 function plainTerminalLines(raw: string): string[] {
   return raw
     .replace(OSC, '')

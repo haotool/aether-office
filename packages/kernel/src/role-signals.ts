@@ -1,10 +1,5 @@
 import type { RoleId } from './departments.js';
 
-// The vocabulary the classifier scores with. Three kinds of evidence: words (a title, a prompt, a branch, a repository),
-// what a session did (the files it touched, the commands it ran) and the subagents it works with. Each entry names the
-// role it points to and how strongly: 2 is a word or a place that nearly only that role uses, 1 one many roles share.
-
-/** A word pattern: [role, strength, pattern]. Latin words are matched whole; Chinese terms as substrings. */
 type WordRule = readonly [RoleId, 1 | 2, RegExp];
 
 export const WORDS: readonly WordRule[] = [
@@ -121,7 +116,6 @@ export const WORDS: readonly WordRule[] = [
   ['research', 1, /\b(?:analy[sz]e|study|find out|look into|understand)\b|分析|了解|原因/i],
 ];
 
-/** What the file a session read or wrote says about it: [role, weight, pattern, label]. The first match per file wins. */
 type PathRule = readonly [RoleId, number, RegExp, string];
 export const PATHS: readonly PathRule[] = [
   [
@@ -190,7 +184,6 @@ export const PATHS: readonly PathRule[] = [
   ],
 ];
 
-/** A command a session ran: [role, weight, pattern, label], tried against the whole command text. */
 type CommandRule = readonly [RoleId, number, RegExp, string];
 export const COMMANDS: readonly CommandRule[] = [
   [
@@ -252,7 +245,6 @@ export const COMMANDS: readonly CommandRule[] = [
   ['backend', 0.4, /\bcurl\b[^|]*(?:localhost|127\.0\.0\.1)/, 'api calls'],
 ];
 
-/** The role a subagent type works as. Built-in Claude Code types and common custom ones; null when it says nothing. */
 const SUBAGENTS: readonly (readonly [RegExp, RoleId])[] = [
   [/security/i, 'security'],
   [/review/i, 'review'],
@@ -268,7 +260,6 @@ const SUBAGENTS: readonly (readonly [RegExp, RoleId])[] = [
 export const roleOfSubagent = (type: string): RoleId | null =>
   SUBAGENTS.find(([pattern]) => pattern.test(type))?.[1] ?? null;
 
-/** Tools that are not about files or commands but say something by themselves: [tool pattern, role, weight, label]. */
 export const TOOLS: readonly (readonly [RegExp, RoleId, number, string])[] = [
   [/^ExitPlanMode$/, 'architect', 1.5, 'plan mode'],
   [/^(?:WebSearch|WebFetch)$/, 'research', 0.6, 'web lookups'],

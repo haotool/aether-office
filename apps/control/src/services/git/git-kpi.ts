@@ -4,10 +4,6 @@ import { defaultBranch, git } from './git-health.js';
 import { mapPool } from '../runtime/pool.js';
 import type { DayOf } from '../usage/usage-counters.js';
 
-// Git activity of one repository over the last 30 days, from read-only git commands with timeouts: commits, merge
-// commits, branches that became part of the default branch, branches still open, authors, lines changed. Counts only:
-// no subject, author or path leaves this file (authors are told apart by email address and only counted). Cached by the branch tips, so an idle repository costs one command.
-
 const KPI_TTL_MS = 60_000;
 const MAX_COMMITS = 5000;
 const STAT_COMMITS = 2000;
@@ -22,22 +18,16 @@ type Raw = {
   base: string;
   branches: Branch[];
   merged: Set<string>;
-  /** Commits on any local branch in the window. */
   commits: { at: number; author: string }[];
-  /** Merge commits on the default branch's own line, with the branch tip each brought in. */
   baseMerges: { at: number; tip: string }[];
   lines: { added: number; removed: number } | null;
-  /** A commit list or the line count stopped at its cap: the counts are a lower bound. */
   truncated: boolean;
-  /** Merged branches that sit on the default branch's tip and did move since they were created (fast-forwarded work). */
   worked: Set<string>;
-  /** First-commit ages (ms since epoch) of the open branches looked at. */
   openSince: number[];
 };
 
 const lines = (text: string) => text.split('\n').filter(Boolean);
 
-/** Pure. `git for-each-ref --format=%(refname:short)%09%(objectname)%09%(committerdate:unix)`. */
 export function parseBranches(text: string): Branch[] {
   return lines(text).flatMap((line) => {
     const [name, sha, at] = line.split('\t');
@@ -45,7 +35,6 @@ export function parseBranches(text: string): Branch[] {
   });
 }
 
-/** Pure. Lines added and removed by `git log --shortstat` output. */
 export function parseShortstat(text: string): { added: number; removed: number } {
   let added = 0;
   let removed = 0;
@@ -56,7 +45,6 @@ export function parseShortstat(text: string): { added: number; removed: number }
   return { added, removed };
 }
 
-/** Pure. The numbers a person reads, from what the commands said. */
 export function buildKpi(raw: Raw, days: readonly string[], dayOf: DayOf, now: number): GitKpi {
   const slot = (at: number) => days.indexOf(dayOf(at));
   const windowed = (times: readonly number[]) => {
@@ -105,7 +93,6 @@ export function buildKpi(raw: Raw, days: readonly string[], dayOf: DayOf, now: n
   };
 }
 
-/** The four read-only log commands of a window, each empty (or null for the line count) when git failed. */
 async function readLogs(root: string, base: string, since: string) {
   const [merged, log, merges, stat] = await Promise.all([
     git(root, ['branch', '--merged', base, '--format=%(refname:short)'], GIT_TIMEOUT_MS).catch(
@@ -140,7 +127,7 @@ async function readLogs(root: string, base: string, since: string) {
         '-n',
         String(STAT_COMMITS),
         '--shortstat',
-        '--format=%x01', // one marker per commit: how many the line count covered
+        '--format=%x01',
       ],
       GIT_TIMEOUT_MS,
     ).then(
@@ -151,7 +138,6 @@ async function readLogs(root: string, base: string, since: string) {
   return { merged, log, merges, stat };
 }
 
-/** Merged branches sitting on the default branch's tip whose reflog shows they moved (fast-forwarded work). */
 async function workedBranches(root: string, branches: Branch[], base: string, merged: Set<string>) {
   const baseTip = branches.find((b) => b.name === base)?.sha;
   const atTip = branches
@@ -168,7 +154,6 @@ async function workedBranches(root: string, branches: Branch[], base: string, me
   return new Set(names.filter((name): name is string => name !== null));
 }
 
-/** The first-commit time of each of the newest open branches. */
 async function openBranchStarts(
   root: string,
   branches: Branch[],
@@ -228,10 +213,6 @@ async function collect(
 const cache = new Map<string, { sig: string; at: number; day: string; kpi: GitKpi }>();
 const MAX_CACHED = 64;
 
-/**
- * Git KPIs of the repository at `root` for the window `days` (YYYY-MM-DD, oldest first, the last being today). Null when
- * it is not a repository, has no commit yet, or git failed. A tip signature and a minute's memory keep repeats cheap.
- */
 export async function gitKpi(
   root: string,
   days: readonly string[],
@@ -259,7 +240,6 @@ export async function gitKpi(
       cache.set(root, { ...hit, at: now });
       return hit.kpi;
     }
-    // The window starts at the first of its days, taken a day early for the zone's edge; buildKpi cuts it exactly.
     const sinceIso = new Date(Date.parse(`${days[0]}T00:00:00Z`) - DAY_MS).toISOString();
     const kpi = buildKpi(await collect(root, branchesText, base, sinceIso), days, dayOf, now);
     if (cache.size >= MAX_CACHED) cache.clear();
@@ -280,7 +260,6 @@ const sumWindowed = (list: readonly GitKpi['commits'][]) => ({
 const sumLines = (list: readonly (number | null)[]) =>
   list.some((n) => n !== null) ? list.reduce<number>((n, v) => n + (v ?? 0), 0) : null;
 
-/** Pure. Several repositories' KPIs as one (an office, the building). Authors are counted once per repository. */
 export function sumKpis(list: readonly GitKpi[]): GitKpi | null {
   const [first] = list;
   if (!first) return null;

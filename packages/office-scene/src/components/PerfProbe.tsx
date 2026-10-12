@@ -13,7 +13,6 @@ type Collector = {
   deltas: number[];
   js: number[];
   render: number[];
-  /** The heaviest main view of the sample: the frames that redraw the shadow map cost the most. */
   calls: number;
   triangles: number;
   resolve: (report: PerfReport) => void;
@@ -27,11 +26,9 @@ const statsOf = (values: readonly number[]): FrameStats =>
 type Rig = PerfRig & { report: (c: Collector) => PerfReport };
 type PerfWindow = Window & { __aetherPerfRig?: Rig };
 type MainView = { calls: number; triangles: number; ms: number };
-/** What the patched render and the frame callback hand each other within one frame. */
 type Timing = {
   frameStart: number;
   pending: { js: number; render: number } | null;
-  /** The main view's own counts: with the control-room wall, the last render of a frame is a small view. */
   main: MainView | null;
   lastMain: MainView | null;
 };
@@ -51,7 +48,6 @@ const newCollector = (frames: number, resolve: (report: PerfReport) => void): Co
   resolve,
 });
 
-/** The report of a finished sample: frame times, CPU time per frame, and what the renderer holds. */
 function reportOf(gl: WebGLRenderer, scene: Scene, c: Collector, settings: Settings): PerfReport {
   const context = gl.getContext();
   const debug = context.getExtension('WEBGL_debug_renderer_info');
@@ -80,7 +76,6 @@ function reportOf(gl: WebGLRenderer, scene: Scene, c: Collector, settings: Setti
   };
 }
 
-/** Times every render call: the CPU time since the frame began, and the main view's own cost and counts. */
 function useRenderTiming(gl: WebGLRenderer, timing: { current: Timing }) {
   useEffect(() => {
     const render = gl.render.bind(gl);
@@ -104,7 +99,6 @@ function useRenderTiming(gl: WebGLRenderer, timing: { current: Timing }) {
   }, [gl, timing]);
 }
 
-/** Takes one frame into the sample (after the warm-up); true once the sample is full. */
 function record(c: Collector, timing: Timing, delta: number): boolean {
   c.seen += 1;
   if (c.seen > WARMUP && timing.pending) {
@@ -123,11 +117,6 @@ type PerfProbeProps = {
   onReport: (report: PerfReport) => void;
 };
 
-/**
- * Renders continuously for a number of frames and reports measured frame times, CPU time per frame and what the scene
- * holds. The first report goes to `onReport`; `window.__aetherPerfRig.sample(n)` takes more after a script has changed
- * the scene (to attribute a cost by switching one piece off).
- */
 export function PerfProbe({ quality, frames = DEFAULT_SAMPLE, onReport }: PerfProbeProps) {
   const collector = useRef<Collector | null>(null);
   const timing = useRef<Timing>({ frameStart: 0, pending: null, main: null, lastMain: null });
@@ -163,7 +152,7 @@ export function PerfProbe({ quality, frames = DEFAULT_SAMPLE, onReport }: PerfPr
     const t = timing.current;
     t.frameStart = performance.now();
     t.lastMain = t.main ?? t.lastMain;
-    t.main = null; // the next render is a new frame's main view
+    t.main = null;
     const c = collector.current;
     if (!c) return;
     if (record(c, t, delta)) {

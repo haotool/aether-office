@@ -26,7 +26,7 @@ it('stores a version 1 layout as sent, accepts a squad as version 2 and refuses 
   try {
     const v1 = defaultLayout([]);
     expect((await save(v1, 0)).statusCode).toBe(200);
-    expect(JSON.stringify((await stored()).data)).toBe(JSON.stringify(v1)); // version 1 round-trips byte for byte
+    expect(JSON.stringify((await stored()).data)).toBe(JSON.stringify(v1));
 
     const zone = squadLayout(v1, 'desk-3', 4)!;
     const v2: Layout = {
@@ -35,7 +35,7 @@ it('stores a version 1 layout as sent, accepts a squad as version 2 and refuses 
       objects: [...v1.objects, squadObjectOf(zone, 'squad-1', 2)],
     };
     expect((await save(v2, 1)).statusCode).toBe(200);
-    expect(JSON.stringify((await stored()).data)).toBe(JSON.stringify(v2)); // and so does version 2
+    expect(JSON.stringify((await stored()).data)).toBe(JSON.stringify(v2));
 
     const missingAnchor = await save(
       {
@@ -46,9 +46,9 @@ it('stores a version 1 layout as sent, accepts a squad as version 2 and refuses 
     );
     expect(missingAnchor.statusCode).toBe(400);
     expect(JSON.stringify(missingAnchor.json())).toContain('LAYOUT_SQUAD_ANCHOR');
-    expect((await save({ ...v2, schemaVersion: 1 }, 2)).statusCode).toBe(400); // a squad needs version 2
+    expect((await save({ ...v2, schemaVersion: 1 }, 2)).statusCode).toBe(400);
     expect((await save({ ...v2, schemaVersion: 3 }, 2)).statusCode).toBe(400);
-    expect((await stored()).version).toBe(2); // every refusal left the saved layout alone
+    expect((await stored()).version).toBe(2);
   } finally {
     await app.close();
     f.control.close();

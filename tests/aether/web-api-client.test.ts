@@ -1,8 +1,6 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { installBrowserEnv, installGlobal, removeBrowserEnv } from './fixtures/browser-env.js';
 
-// The browser's API client against a fake `fetch`: what it sends (credentials, CSRF token, content type), how it recovers
-// when another tab rotated the token, and where it keeps the token.
 const env = installBrowserEnv();
 const { api } = await import('../../apps/web/src/lib/api/api.js');
 const { ApiError } = await import('../../apps/web/src/lib/api/api-error.js');
@@ -92,7 +90,7 @@ describe('CSRF recovery', () => {
     });
     expect(sent.map((s) => s.url)).toEqual(['/api/x', '/api/session/csrf', '/api/x']);
     expect(headers(2)['x-csrf-token']).toBe('fresh');
-    expect(sent[2]!.init.body).toBe('{"a":1}'); // the same body, so the same idempotency key
+    expect(sent[2]!.init.body).toBe('{"a":1}');
   });
 
   it('gives up after one retry', async () => {

@@ -1,5 +1,3 @@
-// Area 2: types and correctness gates. Compiler strictness, files outside the type-checked project, the typecheck,
-// boundary and format gates (run locally, no network), non-null assertions and double casts.
 import path from 'node:path';
 import { isSourceFile, locations, top } from '../lib.mjs';
 import { rule } from '../model.mjs';

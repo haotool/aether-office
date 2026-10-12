@@ -5,7 +5,6 @@ test('local sessions are auto-discovered and shown as observe-only 3D agents', a
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await signIn(page);
-  // The repository is adopted as its own project; its sessions appear there and not in other projects.
   const picker = page.locator('.project-picker select');
   await expect(picker.locator('option', { hasText: 'fixture-repo' })).toBeAttached({
     timeout: 15000,
@@ -14,19 +13,17 @@ test('local sessions are auto-discovered and shown as observe-only 3D agents', a
   await expect(label).toHaveCount(0);
   await picker.selectOption({ label: 'fixture-repo' });
   await expect(label).toBeVisible({ timeout: 15000 });
-  // Labels are projected from 3D and hidden when off-camera, so assert the subagent character exists.
   await expect(page.locator('.scene-label', { hasText: 'Explore' })).toBeAttached();
   await expect(page.locator('canvas')).toBeVisible();
   await label.click();
   await expect(page.getByText('OBSERVE · claude')).toBeVisible();
-  await page.locator('.session-details summary').click(); // the details are one closed fold under the conversation
+  await page.locator('.session-details summary').click();
   await expect(page.getByText('uncommitted', { exact: true })).toBeVisible();
   expect(
     (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
       .violations,
   ).toEqual([]);
   await page.screenshot({ path: 'evidence/screenshots/e2e-local-sessions.png' });
-  // Without WebGL, or by choice, the 2D list and the team strip show the same sessions.
   await page.getByRole('button', { name: '2D 列表' }).click();
   await expect(page.locator('.agent-card', { hasText: 'fixture-repo' }).first()).toBeVisible();
   await expect(page.locator('.team-chip', { hasText: 'fixture-repo' }).first()).toBeVisible();
@@ -47,6 +44,6 @@ test('"show in office" opens the member\'s project and brings its desk into view
   await page.getByRole('button', { name: '在辦公室查看' }).first().click();
   await expect(page).toHaveURL(/\/office\?project=[^&]+&agent=local%3Aclaude%3Ae2e-session$/, {
     timeout: 15000,
-  }); // the focus request was taken up and removed from the address
+  });
   await expect(page.locator('.scene-label.selected')).toBeVisible();
 });

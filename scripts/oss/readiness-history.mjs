@@ -1,4 +1,3 @@
-// History checks of the publishing-readiness check (--history): blobs, paths, commit messages, agent artifacts.
 import { spawn } from 'node:child_process';
 import {
   BUILT_IN_RULES,
@@ -17,9 +16,6 @@ import {
 import { FORBIDDEN_TRACKED, MB, SELF } from './readiness-config.mjs';
 import { add, worst } from './readiness-results.mjs';
 import { report } from './readiness-tree.mjs';
-
-// ---------------------------------------------------------------------------------------------------------------
-// History
 
 async function streamBlobs(repo, ids, onBlob) {
   const child = spawn('git', ['-C', repo, 'cat-file', '--batch'], {

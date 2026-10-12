@@ -11,7 +11,6 @@ import { HomeList, SideNav } from './SettingsNav.js';
 import { SettingsSearch } from './SettingsSearch.js';
 import { useSettingsPage, type SettingsPageState } from './useSettingsPage.js';
 
-/** The brief message at the foot of the page, with an undo when the change can be taken back. */
 function SettingsToast({ notice, onDismiss }: { notice: Notice; onDismiss: () => void }) {
   const t = useT();
   return (
@@ -33,7 +32,6 @@ function SettingsToast({ notice, onDismiss }: { notice: Notice; onDismiss: () =>
   );
 }
 
-/** The title row: a back link and the group's name on a phone's group page, otherwise the heading and the search. */
 function SettingsHeader({ page, projectId }: { page: SettingsPageState; projectId: string }) {
   const t = useT();
   const detailMeta = SECTIONS.find((s) => s.id === page.detail);
@@ -60,7 +58,6 @@ function SettingsHeader({ page, projectId }: { page: SettingsPageState; projectI
   );
 }
 
-/** The groups: the phone's list, the empty search result, or the navigation column beside the rows. */
 function SettingsGroups({
   page,
   projectId,
@@ -72,14 +69,13 @@ function SettingsGroups({
 }) {
   const t = useT();
   const { drill, searching, requested, withMatches, query } = page;
-  if (drill && !requested)
-    return <HomeList sections={SECTIONS} projectId={projectId} onGo={page.go} />;
+  if (drill && !requested) return <HomeList projectId={projectId} onGo={page.go} />;
   if (searching && !withMatches.length)
     return <Empty title={`${t('stNoResults')} “${query.trim()}”`} />;
   return (
     <div className={`settings-layout ${drill || searching ? 'single' : ''}`}>
       {!drill && !searching && (
-        <SideNav sections={SECTIONS} active={page.active} projectId={projectId} onGo={page.go} />
+        <SideNav active={page.active} projectId={projectId} onGo={page.go} />
       )}
       <div className="settings-main">
         {(drill ? SECTIONS.filter((s) => s.id === page.detail) : withMatches).map((s) => (
@@ -90,11 +86,6 @@ function SettingsGroups({
   );
 }
 
-/**
- * Settings: the groups as a column of links beside the rows (scrolling the page moves the mark, a link scrolls to its
- * group and sets the address), or on a phone a list of groups that each open a page of their own. Search narrows both
- * to the rows that match. `/settings/<group>` and `#<group>` open a group directly.
- */
 export function SettingsPage({
   projectId,
   mode,

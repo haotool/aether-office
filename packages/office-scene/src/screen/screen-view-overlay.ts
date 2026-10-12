@@ -10,7 +10,6 @@ const STATE_TEXT: Record<string, string> = {
   unknown: '—',
 };
 
-/** The wallpaper drawn from the member's id, clipped to the screen and drifting slowly. */
 function drawWallpaper(c: ViewCtx, r: Rng, t: number): void {
   const { g, box, profile } = c;
   g.save();
@@ -49,10 +48,6 @@ function drawWallpaper(c: ViewCtx, r: Rng, t: number): void {
   g.restore();
 }
 
-/**
- * A screen that is not working: a wallpaper drawn from the member's id (bubbles, a grid or bands, drifting slowly) with the
- * real title, state, quiet minutes and context share on it.
- */
 export function drawLock(c: ViewCtx): void {
   const { g, p, box, facts } = c;
   g.fillStyle = p.bg;

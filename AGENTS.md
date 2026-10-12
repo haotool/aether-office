@@ -1,7 +1,7 @@
 # AETHER OFFICE: guidance for coding agents
 
 This file is the shared rule index for every AI coding agent working in this repository (`CLAUDE.md` points here). Humans
-should read [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/development.md](docs/development.md).
+should read [CONTRIBUTING.md](.github/CONTRIBUTING.md) and [docs/development.md](docs/development.md).
 
 ## Non-negotiable rules
 
@@ -23,7 +23,8 @@ See [docs/architecture.md](docs/architecture.md).
 ## Checks
 
 Run before finishing: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test`, `pnpm build`, and
-`pnpm exec playwright test` (the same ones CI runs). Work test-first.
+`pnpm exec playwright test` (CI runs the others; it does not run the browser suite, see
+[docs/development.md](docs/development.md)). Work test-first.
 
 ## UI
 
@@ -40,4 +41,5 @@ See [docs/development.md](docs/development.md#the-animals).
 ## Conventions
 
 Conventional commit prefixes (`feat`, `fix`, `refactor`, `perf`, `docs`, `test`, `chore`, `ci`). Small focused changes. Prefer
-the standard library and existing code over new dependencies. Record user-visible changes in `CHANGELOG.md`.
+the standard library and existing code over new dependencies. Record user-visible changes in `CHANGELOG.md`. Code only shrinks and
+comments are rare: see [Code only shrinks](.github/CONTRIBUTING.md#code-only-shrinks).

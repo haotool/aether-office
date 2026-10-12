@@ -1,7 +1,6 @@
 import { OrbitalBackdrop } from './OrbitalBackdrop.js';
 import type { Quality } from '../scene/scene-types.js';
 
-/** The sky, fog and lights of the scene; the shadow-casting sun follows the floor on show. */
 export function SceneLights(props: {
   y: number;
   accent: string;

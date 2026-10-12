@@ -1,4 +1,3 @@
-// E/H criteria evidence file (docs/quality/criteria-evidence.json).
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';

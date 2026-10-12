@@ -5,6 +5,7 @@ import {
   FLOOR_CAPACITY,
   assignSeats,
   defaultLayout,
+  floorKey,
 } from '../../packages/office-scene/src/environment/layout.js';
 import { mergeLayout } from '../../apps/web/src/features/office/layout-merge.js';
 import {
@@ -156,5 +157,19 @@ describe('seat storage', () => {
     expect(back.size).toBe(MAX_SEATS);
     expect(back.has('s0')).toBe(false);
     expect(back.has(`s${MAX_SEATS + 19}`)).toBe(true);
+  });
+});
+
+describe('floorKey (what a floor is built from)', () => {
+  const base = defaultLayout(people(3));
+  const moved = { ...base, objects: base.objects.map((o, i) => (i ? o : { ...o, x: o.x + 1 })) };
+
+  it('ignores who sits where, so a refresh of the same office keeps its floors', () => {
+    expect(floorKey(defaultLayout(people(3, 7)), 0)).toBe(floorKey(base, 0));
+  });
+
+  it('follows the furniture and the floor', () => {
+    expect(floorKey(moved, 0)).not.toBe(floorKey(base, 0));
+    expect(floorKey(base, 1)).not.toBe(floorKey(base, 0));
   });
 });

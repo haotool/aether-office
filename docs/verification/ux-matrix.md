@@ -2,7 +2,7 @@
 
 Unit tests cannot see a layout that overflows at 320 px, a control too small for a thumb, a blank screen or a contrast failure. The UX matrix opens every page in a real browser at seven widths, in both themes and both languages, takes a screenshot and checks the page. It also opens the states a page can be in besides "working": loading, failed, empty, offline, reduced motion, and an overlay on top.
 
-The totals of the latest run are in [ux-matrix.json](ux-matrix.json), stamped with the git tree ids of the code they describe. When `apps/web`, `apps/control` or `packages/{contracts,kernel,office-scene}` change, the record is stale and the release score treats it as not measured until the matrix is run again.
+The totals of the latest run are in `ux-matrix.json` (next to this file), stamped with the git tree ids of the code they describe. When `apps/web`, `apps/control` or `packages/{contracts,kernel,office-scene}` change, the record is stale and the release score treats it as not measured until the matrix is run again.
 
 ## What one run covers
 

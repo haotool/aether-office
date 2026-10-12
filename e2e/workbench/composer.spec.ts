@@ -8,10 +8,9 @@ import {
 } from '../support/native-fixture.js';
 import AxeBuilder from '@axe-core/playwright';
 
-// The composer, against a FAKE interactive CLI (fixtures/processes/claude-tui.mjs, started by
-// scripts/e2e-native-server.ts) and never a model. The first test seeds its own terminal transcript (it needs a session
-// AETHER does not own yet); the others take the server's shared session and continue it when it is not running yet, so
-// they pass in any order. A continued session is a running terminal and a machine runs four of them at most.
+// Against a FAKE interactive CLI (tests/processes/claude-tui.mjs, started by scripts/e2e-native-server.ts), never a
+// model. The first test seeds its own terminal transcript; the others continue the server's shared session, so they
+// pass in any order. A machine runs four terminals at most.
 
 async function login(page: Page) {
   await signIn(page, nativeOrigin(), { session: NATIVE_SESSION });
@@ -20,7 +19,6 @@ async function login(page: Page) {
   await expect(page.getByRole('link', { name: '辦公室', exact: true }).first()).toBeVisible();
 }
 
-/** The panel, composer included, passes axe (contrast too) in the dark theme and the light one. */
 async function expectAccessible(page: Page) {
   // A menu that is still fading in has a blended colour: axe would measure the contrast of that, not of the finished page.
   await page.evaluate(() =>
@@ -66,20 +64,17 @@ test('a session AETHER does not own is read-only; continuing it in AETHER makes 
   await expect(conversation.getByText('Earlier answer from a terminal')).toBeVisible({
     timeout: 15000,
   });
-  // Honest: no text box, an explanation, and the way to continue where AETHER can drive.
   const footer = conversation.locator('.session-footer');
   await expect(footer).toContainText('唯讀');
   await expect(conversation.locator('textarea')).toHaveCount(0);
   await footer.getByRole('button', { name: '在 AETHER 繼續', exact: true }).click();
   await expect(footer.getByText(/終端機已啟動/)).toBeVisible();
   await page.screenshot({ path: 'evidence/screenshots/e2e-composer-continue.png' });
-  // The fake CLI resumes the same session in an AETHER terminal: now the footer is a composer.
   const box = conversation.getByLabel('傳訊息給 session');
   await expect(box).toBeVisible({ timeout: 45000 });
   await expect(conversation.locator('.session-footer')).not.toContainText('唯讀');
   await expectAccessible(page);
 
-  // Send: the message shows at once as a pending bubble, then the transcript's own bubble replaces it (once).
   await box.fill('hello from the composer');
   await box.press('Enter');
   await expect(conversation.locator('.msg.user.pending')).toContainText('hello from the composer');
@@ -91,7 +86,6 @@ test('a session AETHER does not own is read-only; continuing it in AETHER makes 
     conversation.locator('.msg.user', { hasText: 'hello from the composer' }),
   ).toHaveCount(1);
 
-  // Several lines go in as one message; Shift+Enter is a new line, not a send.
   await box.fill('first line');
   await box.press('Shift+Enter');
   await box.pressSequentially('second line');
@@ -100,8 +94,6 @@ test('a session AETHER does not own is read-only; continuing it in AETHER makes 
     timeout: 30000,
   });
 
-  // While it works Stop takes the place of Send; it interrupts, and Send comes back.
-  // (A message sent while the session is still finishing the last one waits for it; Stop is for the one it is doing.)
   await box.fill('slow task please');
   await box.press('Enter');
   await expect(
@@ -130,14 +122,12 @@ test('the slash menu and @file completion fill the box; custom commands are list
   const menu = conversation.getByRole('listbox', { name: '指令' });
   await expect(menu.getByRole('option', { name: /\/compact/ })).toBeVisible();
   await expect(menu.getByRole('option', { name: /\/compact/ })).not.toContainText('終端機中');
-  // A command that opens a list in the terminal says so.
   await box.fill('/mod');
   await expect(menu.getByRole('option', { name: /\/model/ })).toContainText('會在終端機中開啟清單');
-  await expectAccessible(page); // with the list open
+  await expectAccessible(page);
   await page.screenshot({ path: 'evidence/screenshots/e2e-composer-slash.png' });
   await box.press('Tab');
   await expect(box).toHaveValue('/model ');
-  // The caret is put after the completion on the next frame; let it land before the box is typed into again.
   await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => done(true))));
   await box.fill('look at @fixt');
   const files = conversation.getByRole('listbox', { name: '檔案' });
@@ -185,7 +175,7 @@ test('phone: Enter is a new line, Send is a button, quick replies are one tap', 
   await box.press('Enter');
   await box.pressSequentially('two');
   await expect(box).toHaveValue('one\ntwo');
-  await expect(full.locator('.msg.user.pending')).toHaveCount(0); // Enter did not send
+  await expect(full.locator('.msg.user.pending')).toHaveCount(0);
   const quick = full.getByRole('toolbar', { name: '快速回覆' });
   await expect(quick.getByRole('button')).toHaveText(['繼續', '是', '否', 'Esc']);
   for (const control of await full.locator('.composer button, .composer textarea').all()) {

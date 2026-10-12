@@ -244,7 +244,6 @@ it('a workflow step fixes the reviewer provider: the wrong provider is refused a
         "INSERT INTO workflows VALUES ('wf','" + projectId + "','claude_codex_review','t',?,1)",
       )
       .run(owner.actor.id);
-    // The reviewer in this fixture is a codex agent; require a claude one first.
     sql
       .prepare("INSERT INTO workflow_steps VALUES (?,'wf','engineer+reviewer',0,'claude','claude')")
       .run(workId);

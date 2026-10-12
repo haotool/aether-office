@@ -23,9 +23,7 @@ type OfficePageProps = {
   selectedId: string | null;
   focus: string;
   tour: TourState;
-  /** A layout being edited, shown live in the scene before it is saved. */
   preview: Layout | null;
-  /** Keys of local sessions with something new for the user. */
   unread: ReadonlySet<string>;
   canWrite: boolean;
   onSelect: (id: string) => void;
@@ -40,7 +38,6 @@ type OfficePageProps = {
   onRefresh: () => void;
 };
 
-/** The office page: heading and counts, the 3D scene (or the 2D list) with its toolbar, and the team strip. */
 export function OfficePage(props: OfficePageProps) {
   const { session, model, data, projectId, selectedId, canWrite, onSelect } = props;
   const kpi = useKpiPanel();

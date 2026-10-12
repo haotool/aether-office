@@ -98,7 +98,6 @@ export function scheduleCommand(
   return view(ctx.sqlite.prepare('SELECT * FROM schedules WHERE id=?').get(row.id) as Row);
 }
 
-/** Creates the work item for one claimed occurrence; a revoked creator or a template gone invalid stops the schedule. */
 function dispatchOccurrence(ctx: Context, row: Row, occurrence: number): boolean {
   try {
     const actor = identityActor(ctx, row.createdBy);
@@ -127,7 +126,6 @@ function dispatchOccurrence(ctx: Context, row: Row, occurrence: number): boolean
     );
     return true;
   } catch {
-    // The creator was revoked or the template became invalid: record it and stop the schedule.
     ctx.sqlite
       .prepare("UPDATE schedule_runs SET outcome='failed' WHERE scheduleId=? AND occurrence=?")
       .run(row.id, occurrence);
@@ -137,9 +135,8 @@ function dispatchOccurrence(ctx: Context, row: Row, occurrence: number): boolean
 }
 
 /**
- * Dispatches due schedules. An occurrence is claimed by inserting into schedule_runs first, so a
- * restart, a retry or a second ticker cannot create the same work twice. Dispatch only creates a
- * WorkItem: it never assigns an agent, so a schedule cannot spend model budget on its own.
+ * An occurrence is claimed by inserting into schedule_runs first, so a restart, a retry or a second ticker cannot
+ * create the same work twice. Dispatch only creates a WorkItem, so a schedule cannot spend model budget on its own.
  */
 export function tickSchedules(ctx: Context): number {
   const now = ctx.now();

@@ -7,15 +7,11 @@ import { zoneBadge, zoneName } from './squad-text.js';
 import type { SquadSceneContext } from './squad-scene.js';
 import type { SquadFrame } from './use-squad.js';
 
-/** Over the front edge of the zone, at the floor, where the floor zones' own labels are. */
 const LABEL_LIFT = 0.14;
-/** Columns the label's box takes up (the projection keeps two labels from overlapping). */
 const LABEL_WIDTH = 96;
 
-/** The id a squad's label has in the scene's table of label elements. */
 const labelId = (supervisor: string) => `squad:${supervisor}`;
 
-/** Where each squad's label is projected from: over the front edge of its zone. Pure. */
 export function squadLabelsOf(squads: readonly DrawSquad[], exploded: boolean) {
   return squads.map((s) => ({
     id: labelId(s.supervisor),
@@ -26,10 +22,8 @@ export function squadLabelsOf(squads: readonly DrawSquad[], exploded: boolean) {
   }));
 }
 
-/** How often the beam readouts are looked at again; a label's text changes only when its words do. */
 const READOUT_MS = 1000;
 
-/** The beam's readout of each squad ("~12K tokens/min (based on tokens)"), re-read each second, state only when it changes. */
 function useBeamReadouts(squads: readonly DrawSquad[], frame: SquadFrame, zh: boolean) {
   const [texts, setTexts] = useState<Readonly<Record<string, string | null>>>({});
   useEffect(() => {
@@ -55,12 +49,6 @@ function useBeamReadouts(squads: readonly DrawSquad[], frame: SquadFrame, zh: bo
   return texts;
 }
 
-/**
- * The squads' part of the page's own DOM (in the scene's label layer, next to the zone labels): a focusable button for
- * each zone, "Squad of {parent}, 3 working", which flies the camera there. Who joined and who left (relation rows R1 and
- * R6) is said through the scene's one aria log (see use-squad.ts). The beam's rate, with where it comes from, is the
- * button's tooltip and part of its accessible name. The scene projects the buttons.
- */
 export function SquadDom({ squad, scene }: { squad: SquadFrame; scene: SquadSceneContext }) {
   const { floor, exploded, compact, zh, elements } = scene;
   const { agents } = scene.props;

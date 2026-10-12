@@ -1,10 +1,8 @@
-// Safety rails of the history rewrite: only ever rewrite a clone this kit created, into a fresh directory.
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import { CLONE_MARKER, git, toplevel } from './git-messages.mjs';
 
-/** Resolves the git dir of a bare or normal clone. */
 function gitDirOf(dir) {
   return existsSync(path.join(dir, 'HEAD')) && existsSync(path.join(dir, 'objects'))
     ? dir

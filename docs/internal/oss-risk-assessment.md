@@ -30,8 +30,8 @@
   發佈後 CI 的 `check` job 第一天就會失敗。修法：allowlist 加上這幾個前綴（或把 `tests/aether/` 這些檔案列為路徑例外）。
 - **個資（家目錄路徑）**：`/Users/<user>` 出現在 `tests/aether/local-sessions.test.ts` 的 2 個歷史版本、
   `assets-source/animals/*.blend` 的 9 個檔案共約 99 個歷史版本。目前樹沒有（已 `.gitignore`）。歷史提交訊息沒有命中私人字串，
-  但這項檢查依賴 `.oss-private-patterns`，該檔不存在於本機（只有 `.example`），所以只驗了內建通用規則；**需先建立該檔再重掃**（例如主機名 `Mac-mini`、帳號名、gmail 以外的私人地址）。
-- **作者與信箱**：436 個維護者提交都用 `haotool <88911350+s123104@users.noreply.github.com>`（單一身分，`.mailmap` 已有，尚未換成 noreply）。
+  但這項檢查依賴 `.oss-private-patterns`，該檔不存在於本機（只有 `.example`），所以只驗了內建通用規則；**需先建立該檔再重掃**（例如主機名、帳號名、其他私人地址）。
+- **作者與信箱**：436 個維護者提交都用同一個個人信箱（單一身分，`.mailmap` 已有，尚未換成 noreply）。
   上游作者（webdevcody、Shirone、muguetdev 等 9 位）的信箱是上游本來就公開的，不應改寫（計畫也不會）。
 - **AI 共同作者與工作階段連結**：歷史中有約 189 個 `Co-Authored-By: Claude …` 行與 144 個 `claude.ai/code/session_…` 連結。
   `docs/release/history-cleanup.md` 寫「只有一個提交帶 Co-Authored-By」，**與事實不符**，需更正後再決定 `--drop-trailers`。

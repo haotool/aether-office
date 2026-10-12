@@ -11,7 +11,7 @@ test('the camera tour can be paused, skipped, stopped and interrupted by draggin
   await page.getByRole('button', { name: '暫停導覽', exact: true }).click();
   await expect(page.getByRole('button', { name: '繼續導覽', exact: true })).toBeVisible();
   await page.getByRole('button', { name: '跳到下一站', exact: true }).click();
-  await expect(page.getByRole('button', { name: '繼續導覽', exact: true })).toBeVisible(); // still paused
+  await expect(page.getByRole('button', { name: '繼續導覽', exact: true })).toBeVisible();
   await page.getByRole('button', { name: '結束導覽', exact: true }).click();
   await expect(start).toBeVisible();
 
@@ -22,5 +22,5 @@ test('the camera tour can be paused, skipped, stopped and interrupted by draggin
   await page.mouse.down();
   await page.mouse.move(box.x + box.width / 2 + 80, box.y + box.height / 2 + 20, { steps: 5 });
   await page.mouse.up();
-  await expect(start).toBeVisible(); // user input interrupted the tour
+  await expect(start).toBeVisible();
 });

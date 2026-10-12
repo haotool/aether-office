@@ -19,7 +19,7 @@ it('stops what a crashed runner left running, and only what the journal says was
   journal.state.runs['run-finished'] = {
     command: { runId: 'run-finished', epoch: 1 } as never,
     state: 'finished',
-    processIdentity: finished.identity, // done: whatever is at that pid now is nobody's business
+    processIdentity: finished.identity,
   };
   journal.state.terminals['term-open'] = {
     pending: false,
@@ -34,7 +34,7 @@ it('stops what a crashed runner left running, and only what the journal says was
     const reaped = await runner.reapSurvivors();
     expect(reaped.map((r) => r.verdict)).toEqual(['orphaned', 'orphaned']);
     expect(await until(() => !alive(run.pid) && !alive(terminal.pid))).toBe(true);
-    expect(alive(finished.pid)).toBe(true); // a finished run's process is never touched
+    expect(alive(finished.pid)).toBe(true);
     runner.start();
     runner.stop();
     const result = journal.state.pending.find(

@@ -1,8 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 // docs/verification/report.md is generated from docs/verification/features.json so it can never claim more than the
-// feature ledger records. Implementation and verification stay separate; "passed" never means
-// "complete", and every non-passed row shows its blockers.
+// feature ledger records. Implementation and verification stay separate: "passed" never means "complete".
 
 export type Feature = {
   id: string;
@@ -33,7 +32,6 @@ function ledgerIdentityProblems(
   const problems: string[] = [];
   if (seen.has(f.id)) problems.push(`${f.id}: duplicate id`);
   seen.add(f.id);
-  // A blocker says what is missing for this row; one sentence pasted into many rows hides which gap is real.
   for (const b of f.blockers) {
     const owner = blockerOwner.get(b);
     if (owner && owner !== f.id) problems.push(`${f.id}: blocker copied from ${owner}`);
@@ -62,7 +60,6 @@ function ledgerStatusProblems(f: Feature): string[] {
   return problems;
 }
 
-/** Ledger integrity: every claim must point at real files, and a pass must name its checks. */
 export function validateLedger(
   features: readonly Feature[],
   exists: (path: string) => boolean,

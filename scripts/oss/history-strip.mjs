@@ -1,9 +1,7 @@
-// What history cleanup removes: the default strip rules and the blobs of a revision's history that match them.
 import path from 'node:path';
 import { git } from './git-messages.mjs';
 
 export const DEFAULT_STRIP = {
-  // Removed from every commit. Root-anchored directories end in "/", globs match at any depth.
   paths: [
     'glob:*.blend',
     'glob:*.blend1',
@@ -12,7 +10,6 @@ export const DEFAULT_STRIP = {
     'playwright-report/',
     'glob:*.trace.zip',
   ],
-  // Binary versions that are not part of the tip are dropped from history; the tip's versions always stay.
   blobExtensions: [
     'glb',
     'gltf',
@@ -33,7 +30,6 @@ export const DEFAULT_STRIP = {
   maxAnyBytes: 2 * 1024 * 1024,
 };
 
-/** Every blob reachable from `rev`: `{id, size, path}` (the first path git lists for it). */
 export function historyBlobs(repo, rev) {
   const paths = new Map();
   for (const line of git(repo, ['rev-list', '--objects', rev]).split('\n')) {
@@ -61,7 +57,6 @@ export function tipBlobIds(repo, rev) {
   );
 }
 
-/** Blobs of `rev` history that cleanup strips: heavy binaries (or any huge file) that the tip does not use. */
 export function strippableBlobs(repo, rev, strip = DEFAULT_STRIP) {
   const keep = tipBlobIds(repo, rev);
   const extensions = new Set(strip.blobExtensions);

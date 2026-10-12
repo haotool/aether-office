@@ -8,7 +8,6 @@ import { roleOf } from './session-role.js';
 import type { SessionSignals } from './session-signals.js';
 import { topicTitle } from './session-topic.js';
 
-/** What was read about one session, apart from the transcript file itself. */
 export type SessionReads = {
   info: { git: LocalSession['git']; worktree: LocalSession['worktree'] } | undefined;
   hook: HookState | undefined;
@@ -17,9 +16,7 @@ export type SessionReads = {
   title: string | null;
   topic: string | null;
   actions: Parameters<typeof roleOf>[1]['transcript'];
-  /** The process found behind it, `none` when there is none and `unknown` where processes cannot be listed. */
   run: { state: LocalSession['process']; process: AgentProcess | null } | undefined;
-  /** When the process last used CPU, if it was watched. */
   busyAt: (process: AgentProcess) => number | null;
 };
 
@@ -35,14 +32,13 @@ function classificationOf(raw: Raw, key: string, reads: SessionReads, now: numbe
       subagents: signal.subagents.map((c) => c.type),
       transcript: reads.actions,
       hook: (hook?.recent ?? [])
-        .filter((c) => !c.agentId) // the session's own calls: its helpers' work says what they do, not what it does
+        .filter((c) => !c.agentId)
         .map(({ tool, target }) => ({ tool, target })),
     },
     now,
   );
 }
 
-/** The process-related fields: state, liveness, listening ports and resource use. */
 function runtimeOf(raw: Raw, reads: SessionReads, now: number) {
   const { run, hook } = reads;
   const process = run?.process ?? null;
@@ -61,7 +57,6 @@ function runtimeOf(raw: Raw, reads: SessionReads, now: number) {
   };
 }
 
-/** Joins everything read about one transcript into the session the API shows. */
 export function assembleSession(raw: Raw, reads: SessionReads, now: number): LocalSession {
   const key = `${raw.provider}:${raw.sessionId}`;
   const { info, hook, signal } = reads;

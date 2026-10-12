@@ -1,10 +1,8 @@
-// Reads a repository's commits and groups them into milestones for the open-source history plan (scripts/oss).
 import { git } from './git-messages.mjs';
 
 const FIELD = '\x00';
 const RECORD = '\x01';
 
-/** Every commit reachable from `rev`, newest first: hash, parents, author, committer and the full message. */
 export function readCommits(repo, rev = 'HEAD') {
   const [f, r] = ['%x00', '%x01'];
   const format = `${r}%H${f}%P${f}%an${f}%ae${f}%ad${f}%cn${f}%ce${f}%cd${f}%B`;
@@ -37,7 +35,6 @@ export function readCommits(repo, rev = 'HEAD') {
     });
 }
 
-/** Changed lines (insertions plus deletions) per non-merge commit, used to pick the headline commit of a group. */
 export function commitSizes(repo, rev = 'HEAD') {
   const sizes = new Map();
   const out = git(repo, ['log', '--no-merges', '--shortstat', '--format=%x01%H', rev]);
@@ -50,7 +47,6 @@ export function commitSizes(repo, rev = 'HEAD') {
   return sizes;
 }
 
-/** `YYYY-MM-DD` of a raw git date (`<unix> <+hhmm>`), in the author's own offset. */
 export function dayOf(raw) {
   const [ts = '0', tz = '+0000'] = raw.split(' ');
   const offset =
@@ -58,7 +54,6 @@ export function dayOf(raw) {
   return new Date((Number(ts) + offset) * 1000).toISOString().slice(0, 10);
 }
 
-/** Commits at or below an upstream (non-maintainer) author: their whole ancestry is upstream. */
 export function upstreamSet(commits, maintainerEmails) {
   const byHash = new Map(commits.map((c) => [c.hash, c]));
   const maintainers = new Set(maintainerEmails.map((e) => e.toLowerCase()));
@@ -75,11 +70,7 @@ export function upstreamSet(commits, maintainerEmails) {
   return upstream;
 }
 
-// ---------------------------------------------------------------------------------------------------------------
-// Milestones
-
 const theme = (id, label, re) => ({ id, label, re });
-/** Ordered: the first matching theme wins. Override by passing `themes` to `groupUnits`. */
 export const THEMES = [
   theme('docs', 'documentation and ledger', (u) => u.type === 'docs'),
   theme('refactor', 'module splits and cleanup', (u) => u.type === 'refactor'),
@@ -128,7 +119,6 @@ export function themeOf(unit, themes = THEMES) {
 const SIZE_WEIGHT = 0.4;
 const DAY_WEIGHT = 0.8;
 
-/** Splits `items` (each `{theme, day}`) into `k` contiguous segments by dynamic programming. Deterministic. */
 function segment(items, k) {
   const n = items.length;
   const parts = Math.max(1, Math.min(k, n));
@@ -193,7 +183,6 @@ function dominant(values, order) {
   )[0]?.[0];
 }
 
-/** The group's leading theme and, when it covers a quarter of the units, a second one. */
 function rankThemes(found) {
   const counts = new Map();
   for (const t of found) counts.set(t.id, { t, n: (counts.get(t.id)?.n ?? 0) + 1 });
@@ -201,10 +190,7 @@ function rankThemes(found) {
   return ranked.filter((r, i) => i === 0 || (i === 1 && r.n * 4 >= found.length)).map((r) => r.t);
 }
 
-/**
- * Groups units (each `{pinned, type, scope, subject, day}`, oldest first) into about `target` milestones. Pinned
- * units are never merged with anything. Returns `[{pinned, indexes, themes, type}]` in order.
- */
+/** Groups units into about `target` milestones; pinned units are never merged with anything. */
 export function groupUnits(units, { target = 24, themes = THEMES } = {}) {
   const regular = units.filter((u) => !u.pinned).length;
   const result = [];

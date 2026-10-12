@@ -9,9 +9,8 @@ import {
 } from '../perf/perf-control.js';
 
 /**
- * Redraws the shadow map at a fixed rate instead of with every render: it does not depend on the camera, and what casts
- * into it moves slowly. A render that lands inside the interval schedules one more render when it is due, so a change
- * is never left unshadowed. (MultiCam's extra views never redraw it either.)
+ * Redraws the shadow map at a fixed rate instead of with every render: it does not depend on the camera and what casts
+ * into it moves slowly.
  */
 export function ShadowThrottle({ intervalMs }: { intervalMs: number }) {
   const gl = useThree((s) => s.gl);
@@ -31,7 +30,7 @@ export function ShadowThrottle({ intervalMs }: { intervalMs: number }) {
     if (shadowDue(now, last.current, intervalMs)) {
       gl.shadowMap.needsUpdate = true;
       last.current = now;
-      window.clearTimeout(timer.current); // a later frame came by itself, nothing to make up
+      window.clearTimeout(timer.current);
       timer.current = undefined;
     } else if (timer.current === undefined) {
       // Only if no frame follows on its own (an idle scene): one more render once the map is due.
@@ -47,13 +46,8 @@ export function ShadowThrottle({ intervalMs }: { intervalMs: number }) {
   return null;
 }
 
-/** A gap this long is the scene sitting idle, not a slow frame. */
 const IDLE_MS = 250;
 
-/**
- * Dynamic resolution: lowers the pixel ratio (to 0.75 of a pixel at the least) while frames run slow and raises it again
- * when they have room to spare (see `stepRatio`). Only measures frames the scene was asked to keep coming.
- */
 export function AdaptiveRatio({
   ceiling: tier,
   smooth,
@@ -83,11 +77,6 @@ export function AdaptiveRatio({
 
 const WARMUP_LIMIT_MS = 4000;
 
-/**
- * Compiles every shader the scene has, in parallel and without blocking, while the canvas is held back behind the
- * loading cover: the first frame then finds its programs linked instead of stalling on each one. Gives up after a few
- * seconds (a driver without parallel compile just compiles on first use, as before).
- */
 export function Warmup({ onReady }: { onReady: () => void }) {
   const { gl, scene, camera, invalidate } = useThree();
   useEffect(() => {

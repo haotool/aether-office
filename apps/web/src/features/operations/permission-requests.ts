@@ -9,10 +9,8 @@ type Listed = { requests: PermissionRequestView[]; enabled?: boolean };
 const NONE: PermissionRequestView[] = [];
 
 /**
- * The permission prompts of Claude Code sessions that wait for an answer from here (Remote approvals). One query
- * shared by the feed, the conversation and the phone sheet; it stops asking for good when this person may not see
- * them (a viewer gets a 403), and costs nothing on the server when Remote approvals is off (the list is empty).
- * Only the caller that passes `enabled` (the signed-in app shell) fetches; every other caller reads the shared cache.
+ * Stops asking for good when this person may not see the prompts (a viewer gets a 403); only the caller that passes
+ * `enabled` (the signed-in app shell) fetches, every other caller reads the shared cache.
  */
 export function usePermissionRequests(enabled = false): PermissionRequestView[] {
   const query = useQuery({
@@ -20,7 +18,6 @@ export function usePermissionRequests(enabled = false): PermissionRequestView[] 
     enabled,
     queryFn: () => api<Listed>('/api/permission-requests'),
     select: (listed) => listed.requests,
-    // The server says when Remote approvals is off: nothing can be asked then, so only look now and then.
     ...pollBy((listed: Listed | undefined, failed) =>
       failed ? false : listed?.enabled === false ? POLL.slow : POLL.prompt,
     ),
@@ -30,13 +27,11 @@ export function usePermissionRequests(enabled = false): PermissionRequestView[] 
   return query.data ?? NONE;
 }
 
-/** Pure. The pending requests of one session, oldest first (the order Claude asked in). */
 export const requestsFor = (requests: readonly PermissionRequestView[], sessionKey: string) =>
   requests
     .filter((r) => r.state === 'pending' && r.sessionKey === sessionKey)
     .sort((a, b) => a.createdAt - b.createdAt);
 
-/** Pure. The keys of the sessions that have a request waiting. */
 export const askingKeys = (requests: readonly PermissionRequestView[]): ReadonlySet<string> =>
   new Set(requests.filter((r) => r.state === 'pending').map((r) => r.sessionKey));
 
@@ -44,7 +39,6 @@ export const askingKeys = (requests: readonly PermissionRequestView[]): Readonly
 export const mustReview = (request: PermissionRequestView, compact: boolean, reviewed: boolean) =>
   compact && request.needsReview && !reviewed;
 
-/** Whole seconds left before the hook gives up and Claude asks in the terminal; never negative. */
 export const secondsLeft = (expiresAt: number, now: number) =>
   Math.max(0, Math.ceil((expiresAt - now) / 1000));
 
@@ -60,6 +54,5 @@ export function useDecide(id: string) {
   });
 }
 
-/** The code of a failed decision, for the message under the buttons. */
 export const decideError = (error: unknown): string =>
   error instanceof ApiError ? error.code : 'REQUEST_FAILED';

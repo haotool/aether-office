@@ -3,15 +3,10 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { Vector3 } from 'three';
 
 const EDGE_PX = 8;
-const TOP_PX = 56; // under the floor card and the toolbar
+const TOP_PX = 56;
 
 type Anchor = { id: string; x: number; y: number; z: number };
 
-/**
- * Places DOM boxes (the hover card, the action menu, the emote icons, a quick message) at world points, every frame the
- * scene draws. `above` centres a box over its point; `side` puts it beside the point and keeps the whole box inside the
- * canvas, whatever its size. A box behind the camera is hidden.
- */
 export function ProjectedBoxes({
   anchors,
   elements,
@@ -33,7 +28,7 @@ export function ProjectedBoxes({
       const y = ((1 - point.current.y) * size.height) / 2;
       const ahead = point.current.z >= -1 && point.current.z <= 1;
       element.style.visibility = ahead ? 'visible' : 'hidden';
-      element.style.opacity = '1'; // placed: see character-menu.css (it is focusable, but unseen, until then)
+      element.style.opacity = '1';
       if (placement === 'above') {
         element.style.transform = `translate(${x}px,${y}px) translate(-50%,-100%)`;
         continue;

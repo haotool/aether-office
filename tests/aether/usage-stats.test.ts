@@ -16,20 +16,20 @@ describe('incremental reading', () => {
     const s = stats();
     expect((await look(s)).building.totals).toMatchObject({ input: 10, output: 20, requests: 1 });
     const first = s.metrics.bytesRead;
-    await look(s); // nothing changed: nothing read
+    await look(s);
     expect(s.metrics.bytesRead).toBe(first);
     writeLines(file, [claudeLine('m2', '2026-10-07T01:01:00.000Z', { i: 1, o: 2 })], true);
     touch(file, NOW - 30_000);
     const after = await look(s);
     expect(after.building.totals).toMatchObject({ input: 11, output: 22, requests: 2 });
-    expect(s.metrics.bytesRead - first).toBeLessThan(first); // only the new line
+    expect(s.metrics.bytesRead - first).toBeLessThan(first);
   });
 
   it('waits for the rest of a line cut in half and counts it once complete', async () => {
     const file = claudeFile(env.home, 'sess-cut');
     const full = claudeLine('m1', '2026-10-07T01:00:00.000Z', { i: 5, o: 5 });
     writeLines(file, [claudeLine('m0', '2026-10-07T00:59:00.000Z', { i: 1, o: 1 })]);
-    appendFileSync(file, full.slice(0, 200)); // the writer is mid-line
+    appendFileSync(file, full.slice(0, 200));
     touch(file);
     const s = stats();
     expect((await look(s)).building.totals.input).toBe(1);
@@ -47,14 +47,14 @@ describe('incremental reading', () => {
     touch(file);
     const s = stats();
     expect((await look(s)).building.totals.input).toBe(20);
-    writeLines(file, [claudeLine('other', '2026-10-07T02:00:00.000Z', { i: 3, o: 4 })]); // rewritten, shorter
+    writeLines(file, [claudeLine('other', '2026-10-07T02:00:00.000Z', { i: 3, o: 4 })]);
     touch(file, NOW - 30_000);
     expect((await look(s)).building.totals).toMatchObject({ input: 3, output: 4 });
     const text = claudeLine('z1', '2026-10-07T03:00:00.000Z', { i: 100, o: 1 });
     writeLines(file, [text, claudeLine('z2', '2026-10-07T03:01:00.000Z', { i: 100, o: 1 })]);
     touch(file, NOW - 20_000);
     expect((await look(s)).building.totals.input).toBe(200);
-    truncateSync(file, text.length + 1); // cut back to the first record
+    truncateSync(file, text.length + 1);
     touch(file, NOW - 10_000);
     expect((await look(s)).building.totals.input).toBe(100);
   });
@@ -68,7 +68,7 @@ describe('incremental reading', () => {
     const second = claudeFile(env.home, 'sess-b');
     writeLines(second, [claudeLine('m2', '2026-10-07T01:01:00.000Z', { i: 5, o: 1 })]);
     touch(second);
-    env.clock += 50; // the request comes 50 ms after the pass: a cheap pass does not make it wait for a time gap
+    env.clock += 50;
     await s.refresh(400);
     const answer = await s.snapshot('30d', new Map(), null);
     expect(answer.scan).toMatchObject({ complete: true, files: 2 });
@@ -100,7 +100,7 @@ describe('the rollup on disk', () => {
     await look(first);
     await first.flush();
     const text = readFileSync(cacheFile(), 'utf8');
-    expect(text).not.toContain(env.home); // no path
+    expect(text).not.toContain(env.home);
     expect(text).not.toContain('sess-4');
     const second = stats({ cacheFile: cacheFile() });
     const snapshot = await look(second);
@@ -136,7 +136,6 @@ describe('grouping', () => {
     writeLines(claudeFile(env.home, 'old'), [
       claudeLine('c', '2026-10-07T01:00:00.000Z', { i: 1, o: 1 }),
     ]);
-    // a sub-agent's own transcript belongs to the session folder it sits in
     writeLines(join(env.home, '.claude/projects/-work-repo/dev/subagents/agent-x.jsonl'), [
       claudeLine('d', '2026-10-07T01:05:00.000Z', { i: 7, o: 3 }),
     ]);
@@ -155,7 +154,6 @@ describe('grouping', () => {
     expect(office('quality')).toMatchObject({ input: 10, output: 5 });
     expect(snapshot.unplaced.totals).toMatchObject({ input: 1, output: 1 });
     expect(snapshot.building.totals.input).toBe(118);
-    // Offices plus what no office holds are the building: the page can say so.
     const placed = snapshot.offices.reduce((n, o) => n + o.scope.totals.input, 0);
     expect(placed + snapshot.unplaced.totals.input).toBe(snapshot.building.totals.input);
     expect(snapshot.offices.map((o) => o.floor)).toEqual([0, 1, 2, 3, 4]);
@@ -194,6 +192,6 @@ describe('grouping', () => {
     const input = async (range: 'today' | '7d' | '30d') =>
       (await s.snapshot(range, new Map(), null)).building.totals.input;
     expect([await input('today'), await input('7d'), await input('30d')]).toEqual([1, 11, 111]);
-    expect(windowDays('2026-03-01').at(-2)).toBe('2026-02-28'); // calendar arithmetic, not 24-hour steps
+    expect(windowDays('2026-03-01').at(-2)).toBe('2026-02-28');
   });
 });

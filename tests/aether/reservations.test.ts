@@ -32,7 +32,7 @@ it('grants disjoint leases, reports conflicts, enforces ownership, and lets expi
       'RESERVATION_PATTERN_INVALID',
     );
 
-    now += 61_000; // lease lapses
+    now += 61_000;
     expect(() =>
       run(f.sender.actor, 'reservation.renew', { reservationId: first.reservation.id }),
     ).toThrow('RESERVATION_EXPIRED');
@@ -57,7 +57,6 @@ it('grants disjoint leases, reports conflicts, enforces ownership, and lets expi
       await app.close();
     }
 
-    // Human owner can release someone else's stuck lease.
     const [held] = (
       f.control.ctx.sqlite
         .prepare("SELECT id FROM file_reservations WHERE state='active' AND expiresAt>?")

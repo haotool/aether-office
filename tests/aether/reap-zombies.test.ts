@@ -44,13 +44,13 @@ const session = (zombies: number, over: Partial<LocalSession> = {}) =>
 describe('who is reminded to collect a zombie', () => {
   it('is the living parent inside the session tree, once, with how many it holds', () => {
     const rows = [
-      row(100, 1), // the agent
-      row(110, 100), // its shell
-      row(111, 110, 'Z'), // a zombie held by the shell
+      row(100, 1),
+      row(110, 100),
+      row(111, 110, 'Z'),
       row(112, 110, 'Z'),
-      row(113, 100, 'Z'), // a zombie held by the agent itself
-      row(200, 1), // another session
-      row(201, 200, 'Z'), // not ours
+      row(113, 100, 'Z'),
+      row(200, 1),
+      row(201, 200, 'Z'),
     ];
     expect(nudgeTargets(rows, 100).map((t) => [t.pid, t.zombies])).toEqual([
       [110, 2],
@@ -62,9 +62,9 @@ describe('who is reminded to collect a zombie', () => {
     const rows = [
       row(100, 1),
       row(150, 1),
-      row(151, 150, 'Z'), // another tree
-      row(120, 100, 'Z'), // held by the agent: the agent is reminded
-      row(121, 120, 'Z'), // its parent is a zombie too: nobody to remind
+      row(151, 150, 'Z'),
+      row(120, 100, 'Z'),
+      row(121, 120, 'Z'),
     ];
     expect(nudgeTargets(rows, 100).map((t) => [t.pid, t.zombies])).toEqual([[100, 1]]);
   });
@@ -91,7 +91,7 @@ describe('asking for a nudge', () => {
         pid: process.pid,
         startedAt: started + 5000,
       }),
-    ).rejects.toThrow('PROCESS_CHANGED'); // the pid is live but it is another life
+    ).rejects.toThrow('PROCESS_CHANGED');
   });
 
   it('reminds a stuck parent, which cannot collect: the zombie stays, and the parent is left alone', async () => {
@@ -120,8 +120,8 @@ describe('asking for a nudge', () => {
         waitMs: 300,
         signal: (pid) => signalled.push(pid),
       });
-      expect(signalled).toEqual([parent.pid]); // only the one that holds the zombie
-      expect(result).toEqual({ nudged: 1, before: 1, after: 1 }); // a stuck loop reaps nothing
+      expect(signalled).toEqual([parent.pid]);
+      expect(result).toEqual({ nudged: 1, before: 1, after: 1 });
       expect(alive(parent.pid!)).toBe(true);
     } finally {
       parent.kill('SIGKILL');

@@ -23,9 +23,7 @@ const session = (cwd: string, title: string | null = null) =>
 it('names an untitled worktree session by what sets its directory apart', () => {
   const [linked] = sessionsToAgents([session('/t/ledger-api-w1119')], 'p', 0);
   expect(linked!.name).toBe('w1119');
-  expect(sessionsToAgents([session('/t/ledger-api')], 'p', 0)[0]!.name).toBe(
-    'ledger-api',
-  );
+  expect(sessionsToAgents([session('/t/ledger-api')], 'p', 0)[0]!.name).toBe('ledger-api');
   expect(sessionsToAgents([session('/t/x', 'Fix login')], 'p', 0)[0]!.name).toBe('Fix login');
 });
 

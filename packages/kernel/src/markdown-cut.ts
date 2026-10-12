@@ -1,14 +1,11 @@
-/** Pure. Cutting text on boundaries that keep a user-perceived character, and a Markdown reply, whole. */
 const graphemeSegmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
 
-/** The user-perceived characters of `text`: an emoji with its modifiers or a surrogate pair is one. */
 export const graphemes = (text: string): string[] =>
   Array.from(graphemeSegmenter.segment(text), (s) => s.segment);
 
 const WORD_START = /^[A-Za-z0-9_./-]/;
 const FENCE_LINE = /^\s{0,3}(`{3,}|~{3,})/;
 
-/** The fence that is still open at the end of `text` (its marker characters), or null. */
 function openFence(text: string): string | null {
   let open: string | null = null;
   for (const line of text.split('\n')) {
@@ -23,7 +20,6 @@ function openFence(text: string): string | null {
 const countOf = (text: string, what: RegExp) => text.match(what)?.length ?? 0;
 const TABLE_RULE = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/;
 
-/** A table cut before its delimiter row is only pipes on a page: the lines of it that are there are dropped. */
 function dropOpenTable(text: string): string {
   const lines = text.split('\n');
   let start = lines.length;
@@ -34,9 +30,8 @@ function dropOpenTable(text: string): string {
 }
 
 /**
- * A reply cut to at most about `max` characters without leaving a half-written construct behind: it never ends inside a
- * word of Latin text or a character, an unfinished link keeps only its label, and an open fence, code span, `**` or `~~`
- * is closed after an ellipsis. Text that already fits is returned unchanged.
+ * Never ends inside a word of Latin text or a character; an unfinished link keeps only its label and an open fence,
+ * code span, `**` or `~~` is closed after an ellipsis.
  */
 export function cutMarkdown(text: string, max: number): string {
   const chars = graphemes(text);

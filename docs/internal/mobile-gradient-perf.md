@@ -106,8 +106,8 @@
 ## 3. 本次新量測
 
 環境：Chrome（`channel: 'chrome'`、`--use-angle=metal`），`ANGLE (Apple, ANGLE Metal Renderer: Apple M4)`，示範模式伺服器，我自己的埠 4581（已關閉，暫存腳本已刪）。腳本與原始 JSON 都在
-`/private/tmp/claude-501/-Users-dev-Tools-aether-office/23475a39-1333-4543-9901-a8d3f9736ec7/scratchpad/gradient-perf/`
-（`run-matrix.sh`、`matrix-phone-{balanced,low,high}.json`、`gpu.mjs`、`gpu-vsync-off.json`、`dither.mjs`、`dither-metrics.json`、`band.mjs`、`css.mjs`、`tex.mjs`）。
+倉庫外的暫存區（未納入倉庫；
+`run-matrix.sh`、`matrix-phone-{balanced,low,high}.json`、`gpu.mjs`、`gpu-vsync-off.json`、`dither.mjs`、`dither-metrics.json`、`band.mjs`、`css.mjs`、`tex.mjs`）。
 
 ### 3.1 手機設定基準（`scripts/perf-matrix.mjs --phone`，390x844、dpr 3、4x 節流，3 輪，240 幀，中位數）
 

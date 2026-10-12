@@ -13,19 +13,15 @@ import { useLatest } from '../../hooks/use-latest.js';
 import { recordMoment } from '../feed/life-moments.js';
 import { previewParams } from '../office/scene-preview.js';
 
-/** The newest signals kept for the scene: it only ever reads the last half minute. */
 const KEEP = 60;
-/** How many members a preview spreads its effects over. */
 const PREVIEW_MEMBERS = 3;
 
-/** The effects a `?preview=life&effect=a,b&t=1500` address asks for, read once: a preview does not change while the page lives. */
 const previewAsked = previewParams(window.location.search);
 
 const typing = (target: EventTarget | null) =>
   target instanceof HTMLElement &&
   (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
 
-/** The Konami code typed anywhere outside a field is a signal of its own. */
 function useKonami(push: (more: readonly LifeSignal[]) => void) {
   useEffect(() => {
     let progress = 0;
@@ -41,7 +37,6 @@ function useKonami(push: (more: readonly LifeSignal[]) => void) {
   }, [push]);
 }
 
-/** The names the screen reader says for each member, and the members that are idle. */
 function useMemberNames(model: OfficeModel) {
   const names = useMemo(
     () => Object.fromEntries(model.agents.map((a) => [a.id, model.names[a.id]?.title ?? a.name])),
@@ -54,7 +49,6 @@ function useMemberNames(model: OfficeModel) {
   return { names, idle };
 }
 
-/** The contact-sheet preview the address asks for, over the first few members. */
 function usePreviewInput(model: OfficeModel) {
   const memberKey = model.agents
     .slice(0, PREVIEW_MEMBERS)
@@ -74,11 +68,6 @@ function usePreviewInput(model: OfficeModel) {
   );
 }
 
-/**
- * What the 3D office needs for its little moments: the signals the change between scans makes, plus the viewer's own
- * (the Konami code), the settings, the names for the screen reader and, when the address asks, a contact sheet preview.
- * Nothing here decides an effect: the scene's scheduler does, from these.
- */
 export function useLifeInput(
   sessions: readonly AttributedSession[],
   model: OfficeModel,
@@ -100,7 +89,7 @@ export function useLifeInput(
     previous.current = snapshot;
     memory.current = next.memory;
     if (next.signals.length) push(next.signals);
-  }, [sessions, states, agentsNow, push]); // a new scan, or a member's state changed
+  }, [sessions, states, agentsNow, push]);
 
   useKonami(push);
 

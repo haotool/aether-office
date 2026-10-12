@@ -4,13 +4,9 @@ import type { Effect, Sprite } from './types.js';
 const AMBER = [1, 0.72, 0.2] as const;
 const VIOLET = [0.7, 0.55, 1] as const;
 
-/**
- * A lamp over the screen blinks amber while a test command runs, and a bug scurries across the desk. Amber means only
- * "a test command started": there is no green or red here, because no exit status reaches the scene yet.
- */
 export const ciLamp: Effect = (t, d, seed) => {
   const fade = envelope(t, d, 400);
-  const blink = 0.55 + 0.45 * Math.sin(t / 160); // about 1 Hz, well under the 3 flashes a second a viewer can bear
+  const blink = 0.55 + 0.45 * Math.sin(t / 160);
   const lap = (t / 3200) % 1;
   const dir = draw(seed, 0) < 0.5 ? 1 : -1;
   const sprites: Sprite[] = [
@@ -39,7 +35,6 @@ export const ciLamp: Effect = (t, d, seed) => {
   return sprites;
 };
 
-/** A swirling disc on the desk pulling sparks in (a package install): it grows while the effect lasts. */
 export const installHole: Effect = (t, d, seed) => {
   const fade = envelope(t, d, 700);
   const grow = 0.75 + 0.25 * Math.min(1, t / 8000);
@@ -48,7 +43,7 @@ export const installHole: Effect = (t, d, seed) => {
     { cell: 'hole', at: [x, y, z], size: 0.6 * grow, alpha: fade, rot: -t / 700, flat: true },
   ];
   for (let i = 0; i < 6; i += 1) {
-    const p = (t / 1800 + i / 6 + draw(seed, i) * 0.1) % 1; // 0 far, 1 swallowed
+    const p = (t / 1800 + i / 6 + draw(seed, i) * 0.1) % 1;
     const angle = p * 5 + (i * Math.PI * 2) / 6;
     const r = 0.34 * (1 - p);
     sprites.push({

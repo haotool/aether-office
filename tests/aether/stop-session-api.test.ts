@@ -8,7 +8,6 @@ import { resetLocalSessionCache } from '../../apps/control/src/services/runtime/
 import { command, fixture } from './fixture.js';
 import { alive, until, untilAsync } from './process-fixtures.js';
 
-/** A process named claude in `cwd` whose parent has already gone, so init has it. */
 async function orphanClaude(bin: string, cwd: string): Promise<number> {
   const script = `const c=require('node:child_process').spawn(${JSON.stringify(join(bin, 'claude'))},['-e','setInterval(()=>{},1000)','--','-p'],{cwd:${JSON.stringify(cwd)},detached:true,stdio:'ignore'});console.log(c.pid);c.unref()`;
   const middle = spawn(process.execPath, ['-e', script], { stdio: ['ignore', 'pipe', 'ignore'] });
@@ -85,7 +84,6 @@ it('stops an orphaned session for its owner only, by the process the person saw,
         }[];
       };
     };
-    // Both processes are found by the scan once `ps` lists them with their directories: wait for that, not for a fixed time.
     expect(
       await untilAsync(async () => {
         const { sessions } = await list();
@@ -103,19 +101,19 @@ it('stops an orphaned session for its owner only, by the process the person saw,
       call('POST', `/api/local-sessions/${encodeURIComponent(key)}/stop`, token, { startedAt });
     expect((await stop(orphaned.key, f.sender.token, orphaned.liveness.startedAt)).statusCode).toBe(
       403,
-    ); // not an owner
+    );
     const stale = await stop(orphaned.key, f.owner.token, orphaned.liveness.startedAt + 1000);
     expect(stale.statusCode).toBe(409);
     expect(JSON.stringify(stale.json())).toContain('PROCESS_CHANGED');
     const refused = await stop(used.key, f.owner.token, used.liveness.startedAt);
     expect(refused.statusCode).toBe(409);
     expect(JSON.stringify(refused.json())).toContain('SESSION_NOT_STALE');
-    expect(alive(pid) && alive(inUse.pid!)).toBe(true); // nothing so far touched either process
+    expect(alive(pid) && alive(inUse.pid!)).toBe(true);
     const done = await stop(orphaned.key, f.owner.token, orphaned.liveness.startedAt);
     expect(done.statusCode).toBe(200);
     expect(done.json()).toEqual({ outcome: 'stopped' });
     expect(await until(() => !alive(pid))).toBe(true);
-    expect(alive(inUse.pid!)).toBe(true); // the session in use is untouched
+    expect(alive(inUse.pid!)).toBe(true);
     expect((await stop('claude:../../x', f.owner.token, 1)).statusCode).toBe(400);
   } finally {
     inUse.kill('SIGKILL');

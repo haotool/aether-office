@@ -6,7 +6,6 @@ CREATE TABLE rooms (
   createdAt INTEGER NOT NULL,
   UNIQUE(projectId,name)
 );
--- A member is an agent id or a human identity id of the same project.
 CREATE TABLE room_members (
   roomId TEXT NOT NULL REFERENCES rooms(id),
   memberId TEXT NOT NULL,

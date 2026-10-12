@@ -8,7 +8,7 @@ import { ZONE_CAPACITY } from './zone-shader.js';
 
 /**
  * A supervisor's desk is dressed, not rebuilt: the floor's furniture is baked into one mesh, so what marks a desk as a
- * lead's (an in-tray, a stamp, a gold edge) is an overlay, one instanced mesh for every supervisor in the scene.
+ * lead's (an in-tray, a stamp, a gold edge) is an overlay, one instanced mesh for every supervisor.
  */
 export function SupervisorDesk({
   squads,
@@ -27,7 +27,7 @@ export function SupervisorDesk({
       squads.map((s) => ({
         at: [s.deskX, floorY(s.floor, exploded), s.deskZ],
         yaw: (s.deskRotation * Math.PI) / 2,
-        scale: [s.side === 1 ? -1 : 1, 1, 1], // the in-tray is built at the desk's -x end: mirrored to the end the zone is at
+        scale: [s.side === 1 ? -1 : 1, 1, 1],
         color: '#ffffff',
       })),
     );

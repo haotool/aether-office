@@ -1,10 +1,8 @@
-// The import graph over the parsed files: cycles, fan-in, unused exports and what the unit tests reach.
 import path from 'node:path';
 
 const EXTENSION = /\.(m?js|jsx)$/;
 const EXTENSIONS = ['.ts', '.tsx', '.mjs', '.js', '/index.ts', '/index.tsx'];
 
-/** Workspace package name -> { subpath: repo file }, from each package.json "exports". */
 export function workspacePackages(repo) {
   const found = new Map();
   for (const file of repo.files.filter((f) => /^(apps|packages)\/[^/]+\/package\.json$/.test(f))) {
@@ -27,7 +25,6 @@ export function workspacePackages(repo) {
   return found;
 }
 
-/** Returns a function mapping (importing file, specifier) to a repo file, or null for external packages. */
 export function makeResolver(repo) {
   const known = new Set(repo.files);
   const packages = workspacePackages(repo);
@@ -82,7 +79,6 @@ export function buildGraph(repo, facts) {
   return { runtime, uses, reexportAll };
 }
 
-/** Strongly connected components with more than one file (Tarjan), each sorted. */
 export function findCycles(runtime) {
   let counter = 0;
   const index = new Map();
@@ -132,7 +128,6 @@ export function findCycles(runtime) {
   return cycles.sort((a, b) => b.length - a.length || a[0].localeCompare(b[0]));
 }
 
-/** Importers per file (distinct files), over the files `include` accepts as importers. */
 export function fanIn(runtime, include = () => true) {
   const counts = new Map();
   for (const [from, targets] of runtime)
@@ -141,10 +136,6 @@ export function fanIn(runtime, include = () => true) {
   return counts;
 }
 
-/**
- * Exports no other file imports by name. A namespace or dynamic import uses every export of its target. A re-export is
- * not a use in itself: the name counts as used when whoever imports the barrel uses it. Default exports are skipped.
- */
 export function deadExports(facts, uses, { isEntry = () => false } = {}) {
   const byTarget = new Map();
   for (const use of uses) byTarget.set(use.target, [...(byTarget.get(use.target) ?? []), use]);
@@ -166,7 +157,6 @@ export function deadExports(facts, uses, { isEntry = () => false } = {}) {
     );
 }
 
-/** Files reachable from `roots` along the runtime and type-only edges (all imports). */
 export function reachableFrom(roots, uses) {
   const edges = new Map();
   for (const u of uses) edges.set(u.from, [...(edges.get(u.from) ?? []), u.target]);

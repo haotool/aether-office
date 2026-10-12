@@ -1,0 +1,30 @@
+{
+  "schema": "aether-stability/1",
+  "measuredAt": "2026-10-12T16:34:38.496Z",
+  "runs": 3,
+  "tests": 2820,
+  "perRun": [
+    {
+      "passed": 2817,
+      "failed": 0,
+      "skipped": 3
+    },
+    {
+      "passed": 2817,
+      "failed": 0,
+      "skipped": 3
+    },
+    {
+      "passed": 2817,
+      "failed": 0,
+      "skipped": 3
+    }
+  ],
+  "inconsistent": [],
+  "trees": {
+    "apps": "458ecd0a3226d877d504a6041d3ae07bdd6fb2dc",
+    "packages": "43e3007f02a48068ea8b4f52359cbba3473c6b70",
+    "tests": "b5f141dd5f2c78d1e8e0aefc18cd16a4eeaca400",
+    "vitest.config.ts": "92d8925750b3fa73cd006e5589cd1f10a1579eae"
+  }
+}

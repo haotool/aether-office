@@ -5,36 +5,10 @@ import {
   type LocalSession,
 } from '../../packages/contracts/src/index.js';
 import { activityOf } from '../../apps/web/src/lib/sessions/session-attention.js';
+import { localSession } from './session-fixtures.js';
 
 const NOW = 10_000_000;
-const session = (over: Partial<LocalSession>): LocalSession => ({
-  key: 'claude:s',
-  provider: 'claude',
-  sessionId: 's',
-  cwd: '/x',
-  repo: 'x',
-  mtime: NOW - 30_000,
-  git: null,
-  worktree: null,
-  hook: null,
-  subagents: [],
-  process: 'unknown',
-  resources: null,
-  liveness: { state: 'unknown', startedAt: null, quietMs: null, zombies: [] },
-  ports: [],
-  title: null,
-  classification: { role: 'generalist', department: 'product', confidence: 0, evidence: [] },
-  usage: {
-    model: null,
-    contextTokens: null,
-    contextWindow: null,
-    contextPct: null,
-    compactedAt: null,
-    freshTokens: null,
-    limit: null,
-  },
-  ...over,
-});
+const session = (over: Partial<LocalSession>) => localSession({ mtime: NOW - 30_000, ...over });
 const hook = (activity: 'working' | 'idle' | 'waiting_permission' | 'ended', at = NOW) => ({
   activity,
   lastEvent: 'e',
@@ -54,10 +28,8 @@ it('derives activity from hooks first, then the process table, then file age, an
   const stale = hook('working', NOW - 11 * 60_000);
   expect(activityOf(session({ hook: stale, process: 'none' }), NOW)).toBe('offline');
   expect(activityOf(session({ hook: stale, process: 'running' }), NOW)).toBe('working');
-  // without hooks: a fresh file with a running or unknown process looks like work…
   expect(activityOf(session({ process: 'running' }), NOW)).toBe('working');
   expect(activityOf(session({ process: 'unknown' }), NOW)).toBe('working');
-  // …but with no process it is a finished session, and after ten quiet minutes it is gone.
   expect(activityOf(session({ process: 'none' }), NOW)).toBe('idle');
   expect(activityOf(session({ process: 'none', mtime: NOW - 11 * 60_000 }), NOW)).toBe('offline');
   expect(activityOf(session({ process: 'running', mtime: NOW - 11 * 60_000 }), NOW)).toBe('idle');
@@ -66,7 +38,6 @@ it('derives activity from hooks first, then the process table, then file age, an
 it('shares its thresholds with the server: the working window and the gone window sit on the same constants', () => {
   const edge = (over: Partial<LocalSession>, ms: number) =>
     activityOf(session({ ...over, mtime: NOW - ms }), NOW);
-  // [process, ms quiet, expected]: one row either side of each boundary
   const rows: [LocalSession['process'], number, string][] = [
     ['running', SESSION_ACTIVE_MS - 1, 'working'],
     ['running', SESSION_ACTIVE_MS, 'idle'],

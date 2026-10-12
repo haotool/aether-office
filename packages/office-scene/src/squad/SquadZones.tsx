@@ -11,17 +11,14 @@ import { ZONE_CAPACITY, createZoneDecal } from './zone-shader.js';
 import type { SquadFrame } from './use-squad.js';
 
 const POD_CAPACITY = ZONE_CAPACITY * 12;
-/** A zone grows or shrinks over about this long (a time constant of a quarter of it). */
 const GLIDE_TAU = 0.25;
-/** A pod unfolds (its stool and pane scale up) over this long after a member takes it. */
 const UNFOLD_MS = 600;
-const FLOOR_LIFT = 0.035; // over the floor, under the characters' feet
+const FLOOR_LIFT = 0.035;
 
 type Decal = ReturnType<typeof createZoneDecal>;
 type Members = Readonly<Record<string, SquadMemberState>>;
 type Pod = DrawSquad['pods'][number];
 
-/** The instances of each of the layer's meshes, for one write. */
 type Items = {
   zones: Instance[];
   rings: Instance[];
@@ -30,7 +27,6 @@ type Items = {
   figures: Instance[];
 };
 
-/** What one write of the floor needs: the clock, how things ease, and where to put what each squad worked out. */
 type Write = {
   glide: Glide;
   decal: Decal;
@@ -45,7 +41,6 @@ type Write = {
   now: number;
 };
 
-/** A taken seat: its ring, and the stool and pane that unfold (or a silhouette past the character budget). */
 function placePod(w: Write, s: DrawSquad, pod: Pod, n: number, y: number, yaw: number) {
   const tau = w.animate ? GLIDE_TAU : 0;
   const key = `p:${s.supervisor}:${n}`;
@@ -74,7 +69,6 @@ function placePod(w: Write, s: DrawSquad, pod: Pod, n: number, y: number, yaw: n
   }
 }
 
-/** One squad: its zone outline (eased to its size) and every pod in it. */
 function placeSquad(w: Write, s: DrawSquad, i: number) {
   const tau = w.animate ? GLIDE_TAU : 0;
   const y = floorY(s.floor, w.exploded) + FLOOR_LIFT;
@@ -94,12 +88,10 @@ type ZoneProps = {
   squads: readonly DrawSquad[];
   frame: SquadFrame;
   exploded: boolean;
-  /** Glide and unfold; off, a change is shown at once. */
   animate: boolean;
   podPos: Map<string, Point2>;
 };
 
-/** The layer's meshes and what it remembers between frames, made once. */
 type ZoneRig = {
   decal: Decal;
   glide: Glide;
@@ -133,7 +125,6 @@ function useZoneRig(squads: readonly DrawSquad[]): ZoneRig {
   );
 }
 
-/** One frame of the floor: rewrites every mesh when something changed, glides or unfolds; true while it still moves. */
 function updateFloor(rig: ZoneRig, p: ZoneProps, delta: number): boolean {
   const { decal, glide, color, last, meshes } = rig;
   const { squads, exploded, animate, podPos } = p;
@@ -178,11 +169,6 @@ function updateFloor(rig: ZoneRig, p: ZoneProps, delta: number): boolean {
   return glide.moving || unfolding;
 }
 
-/**
- * The floor of the squads: each zone's dashed outline, a ring for every seat, and for a taken seat the hover stool and
- * its holo pane (or a silhouette past the character budget). Five instanced meshes, written when the frame changes or
- * something glides or unfolds. `podPos` is filled with where each sitter's pod is shown this frame.
- */
 export function SquadZones(props: ZoneProps) {
   const { squads } = props;
   const invalidate = useThree((s) => s.invalidate);
@@ -201,7 +187,7 @@ export function SquadZones(props: ZoneProps) {
       withColors(mesh.current);
   }, [meshes]);
   useEffect(() => {
-    last.waiting = '\0'; // a new set of squads: write on the next frame
+    last.waiting = '\0';
     invalidate();
   }, [squads, last, invalidate]);
   useFrame((_, delta) => {

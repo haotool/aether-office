@@ -5,7 +5,6 @@ import { useLocale } from '../../ui/useT.js';
 const TICK_MS = 30_000;
 const NowContext = createContext(Date.now());
 
-/** The clock the conversation's relative times read: one timer for all of them, ticking twice a minute. */
 export function NowProvider({ children }: { children: ReactNode }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -18,7 +17,6 @@ export function NowProvider({ children }: { children: ReactNode }) {
 const clock = (at: number) =>
   new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-/** "just now", "3 min ago", then the clock time; the full date and time is the tooltip. */
 export function Ago({ at }: { at: number | null }) {
   const now = useContext(NowContext);
   const locale = useLocale();
@@ -30,7 +28,6 @@ export function Ago({ at }: { at: number | null }) {
   );
 }
 
-/** The line between one day's messages and the next. */
 export function DaySeparator({ at }: { at: number }) {
   const now = useContext(NowContext);
   const locale = useLocale();

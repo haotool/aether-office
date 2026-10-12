@@ -23,7 +23,7 @@ A passing build or test run is not a claim of production readiness. This file li
 | ENV-02 | implemented | 依賴有 registry metadata、peer／engine 相容查證與例外紀錄。 | The registry audit itself is run by hand and writes local evidence; the policy test enforces exact pins and no stale exceptions in CI |
 | ENV-03 | implemented | 乾淨目錄可以 frozen-lockfile 安裝，不依賴開發者 global packages。 | Verified from a fresh clone on macOS arm64 with a warm pnpm store; a cold-cache or other-OS install was not run |
 | ENV-04 | implemented | setup／migration／seed 重跑不破壞既有資料或重複 demo。 | — |
-| ENV-05 | implemented | build、typecheck、lint 在同一鎖定環境成功。 | Run on macOS arm64 with Node 24.21.0 and pnpm 12.8.1; CI runs typecheck, lint and build on Ubuntu with the Node of .node-version; Windows was not run. |
+| ENV-05 | implemented | build、typecheck、lint 在同一鎖定環境成功。 | Run on macOS arm64 with Node 24.21.0 and pnpm 12.8.1; CI runs typecheck, lint and build on Ubuntu with the Node of .nvmrc; Windows was not run. |
 | ENV-06 | implemented | 既有 git dirty changes 不被覆寫／reset／刪除。 | Covered for managed workspaces and integration; the platform never operates on the user's main working tree |
 | ENV-07 | implemented | doctor 能區分 missing CLI、auth required、native module failure、healthy。 | — |
 | ENV-08 | implemented | README 命令在真正乾淨環境重現，無未宣告步驟。 | Install, build, run setup --demo and the built control were reproduced from a fresh clone; found and fixed that pnpm's built-in setup and doctor shadow the scripts. The pnpm demo watcher is not part of the script |
@@ -166,7 +166,7 @@ A passing build or test run is not a claim of production readiness. This file li
 | INT-04 | partial | knowledge 有 provenance、version、ACL 與繁中搜尋。 | Provenance/version/ACL/繁中搜尋/人類批准與駁回已實作及測試；內容修訂、撤回、大庫索引與測試證實分類仍未完成。 |
 | INT-07 | partial | budget 遵守並行／turn／時間限制，未知成本不顯示零。 | Turn, time and concurrency limits exist; pricing and a global budget do not. |
 | INT-08 | partial | usage 累積值／delta／resume 重播不重複統計。 | Usage de-duplication is implemented; pricing is not. |
-| QA-01 | partial | unit／contract／integration／E2E 都有真正執行紀錄。 | Unit, contract, integration and browser suites run in CI (the unit suite also on macOS); the live provider smoke and the GPU gates are outside the default run and recorded as not run. |
+| QA-01 | partial | unit／contract／integration／E2E 都有真正執行紀錄。 | Unit, contract and integration suites run in CI (the unit suite also on macOS); the browser suite is a local and release gate that CI does not run; the live provider smoke and the GPU gates are outside the default run and recorded as not run. |
 | QA-02 | implemented | fault injection 覆蓋 commit／delivery／ack 關鍵 crash window。 | Control-side commit, outbox, delivery and ack windows are injected and proven atomic; runner journal crash windows and the outbox dispatcher lease are not injected |
 | QA-03 | partial | LIVE／DEMO／synthetic／captured 的證據不混淆。 | Labels are checked where they were implemented; live evidence is limited to the smoke runs in CLA-08 and CDX-08. |
 | QA-04 | partial | 真實頁面截圖覆蓋 overview／desk／review／approval／mobile。 | The README screenshots come from a synthetic demo stack (docs/images/README.md); screenshots of real data for each listed page are not part of the evidence. |

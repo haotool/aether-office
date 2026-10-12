@@ -1,4 +1,3 @@
-/** The words of the squad in the panel (features/FeedSquad, SquadStrip, SubagentCards), in Traditional Chinese. */
 export const squadZh = {
   squadOf: '{name} 的小隊',
   squadStrip: '小隊',

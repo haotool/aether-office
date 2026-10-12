@@ -17,12 +17,10 @@ import { useBeats } from '../../features/sessions/activity-rate.js';
 import { useLeaving } from '../../features/operations/clock-out.js';
 import { officeModel } from '../../features/office/office-model.js';
 
-/** What the frame itself remembers: the camera, the panel and the sheet, the menu, the banners and the open dialog. */
 function useShellState() {
   const [newProject, setNewProject] = useState(false);
   const [preview, setPreview] = useState<Layout | null>(null);
   const [focus, setFocus] = useState('overview');
-  // A narrow desktop window shows the panel as an overlay on the office: closed until asked for.
   const [panelOpen, setPanelOpen] = useState(() => window.innerWidth > 1000);
   const [sheet, setSheet] = useState<SheetHeight>('peek');
   const [menu, setMenu] = useState(false);
@@ -35,7 +33,6 @@ function useShellState() {
   };
 }
 
-/** The office as drawn: the members, who is selected, the feed and what counts as unread. */
 function useOfficeView(
   sel: ReturnType<typeof useProjectSelection>,
   local: ReturnType<typeof useLocalSessions>['data'],
@@ -54,7 +51,6 @@ function useOfficeView(
   const selected = model.agents.find((a) => a.id === sel.selectedId) ?? null;
   const selectedKey = sel.selectedId ? sessionIdOf(sel.selectedId) : null;
   const selectedSession = local?.sessions.find((x) => x.key === selectedKey) ?? null;
-  // Nothing is running anywhere yet: the office is empty, so it says how to start instead of showing an empty building.
   const quiet =
     sel.page === 'office' &&
     !sel.unknownPage &&
@@ -62,11 +58,10 @@ function useOfficeView(
     local.sessions.length === 0 &&
     model.agents.length === 0;
   const feed = useSessionFeed(local?.sessions, selectedKey);
-  const unread = attentionKeys(feed); // the same sessions every badge counts
+  const unread = attentionKeys(feed);
   return { model, selected, selectedSession, quiet, feed, unread };
 }
 
-/** Everything the signed-in frame shows and does: its state, the address, the data, and what waits for the person. */
 export function useApplication(session: Session) {
   const t = useT();
   const prefs = usePreferences();
@@ -74,7 +69,7 @@ export function useApplication(session: Session) {
   const shell = useShellState();
   const { setFocus, setNotice } = shell;
   const { tour, act } = useTour(setFocus);
-  const compact = usePhoneAny(); // portrait or on its side: immersive office, sheets
+  const compact = usePhoneAny();
   const sel = useProjectSelection(session, shell.offline, setNotice);
   const local = useLocalSessions(session);
   const { needs } = useAttention(
@@ -92,7 +87,6 @@ export function useApplication(session: Session) {
     ...{ setParams: sel.setParams, setFocus },
     ...{ setPanelOpen: shell.setPanelOpen, setSheet: shell.setSheet },
   });
-  // The tab's title carries what needs the person, so it shows in a background tab.
   const waitingOnYou =
     needs.approvals + needs.sessions + (prefs.advanced ? needs.tasks + needs.messages : 0);
   useDocumentTitle(sel.unknownPage ? t('notFoundTitle') : t(sel.page), waitingOnYou);

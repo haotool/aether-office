@@ -1,4 +1,3 @@
-/** The reviews words, in Traditional Chinese. */
 export const zhReviews = {
   version: '版本',
   result: '提交成果',

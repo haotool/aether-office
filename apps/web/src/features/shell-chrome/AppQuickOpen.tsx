@@ -6,7 +6,6 @@ import { useT } from '../../ui/useT.js';
 
 const QuickOpen = lazy(() => import('./QuickOpen.js').then((m) => ({ default: m.QuickOpen })));
 
-/** Ctrl/Cmd+K: jump to a page, a project or a local session. Loaded only when first opened. */
 export function AppQuickOpen({
   page,
   advanced,

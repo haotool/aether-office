@@ -17,7 +17,7 @@ function setup() {
 }
 const get = (f: ReturnType<typeof setup>, encoding?: string) =>
   f.app.inject({
-    url: '/api/capabilities', // a few KB of JSON
+    url: '/api/capabilities',
     headers: {
       host: '127.0.0.1:8780',
       authorization: `Bearer ${f.owner.token}`,

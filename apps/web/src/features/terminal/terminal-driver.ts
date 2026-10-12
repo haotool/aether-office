@@ -23,17 +23,14 @@ export function serialized<T>(terminalId: string, task: () => Promise<T>): Promi
     () => undefined,
   );
   chains.set(terminalId, tail);
-  // A drained queue is forgotten, so the map does not grow with every terminal ever driven.
   void tail.then(() => {
     if (chains.get(terminalId) === tail) chains.delete(terminalId);
   });
   return run;
 }
 
-/** How many terminals have sends still queued. */
 export const pendingChains = () => chains.size;
 
-/** Pure. Is the terminal under another person's lease? */
 export const heldByOther = (c: TerminalControl, userId: string, now: number): boolean =>
   c.controlOwner !== null && c.controlOwner !== userId && (c.leaseUntil ?? 0) > now;
 
@@ -52,10 +49,6 @@ async function control(projectId: string, terminalId: string, userId: string): P
   return Number(taken.result['controlEpoch']);
 }
 
-/**
- * Writes the steps into the terminal in order, each after its delay, as one uninterrupted run. The terminal input route
- * queues each write, so an Enter always arrives after the body that came before it.
- */
 export function writeSteps(
   projectId: string,
   terminalId: string,
@@ -71,7 +64,6 @@ export function writeSteps(
   });
 }
 
-/** A request that failed because the network is down, not because the server said no. */
 export const isNetworkError = (error: unknown): boolean => error instanceof TypeError;
 
 /** Ends the AETHER terminal (the process in it): the epoch is read fresh, so a takeover by someone else in between is refused. */

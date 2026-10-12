@@ -1,6 +1,5 @@
 import { PALETTE, SCREEN_W, frame, label, tile, Draw } from './screen-draw.js';
 
-/** Planning screens: an architecture sketch, documents, a kanban board and a mind map. */
 export const architecture: Draw = (g, r, a) => {
   frame(g, 'architecture · services', a);
   const boxes: [number, number][] = [];

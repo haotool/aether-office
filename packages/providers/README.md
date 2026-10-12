@@ -6,7 +6,7 @@ Adapters for Claude Code, Codex app-server, and ACP agents; hook installation; g
 
 - Main export: `packages/providers/src/index.ts`.
 - Subpaths: `@aether/providers/models`, `@aether/providers/approval-config` (`package.json` `exports`).
-- Generated artifacts: `packages/providers/generated/` (Codex JSON/TS per verified release).
+- Generated artifacts: `packages/providers/generated/` (Codex TypeScript types of the pinned release; `pnpm run protocol:regen`).
 
 ## Dependencies
 

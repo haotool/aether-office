@@ -1,6 +1,3 @@
-// The squad beam: one wide, soft funnel of additive light from a zone up into the elevator core. A single instanced tube
-// whose centre line is a quadratic Bezier evaluated in the vertex shader from per-instance start, end and width, so every
-// squad's beam is one draw call. Shader program 2 of the squad layer's four.
 import {
   AdditiveBlending,
   BufferGeometry,
@@ -14,9 +11,7 @@ import { DITHER_END, DITHER_PARS, DITHERED } from '../environment/dither.js';
 
 const SEGMENTS = 48;
 const SIDES = 16;
-/** The beam's width where it enters the core's glass (the core's radius is 1.5). */
 const CORE_WIDTH = 1.2;
-/** Heights the beam runs between, over the floor: above the crosses, under the ceiling rails. */
 export const BEAM_FROM_Y = 2.6;
 export const BEAM_TO_Y = 4.6;
 export const BEAM_CAPACITY = 16;
@@ -73,7 +68,6 @@ const fragmentShader = /* glsl */ `
     ${DITHER_END}
   }`;
 
-/** The tube (uv.x round it, uv.y along it) with an instanced start, end, meta and tone per squad, and its material. */
 export function createBeam() {
   const verts = (SEGMENTS + 1) * (SIDES + 1);
   const uv = new Float32Array(verts * 2);
@@ -114,7 +108,6 @@ export function createBeam() {
   return { geometry, material, start, end, meta, tone };
 }
 
-/** The drifting points from the core to a supervisor's halo (one shared `Points`). */
 export const createDotMaterial = () =>
   new PointsMaterial({
     size: 0.09,

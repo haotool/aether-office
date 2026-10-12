@@ -10,7 +10,6 @@ import { listWorkflows } from '../services/work/workflows.js';
 import { CAPABILITIES, authorize } from '@aether/kernel';
 import type { RouteContext } from './context.js';
 
-/** Read-only lists a project page shows: terminals, reservations, schedules, skills, rooms, workflows, meetings, observations. */
 export function projectListRoutes(context: RouteContext) {
   terminalAndReservationRoutes(context);
   setupListRoutes(context);
@@ -40,14 +39,12 @@ function terminalAndReservationRoutes({ app, control, actor }: RouteContext) {
       return { reservations: listReservations(control.ctx, request.params.projectId) };
     },
   );
-  // Static adapter matrix: lets the UI disable what a provider cannot do instead of guessing.
   app.get('/api/capabilities', async (request) => {
     authorize(actor(request), 'read');
     return { providers: CAPABILITIES };
   });
 }
 
-/** Schedules, skills, integrations and rooms. */
 function setupListRoutes({ app, control, actor }: RouteContext) {
   app.get<{ Params: { projectId: string } }>(
     '/api/projects/:projectId/schedules',
@@ -71,14 +68,12 @@ function setupListRoutes({ app, control, actor }: RouteContext) {
   app.get<{ Params: { projectId: string } }>('/api/projects/:projectId/rooms', async (request) => {
     const who = actor(request);
     authorize(who, 'read', request.params.projectId);
-    // Agents see only the rooms they belong to.
     const rooms = listRooms(control.ctx, request.params.projectId);
     const { agentId } = who;
     return { rooms: agentId ? rooms.filter((r) => r.members.includes(agentId)) : rooms };
   });
 }
 
-/** Workflows, meetings and observations. */
 function activityListRoutes({ app, control, actor }: RouteContext) {
   app.get<{ Params: { projectId: string } }>(
     '/api/projects/:projectId/workflows',
@@ -92,7 +87,6 @@ function activityListRoutes({ app, control, actor }: RouteContext) {
     async (request) => {
       const who = actor(request);
       authorize(who, 'read', request.params.projectId);
-      // Agents learn of a meeting through the request they were sent, not from this list.
       if (who.agentId) return { meetings: [] };
       return { meetings: listMeetings(control.ctx, request.params.projectId) };
     },

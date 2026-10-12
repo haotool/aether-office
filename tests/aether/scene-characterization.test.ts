@@ -18,9 +18,6 @@ import { installBrowserEnv, installGlobal, removeBrowserEnv } from './fixtures/b
 import { recordingContext } from './fixtures/recording-canvas.js';
 import { runScenarios } from './fixtures/scene-scenarios.js';
 
-// The scene's pure modules, run over fixed seeded inputs and reduced to digests. The digests were taken from the code as it
-// stood before its functions were split into named steps: a refactor keeps them, a change of behaviour does not. When a
-// change of behaviour is meant, regenerate them by running this test and copying the digests it prints.
 installBrowserEnv();
 beforeEach(() => {
   installGlobal('Path2D', class {});

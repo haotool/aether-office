@@ -28,7 +28,7 @@ describe('a member sent home', () => {
     const desk = layout.objects.find((o) => o.agentId === 'a')!;
     expect(plan.points[0]).toEqual({ x: desk.x, z: desk.z + SEAT_DEPTH });
     const last = plan.points[plan.points.length - 1]!;
-    expect(Math.hypot(last.x, last.z)).toBeLessThan(0.5); // at the core
+    expect(Math.hypot(last.x, last.z)).toBeLessThan(0.5);
     expect(plan.walkMetres).toBeGreaterThan(5);
   });
 
@@ -38,7 +38,7 @@ describe('a member sent home', () => {
     expect(at(0).clip).toBe('stand_up');
     expect(at(STAND_MS).clip).toBe('wave');
     expect(at(STAND_MS + WAVE_MS / 2 - 1).bag).toBe(false);
-    expect(at(walkStart - 1).bag).toBe(true); // packed by the end of the wave
+    expect(at(walkStart - 1).bag).toBe(true);
     expect(at(walkStart + 500)).toMatchObject({ clip: 'walk', gone: false });
     expect(at(walkEnd + SINK_MS / 2)).toMatchObject({ clip: 'walk', gone: false });
     expect(at(walkEnd + SINK_MS / 2).scale).toBeGreaterThan(0);

@@ -14,7 +14,6 @@ import { useLayoutEditor } from './use-layout-editor.js';
 
 type Editor = ReturnType<typeof useLayoutEditor>;
 
-/** Which floor, and which object on it, is being edited. */
 function ObjectPicker({ editor }: { editor: Editor }) {
   const t = useT();
   const { draft, floor } = editor;
@@ -44,7 +43,6 @@ function ObjectPicker({ editor }: { editor: Editor }) {
   );
 }
 
-/** The fields of the chosen object, by what it is, and the button that removes it. */
 function SelectedObject({ editor, agents }: { editor: Editor; agents: Snapshot['agents'] }) {
   const t = useT();
   const { draft, object } = editor;
@@ -90,7 +88,6 @@ type LayoutEditorProps = {
   onClose: () => void;
   onSaved: () => void;
   onPreview: (layout: Layout | null) => void;
-  /** Subagents working now, by their supervisor's member id: what "Pin current squad" sizes the zone for. */
   liveSquads?: Readonly<Record<string, number>>;
 };
 

@@ -19,7 +19,6 @@ it('says when the window a context gauge is measured against is a guess, and sta
       'en',
     ),
   ).toBe('Context 25% · window inferred (the context is past 200k): 1M');
-  // An older control plane sends no basis: the label is the plain one, never a made-up claim.
   expect(contextLabel({ ...pct, contextWindow: 200_000 }, t, 'en')).toBe('Context 45%');
   expect(
     contextLabel({ contextPct: null, contextWindow: null, contextWindowBasis: null }, t, 'en'),

@@ -3,18 +3,12 @@ import { useFrame } from '@react-three/fiber';
 import type { Mesh, MeshBasicMaterial } from 'three';
 import { CONTEXT_COLOR, contextLevel, easeOut, tweenSeconds } from '../environment/context.js';
 
-const SCREEN_WIDTH = 0.76; // MemberScreen's width
-const HEIGHT = 0.72; // a column rising from the desk, taller than the screen so it reads from far away
+const SCREEN_WIDTH = 0.76;
+const HEIGHT = 0.72;
 const WIDTH = 0.09;
-const GAP = 0.1; // between the screen's edge and the gauge
-const BOTTOM = 0.6; // the desk's surface
+const GAP = 0.1;
+const BOTTOM = 0.6;
 
-/**
- * A thin vertical bar beside the desk monitor: how much of the context window the session has used, filling from the
- * bottom, calm / warm / hot by `contextLevel`. When the share changes the fill moves with an eased tween (the slow fall
- * of a compaction is the same tween over a longer span); it is also the only part of the compaction effect that stays
- * when motion is reduced. Nothing is drawn while the share is unknown.
- */
 export function ContextGauge({ percent }: { percent: number | null }) {
   const fill = useRef<Mesh>(null);
   const material = useRef<MeshBasicMaterial>(null);
@@ -25,7 +19,7 @@ export function ContextGauge({ percent }: { percent: number | null }) {
       shown.current = null;
       return;
     }
-    const from = shown.current ?? percent; // the first reading appears in place
+    const from = shown.current ?? percent;
     move.current = { from, to: percent, start: -1 };
   }, [percent]);
   useFrame((state) => {
@@ -40,7 +34,7 @@ export function ContextGauge({ percent }: { percent: number | null }) {
     fill.current.scale.y = Math.max(0.001, level / 100);
     fill.current.position.y = (-HEIGHT * (1 - level / 100)) / 2;
     material.current.color.set(CONTEXT_COLOR[contextLevel(level)]);
-    if (t < 1) state.invalidate(); // the scene may be idle: keep drawing until the fill has arrived
+    if (t < 1) state.invalidate();
   });
   if (percent === null) return null;
   return (

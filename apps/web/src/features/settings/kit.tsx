@@ -14,10 +14,8 @@ import { useSettings } from './context.js';
 import { entryOf, type EntryId } from './entries.js';
 import { highlight } from './search.js';
 
-/** The ids a row gives its controls, so a switch or a select is named by the row's label and described by its text. */
 const RowIds = createContext({ label: '', desc: '', name: '', locked: false });
 
-/** Text with the words of the search marked. */
 function Marked({ text }: { text: string }) {
   const { query } = useSettings();
   return (
@@ -29,11 +27,6 @@ function Marked({ text }: { text: string }) {
   );
 }
 
-/**
- * One setting: its name and what it does (from the shared index, so the search finds exactly what is shown), the
- * control at the right when there is room and below when there is not, then what is true right now and why a control
- * is out of reach. Hidden while a search that does not match it is on.
- */
 export function Row({
   id,
   control,
@@ -43,9 +36,7 @@ export function Row({
 }: {
   id: EntryId;
   control?: ReactNode;
-  /** Chips and sentences about the current state (StatusChip, CopyCommand, InlineHelp). */
   status?: ReactNode;
-  /** Why the control cannot be used ("Owner only"); the control is disabled and the reason shown. */
   lock?: string;
   children?: ReactNode;
 }) {
@@ -80,7 +71,6 @@ export function Row({
   );
 }
 
-/** A setting that is a whole panel of its own (a list, a form): the panel is drawn by the caller, the row only gates it. */
 export function Block({ id, children }: { id: EntryId; children: ReactNode }) {
   const { matches } = useSettings();
   if (matches && !matches.has(id)) return null;
@@ -100,7 +90,6 @@ export function Switch({
   checked: boolean;
   onChange: (next: boolean) => void;
   disabled?: boolean;
-  /** The accessible name, for a switch that is not in a Row (inside a Row the row's label names it). */
   name?: string;
 }) {
   const ids = useContext(RowIds);
@@ -121,7 +110,6 @@ export function Switch({
   );
 }
 
-/** What a row of choices (segmented buttons or a select) takes. */
 type ChoiceProps<T extends string> = {
   value: T;
   options: readonly { value: T; label: string }[];
@@ -129,7 +117,6 @@ type ChoiceProps<T extends string> = {
   disabled?: boolean;
 };
 
-/** A few exclusive choices in a row; arrow keys move between them. */
 export function Segmented<T extends string>({
   value,
   options,
@@ -218,7 +205,6 @@ export function StatusChip({
   );
 }
 
-/** A command to run in a terminal: monospace, scrolls sideways inside its own box, one tap to copy. */
 export function CopyCommand({ command, caption }: { command: string; caption?: string }) {
   const t = useT();
   const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle');
@@ -246,7 +232,6 @@ export function CopyCommand({ command, caption }: { command: string; caption?: s
   );
 }
 
-/** Explanation that stays folded until asked for. */
 export function InlineHelp({ summary, children }: { summary: string; children: ReactNode }) {
   return (
     <details className="shelp">
@@ -256,7 +241,6 @@ export function InlineHelp({ summary, children }: { summary: string; children: R
   );
 }
 
-/** What cannot be undone, set apart from the everyday rows. */
 export function DangerZone({ children }: { children: ReactNode }) {
   const t = useT();
   const id = useId();
@@ -268,7 +252,6 @@ export function DangerZone({ children }: { children: ReactNode }) {
   );
 }
 
-/** A grey bar where a row will be, so the page does not jump when the answer arrives. */
 export function Skeleton() {
   const t = useT();
   return (

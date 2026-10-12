@@ -1,8 +1,4 @@
-/*
- * Phone density: the sizes of a phone's pages, set so content, not controls, takes the screen. A button is drawn 36 to
- * 40px and hit at 44px (touch-targets.css), a page title is a title and not a banner, and an explanation is an "i" beside
- * it rather than a line of its own.
- */
+/* A button is drawn 36 to 40px and hit at 44px (touch-targets.css): content, not controls, takes the phone's screen. */
 @media (max-width: 760px) {
   h1,
   .page-heading h1,
@@ -32,7 +28,7 @@
     min-width: 0;
   }
   .page-heading .hint-fold {
-    flex-basis: auto; /* the "i" sits beside the title, not under it */
+    flex-basis: auto;
   }
   .page-heading button,
   .page-heading .primary,
@@ -43,16 +39,12 @@
   .primary,
   .secondary,
   button:not([class]) {
-    min-height: var(
-      --control-h-md
-    ); /* wins over the plain buttons a feature sets smaller (a message's copy buttons) */
+    min-height: var(--control-h-md);
     padding-inline: var(--space-16);
     font-size: var(--fs-body);
   }
   .primary {
-    min-height: var(
-      --control-h-lg
-    ); /* the cut corner clips a hit area (compact-desktop.css), so the button is the 44px */
+    min-height: var(--control-h-lg);
   }
   .view-switch {
     gap: var(--space-6);
@@ -106,7 +98,6 @@
     min-height: var(--control-h-sm);
     margin: var(--space-12) 0;
   }
-  /* A member is a row: avatar, name and role, state. */
   .agent-grid {
     grid-template-columns: 1fr;
     gap: var(--space-8);
@@ -159,11 +150,10 @@
     min-width: 0;
   }
   select {
-    padding-right: var(--space-32); /* the arrow has its own room */
+    padding-right: var(--space-32);
   }
 }
 
-/* A narrow list (the narrowest phones) keeps the title and the state. */
 .task-list {
   container: tasks / inline-size;
 }
@@ -177,7 +167,6 @@
 }
 
 @media (max-width: 760px) {
-  /* A section heading that follows a panel or a list keeps a clear space above it. */
   .page-padding > h2,
   .page-padding section > h2,
   .panel + h2,

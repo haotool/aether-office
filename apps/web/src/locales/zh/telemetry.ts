@@ -1,4 +1,3 @@
-/** The telemetry words, in Traditional Chinese. */
 export const zhTelemetry = {
   executionPolicy: '原生代理執行',
   emergencyStop: '緊急停止',

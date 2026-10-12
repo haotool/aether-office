@@ -5,15 +5,8 @@ import { SEATING } from '../core/seating.js';
 import { type Materials } from './building-materials.js';
 import { cylinder } from './building-parts.js';
 
-// ── Furniture ────────────────────────────────────────────────────────────────────────────────────────────────────
-
-/**
- * A workstation without a monitor: a floating slab, an emitter bar and three holographic panes in an arc, and a hover
- * seat. Every height and size of the slab and the seat comes from desk-seating.json, which the animal audit checks the
- * characters against (tools/blender/audit_animals.py): change them there, not here.
- */
 function desk(group: THREE.Group, m: Materials) {
-  const top = SEATING.slab.at[1] + SEATING.slab.size[1] / 2; // the desk's working surface
+  const top = SEATING.slab.at[1] + SEATING.slab.size[1] / 2;
   deskSlab(group, m, top);
   deskPanes(group, m, top);
   hoverSeat(group, m);
@@ -21,21 +14,18 @@ function desk(group: THREE.Group, m: Materials) {
 
 function deskSlab(group: THREE.Group, m: Materials, top: number) {
   const { slab, bar, pedestal } = SEATING;
-  // Floating slab on one pedestal, lit from underneath.
   box(group, m.shell, slab.size, slab.at, 0.12);
   box(group, m.accent, [1.6, 0.012, 0.04], [0, top - 0.08, 0.4], 0);
   box(group, m.accentSoft, [1.5, 0.01, 0.7], [0, top - 0.077, 0], 0.05);
   cylinder(group, m.graphite, 0.09, pedestal.radius, pedestal.height, pedestal.at, 16);
   cylinder(group, m.graphite, 0.34, 0.34, 0.04, [0, 0.02, -0.05], 24);
   cylinder(group, m.accent, 0.36, 0.36, 0.012, [0, 0.045, -0.05], 32, true);
-  // Emitter bar and the three panes it projects.
   box(group, m.graphite, bar.size, bar.at, 0.02);
   box(group, m.accent, [1.3, 0.012, 0.085], [0, bar.at[1] + 0.028, bar.at[2]], 0);
 }
 
 function deskPanes(group: THREE.Group, m: Materials, top: number) {
-  const glass = top + 0.065; // what stands on it: the emitter bar, the panes
-  // The centre pane is the member's own screen, drawn per member by the scene (see Member); the side panes belong to the desk.
+  const glass = top + 0.065;
   for (const [x, angle, w] of [
     [-0.62, 0.42, 0.52],
     [0.62, -0.42, 0.52],
@@ -52,7 +42,6 @@ function deskPanes(group: THREE.Group, m: Materials, top: number) {
       0,
     ).rotation.y = angle;
   }
-  // Light keyboard projected on the slab.
   const keys = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.16), m.hologramCyan);
   keys.rotation.x = -Math.PI / 2;
   keys.position.set(0, top + 0.007, 0.24);
@@ -61,7 +50,6 @@ function deskPanes(group: THREE.Group, m: Materials, top: number) {
 
 function hoverSeat(group: THREE.Group, m: Materials) {
   const { seat, cushion, back } = SEATING;
-  // Hover seat: a shell over a ring of light, no legs.
   box(group, m.shell, seat.size, seat.at, 0.14);
   box(group, m.shell, back.size, back.at, 0.12);
   box(group, m.fabric, cushion.size, cushion.at, 0.1);

@@ -8,7 +8,7 @@ it('has screen art for every engineering role, and picks it deterministically pe
   const a = seeded('member-1');
   const b = seeded('member-1');
   const values = Array.from({ length: 5 }, () => a());
-  expect(Array.from({ length: 5 }, () => b())).toEqual(values); // same member, same picture
+  expect(Array.from({ length: 5 }, () => b())).toEqual(values);
   expect(values.every((v) => v >= 0 && v < 1)).toBe(true);
   expect(seeded('member-2')()).not.toBe(seeded('member-1')());
 });

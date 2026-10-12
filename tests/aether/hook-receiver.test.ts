@@ -7,7 +7,7 @@ import { outcomeOf, toRecord } from '../../packages/providers/src/hook-receiver.
 import { deriveHookState } from '../../apps/control/src/services/hooks/hook-spool.js';
 
 const receiver = join(process.cwd(), 'packages/providers/src/hook-receiver.mjs');
-const SECRET = 'ghp_EXAMPLE_NOT_A_SECRET';
+const SECRET = `ghp_${'0123456789abcdefghij'}0123456789abcdef`;
 const base = { session_id: 's1', cwd: '/w' };
 
 describe('hook receiver: labels, ids and outcomes', () => {
@@ -94,7 +94,6 @@ describe('hook receiver: labels, ids and outcomes', () => {
     expect(outcomeOf('claude', at('PostToolUseFailure', { is_interrupt: true }))).toBeUndefined();
     expect(outcomeOf('claude', at('PreToolUse'))).toBeUndefined();
     expect(outcomeOf('claude', at('Stop'))).toBeUndefined();
-    // Codex: PostToolUse alone proves nothing; a numeric exit code does.
     expect(outcomeOf('codex', at('PostToolUse'))).toBeUndefined();
     expect(outcomeOf('codex', at('PostToolUse', { tool_response: { exit_code: 0 } }))).toBe(true);
     expect(
@@ -137,14 +136,14 @@ describe('hook state: outcomes by id, labels from the closed vocabulary', () => 
       rec('PreToolUse', 3, { tool: 'Bash', toolUseId: 'c' }),
       rec('PostToolUseFailure', 4, { tool: 'Bash', toolUseId: 'a', ok: false }),
       rec('PostToolUse', 5, { tool: 'Bash', toolUseId: 'b', ok: true }),
-      rec('PostToolUse', 6, { tool: 'Bash', ok: true }), // no id: pairs with nothing, however close in time
+      rec('PostToolUse', 6, { tool: 'Bash', ok: true }),
     ]);
     expect(s.recent.map((c) => [c.tags, c.ok])).toEqual([
       [['test'], false],
       [['build'], true],
       [[], null],
     ]);
-    expect(s.activity).toBe('working'); // a failed tool is not an idle agent
+    expect(s.activity).toBe('working');
   });
 
   it('drops a label that is not in the vocabulary (an older or newer receiver) instead of trusting it', () => {

@@ -1,5 +1,3 @@
-// Tiny in-memory fakes of the browser APIs the web app's modules read (the repo's vitest has no DOM environment). Each test
-// file installs what it needs before dynamically importing the module under test, and removes it afterwards.
 export class MemoryStorage {
   private readonly map = new Map<string, string>();
   getItem(key: string) {
@@ -26,7 +24,6 @@ export class FakeMedia extends EventTarget {
   }
 }
 
-/** An EventSource that the test drives: `emit` delivers a named event, `fail` is a connection error. */
 export class FakeEventSource {
   static all: FakeEventSource[] = [];
   closed = false;
@@ -62,7 +59,6 @@ export type BrowserEnv = {
   media: Map<string, FakeMedia>;
 };
 
-/** Installs window, document, storage and matchMedia. `matching` lists the media queries that start out true. */
 export function installBrowserEnv(matching: readonly string[] = []): BrowserEnv {
   const storage = new MemoryStorage();
   const media = new Map<string, FakeMedia>();

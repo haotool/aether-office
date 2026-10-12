@@ -1,8 +1,6 @@
 import { buildNavGrid, findPath, pathLength, type NavGrid, type Point } from '@aether/kernel';
 import type { Layout } from '@aether/contracts';
 
-// Message "carriers" are decoration over durable state: a carrier arriving proves nothing about
-// delivery or acknowledgement, which remain the recipient delivery states.
 export type SceneMessage = { id: string; senderId: string; recipientIds: readonly string[] };
 export type Carrier = {
   key: string;
@@ -19,7 +17,6 @@ type CarrierPlan = {
 
 export const gridFor = (layout: Layout): NavGrid => buildNavGrid(layout.objects);
 
-/** Plans carriers only for messages not seen before; the returned `seen` set is the dedupe record. */
 export function planCarriers(
   messages: readonly SceneMessage[],
   seen: ReadonlySet<string>,
@@ -54,7 +51,6 @@ export function planCarriers(
   return { carriers, unreachable, seen: next };
 }
 
-/** Position `distance` metres along a polyline, clamped to its end. */
 export function positionAt(points: readonly Point[], distance: number): Point {
   let remaining = Math.max(0, distance);
   let a = points[0];

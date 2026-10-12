@@ -1,4 +1,3 @@
-/** Pure business policies. No filesystem, database, transport or rendering imports. */
 export type Role = 'owner' | 'operator' | 'reviewer' | 'viewer' | 'agent' | 'runner';
 export type Actor = {
   id: string;

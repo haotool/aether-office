@@ -19,7 +19,6 @@ import { useAriaLog } from '../life/index.js';
 import { useSquad } from '../squad/index.js';
 import type { OfficeSceneProps } from '../scene/scene-props.js';
 
-/** Who the pointer is over: a name tag or a character, whichever it touched last. */
 function useHover() {
   const [hovered, setHovered] = useState<string | null>(null);
   const hoverStart = (id: string) => setHovered(id);
@@ -27,7 +26,6 @@ function useHover() {
   return { hovered, hoverStart, hoverEnd };
 }
 
-/** The spire is laid out from the commits; its tooltip is fed by the spire's pointer events without redrawing the scene. */
 function useStalk(beanstalk: OfficeSceneProps['beanstalk'], exploded: boolean) {
   const stalk = useMemo(
     () => (beanstalk?.length ? layoutStalk(beanstalk, Date.now(), FLOORS * FLOOR_HEIGHT) : null),
@@ -45,7 +43,6 @@ function useStalk(beanstalk: OfficeSceneProps['beanstalk'], exploded: boolean) {
   return { stalk, spire, tip, showTip };
 }
 
-/** The camera and the floor in view: the director, the first-visit tour and the keyboard all steer through it. */
 function useNavigation(props: OfficeSceneProps, layout: Layout, intro: Intro, compact: boolean) {
   const attention = useMemo(
     () => new Map(Object.entries(props.attention ?? {})),
@@ -72,7 +69,6 @@ function useNavigation(props: OfficeSceneProps, layout: Layout, intro: Intro, co
 }
 type Intro = ReturnType<typeof useIntroTour>;
 
-/** What the scene is made of before it is told what is on screen: the seats (squad pods included), the tour, the camera. */
 function useSceneCore(props: OfficeSceneProps) {
   const placed = useMemo(
     () => props.layout ?? defaultLayout(props.agents),
@@ -80,9 +76,8 @@ function useSceneCore(props: OfficeSceneProps) {
   );
   const zh = props.locale === 'zh-TW';
   const compact = props.compact ?? false;
-  const ariaLog = useAriaLog(zh); // one log for the whole office: the life effects and the squads speak through it
-  const pose = usePoseCues(props.reducedMotion); // the emotes, the hand-over's nods and the life effects' gestures
-  // Subagents sit in their supervisor's squad zone: every seat lookup reads the layout with their pod seats in it.
+  const ariaLog = useAriaLog(zh);
+  const pose = usePoseCues(props.reducedMotion);
   const squad = useSquad(placed, props, ariaLog.say, pose.request);
   const layout = squad.layout;
   const [warm, setWarm] = useState(false);
@@ -101,7 +96,6 @@ function useSceneCore(props: OfficeSceneProps) {
   return { placed, zh, compact, ariaLog, pose, squad, layout, warm, ready, intro, nav };
 }
 
-/** The members on the floor in view (all of them when the building is spread apart), and the floors drawn. */
 function floorsInView(agents: Agent[], layout: Layout, floor: number, exploded: boolean) {
   const count = exploded ? FLOORS : floor + 1;
   return {
@@ -110,7 +104,6 @@ function floorsInView(agents: Agent[], layout: Layout, floor: number, exploded: 
   };
 }
 
-/** How the scene renders: the most it may by quality (AdaptiveRatio lowers it while frames run slow), shadows, motion. */
 function renderSettings(props: OfficeSceneProps, compact: boolean) {
   const animate = !props.reducedMotion && props.quality !== 'low';
   return {
@@ -124,7 +117,6 @@ function renderSettings(props: OfficeSceneProps, compact: boolean) {
 
 type Core = ReturnType<typeof useSceneCore>;
 
-/** The pointer, the marquee, the seat drag, the hold-to-talk wall: everything the person does to the scene. */
 function useInteraction(
   props: OfficeSceneProps,
   core: Core,
@@ -159,7 +151,6 @@ function useInteraction(
   });
 }
 
-/** The floor in view: its height, its department, and the layout cut down to what sits on it. */
 function useFloorFrame(layout: Layout, floor: number, exploded: boolean) {
   const floorLayout = useMemo(
     () => ({ ...layout, objects: layout.objects.filter((o) => (o.floor ?? 0) === floor) }),
@@ -179,7 +170,6 @@ type Labelling = {
   sceneAgents: Agent[];
 };
 
-/** Who wears a name tag, what role it names, and who shows the compaction chip. */
 function labelling(l: Labelling) {
   const { props, marks } = l;
   return {
@@ -189,23 +179,20 @@ function labelling(l: Labelling) {
       agent.id === l.hovered ||
       agent.id === marks.menuId ||
       marks.group.has(agent.id) ||
-      (!l.compact && l.onShot(agent.id)), // on a phone the caption names who the camera is on
+      (!l.compact && l.onShot(agent.id)),
     roleName: (agent: Agent) => roleLabel(props.roleOf?.(agent) ?? 'generalist', l.zh),
-    // The compaction chip: only while the page says the compaction is happening, and not at all on low quality.
     chipped: props.quality === 'low' ? [] : l.sceneAgents.filter((a) => props.compactions?.[a.id]),
   };
 }
 
-/** The DOM nodes the projected labels write into each frame, and where the speech bubbles are this frame. */
 function useDomRegistry() {
   const elements = useRef(new Map<string, HTMLElement>());
   const speechElements = useRef(new Map<string, HTMLElement>());
   const chipElements = useRef(new Map<string, HTMLElement>());
-  const bubbles = useRef(new Map<string, Rect>()); // a name tag under a bubble is hidden, not drawn over what was said
+  const bubbles = useRef(new Map<string, Rect>());
   return { elements, speechElements, chipElements, bubbles };
 }
 
-/** Who is turned toward whom (a message in the air), and the faint lines between desks of one repository or session. */
 function relationsOf(
   props: OfficeSceneProps,
   nav: ReturnType<typeof useSceneCore>['nav'],
@@ -225,12 +212,10 @@ function relationsOf(
   });
 }
 
-/** The members on their way out, planned over the layout; replanned only when the layout or who is leaving changes. */
 function useDepartures(layout: Layout, leaving: OfficeSceneProps['leaving']) {
   return useMemo(() => planDepartures(layout, Object.keys(leaving ?? {})), [layout, leaving]);
 }
 
-/** Who gets a speech bubble: the selected member and the camera's subjects first, then the busiest working ones (not on a phone). */
 const speakersOf = (
   props: OfficeSceneProps,
   sceneAgents: readonly Agent[],
@@ -246,7 +231,6 @@ const speakersOf = (
     compact,
   });
 
-/** The members in view and what passes between them: who leaves, who is heard, who is turned toward whom, and the person's hands on them. */
 function useCrowd(
   props: OfficeSceneProps,
   core: ReturnType<typeof useSceneCore>,
@@ -255,7 +239,7 @@ function useCrowd(
 ) {
   const { layout, nav, compact, zh } = core;
   const { floor, exploded } = nav;
-  const [namesOn, setNamesOn] = useState(!compact); // on a phone only the member in hand has a name, until asked for all
+  const [namesOn, setNamesOn] = useState(!compact);
   const departures = useDepartures(layout, props.leaving);
   const { visibleFloors, sceneAgents } = floorsInView(props.agents, layout, floor, exploded);
   const ix = useInteraction(props, core, sceneAgents, hovered, elements);
@@ -278,7 +262,6 @@ function useCrowd(
   };
 }
 
-/** Everything the scene's canvas and its page overlay draw from, computed once per render of `OfficeScene`. */
 export function useSceneModel(props: OfficeSceneProps) {
   const core = useSceneCore(props);
   const { layout, nav, pose, compact, zh, intro } = core;
@@ -302,7 +285,7 @@ export function useSceneModel(props: OfficeSceneProps) {
     hoverStart,
     hoverEnd,
     ...crowd,
-    filming: nav.directed !== null || intro.active, // the camera runs itself: full-rate frames
+    filming: nav.directed !== null || intro.active,
     auto: (props.autoCamera ?? true) && !props.reducedMotion,
     squadScene: {
       props,

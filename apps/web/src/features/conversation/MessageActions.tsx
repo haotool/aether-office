@@ -6,7 +6,6 @@ import { useT } from '../../ui/useT.js';
 
 const COPIED_MS = 1500;
 
-/** Copy one message: as the Markdown it was written in, or as plain text. Shown on hover or focus, always on a touch screen. */
 export function MessageActions({ text }: { text: string }) {
   const t = useT();
   const [done, setDone] = useState<'markdown' | 'text' | null>(null);

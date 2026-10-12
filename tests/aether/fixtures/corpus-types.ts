@@ -1,6 +1,5 @@
-// A synthetic, labelled corpus of sessions: what each one was asked, where it ran and what it did, with the role a
-// careful person would give it. Nothing here comes from a real session. Cases are written from how such work looks
-// (file kinds, command families, branch names, subagent types), not from the classifier's own keyword lists.
+// A synthetic, labelled corpus of sessions: nothing here comes from a real session. Cases are written from how such
+// work looks (file kinds, command families, branch names, subagent types), not from the classifier's own keyword lists.
 export type ToolCall = { tool: string; target: string | null };
 export type CorpusCase = {
   name: string;

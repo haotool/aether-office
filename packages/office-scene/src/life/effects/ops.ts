@@ -4,13 +4,8 @@ import type { Effect, Rgb, Sprite } from './types.js';
 const AMBER: Rgb = [1, 0.75, 0.25];
 const GREEN: Rgb = [0.4, 0.95, 0.55];
 const PAD = [0.6, 0.72, 0.1] as const;
-/** The countdown takes this long, then the rocket lifts. */
 const COUNTDOWN_MS = 2400;
 
-/**
- * A launch pad on the desk for a deploy, publish or release command: three lights count down (3, 2, 1), turn green, and the
- * rocket climbs. It says the command started; whether the deploy worked is not known to it.
- */
 export const launchPad: Effect = (t, d, seed) => {
   const fade = envelope(t, d, 400);
   const p = clamp01((t - COUNTDOWN_MS) / (d - COUNTDOWN_MS));
@@ -48,7 +43,6 @@ export const launchPad: Effect = (t, d, seed) => {
   return sprites;
 };
 
-/** A deploy on a Friday afternoon: a calendar with a warning triangle hovers over the head while sweat drops fall. */
 export const fridayDeploy: Effect = (t, d, seed) => {
   const fade = envelope(t, d, 400);
   const [x, y, z] = SPOT.overHead;
@@ -74,7 +68,6 @@ export const fridayDeploy: Effect = (t, d, seed) => {
   return sprites;
 };
 
-/** LGTM: a green stamp thumps onto the screen (large, then settled) and a ring spreads from it. */
 export const lgtm: Effect = (t, d, seed) => {
   const fade = envelope(t, d, 200);
   const thump = clamp01(t / 260);

@@ -21,7 +21,6 @@ OUT=ROOT/'apps/web/public/assets/animals'
 SOURCE=ROOT/'assets-source/animals'
 # The baked maps are source material: the shipped GLBs carry their own (WebP) copies, so these stay out of the web root.
 TEXTURES=SOURCE/'textures'
-# The bones that bend the fused skin; the rest (face, ears, tail, props) carry loose parts of their own.
 BODY_BONES={'pelvis','chest','neck','head',*(f'{b}_{s}' for b in ('upper_arm','forearm','hand','thigh','shin','foot') for s in 'LR')}
 
 
@@ -38,7 +37,6 @@ def assemble(species):
     bpy.ops.object.mode_set(mode='WEIGHT_PAINT')
     bpy.ops.object.vertex_group_smooth(group_select_mode='ALL',factor=.5,repeat=3)
     bpy.ops.object.mode_set(mode='OBJECT')
-    # glTF skins take four bones a vertex; trim here so Blender deforms it the same way.
     with bpy.context.temp_override(object=skin,active_object=skin,selected_objects=[skin]):
         bpy.ops.object.vertex_group_limit_total(group_select_mode='ALL',limit=4)
         bpy.ops.object.vertex_group_normalize_all(group_select_mode='ALL',lock_active=False)

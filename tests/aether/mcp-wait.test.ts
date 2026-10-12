@@ -88,4 +88,4 @@ it('MCP cancellation aborts an in-flight inbox request without another poll', as
     http.closeAllConnections();
     await new Promise<void>((resolve, reject) => http.close((e) => (e ? reject(e) : resolve())));
   }
-}, 10000); // far under the 25 s wait the cancellation must cut short
+}, 10000);

@@ -1,5 +1,8 @@
 # Office Life: work plan
 
+- Status: historical
+- Date: 2026-10-08
+
 > **Design record.** The work plan the iterations were run from (briefs for engineers and agents). It is history, not a to-do
 > list; the result is described in [features](../features.md).
 

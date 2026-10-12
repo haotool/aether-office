@@ -1,4 +1,3 @@
-/** The words of the squad in the panel (features/FeedSquad, SquadStrip, SubagentCards), in English. `{name}` and `{n}` are filled in. */
 export const squadEn = {
   squadOf: 'Squad of {name}',
   squadStrip: 'Squad',

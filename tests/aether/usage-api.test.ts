@@ -52,13 +52,13 @@ it('serves token and Git KPIs to a human owner only, validated, redacted and rev
       headers: { host: '127.0.0.1:4503', authorization: `Bearer ${token}`, ...headers },
     });
   try {
-    expect((await get('/api/usage', f.sender.token)).statusCode).toBe(403); // an agent's credential
+    expect((await get('/api/usage', f.sender.token)).statusCode).toBe(403);
     expect((await get('/api/usage/git', f.sender.token)).statusCode).toBe(403);
     expect((await get('/api/usage?range=year', f.owner.token)).statusCode).toBe(400);
 
     let usage = await get('/api/usage?range=7d', f.owner.token);
     for (let n = 0; n < 20 && !usage.json().scan.complete; n++)
-      usage = await get('/api/usage?range=7d', f.owner.token); // the first scan may still be reading
+      usage = await get('/api/usage?range=7d', f.owner.token);
     expect(usage.statusCode).toBe(200);
     const body = usageResponseSchema.parse(usage.json());
     expect(body.enabled).toBe(true);
@@ -71,7 +71,6 @@ it('serves token and Git KPIs to a human owner only, validated, redacted and rev
     });
     expect(body.projects[0]).toMatchObject({ repo: 'acme-site' });
     expect(body.cost).toBeNull();
-    // numbers, model names and repository folder names only: nothing of the machine's paths or text
     expect(usage.body).not.toContain(home);
     expect(usage.body).not.toContain('secret subject');
     expect(usage.body).not.toContain('.jsonl');

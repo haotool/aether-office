@@ -1,4 +1,3 @@
-/** The knowledge words, in English. */
 export const enKnowledge = {
   knowledgeTrustNote:
     'Approval records human review. Test evidence still requires separate verification.',

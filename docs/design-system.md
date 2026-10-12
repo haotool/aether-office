@@ -32,12 +32,13 @@ Delivery: [Loading performance](#loading-performance) · [Installable app (PWA)]
 | Type       | `--fs-label` (11), `--fs-small` (12), `--fs-meta` (13), `--fs-body` (14), `--fs-lead` … `--fs-hero` | No visible text under 11px; readable text is 12px or more. Roles: 11 uppercase mono tags, 12 secondary and dense text (most of the UI), 13 the page's base text (`body`), 14 `h3`, row titles and conversation text |
 | Line height | `--lh-tight` (1.25), `--lh-snug` (1.45), `--lh-body` (1.6) | A title or single line; text in a card; long reading text (`body` is `--lh-body`) |
 | Elevation  | `--shadow-sm` / `-md` / `-lg`, `--shadow`                              | A raised chip or toast; a card or menu; a dialog (`.modal`)                             |
-| Motion     | `--dur-fast` (0.15s), `--dur` (0.2s), `--dur-slow` (0.4s), `--ease`     |                                                                                         |
+| Motion     | `--dur-fast` (0.15s), `--dur` (0.2s), `--dur-slow` (0.4s), `--ease`     | Loops and one-shots by role: `--dur-pulse`, `--dur-hold`, `--dur-sheen`, `--dur-caret` …  |
 | Radius roles | `--r-control` (4), `--r-card` (8), `--r-sheet` (16), `--r-pill`       | Aliases of the scale above, so a role can change in one place                           |
 | Layers     | `--z-*`                                                                | Named, ordered layers: scene overlays below page chrome, sheets on top                  |
 | Color      | theme tokens (`--bg`, `--surface`, `--text`, …) and `--glass*`, `--on-glass*` | The glass set is for what is drawn over the 3D scene, a night view in both themes |
 | Touch      | `--target-touch` (44px hit), `--control-touch` (40), `--control-touch-sm` (36), `--target-fine` (32), `--safe-*` | Hit area, older drawn sizes and the notch and home-bar insets; new code uses the control scale below |
 | Controls   | `--control-h-sm` / `-md` / `-lg`, `--bar-h` (56), `--tabbar-h`          | See the control scale below                                                             |
+| Frame      | `--sidebar-w`, `--brand-w`, `--team-chip-w`, `--stage-min-h`, `--stage-inset`, `--stage-rail` | The page frame and the desktop stage's insets; the steps by window size are at the end of `tokens.css` |
 | Focus      | `--focus-ring` (2px mint), `--focus-offset` (2px)                       | One look for every focused control (below)                                              |
 
 ### Control scale
@@ -47,7 +48,7 @@ replace the mouse values in one place, a `@media (pointer: coarse), (max-width: 
 rule never re-declares a height for a finger. `touch-targets.css` only extends the hit area to 44px (an invisible `::before`).
 The 3D scene's toolbar (`.segmented`, `.scene-options` in `office.css`) is a compact HUD over the canvas: its segments, buttons and
 select are `--control-h-sm` (32 with a mouse, 36 with a finger), checked by `e2e/scene/scene-hud-consistency.spec.ts`. The HUD plaques
-(floor card, deck panel, camera wall) are geometry: their insets and widths stay literal, each with a comment saying why.
+(floor card, deck panel, camera wall) are geometry: their insets come from the `--stage-*` tokens, their widths stay literal, each with a comment saying why.
 
 | Token              | Mouse | Touch / phone | Used by                                                 |
 | ------------------ | ----- | ------------- | ------------------------------------------------------- |
@@ -68,8 +69,7 @@ inset row, a drag handle) sets its own offset and keeps the same ring; it does n
 ### Shared classes
 
 The `u-` classes are the shared names (`controls.css`, `forms.css`, `pages.css`); the older classes join them through grouped
-selectors, so nothing had to be renamed at once. `.u-btn` (with `--primary`, `--ghost`, `--icon`; aliases `.primary`,
-`.secondary`, `.icon-button`, `.text-button`), `.u-field` (alias `.field`), `.u-chip`, `.u-card`, `.u-row`, `.u-head` with
+selectors, so nothing had to be renamed at once. `.u-chip`, `.u-card`, `.u-head` with
 `.u-head__actions` (alias `.page-heading`; the title on one side, any number of actions wrapping on the other), `.u-empty`
 (what `Empty` renders), `.u-switch` and `.u-segmented` (alias `.view-switch`). The Settings switch (`.switch u-switch`) and
 segmented control (`.sseg u-segmented`) and the KPI dashboard's header (`.kpi-head u-head`) and office chips (`.u-chip`) use
@@ -90,7 +90,7 @@ The file list is documented at the top of `index.css`.
 
 Shared pieces live in `apps/web/src/ui/` (one module each: `Modal.tsx` holds `Modal` and `Sheet`, `Disclosure.tsx` holds `Fold`, `Hint` and `Clamp`, then `Field.tsx`, `Badge.tsx`, `Empty.tsx`, `PageHeading.tsx`, `whyNot.ts`, `useT.ts`): `Modal`, `Sheet`, `Fold`, `Hint`, `Clamp`, `Field`, `Badge`, `Empty`,
 `PageHeading`. A feature composes them instead of rebuilding a portal, a backdrop or a close button. Buttons are the
-classes `primary`, `secondary`, `icon-button` and `text-button` (the `u-btn` family, see Shared classes); a new variant is added beside them in `controls.css`.
+classes `primary`, `secondary`, `icon-button` and `text-button`; a new variant is added beside them in `controls.css`.
 
 A control that is off says why: `{...whyNot(t, [canWrite, 'needOperator'], [!busy, 'whyBusy'])}` (`ui/whyNot.ts`) sets the first unmet
 reason as the control's `title` and as its `aria-describedby`, which names the text `ReasonDefs` (mounted once, in the application and
@@ -299,8 +299,8 @@ member is a conversation, not an identity card. Code: `features/SessionPanel.tsx
   wants a look), quiet focus and collapse buttons, the status badge, the model chip and a thin gradient meter for the context
   window; long names truncate with a tooltip. Feed rows have a status rail on the left edge (amber needs you, teal pulsing
   working, blue finished, dim idle), a mono repository and branch chip, the time at the right, sticky group headers with counts
-  and groups that fold smoothly; an empty feed says how to start a session. Conversation: 14px body text, a quiet gutter for the
-  assistant, timestamps on hover (always on a touch screen), code blocks with the language and a copy button, `diff` blocks
+  and groups that fold smoothly; an empty feed says how to start a session. Conversation: 14px body text, the assistant as plain
+  text and the person's words in a bubble, timestamps on hover (always on a touch screen), code blocks with the language and a copy button, `diff` blocks
   coloured by +/-, tool calls as slim chips with a shimmer and the time taken (ticking while they run), a "jump to latest"
   pill after a screen of scrolling up, skeleton rows while the first fetch is out. Composer: the box grows from one to eight
   lines, the quick-reply chips scroll sideways, and the slash and @ lists carry their key hints. A permission card shows the time
@@ -900,7 +900,7 @@ not be run (the installed build does not match this Playwright), so nothing belo
 
 | Budget (phone, first load)                           | Now                                                                  |
 | ---------------------------------------------------- | -------------------------------------------------------------------- |
-| Page and styles (no 3D office, no panel)             | 186 KB transferred (was 251 KB); entry script 83 KB brotli; plus 16 to 18 KB for the language in use and 18 KB for the panel on a desktop |
+| Page and styles (no 3D office, no panel)             | 203 KB brotli over 43 files (251 KB before the first-load round, 186 KB right after it); the build budget is 200 KB, see below |
 | 3D office on top (engine + 8 characters at LOD 2)    | 2.3 MB: engine 266 KB brotli, characters 8 x about 260 KB gzip       |
 | The panel does not wait for the office               | Slow 4G: panel ready at 2.2 s with the office and at 2.2 s without   |
 | Interaction on the panel (sheet open, tap a row)     | 96 ms event with the 3D office off, 240 to 340 ms with it running (4x CPU) |
@@ -922,6 +922,12 @@ limits are in `contracts/src/session-limits.ts`). The first-load total fell from
 scorecard; `scripts/check-bundle-size.mjs` budgets are 870 KB total and 400 KB for the largest chunk). Measured on the phone
 profile (390 by 844, 4x CPU, cache off, median of 5) on Slow 4G (1.6 Mbps, 150 ms): first contentful paint 1.85 to 1.67 s, app
 ready 2.63 to 2.28 s; with no network limit the difference is below the run-to-run noise (about 300 ms).
+
+The first-load total has grown since that round, with the office-life and shell work, to 203 KB brotli (231 KB gzip, 714 KB
+raw): react-dom is 202 KB of the raw size, the kernel 38, react-router 36, the query cache 32 and the office feature 31. That
+is 3 KB over the 200 KB budget of the `first-load` rule, and the one budget of the scorecard that is not met. Most of what is
+left is not the app's own code: splitting the remaining routes would save about 6 KB gzip, and going further means replacing
+the router or the query cache, which costs more than it returns.
 
 Tried and left out: `content-visibility: auto` on feed rows (150 sessions: opening the sheet takes 180 to 280 ms against 96 ms at 12,
 and the change measured no difference, because the cost is the first render, not layout), and a list library (not needed under

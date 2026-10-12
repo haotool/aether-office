@@ -23,12 +23,10 @@ import { ACTIVE, departmentAt, floorY } from '../scene/scene-geometry.js';
 import type { SceneCompaction } from '../environment/context.js';
 import type { Quality } from '../scene/scene-types.js';
 
-/** Where the compaction effect plays: above a seated member's head, in the desk's frame. */
 const HEAD_Y = 1.75;
 
 type Desk = Layout['objects'][number];
 
-/** One member at a desk, as the scene tells it. */
 type MemberProps = {
   agent: Agent;
   desk: Desk;
@@ -36,31 +34,21 @@ type MemberProps = {
   role: string;
   facts: ScreenFacts | undefined;
   intensity: 0 | 1 | 2 | 3;
-  /** A compaction happening now: the paper-to-cube effect over the head (not when motion is reduced or quality is low). */
   compaction: SceneCompaction | undefined;
   apparition: Apparition | undefined;
   zombie: boolean;
-  /** Sent home: the way out and when it begins. The member packs up, walks out and the desk is left empty. */
   departure: { plan: Departure; startAt: number } | undefined;
-  /** Who this member is turned toward right now (a message in the air), newest first. */
   engagements: readonly Engagement[] | undefined;
-  /** The member wants a person: a ring of light pulses on the floor round its desk. */
   attention: boolean;
   selected: boolean;
-  /** The ring under the member: chosen, hovered or in the group selection. */
   ring: Ring | null;
-  /** A reaction the person asked for (see emotes.ts). */
   emote: EmoteCue | undefined;
-  /** A turn of the chair a life effect asked for (see pose-cues.ts). */
   turn?: TurnCue | undefined;
   reducedMotion: boolean;
   quality: Quality;
   light: boolean;
-  /** A click or tap (a second one on the chosen member opens its menu; with Shift it joins the group). */
   onActivate: (id: string, shift: boolean) => void;
-  /** Right click, or a finger held down on the member. */
   onMenu: (id: string) => void;
-  /** A press with Alt held: the start of dragging the member's desk to another seat; false when dragging is not allowed. */
   onGrab: (id: string, event: PointerEvent) => boolean;
   onSelect: (id: string) => void;
   onFly: (target: [number, number, number], offset: [number, number, number]) => void;
@@ -69,7 +57,6 @@ type MemberProps = {
   onFailure: () => void;
 };
 
-/** What the micro-action director needs; only whether it has been quiet a long while matters, so its timer is not reset every minute. */
 function useBehavior(
   facts: ScreenFacts | undefined,
   intensity: 0 | 1 | 2 | 3,
@@ -92,7 +79,6 @@ function useBehavior(
 
 type Profile = ReturnType<typeof deskProfile>;
 
-/** The screen and what stands and glows around the desk, in the desk's frame. */
 function DeskFurnishings({ p, profile }: { p: MemberProps; profile: Profile }) {
   const { agent, facts, intensity, quality, reducedMotion } = p;
   const department = departmentAt(p.desk.floor ?? 0);
@@ -136,7 +122,6 @@ type BodyAnimal = Pick<
   'selected' | 'ring' | 'emote' | 'reducedMotion' | 'quality' | 'light' | 'onError'
 >;
 
-/** Walking out with its bag (or a ghost's own way of going), then gone. */
 function LeavingBody({
   p,
   animal,
@@ -155,7 +140,6 @@ function LeavingBody({
         <Animal
           agent={agent}
           {...animal}
-          // A sleeping rabbit wakes as the member it is; a ghost has only its own way of going.
           apparition={clip && apparition === 'sleeping_rabbit' ? undefined : apparition}
           override={clip ?? undefined}
           pace={clip === 'walk' ? WALK_PACE : 1}
@@ -165,7 +149,6 @@ function LeavingBody({
   );
 }
 
-/** Seated at the desk, turning toward whoever it talks to. */
 function SeatedBody({ p, animal, behavior }: BodyProps & { behavior: BehaviorScene }) {
   const { agent, desk } = p;
   return (
@@ -187,7 +170,6 @@ function SeatedBody({ p, animal, behavior }: BodyProps & { behavior: BehaviorSce
   );
 }
 
-/** The character at its desk: leaving with its bag, or seated and turning toward whoever it talks to; a jiangshi behind the chair when zombies are under it. */
 function MemberBody({ p, behavior }: { p: MemberProps; behavior: BehaviorScene }) {
   const { agent, departure, reducedMotion, quality, light } = p;
   const animal = {
@@ -221,7 +203,6 @@ function MemberBody({ p, behavior }: { p: MemberProps; behavior: BehaviorScene }
   );
 }
 
-/** One member at a desk: its screen, its character (and a jiangshi behind the chair when zombies are under it). */
 export function Member(p: MemberProps) {
   const { agent, desk } = p;
   const baseY = floorY(desk.floor ?? 0, p.exploded);

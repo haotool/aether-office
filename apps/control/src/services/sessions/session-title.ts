@@ -9,10 +9,8 @@ const TAIL_BYTES = 256 * 1024;
 const INDEX_BYTES = 2 * 1024 * 1024;
 const MAX_TITLE = 120;
 
-/** A title is one line of plain text: markup, Markdown, invisible characters and open brackets are gone (kernel `cleanTitle`). */
 const clean = (v: unknown) => (typeof v === 'string' ? cleanTitle(v, MAX_TITLE) || null : null);
 
-/** Pure. The latest `ai-title` in a transcript tail. */
 export function parseClaudeTitle(tail: string): string | null {
   for (const line of tail.split('\n').reverse()) {
     if (!line.includes('"ai-title"')) continue;
@@ -26,7 +24,6 @@ export function parseClaudeTitle(tail: string): string | null {
   return null;
 }
 
-/** Pure. thread id → name from session_index.jsonl, the last entry for an id winning. */
 export function parseCodexIndex(text: string): Map<string, string> {
   const names = new Map<string, string>();
   for (const line of text.split('\n')) {

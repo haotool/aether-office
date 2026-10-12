@@ -12,10 +12,8 @@ import { emit, type Context } from '../domain/context.js';
 import { session, type Session } from './terminal-session.js';
 import { machine } from '../runners/runner-machine.js';
 
-/** A queued command as stored: the payload is JSON text until it is dispatched. */
 type QueuedCommand = Omit<TerminalDispatch, 'payload'> & { payload: string };
 
-/** Why a queued command can no longer run (its requester, session or lease changed since it was queued), if it cannot. */
 function refusalOf(ctx: Context, row: QueuedCommand): DomainError | null {
   try {
     const requester = identityActor(ctx, row.identityId);
@@ -44,7 +42,6 @@ function refusalOf(ctx: Context, row: QueuedCommand): DomainError | null {
   }
 }
 
-/** Fails a command that can no longer run; a start that never ran also ends its session. */
 function refuseCommand(ctx: Context, row: QueuedCommand, error: DomainError) {
   ctx.sqlite
     .prepare("UPDATE terminal_commands SET state='failed',payload='{}',result=? WHERE id=?")
@@ -55,7 +52,6 @@ function refuseCommand(ctx: Context, row: QueuedCommand, error: DomainError) {
       .run(ctx.now(), row.terminalId);
 }
 
-/** The runner side of terminals: claim the next command, report its outcome and the screen it produced. */
 export function claimTerminalCommand(ctx: Context, actor: Actor): TerminalDispatch | null {
   actor = machine(ctx, actor).actor;
   return ctx.sqlite
@@ -91,15 +87,12 @@ export function claimTerminalCommand(ctx: Context, actor: Actor): TerminalDispat
     .immediate();
 }
 
-const commandReportSchema = z
-  .object({
-    commandId: z.string().uuid(),
-    status: z.enum(['applied', 'failed', 'indeterminate']),
-    error: z.string().max(200).optional(),
-  })
-  .strict();
+const commandReportSchema = z.strictObject({
+  commandId: z.string().uuid(),
+  status: z.enum(['applied', 'failed', 'indeterminate']),
+  error: z.string().max(200).optional(),
+});
 
-/** Stores the runner's outcome of a dispatched command; a session whose start failed or whose outcome is unknown ends. */
 function recordCommandResult(
   ctx: Context,
   row: { id: string; terminalId: string; kind: string; state: string },
@@ -157,7 +150,6 @@ export function reportTerminalCommand(ctx: Context, actor: Actor, input: unknown
     })
     .immediate();
 }
-/** What the agent is doing, from the screen the runner just reported; a report with no output keeps what was known. */
 function agentStateOf(
   state: string,
   chunks: readonly { data: string }[],

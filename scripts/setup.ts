@@ -38,7 +38,6 @@ const DEMO_TASKS = [
   },
 ];
 
-/** The demo project: twelve stand-in agents and two tasks, with fixed idempotency keys so a re-run adds nothing. */
 function seedDemo(control: Control, owner: Identity) {
   const cmd = (type: string, data: unknown, key: string, projectId?: string) =>
     control.execute(owner, {
@@ -63,7 +62,6 @@ function seedDemo(control: Control, owner: Identity) {
     cmd('work.create', { ...task, dependencies: [] }, key, projectId);
 }
 
-/** Creates the owner identity (and its token file) on the first run; returns the file's path. */
 function ensureOwner(control: Control, directory: string): string {
   const ownerFile = resolve(directory, 'owner-token');
   if (!control.ctx.sqlite.prepare('SELECT 1 FROM identities LIMIT 1').get()) {

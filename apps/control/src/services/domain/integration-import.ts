@@ -14,7 +14,6 @@ const workDescription = (issue: ExternalIssue) =>
 
 type Link = { workId: string; contentHash: string; conflict: number };
 
-/** An issue seen for the first time becomes a work item, linked to it. */
 function importNewIssue(ctx: Context, row: Row, issue: ExternalIssue, hash: string) {
   const key = `integration:${row.id}:${issue.externalId}`;
   const created = createWork(ctx, {
@@ -71,7 +70,6 @@ function applyUpstreamEdit(
   return 'conflicts';
 }
 
-/** Takes one fetched issue into the platform and says what happened to it (nothing, when it is unchanged). */
 export function importIssue(
   ctx: Context,
   row: Row,

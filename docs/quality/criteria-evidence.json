@@ -1,1 +1,182 @@
-[]
+[
+  {
+    "id": "L1-10",
+    "credit": 1,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": [
+      ".gitattributes",
+      "scripts/regenerate-codex-protocol.mjs",
+      "packages/providers/generated/compat.json",
+      "docs/adr/0006-provider-compat-generated-artifacts.md",
+      "tests/aether/codex-schema.test.ts"
+    ],
+    "note": "Generated Codex types: linguist-generated, GENERATED header, one regeneration command, one copy only, and a unit test that compares a recorded digest on every run (CI) and regenerates byte for byte when the CLI is installed."
+  },
+  {
+    "id": "L2-04",
+    "credit": 1,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": [
+      "apps/control/README.md",
+      "apps/runner/README.md",
+      "apps/web/README.md",
+      "packages/contracts/README.md",
+      "packages/kernel/README.md",
+      "packages/office-scene/README.md",
+      "packages/providers/README.md"
+    ],
+    "note": "Every app and package README states its purpose, public surface and dependency direction; the @aether/* dependency lists equal package.json and the forbidden imports are the ones scripts/check-boundaries.mjs enforces."
+  },
+  {
+    "id": "L2-05",
+    "credit": 1,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": ["docs/adr/README.md", "docs/adr/0012-product-scope-tradeoffs.md"],
+    "note": "Twelve ADRs, each with status and date, all listed in the index."
+  },
+  {
+    "id": "L2-08",
+    "credit": 0.5,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": ["packages/contracts/README.md", "docs/architecture.md"],
+    "note": "Cross-package rules and limits live in packages/contracts (for example CLOCK_OUT_MAX_SESSIONS) and role matrices in packages/kernel; sampled by one reviewer only, the charter asks for two."
+  },
+  {
+    "id": "L3-08",
+    "credit": 1,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": [
+      "tests/aether/security.test.ts",
+      "tests/aether/lan-access.test.ts",
+      "tests/aether/safe-fetch.test.ts",
+      "tests/aether/route-auth.test.ts",
+      "tests/aether/composer-api.test.ts",
+      "tests/aether/machine-grants.test.ts",
+      "e2e/session/session-csrf.spec.ts"
+    ],
+    "note": "Negative tests cover authorization, CSRF, Host and Origin (DNS rebinding), path traversal, SSRF and the public-route sweep; refactors were preceded by pinning tests (see the test(...): pin commits)."
+  },
+  {
+    "id": "L4-07",
+    "credit": 0.5,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": ["docs/verification/ux-matrix.md", "docs/design-system.md"],
+    "note": "Phone, tablet and desktop screenshots of every route were reviewed by the maintainer-side agent only (no independent reviewer); the viewed cells and the defects found and fixed are listed in docs/verification/ux-matrix.md."
+  },
+  {
+    "id": "L4-09",
+    "credit": 0.5,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": ["docs/internal/feature-maturity.md"],
+    "note": "D01 to D20 are closed in the code with a guarding test each, except D16: the real VoiceOver and TalkBack pass is a human step in the publishing checklist."
+  },
+  {
+    "id": "L5-08",
+    "credit": 0,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": ["docs/quality/mobile-perf.md"],
+    "note": "No real-device field report exists yet; the steps to capture one are in docs/getting-started.md and docs/release/publishing-checklist.md."
+  },
+  {
+    "id": "L5-10",
+    "credit": 0.5,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": ["docs/quality/mobile-perf.md", "docs/adr/0009-mobile-performance-measurement.md"],
+    "note": "Deterministic A/B figures (bytes, draw calls, triangles, heap) are recorded; the timing A/B of at least eight interleaved rounds could not run on a loaded machine."
+  },
+  {
+    "id": "L6-02",
+    "credit": 1,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": [
+      "README.md",
+      "LICENSE",
+      ".github/CODE_OF_CONDUCT.md",
+      ".github/CONTRIBUTING.md",
+      ".github/SECURITY.md",
+      ".github/SUPPORT.md",
+      ".github/CODEOWNERS",
+      ".github/PULL_REQUEST_TEMPLATE.md",
+      ".github/ISSUE_TEMPLATE/bug_report.yml",
+      "docs/maintainers.md"
+    ],
+    "note": "All community files exist; pnpm run oss:check passes."
+  },
+  {
+    "id": "L6-03",
+    "credit": 1,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": ["README.md", "README.zh-TW.md"],
+    "note": "Both READMEs have the same ten sections: what it is, quick start, limits, privacy, providers, documentation, contributing, licence; the AI-assistance and unofficial statements are present."
+  },
+  {
+    "id": "L6-04",
+    "credit": 1,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": ["docs/README.md", "docs/getting-started.md", "docs/how-to.md", "docs/configuration.md", "docs/architecture.md"],
+    "note": "Tutorial, how-to, reference and explanation pages are indexed in docs/README.md; no documentation file is unreferenced."
+  },
+  {
+    "id": "L6-06",
+    "credit": 1,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": ["docs/internal/README.md", "docs/research/README.md"],
+    "note": "Maintainer notes are split into docs/internal with a dated index; personal paths, host names and addresses were removed from them and oss:check is clean."
+  },
+  {
+    "id": "L6-08",
+    "credit": 1,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": ["docs/adr/README.md", "docs/design/office-life.md", "docs/design/office-life-work-plan.md", "docs/internal/README.md"],
+    "note": "Every ADR and design record carries a status and a date; internal notes are dated snapshots in their index."
+  },
+  {
+    "id": "L8-06",
+    "credit": 1,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": ["docs/legal/provenance.md", "README.md", "docs/release/history-cleanup.md"],
+    "note": "The release history is built with trailers dropped (every maintainer trailer; from the upstream commits only the session links and AI co-author lines, human co-authors stay) and private strings rewritten; history-verify checks that no commit keeps a session link or AI co-author trailer. The AI-assistance statement is in the README and provenance."
+  },
+  {
+    "id": "L8-07",
+    "credit": 1,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": ["docs/release/history-cleanup.md", "docs/release/publishing-checklist.md"],
+    "note": "Strategy C: upstream commits kept as they were, the maintainer work as milestones whose bodies list what they contain and why."
+  },
+  {
+    "id": "L8-09",
+    "credit": 1,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": ["docs/release/history-cleanup.md"],
+    "note": "The figures on the page are the ones measured by the plan, apply and verify runs named on it."
+  },
+  {
+    "id": "L9-06",
+    "credit": 1,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": ["scripts/oss/third-party-notices.mjs", "docs/release/publishing-checklist.md"],
+    "note": "A CycloneDX 1.5 SBOM is generated from the lockfile (every shipped package has a licence and a purl); the release checklist covers version, tag, SBOM and provenance."
+  },
+  {
+    "id": "L9-07",
+    "credit": 1,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": ["docs/security.md", "tests/aether/route-auth.test.ts", "tests/aether/lan-access.test.ts", "tests/aether/safe-fetch.test.ts"],
+    "note": "More than twenty concrete limits and defaults in the document were compared with the constants in the code (stream clients, pending requests, wait times, file modes, rate limits) and match; the public-route sweep and the negative tests are in the suite."
+  },
+  {
+    "id": "L9-08",
+    "credit": 1,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": ["README.md", "docs/how-to.md", "docs/security.md"],
+    "note": "The only outbound connections in the code are the opt-in connectors, the runner and hook calls to the control plane, and the opt-in A2A gateway; no telemetry or CDN exists, and docs/how-to.md lists how to back up and remove everything AETHER wrote."
+  },
+  {
+    "id": "L9-09",
+    "credit": 0.5,
+    "reviewers": ["PM-SELF-REVIEW"],
+    "files": ["docs/release/publishing-checklist.md"],
+    "note": "The human steps (name and trademark, private reporting, repository settings, real-device and screen-reader checks, final go or no-go) are written as a checklist; the real-device, screen-reader and trademark-search steps have not been carried out."
+  }
+]

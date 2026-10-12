@@ -2,9 +2,6 @@ import { afterAll, describe, expect, it, vi } from 'vitest';
 import { installBrowserEnv, removeBrowserEnv } from './fixtures/browser-env.js';
 import { QueryClient, h, renderHtml, textOf } from './fixtures/ssr.js';
 
-// The whole app shell on the server renderer (fixtures/ssr.ts): nothing is signed in until the browser has asked the
-// server, and effects do not run on the server, so what is checked is the page a visitor sees first. The two hooks that
-// read the browser's media queries need a snapshot the server lacks and are replaced.
 installBrowserEnv();
 vi.mock('../../apps/web/src/lib/preferences/phone.js', () => ({
   usePhone: () => false,

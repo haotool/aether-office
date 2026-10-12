@@ -36,13 +36,11 @@ it('bounds a meeting by rounds, then records one decision whose provenance is th
   const { f, start, say } = setup(clock);
   try {
     const meeting = start();
-    // The opening request is round 1; agents may add rounds 2-4, then the budget is spent.
     say(f.sender, meeting.threadId, f.recipientId);
     say(f.recipient, meeting.threadId, f.senderId);
     say(f.sender, meeting.threadId, f.recipientId);
     expect(() => say(f.recipient, meeting.threadId, f.senderId)).toThrow('MEETING_ROUND_LIMIT');
 
-    // A human can still speak, and concludes the meeting.
     f.control.execute(
       f.owner.actor,
       command(
@@ -77,7 +75,7 @@ it('bounds a meeting by rounds, then records one decision whose provenance is th
       title: 'Meeting decision: Pick a queue',
       source: `meeting:${meeting.threadId}`,
       classification: 'proposed',
-    }); // a proposal: a human still approves it
+    });
     expect(entry.body).toContain('Use SQS.');
     expect(entry.body).toContain(`thread ${meeting.threadId}`);
     expect(() =>
@@ -117,7 +115,7 @@ it('closes at the deadline even with rounds to spare, and only humans can run me
         command('meeting.conclude', { threadId: meeting.threadId, decision: 'x' }, f.projectId),
       ),
     ).toThrow('FORBIDDEN');
-    expect(() => start({ participants: [f.senderId] })).toThrow(); // a meeting needs at least two participants
+    expect(() => start({ participants: [f.senderId] })).toThrow();
     expect(() => start({ maxRounds: 99 })).toThrow();
   } finally {
     f.control.close();

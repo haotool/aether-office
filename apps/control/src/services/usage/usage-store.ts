@@ -2,27 +2,18 @@ import { createHash } from 'node:crypto';
 import { readFile, rename, writeFile } from 'node:fs/promises';
 import type { ParseState } from './usage-counters.js';
 
-// What has been read of each transcript so far: the parser's state, how far it got, and the file's modification time
-// and size, so a later look reads only the appended bytes. Numbers only; a file is known by a hash of its path. The
-// store is bounded, and a small copy of it lives in the data directory so a restart need not read history again.
-
 /** Bump when the parser or the shape of the state changes: an older rollup is then ignored and rebuilt. */
 const ROLLUP_VERSION = 5;
 export const MAX_TRACKED_FILES = 8192;
 
 export type Entry = {
   state: ParseState;
-  /** Bytes of the file already parsed (always at a line boundary). */
   offset: number;
   mtime: number;
   size: number;
-  /** The file's first bytes: a different start means the file was rewritten, not appended to. */
   sig: string;
-  /** The bytes just before `offset`: a file rewritten in place with the same start and a larger size is not an append. */
   tail: string;
-  /** Repository folder the transcript's session ran in, when known. */
   repo: string | null;
-  /** Codex: the id of the session that spawned this rollout, whose subagent it is; counted as part of that session. */
   parent?: string | null;
 };
 
@@ -46,7 +37,6 @@ const isEntry = (e: unknown): e is Entry => {
   );
 };
 
-/** The saved rollup, or an empty store when there is none, it is unreadable, or it was made by another version or zone. */
 export async function loadRollup(file: string, tz: string): Promise<Map<string, Entry>> {
   try {
     const saved = JSON.parse(await readFile(file, 'utf8')) as Saved;

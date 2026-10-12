@@ -11,18 +11,12 @@ import {
 import { SUBAGENT_INFIX, parentOf } from '../../lib/sessions/subagent-id.js';
 
 type MergeOptions = {
-  /**
-   * Seat subagents in their supervisor's squad zone instead of at desks of their own: a subagent whose zone fits beside
-   * its parent gets no desk (the zone seats it); one whose zone does not fit keeps a desk, as before squads existed.
-   */
   squads?: boolean;
-  /** Desks the members already have (`assignSeats`): with no saved layout they keep them whatever order they arrive in. */
   seats?: ReadonlyMap<string, Seat>;
 };
 
 type SeatMember = (agent: Agent) => void;
 
-/** Seats a member at the first free slot of its floor, spilling to the next floor with a free desk; remembers what it placed. */
 function seater(base: Layout, floorOf: (agent: Agent) => number) {
   const added: Layout['objects'] = [];
   const zones: SquadRect[] = [];
@@ -59,7 +53,6 @@ function seater(base: Layout, floorOf: (agent: Agent) => number) {
   return { added, zones, seat };
 }
 
-/** One zone per supervisor, placed with the others already on the floor; what has no zone is seated as before. */
 function zoneSquads(
   base: Layout,
   added: Layout['objects'],
@@ -89,8 +82,8 @@ function zoneSquads(
 }
 
 /**
- * Seats every agent the saved layout has no desk for, on the agent's own floor (the next one with room when it is full), in the first free slot. A saved
- * layout is never rearranged. With no saved layout the whole building is generated.
+ * A saved layout is never rearranged; agents without a desk take the first free slot on their own floor (the next one
+ * with room when it is full).
  */
 export function mergeLayout(
   layout: Layout | null,

@@ -4,7 +4,7 @@ import { floorY } from '../scene/scene-geometry.js';
 export type V3 = [number, number, number];
 export type Pose = { position: V3; target: V3; fov: number };
 
-const smoother = (t: number) => t * t * t * (t * (t * 6 - 15) + 10); // smootherstep: no jolt at either end
+const smoother = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
 const sub = (a: V3, b: V3): V3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const add = (a: V3, b: V3, k = 1): V3 => [a[0] + b[0] * k, a[1] + b[1] * k, a[2] + b[2] * k];
 const length = (a: V3) => Math.hypot(a[0], a[1], a[2]);
@@ -13,7 +13,6 @@ const unit = (a: V3): V3 => {
   return [a[0] / n, a[1] / n, a[2] / n];
 };
 
-/** A desk's own frame to the world: the desk is turned a quarter turn per step of `rotation`. */
 export function toWorld(seat: Seat, local: V3, baseY = floorY(seat.floor, false)): V3 {
   const r = (seat.rotation * Math.PI) / 2;
   return [
@@ -23,30 +22,23 @@ export function toWorld(seat: Seat, local: V3, baseY = floorY(seat.floor, false)
   ];
 }
 
-// A member sits at the +z side of the desk facing -z, its screen in front of it. Cameras are placed in that frame.
 const WATCH: V3 = [0, 1.05, 0.75];
 const CLOSEUP: Record<0 | 1 | 2, V3> = {
-  0: [-1.9, 2.1, 4.1], // over the shoulder
-  1: [3.6, 1.7, 1.9], // from the side
-  2: [-3.3, 1.0, 2.2], // low, looking up at the screen
+  0: [-1.9, 2.1, 4.1],
+  1: [3.6, 1.7, 1.9],
+  2: [-3.3, 1.0, 2.2],
 };
 /**
- * How far a shot's camera may travel, in metres. A shot is one slow dolly along one axis, never an orbit: the camera
- * does not turn while it moves, the horizon stays level and the lens does not zoom, so nothing swims.
+ * A shot is one slow dolly along one axis, never an orbit: the camera does not turn while it moves, the horizon stays
+ * level and the lens does not zoom, so nothing swims.
  */
 export const MAX_TRAVEL = 4;
-/**
- * The nearest the orbit controls let the camera come to what it looks at. A shot that goes nearer is not played: the
- * controls hold the camera at this distance for the whole shot, so no shot may start closer than this plus its move.
- */
 export const MIN_DISTANCE = 4;
 const DOLLY = { closeup: 1.1, pair: 2, sweep: MAX_TRAVEL } as const;
 const FOV = { closeup: 32, pair: 36, sweep: 38 } as const;
-/** A cut between two shots closer than this (metres) glides; anything farther is a hard cut. */
 export const FLY_MAX = 6;
 export const FLY_MS = 1400;
 
-/** How far through a shot, with the framing the screen's shape and the building's state ask for. */
 type Framing = { e: number; back: number; exploded: boolean };
 
 function closeupPose(shot: Shot, subject: Seat, { e, back, exploded }: Framing): Pose {
@@ -56,7 +48,6 @@ function closeupPose(shot: Shot, subject: Seat, { e, back, exploded }: Framing):
     CLOSEUP[shot.style][1] * (0.9 + back * 0.1),
     CLOSEUP[shot.style][2] * back,
   ];
-  // Pushing in ends where the controls allow, on the line the shot is framed along.
   const away = sub(framed, WATCH);
   const from = add(WATCH, unit(away), Math.max(length(away), MIN_DISTANCE + DOLLY.closeup));
   return {
@@ -91,7 +82,6 @@ function pairPose(shot: Shot, first: Seat, second: Seat, { e, back, exploded }: 
   };
 }
 
-/** A sweep: the floor from a height, from a fixed bearing, easing in along the line of sight towards its middle. */
 function sweepPose(shot: Shot, { e, back, exploded }: Framing): Pose {
   const bearing = shot.style * 1.1;
   const radius = 34 * back;
@@ -105,10 +95,6 @@ function sweepPose(shot: Shot, { e, back, exploded }: Framing): Pose {
   return { position: add(from, unit(sub(target, from)), DOLLY.sweep * e), target, fov: FOV.sweep };
 }
 
-/**
- * Where the camera is, and what it looks at, `t` (0 to 1) of the way through a shot. `exploded` is the building spread
- * apart: the floors are higher, and the shot follows its floor.
- */
 export function poseAt(
   shot: Shot,
   seats: ReadonlyMap<string, Seat>,
@@ -116,7 +102,6 @@ export function poseAt(
   aspect: number,
   exploded = false,
 ): Pose {
-  // A portrait screen needs more distance for the same subject width.
   const framing = {
     e: smoother(Math.min(1, Math.max(0, t))),
     back: Math.min(1.9, Math.max(1, 1.1 / aspect)),
@@ -130,9 +115,8 @@ export function poseAt(
 }
 
 /**
- * How the camera gets from the end of one shot to the start of the next: a glide when they are near (the same floor, a
- * few metres apart, and not back the way the last shot was moving), a hard cut otherwise. A cut hides a long flight
- * across the building, which is what makes a viewer dizzy.
+ * A glide when the shots are near (same floor, a few metres apart, not back the way the last shot was moving), a hard
+ * cut otherwise: a cut hides a long flight across the building, which makes a viewer dizzy.
  */
 export function chooseEntry(
   previous: Shot | null,

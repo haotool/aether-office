@@ -33,7 +33,6 @@ import {
 import { usePreferences } from '../preferences/state.js';
 import { POLL, poll } from './polling.js';
 
-/** Drops a project the address names but this person cannot open from the address, and says which one is shown instead. */
 function useProjectFallback(
   requestedGone: boolean,
   fallbackName: string | undefined,
@@ -54,10 +53,6 @@ function useProjectFallback(
   }, [requestedGone, fallbackName, setParams, setNotice, t]);
 }
 
-/**
- * Where the address points: the page, the project (a stale or mistyped one falls back to the first the person can
- * open, with a notice) and the selected member, plus the project list and the snapshot of that project.
- */
 export function useProjectSelection(
   session: Session | null,
   offline: boolean,
@@ -65,16 +60,13 @@ export function useProjectSelection(
 ) {
   const [params, setParams] = useSearchParams();
   const location = useLocation();
-  // `/settings/<group>` is still the settings page: the page is the first segment.
   const page = (location.pathname.split('/')[1] || 'office') as Key;
-  // An address that is no page says so instead of showing something else (an unknown Settings group opens Settings' home).
   const unknownPage = !isPage(page);
   const projects = useQuery({
     queryKey: ['projects'],
     queryFn: () => api<Project[]>('/api/projects'),
     enabled: !!session,
   });
-  // A project the address names but this person cannot open (stale, mistyped, deleted) falls back to the first one.
   const requested = params.get('project');
   const requestedGone =
     !!requested && !!projects.data && !projects.data.some((p) => p.id === requested);
@@ -83,7 +75,6 @@ export function useProjectSelection(
     queryKey: ['snapshot', projectId],
     queryFn: () => api<Snapshot>(`/api/projects/${projectId}/snapshot`),
     enabled: !!session && !!projectId && !!projects.data,
-    // The event stream refreshes it the moment something changes; polling is only the net under it.
     ...poll(offline ? POLL.list : POLL.slow),
     retry: 1,
   });
@@ -100,10 +91,6 @@ export function useProjectSelection(
   };
 }
 
-/**
- * What waits for the person, from the project's work and approvals and the machine's sessions: the counts for the badges
- * and the browser notifications (or a notice in the page, when notifications are not permitted).
- */
 export function useAttention(
   session: Session | null,
   projectId: string | undefined,
@@ -117,7 +104,6 @@ export function useAttention(
   const notify = usePreferences((s) => s.notify);
   const navigate = useNavigate();
   const { approvals, pending } = useApprovals(session, projectId, offline);
-  // An alert is a browser notification when permitted, otherwise a notice in the page; a tap opens what it is about.
   const sink: AlertSink = useMemo(
     () => ({ toast: setNotice, open: (to: string) => navigate(to) }),
     [navigate, setNotice],
@@ -160,7 +146,6 @@ type PanelState = {
   setSheet: (height: 'half' | 'full') => void;
 };
 
-/** Selecting a member, opening their conversation or feed row, and going back: the address and the panel move together. */
 export function useOfficeSelection(state: PanelState) {
   const { projectId, sessions, compact, setParams, setFocus, setPanelOpen, setSheet } = state;
   const select = (id: string) => {
@@ -176,7 +161,6 @@ export function useOfficeSelection(state: PanelState) {
       p.delete('agent');
       return p;
     });
-  // The character menu: the conversation (the full sheet on a phone), or the feed with the member's row brought into view.
   const openConversation = (id: string) => {
     select(id);
     if (compact) setSheet('full');
@@ -187,7 +171,6 @@ export function useOfficeSelection(state: PanelState) {
     if (compact) setSheet('half');
     focusFeedRow(id);
   };
-  // A row of the feed: the office of the session's own project, with the camera on its desk.
   const open = (id: string) => {
     const own = sessions?.find((x) => x.key === sessionIdOf(id))?.projectId;
     if (own && own !== projectId) setParams({ project: own, agent: id, focus: '1' });

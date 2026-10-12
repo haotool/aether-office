@@ -3,7 +3,6 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-// The strict rules are plain .mjs (scripts/design-token-rules.mjs); each is tested with CSS that passes and CSS that fails.
 const { RULES, declarations, mediaViolations, regressions, tally, violationsIn } = await import(
   pathToFileURL(resolve('scripts/design-token-rules.mjs')).href
 );
@@ -22,7 +21,7 @@ describe('design token rules: each one has CSS it allows and CSS it rejects', ()
         'min-height: calc(var(--bar-h) + var(--safe-top));',
         'inset: 0;',
         'width: auto;',
-        'padding: 12px;', // spacing is the older lint's rule, not this one
+        'padding: 12px;',
       ],
       bad: [
         'height: 36px;',

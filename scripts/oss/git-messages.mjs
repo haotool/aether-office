@@ -1,4 +1,3 @@
-// Git runner and commit-message helpers of the open-source release kit (scripts/oss): subjects, wrapping, trailers.
 import { execFileSync } from 'node:child_process';
 import { realpathSync } from 'node:fs';
 
@@ -19,7 +18,6 @@ export const CONVENTIONAL_TYPES = [
 ];
 const PREFIX = new RegExp(`^(${CONVENTIONAL_TYPES.join('|')})(\\([a-z0-9,/._-]+\\))?!?: (?=\\S)`);
 
-/** Runs git in `repo` and returns stdout as text. */
 export function git(repo, args, options = {}) {
   return execFileSync('git', ['-C', repo, ...args], {
     encoding: 'utf8',
@@ -51,9 +49,6 @@ export function commandExists(name) {
   }
 }
 
-// ---------------------------------------------------------------------------------------------------------------
-// Commit subjects
-
 export function conventional(subject) {
   const m = PREFIX.exec(subject);
   return m
@@ -84,7 +79,6 @@ const WEAK_BOUNDARY = /, /g;
 const DANGLING =
   /\s+(?:a|an|the|and|or|of|to|in|on|at|by|for|so|with|that|its|their|from|per|as|is|are|but|into|than|previous)$/i;
 
-/** Last clause boundary of `rest` at or after `min` and within `room` characters that keeps parentheses balanced. */
 function lastBoundary(rest, pattern, min, room) {
   let cut = -1;
   for (const m of rest.matchAll(pattern)) {
@@ -95,10 +89,6 @@ function lastBoundary(rest, pattern, min, room) {
   return cut;
 }
 
-/**
- * Shortens a long subject to `max` characters at the last clause boundary (strong ones first) that keeps balanced
- * parentheses, keeping the conventional prefix. The caller puts the full original subject into the body.
- */
 export function shortenSubject(subject, max = SUBJECT_MAX) {
   if (subject.length <= max) return subject;
   const prefix = conventional(subject)?.prefix ?? '';
@@ -122,7 +112,11 @@ export function mergeSubject(mergedTipSubject) {
 
 const TRAILER = /^(?:Co-Authored-By|Claude-Session|Generated-by):.*$/gim;
 
-/** Removes attribution trailers (Co-Authored-By, session links) from a message. */
+/** Lines an AI tool added to a message: session links and AI co-author trailers. Human co-authors do not match. */
+export const TOOL_TRAILER = String.raw`^(?:(?:Claude-Session|Generated-by):.*|Co-Authored-By:.*<[^>]*@(?:anthropic|openai|cursor)\.[a-z]+>.*)$`;
+
+export const hasToolTrailers = (message) => new RegExp(TOOL_TRAILER, 'im').test(message);
+
 export function stripTrailers(message) {
   return `${message
     .replace(TRAILER, '')
@@ -130,7 +124,6 @@ export function stripTrailers(message) {
     .replace(/\s+$/, '')}\n`;
 }
 
-/** New message: short subject, then the full original subject (when it changed), then the original body. */
 export function rewriteMessage(newSubject, originalMessage) {
   const [first = '', ...others] = originalMessage.replace(/\s+$/, '').split('\n');
   const body = others.join('\n').replace(/^\n+/, '');

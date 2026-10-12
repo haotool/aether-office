@@ -68,7 +68,6 @@ if (lan) {
     `LAN access is ON: open ${addresses.join(' or ') || '(no private-network address found)'} on a device on this network.\n` +
       'Plain HTTP: the access token crosses the network unencrypted, so use it only on a network you trust.',
   );
-  // A phone can be signed in right away: the same one-time code `pnpm run pair` makes, shown as a QR code.
   if (process.env['AETHER_HOST']) {
     const base = `http://${['0.0.0.0', '::'].includes(host) ? '127.0.0.1' : host}:${port}`;
     try {

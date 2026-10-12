@@ -1,11 +1,5 @@
-// Where the squad beam's reference rates come from: the distribution of per-minute rates in real transcripts, numbers only.
-//
-//   node --import tsx scripts/beam-calibration.ts [--claude ~/.claude/projects] [--codex ~/.codex/sessions] [--codex-files 300]
-//
-// Read-only and bounded: Claude subagent files (`<project>/<session>/subagents/agent-*.jsonl`) and the newest Codex rollouts
-// are read once through the same counters the app uses (`usage-parse.ts`: fresh tokens = input + output + cache writes, never
-// cache reads; tool calls), bucketed by minute. No message text is decoded or printed. An "active minute" is one with any
-// tokens or tool calls. The squad rate is what the beam shows: the subagents of one parent session summed per minute.
+// Where the squad beam's reference rates come from: the distribution of per-minute rates in real transcripts, numbers
+// only.
 import { closeSync, openSync, readSync, readdirSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
@@ -24,7 +18,6 @@ const MINUTE = 60_000;
 
 type Minutes = Map<number, { tokens: number; tools: number }>;
 
-/** Per-minute fresh tokens and tool calls of one transcript, from the app's own parser. */
 function minutesOf(file: string, provider: 'claude' | 'codex'): Minutes {
   const state = newState(provider);
   const fd = openSync(file, 'r');
@@ -80,11 +73,9 @@ function summary(values: number[]) {
 const active = (minutes: Iterable<{ tokens: number; tools: number }>) =>
   [...minutes].filter((m) => m.tokens > 0 || m.tools > 0);
 
-// Claude subagents, per file and summed per parent session (the squad).
 const squads = new Map<string, Minutes>();
 const perAgent: { tokens: number[]; tools: number[] } = { tokens: [], tools: [] };
 let agentFiles = 0;
-// Files over the size cap are left out, so the distribution leans to small sessions: how many are left out is printed.
 let skippedClaude = 0;
 for (const file of walk(CLAUDE, (p) => /\/subagents\/agent-[^/]*\.jsonl$/.test(p))) {
   if (statSync(file).size > MAX_FILE_BYTES) {
@@ -107,7 +98,6 @@ for (const file of walk(CLAUDE, (p) => /\/subagents\/agent-[^/]*\.jsonl$/.test(p
 }
 const squadMinutes = [...squads.values()].flatMap((s) => active(s.values()));
 
-// Codex rollouts: the newest ones that fit the budget (their tool calls are the beam's rate for Codex squads).
 const allRollouts = [...walk(CODEX, (p) => /rollout-[^/]*\.jsonl$/.test(p))].sort();
 const fitting = allRollouts.filter((p) => statSync(p).size <= MAX_FILE_BYTES);
 const rollouts = fitting.slice(-CODEX_FILES);

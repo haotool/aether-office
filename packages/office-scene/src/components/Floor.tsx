@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import type { Layout } from '@aether/contracts';
 import { buildFloor, disposeFloor } from '../environment/building.js';
 import type { FloorModel } from '../environment/building-parts.js';
+import { floorKey } from '../environment/layout.js';
 import { setUniform } from '../environment/uniforms.js';
 
 export const Floor = memo(function Floor({
@@ -10,17 +11,16 @@ export const Floor = memo(function Floor({
   floor,
   y,
   animate,
-  detail,
 }: {
   layout: Layout;
   floor: number;
   y: number;
   animate: boolean;
-  detail: boolean;
 }) {
-  const model = useMemo<FloorModel>(() => buildFloor(layout, floor), [layout, floor]);
+  const key = floorKey(layout, floor);
+  // Seating never changes the building, so only its furniture (the key) rebuilds it.
+  const model = useMemo<FloorModel>(() => buildFloor(layout, floor), [key, floor]);
   useEffect(() => () => disposeFloor(model), [model]);
-  // Moving parts (hologram rings, breathing trim) advance only while the scene animates, at a steady rate.
   const clock = useRef(0);
   useFrame((_state, delta) => {
     if (!animate || document.hidden) return;
@@ -47,8 +47,6 @@ export const Floor = memo(function Floor({
     }
     for (const p of model.pulsers)
       p.material.emissiveIntensity = p.base + p.amplitude * Math.sin(clock.current * p.speed);
-    // The next frame is requested by AnimationClock, which sets the pace.
   });
-  void detail;
   return <primitive object={model.group} position={[0, y, 0]} dispose={null} />;
 });

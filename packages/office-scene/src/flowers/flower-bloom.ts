@@ -5,25 +5,19 @@ import { GOLDEN_ANGLE, V3, orderOf, petals } from './flower-petals.js';
 import { seeded } from '../environment/seeded.js';
 import { itemAt } from '../environment/checked.js';
 
-/** One flower to draw: where it stands, which way it faces, how big, and in what colours. */
 export type Bloom = {
   genome: Genome;
-  /** Index into the shader's `open` array: which tier's bloom this belongs to. */
   flower: number;
   origin: THREE.Vector3;
   axis: THREE.Vector3;
-  /** Petal length scale in metres. */
   size: number;
   base: THREE.Color;
-  /** The great bloom on the spire: more whorls, finer petals, a pistil and three rings. */
   grand?: boolean;
-  /** 0 to 1: the share of the bloom that passes before this flower's first part appears (buds open after their twigs grew). */
   after?: number;
 };
 
 const pale = (c: THREE.Color) => c.clone().lerp(new THREE.Color('#ffffff'), 0.7);
 
-/** Local flower frame: +Y along the axis. */
 function frameOf(origin: THREE.Vector3, axis: THREE.Vector3) {
   const y = axis.clone().normalize();
   const x = new THREE.Vector3()
@@ -33,7 +27,6 @@ function frameOf(origin: THREE.Vector3, axis: THREE.Vector3) {
   return new THREE.Matrix4().makeBasis(x, y, z).setPosition(origin);
 }
 
-/** What the centre's parts share: the style of a glowing part, its two colours and the size of the disc. */
 type CentreKit = {
   style: (color: THREE.Color, other: THREE.Color, order: number) => Style;
   white: THREE.Color;
@@ -64,7 +57,6 @@ function centreKit(bloom: Bloom, frame: THREE.Matrix4): CentreKit {
   };
 }
 
-/** A Vogel-spiral disc of florets (r = c sqrt(n), n x the golden angle), domed, with a soft light under the great bloom's. */
 function florets(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4, low: boolean, kit: CentreKit) {
   const { genome: g, size } = bloom;
   const { style, white, colorB, disc } = kit;
@@ -88,7 +80,6 @@ function florets(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4, low: boolea
       style(white.clone().lerp(colorB, n / count), colorB, 0.3),
     );
   }
-  // The great bloom's heart: a soft disc of light under the florets, so the middle is never a dark hole.
   if (bloom.grand)
     b.glowQuad(
       V3(0, size * 0.05, 0).applyMatrix4(frame),
@@ -98,7 +89,6 @@ function florets(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4, low: boolea
     );
 }
 
-/** Glowing stamens, each an arched thread ending in a bead. */
 function stamens(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4, low: boolean, kit: CentreKit) {
   const { genome: g, size } = bloom;
   const { style, white, colorB } = kit;
@@ -137,14 +127,12 @@ function stamens(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4, low: boolea
   }
 }
 
-/** The centre: a disc of florets and glowing stamens ending in beads. */
 function centre(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4, low: boolean) {
   const kit = centreKit(bloom, frame);
   florets(b, bloom, frame, low, kit);
   stamens(b, bloom, frame, low, kit);
 }
 
-/** The great bloom's pistil: a tall glowing column with a bead of light at its tip, rising out of the stamens. */
 function pistil(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4) {
   const { genome: g, size } = bloom;
   const height = size * 0.55;
@@ -174,7 +162,6 @@ function pistil(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4) {
   });
 }
 
-/** A ring or a hovering band round the flower, flat across its axis. */
 function halo(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4, band: boolean, wide = 1) {
   const { genome: g, size } = bloom;
   const reach = wide * size * (g.shape.length * Math.sin(g.shape.pitch) + 0.25);
@@ -213,7 +200,6 @@ function halo(b: MeshBuilder, bloom: Bloom, frame: THREE.Matrix4, band: boolean,
   );
 }
 
-/** One whole flower, appended to the builder. `low` thins it; a `bud` is the five-petal flower at the end of a twig. */
 export function addBloom(b: MeshBuilder, bloom: Bloom, { low = false, bud = false } = {}) {
   const frame = frameOf(bloom.origin, bloom.axis);
   petals(b, bloom, frame, low, bud);
@@ -221,7 +207,6 @@ export function addBloom(b: MeshBuilder, bloom: Bloom, { low = false, bud = fals
   centre(b, bloom, frame, low);
   if (bloom.grand) {
     pistil(b, bloom, frame);
-    // A holographic crown of three rings: a thin ring over the petals, a hovering band under them and a wide faint ring round.
     halo(b, bloom, frame, false);
     halo(b, bloom, frame, true);
     halo(b, bloom, frame, false, 1.35);

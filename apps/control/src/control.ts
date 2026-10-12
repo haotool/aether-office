@@ -51,7 +51,6 @@ function assertReviewSessionMayRun(actor: Actor, type: string) {
     throw new DomainError('REVIEW_SESSION_READ_ONLY', 403);
 }
 
-/** The stored receipt of an earlier call with this idempotency key, or a conflict if its request differed. */
 function journaledReceipt(
   ctx: Context,
   actor: Actor,
@@ -70,7 +69,6 @@ function journaledReceipt(
 
 export class Control {
   readonly ctx: Context;
-  /** Permission prompts waiting for a person (Remote approvals); in memory, bounded. */
   readonly permissionRequests = createPermissionRequests(() => this.ctx.now());
   constructor(
     filename: string,
@@ -99,7 +97,6 @@ export class Control {
     return createIdentity(this.ctx, ...args);
   }
   execute(actor: Actor, input: unknown): Receipt {
-    // Revocation is checked for each call, including in-process clients.
     actor = this.identity(actor.id);
     const c = commandSchema.parse(input);
     assertReviewSessionMayRun(actor, c.type);

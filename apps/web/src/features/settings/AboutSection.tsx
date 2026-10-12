@@ -10,16 +10,18 @@ const LINKS = [
   ['stLinkRepo', REPO],
   ['stLinkDocs', `${REPO}/blob/main/docs/getting-started.md`],
   ['stLinkSecurity', `${REPO}/blob/main/docs/security.md`],
-  ['stLinkNotices', SHIPPED ? `${SHIPPED}/THIRD_PARTY_NOTICES.md` : '/THIRD_PARTY_NOTICES.txt'],
+  [
+    'stLinkNotices',
+    SHIPPED ? `${SHIPPED}/docs/legal/THIRD_PARTY_NOTICES.md` : '/THIRD_PARTY_NOTICES.txt',
+  ],
   ['stLinkLicense', SHIPPED ? `${SHIPPED}/LICENSE` : '/LICENSE.txt'],
 ] as const;
 
-/** The shortcuts the app really has: each is bound in the code named beside it. */
 const SHORTCUTS = [
-  ['⌘ / Ctrl + K', 'stKeyQuick'], // useQuickOpen
-  ['/', 'stKeySearch'], // SettingsPage
-  ['Esc', 'stKeyClose'], // Modal, Sheet
-  ['Enter · Shift + Enter', 'stKeySend'], // Composer
+  ['⌘ / Ctrl + K', 'stKeyQuick'],
+  ['/', 'stKeySearch'],
+  ['Esc', 'stKeyClose'],
+  ['Enter · Shift + Enter', 'stKeySend'],
 ] as const;
 
 type Health = { status: string; mode: string; version: string };

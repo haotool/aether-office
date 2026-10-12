@@ -9,6 +9,7 @@ const generated = resolve('packages/providers/generated');
 const compat = JSON.parse(readFileSync(join(generated, 'compat.json'), 'utf8')) as {
   schema: string;
   verifiedCliVersions: string[];
+  sha256: string;
 };
 
 const digest = (directory: string): Record<string, string> => {
@@ -30,6 +31,17 @@ const digest = (directory: string): Record<string, string> => {
 it('records which CLI versions the committed protocol types are verified against', () => {
   expect(readdirSync(generated)).toContain(`${compat.schema}-ts`);
   expect(compat.verifiedCliVersions).toContain(compat.schema.replace('codex-', ''));
+});
+
+it('keeps the committed protocol types the record names, so a hand edit fails without the CLI', () => {
+  const printed = execFileSync(
+    process.execPath,
+    ['scripts/regenerate-codex-protocol.mjs', '--digest'],
+    {
+      encoding: 'utf8',
+    },
+  );
+  expect(printed.trim()).toBe(compat.sha256);
 });
 
 const version = spawnSync('codex', ['--version'], { encoding: 'utf8' });

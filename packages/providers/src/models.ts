@@ -5,16 +5,12 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import type { ModelCatalog, ModelEntry } from '@aether/contracts';
 
-// The models each provider's CLI offers, read from the CLIs' own private caches so a newly released model shows up
-// without an AETHER release. Those files carry no format guarantee: every parser here skips what it does not
-// recognise and never throws. Nothing is written, no network is touched and no model is run (`codex debug models`
-// prints the local catalog).
+// Read from the CLIs' own private caches, which carry no format guarantee: every parser skips what it does not
+// recognise and never throws. Nothing is written, no network is touched and no model is run.
 const MAX_BYTES = 2 * 1024 * 1024;
 const MAX_MODELS = 100;
 const DAY_MS = 24 * 3_600_000;
-/** A catalog older than this is shown but marked stale. */
 export const STALE_MS = 7 * DAY_MS;
-/** A Codex cache older than this is refreshed from the CLI when it can be. */
 const CODEX_REFRESH_MS = DAY_MS;
 const CLI_TIMEOUT_MS = 5000;
 const MEMO_MS = 30_000;
@@ -40,7 +36,6 @@ const instant = (v: unknown): number | undefined => {
 };
 const familyOf = (id: string) => FAMILIES.find((f) => id.includes(f));
 
-/** Pure. Codex's `models_cache.json` / `codex debug models`: visible models only, best priority first. */
 export function parseCodexModels(raw: string): { models: ModelEntry[]; fetchedAt?: number } {
   const root = obj(parse(raw));
   const rows = list(root['models'])
@@ -69,7 +64,6 @@ export function parseCodexModels(raw: string): { models: ModelEntry[]; fetchedAt
   return { models, ...(fetchedAt && { fetchedAt }) };
 }
 
-/** Pure. One Claude Code `model-catalog/*cc*.json`: the models of its main section, in the order Claude lists them. */
 export function parseClaudeCatalog(raw: string): { models: ModelEntry[]; fetchedAt?: number } {
   const root = obj(parse(raw));
   const rows = list(obj(obj(obj(root['catalog'])['config']))['models']).map(obj);
@@ -100,7 +94,6 @@ export function parseClaudeCatalog(raw: string): { models: ModelEntry[]; fetched
   return { models, ...(fetchedAt && { fetchedAt }) };
 }
 
-/** Pure. `additionalModelOptionsCache` of `.claude.json`: extra picks such as the 1M-context variants. */
 function parseClaudeExtras(raw: string): ModelEntry[] {
   return list(obj(parse(raw))['additionalModelOptionsCache'])
     .map(obj)
@@ -124,7 +117,6 @@ function parseClaudeExtras(raw: string): ModelEntry[] {
     .slice(0, MAX_MODELS);
 }
 
-/** The family aliases `--model` accepts: always a working choice, borrowing efforts from the newest full ID. */
 function withAliases(models: ModelEntry[]): ModelEntry[] {
   const aliases = FAMILIES.map((family): ModelEntry => {
     const newest = models.find((m) => m.family === family && m.efforts.length);
@@ -177,7 +169,6 @@ const claude: Detector = {
     const catalogs = await Promise.all(
       names.slice(0, 8).map((n) => statSource(join(catalogDir, n))),
     );
-    // The extras live next to the config directory when one is set, else in the home directory.
     const extras = await statSource(join(dir ?? homedir(), '.claude.json'));
     return [...catalogs, extras];
   },
@@ -261,10 +252,9 @@ const codex: Detector = {
 const memo = new Map<string, { sig: string; at: number; value: ModelCatalog }>();
 
 /**
- * Both providers' model lists as the CLIs on this machine know them. Remembered in memory for a short time per source
- * file (mtime + size), so a poller never re-reads or re-spawns; `refresh` skips the memory.
- * Homes: `AETHER_CLAUDE_HOME` (else `CLAUDE_CONFIG_DIR`, else `~/.claude`) and `AETHER_CODEX_HOME` (else `CODEX_HOME`,
- * else `~/.codex`).
+ * Remembered in memory for a short time per source file (mtime + size), so a poller never re-reads or re-spawns;
+ * `refresh` skips the memory. Homes: `AETHER_CLAUDE_HOME` (else `CLAUDE_CONFIG_DIR`, else `~/.claude`) and
+ * `AETHER_CODEX_HOME` (else `CODEX_HOME`, else `~/.codex`).
  */
 export async function detectModels(
   env: NodeJS.ProcessEnv = process.env,

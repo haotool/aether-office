@@ -16,7 +16,7 @@ test('an owner creates a timezone schedule and sees its next run in that zone', 
   const item = page.getByRole('listitem').filter({ hasText: '每日巡檢' });
   await expect(item).toContainText('每日 09:00');
   await expect(item).toContainText('Asia/Taipei');
-  await expect(item).toContainText(/上午9:00:00/); // next run rendered in the schedule's own zone
+  await expect(item).toContainText(/上午9:00:00/);
   await item.getByRole('button', { name: '停用' }).click();
   await expect(item.getByRole('button', { name: '啟用' })).toBeVisible();
   expect(

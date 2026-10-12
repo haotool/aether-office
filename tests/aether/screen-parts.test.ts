@@ -26,8 +26,6 @@ import {
   type DrawCall,
 } from './fixtures/recording-canvas.js';
 
-// Shared pieces of the desk screens, on a recording canvas (fixtures/recording-canvas.ts) and a `document` whose
-// createElement hands out such canvases.
 installBrowserEnv();
 type FakeCanvas = {
   width: number;
@@ -125,13 +123,13 @@ describe('scratch canvases', () => {
 
 describe('screen-ui helpers', () => {
   it('fit cuts text to a width with an ellipsis and leaves short text alone', () => {
-    const { g } = recordingContext(); // a character is 7 wide
+    const { g } = recordingContext();
     expect(fit(g, 'short', 100)).toBe('short');
     const cut = fit(g, 'a very long file name.ts', 70);
     expect(cut.endsWith('…')).toBe(true);
     expect(cut.length * 7).toBeLessThanOrEqual(70);
     expect(cut.length).toBeGreaterThan(5);
-    expect(fit(g, 'abcdefgh', 1)).toBe('a…'); // never shorter than one character
+    expect(fit(g, 'abcdefgh', 1)).toBe('a…');
   });
 
   it('text sets the font, colour and words', () => {
@@ -144,7 +142,7 @@ describe('screen-ui helpers', () => {
     ]);
     const plain = recordingContext();
     text(plain.g, 'x', 0, 0, '#000');
-    expect(plain.calls[0]!.args[0]).toMatch(/^12px /); // no stray space when there is no weight
+    expect(plain.calls[0]!.args[0]).toMatch(/^12px /);
   });
 
   it('roundRect starts a fresh path', () => {

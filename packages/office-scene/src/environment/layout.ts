@@ -14,7 +14,6 @@ export const zones = [
   { id: 'integrations', en: 'Integration Dock', zh: '整合中心', x: 16, z: 11 },
 ] as const;
 
-// The rooms keep their positions on every floor; what they are, and what they are called, depends on the department.
 const NAMES: Record<string, Partial<Record<(typeof zones)[number]['id'], [string, string]>>> = {
   product: {
     engineering: ['Product Pods', '產品工作區'],
@@ -52,7 +51,6 @@ const NAMES: Record<string, Partial<Record<(typeof zones)[number]['id'], [string
     knowledge: ['Docs & DevRel Studio', '文件與開發者關係'],
   },
 };
-/** Zones of one floor, named for its department. */
 export function floorZones(floor: number) {
   const department = DEPARTMENTS[floor]?.id ?? 'product';
   return zones.map((zone) => {
@@ -61,10 +59,8 @@ export function floorZones(floor: number) {
   });
 }
 
-// Desk columns either side of the central aisle, rows clear of the aisle cross and the north rooms.
 const COLUMNS = [-22, -18, -14, -10, 10, 14, 18, 22];
 const ROWS = [-6, -2.2, 3.6, 7.4, 11.2, 15];
-/** Desks one floor can hold: desk positions never leave the floor and never block the circulation aisles. */
 export const FLOOR_CAPACITY = COLUMNS.length * ROWS.length;
 export const seatAt = (index: number): [number, number] => [
   COLUMNS[index % COLUMNS.length] ?? 0,
@@ -72,11 +68,9 @@ export const seatAt = (index: number): [number, number] => [
 ];
 
 const clampFloor = (floor: number) => Math.min(FLOORS - 1, Math.max(0, floor));
-/** The floors to try for an agent, nearest-first: its own, then each following floor, wrapping round. */
 export const floorsFrom = (floor: number) =>
   Array.from({ length: FLOORS }, (_, k) => (clampFloor(floor) + k) % FLOORS);
 
-/** A desk by floor and slot (the index `seatAt` maps to a place). */
 export type Seat = readonly [floor: number, slot: number];
 
 const seatFree = (used: Set<number> | undefined, slot: number) =>
@@ -110,10 +104,10 @@ function assignFreshOnFloor(
 }
 
 /**
- * Who sits where. An agent already in `previous` keeps its seat for as long as it is among `agents`, whatever order they
- * come in; every other agent takes the first free slot on its floor (the next floor with room when that one is full), in
- * the order given. A departed agent's seat is simply free again; nobody else moves. An entry of `previous` that is not a
- * valid, unshared seat is ignored. Pure: returns a new map holding only the agents present.
+ * Who sits where: an agent already in `previous` keeps its seat for as long as it is among `agents`; every other agent
+ * takes the first free slot on its floor (the next floor with room when it is full), in the order given. A departed
+ * agent's seat is simply free again and nobody else moves. A `previous` entry that is not a valid, unshared seat is
+ * ignored.
  */
 export function assignSeats(
   previous: ReadonlyMap<string, Seat>,
@@ -143,10 +137,9 @@ const PLANTS: readonly (readonly [number, number])[] = [
   [-10, -14],
   [10, -14],
 ];
-const MIN_DESKS = [12, 8, 8, 8, 8]; // a populated look even on a quiet floor; the ground floor keeps its original twelve
+const MIN_DESKS = [12, 8, 8, 8, 8];
 type LayoutObject = Layout['objects'][number];
 
-/** One floor's desks (`here[i]` is the member at desk i, a hole is a free desk) with its racks, sofas and plants. */
 function furnishFloor(floor: number, here: readonly Agent[]): LayoutObject[] {
   const objects: LayoutObject[] = [];
   const place = (
@@ -173,18 +166,11 @@ function furnishFloor(floor: number, here: readonly Agent[]): LayoutObject[] {
   return objects;
 }
 
-/**
- * One layout for the whole building. `floorOf` says which floor an agent works on (default: the ground floor); the
- * ground-floor ids stay `desk-<n>` so layouts saved before floors existed keep meaning the same thing. `seats` (see
- * `assignSeats`) holds the desks agents already have, so a desk can stay empty between two members.
- */
 export function defaultLayout(
   agents: readonly Agent[],
   floorOf: (agent: Agent) => number = () => 0,
   seats: ReadonlyMap<string, Seat> = new Map(),
 ): Layout {
-  // A floor holds FLOOR_CAPACITY desks; the members beyond it take the next floor with a free desk. `onFloor[f]` is
-  // indexed by slot and has holes where a desk is free.
   const onFloor: Agent[][] = Array.from({ length: FLOORS }, () => []);
   const placed = assignSeats(seats, agents, floorOf);
   for (const agent of agents) {
@@ -195,3 +181,10 @@ export function defaultLayout(
   const objects = onFloor.flatMap((here, floor) => furnishFloor(floor, here));
   return { schemaVersion: 1, objects, zones: zones.map((z) => ({ id: z.id, name: z.zh })) };
 }
+
+/** What a floor's geometry is built from: its furniture, not who sits at it. */
+export const floorKey = (layout: Layout, floor: number) =>
+  layout.objects
+    .filter((o) => o.type !== 'squad' && (o.floor ?? 0) === floor)
+    .map((o) => `${o.type}:${o.x}:${o.z}:${o.rotation}`)
+    .join('|');

@@ -32,7 +32,6 @@ type TranscriptViewProps = {
   children?: ReactNode;
 };
 
-/** Rows where the messages will be, while the first fetch is out: no spinner, no jump when they arrive. */
 function TranscriptSkeleton() {
   const t = useT();
   return (
@@ -53,7 +52,6 @@ type Transcript = { entries: Entry[]; updatedAt: number; truncated: boolean };
 
 const turnAt = (turn: Turn) => turn.user?.at ?? turn.blocks.find((b) => b.at)?.at ?? null;
 
-/** The transcript of one session, grouped into turns (kept stable between fetches) with the prompts it shows. */
 function useTranscript(sessionKey: string, working: boolean) {
   const live = useLinkLive();
   const query = useQuery({
@@ -70,7 +68,6 @@ function useTranscript(sessionKey: string, working: boolean) {
     previous.current = reuseTurns(previous.current, groupTurns(entries ?? []));
     return previous.current;
   }, [entries]);
-  // The prompts the transcript shows: what lets a message typed in the composer give way to its real bubble.
   const prompts = useMemo(
     () => (entries ?? []).filter((e) => e.role === 'user').map((e) => ({ text: e.text, at: e.at })),
     [entries],
@@ -93,7 +90,6 @@ function TranscriptError({ message, onRetry }: { message: string; onRetry: () =>
   );
 }
 
-/** Find and density buttons above the conversation. */
 function ConvTools({
   find,
   density,
@@ -133,7 +129,6 @@ function ConvTools({
   );
 }
 
-/** The turns, each in its own slot, with a day separator where the day changes. */
 function TurnList({
   turns,
   isFresh,
@@ -174,15 +169,14 @@ function EmptyConversation() {
   );
 }
 
-/** A running tool group has its own live state; otherwise a working session shows the "working" line. */
 function hasRunningTools(turns: readonly Turn[]) {
   const last = turns.at(-1)?.blocks.at(-1);
   return last?.type === 'tools' && last.calls.some((c) => c.result === null);
 }
 
 /**
- * The conversation's own find. Ctrl/Cmd+F opens it only for a reader whose focus is inside the conversation, and only
- * where matches can be painted; anywhere else the browser's find is left alone.
+ * Ctrl/Cmd+F opens the conversation's find only while focus is inside the conversation and matches can be painted;
+ * anywhere else the browser's find is left alone.
  */
 function useTranscriptFind(scroller: RefObject<HTMLElement | null>, entries: unknown) {
   const find = useConvFind(scroller, entries);
@@ -200,7 +194,6 @@ function useTranscriptFind(scroller: RefObject<HTMLElement | null>, entries: unk
   return { find, closeFind, onBodyKey };
 }
 
-/** "N new" (or "latest") while the reader is scrolled up: one press goes to the newest message. */
 function NewPill({ unseen, onClick }: { unseen: number; onClick: () => void }) {
   const t = useT();
   return (
@@ -211,20 +204,12 @@ function NewPill({ unseen, onClick }: { unseen: number; onClick: () => void }) {
   );
 }
 
-/**
- * What a session is saying and doing, as turns. It follows the newest message while you are at the bottom; if you have
- * scrolled up to read, it leaves you there and offers a "N new" pill instead. Refetched when the change stream says it
- * moved; polls only while that is down and the page is visible. `children` is drawn at the end of the scrolling area (the
- * session's details). With focus inside: j and k move between turns, `g g` and `G` go to the ends, and Ctrl or Cmd+F opens
- * a find that searches the loaded messages.
- */
 export function TranscriptView({ sessionKey, working, children }: TranscriptViewProps) {
   const t = useT();
   const still = usePreferences((s) => s.reducedMotion);
   const { query, entries, turns, prompts } = useTranscript(sessionKey, working);
   const ids = useMemo(() => (entries ? turns.flatMap(turnIds) : null), [entries, turns]);
   const arrived = useFreshIds(sessionKey, ids);
-  // When the person last looked is read as the conversation opens: what happened after is "new since you looked".
   const [seenAt] = useState(() => seenBaseline(sessionKey));
   const unreadId = useMemo(() => firstUnreadId(turns, seenAt), [turns, seenAt]);
   const showThinking = working && !hasRunningTools(turns);

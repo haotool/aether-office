@@ -1,8 +1,5 @@
-// pnpm lockfile parsing and the shipped dependency closure for the third-party notices (scripts/oss).
 import path from 'node:path';
 import { BUILD_ONLY, ROOTS } from './notices-policy.mjs';
-
-// ------------------------------------------------------------------------------------------------------------- lockfile
 
 const unquote = (s) =>
   s
@@ -10,7 +7,6 @@ const unquote = (s) =>
     .replace(/^'(.*)'$/, '$1')
     .replace(/^"(.*)"$/, '$1');
 
-/** Parses the parts of a pnpm v9 lockfile this script needs (the last YAML document when there are several). */
 export function parseLockfile(text) {
   const docs = text.split(/^---\s*$/m).filter((d) => /^importers:/m.test(d));
   const doc = docs.at(-1) ?? '';
@@ -67,22 +63,17 @@ export function parseLockfile(text) {
   return { importers, packages, snapshots };
 }
 
-/** `@scope/name@1.2.3(peer@1)` -> { name: '@scope/name', version: '1.2.3', id: '@scope/name@1.2.3' }. */
 export function splitKey(key) {
   const base = key.replace(/\(.*$/, '');
   const at = base.lastIndexOf('@');
   return { name: base.slice(0, at), version: base.slice(at + 1), id: base };
 }
 
-/**
- * The production closure: package id -> Set of scopes ('web', 'server'), following dependencies and optional
- * dependencies from the app importers and the workspace packages they link.
- */
 export function shippedClosure(lock, roots = ROOTS, buildOnly = BUILD_ONLY) {
   const scopes = new Map();
   const visit = (key, scope) => {
     const { id, name } = splitKey(key);
-    if (name.startsWith('@types/')) return; // type declarations are erased by compilation
+    if (name.startsWith('@types/')) return;
 
     const seen = scopes.get(id) ?? new Set();
     if (seen.has(scope) && scopes.has(id)) return;

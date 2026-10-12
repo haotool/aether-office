@@ -1,4 +1,3 @@
-/** The tasks words, in Traditional Chinese. */
 export const zhTasks = {
   boardTodo: '待辦',
   boardDoing: '進行中',
@@ -54,7 +53,6 @@ export const zhTasks = {
   status: '狀態',
   enabled: '已啟用',
   disabled: '未啟用',
-  notConfigured: '尚未設定',
   workspaceHint: '每個寫入工作都有獨立 Git worktree。檢視差異不會改動來源目錄。',
   noWorkspaces: '尚未建立工作區',
   loadDiff: '讀取目前差異',

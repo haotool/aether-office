@@ -59,7 +59,7 @@ it('records wire protocol, offered version and SDK semver separately, and only t
     ),
   ) as { version: string };
   expect(ACP_SDK_VERSION).toBe(installed.version);
-  expect(negotiationFrom({ protocolVersion: 1 }).capabilities.resume).toBe(false); // nothing advertised means nothing assumed
+  expect(negotiationFrom({ protocolVersion: 1 }).capabilities.resume).toBe(false);
 });
 
 it('starts a session, streams canonical events, asks the platform before a tool runs, and hides thoughts', async () => {
@@ -87,7 +87,7 @@ it('starts a session, streams canonical events, asks the platform before a tool 
     new AbortController().signal,
   );
   expect(refusal.summary).toBe('Hello denied');
-  expect(denied.events.map((e) => e.kind)).toContain('tool.failed'); // a refused tool is a failed tool, not a success
+  expect(denied.events.map((e) => e.kind)).toContain('tool.failed');
 });
 
 it('cancels a running prompt through session/cancel', async () => {

@@ -41,9 +41,9 @@ describe('labelsOf', () => {
       false,
     );
     const members = tags.filter((t) => ['a', 'b', 'nodesk'].includes(t.id));
-    expect(members.map((t) => t.id)).toEqual(['a', 'b']); // no desk, no tag
+    expect(members.map((t) => t.id)).toEqual(['a', 'b']);
     expect(members[0]).toMatchObject({ x: 10, z: 4, y: FLOOR_Y(1) + 2 });
-    expect(members[1]!.width - members[0]!.width).toBe((4 - 3) * 6); // 小明 is 4 columns, Ada is 3
+    expect(members[1]!.width - members[0]!.width).toBe((4 - 3) * 6);
   });
 
   it('adds a tag over each zone of the floor but the atrium, and none when the building is exploded', () => {
@@ -77,7 +77,7 @@ describe('beamsOf', () => {
     expect(colorOf(info({ branch: null }))).toBe('#a592ff');
     expect(colorOf(info({ linked: true }))).toBe('#43e6df');
     expect(colorOf(info())).toBe('#e8f2f8');
-    expect(colorOf(info({ dirty: 1, branch: null }))).toBe('#ffc65c'); // uncommitted wins over detached
+    expect(colorOf(info({ dirty: 1, branch: null }))).toBe('#ffc65c');
   });
 
   it('runs from the desk up into the elevator core and flows only while the member works', () => {
@@ -154,7 +154,7 @@ describe('desk items', () => {
 
   it('lets the tint choose only the mug’s colour', () => {
     expect(deskItemsGeometry(['mug'], 0)).not.toBe(deskItemsGeometry(['mug'], 1));
-    expect(deskItemsGeometry(['mug'], 1)).toBe(deskItemsGeometry(['mug'], 5)); // four mug colours
+    expect(deskItemsGeometry(['mug'], 1)).toBe(deskItemsGeometry(['mug'], 5));
     expect(deskItemsGeometry(['plant'], 0)).toBe(deskItemsGeometry(['plant'], 3));
   });
 

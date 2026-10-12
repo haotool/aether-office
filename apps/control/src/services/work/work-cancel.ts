@@ -5,7 +5,6 @@ import type { WorkRow } from './work-start.js';
 
 type CancelCommand = Extract<Command, { type: 'work.cancel' }>;
 
-/** States with nothing running: cancelling is final at once. */
 const NOT_RUNNING = [
   'backlog',
   'ready',
@@ -16,9 +15,7 @@ const NOT_RUNNING = [
   'indeterminate', // a human closes a run whose outcome is unknown; the platform never guesses
 ];
 
-/** Retires the run of a work item being cancelled; true when nothing is left to wait for. */
 function cancelRun(ctx: Context, row: WorkRow): boolean {
-  // A queued command has no side effects. Claimed/running work needs the owning runner's cancellation acknowledgement.
   const run = ctx.sqlite
     .prepare("SELECT id,state FROM runs WHERE workId=? AND state IN ('queued','claimed','running')")
     .get(row.id) as { id: string; state: string } | undefined;
@@ -79,7 +76,6 @@ function cancelWaitingDescendants(
   }
 }
 
-/** work.cancel: returns the state the item moves to (`cancel_requested` while a runner still holds it). */
 export function cancelWork(
   ctx: Context,
   actor: Actor,

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useT } from '../../ui/useT.js';
 import { shortDuration } from './turn-groups.js';
 
-/** "Working · 12s": a shimmering line at the end of the conversation while the session works, counting from `since`. */
 export function ThinkingLine({ since }: { since: number | null }) {
   const t = useT();
   const [start] = useState(() => since ?? Date.now());

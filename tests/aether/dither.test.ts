@@ -16,7 +16,6 @@ const premultiplied: Record<string, ShaderMaterial> = {
   'squad zone decal': createZoneDecal().material,
   hologram: createMaterials('#5ee7e7').hologram as ShaderMaterial,
 };
-// These write their own alpha (premultiplied petals, alpha 1 for additive light), so only the noise is added.
 const noiseOnly: Record<string, ShaderMaterial> = {
   petals: gardenMaterial(),
   pollen: pollenMaterial(),

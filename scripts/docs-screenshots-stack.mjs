@@ -1,4 +1,3 @@
-// The throwaway demo stack of the documentation screenshots: start, wait for health, stop (only its own PIDs).
 import { spawn } from 'node:child_process';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
@@ -6,7 +5,6 @@ import { setup } from './setup.ts';
 import { LAN, port, root } from './docs-screenshots-config.mjs';
 import { data, home, pids, spool, work } from './docs-screenshots-fixture.mjs';
 
-// ---- the stack -----------------------------------------------------------------------------------------------------------
 export function startStack() {
   setup('demo', data);
   const env = {

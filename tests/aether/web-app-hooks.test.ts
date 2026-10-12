@@ -8,8 +8,6 @@ import {
 } from './fixtures/browser-env.js';
 import { renderHook } from './fixtures/mini-react.js';
 
-// The app shell's hooks on a synthetic hook runtime (fixtures/mini-react.ts), a fake EventSource and fetch, and a query
-// client that only records what is invalidated or cleared.
 const env: BrowserEnv = installBrowserEnv();
 const web = await vi.hoisted(async () => {
   const paths = await import('./fixtures/web-paths.js');

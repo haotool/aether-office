@@ -11,7 +11,7 @@ import {
 } from '../environment/carriers.js';
 import { itemAt } from '../environment/checked.js';
 
-const SPEED = 4; // metres per second
+const SPEED = 4;
 const HEIGHT = 1.5;
 
 type Live = Carrier & { startedAt: number };
@@ -37,10 +37,7 @@ function Envelope({ carrier, onDone }: { carrier: Live; onDone: (key: string) =>
   );
 }
 
-/**
- * Envelopes walk the collision-free path from sender to recipient desks. This is decoration only:
- * arrival never changes delivery or acknowledgement state.
- */
+/** Decoration only: arrival never changes delivery or acknowledgement state. */
 export function MessageCarriers({
   layout,
   messages,

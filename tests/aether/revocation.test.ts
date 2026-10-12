@@ -34,10 +34,10 @@ it('revoking an identity stops new commands at once and closes its live event st
     const reader = response.body!.getReader();
     const decoder = new TextDecoder();
     const first = decoder.decode((await reader.read()).value);
-    expect(first.length).toBeGreaterThan(0); // the stream is live and delivering
+    expect(first.length).toBeGreaterThan(0);
 
     revoke(f.control.ctx, f.owner.actor, operator.actor.id);
-    expect(work).toThrow('AUTH_REQUIRED'); // refused immediately, no grace period
+    expect(work).toThrow('AUTH_REQUIRED');
     const afterRevoke = await fetch(
       `http://127.0.0.1:${PORT}/api/projects/${f.projectId}/snapshot`,
       { headers },
@@ -57,7 +57,7 @@ it('revoking an identity stops new commands at once and closes its live event st
       if (chunk.done) break;
     }
     expect(text).toContain('event: fault');
-    expect(text).not.toContain('event: domain'); // nothing sensitive after the revocation
+    expect(text).not.toContain('event: domain');
   } finally {
     await app.close();
     f.control.close();

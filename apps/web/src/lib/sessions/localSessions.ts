@@ -68,7 +68,6 @@ export function sessionsToAgents(
       s.mtime,
       projectId,
     );
-    // A finished subagent has left its seat (the server keeps it a while for the panel and the scene's hand-over).
     const children = s.subagents
       .filter((c) => c.status !== 'finished')
       .map((c) =>
@@ -88,10 +87,6 @@ export function sessionsToAgents(
 
 const floorOfDepartment = (id: string) => DEPARTMENTS.find((d) => d.id === id)?.floor ?? 0;
 
-/**
- * Which floor an agent works on: an observed session by the department it was classified into (its subagents with
- * it), a managed agent by what its role says.
- */
 export function floorResolver(sessions: readonly LocalSession[]): (agent: Agent) => number {
   const byKey = new Map(
     sessions.map((s) => [s.key, floorOfDepartment(s.classification.department)]),
@@ -103,10 +98,6 @@ export function floorResolver(sessions: readonly LocalSession[]): (agent: Agent)
   };
 }
 
-/**
- * The role id an agent's screen is chosen by: an observed session's classification; a subagent works as its type says
- * (Explore researches, a code reviewer reviews) and otherwise as its parent; a managed agent by its role text.
- */
 export function roleResolver(sessions: readonly LocalSession[]): (agent: Agent) => string {
   const byKey = new Map(sessions.map((s) => [s.key, s]));
   return (agent) => {
@@ -119,7 +110,6 @@ export function roleResolver(sessions: readonly LocalSession[]): (agent: Agent) 
   };
 }
 
-/** The Git branch behind an observed agent, for the beams in the office; managed agents have none here. */
 export function branchResolver(sessions: readonly LocalSession[]) {
   const byKey = new Map(sessions.map((s) => [s.key, s]));
   return (agent: Agent) => {
@@ -138,7 +128,6 @@ export function branchResolver(sessions: readonly LocalSession[]) {
 }
 
 const quote = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;
-/** The provider's own commands to continue or branch off a session, run from the session's directory. */
 export function sessionCommands(s: Pick<LocalSession, 'provider' | 'sessionId' | 'cwd'>) {
   const cd = `cd ${quote(s.cwd)} && `;
   return s.provider === 'claude'
@@ -149,7 +138,6 @@ export function sessionCommands(s: Pick<LocalSession, 'provider' | 'sessionId' |
     : { resume: `${cd}codex resume ${s.sessionId}`, fork: `${cd}codex fork ${s.sessionId}` };
 }
 
-/** Pure. Tokens each department's sessions have used, largest first; sessions that report no usage are left out. */
 export function tokensByDepartment(
   sessions: readonly (Pick<LocalSession, 'usage'> & { classification: { department: string } })[],
 ) {

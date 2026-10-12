@@ -5,9 +5,8 @@ import type { Context } from '../domain/context.js';
 import { createIdentity, hash, identityActor, secret } from '../domain/identity.js';
 
 /**
- * Short-lived, single-use enrollment. The invitation token is shown once and only its hash is
- * stored. Redeeming it returns a machine credential bound to exactly one project, a provider
- * allowlist and workspace roots; it is not a general shell or admin token.
+ * The invitation token is shown once and only its hash is stored. Redeeming it returns a credential bound to one
+ * project, a provider allowlist and workspace roots; it is not a shell or admin token.
  */
 export function createInvitation(
   ctx: Context,
@@ -45,7 +44,6 @@ type ClaimedInvitation = {
   createdBy: string;
 };
 
-/** The machine an invitation grants, with the providers and roots it was issued for; returns its id. */
 function registerMachine(ctx: Context, claimed: ClaimedInvitation, now: number): string {
   const machineId = randomUUID();
   ctx.sqlite
@@ -71,7 +69,6 @@ export function redeemInvitation(
   return ctx.sqlite
     .transaction(() => {
       const now = ctx.now();
-      // The conditional UPDATE is the single-use gate: only one redemption can match.
       const claimed = ctx.sqlite
         .prepare(
           'UPDATE machine_invitations SET usedAt=? WHERE tokenHash=? AND usedAt IS NULL AND expiresAt>? RETURNING *',

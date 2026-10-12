@@ -1,7 +1,7 @@
 /**
- * Pure. How well `query` matches `text` as a fuzzy (in-order, not necessarily adjacent) match, or null when it does not
- * match at all. Higher is better: a prefix beats a word start beats a run of adjacent letters beats scattered ones, and a
- * shorter text beats a longer one with the same match. Case is ignored.
+ * Fuzzy (in-order, not necessarily adjacent) match score of `query` in `text`, or null when it does not match. Higher
+ * is better: a prefix beats a word start beats a run of adjacent letters beats scattered ones; a shorter text beats a
+ * longer one.
  */
 export function fuzzyScore(query: string, text: string): number | null {
   const q = query.toLowerCase();
@@ -21,7 +21,6 @@ export function fuzzyScore(query: string, text: string): number | null {
   return score - s.length / 100;
 }
 
-/** Pure. The items that match `query`, best first, at most `limit`; with an empty query, the first `limit` in order. */
 export function fuzzyRank<T>(
   query: string,
   items: readonly T[],

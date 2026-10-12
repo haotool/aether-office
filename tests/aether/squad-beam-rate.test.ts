@@ -42,7 +42,7 @@ describe('the squad token rate', () => {
     expect(
       squadTokenRate([member(1, { tokensPerMinute: 4000 }), member(2, { tokensPerMinute: 8000 })]),
     ).toBe(12_000);
-    expect(squadTokenRate([member(1, { tokensPerMinute: 0 })])).toBe(0); // measured, and nothing spent
+    expect(squadTokenRate([member(1, { tokensPerMinute: 0 })])).toBe(0);
     expect(
       squadTokenRate([member(1, { tokensPerMinute: 9000, status: 'finished' }), member(2)]),
     ).toBeNull();
@@ -57,7 +57,7 @@ describe('the squad token rate', () => {
     const noTokens = step([member(1)], T0 + 1000);
     expect(beamRate(noTokens.zones[SUP], T0 + 1000).source).toBe('tools');
     const notYet = step([member(1, { tokensPerMinute: 0 })], T0 + 1000);
-    expect(beamRate(notYet.zones[SUP], T0 + 1000).source).toBe('tools'); // 0 = no second sample yet
+    expect(beamRate(notYet.zones[SUP], T0 + 1000).source).toBe('tools');
     expect(beamRate(undefined, T0)).toEqual({ source: 'tools', perMinute: 0 });
   });
 
@@ -86,7 +86,6 @@ describe('the brightness curve', () => {
         last = level;
       }
       expect(at(source, BEAM_REFERENCE[source] * 1000)).toBeLessThan(1.0000001);
-      // no kink at the reference: the slope just before and after differ by little
       const ref = BEAM_REFERENCE[source];
       const before = at(source, ref) - at(source, ref * 0.9);
       const after = at(source, ref * 1.1) - at(source, ref);

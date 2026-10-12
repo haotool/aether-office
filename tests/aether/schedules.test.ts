@@ -29,14 +29,14 @@ function setup(start: string) {
 it('dispatches at the local time in the schedule timezone exactly once, creating unassigned work only', () => {
   const t = setup('2026-10-03T00:00:00Z');
   try {
-    t.create({ spec: { kind: 'daily', time: '09:00' }, timezone: 'Asia/Taipei' }); // 01:00 UTC
+    t.create({ spec: { kind: 'daily', time: '09:00' }, timezone: 'Asia/Taipei' });
     expect(tickSchedules(t.f.control.ctx)).toBe(0);
     t.clock.now = utc('2026-10-03T00:59:59Z');
     expect(tickSchedules(t.f.control.ctx)).toBe(0);
     t.clock.now = utc('2026-10-03T01:00:05Z');
     expect(tickSchedules(t.f.control.ctx)).toBe(1);
-    expect(tickSchedules(t.f.control.ctx)).toBe(0); // second ticker / retry
-    expect(t.works()).toEqual([{ title: 'Nightly check', state: 'ready', assignee: null }]); // no agent, no spend
+    expect(tickSchedules(t.f.control.ctx)).toBe(0);
+    expect(t.works()).toEqual([{ title: 'Nightly check', state: 'ready', assignee: null }]);
     expect(listSchedules(t.f.control.ctx, t.f.projectId)[0]!.nextRunAt).toBe(
       utc('2026-10-04T01:00:00Z'),
     );
@@ -74,7 +74,7 @@ it('catches up once after an outage with policy single, and not at all with skip
     const t = setup('2026-10-01T00:00:00Z');
     try {
       t.create({ spec: { kind: 'daily', time: '09:00' }, timezone: 'Asia/Taipei', missed });
-      t.clock.now = utc('2026-10-05T03:00:00Z'); // four missed days
+      t.clock.now = utc('2026-10-05T03:00:00Z');
       expect(tickSchedules(t.f.control.ctx), missed).toBe(expected);
       expect(t.works()).toHaveLength(expected);
       expect(listSchedules(t.f.control.ctx, t.f.projectId)[0]!.nextRunAt).toBe(

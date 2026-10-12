@@ -1,6 +1,3 @@
-// Area 7: docs truth. Links resolve, the commands, environment variables and files the docs name exist, the required
-// documents are there and the generated ones are fresh. Research and internal notes and the changelog describe history, so they are
-// not held to the "still exists" rules.
 import path from 'node:path';
 import { SELF, top } from '../lib.mjs';
 import { rule } from '../model.mjs';
@@ -41,8 +38,8 @@ export const PNPM_BUILTINS = new Set([
 const REQUIRED = [
   'README.md',
   'CHANGELOG.md',
-  'CONTRIBUTING.md',
-  'SECURITY.md',
+  '.github/CONTRIBUTING.md',
+  '.github/SECURITY.md',
   'LICENSE',
   'docs/development.md',
   'docs/architecture.md',
@@ -53,7 +50,6 @@ const PATH_REFERENCE =
 const currentDocs = (repo) =>
   matching(repo, /\.md$/).filter((f) => !HISTORY.test(f) && !SELF.test(f));
 
-/** What a reader would type: the lines of fenced code blocks and the inline `code` spans of the other lines. */
 function codeSegments(lines) {
   let fenced = false;
   return lines.map((line) => {
@@ -65,7 +61,6 @@ function codeSegments(lines) {
   });
 }
 
-/** `pnpm <name>` commands in markdown code that are neither a script of package.json nor a pnpm built-in. */
 export function unknownCommands(text, scripts) {
   const out = [];
   codeSegments(text.split('\n')).forEach((code, i) => {
@@ -81,7 +76,6 @@ export function envNames(text) {
   return [...text.matchAll(/\bAETHER_[A-Z0-9]+(?:_[A-Z0-9]+)*\b/g)].map((m) => m[0]);
 }
 
-/** Backticked repository paths in `text` that do not exist (globs and placeholders are skipped). */
 export function missingPaths(text, exists, from = '') {
   const out = [];
   text.split('\n').forEach((line, i) => {

@@ -97,9 +97,8 @@ it('marks needs-you and finished rows unread until they were opened after their 
     ['claude:a', false],
     ['claude:b', true],
   ]);
-  expect(feed.working[0]!.unread).toBe(false); // working rows carry no dot
+  expect(feed.working[0]!.unread).toBe(false);
   expect(attentionCount(feed)).toBe(1);
-  // A reply newer than the last visit makes it unread again.
   const speech = { 'claude:a': { user: null, assistant: { text: 'new', at: NOW - 30_000 } } };
   expect(
     feedOf(sessions, speech, { 'claude:a': NOW - MIN }).finished.find((i) => i.key === 'claude:a')!
@@ -150,7 +149,7 @@ it('parses the Markdown an agent writes into data, never into HTML', () => {
   const blocks = parseMarkdown(
     'Intro with `code` and **bold** and *soft*.\n\n- one\n- two\n\n1. first\n\n## Title\n```sh\nls -la\n\nmore\n```\n<script>alert(1)</script>',
   );
-  expect(blocks.map((b) => b.type)).toEqual(['paragraph', 'list', 'list', 'heading', 'code']); // the trailing <script> element is dropped with its content, so it is no block at all
+  expect(blocks.map((b) => b.type)).toEqual(['paragraph', 'list', 'list', 'heading', 'code']);
   const [intro, bullets, numbered, , code] = blocks;
   expect(intro).toMatchObject({
     inline: [

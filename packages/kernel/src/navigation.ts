@@ -1,4 +1,3 @@
-// Collision-free walking paths across the campus floor. Pure, deterministic, no I/O.
 import { objectBounds, type PlacedObject } from './layout.js';
 
 export type Point = { x: number; z: number };
@@ -12,7 +11,6 @@ export type NavGrid = {
 };
 type PathResult = { status: 'ok'; points: Point[] } | { status: 'unreachable' };
 
-// Mirrors the floor limits enforced by validateLayout.
 const FLOOR = { minX: -24.5, maxX: 24.5, minZ: -16.5, maxZ: 16.5 };
 
 export function buildNavGrid(
@@ -20,12 +18,12 @@ export function buildNavGrid(
   options: { cell?: number; clearance?: number } = {},
 ): NavGrid {
   const cell = options.cell ?? 0.5;
-  const clearance = options.clearance ?? 0.3; // an actor is not a point
+  const clearance = options.clearance ?? 0.3;
   const cols = Math.ceil((FLOOR.maxX - FLOOR.minX) / cell) + 1;
   const rows = Math.ceil((FLOOR.maxZ - FLOOR.minZ) / cell) + 1;
   const blocked = new Uint8Array(cols * rows);
   for (const object of objects) {
-    if (object.type === 'squad') continue; // a squad zone is floor to walk on; its pods are blocked where they are drawn
+    if (object.type === 'squad') continue;
     const b = objectBounds(object, clearance);
     const c0 = Math.max(0, Math.floor((b.minX - FLOOR.minX) / cell));
     const c1 = Math.min(cols - 1, Math.ceil((b.maxX - FLOOR.minX) / cell));
@@ -52,7 +50,6 @@ const pointOf = (g: NavGrid, c: number, r: number): Point => ({
 const open = (g: NavGrid, c: number, r: number) =>
   c >= 0 && r >= 0 && c < g.cols && r < g.rows && g.blocked[r * g.cols + c] === 0;
 
-/** Closest walkable cell centre to `p` within `maxRadius` metres, or null. */
 function nearestWalkable(g: NavGrid, p: Point, maxRadius = 3): Point | null {
   const [c0, r0] = cellOf(g, p);
   const span = Math.ceil(maxRadius / g.cell);
@@ -88,7 +85,6 @@ const NEIGHBOURS = [
   [-1, -1],
 ] as const;
 
-/** The cells from the start to `at`, following each cell's parent back. */
 function cellsTo(g: NavGrid, parent: Map<number, number>, at: number): Point[] {
   const cells: Point[] = [];
   for (let cur: number | undefined = at; cur !== undefined; cur = parent.get(cur))
@@ -113,7 +109,7 @@ function relaxPathNeighbours(search: PathSearch, c: number, r: number, base: num
     const nc = c + dc;
     const nr = r + dr;
     if (!open(g, nc, nr)) continue;
-    if (dc !== 0 && dr !== 0 && !(open(g, c + dc, r) && open(g, c, r + dr))) continue; // no corner cutting
+    if (dc !== 0 && dr !== 0 && !(open(g, c + dc, r) && open(g, c, r + dr))) continue;
     const next = base + Math.hypot(dc, dr);
     const key = index(nc, nr);
     if (next < (cost.get(key) ?? Infinity)) {
@@ -136,7 +132,7 @@ export function findPath(g: NavGrid, from: Point, to: Point): PathResult {
   const heap: PathNode[] = [{ f: 0, c: sc, r: sr }];
   const push = (n: PathNode) => {
     heap.push(n);
-    heap.sort((a, b) => b.f - a.f); // small grid: simple and deterministic
+    heap.sort((a, b) => b.f - a.f);
   };
   const search: PathSearch = { g, gc, gr, index, cost, parent, push };
   const done = new Set<number>();

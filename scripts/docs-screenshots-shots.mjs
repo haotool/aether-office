@@ -1,16 +1,13 @@
-// The screenshots themselves: browser contexts, saving, and one function per picture.
 import { mkdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { MAX_BYTES, out, port } from './docs-screenshots-config.mjs';
 import { data, home } from './docs-screenshots-fixture.mjs';
 
-// ---- the shots ----------------------------------------------------------------------------------------------------------
 export const base = `http://127.0.0.1:${port}`;
 export const token = () => readFileSync(join(data, 'owner-token'), 'utf8').trim();
 const DESKTOP = { width: 1440, height: 900 };
 const PHONE = { width: 390, height: 844 };
 
-/** A browser context already holding the preferences a person would have, signed in. */
 async function open(
   browser,
   {
@@ -53,7 +50,6 @@ async function open(
     .first()
     .waitFor({ timeout: 60_000 });
   if (project) {
-    // The repositories of the fixture sessions are adopted as projects a moment after sign-in.
     const picker = page.locator('.project-picker select');
     await picker
       .locator('option', { hasText: project })
@@ -63,7 +59,6 @@ async function open(
   return { context, page };
 }
 
-/** Saves a JPEG, lowering the quality until it is small enough. */
 async function save(page, id, options = {}) {
   mkdirSync(out, { recursive: true });
   const path = join(out, `${id}.jpg`);
@@ -77,7 +72,6 @@ async function save(page, id, options = {}) {
 const settle = (page, ms = 6000) => page.waitForTimeout(ms);
 const feedRow = (page, text) => page.locator('.feed-row', { hasText: text }).first();
 
-/** The first-visit tour is the one place the whole spire and its crown are in frame; its caption is left out of the picture. */
 const tour =
   (id, seconds, theme = 'dark') =>
   async (browser) => {
@@ -89,7 +83,6 @@ const tour =
   };
 
 export const SHOTS = {
-  // The orbit at about 9 s shows the building, the spire and the crown at once; the rise at 43 s is the crown close up.
   'office-overview-desktop': tour('office-overview-desktop', 9),
   'office-overview-desktop-light': tour('office-overview-desktop-light', 9, 'light'),
   'office-crown-desktop': tour('office-crown-desktop', 43),
@@ -133,7 +126,7 @@ SHOTS['character-menu-desktop'] = async (browser) => {
   const tag = page.locator('button.scene-label.selected');
   await tag.waitFor({ timeout: 15_000 });
   await page.waitForTimeout(3000);
-  await tag.click(); // the feed row chose it; a second click on its name tag opens the menu
+  await tag.click();
   await page.locator('.char-menu').waitFor({ timeout: 10_000 });
   await save(page, 'character-menu-desktop');
   await context.close();
@@ -147,8 +140,7 @@ SHOTS['connect-phone-desktop'] = async (browser) => {
   await context.close();
 };
 SHOTS['approval-card-desktop'] = async (browser) => {
-  const { context, page } = await open(browser, { project: 'ledger-api' }); // opening the project adopts its repository
-  // What switching it on in Settings does, as the owner: a cookie session and its CSRF token, then PUT /api/remote-approvals.
+  const { context, page } = await open(browser, { project: 'ledger-api' });
   const login = await fetch(`${base}/api/login`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', origin: base },
@@ -197,7 +189,7 @@ SHOTS['office-phone'] = async (browser) => {
 SHOTS['sessions-phone'] = async (browser) => {
   const { context, page } = await open(browser, { size: PHONE, touch: true });
   await settle(page, 6000);
-  await page.touchscreen.tap(359, 735); // the chevron of the peek bar opens the sheet
+  await page.touchscreen.tap(359, 735);
   await settle(page, 2000);
   await save(page, 'sessions-phone');
   await page.getByText('Checkout page redesign').first().tap();

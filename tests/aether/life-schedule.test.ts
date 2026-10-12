@@ -20,14 +20,13 @@ import {
 import { env, floorOf, loud, MEMBERS, office, push } from './life-fixtures.js';
 
 const NOW = 1_000_000_000;
-// A plain "a push command started" rule to test the scheduler around: since I8 the real `ship-it` waits for an outcome.
+// A plain "a push command started" rule to test the scheduler around: the real `ship-it` waits for an outcome.
 const ship: LifeRule = {
   ...ruleOf('ship-it')!,
   claimsOutcome: false,
   when: (s) => s.kind === 'tool.start' && s.target === 'git push',
   aria: (who, zh) => (zh ? `${who} 開始了 git push` : `${who} started a git push`),
 };
-/** The same rule, but certain to show: so a test is about the rule around the draw, not the draw. */
 const certain = (over: Partial<LifeRule> = {}): LifeRule => ({ ...ship, chance: 1, ...over });
 const run = (
   signals: readonly LifeSignal[],
@@ -109,7 +108,7 @@ describe('schedule: cooldowns', () => {
   it('keeps one cooldown per floor for floor scope', () => {
     const rule = certain({ cooldownMs: 60_000, scope: 'floor' });
     const a = run([push('m1', NOW)], NOW, [rule]);
-    expect(run([push('m2', NOW + 1000)], NOW + 1000, [rule], a.state).started).toHaveLength(0); // same floor
+    expect(run([push('m2', NOW + 1000)], NOW + 1000, [rule], a.state).started).toHaveLength(0);
     expect(run([push('m5', NOW + 1000)], NOW + 1000, [rule], a.state).started).toHaveLength(1);
   });
 });
@@ -212,7 +211,6 @@ describe('schedule: chance', () => {
     const rule = certain({ chance: 0.5, cooldownMs: 0, category });
     let shown = 0;
     for (let i = 0; i < 400; i += 1) {
-      // A fresh member name per trial gives a fresh seeded draw; nothing else differs.
       const m = `m${(i % 8) + 1}`;
       const ctx = office({ visible: () => visible, floorOf: () => 0, nameOf: () => String(i) });
       const state = { ...emptyLifeState, eligible: { [`${m}:${rule.id}`]: i } };

@@ -1,4 +1,3 @@
-/** The words of the Settings page (features/settings), in Traditional Chinese. */
 export const settingsZh = {
   sectGeneral: '一般',
   sectGeneralHint: '語言、外觀、動態與畫質',

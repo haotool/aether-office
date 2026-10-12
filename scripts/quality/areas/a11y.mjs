@@ -1,5 +1,4 @@
-// Area 5: accessibility and i18n. Locale parity, inline bilingual strings against their baseline, and static
-// accessibility heuristics on the JSX. An axe run is read from its recorded result; it is never started here.
+// An axe run is read from its recorded result; it is never started here.
 import { at, grepLines, top } from '../lib.mjs';
 import { rule, skipped } from '../model.mjs';
 import { matching } from '../repo.mjs';
@@ -11,14 +10,12 @@ const INLINE = /(?:\b(?:zh|en|isZh|isEn)\b|\b(?:locale|lang)\s*===\s*'(?:zh-TW|e
 const UI_SOURCE = /^(apps\/web|packages\/office-scene)\/src\/.*\.tsx?$/;
 const JSX_FILE = /^(apps\/web|packages\/office-scene)\/src\/.*\.tsx$/;
 
-/** Top-level keys of a locale table: `  name:` or `  'name':` at two-space indent. */
 export function localeKeys(text) {
   return new Set(
     [...text.matchAll(/^ {2}(?:'([^']+)'|([A-Za-z_$][\w$]*))\s*:/gm)].map((m) => m[1] ?? m[2]),
   );
 }
 
-/** [{ pair, missingIn, key }] for every en/zh table pair under the locales folder. */
 export function parityGaps(repo) {
   const tables = matching(repo, new RegExp(`^${LOCALES}/[^/]+\\.ts$`));
   const gaps = [];
@@ -49,7 +46,6 @@ export function inlinePairs(repo) {
   return counts;
 }
 
-/** Elements (`<button ... disabled ...>`) that are disabled with no title or description saying why. */
 export function disabledWithoutReason(text) {
   const out = [];
   const lineOf = (index) => text.slice(0, index).split('\n').length;

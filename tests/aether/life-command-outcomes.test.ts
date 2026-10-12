@@ -25,7 +25,6 @@ const end = (tags: CommandTag[], ok: boolean | null): LifeSignal => ({
   tags,
   ok,
 });
-/** Every rule certain to show, so a test is about what the signal is, not the draw. */
 const certain = LIFE_RULES.map((r) => ({ ...r, chance: 1 }));
 const started = (signals: readonly LifeSignal[], now = NOW) =>
   schedule(emptyLifeState, signals, now, loud, office(), { ...env, rules: certain }).started.map(
@@ -141,7 +140,6 @@ describe('command outcome rows: rows that start from what a command was started 
 });
 
 describe('command outcome rows: Friday deploy uses the viewer clock', () => {
-  // Local-time constructors, so the test holds in any time zone. 2026-10-09 is a Friday, 2026-10-08 a Thursday.
   const local = (day: number, hour: number) => new Date(2026, 9, day, hour, 30).getTime();
 
   it('is Friday from 15:00 on, in local time, and no other day or hour', () => {

@@ -1,5 +1,3 @@
-// Brush strokes the atlas pictures share: a cell is a square of CELL_PX, drawn once from vector paths.
-/** The atlas is a grid of square cells, drawn once at startup from vector paths: no image files, no licences to track. */
 export const CELL_PX = 128;
 export const ATLAS_COLUMNS = 8;
 

@@ -1,8 +1,3 @@
-// The hand-over of a result, as a pure timeline: a subagent that finishes stands, walks the folder to the supervisor's desk,
-// presents it, the supervisor reads and the stamp presses, and the subagent leaves as any leaver does. Nothing here draws or
-// reads a clock: every pose is a function of the plan and the time since the subagent finished (the page's wall clock),
-// so a subagent that scrolls out of view and back is where it would have been. All member poses are in the seat's frame
-// (the chair is the origin, the sitter looks along -z), like arrivals and leaves (errand.ts).
 import type { NavGrid, Point } from '@aether/kernel';
 import { positionAt } from '../../environment/carriers.js';
 import {
@@ -19,47 +14,35 @@ import { heading, length, pathIn, shortest, TURN_MS } from '../errand.js';
 import { DESK_TOP } from '../squad-art.js';
 import type { StampKind } from './stamp.js';
 
-/**
- * How a hand-over is shown. `walk`: the full walk and stamp. `pop`: the subagent leaves as usual and the folder pops into the
- * tray (low tier, out of view, too many at once). `tray`: reduced motion and Calm, the folder and the seal just appear.
- */
 export type HandoverMode = 'walk' | 'pop' | 'tray';
 
 export const GLIDE_MS = 600;
 export const READ_MS = 1500;
 export const POP_MS = 600;
-/** The stamp's press: down (ease-in), a hold, and up. */
 export const PRESS_MS = { down: 100, hold: 80, up: 70 } as const;
 export const PRESS_TOTAL_MS = PRESS_MS.down + PRESS_MS.hold + PRESS_MS.up;
-/** The walk to the desk takes at most this long (a long way is walked faster). */
 export const WALK_CAP_MS = 8000;
-/** The folder floats at the chest, this far in front of the carrier and this high. */
 const HELD_AHEAD_M = 0.35;
 const HELD_Y = 1.0;
-/** The in-tray's folders are this thick, and at most this many are stacked. */
 export const FOLDER_THICKNESS = 0.014;
 export const TRAY_STACK_MAX = 5;
 
 const SEATED_HEADING = Math.PI;
-/** Desk-frame places, mirrored by `side`: where the carrier stands, the in-tray and the stamp. */
 const SPOT_X = 1.25;
 const SPOT_Z = -0.1;
 const TRAY_X = 0.55;
 const TRAY_Z = -0.18;
 const STAMP_X = 0.25;
 const STAMP_Z = -0.22;
-/** The upper tray's top over the desk (see the dressing in squad-art.ts): folders lie on it. */
 const TRAY_TOP_M = 0.08;
 
 type Desk = { x: number; z: number; rotation: number };
-/** The desk's hand-over places, in the floor's frame. */
 export type DeskPlaces = {
   spot: Point;
   tray: readonly [number, number, number];
   stamp: readonly [number, number, number];
 };
 
-/** Which end of the desk the dressing sits on: the one nearest the zone (+1 is the desk's +x). */
 export function handoverSide(desk: Desk, zone: { x: number; z: number }): 1 | -1 {
   const yaw = (desk.rotation * Math.PI) / 2;
   const local = (zone.x - desk.x) * Math.cos(yaw) - (zone.z - desk.z) * Math.sin(yaw);
@@ -77,14 +60,10 @@ export function deskPlaces(desk: Desk, side: 1 | -1): DeskPlaces {
 }
 
 export type Route = {
-  /** The chair, then the way to the desk's side; in the seat's frame. */
   toSpot: Point[];
-  /** From the desk's side to the core. */
   exit: Point[];
   exitMetres: number;
-  /** The way the carrier faces at the desk (towards the in-tray), as a heading in the seat's frame. */
   face: number;
-  /** Metres per second: sped up for a long way so the walk takes at most `WALK_CAP_MS`. */
   speed: number;
   walkMs: number;
 };
@@ -98,7 +77,6 @@ const toChairFrame = (chair: Point, frameYaw: number, p: Point): Point => {
   };
 };
 
-/** The ways between a chair, the desk's side and the core (straight lines when the grid finds none: only a picture). */
 export function routeHandover(
   grid: NavGrid,
   chair: Point,
@@ -122,20 +100,15 @@ export function routeHandover(
 }
 
 type Timeline = {
-  /** Queued in the seat with the folder shown, until here (the desk takes one stamp at a time). */
   wait: number;
   standEnd: number;
   walkEnd: number;
   turnEnd: number;
-  /** The folder is in the tray. */
   placeAt: number;
-  /** The stamp comes down (and the supervisor stops reading). */
   stampAt: number;
-  /** The carrier is out of the office; for `pop` and `tray` the moment the stamp has been and gone. */
   total: number;
 };
 
-/** The times of a hand-over, in ms after the subagent finished. */
 export function timeline(mode: HandoverMode, wait: number, route: Route): Timeline {
   if (mode === 'walk') {
     const standEnd = wait + STAND_MS;
@@ -170,9 +143,7 @@ export function timeline(mode: HandoverMode, wait: number, route: Route): Timeli
 export type HandoverPlan = {
   mode: HandoverMode;
   kind: StampKind;
-  /** Seeds the little differences (the folder's shade and tilt, the ink's turn). */
   seed: number;
-  /** The chair in the floor's frame and the turn that puts the seat's frame on the floor's. */
   origin: Point;
   frameYaw: number;
   places: DeskPlaces;
@@ -187,9 +158,7 @@ export type MemberPose = {
   z: number;
   yaw: number;
   scale: number;
-  /** Walk clip speed as a multiple of its natural pace. */
   pace: number;
-  /** The folder is in its hands (floating at the chest). */
   carrying: boolean;
   gone: boolean;
 };
@@ -208,7 +177,6 @@ const pose = (at: Point, facing: number, over: Partial<MemberPose> = {}): Member
   ...over,
 });
 
-/** Leaving, `elapsed` ms in: a wave (turning to the way out), the walk into the core, the sink. */
 function leavingPose({ route, t }: HandoverPlan, elapsed: number): MemberPose {
   const spot = route.toSpot.at(-1) ?? route.toSpot[0] ?? ORIGIN;
   const out = heading(spot, positionAt(route.exit, 0.6), SEATED_HEADING);
@@ -234,7 +202,6 @@ function leavingPose({ route, t }: HandoverPlan, elapsed: number): MemberPose {
     : pose(at, facing, { carrying: false, gone: true, scale: 0 });
 }
 
-/** Where the carrier is, `elapsed` ms after it finished (a `walk` plan only). */
 export function memberAt(plan: HandoverPlan, elapsed: number): MemberPose {
   const { route, t } = plan;
   const [chair = ORIGIN] = route.toSpot;
@@ -259,7 +226,6 @@ export function memberAt(plan: HandoverPlan, elapsed: number): MemberPose {
   return leavingPose(plan, elapsed);
 }
 
-/** A folder's place in the floor's frame (y is the height over the floor), how big and which way it lies. */
 type FolderPose = {
   state: 'hidden' | 'held' | 'glide' | 'pop';
   x: number;
@@ -273,10 +239,6 @@ const HIDDEN: FolderPose = { state: 'hidden', x: 0, y: 0, z: 0, yaw: 0, scale: 0
 const ease = (k: number) => k * k * (3 - 2 * k);
 const overshoot = (k: number) => 1 + 2.7 * Math.pow(k - 1, 3) + 1.7 * Math.pow(k - 1, 2);
 
-/**
- * The folder before it is in the tray: in the carrier's hands (floating at the chest with a small bob), gliding into the
- * tray, or popping up in it. `slot` is the place it will take in the tray's stack. Once placed it is the stack's (hidden here).
- */
 export function folderAt(plan: HandoverPlan, elapsed: number, slot: number): FolderPose {
   const { t } = plan;
   const trayY = plan.places.tray[1] + Math.min(slot, TRAY_STACK_MAX - 1) * FOLDER_THICKNESS;
@@ -319,11 +281,9 @@ export function folderAt(plan: HandoverPlan, elapsed: number, slot: number): Fol
   };
 }
 
-/** When the seal shows on the folder, after the carrier finished: as the stamp touches (at once when there is no press). */
 export const sealAt = (plan: HandoverPlan): number =>
   plan.t.stampAt + (plan.mode === 'tray' ? 0 : PRESS_MS.down);
 
-/** How far the stamp is pressed down, 0 (resting) to 1 (on the paper), `elapsed` ms after the carrier finished. */
 export function pressAt(plan: HandoverPlan, elapsed: number): number {
   if (plan.mode === 'tray') return 0;
   const k = elapsed - plan.t.stampAt;

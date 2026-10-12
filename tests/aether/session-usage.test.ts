@@ -45,7 +45,7 @@ it('reads Codex context in use, session total, window and the model of the lates
           plan_type: 'prolite',
         },
       },
-    }), // a rate-limit-only refresh
+    }),
     line({ type: 'response_item', payload: { type: 'message', content: 'PRIVATE PROMPT TEXT' } }),
   ].join('\n');
   const usage = parseUsage('codex', Buffer.from(tail));
@@ -55,7 +55,7 @@ it('reads Codex context in use, session total, window and the model of the lates
     contextWindow: 1000,
     contextPct: null,
     compactedAt: null,
-    freshTokens: 300, // 900 in all, of which 600 came from the cache
+    freshTokens: 300,
     limit: { usedPercent: 84, windowMinutes: 10080, resetsAt: 1791583205000, plan: 'prolite' },
   });
   expect(JSON.stringify(usage)).not.toContain('PRIVATE');
@@ -151,7 +151,6 @@ it('sums every Claude assistant message once, though one message spans several l
     await writeFile(file, `${lines.join('\n')}\n`);
     return (await readUsage('claude', file)).freshTokens;
   };
-  // Cache reads (100) are not counted; the message written twice counts once.
   expect(
     await total(
       'a.jsonl',
@@ -161,11 +160,9 @@ it('sums every Claude assistant message once, though one message spans several l
       assistant('b', U),
     ),
   ).toBe(34);
-  // The counters after the message's own (one copy per iteration) are not added again.
   expect(await total('b.jsonl', assistant('c', { ...U, iterations: [{ ...U }, { ...U }] }))).toBe(
     17,
   );
-  // A sub-agent's result carries usage but is no message of this session: it has no message id.
   const subagent = line({ type: 'user', toolUseResult: { usage: U }, message: { role: 'user' } });
   expect(await total('c.jsonl', subagent, assistant('d', U))).toBe(17);
 });
@@ -180,10 +177,10 @@ it('lists a session spend equal to what the KPI parser counts on the same file, 
   const filler = line({ type: 'user', message: { content: 'x'.repeat(2000) } });
   const lines: string[] = [];
   for (let n = 0; n < 4000; n++)
-    lines.push(filler, assistant(`m${n}`, usage), assistant(`m${n}`, usage)); // each message written twice
+    lines.push(filler, assistant(`m${n}`, usage), assistant(`m${n}`, usage));
   const text = `${lines.join('\n')}\n`;
   const file = join(await mkdtemp(join(tmpdir(), 'aether-usage-')), 'claude.jsonl');
-  await writeFile(file, text); // about 8 MB: more than one chunk
+  await writeFile(file, text);
   const read = await readUsage('claude', file);
   const state = newState('claude');
   parseChunk(state, Buffer.from(text), dayKeyOf('UTC'));

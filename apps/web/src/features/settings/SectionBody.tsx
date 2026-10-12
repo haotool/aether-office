@@ -39,7 +39,6 @@ function Body({ id, scope }: { id: SectionId; scope: SettingsScope }) {
   }
 }
 
-/** One group of settings: its name and what it holds, then its rows. The body is the container the rows lay out against. */
 export function Section({
   id,
   scope,
@@ -47,7 +46,6 @@ export function Section({
 }: {
   id: SectionId;
   scope: SettingsScope;
-  /** False where the page already shows the name (a phone's detail view, whose bar carries it). */
   heading?: boolean;
 }) {
   const t = useT();

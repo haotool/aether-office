@@ -3,38 +3,29 @@ import type { Layout } from '@aether/contracts';
 import { DEPARTMENTS } from '@aether/kernel';
 import { box, mergeStatic } from './geometry.js';
 import { type Materials, createMaterials } from './building-materials.js';
-import { type FloorModel, ring, cylinder } from './building-parts.js';
+import { type FloorModel, emptyFloorModel, ring, cylinder } from './building-parts.js';
 import { THEMES } from './building-themes.js';
 import { furniture } from './building-furniture.js';
 import { itemAt } from './checked.js';
 
-/** Floor-to-floor distance of the stacked building, and the extra gap the exploded view adds. */
 export const FLOOR_HEIGHT = 7;
 export const EXPLODED_GAP = 11;
-/** The slabs are open this far from the axis, and the core's caps are rings from here out: the Git spire rises through. */
 const WELL = 1.7;
 const CORE_COLLAR = 1.35;
 
-/** The slabs, the lit panel grid, the circulation spines and the perimeter blade. */
 function deck(root: THREE.Group, m: Materials) {
-  // The slabs are open round the elevator core, so the Git spire can rise through the whole building.
   box(root, m.hull, [54.4, 0.9, 38.4], [0, -0.75, 0], 0.5, WELL);
   box(root, m.slab, [53, 0.3, 37], [0, -0.2, 0], 0.3, WELL);
   box(root, m.deck, [52, 0.14, 36], [0, -0.04, 0], 0.2, WELL);
-  // Panel joints as thin light lines: the deck reads as a lit grid rather than a flat tile.
   for (let x = -24; x <= 24; x += 4) box(root, m.accentSoft, [0.035, 0.012, 35.6], [x, 0.04, 0], 0);
   for (let z = -16; z <= 16; z += 4) box(root, m.accentSoft, [51.6, 0.012, 0.035], [0, 0.04, z], 0);
-  // The two circulation spines, kept clear of furniture by the layout rules.
   for (const x of [-1.15, 1.15]) box(root, m.cyan, [0.07, 0.025, 33], [x, 0.06, 0]);
   for (const z of [-1, 1]) box(root, m.cyan, [50, 0.025, 0.07], [0, 0.06, z]);
-  // Perimeter light blade and edge glow.
   for (const z of [-18.4, 18.4]) box(root, m.accent, [52.6, 0.1, 0.12], [0, -0.55, z], 0.02);
   for (const x of [-26.4, 26.4]) box(root, m.accent, [0.12, 0.1, 37], [x, -0.55, 0], 0.02);
 }
 
-/** Lit rectangles under the working areas. */
 function zonePads(root: THREE.Group, m: Materials) {
-  // Zone pads: lit rectangles under the working areas.
   for (const [x, z, w, d] of [
     [-16, -3, 17, 9],
     [16, -3, 17, 9],
@@ -84,7 +75,6 @@ function northRooms(root: THREE.Group, m: Materials) {
   }
 }
 
-/** The walls and frame: rear facade, side pylons, ceiling rails and the north rooms. */
 function frame(root: THREE.Group, m: Materials) {
   rearFacade(root, m);
   sidePylons(root, m);
@@ -98,13 +88,10 @@ function shell(root: THREE.Group, m: Materials) {
   frame(root, m);
 }
 
-/** The elevator core every floor shares: a glowing tube the building is organised around. */
 function core(root: THREE.Group, m: Materials, model: FloorModel) {
-  // The elevator core: a glass tube around a lit column, capped top and bottom.
   cylinder(root, m.glass, 1.5, 1.5, 6.0, [0, 3, 0], 40, true);
   cylinder(root, m.holoCyan, 0.55, 0.55, 5.9, [0, 3, 0], 24);
   cylinder(root, m.cyan, 0.12, 0.12, 5.9, [0, 3, 0], 12);
-  // Open collars, not caps: the spire passes through the core.
   for (const y of [0.1, 6.0]) {
     const collar = new THREE.Mesh(
       new THREE.LatheGeometry(
@@ -137,7 +124,6 @@ function core(root: THREE.Group, m: Materials, model: FloorModel) {
   );
 }
 
-/** Everything that makes a floor feel inhabited from a distance: light shafts, drones, a scanning sweep, data streaming up the core. */
 function atmosphere(root: THREE.Group, m: Materials, model: FloorModel, accent: string) {
   lightShafts(root, m);
   drones(m, model);
@@ -146,7 +132,6 @@ function atmosphere(root: THREE.Group, m: Materials, model: FloorModel, accent: 
 }
 
 function lightShafts(root: THREE.Group, m: Materials) {
-  // Light shafts above the six zone pads: faint additive cones, brightest at the floor.
   for (const [x, z] of [
     [-16, -3],
     [16, -3],
@@ -163,7 +148,6 @@ function lightShafts(root: THREE.Group, m: Materials) {
 }
 
 function drones(m: Materials, model: FloorModel) {
-  // Drones: a ring of light under a lit core, three per floor on different paths.
   const drone = (rx: number, rz: number, y: number, speed: number, phase: number) => {
     const craft = new THREE.Group();
     const halo = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.04, 6, 24), m.cyan);
@@ -183,7 +167,6 @@ function drones(m: Materials, model: FloorModel) {
 }
 
 function scanSweep(m: Materials, model: FloorModel) {
-  // Scan sweep: a thin lit plane crossing the floor, so the deck visibly "scans" every few seconds.
   const sweep = new THREE.Mesh(new THREE.PlaneGeometry(51, 1.2), m.holoStrong);
   sweep.rotation.x = -Math.PI / 2;
   sweep.position.set(0, 0.12, -17);
@@ -192,7 +175,6 @@ function scanSweep(m: Materials, model: FloorModel) {
 }
 
 function dataColumn(model: FloorModel, accent: string) {
-  // Data column: points of light climbing the elevator core.
   const count = 90;
   const positions = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) {
@@ -217,26 +199,17 @@ function dataColumn(model: FloorModel, accent: string) {
   model.streams.push({ points, speed: 1.4, height: 6 });
 }
 
-/** One floor of the building, ready to be placed at its height. Local y = 0 is the deck. */
 export function buildFloor(layout: Layout, floorIndex: number): FloorModel {
   const department = DEPARTMENTS.find((d) => d.floor === floorIndex) ?? itemAt(DEPARTMENTS, 0);
   const m = createMaterials(department.accent);
-  const model: FloorModel = {
-    group: new THREE.Group(),
-    spinners: [],
-    pulsers: [],
-    orbiters: [],
-    sweepers: [],
-    streams: [],
-    holograms: [],
-  };
+  const model = emptyFloorModel();
   const root = new THREE.Group();
   shell(root, m);
   core(root, m, model);
   THEMES[department.id](root, m, model);
   atmosphere(root, m, model, department.accent);
   for (const object of layout.objects) {
-    if ((object.floor ?? 0) !== floorIndex || object.type === 'squad') continue; // a squad zone is not furniture
+    if ((object.floor ?? 0) !== floorIndex || object.type === 'squad') continue;
     const group = new THREE.Group();
     furniture(group, object.type, m);
     group.position.set(object.x, 0, object.z);
@@ -245,7 +218,6 @@ export function buildFloor(layout: Layout, floorIndex: number): FloorModel {
   }
   const merged = mergeStatic(root);
   model.group.add(merged);
-  // Pulsing accent: one material shared by the trim, breathing slowly.
   model.pulsers.push({ material: m.accent, base: 1.3, amplitude: 0.45, speed: 1.6 });
   model.holograms.push(m.hologram, m.hologramCyan);
   return model;
