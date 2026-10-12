@@ -39,7 +39,7 @@ export function parseSkill(text: string): ParsedSkill {
   const fields = new Map<string, string>();
   const [, front = '', rest = ''] = match;
   for (const line of front.split(/\r?\n/)) {
-    const kv = /^([A-Za-z][\w-]*):\s*(.*)$/.exec(line);
+    const kv = /^([A-Za-z][\w-]*):\s*(\S.*)?$/.exec(line);
     if (kv) fields.set((kv[1] ?? '').toLowerCase(), unquote(kv[2] ?? ''));
   }
   const name = fields.get('name') ?? '';
