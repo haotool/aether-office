@@ -5,6 +5,11 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Fixed
+
+- A cell of an HTML table in a reply that held a backslash before a pipe (`a\|b`) could split into an extra column once the table
+  was turned into Markdown; the backslash is now escaped along with the pipe.
+
 ## [0.4.0] - 2026-10-13
 
 The first public release. AETHER OFFICE started from [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT; see
