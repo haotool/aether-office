@@ -1,30 +1,30 @@
 {
   "schema": "aether-stability/1",
-  "measuredAt": "2026-10-13T02:01:15.295Z",
+  "measuredAt": "2026-10-13T18:42:36.476Z",
   "runs": 3,
-  "tests": 2820,
+  "tests": 2822,
   "perRun": [
     {
-      "passed": 2817,
+      "passed": 2819,
       "failed": 0,
       "skipped": 3
     },
     {
-      "passed": 2817,
+      "passed": 2819,
       "failed": 0,
       "skipped": 3
     },
     {
-      "passed": 2817,
+      "passed": 2819,
       "failed": 0,
       "skipped": 3
     }
   ],
   "inconsistent": [],
   "trees": {
-    "apps": "458ecd0a3226d877d504a6041d3ae07bdd6fb2dc",
-    "packages": "f65563c564f129f7db399d1c523b019fb14d1efc",
-    "tests": "f6aa709671b2f810846fa09971ad06cc64cdc903",
+    "apps": "a43564cb11174cbce653ee12b76b245f3c318868",
+    "packages": "81a99c745fd81d6b227142446f3f9dd5af512e84",
+    "tests": "686e028643e53270cbdf412e42640428fd751295",
     "vitest.config.ts": "92d8925750b3fa73cd006e5589cd1f10a1579eae"
   }
 }
