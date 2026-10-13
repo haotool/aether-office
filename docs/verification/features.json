@@ -5,13 +5,8 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "scripts/doctor.ts"
-    ],
-    "testIds": [
-      "tests/aether/doctor.test.ts",
-      "tests/aether/codex-real.test.ts"
-    ],
+    "codePaths": ["scripts/doctor.ts"],
+    "testIds": ["tests/aether/doctor.test.ts", "tests/aether/codex-real.test.ts"],
     "evidencePaths": [],
     "blockers": [
       "Provider binary versions are read from the CLIs on PATH; Windows and Linux hosts were not run"
@@ -23,14 +18,8 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "scripts/audit-dependencies.mjs",
-      "docs/dependencies.md",
-      "pnpm-workspace.yaml"
-    ],
-    "testIds": [
-      "tests/aether/dependencies.test.ts"
-    ],
+    "codePaths": ["scripts/audit-dependencies.mjs", "docs/dependencies.md", "pnpm-workspace.yaml"],
+    "testIds": ["tests/aether/dependencies.test.ts"],
     "evidencePaths": [],
     "blockers": [
       "The registry audit itself is run by hand and writes local evidence; the policy test enforces exact pins and no stale exceptions in CI"
@@ -48,13 +37,10 @@
       "pnpm-workspace.yaml",
       "scripts/clean-room.mjs"
     ],
-    "testIds": [
-      "scripts/clean-room.mjs",
-      "tests/aether/dependencies.test.ts"
-    ],
+    "testIds": ["scripts/clean-room.mjs", "tests/aether/dependencies.test.ts"],
     "evidencePaths": [],
     "blockers": [
-      "Verified from a fresh clone on macOS arm64 with a warm pnpm store; a cold-cache or other-OS install was not run"
+      "Fresh-clone installation was checked on macOS arm64 with a warm pnpm store; CI performs frozen-lockfile installs on Linux and macOS. Manual cold-cache and Windows acceptance remain unverified."
     ]
   },
   {
@@ -63,12 +49,8 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "scripts/setup.ts"
-    ],
-    "testIds": [
-      "tests/aether/setup.test.ts"
-    ],
+    "codePaths": ["scripts/setup.ts"],
+    "testIds": ["tests/aether/setup.test.ts"],
     "evidencePaths": [],
     "blockers": []
   },
@@ -78,16 +60,11 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "package.json",
-      "scripts/check-boundaries.mjs"
-    ],
-    "testIds": [
-      "tests/aether/web-safety.test.ts"
-    ],
+    "codePaths": ["package.json", "scripts/check-boundaries.mjs"],
+    "testIds": ["tests/aether/web-safety.test.ts"],
     "evidencePaths": [],
     "blockers": [
-      "Run on macOS arm64 with Node 24.21.0 and pnpm 12.8.1; CI runs typecheck, lint and build on Ubuntu with the Node of .nvmrc; Windows was not run."
+      "Run on macOS arm64 with Node 24.21.0 and pnpm 12.8.1; CI runs typecheck, lint, tests and build on Linux and macOS using .nvmrc. Windows was not run."
     ]
   },
   {
@@ -96,10 +73,7 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/runner/src/workspaces.ts",
-      "apps/runner/src/merge.ts"
-    ],
+    "codePaths": ["apps/runner/src/workspaces.ts", "apps/runner/src/merge.ts"],
     "testIds": [
       "tests/aether/native-review.test.ts",
       "tests/aether/native-runner.test.ts",
@@ -116,12 +90,8 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "scripts/doctor.ts"
-    ],
-    "testIds": [
-      "tests/aether/doctor.test.ts"
-    ],
+    "codePaths": ["scripts/doctor.ts"],
+    "testIds": ["tests/aether/doctor.test.ts"],
     "evidencePaths": [],
     "blockers": []
   },
@@ -131,13 +101,8 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "README.md",
-      "scripts/clean-room.mjs"
-    ],
-    "testIds": [
-      "scripts/clean-room.mjs"
-    ],
+    "codePaths": ["README.md", "scripts/clean-room.mjs"],
+    "testIds": ["scripts/clean-room.mjs"],
     "evidencePaths": [],
     "blockers": [
       "Install, build, run setup --demo and the built control were reproduced from a fresh clone; found and fixed that pnpm's built-in setup and doctor shadow the scripts. The pnpm demo watcher is not part of the script"
@@ -149,15 +114,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "scripts/check-boundaries.mjs"
-    ],
-    "testIds": [
-      "tests/aether/web-safety.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/boundaries-native.log"
-    ],
+    "codePaths": ["scripts/check-boundaries.mjs"],
+    "testIds": ["tests/aether/web-safety.test.ts"],
+    "evidencePaths": ["evidence/boundaries-native.log"],
     "blockers": []
   },
   {
@@ -166,15 +125,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "scripts/check-boundaries.mjs"
-    ],
-    "testIds": [
-      "tests/aether/web-safety.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/boundaries-native.log"
-    ],
+    "codePaths": ["scripts/check-boundaries.mjs"],
+    "testIds": ["tests/aether/web-safety.test.ts"],
+    "evidencePaths": ["evidence/boundaries-native.log"],
     "blockers": []
   },
   {
@@ -183,16 +136,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "partial",
     "verificationStatus": "partial",
-    "codePaths": [
-      "packages/contracts/src",
-      "apps/control/src/services/runtime/runners.ts"
-    ],
-    "testIds": [
-      "tests/aether/native-runner.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "codePaths": ["packages/contracts/src", "apps/control/src/services/runtime/runners.ts"],
+    "testIds": ["tests/aether/native-runner.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "Schemas and versions exist for the commands and events that ship; the PTY, observe and ACP contracts are not complete public contracts yet (RUN-03 to RUN-08)."
     ]
@@ -203,16 +149,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "partial",
     "verificationStatus": "partial",
-    "codePaths": [
-      "packages/contracts/src",
-      "apps/control/src/services/runtime/runners.ts"
-    ],
-    "testIds": [
-      "tests/aether/native-runner.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "codePaths": ["packages/contracts/src", "apps/control/src/services/runtime/runners.ts"],
+    "testIds": ["tests/aether/native-runner.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "ID separation is checked for the contracts that exist; the identifiers of the unfinished PTY, observe and ACP contracts are not covered yet."
     ]
@@ -252,9 +191,7 @@
       "packages/kernel/src/index.ts",
       "apps/control/src/services/work/work.ts"
     ],
-    "testIds": [
-      "tests/aether/state-guard.test.ts"
-    ],
+    "testIds": ["tests/aether/state-guard.test.ts"],
     "evidencePaths": [],
     "blockers": [
       "Guard covers work_items.state only; other aggregates rely on service-level checks"
@@ -266,14 +203,8 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/web/src/features/conversation/History.tsx",
-      "apps/web/src/App.tsx"
-    ],
-    "testIds": [
-      "e2e/session/replay.spec.ts",
-      "e2e/session/local-sessions.spec.ts"
-    ],
+    "codePaths": ["apps/web/src/features/conversation/History.tsx", "apps/web/src/App.tsx"],
+    "testIds": ["e2e/session/replay.spec.ts", "e2e/session/local-sessions.spec.ts"],
     "evidencePaths": [],
     "blockers": [
       "Replay is a read-only event list up to a chosen seq; it does not rebuild historical entity snapshots"
@@ -285,12 +216,8 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "scripts/check-boundaries.mjs"
-    ],
-    "testIds": [
-      "tests/aether/web-safety.test.ts"
-    ],
+    "codePaths": ["scripts/check-boundaries.mjs"],
+    "testIds": ["tests/aether/web-safety.test.ts"],
     "evidencePaths": [],
     "blockers": [
       "Lint bans Math.random and shows no percentage; it cannot prove every future display is state-derived"
@@ -307,13 +234,8 @@
       "packages/providers/src/claude.ts",
       "packages/providers/src/jsonrpc.ts"
     ],
-    "testIds": [
-      "tests/aether/providers.test.ts",
-      "tests/aether/native-runner.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "testIds": ["tests/aether/providers.test.ts", "tests/aether/native-runner.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "Launch arguments are verified against a synthetic app-server and the Claude normalizer; no live model run is authorized."
     ]
@@ -329,13 +251,8 @@
       "packages/providers/src/claude.ts",
       "packages/providers/src/jsonrpc.ts"
     ],
-    "testIds": [
-      "tests/aether/providers.test.ts",
-      "tests/aether/native-runner.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "testIds": ["tests/aether/providers.test.ts", "tests/aether/native-runner.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "Partial, complete and error parsing is verified on synthetic app-server and Claude normalizer input only; no live model run is authorized."
     ]
@@ -351,14 +268,8 @@
       "apps/control/src/services/runtime/runners.ts",
       "apps/runner/src/native.ts"
     ],
-    "testIds": [
-      "tests/aether/native-runner.test.ts",
-      "tests/aether/control-runner-leases.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/tests-resume-corrected.log",
-      "evidence/e2e-resume.log"
-    ],
+    "testIds": ["tests/aether/native-runner.test.ts", "tests/aether/control-runner-leases.test.ts"],
+    "evidencePaths": ["evidence/tests-resume-corrected.log", "evidence/e2e-resume.log"],
     "blockers": [
       "Resume is tested with a synthetic Codex and the UI; a real Claude resume has not been run."
     ]
@@ -380,9 +291,7 @@
       "tests/aether/hook-bridge.test.ts",
       "tests/aether/hook-status.test.ts"
     ],
-    "evidencePaths": [
-      "evidence/tests-claude-hooks.log"
-    ],
+    "evidencePaths": ["evidence/tests-claude-hooks.log"],
     "blockers": [
       "Codex reported all 9 installed hooks as trusted and enabled through its own hooks/list, and the installed commands ran under a minimal environment, but no Codex session has fired them yet",
       "Claude hooks are installed only for this repository (project scope)",
@@ -400,13 +309,8 @@
       "packages/providers/src/claude.ts",
       "packages/providers/src/jsonrpc.ts"
     ],
-    "testIds": [
-      "tests/aether/providers.test.ts",
-      "tests/aether/native-runner.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "testIds": ["tests/aether/providers.test.ts", "tests/aether/native-runner.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "The mapping of tool events to session and parent is verified on synthetic input only; no live model run is authorized."
     ]
@@ -417,12 +321,8 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "packages/kernel/src/capabilities.ts"
-    ],
-    "testIds": [
-      "tests/aether/capabilities.test.ts"
-    ],
+    "codePaths": ["packages/kernel/src/capabilities.ts"],
+    "testIds": ["tests/aether/capabilities.test.ts"],
     "evidencePaths": [],
     "blockers": [
       "No adapter supports mid-turn or turn-boundary injection (capability none): messages stay in the durable inbox"
@@ -439,13 +339,8 @@
       "packages/providers/src/claude.ts",
       "packages/providers/src/jsonrpc.ts"
     ],
-    "testIds": [
-      "tests/aether/providers.test.ts",
-      "tests/aether/native-runner.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "testIds": ["tests/aether/providers.test.ts", "tests/aether/native-runner.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "Permission, auth and rate-limit states are verified on synthetic input only; the resume and steer authorization flow in the UI is still to be done."
     ]
@@ -461,13 +356,8 @@
       "scripts/live-smoke.ts",
       "docs/provider-compatibility.md"
     ],
-    "testIds": [
-      "tests/aether/providers.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/live-smoke-claude.json",
-      "evidence/live-smoke-exchange.json"
-    ],
+    "testIds": ["tests/aether/providers.test.ts"],
+    "evidencePaths": ["evidence/live-smoke-claude.json", "evidence/live-smoke-exchange.json"],
     "blockers": [
       "The live evidence is one whoami and one message exchange with Claude; a real code change and an approved command were not tested."
     ]
@@ -482,9 +372,7 @@
       "packages/providers/generated/codex-0.159.2-ts/InitializeParams.ts",
       "packages/providers/generated/compat.json"
     ],
-    "testIds": [
-      "tests/aether/codex-schema.test.ts"
-    ],
+    "testIds": ["tests/aether/codex-schema.test.ts"],
     "evidencePaths": [
       "evidence/codex-schema-generation.log",
       "evidence/codex-types-generation.log"
@@ -497,17 +385,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "packages/providers/src/codex.ts",
-      "packages/providers/src/jsonrpc.ts"
-    ],
-    "testIds": [
-      "tests/aether/codex-protocol.test.ts",
-      "tests/aether/providers.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "codePaths": ["packages/providers/src/codex.ts", "packages/providers/src/jsonrpc.ts"],
+    "testIds": ["tests/aether/codex-protocol.test.ts", "tests/aether/providers.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "Initialize and request correlation are verified with a scripted app-server; no real Codex turn ran (no live model is authorized)."
     ]
@@ -526,10 +406,7 @@
       "apps/control/src/services/runtime/runners.ts",
       "apps/runner/src/native.ts"
     ],
-    "testIds": [
-      "tests/aether/providers.test.ts",
-      "tests/aether/native-runner.test.ts"
-    ],
+    "testIds": ["tests/aether/providers.test.ts", "tests/aether/native-runner.test.ts"],
     "evidencePaths": [
       "evidence/workflow-all-tests.log",
       "evidence/tests-resume-corrected.log",
@@ -545,17 +422,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "packages/providers/src/codex.ts",
-      "packages/providers/src/jsonrpc.ts"
-    ],
-    "testIds": [
-      "tests/aether/codex-protocol.test.ts",
-      "tests/aether/providers.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "codePaths": ["packages/providers/src/codex.ts", "packages/providers/src/jsonrpc.ts"],
+    "testIds": ["tests/aether/codex-protocol.test.ts", "tests/aether/providers.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "Streaming de-duplication and tolerance of late items are verified with a scripted app-server; no real Codex turn ran."
     ]
@@ -566,17 +435,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "packages/providers/src/codex.ts",
-      "packages/providers/src/jsonrpc.ts"
-    ],
-    "testIds": [
-      "tests/aether/codex-protocol.test.ts",
-      "tests/aether/providers.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "codePaths": ["packages/providers/src/codex.ts", "packages/providers/src/jsonrpc.ts"],
+    "testIds": ["tests/aether/codex-protocol.test.ts", "tests/aether/providers.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "Interrupt targeting is verified with a scripted app-server; no real Codex turn ran."
     ]
@@ -587,17 +448,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
-    "codePaths": [
-      "packages/providers/src/codex.ts",
-      "packages/providers/src/jsonrpc.ts"
-    ],
-    "testIds": [
-      "tests/aether/codex-protocol.test.ts",
-      "tests/aether/providers.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "codePaths": ["packages/providers/src/codex.ts", "packages/providers/src/jsonrpc.ts"],
+    "testIds": ["tests/aether/codex-protocol.test.ts", "tests/aether/providers.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "steer 對所有 provider 皆未開放（messageInjection=none），僅驗證未開放時被拒；支援時的 semantic ack 待 live 驗證"
     ]
@@ -608,17 +461,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "packages/providers/src/codex.ts",
-      "packages/providers/src/jsonrpc.ts"
-    ],
-    "testIds": [
-      "tests/aether/codex-protocol.test.ts",
-      "tests/aether/providers.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "codePaths": ["packages/providers/src/codex.ts", "packages/providers/src/jsonrpc.ts"],
+    "testIds": ["tests/aether/codex-protocol.test.ts", "tests/aether/providers.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "Approval reply matching is verified with a scripted app-server; no real Codex turn ran."
     ]
@@ -634,13 +479,8 @@
       "scripts/live-smoke.ts",
       "docs/provider-compatibility.md"
     ],
-    "testIds": [
-      "tests/aether/codex-protocol.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/live-smoke-codex.json",
-      "evidence/live-smoke-exchange.json"
-    ],
+    "testIds": ["tests/aether/codex-protocol.test.ts"],
+    "evidencePaths": ["evidence/live-smoke-codex.json", "evidence/live-smoke-exchange.json"],
     "blockers": [
       "The live evidence is one whoami and one message exchange with Codex; a real code change and an approved command were not tested."
     ]
@@ -675,7 +515,7 @@
       "evidence/e2e-terminal-diagnostics-final.log"
     ],
     "blockers": [
-      "Verified on macOS with a real PTY and browser; Linux and WSL2 were not run and native Windows is refused."
+      "Real PTY and browser persistence is checked on macOS; the synthetic native browser journey also passed on Linux CI. Broader Linux fault acceptance and WSL2 remain open; native Windows is refused."
     ]
   },
   {
@@ -708,7 +548,7 @@
       "evidence/e2e-terminal-diagnostics-final.log"
     ],
     "blockers": [
-      "Restart versus PID reuse is verified on macOS; Linux and WSL2 were not run, native Windows is refused, and closing an unknown run by hand is not implemented."
+      "Restart versus PID reuse is checked on macOS; selected synthetic Linux browser coverage does not close the full restart and PID-reuse fault matrix. WSL2 is unverified, native Windows is refused, and manually closing an unknown run is not implemented."
     ]
   },
   {
@@ -734,7 +574,7 @@
       "evidence/e2e-terminal-diagnostics-final.log"
     ],
     "blockers": [
-      "Verified with a real PTY on macOS; after scrollback truncation a gap notice is shown but the screen is not rebuilt from a serialized ANSI state; Linux and WSL2 were not run."
+      "Real PTY behavior is checked on macOS and a synthetic resize/echo browser journey passed on Linux; bounded scrollback shows a gap instead of rebuilding serialized ANSI state. Full Linux fault coverage and WSL2 remain unverified."
     ]
   },
   {
@@ -760,7 +600,7 @@
       "evidence/e2e-terminal-diagnostics-final.log"
     ],
     "blockers": [
-      "Read and write permissions and the single takeover owner are verified on macOS only; Linux and WSL2 were not run and native Windows is refused."
+      "Read/write permissions and takeover ownership are checked on macOS; a synthetic Linux browser journey covers takeover and read-only state after reload. Full Linux permission fault acceptance and WSL2 remain open; native Windows is refused."
     ]
   },
   {
@@ -781,10 +621,7 @@
       "tests/aether/observation-control.test.ts",
       "e2e/workbench/native-workflow.spec.ts"
     ],
-    "evidencePaths": [
-      "evidence/tests-observe-nonblocking.log",
-      "evidence/e2e-observe-final.log"
-    ],
+    "evidencePaths": ["evidence/tests-observe-nonblocking.log", "evidence/e2e-observe-final.log"],
     "blockers": [
       "Approved-path and read-only behaviour is tested on fixtures; real provider files were not used and the GUI authorization is limited."
     ]
@@ -807,10 +644,7 @@
       "tests/aether/observation-control.test.ts",
       "e2e/workbench/native-workflow.spec.ts"
     ],
-    "evidencePaths": [
-      "evidence/tests-observe-nonblocking.log",
-      "evidence/e2e-observe-final.log"
-    ],
+    "evidencePaths": ["evidence/tests-observe-nonblocking.log", "evidence/e2e-observe-final.log"],
     "blockers": [
       "Partial lines, rotation and unknown schemas are tested on fixtures; compatibility with real provider files is unverified and the read limits cap very large files."
     ]
@@ -871,7 +705,7 @@
       "evidence/e2e-terminal-diagnostics-final.log"
     ],
     "blockers": [
-      "Verified on macOS in the browser; Linux and WSL2 were not run and native Windows is refused."
+      "The terminal browser journey is checked on macOS and selected synthetic Linux CI workflows; full Linux browser/platform acceptance and WSL2 remain open, and native Windows is refused."
     ]
   },
   {
@@ -880,16 +714,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/control/src/control.ts",
-      "apps/control/src/services/domain/context.ts"
-    ],
-    "testIds": [
-      "tests/aether/control.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "codePaths": ["apps/control/src/control.ts", "apps/control/src/services/domain/context.ts"],
+    "testIds": ["tests/aether/control.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": []
   },
   {
@@ -898,16 +725,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/control/src/control.ts",
-      "apps/control/src/services/domain/context.ts"
-    ],
-    "testIds": [
-      "tests/aether/control.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "codePaths": ["apps/control/src/control.ts", "apps/control/src/services/domain/context.ts"],
+    "testIds": ["tests/aether/control.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": []
   },
   {
@@ -920,16 +740,9 @@
       "apps/control/src/services/runtime/provider-events.ts",
       "packages/providers/src/codex.ts"
     ],
-    "testIds": [
-      "tests/aether/providers.test.ts",
-      "tests/aether/native-runner.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
-    "blockers": [
-      "僅 synthetic/本機測試，非 live 模型。"
-    ]
+    "testIds": ["tests/aether/providers.test.ts", "tests/aether/native-runner.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
+    "blockers": ["僅 synthetic/本機測試，非 live 模型。"]
   },
   {
     "id": "EVT-04",
@@ -942,13 +755,8 @@
       "apps/control/src/server.ts",
       "apps/control/src/routes"
     ],
-    "testIds": [
-      "tests/aether/reconciliation.test.ts",
-      "tests/aether/cursor-retention.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "testIds": ["tests/aether/reconciliation.test.ts", "tests/aether/cursor-retention.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "Single-process verification: better-sqlite3 is synchronous, so a snapshot and a concurrent writer cannot interleave inside one process"
     ]
@@ -964,9 +772,7 @@
       "apps/control/src/server.ts",
       "apps/control/src/routes"
     ],
-    "testIds": [
-      "tests/aether/cursor-retention.test.ts"
-    ],
+    "testIds": ["tests/aether/cursor-retention.test.ts"],
     "evidencePaths": [],
     "blockers": []
   },
@@ -976,16 +782,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/control/src/services/runtime/runners.ts"
-    ],
-    "testIds": [
-      "tests/aether/reconciliation.test.ts",
-      "tests/aether/remote-runners.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "codePaths": ["apps/control/src/services/runtime/runners.ts"],
+    "testIds": ["tests/aether/reconciliation.test.ts", "tests/aether/remote-runners.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": []
   },
   {
@@ -998,12 +797,8 @@
       "apps/control/src/services/runtime/runners.ts",
       "apps/control/src/services/work/work.ts"
     ],
-    "testIds": [
-      "tests/aether/reconciliation.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "testIds": ["tests/aether/reconciliation.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "A runner that died mid-run and a runner that is only partitioned look identical to control; both stay indeterminate until a human cancels"
     ]
@@ -1014,16 +809,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/control/src/backup.ts",
-      "scripts/backup.ts"
-    ],
-    "testIds": [
-      "tests/aether/backup.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "codePaths": ["apps/control/src/backup.ts", "scripts/backup.ts"],
+    "testIds": ["tests/aether/backup.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "cursor-secret and owner-token are outside the database and are not part of a backup"
     ]
@@ -1045,10 +833,7 @@
       "tests/aether/control.test.ts",
       "e2e/workbench/rooms.spec.ts"
     ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log",
-      "evidence/mcp-built-stdio-test.log"
-    ],
+    "evidencePaths": ["evidence/workflow-all-tests.log", "evidence/mcp-built-stdio-test.log"],
     "blockers": [
       "Rooms are not yet exposed as MCP tools; agents post to a room only through the platform API"
     ]
@@ -1059,15 +844,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/control/src/services/domain/messages.ts"
-    ],
-    "testIds": [
-      "tests/aether/control.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "codePaths": ["apps/control/src/services/domain/messages.ts"],
+    "testIds": ["tests/aether/control.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": []
   },
   {
@@ -1086,13 +865,8 @@
       "tests/aether/capabilities.test.ts",
       "tests/aether/message-waits.test.ts"
     ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log",
-      "evidence/mcp-built-stdio-test.log"
-    ],
-    "blockers": [
-      "injected is never reached because no adapter injects into a running turn"
-    ]
+    "evidencePaths": ["evidence/workflow-all-tests.log", "evidence/mcp-built-stdio-test.log"],
+    "blockers": ["injected is never reached because no adapter injects into a running turn"]
   },
   {
     "id": "MSG-04",
@@ -1104,14 +878,8 @@
       "apps/control/src/services/domain/messages.ts",
       "packages/office-scene/src/environment/carriers.ts"
     ],
-    "testIds": [
-      "tests/aether/fault-injection.test.ts",
-      "tests/aether/carriers.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log",
-      "evidence/mcp-built-stdio-test.log"
-    ],
+    "testIds": ["tests/aether/fault-injection.test.ts", "tests/aether/carriers.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log", "evidence/mcp-built-stdio-test.log"],
     "blockers": []
   },
   {
@@ -1120,13 +888,8 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
-    "codePaths": [
-      "apps/control/src/services/domain/messages.ts"
-    ],
-    "testIds": [
-      "tests/aether/message-waits.test.ts",
-      "tests/aether/mcp-wait.test.ts"
-    ],
+    "codePaths": ["apps/control/src/services/domain/messages.ts"],
+    "testIds": ["tests/aether/message-waits.test.ts", "tests/aether/mcp-wait.test.ts"],
     "evidencePaths": [
       "evidence/workflow-all-tests.log",
       "evidence/mcp-built-stdio-test.log",
@@ -1151,9 +914,7 @@
       "packages/kernel/src/capabilities.ts",
       "apps/control/src/services/domain/messages.ts"
     ],
-    "testIds": [
-      "tests/aether/capabilities.test.ts"
-    ],
+    "testIds": ["tests/aether/capabilities.test.ts"],
     "evidencePaths": [],
     "blockers": [
       "Same boundary as CLA-06: nothing is injected, so a busy agent only receives content when it reads its inbox"
@@ -1165,16 +926,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
-    "codePaths": [
-      "apps/control/src/services/domain/messages.ts"
-    ],
-    "testIds": [
-      "tests/aether/rooms.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log",
-      "evidence/mcp-built-stdio-test.log"
-    ],
+    "codePaths": ["apps/control/src/services/domain/messages.ts"],
+    "testIds": ["tests/aether/rooms.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log", "evidence/mcp-built-stdio-test.log"],
     "blockers": [
       "Thread round limit (32) and per-sender rate limit (60/min) stop ping-pong and a human can open a new thread; spawn depth does not apply because subagents are disabled, and there is no token-based conversation budget"
     ]
@@ -1190,13 +944,8 @@
       "packages/providers/src/codex.ts",
       "scripts/live-smoke.ts"
     ],
-    "testIds": [
-      "tests/aether/mcp.test.ts",
-      "tests/aether/codex-protocol.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/live-smoke-exchange.json"
-    ],
+    "testIds": ["tests/aether/mcp.test.ts", "tests/aether/codex-protocol.test.ts"],
+    "evidencePaths": ["evidence/live-smoke-exchange.json"],
     "blockers": [
       "macOS 單次短 smoke（Codex 0.160.0／Claude Code 2.1.288，訂閱登入）；未測長時間穩定與其他作業系統"
     ]
@@ -1246,10 +995,7 @@
       "tests/aether/control.test.ts",
       "tests/aether/native-runner.test.ts"
     ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log",
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "evidencePaths": ["evidence/workflow-all-tests.log", "evidence/e2e-full-workflow-first.log"],
     "blockers": []
   },
   {
@@ -1258,17 +1004,13 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/control/src/services/runtime/runners.ts"
-    ],
+    "codePaths": ["apps/control/src/services/runtime/runners.ts"],
     "testIds": [
       "tests/aether/scheduler.test.ts",
       "tests/aether/scheduler-limits.test.ts",
       "tests/aether/machine-grants.test.ts"
     ],
-    "evidencePaths": [
-      "evidence/verification-workflow-test.log"
-    ],
+    "evidencePaths": ["evidence/verification-workflow-test.log"],
     "blockers": []
   },
   {
@@ -1343,10 +1085,7 @@
       "tests/aether/control.test.ts",
       "tests/aether/native-runner.test.ts"
     ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log",
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "evidencePaths": ["evidence/workflow-all-tests.log", "evidence/e2e-full-workflow-first.log"],
     "blockers": []
   },
   {
@@ -1371,9 +1110,7 @@
       "evidence/tests-escalation.log",
       "evidence/e2e-escalation.log"
     ],
-    "blockers": [
-      "Provider rate-limit evidence is reported as null: it is never inferred"
-    ]
+    "blockers": ["Provider rate-limit evidence is reported as null: it is never inferred"]
   },
   {
     "id": "TSK-08",
@@ -1405,17 +1142,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/runner/src/workspaces.ts",
-      "apps/control/src/services/work/jobs.ts"
-    ],
-    "testIds": [
-      "tests/aether/workspaces.test.ts",
-      "tests/aether/native-runner.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/verification-workflow-test.log"
-    ],
+    "codePaths": ["apps/runner/src/workspaces.ts", "apps/control/src/services/work/jobs.ts"],
+    "testIds": ["tests/aether/workspaces.test.ts", "tests/aether/native-runner.test.ts"],
+    "evidencePaths": ["evidence/verification-workflow-test.log"],
     "blockers": []
   },
   {
@@ -1433,9 +1162,7 @@
       "tests/aether/workspace-matrix.test.ts",
       "e2e/workbench/native-workflow.spec.ts"
     ],
-    "evidencePaths": [
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "evidencePaths": ["evidence/e2e-full-workflow-first.log"],
     "blockers": [
       "Verified on macOS only; Windows path semantics (case, reserved names) are untested."
     ]
@@ -1469,17 +1196,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/runner/src/workspaces.ts",
-      "apps/control/src/services/work/jobs.ts"
-    ],
-    "testIds": [
-      "tests/aether/workspaces.test.ts",
-      "tests/aether/native-runner.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/verification-workflow-test.log"
-    ],
+    "codePaths": ["apps/runner/src/workspaces.ts", "apps/control/src/services/work/jobs.ts"],
+    "testIds": ["tests/aether/workspaces.test.ts", "tests/aether/native-runner.test.ts"],
+    "evidencePaths": ["evidence/verification-workflow-test.log"],
     "blockers": []
   },
   {
@@ -1497,9 +1216,7 @@
       "tests/aether/workspace-matrix.test.ts",
       "e2e/workbench/native-workflow.spec.ts"
     ],
-    "evidencePaths": [
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "evidencePaths": ["evidence/e2e-full-workflow-first.log"],
     "blockers": [
       "Large, binary and untracked diff degradation is verified on macOS only; Windows path handling is untested."
     ]
@@ -1532,17 +1249,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/runner/src/workspaces.ts",
-      "apps/control/src/services/work/jobs.ts"
-    ],
-    "testIds": [
-      "tests/aether/workspaces.test.ts",
-      "tests/aether/native-runner.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/verification-workflow-test.log"
-    ],
+    "codePaths": ["apps/runner/src/workspaces.ts", "apps/control/src/services/work/jobs.ts"],
+    "testIds": ["tests/aether/workspaces.test.ts", "tests/aether/native-runner.test.ts"],
+    "evidencePaths": ["evidence/verification-workflow-test.log"],
     "blockers": []
   },
   {
@@ -1581,12 +1290,8 @@
       "packages/kernel/src/index.ts",
       "apps/control/src/services/domain/identity.ts"
     ],
-    "testIds": [
-      "tests/aether/security.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "testIds": ["tests/aether/security.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": []
   },
   {
@@ -1607,9 +1312,7 @@
       "tests/aether/mcp.test.ts",
       "tests/aether/security.test.ts"
     ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "Every HTTP route is swept for authentication and cross-project access; the stream is SSE (no WebSocket exists) and is covered by the revocation test"
     ]
@@ -1626,12 +1329,8 @@
       "packages/kernel/src/index.ts",
       "apps/control/src/services/domain/identity.ts"
     ],
-    "testIds": [
-      "tests/aether/security.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "testIds": ["tests/aether/security.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": []
   },
   {
@@ -1645,13 +1344,8 @@
       "apps/runner/src/mcp.ts",
       "apps/control/src/services/domain/identity.ts"
     ],
-    "testIds": [
-      "tests/aether/approvals.test.ts",
-      "tests/aether/mcp.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "testIds": ["tests/aether/approvals.test.ts", "tests/aether/mcp.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "批准/撤銷回歸已跑；完整 export/PTY/connector trust boundaries 與 live provider ack 待驗。"
     ]
@@ -1668,12 +1362,8 @@
       "packages/kernel/src/index.ts",
       "apps/control/src/services/domain/identity.ts"
     ],
-    "testIds": [
-      "tests/aether/security.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "testIds": ["tests/aether/security.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": []
   },
   {
@@ -1709,12 +1399,8 @@
       "apps/control/src/server.ts",
       "apps/control/src/routes"
     ],
-    "testIds": [
-      "tests/aether/secret-hygiene.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "testIds": ["tests/aether/secret-hygiene.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "Scans the database, events, logs and responses for known test secrets; the frontend bundle is not scanned because no secret is available at build time"
     ]
@@ -1736,9 +1422,7 @@
       "tests/aether/schedules.test.ts",
       "tests/aether/review-runs.test.ts"
     ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "Remote and scheduled requests only create unassigned work, so they cannot spend; a global spend budget does not exist"
     ]
@@ -1756,9 +1440,7 @@
       "apps/runner/src/transport.ts",
       "apps/runner/src/runner.ts"
     ],
-    "testIds": [
-      "tests/aether/remote-runners.test.ts"
-    ],
+    "testIds": ["tests/aether/remote-runners.test.ts"],
     "evidencePaths": [],
     "blockers": [
       "Control serves plain HTTP on loopback; TLS for remote use must be terminated by a reverse proxy, and no real TLS handshake was tested"
@@ -1798,9 +1480,7 @@
       "apps/runner/src/enroll.ts",
       "apps/runner/src/transport.ts"
     ],
-    "testIds": [
-      "tests/aether/machine-grants.test.ts"
-    ],
+    "testIds": ["tests/aether/machine-grants.test.ts"],
     "evidencePaths": [],
     "blockers": [
       "Locally enrolled machines (enroll()) keep an empty root list, meaning unrestricted"
@@ -1817,13 +1497,8 @@
       "apps/control/src/server.ts",
       "apps/control/src/routes"
     ],
-    "testIds": [
-      "tests/aether/revocation.test.ts",
-      "tests/aether/remote-runners.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "testIds": ["tests/aether/revocation.test.ts", "tests/aether/remote-runners.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": []
   },
   {
@@ -1842,9 +1517,7 @@
       "tests/aether/runner.test.ts",
       "tests/aether/control.test.ts"
     ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "The spool is a 8 MB JSON file; a longer outage fails closed with RUNNER_SPOOL_FULL rather than dropping events"
     ]
@@ -1855,18 +1528,13 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/runner/src/runner.ts",
-      "apps/control/src/services/runtime/runners.ts"
-    ],
+    "codePaths": ["apps/runner/src/runner.ts", "apps/control/src/services/runtime/runners.ts"],
     "testIds": [
       "tests/aether/runner-spool.test.ts",
       "tests/aether/reconciliation.test.ts",
       "tests/aether/remote-runners.test.ts"
     ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
       "While control is unreachable a runner cannot claim, so no new dispatch starts; an in-flight run keeps going and is reported when the link returns"
     ]
@@ -1877,13 +1545,8 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
-    "codePaths": [
-      "apps/runner/src/storage.ts",
-      "apps/runner/src/main.ts"
-    ],
-    "testIds": [
-      "tests/aether/runner-storage.test.ts"
-    ],
+    "codePaths": ["apps/runner/src/storage.ts", "apps/runner/src/main.ts"],
+    "testIds": ["tests/aether/runner-storage.test.ts"],
     "evidencePaths": [],
     "blockers": [
       "Enforced as: runner state may not live inside an allowed repository; that each machine really uses its own clone is by construction (machine-bound workspaces) and not verified across two real hosts"
@@ -1895,13 +1558,8 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
-    "codePaths": [
-      "apps/runner/src/main.ts",
-      "apps/control/src/services/remote/invitations.ts"
-    ],
-    "testIds": [
-      "tests/aether/remote-runners.test.ts"
-    ],
+    "codePaths": ["apps/runner/src/main.ts", "apps/control/src/services/remote/invitations.ts"],
+    "testIds": ["tests/aether/remote-runners.test.ts"],
     "evidencePaths": [],
     "blockers": [
       "Two real runner processes with the demo provider on one host: revocation, project scope, single-use enrollment and control outage covered",
@@ -1914,17 +1572,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/runner/src/mcp.ts",
-      "apps/control/src/services/domain/identity.ts"
-    ],
-    "testIds": [
-      "tests/aether/mcp.test.ts",
-      "tests/aether/mcp-wait.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/mcp-built-stdio-test.log"
-    ],
+    "codePaths": ["apps/runner/src/mcp.ts", "apps/control/src/services/domain/identity.ts"],
+    "testIds": ["tests/aether/mcp.test.ts", "tests/aether/mcp-wait.test.ts"],
+    "evidencePaths": ["evidence/mcp-built-stdio-test.log"],
     "blockers": [
       "The tools are tested against the kernel; no real provider CLI was connected to this MCP server."
     ]
@@ -1935,17 +1585,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/runner/src/mcp.ts",
-      "apps/control/src/services/domain/identity.ts"
-    ],
-    "testIds": [
-      "tests/aether/mcp.test.ts",
-      "tests/aether/mcp-wait.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/mcp-built-stdio-test.log"
-    ],
+    "codePaths": ["apps/runner/src/mcp.ts", "apps/control/src/services/domain/identity.ts"],
+    "testIds": ["tests/aether/mcp.test.ts", "tests/aether/mcp-wait.test.ts"],
+    "evidencePaths": ["evidence/mcp-built-stdio-test.log"],
     "blockers": [
       "Scope isolation is tested with synthetic identities; starting a workflow is deliberately not offered to agents (humans only), and no real provider CLI was connected."
     ]
@@ -1961,10 +1603,7 @@
       "packages/providers/src/acp-fixture.mjs",
       "apps/runner/src/native.ts"
     ],
-    "testIds": [
-      "tests/aether/acp.test.ts",
-      "tests/aether/acp-native.test.ts"
-    ],
+    "testIds": ["tests/aether/acp.test.ts", "tests/aether/acp-native.test.ts"],
     "evidencePaths": [],
     "blockers": [
       "A real prompt turn was not run against claude-agent-acp or codex-acp (needs paid, authenticated sessions); the real adapter was only negotiated",
@@ -1977,13 +1616,8 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "packages/providers/src/acp.ts",
-      "docs/provider-compatibility.md"
-    ],
-    "testIds": [
-      "tests/aether/acp.test.ts"
-    ],
+    "codePaths": ["packages/providers/src/acp.ts", "docs/provider-compatibility.md"],
+    "testIds": ["tests/aether/acp.test.ts"],
     "evidencePaths": [],
     "blockers": []
   },
@@ -1998,13 +1632,9 @@
       "apps/control/src/server.ts",
       "apps/control/src/routes"
     ],
-    "testIds": [
-      "tests/aether/a2a.test.ts"
-    ],
+    "testIds": ["tests/aether/a2a.test.ts"],
     "evidencePaths": [],
-    "blockers": [
-      "The card declares no streaming or push because neither is implemented"
-    ]
+    "blockers": ["The card declares no streaming or push because neither is implemented"]
   },
   {
     "id": "STD-06",
@@ -2016,9 +1646,7 @@
       "apps/control/src/services/a2a/a2a.ts",
       "apps/control/src/services/a2a/a2a-clients.ts"
     ],
-    "testIds": [
-      "tests/aether/a2a.test.ts"
-    ],
+    "testIds": ["tests/aether/a2a.test.ts"],
     "evidencePaths": [],
     "blockers": [
       "Verified with the official @a2a-js/sdk client over real HTTP; no interop run against a third-party A2A server"
@@ -2035,10 +1663,7 @@
       "apps/control/src/services/platform/safe-fetch.ts",
       "apps/control/src/services/a2a/a2a-clients.ts"
     ],
-    "testIds": [
-      "tests/aether/a2a.test.ts",
-      "tests/aether/safe-fetch.test.ts"
-    ],
+    "testIds": ["tests/aether/a2a.test.ts", "tests/aether/safe-fetch.test.ts"],
     "evidencePaths": [],
     "blockers": [
       "The gateway never fetches remote artifact URLs at all (URL parts are refused); an outbound artifact fetcher would reuse safe-fetch and does not exist yet"
@@ -2055,14 +1680,9 @@
       "apps/web/src/features/integrations/Agents.tsx",
       "apps/web/src/features/integrations/CapabilityMatrix.tsx"
     ],
-    "testIds": [
-      "e2e/workbench/a2a.spec.ts",
-      "e2e/settings/capabilities.spec.ts"
-    ],
+    "testIds": ["e2e/workbench/a2a.spec.ts", "e2e/settings/capabilities.spec.ts"],
     "evidencePaths": [],
-    "blockers": [
-      "hcom and Agent Mail bridges are not built and appear nowhere in the UI"
-    ]
+    "blockers": ["hcom and Agent Mail bridges are not built and appear nowhere in the UI"]
   },
   {
     "id": "UIX-01",
@@ -2070,17 +1690,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
-    "codePaths": [
-      "apps/web/src/App.tsx",
-      "apps/web/src/ui/PageHeading.tsx"
-    ],
-    "testIds": [
-      "e2e/workbench/workbench.spec.ts",
-      "e2e/workbench/native-workflow.spec.ts"
-    ],
-    "evidencePaths": [
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "codePaths": ["apps/web/src/App.tsx", "apps/web/src/ui/PageHeading.tsx"],
+    "testIds": ["e2e/workbench/workbench.spec.ts", "e2e/workbench/native-workflow.spec.ts"],
+    "evidencePaths": ["evidence/e2e-full-workflow-first.log"],
     "blockers": [
       "Demo sign-in through to a first task is covered; live onboarding (execution policy, runner, provider sign-in) has no guided flow",
       "A live-like run (fresh data dir, setup, start, synthetic sessions) showed what a CLI user meets: setup creates no runner credential, so terminals, Continue in AETHER, the composer and managed agents need `pnpm runner:enroll` plus a native file; the UI now says so, but there is no guided flow for it"
@@ -2092,18 +1704,13 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/web/src/App.tsx",
-      "apps/web/src/ui/Badge.tsx"
-    ],
+    "codePaths": ["apps/web/src/App.tsx", "apps/web/src/ui/Badge.tsx"],
     "testIds": [
       "e2e/workbench/workbench.spec.ts",
       "e2e/workbench/native-workflow.spec.ts",
       "e2e/workbench/navigation.spec.ts"
     ],
-    "evidencePaths": [
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "evidencePaths": ["evidence/e2e-full-workflow-first.log"],
     "blockers": []
   },
   {
@@ -2112,16 +1719,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
-    "codePaths": [
-      "apps/web/src/App.tsx",
-      "apps/web/src/ui/whyNot.ts"
-    ],
-    "testIds": [
-      "e2e/ui/ui-sweep.spec.ts"
-    ],
-    "evidencePaths": [
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "codePaths": ["apps/web/src/App.tsx", "apps/web/src/ui/whyNot.ts"],
+    "testIds": ["e2e/ui/ui-sweep.spec.ts"],
+    "evidencePaths": ["evidence/e2e-full-workflow-first.log"],
     "blockers": [
       "Write actions a viewer cannot use now say why (a title, covered by e2e/ui/accessibility.spec.ts); controls disabled while busy or for missing input still do not"
     ]
@@ -2143,9 +1743,7 @@
       "e2e/workbench/workbench.spec.ts",
       "e2e/settings/first-run.spec.ts"
     ],
-    "evidencePaths": [
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "evidencePaths": ["evidence/e2e-full-workflow-first.log"],
     "blockers": [
       "Loading, empty (first run, no sessions, no approvals), error (a missing project, an unknown page) and offline states are covered; no-permission (viewer) states are not browser-tested",
       "Raw error codes were shown for most failures; the ones a CLI user can reach now have words in both languages, the rest of the roughly 200 codes still show as a code (DAG_CYCLE, INTEGRATION_TOKEN_MISSING and others on the orchestration pages)"
@@ -2157,19 +1755,14 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/web/src/lib/i18n/i18n.ts",
-      "apps/web/src/lib/preferences/state.ts"
-    ],
+    "codePaths": ["apps/web/src/lib/i18n/i18n.ts", "apps/web/src/lib/preferences/state.ts"],
     "testIds": [
       "tests/aether/i18n.test.ts",
       "e2e/ui/ui-sweep.spec.ts",
       "tests/aether/first-run.test.ts",
       "e2e/settings/first-run.spec.ts"
     ],
-    "evidencePaths": [
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "evidencePaths": ["evidence/e2e-full-workflow-first.log"],
     "blockers": [
       "Key parity, script purity and placeholder-free copy are unit-tested; the first-visit language (English and Traditional Chinese browsers), the login page, the first-run panel, Approvals, the 404 page and the forms are checked in the browser in both languages; the rest of the English UI is not browser-swept"
     ]
@@ -2180,16 +1773,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/web/src/styles/index.css"
-    ],
-    "testIds": [
-      "e2e/ui/ui-sweep.spec.ts",
-      "e2e/workbench/workbench.spec.ts"
-    ],
-    "evidencePaths": [
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "codePaths": ["apps/web/src/styles/index.css"],
+    "testIds": ["e2e/ui/ui-sweep.spec.ts", "e2e/workbench/workbench.spec.ts"],
+    "evidencePaths": ["evidence/e2e-full-workflow-first.log"],
     "blockers": [
       "Horizontal overflow is measured on every page at 1440 and 390 px in both themes; there is no pixel-level clipping or tap-target audit"
     ]
@@ -2200,17 +1786,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/web/src/App.tsx",
-      "apps/web/src/ui/PageHeading.tsx"
-    ],
-    "testIds": [
-      "e2e/workbench/navigation.spec.ts",
-      "e2e/ui/ui-sweep.spec.ts"
-    ],
-    "evidencePaths": [
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "codePaths": ["apps/web/src/App.tsx", "apps/web/src/ui/PageHeading.tsx"],
+    "testIds": ["e2e/workbench/navigation.spec.ts", "e2e/ui/ui-sweep.spec.ts"],
+    "evidencePaths": ["evidence/e2e-full-workflow-first.log"],
     "blockers": []
   },
   {
@@ -2219,16 +1797,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/web/src/ui/Badge.tsx"
-    ],
-    "testIds": [
-      "e2e/workbench/navigation.spec.ts",
-      "e2e/ui/ui-sweep.spec.ts"
-    ],
-    "evidencePaths": [
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "codePaths": ["apps/web/src/ui/Badge.tsx"],
+    "testIds": ["e2e/workbench/navigation.spec.ts", "e2e/ui/ui-sweep.spec.ts"],
+    "evidencePaths": ["evidence/e2e-full-workflow-first.log"],
     "blockers": [
       "Badges are checked for visible text; icon-only meaning elsewhere is covered only by axe"
     ]
@@ -2245,10 +1816,7 @@
       "tools/blender/build_animals.py",
       "scripts/validate-assets.mjs"
     ],
-    "testIds": [
-      "e2e/workbench/workbench.spec.ts",
-      "tests/aether/kernel.test.ts"
-    ],
+    "testIds": ["e2e/workbench/workbench.spec.ts", "tests/aether/kernel.test.ts"],
     "evidencePaths": [
       "evidence/assets-validation.json",
       "evidence/e2e-full-workflow-first.log",
@@ -2270,18 +1838,13 @@
       "tools/blender/build_animals.py",
       "scripts/validate-assets.mjs"
     ],
-    "testIds": [
-      "e2e/workbench/workbench.spec.ts",
-      "tests/aether/kernel.test.ts"
-    ],
+    "testIds": ["e2e/workbench/workbench.spec.ts", "tests/aether/kernel.test.ts"],
     "evidencePaths": [
       "evidence/assets-validation.json",
       "evidence/e2e-full-workflow-first.log",
       "evidence/renders/fox-3840x2160.json"
     ],
-    "blockers": [
-      "The campus and Earth scale gate is not complete."
-    ]
+    "blockers": ["The campus and Earth scale gate is not complete."]
   },
   {
     "id": "VIS-03",
@@ -2295,18 +1858,13 @@
       "tools/blender/build_animals.py",
       "scripts/validate-assets.mjs"
     ],
-    "testIds": [
-      "e2e/workbench/workbench.spec.ts",
-      "tests/aether/kernel.test.ts"
-    ],
+    "testIds": ["e2e/workbench/workbench.spec.ts", "tests/aether/kernel.test.ts"],
     "evidencePaths": [
       "evidence/assets-validation.json",
       "evidence/e2e-full-workflow-first.log",
       "evidence/renders/fox-3840x2160.json"
     ],
-    "blockers": [
-      "The physical-contact gate for desks, chairs and screens is not complete."
-    ]
+    "blockers": ["The physical-contact gate for desks, chairs and screens is not complete."]
   },
   {
     "id": "VIS-04",
@@ -2320,10 +1878,7 @@
       "tools/blender/build_animals.py",
       "scripts/validate-assets.mjs"
     ],
-    "testIds": [
-      "e2e/workbench/workbench.spec.ts",
-      "tests/aether/kernel.test.ts"
-    ],
+    "testIds": ["e2e/workbench/workbench.spec.ts", "tests/aether/kernel.test.ts"],
     "evidencePaths": [
       "evidence/assets-validation.json",
       "evidence/e2e-full-workflow-first.log",
@@ -2345,18 +1900,13 @@
       "tools/blender/build_animals.py",
       "scripts/validate-assets.mjs"
     ],
-    "testIds": [
-      "e2e/workbench/workbench.spec.ts",
-      "tests/aether/kernel.test.ts"
-    ],
+    "testIds": ["e2e/workbench/workbench.spec.ts", "tests/aether/kernel.test.ts"],
     "evidencePaths": [
       "evidence/assets-validation.json",
       "evidence/e2e-full-workflow-first.log",
       "evidence/renders/fox-3840x2160.json"
     ],
-    "blockers": [
-      "The full performance gate (frame time and VRAM) is not complete."
-    ]
+    "blockers": ["The full performance gate (frame time and VRAM) is not complete."]
   },
   {
     "id": "VIS-06",
@@ -2368,9 +1918,7 @@
       "packages/office-scene/src/environment/carriers.ts",
       "packages/office-scene/src/components/MessageCarriers.tsx"
     ],
-    "testIds": [
-      "tests/aether/carriers.test.ts"
-    ],
+    "testIds": ["tests/aether/carriers.test.ts"],
     "evidencePaths": [],
     "blockers": [
       "Dedupe and planning are unit-tested; the moving envelope was not exercised in a browser with an agent-to-agent message",
@@ -2388,10 +1936,7 @@
       "packages/office-scene/src/environment/carriers.ts",
       "apps/web/src/App.tsx"
     ],
-    "testIds": [
-      "tests/aether/navigation.test.ts",
-      "tests/aether/carriers.test.ts"
-    ],
+    "testIds": ["tests/aether/navigation.test.ts", "tests/aether/carriers.test.ts"],
     "evidencePaths": [],
     "blockers": [
       "Unreachable surfaces as a notice; that notice was not browser-tested",
@@ -2410,10 +1955,7 @@
       "tools/blender/build_animals.py",
       "scripts/validate-assets.mjs"
     ],
-    "testIds": [
-      "e2e/workbench/workbench.spec.ts",
-      "tests/aether/kernel.test.ts"
-    ],
+    "testIds": ["e2e/workbench/workbench.spec.ts", "tests/aether/kernel.test.ts"],
     "evidencePaths": [
       "evidence/assets-validation.json",
       "evidence/e2e-full-workflow-first.log",
@@ -2435,10 +1977,7 @@
       "tools/blender/build_animals.py",
       "scripts/validate-assets.mjs"
     ],
-    "testIds": [
-      "e2e/workbench/workbench.spec.ts",
-      "tests/aether/kernel.test.ts"
-    ],
+    "testIds": ["e2e/workbench/workbench.spec.ts", "tests/aether/kernel.test.ts"],
     "evidencePaths": [
       "evidence/assets-validation.json",
       "evidence/e2e-full-workflow-first.log",
@@ -2459,10 +1998,7 @@
       "apps/web/src/App.tsx",
       "packages/office-scene/src/components/OfficeScene.tsx"
     ],
-    "testIds": [
-      "tests/aether/tour.test.ts",
-      "e2e/office-life/tour.spec.ts"
-    ],
+    "testIds": ["tests/aether/tour.test.ts", "e2e/office-life/tour.spec.ts"],
     "evidencePaths": [],
     "blockers": []
   },
@@ -2472,14 +2008,8 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/web/src/features/office/LayoutEditor.tsx",
-      "apps/control/src/control.ts"
-    ],
-    "testIds": [
-      "e2e/scene/layout-editor.spec.ts",
-      "tests/aether/layout.test.ts"
-    ],
+    "codePaths": ["apps/web/src/features/office/LayoutEditor.tsx", "apps/control/src/control.ts"],
+    "testIds": ["e2e/scene/layout-editor.spec.ts", "tests/aether/layout.test.ts"],
     "evidencePaths": [
       "evidence/assets-validation.json",
       "evidence/e2e-full-workflow-first.log",
@@ -2498,9 +2028,7 @@
       "packages/kernel/src/layout.ts",
       "packages/contracts/src"
     ],
-    "testIds": [
-      "tests/aether/layout.test.ts"
-    ],
+    "testIds": ["tests/aether/layout.test.ts"],
     "evidencePaths": [
       "evidence/assets-validation.json",
       "evidence/e2e-full-workflow-first.log",
@@ -2518,9 +2046,7 @@
       "packages/office-scene/src/components/OfficeScene.tsx",
       "packages/office-scene/src/components/PerfProbe.tsx"
     ],
-    "testIds": [
-      "e2e/scene/scene.spec.ts"
-    ],
+    "testIds": ["e2e/scene/scene.spec.ts"],
     "evidencePaths": [
       "evidence/assets-validation.json",
       "evidence/e2e-full-workflow-first.log",
@@ -2536,13 +2062,8 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "packages/office-scene/src/components/OfficeScene.tsx",
-      "apps/web/src/App.tsx"
-    ],
-    "testIds": [
-      "e2e/scene/scene.spec.ts"
-    ],
+    "codePaths": ["packages/office-scene/src/components/OfficeScene.tsx", "apps/web/src/App.tsx"],
+    "testIds": ["e2e/scene/scene.spec.ts"],
     "evidencePaths": [
       "evidence/assets-validation.json",
       "evidence/e2e-full-workflow-first.log",
@@ -2562,9 +2083,7 @@
       "packages/office-scene/src/components/OfficeScene.tsx",
       "packages/office-scene/src/components/PerfProbe.tsx"
     ],
-    "testIds": [
-      "e2e/scene/scene.spec.ts"
-    ],
+    "testIds": ["e2e/scene/scene.spec.ts"],
     "evidencePaths": [
       "evidence/assets-validation.json",
       "evidence/e2e-full-workflow-first.log",
@@ -2584,10 +2103,7 @@
       "packages/office-scene/src/perf/perf.ts",
       "packages/office-scene/src/components/PerfProbe.tsx"
     ],
-    "testIds": [
-      "tests/aether/perf.test.ts",
-      "e2e/perf/perf.spec.ts"
-    ],
+    "testIds": ["tests/aether/perf.test.ts", "e2e/perf/perf.spec.ts"],
     "evidencePaths": [],
     "blockers": [
       "One measurement: headless Chrome on Apple M4 (Metal), 904x548 viewport, vsync-capped near 60 fps, so headroom is unknown",
@@ -2600,18 +2116,13 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
-    "codePaths": [
-      "apps/web/src/App.tsx",
-      "apps/web/src/ui/Field.tsx"
-    ],
+    "codePaths": ["apps/web/src/App.tsx", "apps/web/src/ui/Field.tsx"],
     "testIds": [
       "e2e/ui/accessibility.spec.ts",
       "e2e/ui/ui-sweep.spec.ts",
       "e2e/settings/first-run.spec.ts"
     ],
-    "evidencePaths": [
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "evidencePaths": ["evidence/e2e-full-workflow-first.log"],
     "blockers": [
       "Task creation is verified by keyboard alone, and the skip link reaches the main landmark with one Tab; messaging, approval and review flows are not walked through by keyboard"
     ]
@@ -2622,15 +2133,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/web/src/ui/Modal.tsx"
-    ],
-    "testIds": [
-      "e2e/ui/accessibility.spec.ts"
-    ],
-    "evidencePaths": [
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "codePaths": ["apps/web/src/ui/Modal.tsx"],
+    "testIds": ["e2e/ui/accessibility.spec.ts"],
+    "evidencePaths": ["evidence/e2e-full-workflow-first.log"],
     "blockers": [
       "Native modal dialog: focus may pass to the browser's own UI, never to the page behind it"
     ]
@@ -2653,9 +2158,7 @@
       "e2e/settings/first-run.spec.ts",
       "tests/aether/first-run.test.ts"
     ],
-    "evidencePaths": [
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "evidencePaths": ["evidence/e2e-full-workflow-first.log"],
     "blockers": []
   },
   {
@@ -2668,12 +2171,8 @@
       "apps/web/src/lib/preferences/state.ts",
       "packages/office-scene/src/animals/Animal.tsx"
     ],
-    "testIds": [
-      "e2e/ui/accessibility.spec.ts"
-    ],
-    "evidencePaths": [
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "testIds": ["e2e/ui/accessibility.spec.ts"],
+    "evidencePaths": ["evidence/e2e-full-workflow-first.log"],
     "blockers": [
       "The product has no camera flights or particles; the preference is honoured by character animation and camera damping"
     ]
@@ -2684,15 +2183,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/web/src/styles/core/tokens.css"
-    ],
-    "testIds": [
-      "e2e/ui/ui-sweep.spec.ts"
-    ],
-    "evidencePaths": [
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "codePaths": ["apps/web/src/styles/core/tokens.css"],
+    "testIds": ["e2e/ui/ui-sweep.spec.ts"],
+    "evidencePaths": ["evidence/e2e-full-workflow-first.log"],
     "blockers": [
       "axe colour-contrast on every page in both themes; state icons are covered by axe only"
     ]
@@ -2703,18 +2196,10 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "apps/web/src/features/office/LayoutEditor.tsx"
-    ],
-    "testIds": [
-      "e2e/scene/layout-editor.spec.ts"
-    ],
-    "evidencePaths": [
-      "evidence/e2e-full-workflow-first.log"
-    ],
-    "blockers": [
-      "The layout editor uses form controls, so no operation depends on dragging"
-    ]
+    "codePaths": ["apps/web/src/features/office/LayoutEditor.tsx"],
+    "testIds": ["e2e/scene/layout-editor.spec.ts"],
+    "evidencePaths": ["evidence/e2e-full-workflow-first.log"],
+    "blockers": ["The layout editor uses form controls, so no operation depends on dragging"]
   },
   {
     "id": "A11Y-07",
@@ -2727,14 +2212,9 @@
       "apps/web/src/features/operations/Approvals.tsx",
       "apps/web/src/lib/preferences/state.ts"
     ],
-    "testIds": [
-      "tests/aether/notifications.test.ts",
-      "e2e/settings/notifications.spec.ts"
-    ],
+    "testIds": ["tests/aether/notifications.test.ts", "e2e/settings/notifications.spec.ts"],
     "evidencePaths": [],
-    "blockers": [
-      "The product has no audio at all; only opt-in browser notifications exist"
-    ]
+    "blockers": ["The product has no audio at all; only opt-in browser notifications exist"]
   },
   {
     "id": "A11Y-08",
@@ -2742,16 +2222,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
-    "codePaths": [
-      "e2e/ui/ui-sweep.spec.ts"
-    ],
-    "testIds": [
-      "e2e/ui/ui-sweep.spec.ts",
-      "e2e/ui/accessibility.spec.ts"
-    ],
-    "evidencePaths": [
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "codePaths": ["e2e/ui/ui-sweep.spec.ts"],
+    "testIds": ["e2e/ui/ui-sweep.spec.ts", "e2e/ui/accessibility.spec.ts"],
+    "evidencePaths": ["evidence/e2e-full-workflow-first.log"],
     "blockers": [
       "axe sweeps run on every page (and found and fixed unfocusable scroll regions); there has been no screen-reader pass"
     ]
@@ -2768,10 +2241,7 @@
       "apps/control/src/db/migrations/020-integrations-sync.sql",
       "apps/web/src/features/integrations/Integrations.tsx"
     ],
-    "testIds": [
-      "tests/aether/integrations.test.ts",
-      "e2e/settings/integrations.spec.ts"
-    ],
+    "testIds": ["tests/aether/integrations.test.ts", "e2e/settings/integrations.spec.ts"],
     "evidencePaths": [],
     "blockers": [
       "Live GitHub verification blocked: no credentials; behavior is checked against a local fake that follows the documented REST shapes",
@@ -2791,9 +2261,7 @@
       "apps/control/src/db/migrations/020-integrations-sync.sql",
       "apps/web/src/features/integrations/Integrations.tsx"
     ],
-    "testIds": [
-      "tests/aether/integrations.test.ts"
-    ],
+    "testIds": ["tests/aether/integrations.test.ts"],
     "evidencePaths": [],
     "blockers": [
       "Live Linear verification blocked: no credentials; GraphQL shapes and the RATELIMITED error code come from public docs and are untested against the real service",
@@ -2812,9 +2280,7 @@
       "apps/control/src/db/migrations/020-integrations-sync.sql",
       "apps/web/src/features/integrations/Integrations.tsx"
     ],
-    "testIds": [
-      "tests/aether/integrations.test.ts"
-    ],
+    "testIds": ["tests/aether/integrations.test.ts"],
     "evidencePaths": [],
     "blockers": [
       "Webhooks need a reverse proxy that preserves the Host header; polling works without one"
@@ -2907,16 +2373,9 @@
       "apps/runner/src/runner.ts",
       "apps/web/src/features/operations/ExecutionSettings.tsx"
     ],
-    "testIds": [
-      "tests/aether/kernel.test.ts",
-      "tests/aether/native-runner.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
-    "blockers": [
-      "Turn, time and concurrency limits exist; pricing and a global budget do not."
-    ]
+    "testIds": ["tests/aether/kernel.test.ts", "tests/aether/native-runner.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
+    "blockers": ["Turn, time and concurrency limits exist; pricing and a global budget do not."]
   },
   {
     "id": "INT-08",
@@ -2929,16 +2388,9 @@
       "apps/runner/src/runner.ts",
       "apps/web/src/features/operations/ExecutionSettings.tsx"
     ],
-    "testIds": [
-      "tests/aether/kernel.test.ts",
-      "tests/aether/native-runner.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log"
-    ],
-    "blockers": [
-      "Usage de-duplication is implemented; pricing is not."
-    ]
+    "testIds": ["tests/aether/kernel.test.ts", "tests/aether/native-runner.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log"],
+    "blockers": ["Usage de-duplication is implemented; pricing is not."]
   },
   {
     "id": "QA-01",
@@ -2946,18 +2398,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "partial",
     "verificationStatus": "partial",
-    "codePaths": [
-      "docs/verification/features.json",
-      "docs/native-execution.md"
-    ],
-    "testIds": [
-      "e2e/workbench/native-workflow.spec.ts",
-      "tests/aether/native-runner.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log",
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "codePaths": ["docs/verification/features.json", "docs/native-execution.md"],
+    "testIds": ["e2e/workbench/native-workflow.spec.ts", "tests/aether/native-runner.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log", "evidence/e2e-full-workflow-first.log"],
     "blockers": [
       "Unit, contract and integration suites run in CI (the unit suite also on macOS); the browser suite is a local and release gate that CI does not run; the live provider smoke and the GPU gates are outside the default run and recorded as not run."
     ]
@@ -2968,12 +2411,8 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
-    "codePaths": [
-      "apps/control/src/control.ts"
-    ],
-    "testIds": [
-      "tests/aether/fault-injection.test.ts"
-    ],
+    "codePaths": ["apps/control/src/control.ts"],
+    "testIds": ["tests/aether/fault-injection.test.ts"],
     "evidencePaths": [],
     "blockers": [
       "Control-side commit, outbox, delivery and ack windows are injected and proven atomic; runner journal crash windows and the outbox dispatcher lease are not injected"
@@ -2985,18 +2424,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "partial",
     "verificationStatus": "partial",
-    "codePaths": [
-      "docs/verification/features.json",
-      "docs/native-execution.md"
-    ],
-    "testIds": [
-      "e2e/workbench/native-workflow.spec.ts",
-      "tests/aether/native-runner.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log",
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "codePaths": ["docs/verification/features.json", "docs/native-execution.md"],
+    "testIds": ["e2e/workbench/native-workflow.spec.ts", "tests/aether/native-runner.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log", "evidence/e2e-full-workflow-first.log"],
     "blockers": [
       "Labels are checked where they were implemented; live evidence is limited to the smoke runs in CLA-08 and CDX-08."
     ]
@@ -3007,18 +2437,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "partial",
     "verificationStatus": "partial",
-    "codePaths": [
-      "docs/verification/features.json",
-      "docs/native-execution.md"
-    ],
-    "testIds": [
-      "e2e/workbench/native-workflow.spec.ts",
-      "tests/aether/native-runner.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log",
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "codePaths": ["docs/verification/features.json", "docs/native-execution.md"],
+    "testIds": ["e2e/workbench/native-workflow.spec.ts", "tests/aether/native-runner.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log", "evidence/e2e-full-workflow-first.log"],
     "blockers": [
       "The README screenshots come from a synthetic demo stack (docs/images/README.md); screenshots of real data for each listed page are not part of the evidence."
     ]
@@ -3029,18 +2450,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "partial",
     "verificationStatus": "partial",
-    "codePaths": [
-      "docs/verification/features.json",
-      "docs/native-execution.md"
-    ],
-    "testIds": [
-      "e2e/workbench/native-workflow.spec.ts",
-      "tests/aether/native-runner.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log",
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "codePaths": ["docs/verification/features.json", "docs/native-execution.md"],
+    "testIds": ["e2e/workbench/native-workflow.spec.ts", "tests/aether/native-runner.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log", "evidence/e2e-full-workflow-first.log"],
     "blockers": [
       "verification:check proves that every listed path exists; whether a test proves the requirement is the reviewer's judgement, which the partial rows record."
     ]
@@ -3051,18 +2463,9 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "partial",
     "verificationStatus": "partial",
-    "codePaths": [
-      "docs/verification/features.json",
-      "docs/native-execution.md"
-    ],
-    "testIds": [
-      "e2e/workbench/native-workflow.spec.ts",
-      "tests/aether/native-runner.test.ts"
-    ],
-    "evidencePaths": [
-      "evidence/workflow-all-tests.log",
-      "evidence/e2e-full-workflow-first.log"
-    ],
+    "codePaths": ["docs/verification/features.json", "docs/native-execution.md"],
+    "testIds": ["e2e/workbench/native-workflow.spec.ts", "tests/aether/native-runner.test.ts"],
+    "evidencePaths": ["evidence/workflow-all-tests.log", "evidence/e2e-full-workflow-first.log"],
     "blockers": [
       "Documentation is compared with the code by audits (docs/internal/design-review.md) and a link check; no automated check compares documented values with the code."
     ]
@@ -3073,14 +2476,8 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "scripts/clean-room.mjs",
-      "package.json",
-      "README.md"
-    ],
-    "testIds": [
-      "scripts/clean-room.mjs"
-    ],
+    "codePaths": ["scripts/clean-room.mjs", "package.json", "README.md"],
+    "testIds": ["scripts/clean-room.mjs"],
     "evidencePaths": [],
     "blockers": []
   },
@@ -3090,13 +2487,8 @@
     "scope": "AETHER target; historical 0.3 source not supplied and superseded by fresh-clone instruction",
     "implementationStatus": "implemented",
     "verificationStatus": "passed",
-    "codePaths": [
-      "scripts/verification-ledger.ts",
-      "docs/verification/report.md"
-    ],
-    "testIds": [
-      "tests/aether/verification-ledger.test.ts"
-    ],
+    "codePaths": ["scripts/verification-ledger.ts", "docs/verification/report.md"],
+    "testIds": ["tests/aether/verification-ledger.test.ts"],
     "evidencePaths": [],
     "blockers": []
   },
@@ -3252,10 +2644,7 @@
       "apps/web/src/features/conversation/ModelPicker.tsx",
       "apps/web/src/features/settings/ModelsSection.tsx"
     ],
-    "testIds": [
-      "tests/aether/models.test.ts",
-      "tests/aether/model-picker.test.ts"
-    ],
+    "testIds": ["tests/aether/models.test.ts", "tests/aether/model-picker.test.ts"],
     "blockers": []
   },
   {
@@ -3270,10 +2659,7 @@
       "apps/control/src/services/sessions/session-role.ts",
       "docs/roles.md"
     ],
-    "testIds": [
-      "tests/aether/classify-session.test.ts",
-      "tests/aether/session-names.test.ts"
-    ],
+    "testIds": ["tests/aether/classify-session.test.ts", "tests/aether/session-names.test.ts"],
     "blockers": [
       "Accuracy is 84.9% to 100% on a synthetic corpus and 48% to 90% on 50 hand-labelled real sessions; it is not validated on other users' sessions"
     ]
@@ -3298,9 +2684,7 @@
       "tests/aether/seat-drag.test.ts",
       "e2e/scene/z-characters.spec.ts"
     ],
-    "blockers": [
-      "Touch gestures were exercised with emulated touch, not on a physical phone"
-    ]
+    "blockers": ["Touch gestures were exercised with emulated touch, not on a physical phone"]
   },
   {
     "id": "OBS-GRAPH-01",
@@ -3638,9 +3022,7 @@
       "scripts/contact-sheet.mjs",
       "e2e/office-life/office-life-perf.spec.ts"
     ],
-    "testIds": [
-      "tests/aether/scene-preview.test.ts"
-    ],
+    "testIds": ["tests/aether/scene-preview.test.ts"],
     "blockers": [
       "No office-life effect exists yet, so the preview route renders nothing and the gate was only run once, on the existing talk=1 stand-in traffic (ANGLE Metal, Apple M4, a loaded machine); the effect budgets are unmeasured."
     ]
@@ -3817,10 +3199,7 @@
       "apps/web/src/features/settings/OfficeAnimationsSettings.tsx",
       "apps/web/src/lib/navigation/intro-gate.ts"
     ],
-    "testIds": [
-      "tests/aether/life-moments.test.ts",
-      "e2e/office-life/office-life.spec.ts"
-    ],
+    "testIds": ["tests/aether/life-moments.test.ts", "e2e/office-life/office-life.spec.ts"],
     "blockers": [
       "The chip was looked at in the desktop panel and checked by the settings and axe specs; a phone-sized look is part of the responsive spec run, not a separate review",
       "Moments live only while the page does, and only for the office page (the scene is what reports them)"
@@ -3899,14 +3278,8 @@
     "scope": "AETHER target; office life follow-up, see docs/design/office-life.md section 4.4",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
-    "codePaths": [
-      "scripts/beam-calibration.ts",
-      "packages/office-scene/src/squad/beam-rate.ts"
-    ],
-    "testIds": [
-      "tests/aether/beam-calibration.test.ts",
-      "tests/aether/squad-beam-rate.test.ts"
-    ],
+    "codePaths": ["scripts/beam-calibration.ts", "packages/office-scene/src/squad/beam-rate.ts"],
+    "testIds": ["tests/aether/beam-calibration.test.ts", "tests/aether/squad-beam-rate.test.ts"],
     "blockers": [
       "The distribution is one person's machine (30 parent sessions, 767 subagent files, the newest 300 Codex rollouts, files over 100 MB skipped); another way of working would change the numbers, and the script is there to re-run",
       "Tokens cannot reach both goals with a logarithmic curve (a median of 0.5-0.7 and a p99 of 0.95): the reference puts the median at 0.70 and the p99 at 0.84. The curve was kept, as asked; an offset in log space would spread it",

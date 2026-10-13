@@ -80,7 +80,7 @@ export function renderReport(features: readonly Feature[], generatedFor: string)
   const impl = (status: Feature['implementationStatus']) =>
     features.filter((f) => f.implementationStatus === status).length;
   const lines = [
-    '# Final verification',
+    '# Feature verification',
     '',
     `Generated from \`docs/verification/features.json\` (${generatedFor}). Do not edit by hand: run \`pnpm verification:report\`.`,
     '',

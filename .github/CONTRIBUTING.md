@@ -1,5 +1,7 @@
 # Contributing to AETHER OFFICE
 
+[Documentation](../docs/README.md) · [Project](../README.md)
+
 Thank you for considering a contribution. This document explains how to set up the project, what a good change looks
 like and how it is reviewed.
 
@@ -23,7 +25,7 @@ Blender 5.2 is needed only to change the animals (see [development](../docs/deve
 
 ## Before you open a pull request
 
-Run the checks CI runs, and the browser suite, which CI does not (see [development](../docs/development.md)):
+Run the source checks and the full browser suite (see [development](../docs/development.md#testing)):
 
 ```sh
 pnpm typecheck
@@ -38,7 +40,8 @@ pnpm run quality:check   # the quality scorecard is current and no area is below
 pnpm exec playwright test
 ```
 
-CI also runs the unit tests on macOS and `pnpm audit:gate` (fail-closed high/critical advisories; needs the network).
+CI runs the source checks on Linux and macOS, selected Linux browser workflows, and `pnpm audit:gate`
+(fail-closed high/critical advisories; needs the network). The complete browser suite remains a local release gate.
 
 A change is ready when:
 
@@ -106,9 +109,10 @@ expected. For a feature, describe the problem first; a design discussion before 
 
 ## Licensing
 
-By contributing you agree that your contribution is licensed under the [MIT License](../LICENSE). Please sign off your commits
-(`git commit -s`) to certify the [Developer Certificate of Origin](https://developercertificate.org/): that you wrote the change
-or otherwise have the right to submit it under that license.
+By contributing you agree that your contribution is licensed under the [MIT License](../LICENSE). Certify the
+[Developer Certificate of Origin](https://developercertificate.org/) in the pull request checklist: you wrote the change
+or have the right to submit it under that license. This keeps the certification with the review while preserving the
+project's clean commit-message convention.
 
 Do not paste code from projects with incompatible licenses (GPL, AGPL, source-available or non-commercial terms), and do not
 commit code an AI assistant reproduced from such a project; take the idea and write the code. Where you adapt code under a

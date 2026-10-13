@@ -69,6 +69,9 @@ describe('judging what a recorded process is now', () => {
       judgeSurvivor(start, seen({ ppid: 900 }), { command: '/usr/lib/systemd/systemd --user' }),
     ).toBe('orphaned');
     expect(isOrphan({ ppid: 900 }, { command: '/usr/bin/zsh' })).toBe(false);
+    expect(isOrphan({ ppid: 900 }, { command: 'systemd ' + ' '.repeat(100_000) + '--user' })).toBe(
+      false,
+    );
   });
   it('reads the identity processIdentity writes, with the colons of the time in it', () => {
     expect(parseIdentity('123:Sat Oct  3 10:23:45 2026')).toEqual({

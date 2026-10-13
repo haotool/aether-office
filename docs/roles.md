@@ -1,5 +1,7 @@
 # How a session gets its role
 
+[Documentation](README.md) · [Project](../README.md)
+
 Every observed Claude Code or Codex session is given one of 18 engineering roles, grouped into five departments (one floor
 each, see `packages/kernel/src/departments.ts`). The role decides the floor, the label, the screen and the Sessions filter.
 One server-side result feeds all of them; the web app never classifies an observed session itself.
@@ -34,15 +36,15 @@ network or a provider SDK.
 Every signal adds weighted points to the roles it points at (`packages/kernel/src/role-signals.ts`); each source can carry a
 role only so far (4 points, activity 6), so one noisy source cannot decide alone.
 
-| Signal                  | Source                                                                                                  | Weight                                           |
-| ----------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| What it did             | file kinds it edited (`tests/`, `db/migrations/`, `.github/workflows`, `*.tsx`, `ios/` …), commands it ran (`docker`, `psql`, `gh pr`, `xcodebuild` …), special tools (plan mode, Figma, ticket trackers, monitoring) | 0.25 to 1.5 per call; reads count a quarter; read-only exploration counts for research |
-| Title                   | the provider's own session title, English and Traditional Chinese keywords                              | 2 per strong word, 1 per shared word             |
-| Prompt                  | the task text: first 120 characters at 0.8, the rest at 0.4                                             | as above; several different words count up to 2x |
-| Branch, repository      | branch words (`fix/api-…`, `docs/…`, `chore/ci`), repository name                                       | 1.0 for the branch, 0.5 for the repository       |
-| Subagents               | running types (`Explore` research, `Plan` architect, `code-reviewer` review, `security-reviewer`, `tdd-guide` qa …), `Task` delegations | 1.5 (0.5 for Explore, Plan), capped at 3 |
-| Frontend and backend    | both at 3+ points and within 60% of each other                                                          | becomes full-stack                               |
-| Provider, model         | none: measured to add no accuracy, so they are not used                                                 | 0                                                |
+| Signal               | Source                                                                                                                                                                                                                | Weight                                                                                 |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| What it did          | file kinds it edited (`tests/`, `db/migrations/`, `.github/workflows`, `*.tsx`, `ios/` …), commands it ran (`docker`, `psql`, `gh pr`, `xcodebuild` …), special tools (plan mode, Figma, ticket trackers, monitoring) | 0.25 to 1.5 per call; reads count a quarter; read-only exploration counts for research |
+| Title                | the provider's own session title, English and Traditional Chinese keywords                                                                                                                                            | 2 per strong word, 1 per shared word                                                   |
+| Prompt               | the task text: first 120 characters at 0.8, the rest at 0.4                                                                                                                                                           | as above; several different words count up to 2x                                       |
+| Branch, repository   | branch words (`fix/api-…`, `docs/…`, `chore/ci`), repository name                                                                                                                                                     | 1.0 for the branch, 0.5 for the repository                                             |
+| Subagents            | running types (`Explore` research, `Plan` architect, `code-reviewer` review, `security-reviewer`, `tdd-guide` qa …), `Task` delegations                                                                               | 1.5 (0.5 for Explore, Plan), capped at 3                                               |
+| Frontend and backend | both at 3+ points and within 60% of each other                                                                                                                                                                        | becomes full-stack                                                                     |
+| Provider, model      | none: measured to add no accuracy, so they are not used                                                                                                                                                               | 0                                                                                      |
 
 Confidence is `top / (top + runner-up + 1)`. A role wins only with at least 1.5 points and 0.4 confidence; otherwise the
 session is a **generalist** (Software Engineer, Product Engineering floor) rather than a wrong department, and its
@@ -67,10 +69,10 @@ Corpus: 93 synthetic labelled cases (`tests/aether/fixtures/session-corpus.ts`) 
 thin-signal and no-signal cases. Real sessions: the 66 on the development machine, 50 labelled by hand from anonymised
 signals (tool mix, file kinds, command names), the rest ambiguous and left out.
 
-| Set                       | Old (first matching keyword in title, prompt, branch) | New    |
-| ------------------------- | ------------------------------------------------------ | ------ |
-| Synthetic corpus, 93 cases | 84.9% roles                                            | 100% roles and departments |
-| Real sessions, 50 labelled | 48%                                                    | 90%    |
+| Set                        | Old (first matching keyword in title, prompt, branch) | New                        |
+| -------------------------- | ----------------------------------------------------- | -------------------------- |
+| Synthetic corpus, 93 cases | 84.9% roles                                           | 100% roles and departments |
+| Real sessions, 50 labelled | 48%                                                   | 90%                        |
 
 The synthetic corpus was written alongside the vocabulary, so its 100% is a regression guard, not a forecast; the real set
 is the honest number, and its labels carry the labeller's judgement. The test requires at least 90% overall and 80%

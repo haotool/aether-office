@@ -1,11 +1,12 @@
 # Documentation
 
-The [project README](../README.md) is the short version: what it is, a quick start and the limits. These pages are the manual.
-They are written in English; the Traditional Chinese README is [README.zh-TW.md](../README.zh-TW.md).
+Start with [Getting started](getting-started.md) to run AETHER OFFICE. Use the guides below for configuration,
+architecture, development and release verification. The operational manual is in English; a
+[Traditional Chinese introduction](../README.zh-TW.md) is also available.
 
-The pages follow four kinds. **Tutorial:** Getting started. **How-to:** the How-to guides. **Reference:** Configuration,
-Provider compatibility, the verification ledger and the UX matrix. **Explanation:** Architecture, Security, Session roles,
-Native execution and the design records.
+> [!IMPORTANT]
+> The project is pre-release. The [feature ledger](verification/report.md) separates implementation from verification.
+> Historical design notes and synthetic screenshots do not establish current production readiness.
 
 ## Use it
 
@@ -28,36 +29,36 @@ Native execution and the design records.
 
 ## Contribute
 
-| Document                          | Contents                                                              |
-| --------------------------------- | --------------------------------------------------------------------- |
-| [Development](development.md)     | Layout, commands, test layers, the animals pipeline, contact sheets   |
-| [Design system](design-system.md) | Tokens, components, the panel, the 3D office, responsive rules        |
-| [Dependencies](dependencies.md)   | Notable dependency choices and supply-chain controls                  |
-| [Screenshots](images/README.md)   | The images in the README, what they show and how to regenerate them   |
-| [Maintainers](maintainers.md)     | Who maintains the project, how decisions are made, response times     |
+| Document                          | Contents                                                            |
+| --------------------------------- | ------------------------------------------------------------------- |
+| [Development](development.md)     | Layout, commands, test layers, the animals pipeline, contact sheets |
+| [Design system](design-system.md) | Tokens, components, the panel, the 3D office, responsive rules      |
+| [Dependencies](dependencies.md)   | Notable dependency choices and supply-chain controls                |
+| [Screenshots](images/README.md)   | The images in the README, what they show and how to regenerate them |
+| [Maintainers](maintainers.md)     | Who maintains the project, how decisions are made, response times   |
 
 ## Design records
 
 Written before or while the work was built, kept for the reasoning. They are history, not the current manual: where they
 differ from the pages above, the pages above win.
 
-| Document                                                | Contents                                                                           |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| [Office life: spec](design/office-life.md)              | Squads, signals, office-life effects and the first-visit tour: rules and budgets   |
-| [Office life: work plan](design/office-life-work-plan.md) | The briefs the iterations were run from                                         |
-| [Architecture decisions](adr/README.md)               | Why the project is built the way it is (indexed list)                              |
-| [Research](research/README.md)                          | The projects studied and what was taken from them                                  |
-| [Internal notes](internal/README.md)                    | Maintainer audits and feasibility studies (zh-TW); not required to contribute      |
+| Document                                                  | Contents                                                                         |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [Office life: spec](design/office-life.md)                | Squads, signals, office-life effects and the first-visit tour: rules and budgets |
+| [Office life: work plan](design/office-life-work-plan.md) | The briefs the iterations were run from                                          |
+| [Architecture decisions](adr/README.md)                   | Why the project is built the way it is (indexed list)                            |
+| [Research](research/README.md)                            | The projects studied and what was taken from them                                |
+| [Internal notes](internal/README.md)                      | Maintainer audits and feasibility studies (zh-TW); not required to contribute    |
 
 ## Release and verification
 
-| Document                                                | Contents                                                                       |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| [Quality scorecard](quality/scorecard.md)               | Computed score per area, the rubric ([how](quality/README.md)) and what costs points |
-| [Mobile perf harness](quality/mobile-perf.md)         | M-MID/M-LOW A/B measurement, evidence schema, G5 field steps                        |
-| [Verification ledger](verification/report.md)           | What is implemented and what is verified, per capability                       |
+| Document                                                | Contents                                                                                               |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| [Quality scorecard](quality/scorecard.md)               | Computed score per area, the rubric ([how](quality/README.md)) and what costs points                   |
+| [Mobile perf harness](quality/mobile-perf.md)           | M-MID/M-LOW A/B measurement, evidence schema, G5 field steps                                           |
+| [Verification ledger](verification/report.md)           | What is implemented and what is verified, per capability                                               |
 | [UX matrix](verification/ux-matrix.md)                  | Every page at seven widths, both themes and languages, plus the page states, checked in a real browser |
-| [Publishing checklist](release/publishing-checklist.md) | From the readiness check to a public repository, branch protection, a release  |
-| [Cleaning the history](release/history-cleanup.md)      | The three options (A, B, C), the `scripts/oss` kit, commands, measured results |
-| [Legal and licensing](legal/README.md)                  | Licence inventory, licence policy, provenance, trademarks, notices and SBOM    |
-| [Changelog](../CHANGELOG.md)                            | User-facing changes per release                                                |
+| [Publishing checklist](release/publishing-checklist.md) | Version updates, clean-candidate checks, protected-branch integration and source releases              |
+| [Cleaning the history](release/history-cleanup.md)      | The three options (A, B, C), the `scripts/oss` kit, commands, measured results                         |
+| [Legal and licensing](legal/README.md)                  | Licence inventory, licence policy, provenance, trademarks, notices and SBOM                            |
+| [Changelog](../CHANGELOG.md)                            | User-facing changes per release                                                                        |

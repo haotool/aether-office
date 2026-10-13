@@ -1,5 +1,7 @@
 # ADR 0008: Separate implementation and verification in the verification ledger
 
+[Documentation](../README.md) · [Project](../../README.md)
+
 - Status: accepted
 - Date: 2026-10-08
 

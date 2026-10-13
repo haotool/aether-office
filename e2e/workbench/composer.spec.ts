@@ -21,33 +21,28 @@ test.beforeAll(() => {
   expect(basename(directory)).toMatch(/^aether-synthetic-browser-/);
   fixtureControl = new Control(join(directory, 'control.sqlite'), { mode: 'live' });
   priorTerminals = new Set(
-    (fixtureControl.ctx.sqlite.prepare('SELECT * FROM terminal_sessions').all() as Session[]).map(
-      ({ id }) => id,
-    ),
+    fixtureControl.ctx.sqlite.prepare('SELECT id FROM terminal_sessions').pluck().all() as string[],
   );
 });
 test.afterAll(() => fixtureControl?.close());
 test.afterEach(async () => {
   const control = fixtureControl;
   if (!control) return;
+  const db = control.ctx.sqlite;
   const spawned = () =>
-    (
-      control.ctx.sqlite
-        .prepare("SELECT * FROM terminal_sessions WHERE state<>'exited'")
-        .all() as Session[]
-    ).filter(({ id }) => !priorTerminals.has(id));
+    (db.prepare("SELECT * FROM terminal_sessions WHERE state<>'exited'").all() as Session[]).filter(
+      ({ id }) => !priorTerminals.has(id),
+    );
   const owner = control.authenticate(
     readFileSync(join(dirname(control.ctx.sqlite.name), 'owner-token'), 'utf8').trim(),
   );
-  control.ctx.sqlite
-    .transaction(() => {
-      for (const row of spawned().filter(({ state }) => state !== 'stopping'))
-        control.execute(
-          owner,
-          command('terminal.stop', { terminalId: row.id, epoch: row.controlEpoch }, row.projectId),
-        );
-    })
-    .immediate();
+  db.transaction(() => {
+    for (const row of spawned().filter(({ state }) => state !== 'stopping'))
+      control.execute(
+        owner,
+        command('terminal.stop', { terminalId: row.id, epoch: row.controlEpoch }, row.projectId),
+      );
+  }).immediate();
   await expect.poll(() => spawned().length, { timeout: 20000 }).toBe(0);
 });
 
@@ -78,25 +73,21 @@ async function expectAccessible(page: Page) {
 }
 
 async function openSession(page: Page, view: 'observed' | 'desktop' | 'phone' = 'observed') {
-  const sessionId = writeNativeTerminalTranscript({
-    answerText: 'Earlier answer from a terminal',
-  });
+  const sessionId = writeNativeTerminalTranscript({ answerText: 'Earlier answer from a terminal' });
   const scope = await openNativeSessionRow(page, sessionId, view === 'phone');
   if (view !== 'observed') await continueNativeSessionIfNeeded(scope);
   return { scope, conversation: scope.locator('.conversation') };
 }
 
-test('a session AETHER does not own is read-only; continuing it in AETHER makes it drivable', async ({
-  page,
-}) => {
+test('external sessions stay read-only until continued in AETHER', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await login(page);
   const { conversation } = await openSession(page);
-  await expect(conversation.getByText('Earlier answer from a terminal')).toBeVisible({
-    timeout: 15000,
-  });
+  const message = (value: string) => conversation.getByText(value);
+  await expect(message('Earlier answer from a terminal')).toBeVisible({ timeout: 15000 });
   const footer = conversation.locator('.session-footer');
+  const send = conversation.getByRole('button', { name: '送出', exact: true });
   await expect(footer).toContainText('唯讀');
   await expect(conversation.locator('textarea')).toHaveCount(0);
   await footer.getByRole('button', { name: '在 AETHER 繼續', exact: true }).click();
@@ -104,15 +95,13 @@ test('a session AETHER does not own is read-only; continuing it in AETHER makes 
   await page.screenshot({ path: 'evidence/screenshots/e2e-composer-continue.png' });
   const box = conversation.getByLabel('傳訊息給 session');
   await expect(box).toBeVisible({ timeout: 45000 });
-  await expect(conversation.locator('.session-footer')).not.toContainText('唯讀');
+  await expect(footer).not.toContainText('唯讀');
   await expectAccessible(page);
 
   await box.fill('hello from the composer');
   await box.press('Enter');
   await expect(conversation.locator('.msg.user.pending')).toContainText('hello from the composer');
-  await expect(conversation.getByText('ECHO: hello from the composer')).toBeVisible({
-    timeout: 30000,
-  });
+  await expect(message('ECHO: hello from the composer')).toBeVisible({ timeout: 30000 });
   await expect(conversation.locator('.msg.user.pending')).toHaveCount(0);
   await expect(
     conversation.locator('.msg.user', { hasText: 'hello from the composer' }),
@@ -122,9 +111,7 @@ test('a session AETHER does not own is read-only; continuing it in AETHER makes 
   await box.press('Shift+Enter');
   await box.pressSequentially('second line');
   await box.press('Enter');
-  await expect(conversation.getByText('ECHO: first line / second line')).toBeVisible({
-    timeout: 30000,
-  });
+  await expect(message('ECHO: first line / second line')).toBeVisible({ timeout: 30000 });
 
   await box.fill('slow task please');
   await box.press('Enter');
@@ -133,19 +120,15 @@ test('a session AETHER does not own is read-only; continuing it in AETHER makes 
   ).toBeVisible({ timeout: 45000 });
   const stop = conversation.getByRole('button', { name: '停止', exact: true });
   await expect(stop).toBeVisible({ timeout: 30000 });
-  await expect(conversation.getByRole('button', { name: '送出', exact: true })).toHaveCount(0);
+  await expect(send).toHaveCount(0);
   await page.screenshot({ path: 'evidence/screenshots/e2e-composer-working.png' });
   await stop.click();
-  await expect(conversation.getByText('[interrupted]')).toBeVisible({ timeout: 30000 });
-  await expect(conversation.getByRole('button', { name: '送出', exact: true })).toBeVisible({
-    timeout: 30000,
-  });
+  await expect(message('[interrupted]')).toBeVisible({ timeout: 30000 });
+  await expect(send).toBeVisible({ timeout: 30000 });
   expect(errors).toEqual([]);
 });
 
-test('the slash menu and @file completion fill the box; custom commands are listed', async ({
-  page,
-}) => {
+test('slash and @file menus complete input and list custom commands', async ({ page }) => {
   await login(page);
   const { conversation } = await openSession(page, 'desktop');
   const box = conversation.getByLabel('傳訊息給 session');
@@ -168,10 +151,7 @@ test('the slash menu and @file completion fill the box; custom commands are list
   await box.fill('');
 });
 
-test('offline: a message waits in the conversation and goes in when the connection returns', async ({
-  page,
-  context,
-}) => {
+test('offline messages queue and send when the connection returns', async ({ page, context }) => {
   await login(page);
   const { conversation } = await openSession(page, 'desktop');
   const box = conversation.getByLabel('傳訊息給 session');
@@ -186,9 +166,7 @@ test('offline: a message waits in the conversation and goes in when the connecti
   await expect(conversation.locator('.msg.user.pending')).toHaveCount(0);
 });
 
-test('phone: Enter is a new line, Send is a button, quick replies are one tap', async ({
-  browser,
-}) => {
+test('phone: Enter adds a line; quick replies use buttons', async ({ browser }) => {
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
     hasTouch: true,

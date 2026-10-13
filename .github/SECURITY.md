@@ -1,8 +1,10 @@
 # Security Policy
 
+[Documentation](../docs/README.md) · [Project](../README.md)
+
 ## Supported versions
 
-AETHER OFFICE is a pre-release (`0.4.0`). Security fixes are made on the `main` branch; there are no
+AETHER OFFICE is a pre-release (`0.4.x`). Security fixes are made on the `main` branch; there are no
 maintained release branches yet.
 
 ## Reporting a vulnerability

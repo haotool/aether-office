@@ -1,5 +1,7 @@
 # ADR 0009: Relative mobile performance measurement (harness only)
 
+[Documentation](../README.md) · [Project](../../README.md)
+
 - Status: accepted
 - Date: 2026-10-08
 

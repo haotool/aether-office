@@ -1,5 +1,7 @@
 # ADR 0006: Verified provider releases and generated protocol artifacts
 
+[Documentation](../README.md) · [Project](../../README.md)
+
 - Status: accepted
 - Date: 2026-10-08
 

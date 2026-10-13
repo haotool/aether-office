@@ -1,5 +1,7 @@
 # ADR 0004: Enforced module layers between apps and packages
 
+[Documentation](../README.md) · [Project](../../README.md)
+
 - Status: accepted
 - Date: 2026-10-08
 

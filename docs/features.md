@@ -1,5 +1,33 @@
 # Feature notes
 
+[Documentation](README.md) · [Project](../README.md)
+
+<details>
+<summary>Contents</summary>
+
+- [First run, language, titles and the keyboard](#first-run-language-titles-and-the-keyboard)
+- [Navigation: the Advanced switch](#navigation-the-advanced-switch)
+- [Settings](#settings)
+- [Notifications](#notifications)
+- [Connecting a phone](#connecting-a-phone)
+- [Task dependency graph](#task-dependency-graph)
+- [Project knowledge and human review](#project-knowledge-and-human-review)
+- [Agent review](#agent-review)
+- [Interacting with the characters](#interacting-with-the-characters)
+- [The session panel and the composer](#the-session-panel-and-the-composer)
+- [Answering permission prompts (Remote approvals)](#answering-permission-prompts-remote-approvals)
+- [Text in the conversation: wrappers, notices and Markdown](#text-in-the-conversation-wrappers-notices-and-markdown)
+- [Token and Git KPIs](#token-and-git-kpis)
+- [Detected models](#detected-models)
+- [The first-visit tour](#the-first-visit-tour)
+- [Clock out](#clock-out)
+- [The repository in the office](#the-repository-in-the-office)
+- [Speech bubbles, context and compaction](#speech-bubbles-context-and-compaction)
+- [Office life: little moments in the 3D office](#office-life-little-moments-in-the-3d-office)
+- [Observed sessions on the 3D floor](#observed-sessions-on-the-3d-floor)
+
+</details>
+
 Behavioral notes for capabilities that are not obvious from the UI. The authoritative per-capability status is the
 [verification ledger](verification/report.md).
 
@@ -209,25 +237,25 @@ no tokens) is skipped, so the gauge shows the last real turn, or nothing, never 
 ## Office life: little moments in the 3D office
 
 Small, decorative animations that follow what a session does. They are pictures, not facts. Each wave-1 effect says what a
-command was *started* as or what state a session is in, never whether it passed or was pushed. The wave-2 outcome moments (below the
-table) start only when the provider *stated* how a command ended (Claude's `PostToolUse` or `PostToolUseFailure`, an `is_error`
+command was _started_ as or what state a session is in, never whether it passed or was pushed. The wave-2 outcome moments (below the
+table) start only when the provider _stated_ how a command ended (Claude's `PostToolUse` or `PostToolUseFailure`, an `is_error`
 in the transcript, a Codex exit code); when the outcome is unknown nothing shows. The hidden live region "Office activity
 (decorative)" announces each one, at most one line per 5 s, in the page language.
 
-| Effect | Fires on (from the hook records and the scan) | Lasts | Cooldown | Kind |
-| --- | --- | --- | --- | --- |
-| Rubber duck | working, no tool running, nothing heard for 45 s | 18 s | 10 min per member | Wellbeing |
-| Test lamp and bug | a test command starts (`pnpm test`, `vitest`, `pytest`, `go test`, `cargo test`, ...); amber only | 14 s | 5 min per member | Tests and builds |
-| Install disc | an install command starts (`pnpm install`, `npm i`, `yarn`, ...) | 20 s | 10 min per member | Tests and builds |
-| Rocket or paper plane | a `git push` command starts | 2.6 s | 10 min per member | Git |
-| Pager bell | a member's state turns to error | 3 s | 5 min per member | Ops |
-| Coffee steam | a session that began 2 h or more ago starts working | 4.5 s | 45 min per member | Wellbeing |
-| Loop ring | the same command ran 4 times in 2 minutes | 8 s | 10 min per member | Memes |
-| Copy and paste keycaps | a fetch of Stack Overflow, Super User or a Stack Exchange site | 2.4 s | 30 min per member | Memes |
-| `:q!` sign | `vim`, `vi` or `nvim` starts | 4 s | 1 day per member | Memes |
-| Pile of boxes | 20 or more uncommitted files for 30 minutes | 45 s | 10 min per member | Work |
-| Stand-up circle | a member idle 5 minutes while 3 or more are idle on the floor | 12 s | 1 h per floor | Social |
-| Confetti | the viewer types the Konami code | 4.5 s | once a day | Easter eggs |
+| Effect                 | Fires on (from the hook records and the scan)                                                     | Lasts | Cooldown          | Kind             |
+| ---------------------- | ------------------------------------------------------------------------------------------------- | ----- | ----------------- | ---------------- |
+| Rubber duck            | working, no tool running, nothing heard for 45 s                                                  | 18 s  | 10 min per member | Wellbeing        |
+| Test lamp and bug      | a test command starts (`pnpm test`, `vitest`, `pytest`, `go test`, `cargo test`, ...); amber only | 14 s  | 5 min per member  | Tests and builds |
+| Install disc           | an install command starts (`pnpm install`, `npm i`, `yarn`, ...)                                  | 20 s  | 10 min per member | Tests and builds |
+| Rocket or paper plane  | a `git push` command starts                                                                       | 2.6 s | 10 min per member | Git              |
+| Pager bell             | a member's state turns to error                                                                   | 3 s   | 5 min per member  | Ops              |
+| Coffee steam           | a session that began 2 h or more ago starts working                                               | 4.5 s | 45 min per member | Wellbeing        |
+| Loop ring              | the same command ran 4 times in 2 minutes                                                         | 8 s   | 10 min per member | Memes            |
+| Copy and paste keycaps | a fetch of Stack Overflow, Super User or a Stack Exchange site                                    | 2.4 s | 30 min per member | Memes            |
+| `:q!` sign             | `vim`, `vi` or `nvim` starts                                                                      | 4 s   | 1 day per member  | Memes            |
+| Pile of boxes          | 20 or more uncommitted files for 30 minutes                                                       | 45 s  | 10 min per member | Work             |
+| Stand-up circle        | a member idle 5 minutes while 3 or more are idle on the floor                                     | 12 s  | 1 h per floor     | Social           |
+| Confetti               | the viewer types the Konami code                                                                  | 4.5 s | once a day        | Easter eggs      |
 
 **Wave 2** adds fourteen more, each from a stated outcome or a command label: a green lamp and a squashed bug when a test
 command exited successfully, a red lamp and a scurrying bug when it failed, a CI stack for a watch command's exit status, a red

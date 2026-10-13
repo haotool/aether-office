@@ -147,7 +147,7 @@ function step(run: Run, i: number): number {
 
 function codeSpan(run: Run, i: number): number {
   const { text } = run;
-  const n = /^`+/.exec(text.slice(i, i + 64))?.[0].length ?? 1;
+  const n = /^`+/.exec(text.slice(i))?.[0].length ?? 1;
   const end = closingTicks(text, i + n, n);
   put(run, end < 0 ? text.slice(i, i + n) : text.slice(i, end + n));
   return end < 0 ? i + n : end + n;

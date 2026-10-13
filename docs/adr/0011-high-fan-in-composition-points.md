@@ -1,5 +1,7 @@
 # ADR 0011: High fan-in modules at intentional composition points
 
+[Documentation](../README.md) · [Project](../../README.md)
+
 - Status: accepted
 - Date: 2026-10-08
 

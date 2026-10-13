@@ -1,5 +1,7 @@
 # ADR 0012: Product scope — what ships now, what is simplified, what waits
 
+[Documentation](../README.md) · [Project](../../README.md)
+
 - Status: accepted
 - Date: 2026-10-08
 

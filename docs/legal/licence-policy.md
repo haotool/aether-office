@@ -1,5 +1,7 @@
 # Licence policy
 
+[Documentation](../README.md) · [Project](../../README.md)
+
 AETHER OFFICE is released under the MIT License. Everything it ships must be compatible with that, and everything it uses
 must be used within its licence. This policy is enforced by `scripts/oss/third-party-notices.mjs` (the `ALLOWED`,
 `CONDITIONAL`, `DENIED`, `EXCEPTIONS` and `APPROVED` tables there are the machine-readable copy of the lists below) and by
@@ -13,11 +15,11 @@ CC-BY-4.0 (data and documentation). `WITH LLVM-exception` and `WITH Classpath-ex
 
 **Conditional** (allowed in development tools; a shipped package needs an entry in `APPROVED` with the reason):
 
-| Licence    | Condition                                                                                                       |
-| ---------- | --------------------------------------------------------------------------------------------------------------- |
-| MPL-2.0    | File-level copyleft. Use the files unmodified; if an MPL file is ever modified or shipped, its source must be offered under the MPL. Today only development tools (`axe-core`, `@axe-core/playwright`, `lightningcss`) are MPL, unmodified and not shipped. |
-| CC-BY-3.0  | Attribution in the notices.                                                                                     |
-| `LicenseRef-*` (proprietary terms) | Allowed only as a dependency the user installs, never copied into the repository or a build. The one case is `@anthropic-ai/claude-agent-sdk` (see below). |
+| Licence                            | Condition                                                                                                                                                                                                                                                   |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MPL-2.0                            | File-level copyleft. Use the files unmodified; if an MPL file is ever modified or shipped, its source must be offered under the MPL. Today only development tools (`axe-core`, `@axe-core/playwright`, `lightningcss`) are MPL, unmodified and not shipped. |
+| CC-BY-3.0                          | Attribution in the notices.                                                                                                                                                                                                                                 |
+| `LicenseRef-*` (proprietary terms) | Allowed only as a dependency the user installs, never copied into the repository or a build. The one case is `@anthropic-ai/claude-agent-sdk` (see below).                                                                                                  |
 
 **Denied** (the check fails, in development tools too): GPL, LGPL, AGPL, SSPL, BUSL, Elastic License, EUPL, OSL, RPL, CPAL,
 Commons Clause, CC BY-NC / BY-SA / BY-ND, PolyForm (including Noncommercial), the JSON License, "ethical" licences
@@ -60,13 +62,14 @@ Contributions written with an AI assistant are welcome and are held to the same 
 submit. Do not ask an assistant to reproduce another project's code, and do not paste in code it produces that you
 recognise (or suspect) as coming from a project with an incompatible licence. If an assistant produced a long block that
 looks like library or project code, check where it comes from before committing it. By submitting a contribution you
-certify that you have the right to submit it under the MIT License (see the sign-off below).
+certify that you have the right to submit it under the MIT License (see the certification below).
 
 ## Contributor sign-off
 
 Contributions are accepted under the MIT License ("inbound = outbound"); there is no contributor licence agreement. The
-project recommends the [Developer Certificate of Origin](https://developercertificate.org/) (`git commit -s`) as the
-contributor's statement that they may submit the change. *Maintainer decision:* whether to require the sign-off in CI.
+[pull request checklist](../../.github/PULL_REQUEST_TEMPLATE.md) records the
+[Developer Certificate of Origin](https://developercertificate.org/) certification that the contributor may submit the
+change. Commit trailers are not required; the contribution statement stays with its review.
 
 ## Assets
 

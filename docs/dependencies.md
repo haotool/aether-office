@@ -1,5 +1,7 @@
 # Dependencies
 
+[Documentation](README.md) · [Project](../README.md)
+
 Direct runtime and development dependencies are pinned in each package manifest and in `pnpm-lock.yaml`. `pnpm-workspace.yaml` sets supply-chain controls: a release younger than a day is not installed, a package whose publish
 evidence is weaker than an earlier version's is refused, and dependencies may not come from git or tarball URLs.
 Licenses and attributions are in [THIRD_PARTY_NOTICES.md](legal/THIRD_PARTY_NOTICES.md), generated from the lockfile by
