@@ -9,7 +9,7 @@ Overall: **97.5** (mean of the scored areas; target 95).
 | Structure (`structure`) | 95.0 | 95.0 | 100% | fan-in 3 (-5) |
 | Types and correctness gates (`types`) | 100.0 | 100.0 | 100% | none |
 | Tests (`tests`) | 100.0 | 100.0 | 100% | none |
-| UI system and design tokens (`ui`) | 100.0 | 100.0 | 100% | none |
+| UI system and design tokens (`ui`) | 100.0 | 100.0 | 82% | none |
 | Accessibility and i18n (`a11y`) | 100.0 | 100.0 | 80% | none |
 | Performance budgets (`perf`) | 99.1 | 99.1 | 70% | first-load 203 (-0.9) |
 | Docs truth (`docs`) | 100.0 | 100.0 | 100% | none |
@@ -92,7 +92,7 @@ packages/providers: 2051 source lines
 
 ## UI system and design tokens
 
-Score 100.0, floor 100.0, 100% of the rule weight measured.
+Score 100.0, floor 100.0, 82% of the rule weight measured.
 
 | Rule | Id | Value | Limit | Weight | Penalty | State |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
@@ -107,7 +107,7 @@ Score 100.0, floor 100.0, 100% of the rule weight measured.
 | px custom properties outside tokens.css | `custom-property-literal` | 0 | 0 | 5 | 0 | pass |
 | token-lint escape comments over the budget of 100 | `escape-comments` | 100 | 100 | 10 | 0 | pass |
 | Rules above scripts/design-token-baseline.json | `baseline-regression` | 0 | 0 | 15 | 0 | pass |
-| Roles with more distinct sizes than allowed | `role-variance` | 0 | 0 | 20 | 0 | pass |
+| Distinct control sizes per role (e2e/ui/role-variance.spec.ts) (not run: the spec has no recorded result (expected evidence/role-variance.json)) | `role-variance` | - | - | 20 | 0 | not run |
 | Physical left/right properties (logical ones are RTL-ready) | `physical-properties` | 169 | - | - | 0 | info |
 
 ## Accessibility and i18n
@@ -130,8 +130,8 @@ Score 99.1, floor 99.1, 70% of the rule weight measured.
 
 | Rule | Id | Value | Limit | Weight | Penalty | State |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
-| Web JavaScript total, gzip (budget 870 KB) | `bundle-total` | 852 KB | 870 | 25 | 0 | pass |
-| Largest JavaScript chunk, gzip (budget 400 KB) | `bundle-chunk` | 380 KB | 400 | 15 | 0 | pass |
+| Web JavaScript total, gzip (budget 870 KB) | `bundle-total` | 849 KB | 870 | 25 | 0 | pass |
+| Largest JavaScript chunk, gzip (budget 400 KB) | `bundle-chunk` | 379 KB | 400 | 15 | 0 | pass |
 | First-load JavaScript and CSS, transferred (budget 200 KB) | `first-load` | 203 KB | 200 | 30 | -0.9 | fail |
 | Frame times and draw cost (scripts/perf-matrix.mjs) (not run: needs a real GPU (PERF_GPU=1); the measured numbers in docs/design-system.md are not re-scored) | `perf-matrix` | - | - | 30 | 0 | not run |
 | Stylesheet files in apps/web/src (198 KB source, 3 built file(s) at 32 KB gzip; no CSS budget is documented) | `css-sources` | 52 | - | - | 0 | info |
