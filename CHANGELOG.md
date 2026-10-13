@@ -15,6 +15,8 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   server for seconds; the line is now read in linear time.
 - A reply with a line of tens of thousands of backticks stalled the conversation text pass for seconds; code spans are now
   found in linear time, and a run of more than 16 backticks no longer delimits a span.
+- Checking whether a session's process had been orphaned stalled for seconds when its parent's command line was very long; the
+  check is now linear, and `--user` has to follow `systemd` within 256 characters.
 
 ## [0.4.0] - 2026-10-13
 

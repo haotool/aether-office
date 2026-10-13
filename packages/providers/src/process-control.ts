@@ -87,8 +87,9 @@ export function inspectProcess(pid: number): Inspected | null {
   }
 }
 
-// The manager that adopts a user's orphans on Linux, in place of init.
-const ORPHAN_ADOPTER = /(?:^|\/)systemd\s.*--user\b/;
+// The manager that adopts a user's orphans on Linux, in place of init. The gap is bounded so a very long command line
+// cannot backtrack quadratically.
+const ORPHAN_ADOPTER = /(?:^|\/)systemd\s.{0,256}--user\b/;
 
 export function isOrphan(
   info: Pick<Inspected, 'ppid'>,
