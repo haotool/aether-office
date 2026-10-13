@@ -19,9 +19,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Validate title and commits
-        env:
-          TITLE: ${{ github.event.pull_request.title }}
-          BASE: ${{ github.base_ref }}
+        env: { TITLE: '${{ github.event.pull_request.title }}', BASE: '${{ github.base_ref }}' }
         run: |
           bash scripts/oss/commit-msg.sh --subject "$TITLE"
           bash scripts/oss/commit-msg.sh --range "origin/$BASE..HEAD"
@@ -55,6 +53,8 @@ jobs:
         run: pnpm audit:gate
       - name: Linux browser workflows
         if: matrix.os == 'ubuntu-latest'
+        env:
+          TMPDIR: ${{ runner.temp }}
         run: |
           pnpm exec playwright install --with-deps chromium
           pnpm exec playwright test e2e/session/local-sessions.spec.ts e2e/session/pairing.spec.ts e2e/workbench/composer.spec.ts e2e/workbench/native-workflow.spec.ts --timeout=120000
@@ -71,7 +71,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - env:
-          RESULT: ${{ needs.verify.result }}
+      - env: { RESULT: '${{ needs.verify.result }}' }
         run: test "$RESULT" = success
   audit: *verified

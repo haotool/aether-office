@@ -103,6 +103,20 @@ docs/             This documentation, ADRs and the verification ledger
   journey (sign in, create and assign work, review, verify, accept), accessibility (axe), responsive layout at six sizes,
   touch flows and the 3D scene.
 
+### Linux browser fixtures
+
+Automatic project adoption intentionally excludes repositories under `/tmp` and `/private/tmp`. Linux browser tests
+therefore need a temporary directory outside those scratch roots. CI sets `TMPDIR` to the runner's temporary directory
+for the browser step. For a local Linux run:
+
+```sh
+mkdir -p "$HOME/.cache/aether-e2e"
+TMPDIR="$HOME/.cache/aether-e2e" pnpm exec playwright test
+```
+
+The fixture data stays synthetic and separate from the operator's CLI credentials. This setting changes the test
+fixture location; it does not change which repositories the product adopts.
+
 ## Writing stable tests
 
 A test passes on a quiet machine and on one at load 30 alike, or it is not finished. Wait for the thing, never for a guess
