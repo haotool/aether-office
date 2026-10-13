@@ -10,7 +10,7 @@ are separate operations; the historical procedure is in [History cleanup](histor
 
 - [ ] Update the version in the root `package.json` and all seven workspace manifests. Runtime services read
       `APP_VERSION` from the root; `tests/aether/version.test.ts` checks consistency. Update the sidebar's major/minor
-      badge only when that series changes.
+      badge only when that series changes. Choose the increment using the [version policy](versioning.md).
 - [ ] Move the completed changes from `Unreleased` into a dated version section in [CHANGELOG.md](../../CHANGELOG.md).
       Include upgrade steps when behavior or configuration changes. Keep earlier release entries intact.
 - [ ] Review the [feature ledger](../verification/report.md). Implementation and verification are separate; missing
@@ -37,6 +37,13 @@ pnpm run oss:check
 pnpm run quality:check
 pnpm exec playwright test
 pnpm verify:clean
+```
+
+For a stable release, also produce exact-HEAD gate evidence and require the strict release score:
+
+```sh
+pnpm run quality:gates -- --out /tmp/aether-quality-gates.json
+pnpm run quality:release -- --gates /tmp/aether-quality-gates.json
 ```
 
 - [ ] Run `pnpm run notices:check`. Dependency changes require regenerated notices; verify the build contains
@@ -68,15 +75,16 @@ pnpm verify:clean
 Use the version from `package.json`. For example, a `0.4.1` release uses the tag `v0.4.1`:
 
 ```sh
-node scripts/oss/third-party-notices.mjs --sbom aether-office-0.4.1.cdx.json
+node scripts/oss/third-party-notices.mjs --sbom /tmp/aether-office-0.4.1.cdx.json
 git tag -a v0.4.1 -m "v0.4.1"
+AETHER_RELEASE_TAG=v0.4.1 pnpm exec vitest run tests/aether/version.test.ts tests/aether/quality-release-metadata.test.ts
 git push origin v0.4.1
 ```
 
 - [ ] Obtain maintainer authorization before pushing or publishing. Create the annotated tag from the verified main
       commit; use a signed tag if a signing key is already configured. Never replace an existing public release tag.
-- [ ] Create a GitHub release using the matching changelog section and attach the CycloneDX SBOM. Mark it a pre-release
-      while the ledger contains unresolved release blockers.
+- [ ] Create a draft GitHub release using the matching changelog section and attach the CycloneDX SBOM. Mark it a
+      pre-release while the ledger contains unresolved release blockers, then publish the complete draft.
 - [ ] Check the tag's commit, release status, notes and attachment after publication. A source-only release has no
       compiled binary provenance claim: its evidence is the public tag and verified source commit.
 - [ ] Follow the README from a fresh checkout. Preserve verification records and a recoverable snapshot before
@@ -88,6 +96,8 @@ These settings are reviewed separately from routine releases:
 
 - Require PRs, the existing status checks and linear history on `main`; block force pushes and deletion. Keep
   `.github/CODEOWNERS` current. Require an approving Code Owner once a second maintainer can review the first's changes.
+- Require CodeQL alongside the source checks. Protect `v*` tags from update and deletion, and enable immutable releases;
+  assemble assets in a draft before publishing.
 - Use read-only Actions permissions and approvals for first-time contributors. Keep Actions pinned to commit SHAs.
 - Enable private vulnerability reporting, secret scanning, push protection and Dependabot security updates where
   available. Confirm the repository offers **Report a vulnerability** and the issue templates load.
