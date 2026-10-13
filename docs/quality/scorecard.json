@@ -98,7 +98,7 @@
         },
         {
           "id": "code-lines",
-          "label": "Code lines over the budget of 146606",
+          "label": "Code lines over the budget of 146595",
           "status": "pass",
           "weight": 6,
           "value": 0,
@@ -321,9 +321,9 @@
             "apps/runner: 22/24 modules, 3070 source lines",
             "apps/web: 190/337 modules, 28185 source lines",
             "packages/contracts: 16/16 modules, 1365 source lines",
-            "packages/kernel: 28/28 modules, 3448 source lines",
+            "packages/kernel: 28/28 modules, 3449 source lines",
             "packages/office-scene: 133/244 modules, 25872 source lines",
-            "packages/providers: 14/14 modules, 2050 source lines"
+            "packages/providers: 14/14 modules, 2051 source lines"
           ]
         },
         {
@@ -391,9 +391,9 @@
             "apps/runner: 3070 source lines",
             "apps/web: 28185 source lines",
             "packages/contracts: 1365 source lines",
-            "packages/kernel: 3448 source lines",
+            "packages/kernel: 3449 source lines",
             "packages/office-scene: 25872 source lines",
-            "packages/providers: 2050 source lines"
+            "packages/providers: 2051 source lines"
           ]
         }
       ]
@@ -714,14 +714,14 @@
           "unit": "KB",
           "penalty": 0,
           "details": [
-            "apps/web/dist/assets/src-BpC24ZoJ.js:1 380 KB",
-            "apps/web/dist/assets/index-BbVV8vSH.js:1 91 KB",
+            "apps/web/dist/assets/src-jhYW80ZW.js:1 380 KB",
+            "apps/web/dist/assets/index-CyIaHKDx.js:1 91 KB",
             "apps/web/dist/assets/Terminals-BhCPX-ju.js:1 86 KB",
             "apps/web/dist/assets/TaskDag-D7bAZYC1.js:1 56 KB",
             "apps/web/dist/assets/core-CJGtMnx9.js:1 27 KB",
-            "apps/web/dist/assets/ProjectPage-C4fqzcdT.js:1 27 KB",
+            "apps/web/dist/assets/ProjectPage-8skdZLZy.js:1 27 KB",
             "apps/web/dist/assets/zh-CbTq9pdL.js:1 21 KB",
-            "apps/web/dist/assets/PanelBody-ClzQqa0T.js:1 20 KB"
+            "apps/web/dist/assets/PanelBody-pIVdKENw.js:1 20 KB"
           ]
         },
         {
@@ -735,7 +735,7 @@
           "unit": "KB",
           "penalty": 0,
           "details": [
-            "apps/web/dist/assets/src-BpC24ZoJ.js:1 380 KB"
+            "apps/web/dist/assets/src-jhYW80ZW.js:1 380 KB"
           ]
         },
         {
@@ -749,7 +749,7 @@
           "unit": "KB",
           "penalty": 0.9,
           "details": [
-            "apps/web/dist/assets/index-BbVV8vSH.js:1 80 KB",
+            "apps/web/dist/assets/index-CyIaHKDx.js:1 79 KB",
             "apps/web/dist/assets/signals-BiryGzd7.js:1 3 KB",
             "apps/web/dist/assets/scheduler-CaJXFZeK.js:1 1 KB",
             "apps/web/dist/assets/react-dom-DkN6JdHT.js:1 1 KB",
@@ -764,7 +764,7 @@
             "apps/web/dist/assets/PermissionCard-DfG09Nz-.js:1 8 KB",
             "apps/web/dist/assets/arrow-up-right-DDxfJXAZ.js:1 0 KB",
             "apps/web/dist/assets/monitor-ND28roRt.js:1 0 KB",
-            "apps/web/dist/assets/text-title-CotuO_NR.js:1 10 KB",
+            "apps/web/dist/assets/text-title-DWY6J0G4.js:1 10 KB",
             "apps/web/dist/assets/time-CPE8nN5v.js:1 0 KB",
             "apps/web/dist/assets/browser-compat-Cpt3e03-.js:1 0 KB",
             "apps/web/dist/assets/api-commands-CCpRaWgH.js:1 0 KB",
@@ -773,19 +773,19 @@
             "apps/web/dist/assets/Badge-DWqNqciH.js:1 0 KB",
             "apps/web/dist/assets/Modal-CBR7dyyH.js:1 1 KB",
             "apps/web/dist/assets/Field-B9Dixeel.js:1 0 KB",
-            "apps/web/dist/assets/install-prompt-CUaC5MJ4.js:1 6 KB",
+            "apps/web/dist/assets/install-prompt-C50tqYcv.js:1 6 KB",
             "apps/web/dist/assets/departments-CfOr-c1i.js:1 1 KB",
             "apps/web/dist/assets/animal-states-fx34-YW1.js:1 1 KB",
-            "apps/web/dist/assets/session-limits-B_8XrkV8.js:1 0 KB",
-            "apps/web/dist/assets/localSessions-CL7zqQZD.js:1 6 KB",
-            "apps/web/dist/assets/clock-out-BCAZFGcD.js:1 1 KB",
-            "apps/web/dist/assets/feed-avatar-CR8qoiOP.js:1 5 KB",
+            "apps/web/dist/assets/session-limits-CQdVUBfq.js:1 0 KB",
+            "apps/web/dist/assets/localSessions-CFgB50Kp.js:1 6 KB",
+            "apps/web/dist/assets/clock-out-D8FDNZhp.js:1 1 KB",
+            "apps/web/dist/assets/feed-avatar-83a4L2UO.js:1 5 KB",
             "apps/web/dist/assets/copy-DAvi4YBU.js:1 0 KB",
             "apps/web/dist/assets/door-open-DeqL-zfI.js:1 0 KB",
             "apps/web/dist/assets/PreferenceControls-BAJODtfU.js:1 1 KB",
             "apps/web/dist/assets/use-drive-CDanVQ7V.js:1 3 KB",
-            "apps/web/dist/assets/character-actions-DZSpFXs6.js:1 1 KB",
-            "apps/web/dist/assets/squad-layout-sNDGujSo.js:1 3 KB",
+            "apps/web/dist/assets/character-actions-Cbmj1Awm.js:1 1 KB",
+            "apps/web/dist/assets/squad-layout-DhTprO1U.js:1 3 KB",
             "apps/web/dist/assets/context-X44HcWvZ.js:1 0 KB",
             "apps/web/dist/assets/use-latest-Toba1xOl.js:1 0 KB",
             "apps/web/dist/assets/ClaudeQuota-D26tW0yN.js:1 1 KB",

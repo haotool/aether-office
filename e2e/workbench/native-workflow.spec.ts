@@ -1,150 +1,137 @@
 import { test, expect } from '@playwright/test';
 import { NATIVE_SESSION, nativeOrigin, signIn } from '../support/sign-in.js';
+import { nativeDataDirectory } from '../support/native-fixture.js';
 import { execFileSync } from 'node:child_process';
-import { readFileSync, unlinkSync } from 'node:fs';
+import { readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 test('synthetic provider browser flow: permission, diff, review, commit-bound verification, human acceptance', async ({
   page,
 }) => {
-  const runtime = JSON.parse(readFileSync('.data/e2e-native-session.json', 'utf8')) as {
-    directory: string;
-  };
+  const title = `合成程序完整工作鏈 ${randomUUID()}`;
+  const button = (name: string | RegExp) =>
+    page.getByRole('button', { name, exact: typeof name === 'string' });
+  const field = (name: string) => page.getByLabel(name, { exact: true });
+  const text = (name: string) => page.getByText(name, { exact: true });
+  const workspace = page
+    .locator('.workspace-card')
+    .filter({ hasText: title })
+    .filter({ hasText: '· 工作區' });
+  const directory = nativeDataDirectory();
   let authenticated = false;
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (message) => {
-    if (
-      message.type() === 'error' &&
-      !(
-        !authenticated &&
-        message.location().url.endsWith('/api/session') &&
-        message.text().includes('401')
-      )
-    )
-      errors.push(message.text());
+    const login401 =
+      !authenticated &&
+      message.location().url.endsWith('/api/session') &&
+      message.text().includes('401');
+    if (message.type() === 'error' && !login401) errors.push(message.text());
   });
   await signIn(page, nativeOrigin(), { session: NATIVE_SESSION });
   authenticated = true;
   await page.getByRole('link', { name: '外部觀察', exact: true }).click();
-  await expect(
-    page.getByText('Observed fixture only · 不代表任務已完成', { exact: true }),
-  ).toBeVisible({ timeout: 15000 });
-  await expect(page.getByText('OBSERVE · 唯讀', { exact: true })).toBeVisible();
-  await page.screenshot({ path: 'evidence/screenshots/e2e-observe.png' });
-  unlinkSync(join(runtime.directory, 'observer-fixture', 'session.jsonl'));
-  await expect(page.getByText('來源檔案不存在', { exact: true })).toBeVisible({ timeout: 15000 });
-  await page.getByRole('link', { name: '辦公室', exact: true }).click();
-  await page.getByRole('button', { name: '建立任務', exact: true }).click();
-  await page.getByLabel('任務標題', { exact: true }).fill('合成程序完整工作鏈');
-  await page
-    .getByLabel('工作說明', { exact: true })
-    .fill('Synthetic wire fixture; no installed provider or paid model.');
-  await page
-    .getByLabel('驗收條件', { exact: true })
-    .fill('批准、審查、固定版本測試與接受分開完成。');
-  await page.getByRole('button', { name: '建立', exact: true }).click();
-  await expect(page.getByRole('dialog')).toHaveCount(0);
-  await page.getByRole('link', { name: /^任務/ }).click();
-  await page.getByRole('button', { name: /合成程序完整工作鏈/ }).click();
-  await page
-    .getByLabel('選擇成員', { exact: true })
-    .selectOption({ label: 'Synthetic Codex Wire · codex' });
-  await page.getByRole('button', { name: '派工', exact: true }).click();
-  await page.getByRole('dialog').getByRole('button', { name: '關閉', exact: true }).click();
-  await page.getByRole('link', { name: /^工具批准/ }).click();
-  await expect(page.getByRole('button', { name: '允許這次操作', exact: true })).toBeVisible({
+  await expect(text('Observed fixture only · 不代表任務已完成').first()).toBeVisible({
     timeout: 15000,
   });
+  await expect(text('OBSERVE · 唯讀')).toBeVisible();
+  await page.screenshot({ path: 'evidence/screenshots/e2e-observe.png' });
+  const source = join(directory, 'observer-fixture', 'session.jsonl');
+  const original = readFileSync(source);
+  try {
+    unlinkSync(source);
+    await expect(
+      page
+        .locator('article')
+        .filter({ has: page.getByRole('heading', { name: 'External Observe Fixture' }) })
+        .getByText('來源檔案不存在', { exact: true }),
+    ).toBeVisible({ timeout: 15000 });
+  } finally {
+    writeFileSync(source, original);
+  }
+  await page.getByRole('link', { name: '辦公室', exact: true }).click();
+  await button('建立任務').click();
+  await field('任務標題').fill(title);
+  await field('工作說明').fill('Synthetic wire fixture; no installed provider or paid model.');
+  await field('驗收條件').fill('批准、審查、固定版本測試與接受分開完成。');
+  await button('建立').click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('link', { name: /^任務/ }).click();
-  await page.getByRole('button', { name: /合成程序完整工作鏈/ }).click();
-  await expect(page.getByText('等待人類工具批准', { exact: true })).toBeVisible();
-  await expect(page.getByText('機器心跳', { exact: true })).toBeVisible();
+  await button(new RegExp(title)).click();
+  await field('選擇成員').selectOption({ label: 'Synthetic Codex Wire · codex' });
+  await button('派工').click();
+  await page.getByRole('dialog').getByRole('button', { name: '關閉', exact: true }).click();
+  await page.getByRole('link', { name: /^工具批准/ }).click();
+  await expect(button('允許這次操作')).toBeVisible({ timeout: 15000 });
+  await page.getByRole('link', { name: /^任務/ }).click();
+  await button(new RegExp(title)).click();
+  await expect(text('等待人類工具批准')).toBeVisible();
+  await expect(text('機器心跳')).toBeVisible();
   await page.getByRole('dialog').getByRole('button', { name: '關閉', exact: true }).click();
   await page.getByRole('link', { name: /^工具批准/ }).click();
   await page.screenshot({ path: 'evidence/screenshots/e2e-synthetic-approval.png' });
   const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
   expect(axe.violations).toEqual([]);
-  await page.getByRole('button', { name: '允許這次操作', exact: true }).click();
-  await expect(page.getByText('已明確確認', { exact: true })).toBeVisible({ timeout: 15000 });
+  const confirmedBefore = await text('已明確確認').count();
+  await button('允許這次操作').click();
+  await expect(text('已明確確認')).toHaveCount(confirmedBefore + 1, { timeout: 15000 });
   await page.getByRole('link', { name: '工作區', exact: true }).click();
-  await expect(page.getByRole('button', { name: '讀取目前差異', exact: true })).toBeEnabled({
+  await expect(workspace.getByRole('button', { name: '讀取目前差異', exact: true })).toBeEnabled({
     timeout: 10000,
   });
-  await page.getByRole('button', { name: '讀取目前差異', exact: true }).click();
-  await expect(page.getByText('沒有已追蹤檔案差異', { exact: true })).toBeVisible({
+  await workspace.getByRole('button', { name: '讀取目前差異', exact: true }).click();
+  await expect(workspace.getByText('沒有已追蹤檔案差異', { exact: true })).toBeVisible({
     timeout: 15000,
   });
-  await expect(page.getByText(/此證據對應的版本/)).toBeVisible();
+  await expect(workspace.getByText(/此證據對應的版本/)).toBeVisible();
   await page.getByRole('link', { name: '成果審查', exact: true }).click();
   await expect(page.getByRole('region', { name: '程式碼區塊評論' })).toBeVisible();
   await expect(page.getByText('沒有可留言的區塊', { exact: false })).toBeVisible();
-  await page.getByLabel('審查意見', { exact: true }).fill('請在原工作區繼續修正。');
-  await page.getByRole('button', { name: '要求修改', exact: true }).click();
-  await page.getByRole('link', { name: /^任務/ }).click();
-  await page.getByRole('button', { name: /合成程序完整工作鏈/ }).click();
-  await page.getByLabel('接續原提供者對話', { exact: true }).check();
-  await page.getByRole('button', { name: '重試 (1/3)', exact: true }).click();
-  await expect(page.getByRole('dialog').getByText('已派工', { exact: true })).toBeVisible();
-  await page.getByRole('dialog').getByRole('button', { name: '關閉', exact: true }).click();
-  await page.getByRole('link', { name: /^工具批准/ }).click();
-  await expect(page.getByRole('button', { name: '允許這次操作', exact: true })).toBeVisible({
-    timeout: 15000,
-  });
-  await page.getByRole('button', { name: '允許這次操作', exact: true }).click();
-  await expect(page.getByText('已明確確認', { exact: true })).toHaveCount(2, { timeout: 15000 });
-  await page.getByRole('link', { name: '成果審查', exact: true }).click();
-  await expect(page.getByText(/Fixture answer resumed/)).toBeVisible();
-  for (const attempt of [2, 3]) {
-    await page.getByLabel('審查意見', { exact: true }).fill('合成案例：再次退回以驗證執行上限。');
-    await page.getByRole('button', { name: '要求修改', exact: true }).click();
+  for (const attempt of [1, 2, 3]) {
+    await field('審查意見').fill('合成案例：再次退回以驗證執行上限。');
+    await button('要求修改').click();
     await page.getByRole('link', { name: /^任務/ }).click();
-    await page.getByRole('button', { name: /合成程序完整工作鏈/ }).click();
+    await button(new RegExp(title)).click();
+    if (attempt === 1) await field('接續原提供者對話').check();
     if (attempt === 3) {
-      await expect(page.getByRole('button', { name: '重試 (3/3)', exact: true })).toBeDisabled();
-      await page.getByLabel('追加原因', { exact: true }).fill('人工確認合成測試需要第四次執行。');
-      await page.getByRole('button', { name: '批准追加一次', exact: true }).click();
-      await expect(page.getByRole('button', { name: '重試 (3/4)', exact: true })).toBeEnabled();
+      await expect(button('重試 (3/3)')).toBeDisabled();
+      await field('追加原因').fill('人工確認合成測試需要第四次執行。');
+      await button('批准追加一次').click();
+      await expect(button('重試 (3/4)')).toBeEnabled();
     }
     await page
       .getByRole('button', { name: `重試 (${attempt}/${attempt === 3 ? 4 : 3})`, exact: true })
       .click();
+    if (attempt === 1)
+      await expect(page.getByRole('dialog').getByText('已派工', { exact: true })).toBeVisible();
     await page.getByRole('dialog').getByRole('button', { name: '關閉', exact: true }).click();
     await page.getByRole('link', { name: /^工具批准/ }).click();
-    await expect(page.getByRole('button', { name: '允許這次操作', exact: true })).toBeVisible({
-      timeout: 15000,
-    });
-    await page.getByRole('button', { name: '允許這次操作', exact: true }).click();
-    await expect(page.getByText('已明確確認', { exact: true })).toHaveCount(attempt + 1, {
-      timeout: 15000,
-    });
+    await expect(button('允許這次操作')).toBeVisible({ timeout: 15000 });
+    await button('允許這次操作').click();
+    await expect(text('已明確確認')).toHaveCount(confirmedBefore + attempt + 1, { timeout: 15000 });
     await page.getByRole('link', { name: '成果審查', exact: true }).click();
+    if (attempt === 1) await expect(page.getByText(/Fixture answer resumed/)).toBeVisible();
   }
   await page.getByRole('link', { name: '工作區', exact: true }).click();
-  await expect(page.getByText(/歷史證據，不代表目前版本/)).toBeVisible();
+  await expect(workspace.getByText(/歷史證據，不代表目前版本/)).toBeVisible();
   await page.getByRole('link', { name: '成果審查', exact: true }).click();
-  await page
-    .getByLabel('審查代理', { exact: true })
-    .selectOption({ label: 'Synthetic Reviewer Wire · codex' });
-  await page.getByRole('button', { name: '啟動代理審查', exact: true }).click();
+  await field('審查代理').selectOption({ label: 'Synthetic Reviewer Wire · codex' });
+  await button('啟動代理審查').click();
   await expect(
-    page.getByText('Synthetic native reviewer: fixed commit inspected, no live model used.', {
-      exact: true,
-    }),
+    text('Synthetic native reviewer: fixed commit inspected, no live model used.'),
   ).toBeVisible({ timeout: 15000 });
-  await expect(page.getByRole('button', { name: '執行固定版本測試', exact: true })).toBeEnabled();
-  await page.getByRole('button', { name: '執行固定版本測試', exact: true }).click();
-  await expect(page.getByRole('button', { name: '接受此版本成果', exact: true })).toBeEnabled({
-    timeout: 15000,
-  });
+  await expect(button('執行固定版本測試')).toBeEnabled();
+  await button('執行固定版本測試').click();
+  await expect(button('接受此版本成果')).toBeEnabled({ timeout: 15000 });
   await expect(page.getByText(/此證據對應的版本/)).toBeVisible();
   await page.screenshot({ path: 'evidence/screenshots/e2e-synthetic-review.png' });
-  await page.getByRole('button', { name: '接受此版本成果', exact: true }).click();
-  await expect(page.getByText('目前沒有待審查成果', { exact: true })).toBeVisible();
+  await button('接受此版本成果').click();
+  await expect(text('目前沒有待審查成果')).toBeVisible();
   await page.getByRole('link', { name: /^任務/ }).click();
-  await page.getByRole('button', { name: /合成程序完整工作鏈/ }).click();
+  await button(new RegExp(title)).click();
   await expect(page.getByRole('dialog').getByText('已接受', { exact: true })).toBeVisible();
-  const repository = join(runtime.directory, 'fixture-repository');
+  const repository = join(directory, 'fixture-repository');
   const git = (...args: string[]) =>
     execFileSync('git', ['-C', repository, ...args], { encoding: 'utf8' }).trim();
   const baseBranch = git('rev-parse', '--abbrev-ref', 'HEAD');
@@ -161,17 +148,17 @@ test('synthetic provider browser flow: permission, diff, review, commit-bound ve
   await page.screenshot({ path: 'evidence/screenshots/e2e-integration.png' });
   await page.getByRole('dialog').getByRole('button', { name: '關閉', exact: true }).click();
   await page.getByRole('link', { name: '終端機', exact: true }).click();
-  await page.getByRole('button', { name: '啟動終端機', exact: true }).click();
+  await button('啟動終端機').click();
   await expect(page.locator('.terminal-screen')).toContainText('PTY READY 狐狸', {
     timeout: 15000,
   });
   await expect(page.getByText(/^唯讀 · running$/)).toBeVisible();
-  await page.getByRole('button', { name: '接管輸入', exact: true }).click();
+  await button('接管輸入').click();
   await expect(page.getByText(/^您已接管 · running$/)).toBeVisible();
-  await page.getByLabel('欄數', { exact: true }).fill('101');
-  await page.getByLabel('列數', { exact: true }).fill('30');
-  await page.getByRole('button', { name: '調整尺寸', exact: true }).click();
-  await page.getByLabel('PTY input', { exact: true }).focus();
+  await field('欄數').fill('101');
+  await field('列數').fill('30');
+  await button('調整尺寸').click();
+  await field('PTY input').focus();
   await page.keyboard.type('hello');
   await expect(page.locator('.terminal-screen')).toContainText('PTY ECHO:hello SIZE:101x30', {
     timeout: 15000,
@@ -180,15 +167,15 @@ test('synthetic provider browser flow: permission, diff, review, commit-bound ve
   await page.getByRole('button', { name: /pty-fixture · running/ }).click();
   await expect(page.locator('.terminal-screen')).toContainText('PTY ECHO:hello SIZE:101x30');
   await expect(page.getByText(/^唯讀 · running$/)).toBeVisible();
-  await page.getByRole('button', { name: '停止終端機', exact: true }).click();
+  await button('停止終端機').click();
   await expect(page.getByText(/^唯讀 · exited$/)).toBeVisible({ timeout: 15000 });
   await expect(page.getByText(/Exit code:/)).toBeVisible();
-  await page.getByRole('button', { name: '啟動終端機', exact: true }).click();
+  await button('啟動終端機').click();
   await expect(page.getByText(/^唯讀 · running$/)).toBeVisible({ timeout: 15000 });
-  await page.getByRole('button', { name: '緊急停止', exact: true }).click();
-  await page.getByRole('button', { name: '確定停止所有執行', exact: true }).click();
+  await button('緊急停止').click();
+  await button('確定停止所有執行').click();
   await expect(page.getByText(/^唯讀 · exited$/)).toBeVisible({ timeout: 15000 });
-  await expect(page.getByRole('button', { name: '緊急停止', exact: true })).toHaveCount(0);
+  await expect(button('緊急停止')).toHaveCount(0);
   await page.screenshot({ path: 'evidence/screenshots/e2e-emergency-stop.png' });
   expect(errors).toEqual([]);
 });
