@@ -1,5 +1,7 @@
 # Trademarks
 
+[Documentation](../README.md) · [Project](../../README.md)
+
 AETHER OFFICE works with tools and services made by other companies and has to name them. This page records how it does so and
 which published guidelines were read. It is not legal advice; the open question at the end needs the maintainer's decision.
 
@@ -22,11 +24,11 @@ and marks mentioned. (The README, `NOTICE`, the generated
 
 ## Guidelines read (2026-10-07)
 
-| Owner | Source | What it says, in short |
-| --- | --- | --- |
+| Owner     | Source                                                                                                                          | What it says, in short                                                                                                                                                                                                                                                                                                                                                     |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Anthropic | [Claude Code legal and compliance](https://code.claude.com/docs/en/legal-and-compliance), "Using the Claude Code name and logo" | You may accurately say in plain text that a product runs Claude Code; you may not use the Claude Code or Anthropic names or logos as part of your own product, feature or company name or logo, or in a way that suggests Anthropic built, endorses or partners with the product; any other use of names or logos needs written permission under the Trademark Guidelines. |
-| Anthropic | [Trademark Guidelines](https://www.anthropic.com/legal/trademark-guidelines) | Marks only as permitted and in approved materials; logos are supplied by Anthropic and may not be altered (colour, font, proportion); no implied sponsorship or affiliation. |
-| OpenAI | [Brand guidelines](https://openai.com/brand/) (the page refused automated access; read through search-engine extracts) | Name and marks are OpenAI's; do not use the logo more prominently than your own, modify it, design a similar logo or use it in your branding; "powered by" style references in text are the recommended form. |
+| Anthropic | [Trademark Guidelines](https://www.anthropic.com/legal/trademark-guidelines)                                                    | Marks only as permitted and in approved materials; logos are supplied by Anthropic and may not be altered (colour, font, proportion); no implied sponsorship or affiliation.                                                                                                                                                                                               |
+| OpenAI    | [Brand guidelines](https://openai.com/brand/) (the page refused automated access; read through search-engine extracts)          | Name and marks are OpenAI's; do not use the logo more prominently than your own, modify it, design a similar logo or use it in your branding; "powered by" style references in text are the recommended form.                                                                                                                                                              |
 
 The project follows these in its text. GitHub, Linear and Tailscale are named only in plain text labels and documentation.
 

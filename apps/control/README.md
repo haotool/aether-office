@@ -1,5 +1,7 @@
 # @aether/control
 
+[Documentation](../../docs/README.md) · [Project](../../README.md)
+
 Fastify control plane: authentication, SQLite state, HTTP API, local-session discovery, and the built web static host.
 
 ## Public surface

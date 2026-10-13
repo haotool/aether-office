@@ -1,5 +1,7 @@
 # @aether/providers
 
+[Documentation](../../docs/README.md) · [Project](../../README.md)
+
 Adapters for Claude Code, Codex app-server, and ACP agents; hook installation; generated Codex protocol types.
 
 ## Public surface

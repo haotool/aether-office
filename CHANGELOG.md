@@ -1,12 +1,22 @@
 # Changelog
 
+[Documentation](docs/README.md) · [Project](README.md)
+
 All notable changes are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the
 project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) once it has a stable release.
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-13
+
+### Changed
+
+- Reorganize the English and Traditional Chinese READMEs, documentation navigation, contributor guidance and release checklist.
+- Check documentation formatting and selected Linux browser workflows in CI; run source checks on both Linux and macOS.
+
 ### Fixed
 
+- Replies with unequal, very long backtick delimiters no longer trigger repeated quadratic scans in HTML neutralization.
 - Browser-test retries release their synthetic terminal slots and restore deleted observer fixtures, so later tests remain independent.
 - A cell of an HTML table in a reply that held a backslash before a pipe (`a\|b`) could split into an extra column once the table
   was turned into Markdown; the backslash is now escaped along with the pipe.

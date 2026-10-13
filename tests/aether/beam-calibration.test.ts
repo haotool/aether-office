@@ -6,7 +6,7 @@ const doc = readFileSync('docs/design/office-life.md', 'utf8');
 const number = (text: string) => Number(text.replaceAll(',', ''));
 
 function squadRow(label: string, skip = 1): number[] {
-  const row = doc.match(new RegExp(`^\\s*\\| ${label} \\|([^\\n]*)\\|$`, 'm'));
+  const row = doc.match(new RegExp(`^\\s*\\| ${label} +\\|([^\\n]*)\\|$`, 'm'));
   expect(row, `${label} is in the calibration table of section 4.4`).not.toBeNull();
   return row![1]!
     .split('|')

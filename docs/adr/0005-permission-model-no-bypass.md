@@ -1,5 +1,7 @@
 # ADR 0005: No permission bypass; remote approvals with explicit timeouts
 
+[Documentation](../README.md) · [Project](../../README.md)
+
 - Status: accepted
 - Date: 2026-10-08
 

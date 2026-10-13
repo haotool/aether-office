@@ -1,4 +1,4 @@
-# Final verification
+# Feature verification
 
 Generated from `docs/verification/features.json` (docs/verification/features.json). Do not edit by hand: run `pnpm verification:report`.
 

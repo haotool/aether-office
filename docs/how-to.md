@@ -1,5 +1,7 @@
 # How-to guides
 
+[Documentation](README.md) · [Project](../README.md)
+
 Short answers to specific jobs. Each one gives the command and points to the page that explains it. If you are new, start
 with [Getting started](getting-started.md).
 
@@ -24,7 +26,7 @@ with [Getting started](getting-started.md).
 - **Get exact "working" and "waiting" states:** `pnpm hooks install --project /path/to/repo`; `status` and `remove` undo and
   check it ([Hooks](getting-started.md#exact-activity-with-hooks-optional)).
 - **Answer Claude Code permission prompts from the browser or a phone:** `pnpm hooks install --remote-approvals --project
-  /path/to/repo` ([Approvals](getting-started.md#answer-claude-code-permission-prompts-from-the-browser-optional)).
+/path/to/repo` ([Approvals](getting-started.md#answer-claude-code-permission-prompts-from-the-browser-optional)).
 - **Open it on a phone:** start with `AETHER_HOST=0.0.0.0 pnpm start`, then `pnpm run pair` prints a QR code
   ([QR pairing](getting-started.md#connect-a-phone-by-scanning-a-qr-code)); HTTPS and the installable app are in
   [Install it on a phone](getting-started.md#install-it-on-a-phone).

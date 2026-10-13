@@ -1,15 +1,17 @@
 # UX matrix
 
+[Documentation](../README.md) · [Project](../../README.md)
+
 Unit tests cannot see a layout that overflows at 320 px, a control too small for a thumb, a blank screen or a contrast failure. The UX matrix opens every page in a real browser at seven widths, in both themes and both languages, takes a screenshot and checks the page. It also opens the states a page can be in besides "working": loading, failed, empty, offline, reduced motion, and an overlay on top.
 
 The totals of the latest run are in `ux-matrix.json` (next to this file), stamped with the git tree ids of the code they describe. When `apps/web`, `apps/control` or `packages/{contracts,kernel,office-scene}` change, the record is stale and the release score treats it as not measured until the matrix is run again.
 
 ## What one run covers
 
-| Part                                                       | Dimensions                                                    | Scenes per combination | Cells |
-| ---------------------------------------------------------- | ------------------------------------------------------------- | ---------------------- | ----- |
-| Core ([matrix.spec.ts](../../e2e/ux-matrix/matrix.spec.ts)) | 320×568, 360×640, 390×844, 820×1180, 1180×820, 1440×900, 1920×1080 × light, dark × English, Traditional Chinese | 19 | 532 |
-| States ([states.spec.ts](../../e2e/ux-matrix/states.spec.ts)) | 390×844 and 820×1180 × dark with Chinese, light with English | 9 | 36 |
+| Part                                                          | Dimensions                                                                                                      | Scenes per combination | Cells |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------- | ----- |
+| Core ([matrix.spec.ts](../../e2e/ux-matrix/matrix.spec.ts))   | 320×568, 360×640, 390×844, 820×1180, 1180×820, 1440×900, 1920×1080 × light, dark × English, Traditional Chinese | 19                     | 532   |
+| States ([states.spec.ts](../../e2e/ux-matrix/states.spec.ts)) | 390×844 and 820×1180 × dark with Chinese, light with English                                                    | 9                      | 36    |
 
 The 19 core scenes are the sign-in page and the 404 page when signed out, the fourteen pages (office, agents, tasks, messages, workspace, terminals, sessions, observations, reviews, approvals, knowledge, machines, history, settings), the office as a list at its top and at its end, and the 404 page when signed in. The 9 state scenes are loading, a failed projects request, no projects, a project with no sessions, offline, reduced motion (the office and settings), and on a phone the conversation sheet and the drawer, on a tablet the new-project and pair dialogs.
 
@@ -17,13 +19,13 @@ A run is **complete** when all 28 core combinations and all 4 state combinations
 
 ## What is checked in every cell
 
-| Check             | Fails when                                                                                                           |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Overflow          | the page is wider than the window by more than 1 px                                                                  |
-| Blank             | the signed-in page shows no text (core cells)                                                                        |
-| Small targets     | on a touch width (1180 px and below) a visible control is smaller than 24×24 CSS px, the minimum of WCAG 2.5.8; a checkbox inside its label counts as the label |
-| axe               | a serious or critical violation of the WCAG 2.0, 2.1 and 2.2 A and AA rules (colour contrast included)                |
-| Console           | a page error or a console error, except the 401 of the signed-out sign-in page and the failures a state injects on purpose |
+| Check         | Fails when                                                                                                                                                      |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Overflow      | the page is wider than the window by more than 1 px                                                                                                             |
+| Blank         | the signed-in page shows no text (core cells)                                                                                                                   |
+| Small targets | on a touch width (1180 px and below) a visible control is smaller than 24×24 CSS px, the minimum of WCAG 2.5.8; a checkbox inside its label counts as the label |
+| axe           | a serious or critical violation of the WCAG 2.0, 2.1 and 2.2 A and AA rules (colour contrast included)                                                          |
+| Console       | a page error or a console error, except the 401 of the signed-out sign-in page and the failures a state injects on purpose                                      |
 
 ## Run it
 

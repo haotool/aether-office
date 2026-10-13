@@ -4,7 +4,7 @@ dist
 .DS_Store
 __pycache__/
 .research/
-.tools/
+.tools
 .data/
 .env
 .env.*.local

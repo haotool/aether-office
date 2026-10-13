@@ -50,9 +50,7 @@
     "commit": "b5df315a82b38fd2379eb4255e311ab4fa7f588d",
     "license": "MIT License",
     "licenseSha256": "8bab40f7557b5ed6936f146436bb10d07f7688c1b1cb83e009ef0376565e31dc",
-    "filesRead": [
-      "engdocs/architecture/event-bus.md"
-    ],
+    "filesRead": ["engdocs/architecture/event-bus.md"],
     "sourceReviewScope": "selected excerpts only",
     "testsExecuted": false,
     "codeReuse": false,
@@ -66,10 +64,7 @@
     "commit": "649b832b7672bc7a2dbef26f5983aba6198b819b",
     "license": "MIT License",
     "licenseSha256": "6141d15e761ef772bdd45fdd4036dfc1f97488011429e6643e1445afa9d22f4d",
-    "filesRead": [
-      "internal/mail/store.go",
-      "internal/mail/delivery_test.go"
-    ],
+    "filesRead": ["internal/mail/store.go", "internal/mail/delivery_test.go"],
     "sourceReviewScope": "selected excerpts only",
     "testsExecuted": false,
     "codeReuse": false,
@@ -83,10 +78,7 @@
     "commit": "c4e172709f912390814b37364e3049cfdbde10a8",
     "license": "MIT License",
     "licenseSha256": "c4377e640e98dac75418c670376569cf197c2f68513bfb9fdc05a80e36588100",
-    "filesRead": [
-      "src/delivery.rs",
-      "tests/send_delivery.rs"
-    ],
+    "filesRead": ["src/delivery.rs", "tests/send_delivery.rs"],
     "sourceReviewScope": "selected excerpts only",
     "testsExecuted": false,
     "codeReuse": false,
@@ -114,10 +106,7 @@
     "commit": "109868385b9ee5c54e48de404a59d0bbdb9c547d",
     "license": "MIT License",
     "licenseSha256": "bac517c0e2e7286936e2b774e3bbf11b5bed539a709b6e0660c6141f124bc77d",
-    "filesRead": [
-      "lib/message-delivery.ts",
-      "lib/agent-runtime.ts"
-    ],
+    "filesRead": ["lib/message-delivery.ts", "lib/agent-runtime.ts"],
     "sourceReviewScope": "selected excerpts only",
     "testsExecuted": false,
     "codeReuse": false,

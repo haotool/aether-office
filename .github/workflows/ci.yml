@@ -1,87 +1,77 @@
 name: CI
-
 on:
   push:
     branches: [main]
   pull_request:
-
 permissions:
   contents: read
-
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
-  # A pull request title becomes the squash-merge subject; the commits must follow the same convention (CONTRIBUTING.md).
   commit-messages:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Pull request title
+      - name: Validate title and commits
         env:
           TITLE: ${{ github.event.pull_request.title }}
-        run: bash scripts/oss/commit-msg.sh --subject "$TITLE"
-      - name: Commit subjects
-        env:
           BASE: ${{ github.base_ref }}
-        run: bash scripts/oss/commit-msg.sh --range "origin/$BASE..HEAD"
-
-  check:
-    runs-on: ubuntu-latest
+        run: |
+          bash scripts/oss/commit-msg.sh --subject "$TITLE"
+          bash scripts/oss/commit-msg.sh --range "origin/$BASE..HEAD"
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version-file: .nvmrc
-      - run: corepack enable
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm typecheck
-      - run: pnpm lint
-      - run: pnpm format:check
-      - run: pnpm test
-      - run: pnpm build
-      - run: pnpm verification:check
-      - run: node scripts/check-bundle-size.mjs
-      # After the build, so the ignore rules are also proven against the build output.
-      - run: pnpm run oss:check
-      # After the build, so that the bundle budgets are measured.
-      - run: pnpm run quality:check
-
-  # Unit tests also run on macOS (vm_stat, ps and lsof parsing).
-  unit-macos:
-    runs-on: macos-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - run: corepack enable && pnpm install --frozen-lockfile
+      - name: Validate source and build
+        run: |
+          pnpm typecheck
+          pnpm lint
+          pnpm format:check
+          pnpm test
+          pnpm build
+          pnpm verification:check
+          node scripts/check-bundle-size.mjs
+          pnpm run oss:check
+          pnpm run quality:check
+      - if: matrix.os == 'ubuntu-latest'
+        run: pnpm audit:gate
+      - name: Linux browser workflows
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          pnpm exec playwright test e2e/session/local-sessions.spec.ts e2e/session/pairing.spec.ts e2e/workbench/composer.spec.ts e2e/workbench/native-workflow.spec.ts --timeout=120000
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: failure() && matrix.os == 'ubuntu-latest'
         with:
-          persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version-file: .nvmrc
-      - run: corepack enable
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm test
-
-  # Registry advisory gate: high and critical findings fail unless time-boxed in docs/security/audit-exceptions.json.
-  audit:
+          name: linux-browser-failures
+          path: |
+            evidence/e2e-results.json
+            test-results/
+  check: &verified
+    if: always()
+    needs: verify
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version-file: .nvmrc
-      - run: corepack enable
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm audit:gate
+      - env:
+          RESULT: ${{ needs.verify.result }}
+        run: test "$RESULT" = success
+  audit: *verified

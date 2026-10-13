@@ -9,7 +9,7 @@ Overall: **97.5** (mean of the scored areas; target 95).
 | Structure (`structure`) | 95.0 | 95.0 | 100% | fan-in 3 (-5) |
 | Types and correctness gates (`types`) | 100.0 | 100.0 | 100% | none |
 | Tests (`tests`) | 100.0 | 100.0 | 100% | none |
-| UI system and design tokens (`ui`) | 100.0 | 100.0 | 100% | none |
+| UI system and design tokens (`ui`) | 100.0 | 100.0 | 82% | none |
 | Accessibility and i18n (`a11y`) | 100.0 | 100.0 | 80% | none |
 | Performance budgets (`perf`) | 99.1 | 99.1 | 70% | first-load 203 (-0.9) |
 | Docs truth (`docs`) | 100.0 | 100.0 | 100% | none |
@@ -32,7 +32,7 @@ Score 95.0, floor 95.0, 100% of the rule weight measured.
 | Import cycles (runtime imports, product source) | `import-cycles` | 0 | 0 | 12 | 0 | pass |
 | Files imported by more than 30 others | `fan-in` | 3 | 0 | 5 | -5 | fail |
 | Exports nothing imports | `dead-exports` | 0 | 0 | 10 | 0 | pass |
-| Code lines over the budget of 146595 | `code-lines` | 0 | 0 | 6 | 0 | pass |
+| Code lines over the budget of 146572 | `code-lines` | 0 | 0 | 6 | 0 | pass |
 | Duplicated code share (limit 3%) | `duplicates` | 0.29% | 3% | 12 | 0 | pass |
 | Uses of the any type (product source) | `any-type` | 0 | 0 | 6 | 0 | pass |
 | Type or lint suppression comments | `suppressions` | 0 | 0 | 6 | 0 | pass |
@@ -85,14 +85,14 @@ apps/control: 14628 source lines
 apps/runner: 3070 source lines
 apps/web: 28185 source lines
 packages/contracts: 1365 source lines
-packages/kernel: 3449 source lines
+packages/kernel: 3452 source lines
 packages/office-scene: 25872 source lines
 packages/providers: 2051 source lines
 ```
 
 ## UI system and design tokens
 
-Score 100.0, floor 100.0, 100% of the rule weight measured.
+Score 100.0, floor 100.0, 82% of the rule weight measured.
 
 | Rule | Id | Value | Limit | Weight | Penalty | State |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
@@ -107,7 +107,7 @@ Score 100.0, floor 100.0, 100% of the rule weight measured.
 | px custom properties outside tokens.css | `custom-property-literal` | 0 | 0 | 5 | 0 | pass |
 | token-lint escape comments over the budget of 100 | `escape-comments` | 100 | 100 | 10 | 0 | pass |
 | Rules above scripts/design-token-baseline.json | `baseline-regression` | 0 | 0 | 15 | 0 | pass |
-| Roles with more distinct sizes than allowed | `role-variance` | 0 | 0 | 20 | 0 | pass |
+| Distinct control sizes per role (e2e/ui/role-variance.spec.ts) (not run: the spec has no recorded result (expected evidence/role-variance.json)) | `role-variance` | - | - | 20 | 0 | not run |
 | Physical left/right properties (logical ones are RTL-ready) | `physical-properties` | 169 | - | - | 0 | info |
 
 ## Accessibility and i18n
@@ -141,7 +141,7 @@ Score 99.1, floor 99.1, 70% of the rule weight measured.
 **first-load** (-0.9): First-load JavaScript and CSS, transferred (budget 200 KB)
 
 ```text
-  apps/web/dist/assets/index-CyIaHKDx.js:1 79 KB
+  apps/web/dist/assets/index-DEkQzudc.js:1 79 KB
   apps/web/dist/assets/signals-BiryGzd7.js:1 3 KB
   apps/web/dist/assets/scheduler-CaJXFZeK.js:1 1 KB
   apps/web/dist/assets/react-dom-DkN6JdHT.js:1 1 KB

@@ -1,5 +1,36 @@
 # Design system
 
+[Documentation](README.md) · [Project](../README.md)
+
+<details>
+<summary>Contents</summary>
+
+- [Tokens](#tokens)
+- [Stylesheet organization](#stylesheet-organization)
+- [Components](#components)
+- [Responsive and touch rules](#responsive-and-touch-rules)
+- [The 3D scene on a phone](#the-3d-scene-on-a-phone)
+- [Session panel](#session-panel)
+- [Clock out](#clock-out)
+- [The camera runs itself](#the-camera-runs-itself)
+- [The beanstalk](#the-beanstalk)
+- [Navigation and phone information architecture](#navigation-and-phone-information-architecture)
+- [Settings](#settings)
+- [Many busy members at once](#many-busy-members-at-once)
+- [Desk screens and behavior](#desk-screens-and-behavior)
+- [Context window, compaction and provider marks](#context-window-compaction-and-provider-marks)
+- [Avatars](#avatars)
+- [Interactions with the characters](#interactions-with-the-characters)
+- [Loading performance](#loading-performance)
+- [Installable app (PWA)](#installable-app-pwa)
+- [Performance and quality tiers](#performance-and-quality-tiers)
+- [Alive and futuristic, cheaply](#alive-and-futuristic-cheaply)
+- [Squads in the scene](#squads-in-the-scene)
+- [KPI dashboards](#kpi-dashboards)
+- [Verifying a UI change](#verifying-a-ui-change)
+
+</details>
+
 The web UI is built in three layers: **tokens → components → features**. The rules below are checked by
 `pnpm lint` (design tokens), `e2e/ui/responsive.spec.ts` (every page at 320, 390, 820, 1194, 1280 and 1366 px, and a phone
 on its side) and `e2e/ui/ui-sweep.spec.ts` (axe accessibility, both themes). A UI change is done when those pass and the
@@ -25,21 +56,21 @@ Delivery: [Loading performance](#loading-performance) · [Installable app (PWA)]
 `apps/web/src/styles/core/tokens.css` is the **only** file allowed to hold a raw color, type size, space, radius or z-index.
 `scripts/check-design-tokens.mjs` (part of `pnpm lint`) fails on a raw value anywhere else in the stylesheet.
 
-| Family     | Tokens                                                                 | Notes                                                                                   |
-| ---------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Spacing    | `--space-2` … `--space-64`                                             | 4px grid with 2px and 6px half steps; used by `padding`, `margin` and `gap`             |
-| Radius     | `--r-xs` … `--r-3xl`, `--r-pill`                                       | A circle is `50%`                                                                       |
-| Type       | `--fs-label` (11), `--fs-small` (12), `--fs-meta` (13), `--fs-body` (14), `--fs-lead` … `--fs-hero` | No visible text under 11px; readable text is 12px or more. Roles: 11 uppercase mono tags, 12 secondary and dense text (most of the UI), 13 the page's base text (`body`), 14 `h3`, row titles and conversation text |
-| Line height | `--lh-tight` (1.25), `--lh-snug` (1.45), `--lh-body` (1.6) | A title or single line; text in a card; long reading text (`body` is `--lh-body`) |
-| Elevation  | `--shadow-sm` / `-md` / `-lg`, `--shadow`                              | A raised chip or toast; a card or menu; a dialog (`.modal`)                             |
-| Motion     | `--dur-fast` (0.15s), `--dur` (0.2s), `--dur-slow` (0.4s), `--ease`     | Loops and one-shots by role: `--dur-pulse`, `--dur-hold`, `--dur-sheen`, `--dur-caret` …  |
-| Radius roles | `--r-control` (4), `--r-card` (8), `--r-sheet` (16), `--r-pill`       | Aliases of the scale above, so a role can change in one place                           |
-| Layers     | `--z-*`                                                                | Named, ordered layers: scene overlays below page chrome, sheets on top                  |
-| Color      | theme tokens (`--bg`, `--surface`, `--text`, …) and `--glass*`, `--on-glass*` | The glass set is for what is drawn over the 3D scene, a night view in both themes |
-| Touch      | `--target-touch` (44px hit), `--control-touch` (40), `--control-touch-sm` (36), `--target-fine` (32), `--safe-*` | Hit area, older drawn sizes and the notch and home-bar insets; new code uses the control scale below |
-| Controls   | `--control-h-sm` / `-md` / `-lg`, `--bar-h` (56), `--tabbar-h`          | See the control scale below                                                             |
-| Frame      | `--sidebar-w`, `--brand-w`, `--team-chip-w`, `--stage-min-h`, `--stage-inset`, `--stage-rail` | The page frame and the desktop stage's insets; the steps by window size are at the end of `tokens.css` |
-| Focus      | `--focus-ring` (2px mint), `--focus-offset` (2px)                       | One look for every focused control (below)                                              |
+| Family       | Tokens                                                                                                           | Notes                                                                                                                                                                                                               |
+| ------------ | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Spacing      | `--space-2` … `--space-64`                                                                                       | 4px grid with 2px and 6px half steps; used by `padding`, `margin` and `gap`                                                                                                                                         |
+| Radius       | `--r-xs` … `--r-3xl`, `--r-pill`                                                                                 | A circle is `50%`                                                                                                                                                                                                   |
+| Type         | `--fs-label` (11), `--fs-small` (12), `--fs-meta` (13), `--fs-body` (14), `--fs-lead` … `--fs-hero`              | No visible text under 11px; readable text is 12px or more. Roles: 11 uppercase mono tags, 12 secondary and dense text (most of the UI), 13 the page's base text (`body`), 14 `h3`, row titles and conversation text |
+| Line height  | `--lh-tight` (1.25), `--lh-snug` (1.45), `--lh-body` (1.6)                                                       | A title or single line; text in a card; long reading text (`body` is `--lh-body`)                                                                                                                                   |
+| Elevation    | `--shadow-sm` / `-md` / `-lg`, `--shadow`                                                                        | A raised chip or toast; a card or menu; a dialog (`.modal`)                                                                                                                                                         |
+| Motion       | `--dur-fast` (0.15s), `--dur` (0.2s), `--dur-slow` (0.4s), `--ease`                                              | Loops and one-shots by role: `--dur-pulse`, `--dur-hold`, `--dur-sheen`, `--dur-caret` …                                                                                                                            |
+| Radius roles | `--r-control` (4), `--r-card` (8), `--r-sheet` (16), `--r-pill`                                                  | Aliases of the scale above, so a role can change in one place                                                                                                                                                       |
+| Layers       | `--z-*`                                                                                                          | Named, ordered layers: scene overlays below page chrome, sheets on top                                                                                                                                              |
+| Color        | theme tokens (`--bg`, `--surface`, `--text`, …) and `--glass*`, `--on-glass*`                                    | The glass set is for what is drawn over the 3D scene, a night view in both themes                                                                                                                                   |
+| Touch        | `--target-touch` (44px hit), `--control-touch` (40), `--control-touch-sm` (36), `--target-fine` (32), `--safe-*` | Hit area, older drawn sizes and the notch and home-bar insets; new code uses the control scale below                                                                                                                |
+| Controls     | `--control-h-sm` / `-md` / `-lg`, `--bar-h` (56), `--tabbar-h`                                                   | See the control scale below                                                                                                                                                                                         |
+| Frame        | `--sidebar-w`, `--brand-w`, `--team-chip-w`, `--stage-min-h`, `--stage-inset`, `--stage-rail`                    | The page frame and the desktop stage's insets; the steps by window size are at the end of `tokens.css`                                                                                                              |
+| Focus        | `--focus-ring` (2px mint), `--focus-offset` (2px)                                                                | One look for every focused control (below)                                                                                                                                                                          |
 
 ### Control scale
 
@@ -50,12 +81,12 @@ The 3D scene's toolbar (`.segmented`, `.scene-options` in `office.css`) is a com
 select are `--control-h-sm` (32 with a mouse, 36 with a finger), checked by `e2e/scene/scene-hud-consistency.spec.ts`. The HUD plaques
 (floor card, deck panel, camera wall) are geometry: their insets come from the `--stage-*` tokens, their widths stay literal, each with a comment saying why.
 
-| Token              | Mouse | Touch / phone | Used by                                                 |
-| ------------------ | ----- | ------------- | ------------------------------------------------------- |
-| `--control-h-sm`   | 32    | 36            | icon button, text button, chip, segment                 |
-| `--control-h-md`   | 36    | 40            | button, field, select, summary                          |
-| `--control-h-lg`   | 40    | 44            | a main call to action                                   |
-| `--bar-h`          | 56    | 56            | top bar, tab bar, drawer header                         |
+| Token            | Mouse | Touch / phone | Used by                                 |
+| ---------------- | ----- | ------------- | --------------------------------------- |
+| `--control-h-sm` | 32    | 36            | icon button, text button, chip, segment |
+| `--control-h-md` | 36    | 40            | button, field, select, summary          |
+| `--control-h-lg` | 40    | 44            | a main call to action                   |
+| `--bar-h`        | 56    | 56            | top bar, tab bar, drawer header         |
 
 The heights are minimums: a label that wraps grows the control. `e2e/ui/role-variance.spec.ts` measures the 14 views at
 1440x900, 390x844 and 820x1180 and fails when a role shows more distinct heights than it should (buttons 3, icon buttons 1,
@@ -125,12 +156,12 @@ is a phone on its side. A component that must change by the room it has, not by 
 lint does not count. Four thresholds are measured facts about one component and are listed, with their reasons, in
 `MEDIA_EXCEPTIONS` in `scripts/design-token-rules.mjs`:
 
-| px   | Where                                                                                                     |
-| ---- | --------------------------------------------------------------------------------------------------------- |
+| px   | Where                                                                                                      |
+| ---- | ---------------------------------------------------------------------------------------------------------- |
 | 700h | a short phone (an SE is 667px tall): the floor rail stands on the new-task button instead of the middle    |
-| 880h | the scene shell keeps the control-room wall its minimum height on a roomy window                          |
+| 880h | the scene shell keeps the control-room wall its minimum height on a roomy window                           |
 | 1500 | the top bar holds the telemetry numbers only above the width where brand, picker, numbers and controls fit |
-| 1800 | an ultra-wide window: a wider sidebar and page padding                                                    |
+| 1800 | an ultra-wide window: a wider sidebar and page padding                                                     |
 
 The top bar keeps every control on screen at 320, 390, 768, 1024, 1440 and 1920px (`e2e/ui/role-variance.spec.ts`, native
 runner): its right side never shrinks, the project picker gives way first, below 1000px the emergency stop shows its icon and
@@ -159,16 +190,16 @@ spacing, radius or z-index outside `tokens.css` fails. The second holds the rule
 `scripts/design-token-baseline.json`, which records the count per rule and per file; **a count may only go down**, and the
 gate prints the rule and the file that rose.
 
-| Rule                      | Counted                                                                                        |
-| ------------------------- | ---------------------------------------------------------------------------------------------- |
-| `literal-size`            | a `px` of 2 or more in `width`, `height`, `min-`/`max-` of those, `inset`, `top`, `left`, `right`, `bottom` |
-| `viewport-height`         | a `vh` unit (use `dvh` or `svh`)                                                               |
-| `media-breakpoint`        | an `@media` px value off the scale above and not in `MEDIA_EXCEPTIONS`                         |
-| `custom-property-literal` | a `--x: 12px` outside `tokens.css`                                                             |
+| Rule                      | Counted                                                                                                                                                          |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `literal-size`            | a `px` of 2 or more in `width`, `height`, `min-`/`max-` of those, `inset`, `top`, `left`, `right`, `bottom`                                                      |
+| `viewport-height`         | a `vh` unit (use `dvh` or `svh`)                                                                                                                                 |
+| `media-breakpoint`        | an `@media` px value off the scale above and not in `MEDIA_EXCEPTIONS`                                                                                           |
+| `custom-property-literal` | a `--x: 12px` outside `tokens.css`                                                                                                                               |
 | `literal-duration`        | seconds or milliseconds in `transition` or `animation` (use `--dur-fast`, `--dur`, `--dur-slow`, or a loop or one-shot role such as `--dur-pulse`, `--dur-hold`) |
-| `literal-shadow`          | a px value in `box-shadow` or `text-shadow` (use `--shadow-sm/md/lg/up`, `--ring`, `--glow-*`)         |
-| `literal-line-height`     | a `line-height` that is not `var(--lh-*)`, `inherit` or `normal`                               |
-| `important`               | `!important`                                                                                   |
+| `literal-shadow`          | a px value in `box-shadow` or `text-shadow` (use `--shadow-sm/md/lg/up`, `--ring`, `--glow-*`)                                                                   |
+| `literal-line-height`     | a `line-height` that is not `var(--lh-*)`, `inherit` or `normal`                                                                                                 |
+| `important`               | `!important`                                                                                                                                                     |
 
 `0`, `1px` hairlines, `%`, `auto` and a size from a token pass. **The escape hatch** is a comment on the declaration's own
 line, `/* token-lint: <reason> */`, and exempts that line: `geometry` (the size of a dot, a drawing, a plaque over the 3D
@@ -270,10 +301,10 @@ member is a conversation, not an identity card. Code: `features/SessionPanel.tsx
   command as a normal message ("applies to the next message"): `/model <id>` for Claude, the bare `/model` for Codex (whose
   own picker applies it). Effort is offered for Claude only (`/effort <level>`); permission mode has no text command in
   either CLI and is not offered.
-- **Phone.** A sheet over the tab bar at three heights. *Peek* (72px, always there on the office): a chip for each session
+- **Phone.** A sheet over the tab bar at three heights. _Peek_ (72px, always there on the office): a chip for each session
   that wants a look (state dot, unread dot, 44px hit area) and the newest reply line of the most urgent one; with a member
-  chosen, the member bar: avatar with its state dot, name, the newest reply line, focus, open, close. *Half*: the feed.
-  *Full*: the conversation, back arrow top left, collapse top right. A row opens full, back returns to half, collapse returns
+  chosen, the member bar: avatar with its state dot, name, the newest reply line, focus, open, close. _Half_: the feed.
+  _Full_: the conversation, back arrow top left, collapse top right. A row opens full, back returns to half, collapse returns
   to peek with the member still in hand. The new-task button and the camera chips stand above the peek. The sheet respects
   the notch and home bar (`--safe-*`); on its side the feed and conversation take a column at the right.
 - **Width and rail (desktop).** The panel's left edge is a drag handle (`PanelResizer.tsx`): a 16px hit area with a hairline
@@ -418,24 +449,24 @@ code is `packages/kernel/src/text-*.ts` (no `apps/*` imports): `neutralizeHtml`,
 `shortLabel`, `displayWidth`, `balanceBrackets`. Tests: `text-html` (86 table cases plus properties), `text-title`,
 `session-transcript`, `session-title`, `session-speech`, `session-names`, and `e2e/session/text-pipeline.spec.ts`.
 
-| Source | Where it is read | Sanitized by |
-| --- | --- | --- |
-| Assistant and user messages (Claude, Codex) | `session-transcript.ts`, `session-speech.ts` | `stripCliWrappers` then `neutralizeHtml`, redacted, cut |
-| Tool calls and results, tool target (`summary`) | `session-transcript.ts`, `session-work.ts`, `hook-spool.ts` | Redacted and cut; shown only as text (React escapes), never as Markdown or HTML |
-| A subagent's task description and last words | `subagent-files.ts`, `subagent-transcripts.ts` (through `subagent-text.ts`) | Redacted first, then `stripCliWrappers`, `neutralizeHtml`, `toPlainPreview`, cut to 60 / 160 characters; plain text only |
-| Claude `ai-title`, Codex thread name | `session-title.ts` | `cleanTitle` |
-| A task's opening words (a `codex exec` title) | `session-topic.ts` | `cleanTitle`, redacted |
-| Commit subjects and authors, terminal output | the repository and terminal services | Text only; never rendered as Markdown |
+| Source                                          | Where it is read                                                            | Sanitized by                                                                                                             |
+| ----------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Assistant and user messages (Claude, Codex)     | `session-transcript.ts`, `session-speech.ts`                                | `stripCliWrappers` then `neutralizeHtml`, redacted, cut                                                                  |
+| Tool calls and results, tool target (`summary`) | `session-transcript.ts`, `session-work.ts`, `hook-spool.ts`                 | Redacted and cut; shown only as text (React escapes), never as Markdown or HTML                                          |
+| A subagent's task description and last words    | `subagent-files.ts`, `subagent-transcripts.ts` (through `subagent-text.ts`) | Redacted first, then `stripCliWrappers`, `neutralizeHtml`, `toPlainPreview`, cut to 60 / 160 characters; plain text only |
+| Claude `ai-title`, Codex thread name            | `session-title.ts`                                                          | `cleanTitle`                                                                                                             |
+| A task's opening words (a `codex exec` title)   | `session-topic.ts`                                                          | `cleanTitle`, redacted                                                                                                   |
+| Commit subjects and authors, terminal output    | the repository and terminal services                                        | Text only; never rendered as Markdown                                                                                    |
 
-| Sink | Gets | Through |
-| --- | --- | --- |
-| Conversation | Markdown body | `Markdown.tsx` over `parseMarkdown`, which neutralizes HTML again (defence in depth) |
-| Speech bubbles, feed reply, member bar, notifications | Plain or inline segments | `toInlineSegments`, `toPlainPreview` |
-| Name tag, member list, PiP captions, team chips | Short label (28 columns) | `shortLabel` via `labelOf` in `session-names.ts`; the full title is the tooltip and accessible name |
-| Feed rows, live and attention lists | Row label (44 columns) | `rowLabelOf`; the full title is the `title` attribute |
-| Panel header, sessions list, search | Full clean title | `cleanTitle` on the server; the web normalizes an older server's title in `local-session-compat.ts` |
-| Desk screen header | Short label (40 columns) | `shortLabel` in `screensOf`, then the canvas's own pixel fit |
-| Document title, history pages | No session text | nothing to sanitize |
+| Sink                                                  | Gets                     | Through                                                                                             |
+| ----------------------------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------- |
+| Conversation                                          | Markdown body            | `Markdown.tsx` over `parseMarkdown`, which neutralizes HTML again (defence in depth)                |
+| Speech bubbles, feed reply, member bar, notifications | Plain or inline segments | `toInlineSegments`, `toPlainPreview`                                                                |
+| Name tag, member list, PiP captions, team chips       | Short label (28 columns) | `shortLabel` via `labelOf` in `session-names.ts`; the full title is the tooltip and accessible name |
+| Feed rows, live and attention lists                   | Row label (44 columns)   | `rowLabelOf`; the full title is the `title` attribute                                               |
+| Panel header, sessions list, search                   | Full clean title         | `cleanTitle` on the server; the web normalizes an older server's title in `local-session-compat.ts` |
+| Desk screen header                                    | Short label (40 columns) | `shortLabel` in `screensOf`, then the canvas's own pixel fit                                        |
+| Document title, history pages                         | No session text          | nothing to sanitize                                                                                 |
 
 Rules. `neutralizeHtml` turns HTML in prose into Markdown or text (`<br>` a newline; `<p>`, `<div>`, `<span>` wrappers dropped
 with their text kept; `<a href>` a Markdown link only for http(s); `<code>` inline code; `<pre>` a fence; `<b>`, `<i>`,
@@ -475,16 +506,16 @@ emphasis and link nesting is capped, checked by a 1 MB hostile-input test (`text
 `structureWrappers(text)` (`text-wrappers.ts`) returns `{ text, notices }`. Wrappers that carry meaning become **notices**;
 ids, tool-use ids and output paths are never kept:
 
-| Wrapper | Notice |
-| --- | --- |
-| `<task-notification>` (`<subagent_notification>`) | `task`: status, summary, exit code read from the summary, optional result detail |
-| `<command-name>`, `<command-args>` | `command`: name and arguments (`<command-message>` dropped) |
-| `<local-command-stdout/stderr>` | `output`: text without terminal colors, `error` for stderr |
-| `<system-reminder>`, `<environment_context>`, `<ide_*>`, `<user_instructions>`, `<permissions>`, `<skill>`, `<plugin>`, ... | `context`: label and sanitized text, leaf children as `cwd: /x` lines |
-| `<*-hook>` (user-prompt-submit and the like) | `hook` |
-| `<turn_aborted>`, `[Request interrupted by user]` | `interrupted` |
-| thinking, memory citations, the local-command caveat | dropped |
-| anything else | tags removed, inner text kept |
+| Wrapper                                                                                                                     | Notice                                                                           |
+| --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `<task-notification>` (`<subagent_notification>`)                                                                           | `task`: status, summary, exit code read from the summary, optional result detail |
+| `<command-name>`, `<command-args>`                                                                                          | `command`: name and arguments (`<command-message>` dropped)                      |
+| `<local-command-stdout/stderr>`                                                                                             | `output`: text without terminal colors, `error` for stderr                       |
+| `<system-reminder>`, `<environment_context>`, `<ide_*>`, `<user_instructions>`, `<permissions>`, `<skill>`, `<plugin>`, ... | `context`: label and sanitized text, leaf children as `cwd: /x` lines            |
+| `<*-hook>` (user-prompt-submit and the like)                                                                                | `hook`                                                                           |
+| `<turn_aborted>`, `[Request interrupted by user]`                                                                           | `interrupted`                                                                    |
+| thinking, memory citations, the local-command caveat                                                                        | dropped                                                                          |
+| anything else                                                                                                               | tags removed, inner text kept                                                    |
 
 The server (`session-transcript.ts`) turns each notice into its own entry (`role: 'notice'`, `notice: {...}`), redacted and cut
 like a message; the conversation draws it as a chip. A task chip is green only for a completed status with exit code 0 and red
@@ -620,8 +651,8 @@ one a visibly different flower); `flower-petals.ts`, `flower-bloom.ts`, `flower-
   flowers), 26,400 at most across the histories tested (the test asserts 28,000).
 
 Research this was built from (techniques only): Vogel's `r = c sqrt(n)`, `phi = n x 137.5 deg` for the florets and the golden
-turn of whorls ([Wikipedia, Golden angle](https://en.wikipedia.org/wiki/Golden_angle); Prusinkiewicz and Lindenmayer, *The
-Algorithmic Beauty of Plants*, ch. 4 [algorithmicbotany.org](https://algorithmicbotany.org/papers/abop/abop-ch4.pdf)); the
+turn of whorls ([Wikipedia, Golden angle](https://en.wikipedia.org/wiki/Golden_angle); Prusinkiewicz and Lindenmayer, _The
+Algorithmic Beauty of Plants_, ch. 4 [algorithmicbotany.org](https://algorithmicbotany.org/papers/abop/abop-ch4.pdf)); the
 whorl structure of a flower (sepals, petals, stamens, carpels) and the ABC model that blends organ identities by overlapping
 gene weights, which is why a genome blends archetype weights instead of switching ([Causier et al. 2010; MPIPZ ABC
 overview](https://www.mpipz.mpg.de/25280)); competition-for-space branching ([Runions, Lane, Prusinkiewicz, space colonization,
@@ -642,7 +673,7 @@ answering and dispatching, not for administering. So:
   integrations) appear only when **Advanced** is on (Settings, off by default, stored in the browser's preferences). It is a
   filter on the navigation, the tab bar and quick open, not a gate: their addresses always open. The Playwright suite starts
   with it on; `e2e/workbench/advanced.spec.ts` covers the default.
-- **Glance.** The office is the home screen. Two chips float on it: *Running* (a green dot) and *Needs you* (the sessions waiting
+- **Glance.** The office is the home screen. Two chips float on it: _Running_ (a green dot) and _Needs you_ (the sessions waiting
   for an approval or an answer, then those forgotten or ownerless). Each has an accessible name with its count, a 44px tap
   target and a list sheet; the visible word appears when the screen has room (landscape), a portrait phone shows the number.
 - **Answer.** The four tabs are the places a person acts: Office, Sessions, Approvals, Terminals (with Advanced on: Office,
@@ -654,7 +685,7 @@ answering and dispatching, not for administering. So:
   press; without it the alert is a notice inside the page. A tap on a notification opens that session.
 - **Open on your phone** is a button in the top bar (and in the drawer on a phone), opening the pairing QR in a dialog with the
   plain-HTTP caveat stated. The control plane prints the same QR at start when `AETHER_HOST` is set.
-- **Everything else is behind "More"**, grouped by what a person comes for: *Work*, *Watch* and *System*, with an empty group
+- **Everything else is behind "More"**, grouped by what a person comes for: _Work_, _Watch_ and _System_, with an empty group
   left out. The same groups head the desktop sidebar.
 - **Explanations fold.** A page title carries an "i" beside it instead of a paragraph under it (`Hint`, `Fold`, `Clamp`).
 - **A member is a row** (avatar, name and role, state), not a card; a table of rows becomes cards (`table.stack`).
@@ -817,15 +848,15 @@ orbiting: the layer is `pointer-events: none` except the menu, the group bar and
 **Ways in.** A character is reached by its 3D model and by its name tag, which is also the keyboard's way to it (the tag is a
 button: Tab to it, `aria-haspopup="menu"`, an `aria-label` of name, role and state).
 
-| Gesture                                        | Does                                                                                   |
-| ---------------------------------------------- | -------------------------------------------------------------------------------------- |
-| click, tap                                     | chooses the member (camera and panel as before); a second one on the chosen member opens its menu |
-| right click, Shift+F10, press-and-hold (touch) | opens the menu (and chooses the member)                                                |
-| Enter or Space on a focused tag                | opens the menu at once                                                                 |
-| Shift + click, Shift + drag on the floor       | adds to a group / draws a marquee; a floating bar offers the group actions             |
-| Alt + drag (a model or a tag), desktop only    | carries the member's desk to another seat (see below)                                  |
+| Gesture                                        | Does                                                                                                                |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| click, tap                                     | chooses the member (camera and panel as before); a second one on the chosen member opens its menu                   |
+| right click, Shift+F10, press-and-hold (touch) | opens the menu (and chooses the member)                                                                             |
+| Enter or Space on a focused tag                | opens the menu at once                                                                                              |
+| Shift + click, Shift + drag on the floor       | adds to a group / draws a marquee; a floating bar offers the group actions                                          |
+| Alt + drag (a model or a tag), desktop only    | carries the member's desk to another seat (see below)                                                               |
 | hover (a mouse), 300 ms                        | a card with name, role, state, context share and current tool; a ring under the model; the cursor becomes a pointer |
-| Esc                                            | closes the menu, cancels a carry, clears a group, in that order                        |
+| Esc                                            | closes the menu, cancels a carry, clears a group, in that order                                                     |
 
 **The action menu** (`CharacterMenu.tsx`) is a floating `role="menu"` beside the character, kept inside the canvas (it scrolls
 inside a short one), with arrow keys, Home and End to move and focus returning to the character's tag when it closes. On a
@@ -898,14 +929,14 @@ Measured in headless Chrome with `--use-angle=metal` (`ANGLE Metal Renderer: App
 a range is given; run-to-run noise on timings is about 100 ms, so bytes and main-thread totals are the firm numbers. WebKit could
 not be run (the installed build does not match this Playwright), so nothing below is an iOS measurement.
 
-| Budget (phone, first load)                           | Now                                                                  |
-| ---------------------------------------------------- | -------------------------------------------------------------------- |
-| Page and styles (no 3D office, no panel)             | 203 KB brotli over 43 files (251 KB before the first-load round, 186 KB right after it); the build budget is 200 KB, see below |
-| 3D office on top (engine + 8 characters at LOD 2)    | 2.3 MB: engine 266 KB brotli, characters 8 x about 260 KB gzip       |
-| The panel does not wait for the office               | Slow 4G: panel ready at 2.2 s with the office and at 2.2 s without   |
-| Interaction on the panel (sheet open, tap a row)     | 96 ms event with the 3D office off, 240 to 340 ms with it running (4x CPU) |
-| Scene cost while nothing happens                     | 14% of the main thread at 4x CPU (4% for the page without the scene) |
-| GPU memory of the scene (`renderer.info` estimate)   | 57 MB, 111 draw calls, 86 k triangles, 15 programs                   |
+| Budget (phone, first load)                         | Now                                                                                                                            |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Page and styles (no 3D office, no panel)           | 203 KB brotli over 43 files (251 KB before the first-load round, 186 KB right after it); the build budget is 200 KB, see below |
+| 3D office on top (engine + 8 characters at LOD 2)  | 2.3 MB: engine 266 KB brotli, characters 8 x about 260 KB gzip                                                                 |
+| The panel does not wait for the office             | Slow 4G: panel ready at 2.2 s with the office and at 2.2 s without                                                             |
+| Interaction on the panel (sheet open, tap a row)   | 96 ms event with the 3D office off, 240 to 340 ms with it running (4x CPU)                                                     |
+| Scene cost while nothing happens                   | 14% of the main thread at 4x CPU (4% for the page without the scene)                                                           |
+| GPU memory of the scene (`renderer.info` estimate) | 57 MB, 111 draw calls, 86 k triangles, 15 programs                                                                             |
 
 The scene already redraws about 20 times a second on a phone, draws on demand and stops while the tab is hidden. What this
 round changed: the entry bundle no longer carries zod (the event stream is checked by `stream-event.ts`; the schemas load with
@@ -941,20 +972,20 @@ block and collects rAF frame times, navigation paint entries and `/api` fetch co
 what the report reads; anything missing is `null` and named in `unsupported` (sources: MDN, WebKit feature status, Chrome
 Platform Status, checked 2026-10-08).
 
-| API | Chrome Android | Safari iOS | In the report |
-| --- | --- | --- | --- |
-| `PerformanceNavigationTiming` | Yes | Yes | `startup.navigationType`, DCL / load |
-| `PerformancePaintTiming` (FCP) | Yes | Yes (16.4+) | `startup.firstContentfulPaintMs` |
-| `Largest Contentful Paint` | Yes | Yes (16.4+) | `startup.largestContentfulPaintMs` |
-| `PerformanceObserver` `longtask` | Yes | Limited / often absent | `longTasks` or `null` |
-| `PerformanceObserver` `long-animation-frame` (LoAF) | Yes (123+) | No | `loaf` or `null` |
-| `performance.memory` | Yes (Chromium) | No | `memory` or `null` |
-| `navigator.deviceMemory` | Yes | No | `device.deviceMemoryGb` or `null` |
-| `navigator.hardwareConcurrency` | Yes | Yes | `device.hardwareConcurrency` |
-| `Network Information` (`navigator.connection`) | Yes | No | `context.connection` or `null` |
-| `navigator.getBattery` / low-power mode | Deprecated / not low-power | No | `context.lowPowerMode` always `null` |
-| `Service Worker` `controller` / registrations | Yes (secure context) | Yes (secure context) | `context.serviceWorker` |
-| `matchMedia('(display-mode: …)')` | Yes | Yes (standalone via Add to Home Screen) | `context.displayMode` |
+| API                                                 | Chrome Android             | Safari iOS                              | In the report                        |
+| --------------------------------------------------- | -------------------------- | --------------------------------------- | ------------------------------------ |
+| `PerformanceNavigationTiming`                       | Yes                        | Yes                                     | `startup.navigationType`, DCL / load |
+| `PerformancePaintTiming` (FCP)                      | Yes                        | Yes (16.4+)                             | `startup.firstContentfulPaintMs`     |
+| `Largest Contentful Paint`                          | Yes                        | Yes (16.4+)                             | `startup.largestContentfulPaintMs`   |
+| `PerformanceObserver` `longtask`                    | Yes                        | Limited / often absent                  | `longTasks` or `null`                |
+| `PerformanceObserver` `long-animation-frame` (LoAF) | Yes (123+)                 | No                                      | `loaf` or `null`                     |
+| `performance.memory`                                | Yes (Chromium)             | No                                      | `memory` or `null`                   |
+| `navigator.deviceMemory`                            | Yes                        | No                                      | `device.deviceMemoryGb` or `null`    |
+| `navigator.hardwareConcurrency`                     | Yes                        | Yes                                     | `device.hardwareConcurrency`         |
+| `Network Information` (`navigator.connection`)      | Yes                        | No                                      | `context.connection` or `null`       |
+| `navigator.getBattery` / low-power mode             | Deprecated / not low-power | No                                      | `context.lowPowerMode` always `null` |
+| `Service Worker` `controller` / registrations       | Yes (secure context)       | Yes (secure context)                    | `context.serviceWorker`              |
+| `matchMedia('(display-mode: …)')`                   | Yes                        | Yes (standalone via Add to Home Screen) | `context.displayMode`                |
 
 When a ring buffer fills, the JSON marks `truncated: true` on the affected block and keeps only the newest retained
 entries in `entries` (or `deltasMs` for frames). Session totals (`sampleCount`, `count`, `droppedFrameCount`,
@@ -980,11 +1011,11 @@ Measured on a real GPU (headless Chrome with `--use-angle=metal`, `ANGLE Metal R
 `/office?intensity=3`, device pixel ratio 2, `?perf=N` probe (`PerfProbe`, which also leaves `window.__aetherPerfRig.sample(n)`
 for re-sampling after a script switches a piece off). Software rendering (SwiftShader) numbers mean nothing and are not quoted.
 
-| Tier     | Pixel ratio (cap) | Shadows                            | Characters                      | Air, desk glow, threads | Wall | Programs | GPU memory (est.) |
-| -------- | ----------------- | ---------------------------------- | ------------------------------- | ----------------------- | ---- | -------- | ----------------- |
-| low      | 1                 | none (soft footprint under each)   | LOD 2                         | none (attention ring on) | no   | 19       | 67 MB             |
-| balanced | 1.5               | 2048 map, redrawn at about 12 Hz   | LOD 1                           | 110 motes, 3 shafts     | yes  | 42       | 108 MB            |
-| high     | 2                 | 4096 map, redrawn at 20 Hz         | LOD 1 (selected: LOD 0)         | 240 motes, 5 shafts     | yes  | 42       | 210 MB            |
+| Tier     | Pixel ratio (cap) | Shadows                          | Characters              | Air, desk glow, threads  | Wall | Programs | GPU memory (est.) |
+| -------- | ----------------- | -------------------------------- | ----------------------- | ------------------------ | ---- | -------- | ----------------- |
+| low      | 1                 | none (soft footprint under each) | LOD 2                   | none (attention ring on) | no   | 19       | 67 MB             |
+| balanced | 1.5               | 2048 map, redrawn at about 12 Hz | LOD 1                   | 110 motes, 3 shafts      | yes  | 42       | 108 MB            |
+| high     | 2                 | 4096 map, redrawn at 20 Hz       | LOD 1 (selected: LOD 0) | 240 motes, 5 shafts      | yes  | 42       | 210 MB            |
 
 A phone (`compact`) is low-like (no shadows, no air, footprints) at a cap of 2 on high and 1.5 on balanced (`PIXEL_RATIO_CAP_PHONE_HIGH`, see "Mobile quality" below). Reduced motion freezes the air and
 the breathing of lines and rings and never turns members toward each other. The pixel ratio of every tier may fall to 0.75 (see below).
@@ -997,12 +1028,12 @@ uploads 13%, matrix updates 10%.
 
 **What was done, and what it measured** (same build, interleaved runs of the probe; p50 / p95 ms):
 
-| Change                                             | 1440x900 wall off | 1920x1080 wall on |
-| -------------------------------------------------- | ----------------- | ----------------- |
-| Before                                             | 3.1 / 5.7         | 6.3 to 6.8 / 14   |
-| Shadow map redrawn at 20 Hz, not every render       | 1.85 / 3.7        | 5.4 to 5.8 / 13   |
-| Animation updates by distance (30, 15, 5 Hz)       | within noise (0.3 at 1080p, 12 members) | |
-| Warm-up behind the loading cover                    | no frame-time change; worst startup frame 250 to 325 ms down to about 150 to 215 ms | |
+| Change                                        | 1440x900 wall off                                                                   | 1920x1080 wall on |
+| --------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------- |
+| Before                                        | 3.1 / 5.7                                                                           | 6.3 to 6.8 / 14   |
+| Shadow map redrawn at 20 Hz, not every render | 1.85 / 3.7                                                                          | 5.4 to 5.8 / 13   |
+| Animation updates by distance (30, 15, 5 Hz)  | within noise (0.3 at 1080p, 12 members)                                             |                   |
+| Warm-up behind the loading cover              | no frame-time change; worst startup frame 250 to 325 ms down to about 150 to 215 ms |                   |
 
 At the scene's own pace (no probe; CPU seconds of the renderer and GPU processes over 20 s, one run each, so read the order and not
 the decimals): the moving camera went from 5.7 and 5.6 to 4.9 and 4.4, the 1080p wall from 5.7 and 4.5 to 4.6 and 3.0, a still
@@ -1077,15 +1108,15 @@ GPU.**
   (`e2e/scene/scene-context.spec.ts`); whether Safari fires the event for a backgrounded page was not observed.
 - **What the transparent objects are (R4), phone profile, `?intensity=3`, 4x CPU, hiding one class at a time (`renderMs` of a 6.0 ms baseline, 195 draws):**
 
-  | Class (layer, why transparent)                                 | Objects | Draws saved | `renderMs` saved | Instance / merge / opaque?                                        |
-  | -------------------------------------------------------------- | ------- | ----------- | ---------------- | ----------------------------------------------------------------- |
-  | Screen code band (`MemberScreen`, opacity .9) and context gauge backing (`ContextGauge`, .75) | 24 | 24 | 1.7 | one material per member; merging needs shared instanced pools |
-  | Desk screen plane (`MemberScreen`, opacity .12 / .5 / 1)        | 12      | 12          | 1.1              | opaque when working would not change the cost (below)             |
-  | Contact shadow (`DeskGlow`, black plane, phone has no shadows) | 12      | 12          | 0.3              | needed: it is the phone's only ground contact                     |
-  | Smoke and spark points (`DeskEffects`, intensity 2 and 3 only) | 24      | 24          | 0.2 + 0.2        | exist only at all-out effort; a shared texture was tried (below)  |
-  | Status gems (`Labels`, octahedra, opacity .95)                 | 12      | 12          | 0.5              | opaque (.95 to 1) would not change the cost                       |
-  | Planet shells and rings, stars                                 | 5       | 5           | 0.3              | backdrop, one each                                                |
-  | Building holograms and glass                                   | about 10 | about 10    | not isolated     | additive, one material each, merged per floor already             |
+  | Class (layer, why transparent)                                                                | Objects  | Draws saved | `renderMs` saved | Instance / merge / opaque?                                       |
+  | --------------------------------------------------------------------------------------------- | -------- | ----------- | ---------------- | ---------------------------------------------------------------- |
+  | Screen code band (`MemberScreen`, opacity .9) and context gauge backing (`ContextGauge`, .75) | 24       | 24          | 1.7              | one material per member; merging needs shared instanced pools    |
+  | Desk screen plane (`MemberScreen`, opacity .12 / .5 / 1)                                      | 12       | 12          | 1.1              | opaque when working would not change the cost (below)            |
+  | Contact shadow (`DeskGlow`, black plane, phone has no shadows)                                | 12       | 12          | 0.3              | needed: it is the phone's only ground contact                    |
+  | Smoke and spark points (`DeskEffects`, intensity 2 and 3 only)                                | 24       | 24          | 0.2 + 0.2        | exist only at all-out effort; a shared texture was tried (below) |
+  | Status gems (`Labels`, octahedra, opacity .95)                                                | 12       | 12          | 0.5              | opaque (.95 to 1) would not change the cost                      |
+  | Planet shells and rings, stars                                                                | 5        | 5           | 0.3              | backdrop, one each                                               |
+  | Building holograms and glass                                                                  | about 10 | about 10    | not isolated     | additive, one material each, merged per floor already            |
 
   Everything adds to the 102 transparent objects (hiding all: 49 draws, 2.0 ms). **Converting transparent to opaque changed nothing**
   (octahedra and working screens: 5.5 to 5.6 ms), and **sharing the smoke texture** (one canvas instead of one per member) changed nothing

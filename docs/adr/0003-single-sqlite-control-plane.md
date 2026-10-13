@@ -1,5 +1,7 @@
 # ADR 0003: One SQLite database owned by the control plane
 
+[Documentation](../README.md) · [Project](../../README.md)
+
 - Status: accepted
 - Date: 2026-10-08
 

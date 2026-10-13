@@ -1,5 +1,7 @@
 # @aether/web
 
+[Documentation](../../docs/README.md) · [Project](../../README.md)
+
 React workbench: panel, settings, KPIs, session feed, and lazy-loaded 3D office (`@aether/office-scene`).
 
 ## Public surface

@@ -1,5 +1,21 @@
 # Native execution
 
+[Documentation](README.md) · [Project](../README.md)
+
+<details>
+<summary>Contents</summary>
+
+- [Setup](#setup)
+- [Execution model](#execution-model)
+- [Review, verification and acceptance](#review-verification-and-acceptance)
+- [Interactive terminals (PTY)](#interactive-terminals-pty)
+- [External read-only observation](#external-read-only-observation)
+- [Live smoke test](#live-smoke-test)
+- [Process lifecycle: stop, survivors, orphans and zombies](#process-lifecycle-stop-survivors-orphans-and-zombies)
+- [Claude subscription limits](#claude-subscription-limits)
+
+</details>
+
 Native execution lets AETHER OFFICE start Codex or Claude Code itself, in isolated Git worktrees, under explicit approvals.
 It is **off by default** and needs two independent grants: a local configuration file on the runner's machine and an
 explicit per-project opt-in by the project owner. Saving settings never starts a model; only an assignment does.

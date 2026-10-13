@@ -1,5 +1,23 @@
 # Development
 
+[Documentation](README.md) · [Project](../README.md)
+
+<details>
+<summary>Contents</summary>
+
+- [Repository layout](#repository-layout)
+- [Commands](#commands)
+- [Testing](#testing)
+- [Writing stable tests](#writing-stable-tests)
+- [Verification ledger](#verification-ledger)
+- [Database changes](#database-changes)
+- [Adding a capability](#adding-a-capability)
+- [The animals](#the-animals)
+- [Contact sheets and GPU perf](#contact-sheets-and-gpu-perf)
+- [Releasing](#releasing)
+
+</details>
+
 ## Repository layout
 
 ```
@@ -23,34 +41,34 @@ docs/             This documentation, ADRs and the verification ledger
 
 ## Commands
 
-| Command                       | What it does                                                                             |
-| ----------------------------- | ---------------------------------------------------------------------------------------- |
-| `pnpm install --frozen-lockfile` | Installs exactly the locked dependencies                                              |
-| `pnpm dev` / `pnpm demo`      | Runs control, runner and web with live or fixture data                                   |
-| `pnpm build`                  | Builds control, runner and web (the build also pre-compresses assets)                    |
-| `pnpm start`                  | Runs the built control plane                                                             |
-| `pnpm typecheck`              | `tsc --noEmit` over apps, packages, tests and scripts                                    |
-| `pnpm lint`                   | Module boundaries (`scripts/check-boundaries.mjs`) and design tokens (`scripts/check-design-tokens.mjs`) |
-| `pnpm format` / `format:check`| Prettier                                                                                 |
-| `pnpm test`                   | Vitest (`tests/aether`); default run excludes host CLI drift checks (see [Provider CLI version tests](#provider-cli-version-tests)); `test:unit`, `test:integration` and `test:security` run one file each |
-| `pnpm test:host-clis`         | Host CLI drift alarm: version checks against **installed** `codex` and `claude` on `PATH` (requires `AETHER_HOST_CLIS=1`; not part of default `pnpm test`); fails when a CLI is present but its version is not on the verified list |
-| `pnpm test:coverage`          | Vitest with the v8 coverage provider; writes `coverage/coverage-summary.json` for the quality scorecard |
-| `pnpm exec playwright test`   | End-to-end suite in Chrome                                                               |
-| `pnpm run setup`              | Creates the data directory and the owner token (`--demo` for the demo's)                   |
-| `pnpm hooks <install\|remove\|status>` | Installs, removes or reports the Claude Code or Codex hooks (see [getting started](getting-started.md#exact-activity-with-hooks-optional)) |
-| `pnpm run pair` / `pnpm runner:enroll` | Prints a phone-pairing QR code / enrolls a runner with a one-time invitation                |
-| `pnpm run doctor`             | Reports OS, Node, pnpm, Git and provider CLI versions; `--strict` fails on warnings too   |
-| `pnpm run protocol:regen`     | Rewrites the generated Codex protocol types from the installed `codex` of the pinned release and records their digest in `compat.json` (`--check` reports drift, `--digest` prints the digest) |
-| `pnpm verification:report` / `verification:check` | Regenerate / check the verification report from the ledger           |
-| `node scripts/audit-dependencies.mjs [package...]` | Reads the registry metadata of the dev dependencies (network) for the dependency ledger entry |
-| `pnpm audit:gate`             | Fail-closed gate for unexempted high/critical advisories                                 |
-| `node scripts/check-bundle-size.mjs` | After `pnpm build`: gzip size of the web JavaScript against its budget (CI runs it)      |
-| `pnpm run quality` / `quality:report` / `quality:check` | Objective scorecard per area (`--json`, `--area <name>`, `--target 95`); regenerate it and raise the floors / fail on a stale scorecard or an area below its floor; see [quality](quality/README.md) |
-| `pnpm verify:clean`           | Clean-room install, build and test of the committed tree                                 |
-| `node --import tsx scripts/docs-screenshots.mjs --port 4511` | Retakes the README screenshots from a synthetic demo stack (see [images](images/README.md)) |
-| `pnpm backup`                 | Create or restore a backup of the control plane's data                                   |
-| `pnpm run oss:check`          | Publishing-readiness scan of the tree (`--history` adds the history); see [release](release/history-cleanup.md) |
-| `pnpm smoke:live`             | Real Claude/Codex smoke test; consumes subscription quota, needs `--confirm-subscription-quota` |
+| Command                                                      | What it does                                                                                                                                                                                                                        |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm install --frozen-lockfile`                             | Installs exactly the locked dependencies                                                                                                                                                                                            |
+| `pnpm dev` / `pnpm demo`                                     | Runs control, runner and web with live or fixture data                                                                                                                                                                              |
+| `pnpm build`                                                 | Builds control, runner and web (the build also pre-compresses assets)                                                                                                                                                               |
+| `pnpm start`                                                 | Runs the built control plane                                                                                                                                                                                                        |
+| `pnpm typecheck`                                             | `tsc --noEmit` over apps, packages, tests and scripts                                                                                                                                                                               |
+| `pnpm lint`                                                  | Module boundaries (`scripts/check-boundaries.mjs`) and design tokens (`scripts/check-design-tokens.mjs`)                                                                                                                            |
+| `pnpm format` / `format:check`                               | Prettier                                                                                                                                                                                                                            |
+| `pnpm test`                                                  | Vitest (`tests/aether`); default run excludes host CLI drift checks (see [Provider CLI version tests](#provider-cli-version-tests)); `test:unit`, `test:integration` and `test:security` run one file each                          |
+| `pnpm test:host-clis`                                        | Host CLI drift alarm: version checks against **installed** `codex` and `claude` on `PATH` (requires `AETHER_HOST_CLIS=1`; not part of default `pnpm test`); fails when a CLI is present but its version is not on the verified list |
+| `pnpm test:coverage`                                         | Vitest with the v8 coverage provider; writes `coverage/coverage-summary.json` for the quality scorecard                                                                                                                             |
+| `pnpm exec playwright test`                                  | End-to-end suite in Chrome                                                                                                                                                                                                          |
+| `pnpm run setup`                                             | Creates the data directory and the owner token (`--demo` for the demo's)                                                                                                                                                            |
+| `pnpm hooks <install\|remove\|status>`                       | Installs, removes or reports the Claude Code or Codex hooks (see [getting started](getting-started.md#exact-activity-with-hooks-optional))                                                                                          |
+| `pnpm run pair` / `pnpm runner:enroll`                       | Prints a phone-pairing QR code / enrolls a runner with a one-time invitation                                                                                                                                                        |
+| `pnpm run doctor`                                            | Reports OS, Node, pnpm, Git and provider CLI versions; `--strict` fails on warnings too                                                                                                                                             |
+| `pnpm run protocol:regen`                                    | Rewrites the generated Codex protocol types from the installed `codex` of the pinned release and records their digest in `compat.json` (`--check` reports drift, `--digest` prints the digest)                                      |
+| `pnpm verification:report` / `verification:check`            | Regenerate / check the verification report from the ledger                                                                                                                                                                          |
+| `node scripts/audit-dependencies.mjs [package...]`           | Reads the registry metadata of the dev dependencies (network) for the dependency ledger entry                                                                                                                                       |
+| `pnpm audit:gate`                                            | Fail-closed gate for unexempted high/critical advisories                                                                                                                                                                            |
+| `node scripts/check-bundle-size.mjs`                         | After `pnpm build`: gzip size of the web JavaScript against its budget (CI runs it)                                                                                                                                                 |
+| `pnpm run quality` / `quality:report` / `quality:check`      | Objective scorecard per area (`--json`, `--area <name>`, `--target 95`); regenerate it and raise the floors / fail on a stale scorecard or an area below its floor; see [quality](quality/README.md)                                |
+| `pnpm verify:clean`                                          | Clean-room install, build and test of the committed tree                                                                                                                                                                            |
+| `node --import tsx scripts/docs-screenshots.mjs --port 4511` | Retakes the README screenshots from a synthetic demo stack (see [images](images/README.md))                                                                                                                                         |
+| `pnpm backup`                                                | Create or restore a backup of the control plane's data                                                                                                                                                                              |
+| `pnpm run oss:check`                                         | Publishing-readiness scan of the tree (`--history` adds the history); see [release](release/history-cleanup.md)                                                                                                                     |
+| `pnpm smoke:live`                                            | Real Claude/Codex smoke test; consumes subscription quota, needs `--confirm-subscription-quota`                                                                                                                                     |
 
 ## Testing
 
@@ -71,7 +89,7 @@ docs/             This documentation, ADRs and the verification ledger
   verification ledger are checked here too. Playwright in `e2e/` (about 50 specs): real control plane and runner on ports 4320 and
   4330 (`AETHER_E2E_PORT` and `AETHER_E2E_NATIVE_PORT` give a second checkout or run its own pair; no spec names a port) with a **fixture home** (`playwright.config.ts` points `AETHER_LOCAL_SESSIONS_HOME`, `AETHER_HOOK_SPOOL` and
   `AETHER_CLAUDE_USAGE_FILE` at a temporary directory, so no test reads your real `~/.claude` or `~/.codex`). The e2e specs drive
-  Chrome (`channel: 'chrome'`; where `CI` is set, Playwright's own Chromium in its new headless mode, because the headless shell reports notification permission as denied). CI does not run the suite. On a hosted runner (two vCPUs, no GPU) the whole suite was cancelled after an hour with most scene specs failing, and its DOM specs (`e2e/settings`, `e2e/session`, `e2e/workbench`) took 44 minutes with 20 failures, mostly fixture sessions that never reached the project picker. The same 104 specs pass in about six minutes on macOS with `CI=1`, so those failures show up only on that runner (cause not found, Linux is unverified). It is a local and release gate. WebKit is opt-in with `AETHER_WEBKIT=1`. GPU measurements (`PERF_GPU=1`) and `pnpm smoke:live`
+  Chrome (`channel: 'chrome'`; where `CI` is set, Playwright's own Chromium in its new headless mode, because the headless shell reports notification permission as denied). CI runs the session-discovery, QR-pairing, composer and synthetic native-workflow specs on Linux with Chromium. The full suite, including 3D scenes, remains a local and release gate. Earlier hosted runs failed to discover fixture sessions and timed out; retained failure records are historical evidence, not proof about the current revision. CI artifacts include browser results and failure screenshots. WebKit is opt-in with `AETHER_WEBKIT=1`. GPU measurements (`PERF_GPU=1`) and `pnpm smoke:live`
   are never part of the default run: a skipped check is "not run", never "passed".
 - **Keeping tests stable.** Use fixture data with fixed timestamps rather than "now" where you can; synthetic processes
   (`tests/processes`, `sleep` named `claude`) instead of real CLIs; wait on a visible state (`expect(...).toBeVisible()`,
@@ -92,7 +110,7 @@ at how long it takes.
 
 - **No fixed sleeps before an assertion.** Wait for the event or state (`expect(...).toBeVisible()`, `expect.poll`,
   `locator.waitFor`; in Vitest `eventually` from `tests/aether/timing.ts`) with a deadline that only a hang can reach. A wait
-  for something to *not* happen (a banner that must not appear) has to be time-based: keep it short, say so in a comment, and
+  for something to _not_ happen (a banner that must not appear) has to be time-based: keep it short, say so in a comment, and
   never let it stand in for a positive wait. `e2e/support/settled.ts` counts animation frames instead of milliseconds for a
   camera flight (`settled`) or a stretch of scene time (`frames`).
 - **Ephemeral ports.** A test that listens takes `freePort()` (`tests/aether/timing.ts`), not a number in the 4000s that
@@ -189,7 +207,7 @@ loaded machine (`PERF_ROUNDS`).
 
 ## Releasing
 
-There is no release process yet; the project is pre-release. Before one: run `pnpm verify:clean`, review the verification
-ledger, run `pnpm run notices:check` and produce the software bill of materials
-(`node scripts/oss/third-party-notices.mjs --sbom aether-office-<version>.cdx.json`; see [legal](legal/README.md)). The steps
-to publish, including cleaning the history, are in the [publishing checklist](release/publishing-checklist.md).
+Releases are source-only pre-releases while the verification ledger has open blockers. Follow the
+[publishing checklist](release/publishing-checklist.md) to update versions, validate a clean checkout, verify CI at the
+exact main commit, and publish an annotated tag with its software bill of materials. Preserve existing public tags.
+History cleanup is a separate, explicit maintenance operation; routine releases do not rewrite public history.
