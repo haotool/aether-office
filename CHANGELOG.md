@@ -3,11 +3,9 @@
 [Documentation](docs/README.md) · [Project](README.md)
 
 All notable changes are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the
-project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) once it has a stable release.
+project follows its [pre-release version policy](docs/release/versioning.md).
 
 ## [Unreleased]
-
-## [0.4.1] - 2026-10-13
 
 ### Changed
 
@@ -28,6 +26,11 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   found in linear time, and a run of more than 16 backticks no longer delimits a span.
 - Checking whether a session's process had been orphaned stalled for seconds when its parent's command line was very long; the
   check is now linear, and `--user` has to follow `systemd` within 256 characters.
+
+### Security
+
+- Bind every manual release-evidence entry to a full ancestor commit SHA instead of accepting unversioned review claims.
+- Validate version, changelog, workspace manifests, clean state and annotated tag identity before a release tag is pushed.
 
 ## [0.4.0] - 2026-10-13
 

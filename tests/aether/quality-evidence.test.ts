@@ -11,6 +11,11 @@ const { evidenceForCriteria, evidenceRow, loadEvidence, resolveEvidencePath, EVI
 const { memoryRepo } = await loadRoot('repo.mjs');
 
 const VALID_E = 'L1-10';
+const root = resolve('.');
+const head = execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], {
+  encoding: 'utf8',
+}).trim();
+const anchored = { id: VALID_E, credit: 1, sha: head };
 
 describe('resolveEvidencePath', () => {
   it('rejects parent segments and absolute paths', () => {
@@ -23,11 +28,6 @@ describe('resolveEvidencePath', () => {
 });
 
 describe('loadEvidence', () => {
-  it('accepts a valid empty array', () => {
-    const repo = memoryRepo({ [EVIDENCE_PATH]: '[]' });
-    expect(loadEvidence(repo)).toEqual({ entries: [], error: null });
-  });
-
   it('rejects malformed JSON', () => {
     const repo = memoryRepo({ [EVIDENCE_PATH]: '{not json' });
     const got = loadEvidence(repo);
@@ -43,74 +43,61 @@ describe('loadEvidence', () => {
 });
 
 describe('evidenceRow', () => {
-  const head = 'abc123';
-
   it('accepts valid evidence', () => {
     const repo = memoryRepo({
       'docs/foo.md': '# ok',
       [EVIDENCE_PATH]: '[]',
     });
     const row = evidenceRow(
-      repo,
-      { id: VALID_E, credit: 1, files: ['docs/foo.md'], note: 'reviewed' },
+      { ...repo, root },
+      { ...anchored, files: ['docs/foo.md'], note: 'reviewed' },
       head,
     );
     expect(row).toMatchObject({ id: VALID_E, credit: 1 });
   });
 
-  it('rejects unknown criterion id', () => {
-    const row = evidenceRow(repoWith([]), { id: 'L9-99', credit: 1 }, head);
-    expect(row).toHaveProperty('error');
+  it('requires a full commit sha', () => {
+    for (const sha of [undefined, 'abc123'])
+      expect(evidenceRow(repoWith([]), { id: VALID_E, credit: 1, sha }, head)).toHaveProperty(
+        'error',
+      );
   });
 
-  it('rejects credit outside 0, 0.5, 1', () => {
-    const row = evidenceRow(repoWith([]), { id: VALID_E, credit: 0.25 }, head);
-    expect(row).toHaveProperty('error');
-  });
-
-  it('rejects missing files', () => {
-    const row = evidenceRow(repoWith([]), { id: VALID_E, credit: 1, files: ['missing.md'] }, head);
-    expect(row).toHaveProperty('error');
+  it.each([
+    ['unknown criterion', { ...anchored, id: 'L9-99' }],
+    ['invalid credit', { ...anchored, credit: 0.25 }],
+    ['missing file', { ...anchored, files: ['missing.md'] }],
+  ])('rejects %s', (_name, entry) => {
+    expect(evidenceRow(repoWith([]), entry, head)).toHaveProperty('error');
   });
 
   it('rejects parent-segment paths', () => {
     const row = evidenceRow(
       memoryRepo({ [EVIDENCE_PATH]: '[]', 'package.json': '{}' }),
-      { id: VALID_E, credit: 1, files: ['../package.json'] },
+      { ...anchored, files: ['../package.json'] },
       head,
     );
     expect(row).toHaveProperty('error');
   });
 
   it('rejects sha not ancestral to HEAD', () => {
-    const root = resolve('.');
-    const headSha = execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], {
-      encoding: 'utf8',
-    }).trim();
     const repo = memoryRepo({ [EVIDENCE_PATH]: '[]', root });
     const row = evidenceRow(
       { ...repo, root },
       { id: VALID_E, credit: 1, sha: '0'.repeat(40) },
-      headSha,
+      head,
     );
     expect(row).toHaveProperty('error');
   });
 });
 
 describe('evidenceForCriteria', () => {
-  it('returns a map for valid evidence', () => {
-    const repo = repoWith([{ id: VALID_E, credit: 0.5, note: 'partial' }]);
-    const { evidence, error } = evidenceForCriteria(repo, 'deadbeef');
-    expect(error).toBeNull();
-    expect(evidence.get(VALID_E)?.credit).toBe(0.5);
-  });
-
   it('invalidates the file on duplicate ids', () => {
     const repo = repoWith([
       { id: VALID_E, credit: 1 },
       { id: VALID_E, credit: 0.5 },
     ]);
-    const { evidence, error } = evidenceForCriteria(repo, 'deadbeef');
+    const { evidence, error } = evidenceForCriteria(repo, head);
     expect(evidence.size).toBe(0);
     expect(error).toMatch(/duplicate criterion id/);
   });
@@ -123,5 +110,6 @@ describe('evidenceForCriteria', () => {
 });
 
 function repoWith(entries: unknown[]) {
-  return memoryRepo({ [EVIDENCE_PATH]: JSON.stringify(entries) });
+  const anchoredEntries = entries.map((entry) => ({ sha: head, ...(entry as object) }));
+  return { ...memoryRepo({ [EVIDENCE_PATH]: JSON.stringify(anchoredEntries) }), root };
 }

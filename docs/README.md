@@ -59,6 +59,7 @@ differ from the pages above, the pages above win.
 | [Verification ledger](verification/report.md)           | What is implemented and what is verified, per capability                                               |
 | [UX matrix](verification/ux-matrix.md)                  | Every page at seven widths, both themes and languages, plus the page states, checked in a real browser |
 | [Publishing checklist](release/publishing-checklist.md) | Version updates, clean-candidate checks, protected-branch integration and source releases              |
+| [Version policy](release/versioning.md)                 | Pre-1.0 compatibility surface, version increments and immutable release identity                       |
 | [Cleaning the history](release/history-cleanup.md)      | The three options (A, B, C), the `scripts/oss` kit, commands, measured results                         |
 | [Legal and licensing](legal/README.md)                  | Licence inventory, licence policy, provenance, trademarks, notices and SBOM                            |
 | [Changelog](../CHANGELOG.md)                            | User-facing changes per release                                                                        |
