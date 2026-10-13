@@ -141,7 +141,7 @@ Score 99.1, floor 99.1, 70% of the rule weight measured.
 **first-load** (-0.9): First-load JavaScript and CSS, transferred (budget 200 KB)
 
 ```text
-  apps/web/dist/assets/index-DEkQzudc.js:1 79 KB
+  apps/web/dist/assets/index-l4eO4M7C.js:1 80 KB
   apps/web/dist/assets/signals-BiryGzd7.js:1 3 KB
   apps/web/dist/assets/scheduler-CaJXFZeK.js:1 1 KB
   apps/web/dist/assets/react-dom-DkN6JdHT.js:1 1 KB

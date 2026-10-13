@@ -5,7 +5,7 @@
 <details>
 <summary>Contents</summary>
 
-- [What is wrong with the current history](#what-is-wrong-with-the-current-history)
+- [What the original history contained](#what-the-original-history-contained)
 - [The three options](#the-three-options)
 - [What the kit does](#what-the-kit-does)
 - [Step by step](#step-by-step)
@@ -15,13 +15,17 @@
 
 </details>
 
-The repository is meant to be published as an open-source project. Its history is not ready for that as it stands. This
-page explains what is wrong, the three ways to fix it, and the commands. The tooling is in `scripts/oss/`; it never changes
-this repository: every rewrite runs on a throwaway clone that the scripts create themselves.
+> [!NOTE]
+> Historical preparation record. Public `main` has since been cleaned and published. The measurements below describe
+> pre-publication clones. Routine releases follow the [release checklist](publishing-checklist.md); another history
+> rewrite requires a separate, explicit maintenance decision.
 
-## What is wrong with the current history
+This page records the original problems, three cleanup strategies and the commands used to compare them. The tooling
+lives in `scripts/oss/`; each rewrite operates on a disposable clone rather than the working repository.
 
-Measured with `pnpm run oss:check --history` on 931 commits (30 upstream, 901 maintainer, 102 merges):
+## What the original history contained
+
+Measured before publication with `pnpm run oss:check --history` on 931 commits (30 upstream, 901 maintainer, 102 merges):
 
 | Problem                                                                                                                                             | Why it matters                                             |
 | --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |

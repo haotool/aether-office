@@ -56,7 +56,7 @@ describe('tag classification', () => {
   };
 
   it('collects what opens and closes in prose and skips code spans', () => {
-    const sets = tagSets('<Note>hi</Note> and `<code-only>` and <br/> <x a="1">');
+    const sets = tagSets('<Note>hi</Note>`<code-only>` and <br/> <x a="1">');
     expect([...sets.opens].sort()).toEqual(['note', 'x']);
     expect([...sets.closes]).toEqual(['note']);
     expect(tagSets('no tags here').opens.size).toBe(0);

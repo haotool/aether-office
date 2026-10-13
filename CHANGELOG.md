@@ -16,7 +16,7 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ### Fixed
 
-- Replies with unequal, very long backtick delimiters no longer trigger repeated quadratic scans in HTML neutralization.
+- Replies with unequal, very long backtick delimiters no longer trigger repeated quadratic scans in HTML neutralization; adjacent code spans retain their protection.
 - Browser-test retries release their synthetic terminal slots and restore deleted observer fixtures, so later tests remain independent.
 - A cell of an HTML table in a reply that held a backslash before a pipe (`a\|b`) could split into an extra column once the table
   was turned into Markdown; the backslash is now escaped along with the pipe.
