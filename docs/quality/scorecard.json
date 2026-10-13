@@ -402,7 +402,7 @@
       "name": "ui",
       "title": "UI system and design tokens",
       "score": 100,
-      "measured": 82,
+      "measured": 100,
       "rules": [
         {
           "id": "token-lint",
@@ -580,16 +580,15 @@
         },
         {
           "id": "role-variance",
-          "label": "Distinct control sizes per role (e2e/ui/role-variance.spec.ts)",
-          "status": "skipped",
+          "label": "Roles with more distinct sizes than allowed",
+          "status": "pass",
           "weight": 20,
-          "value": null,
-          "limit": null,
-          "full": null,
+          "value": 0,
+          "limit": 0,
+          "full": 10,
           "unit": "",
           "penalty": 0,
-          "details": [],
-          "note": "not run: the spec has no recorded result (expected evidence/role-variance.json)"
+          "details": []
         },
         {
           "id": "physical-properties",
@@ -1223,6 +1222,6 @@
     }
   ],
   "inputs": {
-    "role-variance": "absent"
+    "role-variance": "present sha256:e9e9cc02"
   }
 }

@@ -143,7 +143,8 @@ at how long it takes.
   own PID afterwards) before calling a timing fix done, and compare with the same run on the old test.
 - **Nothing from the machine.** A test that makes a git commit sets `user.name` and `user.email` itself (`-c user.name=t -c user.email=t@example.com`): a CI runner has no identity, a laptop always does. To see what a runner sees, run the file with `GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=user.useConfigOnly GIT_CONFIG_VALUE_0=true`.
 - **Retries are a net, not a fix.** On a slow or shared machine a few 3D-scene specs can miss a deadline. CI retries a failing
-  e2e test twice (`AETHER_E2E_RETRIES` sets the count anywhere else) and the run reports a test that needed a retry as flaky.
+  e2e test twice by default (`AETHER_E2E_RETRIES` sets the count). The Linux browser job sets zero retries so the first
+  failure blocks its gate; any run that needed a retry is reported as flaky.
   Treat a flaky test like a failing one: find the missing wait.
 
 ## Verification ledger

@@ -53,15 +53,14 @@ jobs:
         run: pnpm audit:gate
       - name: Linux browser workflows
         if: matrix.os == 'ubuntu-latest'
-        env:
-          TMPDIR: ${{ runner.temp }}
+        env: { TMPDIR: '${{ runner.temp }}', AETHER_E2E_RETRIES: '0' }
         run: |
           pnpm exec playwright install --with-deps chromium
           pnpm exec playwright test e2e/session/local-sessions.spec.ts e2e/session/pairing.spec.ts e2e/workbench/composer.spec.ts e2e/workbench/native-workflow.spec.ts --timeout=120000
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: failure() && matrix.os == 'ubuntu-latest'
+        if: always() && matrix.os == 'ubuntu-latest'
         with:
-          name: linux-browser-failures
+          name: linux-browser-results
           path: |
             evidence/e2e-results.json
             test-results/

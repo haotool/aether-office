@@ -40,7 +40,7 @@
     "testIds": ["scripts/clean-room.mjs", "tests/aether/dependencies.test.ts"],
     "evidencePaths": [],
     "blockers": [
-      "Verified from a fresh clone on macOS arm64 with a warm pnpm store; a cold-cache or other-OS install was not run"
+      "Fresh-clone installation was checked on macOS arm64 with a warm pnpm store; CI performs frozen-lockfile installs on Linux and macOS. Manual cold-cache and Windows acceptance remain unverified."
     ]
   },
   {
@@ -64,7 +64,7 @@
     "testIds": ["tests/aether/web-safety.test.ts"],
     "evidencePaths": [],
     "blockers": [
-      "Run on macOS arm64 with Node 24.21.0 and pnpm 12.8.1; CI runs typecheck, lint and build on Ubuntu with the Node of .nvmrc; Windows was not run."
+      "Run on macOS arm64 with Node 24.21.0 and pnpm 12.8.1; CI runs typecheck, lint, tests and build on Linux and macOS using .nvmrc. Windows was not run."
     ]
   },
   {
@@ -515,7 +515,7 @@
       "evidence/e2e-terminal-diagnostics-final.log"
     ],
     "blockers": [
-      "Verified on macOS with a real PTY and browser; Linux and WSL2 were not run and native Windows is refused."
+      "Real PTY and browser persistence is checked on macOS; the synthetic native browser journey also passed on Linux CI. Broader Linux fault acceptance and WSL2 remain open; native Windows is refused."
     ]
   },
   {
@@ -548,7 +548,7 @@
       "evidence/e2e-terminal-diagnostics-final.log"
     ],
     "blockers": [
-      "Restart versus PID reuse is verified on macOS; Linux and WSL2 were not run, native Windows is refused, and closing an unknown run by hand is not implemented."
+      "Restart versus PID reuse is checked on macOS; selected synthetic Linux browser coverage does not close the full restart and PID-reuse fault matrix. WSL2 is unverified, native Windows is refused, and manually closing an unknown run is not implemented."
     ]
   },
   {
@@ -574,7 +574,7 @@
       "evidence/e2e-terminal-diagnostics-final.log"
     ],
     "blockers": [
-      "Verified with a real PTY on macOS; after scrollback truncation a gap notice is shown but the screen is not rebuilt from a serialized ANSI state; Linux and WSL2 were not run."
+      "Real PTY behavior is checked on macOS and a synthetic resize/echo browser journey passed on Linux; bounded scrollback shows a gap instead of rebuilding serialized ANSI state. Full Linux fault coverage and WSL2 remain unverified."
     ]
   },
   {
@@ -600,7 +600,7 @@
       "evidence/e2e-terminal-diagnostics-final.log"
     ],
     "blockers": [
-      "Read and write permissions and the single takeover owner are verified on macOS only; Linux and WSL2 were not run and native Windows is refused."
+      "Read/write permissions and takeover ownership are checked on macOS; a synthetic Linux browser journey covers takeover and read-only state after reload. Full Linux permission fault acceptance and WSL2 remain open; native Windows is refused."
     ]
   },
   {
@@ -705,7 +705,7 @@
       "evidence/e2e-terminal-diagnostics-final.log"
     ],
     "blockers": [
-      "Verified on macOS in the browser; Linux and WSL2 were not run and native Windows is refused."
+      "The terminal browser journey is checked on macOS and selected synthetic Linux CI workflows; full Linux browser/platform acceptance and WSL2 remain open, and native Windows is refused."
     ]
   },
   {

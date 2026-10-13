@@ -9,7 +9,7 @@ Overall: **97.5** (mean of the scored areas; target 95).
 | Structure (`structure`) | 95.0 | 95.0 | 100% | fan-in 3 (-5) |
 | Types and correctness gates (`types`) | 100.0 | 100.0 | 100% | none |
 | Tests (`tests`) | 100.0 | 100.0 | 100% | none |
-| UI system and design tokens (`ui`) | 100.0 | 100.0 | 82% | none |
+| UI system and design tokens (`ui`) | 100.0 | 100.0 | 100% | none |
 | Accessibility and i18n (`a11y`) | 100.0 | 100.0 | 80% | none |
 | Performance budgets (`perf`) | 99.1 | 99.1 | 70% | first-load 203 (-0.9) |
 | Docs truth (`docs`) | 100.0 | 100.0 | 100% | none |
@@ -92,7 +92,7 @@ packages/providers: 2051 source lines
 
 ## UI system and design tokens
 
-Score 100.0, floor 100.0, 82% of the rule weight measured.
+Score 100.0, floor 100.0, 100% of the rule weight measured.
 
 | Rule | Id | Value | Limit | Weight | Penalty | State |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
@@ -107,7 +107,7 @@ Score 100.0, floor 100.0, 82% of the rule weight measured.
 | px custom properties outside tokens.css | `custom-property-literal` | 0 | 0 | 5 | 0 | pass |
 | token-lint escape comments over the budget of 100 | `escape-comments` | 100 | 100 | 10 | 0 | pass |
 | Rules above scripts/design-token-baseline.json | `baseline-regression` | 0 | 0 | 15 | 0 | pass |
-| Distinct control sizes per role (e2e/ui/role-variance.spec.ts) (not run: the spec has no recorded result (expected evidence/role-variance.json)) | `role-variance` | - | - | 20 | 0 | not run |
+| Roles with more distinct sizes than allowed | `role-variance` | 0 | 0 | 20 | 0 | pass |
 | Physical left/right properties (logical ones are RTL-ready) | `physical-properties` | 169 | - | - | 0 | info |
 
 ## Accessibility and i18n

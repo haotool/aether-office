@@ -164,7 +164,8 @@ session discovery. Starting a terminal runs a real local program and creates no 
 - The control plane reads what the agent in a terminal is doing (working, waiting for you, idle) from the bottom of its screen
   and shows it in the list; unfamiliar output reads as unknown, never a guess (`packages/kernel/src/terminal-state.ts`).
 - Verified on macOS (real PTY, HTTP and SQLite, restart without re-sending, Unicode, ANSI, resize, group termination, browser
-  journey) using a labeled Node fixture. Linux and WSL2 are untested; native Windows refuses to start the supervisor.
+  journey) using a labeled Node fixture. Selected Linux synthetic browser journeys also run in CI; the full Linux fault
+  matrix and WSL2 acceptance remain open. Native Windows refuses to start the supervisor.
 
 ## External read-only observation
 
