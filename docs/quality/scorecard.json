@@ -709,15 +709,15 @@
           "label": "Web JavaScript total, gzip (budget 870 KB)",
           "status": "pass",
           "weight": 25,
-          "value": 849,
+          "value": 852,
           "limit": 870,
           "full": 435,
           "unit": "KB",
           "penalty": 0,
           "details": [
-            "apps/web/dist/assets/src-BTsZEZxt.js:1 379 KB",
+            "apps/web/dist/assets/src-BTsZEZxt.js:1 380 KB",
             "apps/web/dist/assets/index-l4eO4M7C.js:1 91 KB",
-            "apps/web/dist/assets/Terminals-BhCPX-ju.js:1 85 KB",
+            "apps/web/dist/assets/Terminals-BhCPX-ju.js:1 86 KB",
             "apps/web/dist/assets/TaskDag-D7bAZYC1.js:1 56 KB",
             "apps/web/dist/assets/core-CJGtMnx9.js:1 27 KB",
             "apps/web/dist/assets/ProjectPage-Dj8PeRkL.js:1 27 KB",
@@ -730,13 +730,13 @@
           "label": "Largest JavaScript chunk, gzip (budget 400 KB)",
           "status": "pass",
           "weight": 15,
-          "value": 379,
+          "value": 380,
           "limit": 400,
           "full": 200,
           "unit": "KB",
           "penalty": 0,
           "details": [
-            "apps/web/dist/assets/src-BTsZEZxt.js:1 379 KB"
+            "apps/web/dist/assets/src-BTsZEZxt.js:1 380 KB"
           ]
         },
         {

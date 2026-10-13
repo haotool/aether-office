@@ -130,8 +130,8 @@ Score 99.1, floor 99.1, 70% of the rule weight measured.
 
 | Rule | Id | Value | Limit | Weight | Penalty | State |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
-| Web JavaScript total, gzip (budget 870 KB) | `bundle-total` | 849 KB | 870 | 25 | 0 | pass |
-| Largest JavaScript chunk, gzip (budget 400 KB) | `bundle-chunk` | 379 KB | 400 | 15 | 0 | pass |
+| Web JavaScript total, gzip (budget 870 KB) | `bundle-total` | 852 KB | 870 | 25 | 0 | pass |
+| Largest JavaScript chunk, gzip (budget 400 KB) | `bundle-chunk` | 380 KB | 400 | 15 | 0 | pass |
 | First-load JavaScript and CSS, transferred (budget 200 KB) | `first-load` | 203 KB | 200 | 30 | -0.9 | fail |
 | Frame times and draw cost (scripts/perf-matrix.mjs) (not run: needs a real GPU (PERF_GPU=1); the measured numbers in docs/design-system.md are not re-scored) | `perf-matrix` | - | - | 30 | 0 | not run |
 | Stylesheet files in apps/web/src (198 KB source, 3 built file(s) at 32 KB gzip; no CSS budget is documented) | `css-sources` | 52 | - | - | 0 | info |
