@@ -7,6 +7,8 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-14
+
 ### Changed
 
 - Reorganize the English and Traditional Chinese READMEs, documentation navigation, contributor guidance and release checklist.
@@ -284,5 +286,6 @@ For anyone who ran a development build before this release.
 
 - The upstream agent-office application; its attribution is kept in `THIRD_PARTY_NOTICES.md`.
 
-[Unreleased]: https://github.com/haotool/aether-office/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/haotool/aether-office/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/haotool/aether-office/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/haotool/aether-office/releases/tag/v0.4.0
