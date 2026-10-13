@@ -1,21 +1,58 @@
 import { test, expect, type Page } from '@playwright/test';
 import { NATIVE_SESSION, nativeOrigin, signIn } from '../support/sign-in.js';
 import {
-  NATIVE_RESUMABLE_SESSION_ID,
+  nativeDataDirectory,
   continueNativeSessionIfNeeded,
   openNativeSessionRow,
   writeNativeTerminalTranscript,
 } from '../support/native-fixture.js';
 import AxeBuilder from '@axe-core/playwright';
+import { readFileSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
+import { Control } from '../../apps/control/src/control.js';
+import type { Session } from '../../apps/control/src/services/terminals/terminal-session.js';
+import { command } from '../../tests/aether/fixture.js';
 
-// Against a FAKE interactive CLI (tests/processes/claude-tui.mjs, started by scripts/e2e-native-server.ts), never a
-// model. The first test seeds its own terminal transcript; the others continue the server's shared session, so they
-// pass in any order. A machine runs four terminals at most.
+// Synthetic CLI only; each attempt must release its own terminal capacity.
+let fixtureControl: Control | undefined;
+let priorTerminals = new Set<string>();
+test.beforeAll(() => {
+  const directory = nativeDataDirectory();
+  expect(basename(directory)).toMatch(/^aether-synthetic-browser-/);
+  fixtureControl = new Control(join(directory, 'control.sqlite'), { mode: 'live' });
+  priorTerminals = new Set(
+    (fixtureControl.ctx.sqlite.prepare('SELECT * FROM terminal_sessions').all() as Session[]).map(
+      ({ id }) => id,
+    ),
+  );
+});
+test.afterAll(() => fixtureControl?.close());
+test.afterEach(async () => {
+  const control = fixtureControl;
+  if (!control) return;
+  const spawned = () =>
+    (
+      control.ctx.sqlite
+        .prepare("SELECT * FROM terminal_sessions WHERE state<>'exited'")
+        .all() as Session[]
+    ).filter(({ id }) => !priorTerminals.has(id));
+  const owner = control.authenticate(
+    readFileSync(join(dirname(control.ctx.sqlite.name), 'owner-token'), 'utf8').trim(),
+  );
+  control.ctx.sqlite
+    .transaction(() => {
+      for (const row of spawned().filter(({ state }) => state !== 'stopping'))
+        control.execute(
+          owner,
+          command('terminal.stop', { terminalId: row.id, epoch: row.controlEpoch }, row.projectId),
+        );
+    })
+    .immediate();
+  await expect.poll(() => spawned().length, { timeout: 20000 }).toBe(0);
+});
 
 async function login(page: Page) {
   await signIn(page, nativeOrigin(), { session: NATIVE_SESSION });
-  // Signed in means the navigation is there: the login page has a `main` too, and a page change while the sign-in is still
-  // answering would lose its CSRF token (the next send would be refused).
   await expect(page.getByRole('link', { name: '辦公室', exact: true }).first()).toBeVisible();
 }
 
@@ -40,17 +77,12 @@ async function expectAccessible(page: Page) {
   await page.evaluate(() => (document.documentElement.dataset['theme'] = 'dark'));
 }
 
-async function openFreshObserved(page: Page, phone = false) {
+async function openSession(page: Page, view: 'observed' | 'desktop' | 'phone' = 'observed') {
   const sessionId = writeNativeTerminalTranscript({
     answerText: 'Earlier answer from a terminal',
   });
-  const scope = await openNativeSessionRow(page, sessionId, phone);
-  return { scope, conversation: scope.locator('.conversation') };
-}
-
-async function openSharedDrivable(page: Page, phone = false) {
-  const scope = await openNativeSessionRow(page, NATIVE_RESUMABLE_SESSION_ID, phone);
-  await continueNativeSessionIfNeeded(scope);
+  const scope = await openNativeSessionRow(page, sessionId, view === 'phone');
+  if (view !== 'observed') await continueNativeSessionIfNeeded(scope);
   return { scope, conversation: scope.locator('.conversation') };
 }
 
@@ -60,7 +92,7 @@ test('a session AETHER does not own is read-only; continuing it in AETHER makes 
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await login(page);
-  const { conversation } = await openFreshObserved(page);
+  const { conversation } = await openSession(page);
   await expect(conversation.getByText('Earlier answer from a terminal')).toBeVisible({
     timeout: 15000,
   });
@@ -115,9 +147,8 @@ test('the slash menu and @file completion fill the box; custom commands are list
   page,
 }) => {
   await login(page);
-  const { conversation } = await openSharedDrivable(page);
+  const { conversation } = await openSession(page, 'desktop');
   const box = conversation.getByLabel('傳訊息給 session');
-  await expect(box).toBeVisible({ timeout: 45000 });
   await box.fill('/co');
   const menu = conversation.getByRole('listbox', { name: '指令' });
   await expect(menu.getByRole('option', { name: /\/compact/ })).toBeVisible();
@@ -142,9 +173,8 @@ test('offline: a message waits in the conversation and goes in when the connecti
   context,
 }) => {
   await login(page);
-  const { conversation } = await openSharedDrivable(page);
+  const { conversation } = await openSession(page, 'desktop');
   const box = conversation.getByLabel('傳訊息給 session');
-  await expect(box).toBeVisible({ timeout: 45000 });
   await context.setOffline(true);
   await box.fill('sent while offline');
   await box.press('Enter');
@@ -166,25 +196,23 @@ test('phone: Enter is a new line, Send is a button, quick replies are one tap', 
   });
   const page = await context.newPage();
   await login(page);
-  const { scope } = await openSharedDrivable(page, true);
-  const full = scope;
-  const box = full.getByLabel('傳訊息給 session');
-  await expect(box).toBeVisible({ timeout: 45000 });
+  const { scope } = await openSession(page, 'phone');
+  const box = scope.getByLabel('傳訊息給 session');
   await box.tap();
   await box.pressSequentially('one');
   await box.press('Enter');
   await box.pressSequentially('two');
   await expect(box).toHaveValue('one\ntwo');
-  await expect(full.locator('.msg.user.pending')).toHaveCount(0);
-  const quick = full.getByRole('toolbar', { name: '快速回覆' });
+  await expect(scope.locator('.msg.user.pending')).toHaveCount(0);
+  const quick = scope.getByRole('toolbar', { name: '快速回覆' });
   await expect(quick.getByRole('button')).toHaveText(['繼續', '是', '否', 'Esc']);
-  for (const control of await full.locator('.composer button, .composer textarea').all()) {
+  for (const control of await scope.locator('.composer button, .composer textarea').all()) {
     const size = await control.boundingBox();
     if (size) expect(Math.min(size.width, size.height)).toBeGreaterThanOrEqual(32);
   }
   await page.screenshot({ path: 'evidence/screenshots/e2e-composer-phone.png' });
   await box.fill('');
   await quick.getByRole('button', { name: '繼續', exact: true }).tap();
-  await expect(full.getByText('ECHO: continue')).toBeVisible({ timeout: 30000 });
+  await expect(scope.getByText('ECHO: continue')).toBeVisible({ timeout: 30000 });
   await context.close();
 });
