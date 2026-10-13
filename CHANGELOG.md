@@ -13,6 +13,8 @@ project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   on a long run of spaces in a code block (two regular expressions).
 - Importing a skill whose frontmatter line held tens of thousands of spaces and a stray carriage return stalled the control
   server for seconds; the line is now read in linear time.
+- A reply with a line of tens of thousands of backticks stalled the conversation text pass for seconds; code spans are now
+  found in linear time, and a run of more than 16 backticks no longer delimits a span.
 
 ## [0.4.0] - 2026-10-13
 
