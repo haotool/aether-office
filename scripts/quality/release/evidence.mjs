@@ -61,6 +61,8 @@ export function evidenceRow(repo, entry, headSha) {
   if (!criteriaById[entry.id]) detail.push(`unknown criterion id ${entry.id}`);
   if (typeof entry.credit !== 'number' || !ALLOWED_CREDIT.has(entry.credit))
     detail.push(`credit must be 0, 0.5, or 1`);
+  if (typeof entry.sha !== 'string' || !/^[0-9a-f]{40}$/.test(entry.sha))
+    detail.push('sha must be a full 40-character commit id');
   for (const file of entry.files ?? []) {
     if (typeof file !== 'string') {
       detail.push('files entries must be strings');
@@ -70,7 +72,7 @@ export function evidenceRow(repo, entry, headSha) {
     if (!resolved) detail.push(`path not allowed ${file}`);
     else if (!repo.exists(resolved)) detail.push(`missing file ${file}`);
   }
-  if (entry.sha && typeof entry.sha === 'string' && !isAncestor(repo.root, entry.sha, headSha))
+  if (/^[0-9a-f]{40}$/.test(entry.sha) && !isAncestor(repo.root, entry.sha, headSha))
     detail.push(`sha ${entry.sha} is not an ancestor of HEAD`);
   if (detail.length) {
     return { error: `criteria evidence unavailable: ${entry.id}: ${detail.join('; ')}` };
