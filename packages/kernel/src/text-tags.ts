@@ -6,7 +6,10 @@ export const TAG_NAME = '[a-zA-Z][\\w:.-]*';
 
 export type TagSets = { opens: Set<string>; closes: Set<string> };
 
-const SCAN = new RegExp(`(\`+)[^\`]*?\\1(?!\`)|<(/?)(${TAG_NAME})(?:\\s[^<>]*)?>`, 'g');
+const SCAN = new RegExp(
+  `(?<!\`)(?=(\`+))\\1[^\`]*?\\1(?!\`)|<(/?)(${TAG_NAME})(?:\\s[^<>]*)?>`,
+  'g',
+);
 
 export function tagSets(prose: string): TagSets {
   const sets: TagSets = { opens: new Set(), closes: new Set() };

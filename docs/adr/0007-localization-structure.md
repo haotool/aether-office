@@ -1,5 +1,7 @@
 # ADR 0007: Traditional Chinese and English locale tables
 
+[Documentation](../README.md) · [Project](../../README.md)
+
 - Status: accepted
 - Date: 2026-10-08
 

@@ -1,5 +1,7 @@
 # Maintainers
 
+[Documentation](README.md) · [Project](../README.md)
+
 ## Current maintainer
 
 | Role | GitHub    | Scope                                      |

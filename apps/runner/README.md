@@ -1,5 +1,7 @@
 # @aether/runner
 
+[Documentation](../../docs/README.md) · [Project](../../README.md)
+
 Separate process that runs agents in Git worktrees, supervises PTYs, observes transcripts, and reports to the control plane.
 
 ## Public surface

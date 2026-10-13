@@ -1,5 +1,7 @@
 # Support
 
+[Documentation](../docs/README.md) · [Project](../README.md)
+
 AETHER OFFICE is pre-release software maintained in spare time. There is no paid support tier and no service-level
 agreement.
 

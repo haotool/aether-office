@@ -1,5 +1,7 @@
 # @aether/contracts
 
+[Documentation](../../docs/README.md) · [Project](../../README.md)
+
 Shared Zod schemas and TypeScript types for commands, events, sessions, runner protocol, and permissions.
 
 ## Public surface

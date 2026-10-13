@@ -20,5 +20,6 @@
 ## Title and commits
 
 The pull request title uses conventional commits (`type` or `type(scope): subject`, ≤72 characters, no trailing
-period), matching [CONTRIBUTING.md](CONTRIBUTING.md#commit-messages-and-pull-requests). Commits are signed off (`git
-commit -s`) for the Developer Certificate of Origin.
+period), matching [CONTRIBUTING.md](CONTRIBUTING.md#commit-messages-and-pull-requests).
+
+- [ ] I certify the [Developer Certificate of Origin](https://developercertificate.org/): I have the right to submit this contribution under the MIT license.

@@ -1,39 +1,58 @@
 # Cleaning the history before publishing
 
-The repository is meant to be published as an open-source project. Its history is not ready for that as it stands. This
-page explains what is wrong, the three ways to fix it, and the commands. The tooling is in `scripts/oss/`; it never changes
-this repository: every rewrite runs on a throwaway clone that the scripts create themselves.
+[Documentation](../README.md) · [Project](../../README.md)
 
-## What is wrong with the current history
+<details>
+<summary>Contents</summary>
 
-Measured with `pnpm run oss:check --history` on 931 commits (30 upstream, 901 maintainer, 102 merges):
+- [What the original history contained](#what-the-original-history-contained)
+- [The three options](#the-three-options)
+- [What the kit does](#what-the-kit-does)
+- [Step by step](#step-by-step)
+- [Measured on this repository](#measured-on-this-repository)
+- [Milestone subjects](#milestone-subjects)
+- [Limits and residual risks](#limits-and-residual-risks)
 
-| Problem                                                                                                    | Why it matters                                               |
-| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| About 450 MB for a single branch: every rebuild of the animals is kept (`.blend`, GLB, PNG; 517 old versions, 643 MB uncompressed) | A slow first clone, and GitHub warns above 100 MB per push   |
-| The `.blend` files embed the builder's absolute home path; a few historical files and commit messages name it | Personal information in public, permanently                  |
-| One mailbox address on all 901 maintainer commits                                           | The maintainer may prefer a GitHub noreply address           |
-| 456 maintainer subjects are longer than 72 characters (up to 502) and read as paragraphs                   | `git log --oneline`, blame and GitHub's UI truncate them     |
-| 102 merge commits, 75 of them named `Merge branch 'worktree-agent-...'`                                                 | Tool artifacts, no information                               |
-| The first 30 commits belong to the upstream agent-office contributors (MIT)                                | Their attribution must stay                                  |
-| 396 maintainer commits carry a `Co-authored-by` trailer and 142 a session link; 22 upstream commits carry 37 AI co-author lines and 2 session links | A maintainer decision (see `--drop-trailers`)                |
+</details>
+
+> [!NOTE]
+> Historical preparation record. Public `main` has since been cleaned and published. The measurements below describe
+> pre-publication clones. Routine releases follow the [release checklist](publishing-checklist.md); another history
+> rewrite requires a separate, explicit maintenance decision.
+
+This page records the original problems, three cleanup strategies and the commands used to compare them. The tooling
+lives in `scripts/oss/`; each rewrite operates on a disposable clone rather than the working repository.
+
+## What the original history contained
+
+Measured before publication with `pnpm run oss:check --history` on 931 commits (30 upstream, 901 maintainer, 102 merges):
+
+| Problem                                                                                                                                             | Why it matters                                             |
+| --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| About 450 MB for a single branch: every rebuild of the animals is kept (`.blend`, GLB, PNG; 517 old versions, 643 MB uncompressed)                  | A slow first clone, and GitHub warns above 100 MB per push |
+| The `.blend` files embed the builder's absolute home path; a few historical files and commit messages name it                                       | Personal information in public, permanently                |
+| One mailbox address on all 901 maintainer commits                                                                                                   | The maintainer may prefer a GitHub noreply address         |
+| 456 maintainer subjects are longer than 72 characters (up to 502) and read as paragraphs                                                            | `git log --oneline`, blame and GitHub's UI truncate them   |
+| 102 merge commits, 75 of them named `Merge branch 'worktree-agent-...'`                                                                             | Tool artifacts, no information                             |
+| The first 30 commits belong to the upstream agent-office contributors (MIT)                                                                         | Their attribution must stay                                |
+| 396 maintainer commits carry a `Co-authored-by` trailer and 142 a session link; 22 upstream commits carry 37 AI co-author lines and 2 session links | A maintainer decision (see `--drop-trailers`)              |
 
 Secrets are not a problem: gitleaks reports only fixed fake values in test fixtures, which `.github/gitleaks.toml` allowlists.
 
 ## The three options
 
-| | A. Fresh milestone history | B. Cleaned history, commits kept | C. B plus our commits squashed into milestones |
-| --- | --- | --- | --- |
-| Commits after | 27 (1 upstream baseline + 26 milestones) | 930 | 56 (30 upstream, the sync merge and 25 milestones) |
-| Repository size (measured) | 39 MB | 47 MB | 39 MB |
-| Upstream commits | One baseline commit; the other contributors are named in the sync commit's body | All 30 kept, authors and dates untouched, messages untouched except for AI tool lines | All 30 kept, authors and dates untouched, messages untouched except for AI tool lines |
-| What you keep | The final tree and a readable story | Every commit, `git blame` and `git bisect` at full resolution | Upstream detail, a readable story of our work |
-| What you lose | Upstream commit detail (and `git shortlog` shows 2 authors, not 9); fine-grained blame and bisect | Nothing but the stripped binaries and the old subjects (kept in each body) | Our fine-grained blame and bisect; the story is 25 steps |
-| Hash changes | Every hash | Every hash (the upstream root contains stripped binaries, so all descendants change) | Every hash |
-| Subjects | Written by the plan, editable | Shortened to 72, the original in the body; merges renamed | Written by the plan, editable; the body lists each original subject |
-| Merge commits | None | 102 kept (renamed) | 1 (the upstream sync) |
-| Effort and risk | Lowest to review, highest loss | Highest volume to review, lowest loss | Middle; the milestone list is the one thing to review |
-| Choose it when | You want a clean slate and the upstream list is credited in NOTICE | You value `git bisect` and the fine-grained record | You want upstream intact and a history a newcomer can read |
+|                            | A. Fresh milestone history                                                                        | B. Cleaned history, commits kept                                                      | C. B plus our commits squashed into milestones                                        |
+| -------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Commits after              | 27 (1 upstream baseline + 26 milestones)                                                          | 930                                                                                   | 56 (30 upstream, the sync merge and 25 milestones)                                    |
+| Repository size (measured) | 39 MB                                                                                             | 47 MB                                                                                 | 39 MB                                                                                 |
+| Upstream commits           | One baseline commit; the other contributors are named in the sync commit's body                   | All 30 kept, authors and dates untouched, messages untouched except for AI tool lines | All 30 kept, authors and dates untouched, messages untouched except for AI tool lines |
+| What you keep              | The final tree and a readable story                                                               | Every commit, `git blame` and `git bisect` at full resolution                         | Upstream detail, a readable story of our work                                         |
+| What you lose              | Upstream commit detail (and `git shortlog` shows 2 authors, not 9); fine-grained blame and bisect | Nothing but the stripped binaries and the old subjects (kept in each body)            | Our fine-grained blame and bisect; the story is 25 steps                              |
+| Hash changes               | Every hash                                                                                        | Every hash (the upstream root contains stripped binaries, so all descendants change)  | Every hash                                                                            |
+| Subjects                   | Written by the plan, editable                                                                     | Shortened to 72, the original in the body; merges renamed                             | Written by the plan, editable; the body lists each original subject                   |
+| Merge commits              | None                                                                                              | 102 kept (renamed)                                                                    | 1 (the upstream sync)                                                                 |
+| Effort and risk            | Lowest to review, highest loss                                                                    | Highest volume to review, lowest loss                                                 | Middle; the milestone list is the one thing to review                                 |
+| Choose it when             | You want a clean slate and the upstream list is credited in NOTICE                                | You value `git bisect` and the fine-grained record                                    | You want upstream intact and a history a newcomer can read                            |
 
 All three keep the final tree **byte-identical** for every file that is not stripped or rewritten (checked by
 `history-verify.sh`: 2402 of 2402 files on the measured tip) and none removes upstream credit from the repository: the
@@ -47,13 +66,13 @@ to read and the most lossy.
 
 ## What the kit does
 
-| Script | Purpose |
-| --- | --- |
-| `scripts/oss/readiness-check.mjs` (`pnpm run oss:check`) | Scans the tree and, with `--history`, the history. No network. Exit 1 on a failure |
-| `scripts/oss/history-plan.mjs --strategy B\|C\|A` | Writes `plan.json` and `plan.md`: commits kept, squashed or renamed, milestones, strip rules, identity |
-| `scripts/oss/history-apply.sh --plan ... --out ...` | Creates a fresh bare clone, applies the plan with `git filter-repo`, never touches the source. `--dry-run` prints what it would do |
-| `scripts/oss/history-verify.sh <clone> --plan ...` | Checks the result and prints go or no-go |
-| `scripts/oss/commit-msg.sh` | The commit-subject convention check (hook, `--subject`, `--range`) |
+| Script                                                   | Purpose                                                                                                                            |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/oss/readiness-check.mjs` (`pnpm run oss:check`) | Scans the tree and, with `--history`, the history. No network. Exit 1 on a failure                                                 |
+| `scripts/oss/history-plan.mjs --strategy B\|C\|A`        | Writes `plan.json` and `plan.md`: commits kept, squashed or renamed, milestones, strip rules, identity                             |
+| `scripts/oss/history-apply.sh --plan ... --out ...`      | Creates a fresh bare clone, applies the plan with `git filter-repo`, never touches the source. `--dry-run` prints what it would do |
+| `scripts/oss/history-verify.sh <clone> --plan ...`       | Checks the result and prints go or no-go                                                                                           |
+| `scripts/oss/commit-msg.sh`                              | The commit-subject convention check (hook, `--subject`, `--range`)                                                                 |
 
 Safety: the apply script clones with `git clone --no-local`, removes the `origin` remote, writes a marker file
 (`oss-throwaway-clone.json`) and checks that the source branch and `HEAD` are unchanged when it finishes. The rewriting
@@ -78,7 +97,7 @@ steps and `history-verify.sh` refuse any directory without that marker, the curr
 ### Git LFS instead of dropping old versions
 
 If old versions of the animals should stay reachable, move them to Git LFS instead of stripping them: run
-`git lfs migrate import --include="*.glb,*.png,*.webp" --everything` in the clone *instead of* the strip rules
+`git lfs migrate import --include="*.glb,*.png,*.webp" --everything` in the clone _instead of_ the strip rules
 (`--strip-blobs-with-ids` input is the only part that removes binaries; edit `plan.json` `strip.minBytes` to a huge value
 to disable it). Costs: every contributor needs `git lfs install`, GitHub LFS storage and bandwidth are limited on free
 accounts, and a mirror push needs `git lfs push --all`. The repository stays small, but the history is only as portable as
@@ -147,11 +166,11 @@ The exact commands for each strategy differ only in `--strategy` and the directo
 
 On the source history (931 commits, a 450 MB single-branch clone), on an Apple-silicon laptop:
 
-| Strategy | Plan | Apply | Commits | Pack after `gc --aggressive` | Verify |
-| --- | --- | --- | --- | --- | --- |
-| B | 3 s | 20 s | 931 to 930 (one became empty), 790 subjects rewritten | 46.7 MiB | 25 s with install, typecheck and tests |
-| C | 8 s | 14 s | 931 to 56, 25 milestones | 39.2 MiB | 19 s with install, typecheck and tests |
-| A | 8 s | 17 s | 931 to 27 | 39.1 MiB | 21 s with install, typecheck and tests |
+| Strategy | Plan | Apply | Commits                                               | Pack after `gc --aggressive` | Verify                                 |
+| -------- | ---- | ----- | ----------------------------------------------------- | ---------------------------- | -------------------------------------- |
+| B        | 3 s  | 20 s  | 931 to 930 (one became empty), 790 subjects rewritten | 46.7 MiB                     | 25 s with install, typecheck and tests |
+| C        | 8 s  | 14 s  | 931 to 56, 25 milestones                              | 39.2 MiB                     | 19 s with install, typecheck and tests |
+| A        | 8 s  | 17 s  | 931 to 27                                             | 39.1 MiB                     | 21 s with install, typecheck and tests |
 
 Timings vary with the disk cache and the machine load. The apply step stripped `*.blend`, `evidence/` and 174 to 517
 historical binary versions (200 to 675 MB uncompressed, depending on strategy: squashing first leaves fewer versions to

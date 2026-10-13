@@ -1,5 +1,25 @@
 # Orca 唯讀 3D 辦公室視圖：可行性研究（方案 B）
 
+[文件索引](../README.md) · [專案首頁](../../README.zh-TW.md)
+
+> [!NOTE]
+> 此文件為當時版本的設計與研究紀錄；提案、量測及實作觀察不代表目前版本的支援狀態。
+> 現行操作方式與驗證結果，請以操作指南及功能驗證台帳為準。
+
+<details>
+<summary>目錄</summary>
+
+- [1. 結論先行](#1-結論先行)
+- [2. 證據表：Orca 把事實放在哪裡](#2-證據表orca-把事實放在哪裡)
+- [3. 整合方案排序](#3-整合方案排序)
+- [4. 與 AETHER 模型的對應](#4-與-aether-模型的對應)
+- [5. 本機實測（只列存在與否）](#5-本機實測只列存在與否)
+- [6. 相容性與風險](#6-相容性與風險)
+- [7. 分階段計畫與 go / no-go](#7-分階段計畫與-go--no-go)
+- [8. 決策](#8-決策)
+
+</details>
+
 日期：2026-10-07。性質：唯讀研究，未改任何程式碼，未執行 Orca，未連網。
 範圍：Orca 本機 clone（https://github.com/stablyai/orca，MIT，commit `373d951b`，2026-09-30，`package.json:3` 版本 1.4.214）；本 repo 為 AETHER OFFICE。
 標記：**[已驗證]** 讀過程式碼或文件原文；**[推論]** 由程式碼合理推得但未執行；**[未知]** 需實測。
@@ -22,26 +42,26 @@ Orca 自己顯示的 agent 狀態，來源就是 Claude Code / Codex 的 hook �
 
 ## 2. 證據表：Orca 把事實放在哪裡
 
-| # | 事實 | 位置（file:line） | 格式 / 更新方式 | 穩定性 | 標記 |
-|---|---|---|---|---|---|
-| 1 | 每 pane 的 agent 狀態（含 prompt、最後回覆、tool、model、worktreeId、tabId、paneKey、時間戳） | `orca:src/main/agent-hooks/server/server-persistence.ts:17-95`（序列化）、`:110-127`（寫入）；型別 `orca:src/shared/agent-status-types.ts:76-150` | `<userData>/agent-hooks/[namespace/]last-status.json`，`{version:2, entries, authorityCommitments}`；先寫 tmp 再 rename（原子），權限 0600，事件停止 250 ms 後才寫（`server-constants.ts:4,11,14`）；路徑組成 `server-runtime-env.ts:52-62` | 內部。設計文件稱它是「主程序的 hook server store」（`orca:docs/reference/agent-status-store.md`），沒有對外承諾 | 已驗證 |
-| 2 | 同上檔案的限制 | `server-persistence.ts:32`（結構化 session 不寫入）、`server-constants.ts:23`（只回補 7 天）、`agent-status-types.ts` 的 `restoredUnconfirmed` | 重啟後讀回的 nonterminal 列會被標成未確認；結構化（原生聊天）session 完全不在此檔 | 內部 | 已驗證 |
-| 3 | 狀態集合 | `orca:src/shared/agent-status-types.ts:51` | `working / blocked / waiting / done`，另有 `interrupted` 旗標。**沒有 error 狀態** | 內部型別 | 已驗證 |
-| 4 | 原始 hook 事件 | `orca:src/main/agent-hooks/hook-stdin-contract.ts:145-157`；`orca:src/shared/agent-hook-spool.ts:1-30` | `<userData>/agent-hooks/spool/pane-<id>.jsonl`，每行含 paneKey、tabId、worktreeId、payload、receivedAt；單檔 5 MB、7 天、1024 檔上限 | 內部（含完整 payload，內容敏感） | 已驗證 |
-| 5 | HTTP hook 端點 | `orca:src/shared/agent-hook-endpoint-file.ts:1-40` | `endpoint.env`：port、token、env、version；本機 loopback，token 為密鑰 | 內部，僅供 Orca 自己的 hook script | 已驗證 |
-| 6 | 主資料（repos、worktrees、中繼資料、session） | `orca:src/main/persistence/loading-store/user-data-path.ts:15-16`；`orca:src/main/persistence/profile-state/legacy-json/README.md:1-5,20-24` | **SQLite（`profile-state.db`）是唯一可寫後端**；`orca-data.json` 只在乾淨關閉或維護時匯出，崩潰後可能過期。路徑為 `profiles/<id>/` 之下（`profile-state-access.ts:33-38`） | 內部。直接讀 SQLite 或 JSON 都不可取 | 已驗證 |
-| 7 | 對外 CLI | `orca:src/cli/specs/core.ts:20,69,188,196,212`；官方文件 `orca:docs/site/content/docs/cli/overview.mdx:15,33-53`、`reference.mdx:91-101` | `orca status / worktree list / worktree ps / terminal list / terminal read` 均有 `--json`。文件把它定位為「從任何 shell 腳本化控制執行中的 Orca」 | **文件化**，是最接近穩定介面者 | 已驗證 |
-| 8 | CLI 的傳輸 | `orca:src/shared/runtime-bootstrap.ts:17-23,45`；`orca:src/cli/runtime/metadata.ts:42-56` | CLI 讀 `<userData>/orca-runtime.json`（`runtimeId、pid、transports[unix/named-pipe/websocket]、authToken、startedAt`），經 unix socket / named pipe 呼叫 RPC。`ORCA_USER_DATA_PATH` 可指定實例 | 內部檔案，但有舊格式相容碼；**內含 authToken，AETHER 不應直接讀** | 已驗證 |
-| 9 | RPC 版本與相容規則 | `orca:src/shared/protocol-version.ts:34`（`RUNTIME_PROTOCOL_VERSION = 3`，最低相容 client/server 2）；`orca:docs/reference/remote-wire-compatibility.md:1-20` | 新增方法或可選欄位不升版；移除方法、改欄位語意才升版。「混版是常態」 | **有明文契約**（對 Orca 自己的 client 而言） | 已驗證 |
-| 10 | `worktree ps` 回傳形狀 | `orca:src/shared/runtime-worktree-contracts.ts:13-36`（agent row）、`:38-68`（worktree summary）；組裝 `orca:src/main/runtime/runtime-worktree-agent-rows.ts:44-76` | 每個 worktree：`worktreeId、repoId、repo、path、branch、isArchived、parentWorktreeId、childWorktreeIds、displayName、workspaceStatus、lastActivityAt、linkedPR…` 加 agent rows：`paneKey、state、agentType、prompt、lastAssistantMessage、toolName、stateStartedAt、updatedAt、restoredUnconfirmed、structuredHostOwned` | CLI 輸出，隨 Orca 版本增欄 | 已驗證（型別）；實際輸出 **未知** |
-| 11 | token / 用量 | `orca:src/main/claude-usage/transcript-file-discovery.ts:5-6`、`worktree-attribution.ts:1-40`；`orca:src/main/codex-usage/codex-session-file-discovery.ts` | Orca 自己掃 `~/.claude/projects` 與 Codex rollout，再用 cwd 路徑對應 worktree。**用量不在 Orca 的狀態檔裡，是現算的** | 內部 | 已驗證 |
-| 12 | worktree 預設位置 | `orca:src/shared/constants.ts:107` | `~/orca/workspaces/<repo>/<worktree>`（可改） | 預設值 | 已驗證 |
-| 13 | pty / terminal id | `orca:src/main/providers/local-pty-launch-helpers.ts:8-13`（`ORCA_PANE_KEY、ORCA_TAB_ID、ORCA_WORKTREE_ID、ORCA_AGENT_LAUNCH_TOKEN` 注入 PTY 環境）；terminal handle 由 `orca terminal list` 提供 | 環境變數與 CLI | 內部 | 已驗證 |
-| 14 | daemon（PTY 常駐程序） | `orca:src/main/daemon/daemon-checkpoint-file.ts`、`daemon-durable-history-snapshot.ts` | 終端歷史檢查點，非 agent 狀態 | 內部 | 已驗證（僅看檔名與位置） |
-| 15 | mobile 同伴協定 | `orca:mobile/README.md`（WebSocket RPC 預設 6768）；`orca:src/main/runtime/rpc/e2ee-channel.ts:42`（scope `mobile`/`runtime`） | 需配對、E2EE、方法白名單 | 內部，專為 Orca 手機 app | 已驗證；不建議使用 |
-| 16 | `orca.yaml` | `orca:orca.yaml:1-4`；`orca:src/main/effective-hook-config.ts:1-50` | 只是 repo 的 setup / archive 指令碼設定，**與 agent 狀態無關** | 使用者設定 | 已驗證（先前的假設不成立） |
-| 17 | Orca 裝進 Claude/Codex 的 hook | `orca:src/main/claude/hook-settings.ts:39-41`（`~/.claude/settings.json`）、`:147-177`（apply）、`:183-213`（statusLine） | 在每個事件的陣列後面附加，先以 script 檔名比對清掉自己舊的；不動別人的條目；使用者自有的 `statusLine` 不覆寫 | 內部行為 | 已驗證 |
-| 18 | skills | `orca:skills/orca-cli/SKILL.md`、`orca:skill-guides/` | 教 agent 使用 `orca` CLI；不是資料來源 | 文件 | 已驗證 |
+| #   | 事實                                                                                          | 位置（file:line）                                                                                                                                                                                 | 格式 / 更新方式                                                                                                                                                                                                                                                                                                          | 穩定性                                                                                                          | 標記                              |
+| --- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| 1   | 每 pane 的 agent 狀態（含 prompt、最後回覆、tool、model、worktreeId、tabId、paneKey、時間戳） | `orca:src/main/agent-hooks/server/server-persistence.ts:17-95`（序列化）、`:110-127`（寫入）；型別 `orca:src/shared/agent-status-types.ts:76-150`                                                 | `<userData>/agent-hooks/[namespace/]last-status.json`，`{version:2, entries, authorityCommitments}`；先寫 tmp 再 rename（原子），權限 0600，事件停止 250 ms 後才寫（`server-constants.ts:4,11,14`）；路徑組成 `server-runtime-env.ts:52-62`                                                                              | 內部。設計文件稱它是「主程序的 hook server store」（`orca:docs/reference/agent-status-store.md`），沒有對外承諾 | 已驗證                            |
+| 2   | 同上檔案的限制                                                                                | `server-persistence.ts:32`（結構化 session 不寫入）、`server-constants.ts:23`（只回補 7 天）、`agent-status-types.ts` 的 `restoredUnconfirmed`                                                    | 重啟後讀回的 nonterminal 列會被標成未確認；結構化（原生聊天）session 完全不在此檔                                                                                                                                                                                                                                        | 內部                                                                                                            | 已驗證                            |
+| 3   | 狀態集合                                                                                      | `orca:src/shared/agent-status-types.ts:51`                                                                                                                                                        | `working / blocked / waiting / done`，另有 `interrupted` 旗標。**沒有 error 狀態**                                                                                                                                                                                                                                       | 內部型別                                                                                                        | 已驗證                            |
+| 4   | 原始 hook 事件                                                                                | `orca:src/main/agent-hooks/hook-stdin-contract.ts:145-157`；`orca:src/shared/agent-hook-spool.ts:1-30`                                                                                            | `<userData>/agent-hooks/spool/pane-<id>.jsonl`，每行含 paneKey、tabId、worktreeId、payload、receivedAt；單檔 5 MB、7 天、1024 檔上限                                                                                                                                                                                     | 內部（含完整 payload，內容敏感）                                                                                | 已驗證                            |
+| 5   | HTTP hook 端點                                                                                | `orca:src/shared/agent-hook-endpoint-file.ts:1-40`                                                                                                                                                | `endpoint.env`：port、token、env、version；本機 loopback，token 為密鑰                                                                                                                                                                                                                                                   | 內部，僅供 Orca 自己的 hook script                                                                              | 已驗證                            |
+| 6   | 主資料（repos、worktrees、中繼資料、session）                                                 | `orca:src/main/persistence/loading-store/user-data-path.ts:15-16`；`orca:src/main/persistence/profile-state/legacy-json/README.md:1-5,20-24`                                                      | **SQLite（`profile-state.db`）是唯一可寫後端**；`orca-data.json` 只在乾淨關閉或維護時匯出，崩潰後可能過期。路徑為 `profiles/<id>/` 之下（`profile-state-access.ts:33-38`）                                                                                                                                               | 內部。直接讀 SQLite 或 JSON 都不可取                                                                            | 已驗證                            |
+| 7   | 對外 CLI                                                                                      | `orca:src/cli/specs/core.ts:20,69,188,196,212`；官方文件 `orca:docs/site/content/docs/cli/overview.mdx:15,33-53`、`reference.mdx:91-101`                                                          | `orca status / worktree list / worktree ps / terminal list / terminal read` 均有 `--json`。文件把它定位為「從任何 shell 腳本化控制執行中的 Orca」                                                                                                                                                                        | **文件化**，是最接近穩定介面者                                                                                  | 已驗證                            |
+| 8   | CLI 的傳輸                                                                                    | `orca:src/shared/runtime-bootstrap.ts:17-23,45`；`orca:src/cli/runtime/metadata.ts:42-56`                                                                                                         | CLI 讀 `<userData>/orca-runtime.json`（`runtimeId、pid、transports[unix/named-pipe/websocket]、authToken、startedAt`），經 unix socket / named pipe 呼叫 RPC。`ORCA_USER_DATA_PATH` 可指定實例                                                                                                                           | 內部檔案，但有舊格式相容碼；**內含 authToken，AETHER 不應直接讀**                                               | 已驗證                            |
+| 9   | RPC 版本與相容規則                                                                            | `orca:src/shared/protocol-version.ts:34`（`RUNTIME_PROTOCOL_VERSION = 3`，最低相容 client/server 2）；`orca:docs/reference/remote-wire-compatibility.md:1-20`                                     | 新增方法或可選欄位不升版；移除方法、改欄位語意才升版。「混版是常態」                                                                                                                                                                                                                                                     | **有明文契約**（對 Orca 自己的 client 而言）                                                                    | 已驗證                            |
+| 10  | `worktree ps` 回傳形狀                                                                        | `orca:src/shared/runtime-worktree-contracts.ts:13-36`（agent row）、`:38-68`（worktree summary）；組裝 `orca:src/main/runtime/runtime-worktree-agent-rows.ts:44-76`                               | 每個 worktree：`worktreeId、repoId、repo、path、branch、isArchived、parentWorktreeId、childWorktreeIds、displayName、workspaceStatus、lastActivityAt、linkedPR…` 加 agent rows：`paneKey、state、agentType、prompt、lastAssistantMessage、toolName、stateStartedAt、updatedAt、restoredUnconfirmed、structuredHostOwned` | CLI 輸出，隨 Orca 版本增欄                                                                                      | 已驗證（型別）；實際輸出 **未知** |
+| 11  | token / 用量                                                                                  | `orca:src/main/claude-usage/transcript-file-discovery.ts:5-6`、`worktree-attribution.ts:1-40`；`orca:src/main/codex-usage/codex-session-file-discovery.ts`                                        | Orca 自己掃 `~/.claude/projects` 與 Codex rollout，再用 cwd 路徑對應 worktree。**用量不在 Orca 的狀態檔裡，是現算的**                                                                                                                                                                                                    | 內部                                                                                                            | 已驗證                            |
+| 12  | worktree 預設位置                                                                             | `orca:src/shared/constants.ts:107`                                                                                                                                                                | `~/orca/workspaces/<repo>/<worktree>`（可改）                                                                                                                                                                                                                                                                            | 預設值                                                                                                          | 已驗證                            |
+| 13  | pty / terminal id                                                                             | `orca:src/main/providers/local-pty-launch-helpers.ts:8-13`（`ORCA_PANE_KEY、ORCA_TAB_ID、ORCA_WORKTREE_ID、ORCA_AGENT_LAUNCH_TOKEN` 注入 PTY 環境）；terminal handle 由 `orca terminal list` 提供 | 環境變數與 CLI                                                                                                                                                                                                                                                                                                           | 內部                                                                                                            | 已驗證                            |
+| 14  | daemon（PTY 常駐程序）                                                                        | `orca:src/main/daemon/daemon-checkpoint-file.ts`、`daemon-durable-history-snapshot.ts`                                                                                                            | 終端歷史檢查點，非 agent 狀態                                                                                                                                                                                                                                                                                            | 內部                                                                                                            | 已驗證（僅看檔名與位置）          |
+| 15  | mobile 同伴協定                                                                               | `orca:mobile/README.md`（WebSocket RPC 預設 6768）；`orca:src/main/runtime/rpc/e2ee-channel.ts:42`（scope `mobile`/`runtime`）                                                                    | 需配對、E2EE、方法白名單                                                                                                                                                                                                                                                                                                 | 內部，專為 Orca 手機 app                                                                                        | 已驗證；不建議使用                |
+| 16  | `orca.yaml`                                                                                   | `orca:orca.yaml:1-4`；`orca:src/main/effective-hook-config.ts:1-50`                                                                                                                               | 只是 repo 的 setup / archive 指令碼設定，**與 agent 狀態無關**                                                                                                                                                                                                                                                           | 使用者設定                                                                                                      | 已驗證（先前的假設不成立）        |
+| 17  | Orca 裝進 Claude/Codex 的 hook                                                                | `orca:src/main/claude/hook-settings.ts:39-41`（`~/.claude/settings.json`）、`:147-177`（apply）、`:183-213`（statusLine）                                                                         | 在每個事件的陣列後面附加，先以 script 檔名比對清掉自己舊的；不動別人的條目；使用者自有的 `statusLine` 不覆寫                                                                                                                                                                                                             | 內部行為                                                                                                        | 已驗證                            |
+| 18  | skills                                                                                        | `orca:skills/orca-cli/SKILL.md`、`orca:skill-guides/`                                                                                                                                             | 教 agent 使用 `orca` CLI；不是資料來源                                                                                                                                                                                                                                                                                   | 文件                                                                                                            | 已驗證                            |
 
 重點判讀：
 
@@ -81,16 +101,16 @@ Orca 自己顯示的 agent 狀態，來源就是 Claude Code / Codex 的 hook �
 
 ## 4. 與 AETHER 模型的對應
 
-| Orca | AETHER | 說明 |
-|---|---|---|
-| repo / project | project（`worktree.project`、`worktree.main`） | 以 git common dir 對齊，已存在 |
-| worktree（`worktreeId = <repoId>::<path>`） | `LocalSession.worktree.root`、`worktree.linked` | 路徑相等即對上；`displayName`、`workspaceStatus` 為新增欄位 |
-| 父子 worktree | 無現成對應 | 可作為 squad 之外的關係線（`RelationLines`），需新欄位 |
-| workspace / tab / pane（`paneKey`） | 無；一個 pane 對應一個 session | 只作為關聯鍵，不需成為模型 |
-| agent row（state） | session 的 `hook.activity` | `working→working`、`waiting`/`blocked→waiting_permission`、`done→idle`；Orca 無 error 狀態；`interrupted` 對應中斷 |
-| subagents（`subagents` / `children`） | `subagentSchema` → squad | 概念相同，AETHER 已由 hook 與 rollout 推得 |
-| orchestration task / dispatch | 無 | 可作為辦公室名牌文字 |
-| 遠端主機（SSH relay / WSL） | 無 | 只有 (b) 能看到，且資料在本機 Orca 的鏡像中 |
+| Orca                                        | AETHER                                          | 說明                                                                                                               |
+| ------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| repo / project                              | project（`worktree.project`、`worktree.main`）  | 以 git common dir 對齊，已存在                                                                                     |
+| worktree（`worktreeId = <repoId>::<path>`） | `LocalSession.worktree.root`、`worktree.linked` | 路徑相等即對上；`displayName`、`workspaceStatus` 為新增欄位                                                        |
+| 父子 worktree                               | 無現成對應                                      | 可作為 squad 之外的關係線（`RelationLines`），需新欄位                                                             |
+| workspace / tab / pane（`paneKey`）         | 無；一個 pane 對應一個 session                  | 只作為關聯鍵，不需成為模型                                                                                         |
+| agent row（state）                          | session 的 `hook.activity`                      | `working→working`、`waiting`/`blocked→waiting_permission`、`done→idle`；Orca 無 error 狀態；`interrupted` 對應中斷 |
+| subagents（`subagents` / `children`）       | `subagentSchema` → squad                        | 概念相同，AETHER 已由 hook 與 rollout 推得                                                                         |
+| orchestration task / dispatch               | 無                                              | 可作為辦公室名牌文字                                                                                               |
+| 遠端主機（SSH relay / WSL）                 | 無                                              | 只有 (b) 能看到，且資料在本機 Orca 的鏡像中                                                                        |
 
 **不變即可運作（皆來自 AETHER 自己的來源）**：說話泡泡（最後 prompt/回覆）、KPI 與用量、context gauge、squads、liveness、角色與樓層。
 
@@ -100,14 +120,14 @@ Orca 自己顯示的 agent 狀態，來源就是 Claude Code / Codex 的 hook �
 
 ## 5. 本機實測（只列存在與否）
 
-| 檢查 | 結果 |
-|---|---|
-| Orca 的 userData：`~/Library/Application Support/orca`、`Orca`、`orca-dev`（app 名稱 `Orca`，`appId com.stablyai.orca`，`orca:config/electron-builder.config.cjs:77,175`） | 皆不存在 |
-| `~/orca`（預設 workspace 根）、`~/.orca`、`~/.config/orca`、`~/Library/Caches/orca`、`~/Library/Logs/orca`、偏好設定 plist | 皆不存在 |
-| `/Applications/Orca.app`、`~/Applications/Orca.app`、PATH 上的 `orca` / `orca-dev` | 皆不存在 |
-| `~/.claude/settings.json` 中含 "orca" 的行數（僅計數，未讀內容） | 0 |
-| `~/.claude/hooks` 內名稱含 orca 的檔案 | 無 |
-| 本機 AETHER 側：`~/.aether/hook-events.jsonl`、`hook-events.jsonl.1` | 存在（既有 hook spool） |
+| 檢查                                                                                                                                                                       | 結果                    |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| Orca 的 userData：`~/Library/Application Support/orca`、`Orca`、`orca-dev`（app 名稱 `Orca`，`appId com.stablyai.orca`，`orca:config/electron-builder.config.cjs:77,175`） | 皆不存在                |
+| `~/orca`（預設 workspace 根）、`~/.orca`、`~/.config/orca`、`~/Library/Caches/orca`、`~/Library/Logs/orca`、偏好設定 plist                                                 | 皆不存在                |
+| `/Applications/Orca.app`、`~/Applications/Orca.app`、PATH 上的 `orca` / `orca-dev`                                                                                         | 皆不存在                |
+| `~/.claude/settings.json` 中含 "orca" 的行數（僅計數，未讀內容）                                                                                                           | 0                       |
+| `~/.claude/hooks` 內名稱含 orca 的檔案                                                                                                                                     | 無                      |
+| 本機 AETHER 側：`~/.aether/hook-events.jsonl`、`hook-events.jsonl.1`                                                                                                       | 存在（既有 hook spool） |
 
 結論：**本機沒有安裝 Orca，也沒有任何 Orca 資料目錄，所以第 2、3 節所有標「已驗證」的項目都只來自讀原始碼，沒有一項在真機上跑過。** Phase 0 需要一台裝了 Orca 的機器。
 
@@ -168,6 +188,7 @@ Orca 自己顯示的 agent 狀態，來源就是 Claude Code / Codex 的 hook �
 **有條件可行。** 條件是：只做讀取；以現有的 transcript / hook / git 路徑為主（它已經涵蓋由 Orca 啟動的本機 agent）；Orca 的名稱與脈絡只經由其文件化的 `orca` CLI 以容錯方式取得，並且在 Orca 不存在或版本不符時完整降級；不讀 Orca 的 SQLite 與 `orca-runtime.json`，`last-status.json` 不列入計畫。預計 Phase 0 到 2 合計約 7–9 個工作天。
 
 **需要維護者決定或驗證：**
+
 1. 在裝有 Orca 的機器上完成 Phase 0 的三個實測（CLI 輸出與成本、環境變數繼承、雙 `PermissionRequest` hook 行為）。
 2. 是否要支援遠端 SSH / WSL 的 Orca agent（只有 CLI 路徑能看到，且缺 transcript，說話泡泡與 KPI 不完整）。
 3. 產品上疊加層的價值是否大於維護成本，因為方案 (c) 單獨已讓 Orca 啟動的本機 agent 出現在辦公室。

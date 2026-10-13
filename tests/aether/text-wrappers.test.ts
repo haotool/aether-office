@@ -324,6 +324,7 @@ describe('wrapper pipeline: hostile input stays linear', () => {
     ['hyphen chain', '<' + 'a-'.repeat(MB / 2)],
     ['hook-like chain', '<' + 'a-a-'.repeat(MB / 4) + '>'],
     ['backticks', '`'.repeat(MB)],
+    ['unequal tick runs', '<\nx' + '`'.repeat(262_144) + 'a' + '`'.repeat(262_143)],
     ['alternating ticks', '`` `'.repeat(MB / 4)],
     ['tick-wrapped tags', '`<a-b>` '.repeat(MB / 8)],
     ['long attribute', '<my-tag ' + 'a="b" '.repeat(MB / 6) + '>'],

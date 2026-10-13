@@ -1,100 +1,99 @@
-# Publishing checklist
+# Release checklist
 
-Steps to take, in order, to make the repository public as `github.com/haotool/aether-office`. Nothing here is automated
-beyond the readiness check: pushing and changing GitHub settings stay manual decisions. The history work is described in
-[Cleaning the history before publishing](history-cleanup.md).
+[Documentation](../README.md) · [Project](../../README.md)
 
-## 1. Prepare the repository
+AETHER OFFICE is published at [haotool/aether-office](https://github.com/haotool/aether-office).
+Routine releases use the protected `main` branch and preserve public history. Repository creation and history cleanup
+are separate operations; the historical procedure is in [History cleanup](history-cleanup.md).
 
-- [ ] Copy `scripts/oss/private-patterns.example` to `.oss-private-patterns` and list your private strings.
-- [ ] `pnpm install --frozen-lockfile && pnpm build`, then `pnpm run oss:check`. Fix every **FAIL**; read every **WARN**
-      (shipped assets over 1 MB and documentation host names such as `office.example` are expected).
-- [ ] Decide the canonical author identity and pass it to `history-plan.mjs` as `--canonical-name` and `--canonical-email`
-      (a GitHub noreply address is `<id>+<login>@users.noreply.github.com`; the id is the `id` field of
-      `https://api.github.com/users/<login>` of the account that owns the address). This is the maintainer's decision: the
-      tooling never chooses it.
-- [ ] Confirm `.github/CODEOWNERS` (`* @s123104`): also a maintainer decision. It asks the owner to review every pull
-      request. The branch ruleset in step 4 does not require that review while there is one maintainer, because a single
-      owner cannot approve their own pull requests; require it once a second owner is listed here.
-- [ ] `CHANGELOG.md` has the `[0.4.0] - 2026-10-13` entry above an empty `[Unreleased]`: change the date if the release day
-      differs. The version is `0.4.0` in the root `package.json` and the seven workspace `package.json` files
-      (`tests/aether/version.test.ts` fails if they differ). Runtime code reads it from the root file (`APP_VERSION` in
-      `@aether/contracts`); the `v0.4` badge in `apps/web/src/features/shell-chrome/Sidebar.tsx` and the version in
-      `.github/SECURITY.md` are written by hand.
-- [ ] Run the full checks once: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test`, `pnpm build`,
-      `pnpm exec playwright test`, `pnpm verify:clean`.
-- [ ] Licence compliance gate (see [docs/legal](../legal/README.md)):
-  - `pnpm run notices:check` passes (notices current, every package under an approved licence, every file in `REUSE.toml`);
-  - `node scripts/oss/overlap-scan.mjs --refs <folder with the reference clones> --exclude mcp_agent_mail --exclude agents-office` reports no block
-    that is not listed in [provenance](../legal/provenance.md#evidence-that-no-code-was-copied);
-  - the [open items](../legal/inventory.md#open-items) are decided (provider marks, Claude authentication wording) and the
-    decisions recorded;
-  - `pnpm build` and check that `apps/web/dist` contains `LICENSE.txt` and `THIRD_PARTY_NOTICES.txt`.
-- [ ] Produce the software bill of materials:
-      `node scripts/oss/third-party-notices.mjs --sbom aether-office-0.4.0.cdx.json` (CycloneDX 1.5, shipped packages).
+## Prepare the change
 
-## 2. Clean and verify the history
+- [ ] Update the version in the root `package.json` and all seven workspace manifests. Runtime services read
+      `APP_VERSION` from the root; `tests/aether/version.test.ts` checks consistency. Update the sidebar's major/minor
+      badge only when that series changes.
+- [ ] Move the completed changes from `Unreleased` into a dated version section in [CHANGELOG.md](../../CHANGELOG.md).
+      Include upgrade steps when behavior or configuration changes. Keep earlier release entries intact.
+- [ ] Review the [feature ledger](../verification/report.md). Implementation and verification are separate; missing
+      provider, platform, device or human evidence remains an open blocker.
+- [ ] Check the [provider compatibility contracts](../provider-compatibility.md). Synthetic tests do not verify a
+      real authenticated CLI or paid model. Run those integrations only with explicit authorization.
+- [ ] Keep private data, local credentials and audit artifacts out of the release. Use `.oss-private-patterns` for
+      maintainer-specific scan patterns; never commit that file.
 
-- [ ] Choose strategy A, B or C (decision table in [history-cleanup](history-cleanup.md#the-three-options)).
-- [ ] `history-plan.mjs`, edit `plan.json`, `history-apply.sh --dry-run`, `history-apply.sh`.
-- [ ] `history-verify.sh <clone> --plan <plan> --full` ends with `GO`.
-- [ ] `pnpm run oss:check --history` on a checkout of the rewritten clone: no FAIL.
-- [ ] Skim `git log --oneline` of the clone and the first and last commits of every milestone.
+## Validate a clean candidate
 
-## 3. Create the repository
+Run the repository checks on the candidate commit and retain the results with its SHA and platform:
 
-- [ ] Create `haotool/aether-office` **private** (no README, no license, no `.gitignore`: the push brings them).
-- [ ] From the rewritten clone: `git remote add origin git@github.com:haotool/aether-office.git`, then
-      `git push -u origin main`. Never push this working repository.
-- [ ] Wait for CI (`check`, `commit-messages`, and `audit`) to pass on the pushed `main`.
-- [ ] Set the description and topics (`ai-agents`, `claude-code`, `codex`, `mcp`, `threejs`, `local-first`), the website if any,
-      and the default branch `main`. Turn off wiki and projects unless used.
+```sh
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm lint
+pnpm format:check
+pnpm test
+pnpm build
+pnpm verification:check
+node scripts/check-bundle-size.mjs
+pnpm run oss:check
+pnpm run quality:check
+pnpm exec playwright test
+pnpm verify:clean
+```
 
-## 4. Protect it
+- [ ] Run `pnpm run notices:check`. Dependency changes require regenerated notices; verify the build contains
+      `LICENSE.txt` and `THIRD_PARTY_NOTICES.txt`.
+- [ ] Review upstream attribution in `LICENSE`, `NOTICE`, `REUSE.toml` and [provenance](../legal/provenance.md).
+      Adapted code keeps its compatible license and notice. For newly studied reference code, run the overlap scanner
+      described in provenance and review every unexplained match.
+- [ ] Review the [license inventory](../legal/inventory.md) and [trademark decisions](../legal/trademarks.md).
+      The Anthropic agent SDK has separate terms and is not bundled. AETHER OFFICE remains independent of provider brands.
+- [ ] Inspect changed UI pages at phone and tablet sizes and run their responsive and accessibility specs. Automated
+      axe checks do not replace VoiceOver or TalkBack testing.
+- [ ] Record checks that were skipped, failed or unavailable. The quality score excludes some unmeasured rules;
+      [release scoring](../quality/README.md#release-mode---release) counts unmeasured criteria as zero.
 
-- [ ] Branch ruleset for `main`: require a pull request (no approving review while there is one maintainer; one review
-      with Code Owners from `.github/CODEOWNERS` once there are two), the status checks `check`, `commit-messages`, and
-      `audit`, a linear history; block force pushes and deletion; let repository admins bypass through a pull request only.
-- [ ] Settings, Code security: enable **private vulnerability reporting** (`.github/SECURITY.md` points reporters there),
-      **secret scanning** and **push protection**, **Dependabot alerts** and **security updates**
-      (`.github/dependabot.yml` already configures version updates).
-- [ ] Settings, Actions: default workflow permissions read-only (the CI file already declares `contents: read`); require
-      approval for workflows from first-time contributors.
-- [ ] Confirm code scanning runs: `.github/workflows/codeql.yml` is on `main` (advanced CodeQL setup). Add a `.github/SECURITY.md`
-      fallback address if you do not want to rely on GitHub private vulnerability reporting alone.
+## Merge through the protected branch
 
-## 5. Release
+- [ ] Open a focused pull request with the concrete behavior change, validation results and remaining limitations.
+      Use a conventional title of at most 72 characters and complete the contribution certification.
+- [ ] Confirm the current PR head has successful `check`, `audit`, `commit-messages` and CodeQL runs.
+      `check` and `audit` require the Linux/macOS verification matrix; Linux also runs the selected browser workflows.
+- [ ] Merge the reviewed head through the ruleset. Do not bypass checks or force-push `main`.
+- [ ] Confirm the resulting `main` commit and its CI/CodeQL results. A passing earlier head is not evidence for a changed
+      release tree.
+- [ ] Run `pnpm verify:clean` from that exact main revision. The complete local browser suite remains a release gate;
+      CI's selected workflows cover only part of it.
 
-- [ ] Tag from the pushed `main`: `git tag -a v0.4.0 -m "v0.4.0"` and `git push origin v0.4.0`.
-- [ ] Create the release from the `[0.4.0]` section of `CHANGELOG.md`; attach the SBOM. Mark it a pre-release if the
-      verification ledger still lists blocked items.
-- [ ] Provenance: the release is source only, so the evidence is the tag and the commit it points at. Check that the commit
-      has a green `check` run, and sign the tag (`git tag -s`) if you have a signing key.
-- [ ] Optional: publish the documentation with GitHub Pages from `docs/` (it is plain Markdown) or leave it in the
-      repository.
+## Publish the source release
 
-## 6. Legal and trust notes
+Use the version from `package.json`. For example, a `0.4.1` release uses the tag `v0.4.1`:
 
-- [ ] Upstream credit: `LICENSE` keeps the upstream copyright beside yours, `NOTICE`, `REUSE.toml` and
-      [provenance](../legal/provenance.md) list what is derived, and the upstream contributors' commits are in the history
-      (strategies B and C) or named in the sync commit (A).
-- [ ] Trademarks: Claude, Anthropic, OpenAI and Codex are marks of their owners. The README, `NOTICE` and Settings, About say
-      the project is not affiliated with them. Do not use their names in the repository name, the logo or the release
-      titles. The provider marks are small indicators only, never the logo ([trademarks](../legal/trademarks.md#provider-marks)).
-- [ ] `@anthropic-ai/claude-agent-sdk` is under Anthropic's own terms, not an open-source license; the notices say so and
-      the project never bundles it. These documents are not legal advice: have the open items reviewed if in doubt.
-- [ ] Search the pushed repository once for your private strings (GitHub code search) before making it public.
+```sh
+node scripts/oss/third-party-notices.mjs --sbom aether-office-0.4.1.cdx.json
+git tag -a v0.4.1 -m "v0.4.1"
+git push origin v0.4.1
+```
 
-## 7. Go public and check
+- [ ] Obtain maintainer authorization before pushing or publishing. Create the annotated tag from the verified main
+      commit; use a signed tag if a signing key is already configured. Never replace an existing public release tag.
+- [ ] Create a GitHub release using the matching changelog section and attach the CycloneDX SBOM. Mark it a pre-release
+      while the ledger contains unresolved release blockers.
+- [ ] Check the tag's commit, release status, notes and attachment after publication. A source-only release has no
+      compiled binary provenance claim: its evidence is the public tag and verified source commit.
+- [ ] Follow the README from a fresh checkout. Preserve verification records and a recoverable snapshot before
+      archiving the task's temporary worktree.
 
-- [ ] Change the visibility to public.
-- [ ] Clone it fresh on another machine and follow the README: `pnpm install --frozen-lockfile`, `pnpm demo`.
-- [ ] Open the Security tab and confirm **Report a vulnerability** is offered; open the Issues "New issue" page and confirm the
-      templates load.
-- [ ] On a real iPhone (Safari) and a real Android phone (Chrome), open the app over HTTPS, install it and
-      [capture the performance report](../getting-started.md#capture-a-phone-performance-report). The numbers in
-      [mobile performance](../quality/mobile-perf.md) come from a desktop browser, not from a phone.
-- [ ] Turn on VoiceOver (iOS or macOS) or TalkBack (Android) and go through the office, Sessions and Settings: every control
-      has a name, the skip link works, and dialogs keep focus and give it back. Automated checks (axe, landmarks) cannot say
-      whether it reads well.
-- [ ] Keep this working repository until the published copy has been accepted; then archive it.
+## Repository administration
+
+These settings are reviewed separately from routine releases:
+
+- Require PRs, the existing status checks and linear history on `main`; block force pushes and deletion. Keep
+  `.github/CODEOWNERS` current. Require an approving Code Owner once a second maintainer can review the first's changes.
+- Use read-only Actions permissions and approvals for first-time contributors. Keep Actions pinned to commit SHAs.
+- Enable private vulnerability reporting, secret scanning, push protection and Dependabot security updates where
+  available. Confirm the repository offers **Report a vulnerability** and the issue templates load.
+- Old pull-request refs can survive a public-history rewrite. Removing them requires GitHub Support; do not repeat a
+  main-branch rewrite or claim those refs are gone without confirmation.
+
+Real iPhone/Android performance reports, VoiceOver/TalkBack journeys and independent release scoring remain separate
+acceptance evidence. Follow [mobile measurement](../quality/mobile-perf.md) and the verification ledger; publishing a
+pre-release does not close those gates.

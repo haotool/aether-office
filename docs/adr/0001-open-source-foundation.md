@@ -1,5 +1,7 @@
 # ADR 0001: Build on an open-source foundation
 
+[Documentation](../README.md) · [Project](../../README.md)
+
 - Status: accepted
 - Date: 2026-10-01
 

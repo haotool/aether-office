@@ -1,5 +1,24 @@
 # Getting started
 
+[Documentation](README.md) · [Project](../README.md)
+
+<details>
+<summary>Contents</summary>
+
+- [Requirements](#requirements)
+- [First run in five minutes](#first-run-in-five-minutes)
+- [Try the demo](#try-the-demo)
+- [Live mode: see your own sessions](#live-mode-see-your-own-sessions)
+- [Connect a phone by scanning a QR code](#connect-a-phone-by-scanning-a-qr-code)
+- [Open it from a phone or tablet](#open-it-from-a-phone-or-tablet)
+- [Upgrading](#upgrading)
+- [Capture a phone performance report](#capture-a-phone-performance-report)
+- [Install it on a phone](#install-it-on-a-phone)
+- [Managed execution (optional)](#managed-execution-optional)
+- [Next steps](#next-steps)
+
+</details>
+
 ## Requirements
 
 - Node.js **24.21.0** (`.nvmrc`) and the pnpm version pinned in `package.json`.
@@ -77,7 +96,7 @@ Open the address the terminal prints (`http://127.0.0.1:4310`); `localhost` is r
 the exact address, which is what stops DNS rebinding) and answers with a JSON `HOST_FORBIDDEN` error. Sign in with the owner
 token. Recent Claude Code and Codex sessions from this machine appear as observed characters.
 Discovery reads session ids, working directories, file times and process information plus read-only `git status`;
-transcript text is read only for the session you open, and never stored. Live mode alone only *observes*: `pnpm run setup` creates no runner credential, so the terminals page, **Continue in AETHER**,
+transcript text is read only for the session you open, and never stored. Live mode alone only _observes_: `pnpm run setup` creates no runner credential, so the terminals page, **Continue in AETHER**,
 the composer and managed agents stay unavailable (the UI says why) until a runner is enrolled with `pnpm runner:enroll`
 and its native file turns on `cliTerminals` (see [native execution](native-execution.md)). Sessions in linked worktrees group under the
 repository's Git common directory. Set `AETHER_LOCAL_SESSIONS=off` to disable discovery.
@@ -190,7 +209,7 @@ The office is an installable web app: opened from the home screen it runs full s
 - **Desktop Chrome and Edge:** the install icon in the address bar.
 
 **Plain HTTP on the network cannot be installed as a full app and gets no offline shell or update prompt.** Service workers
-(which those need, and Web Push would) work only in a *secure context*: `https://`, or `localhost` / `127.0.0.1`.
+(which those need, and Web Push would) work only in a _secure context_: `https://`, or `localhost` / `127.0.0.1`.
 A phone that opens `http://192.0.2.20:4310` still gets the whole office (and Add to Home Screen on iOS gives it its icon
 and full-screen mode), but the page registers nothing and says nothing about it. To get the rest, serve the office over HTTPS:
 
@@ -221,11 +240,11 @@ If the proxy runs on the same machine, start the control plane with `AETHER_TRUS
 The `Origin` rewrite is limited to the proxy's own address, so a request from another web site still carries a foreign
 Origin and is refused, as before. (This recipe follows the Caddy and control-plane code; it has not been run end to end here.)
 
-| Certificate | What to do | Trade-off |
-| --- | --- | --- |
-| Caddy's own CA (`tls internal`) | Trust Caddy's root certificate on the phone. | Works on the LAN alone; every phone has to trust the CA. |
-| mkcert | `mkcert -install`, `mkcert office.example`, point `tls` at the files, send `rootCA.pem` (`mkcert -CAROOT`) to the phone and trust it (iOS: install the profile, then Settings, General, About, Certificate Trust Settings). | The CA key must stay private. |
-| Tailscale | Turn on MagicDNS and HTTPS certificates in the admin console, `tailscale cert <machine>.<tailnet>.ts.net`, point `tls` at the files. | A publicly trusted certificate, so nothing to install on the phone; reachable only from your tailnet. |
+| Certificate                     | What to do                                                                                                                                                                                                                  | Trade-off                                                                                             |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Caddy's own CA (`tls internal`) | Trust Caddy's root certificate on the phone.                                                                                                                                                                                | Works on the LAN alone; every phone has to trust the CA.                                              |
+| mkcert                          | `mkcert -install`, `mkcert office.example`, point `tls` at the files, send `rootCA.pem` (`mkcert -CAROOT`) to the phone and trust it (iOS: install the profile, then Settings, General, About, Certificate Trust Settings). | The CA key must stay private.                                                                         |
+| Tailscale                       | Turn on MagicDNS and HTTPS certificates in the admin console, `tailscale cert <machine>.<tailnet>.ts.net`, point `tls` at the files.                                                                                        | A publicly trusted certificate, so nothing to install on the phone; reachable only from your tailnet. |
 
 If a service worker ever misbehaves, open the office once with `?sw=off`: the worker and its caches are removed from that
 browser and it stays off (`?sw=on` turns it back on).

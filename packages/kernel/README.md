@@ -1,5 +1,7 @@
 # @aether/kernel
 
+[Documentation](../../docs/README.md) · [Project](../../README.md)
+
 Pure domain logic: authorization matrix, task transitions, schedules, text pipelines, session classification—no I/O.
 
 ## Public surface

@@ -1,5 +1,7 @@
 # @aether/office-scene
 
+[Documentation](../../docs/README.md) · [Project](../../README.md)
+
 Three.js office: building, characters, camera director, squads, office-life effects. Loaded lazily from the web app.
 
 ## Public surface

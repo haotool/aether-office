@@ -1,17 +1,33 @@
 # Mobile performance measurement
 
+[Documentation](../README.md) · [Project](../../README.md)
+
+<details>
+<summary>Contents</summary>
+
+- [Profiles](#profiles)
+- [Harness entry](#harness-entry)
+- [Output schema (`aether-audit-perf-run/1`)](#output-schema-aether-audit-perf-run1)
+- [Pass / revert rules (harness-only)](#pass--revert-rules-harness-only)
+- [Record for the release scorer](#record-for-the-release-scorer)
+- [Interpreting results](#interpreting-results)
+- [Capture a field report on your phone (G5)](#capture-a-field-report-on-your-phone-g5)
+- [Known limits](#known-limits)
+
+</details>
+
 This document describes how AETHER OFFICE measures **relative** mobile PWA performance for A/B experiments. It does not change product behavior. Run baselines on an otherwise idle machine; the same harness works locally.
 
 See also [design-system.md](../design-system.md) (performance section), [mobile-gradient-perf.md](../internal/mobile-gradient-perf.md) (research), and `scripts/perf-matrix.mjs` (scene GPU matrix).
 
 ## Profiles
 
-| Profile | Viewport | DPR | CPU throttle | Network | Notes |
-| --- | --- | --- | --- | --- | --- |
-| **M-LAB** | 390×844 touch | 3 | optional | none | Mac Chrome + Metal ANGLE; headless refuses software renderers |
-| **M-MID** | 390×844 touch | 3 | 4× | LAN dev/built server | Default for A/B runs |
-| **M-LOW** | same as M-MID | 3 | 6× | Slow 4G (CDP) | M-MID + heavier CPU + network |
-| **M-REAL** | device native | device | — | real radio | G5 field JSON via `?fieldperf=1` (human) |
+| Profile    | Viewport      | DPR    | CPU throttle | Network              | Notes                                                         |
+| ---------- | ------------- | ------ | ------------ | -------------------- | ------------------------------------------------------------- |
+| **M-LAB**  | 390×844 touch | 3      | optional     | none                 | Mac Chrome + Metal ANGLE; headless refuses software renderers |
+| **M-MID**  | 390×844 touch | 3      | 4×           | LAN dev/built server | Default for A/B runs                                          |
+| **M-LOW**  | same as M-MID | 3      | 6×           | Slow 4G (CDP)        | M-MID + heavier CPU + network                                 |
+| **M-REAL** | device native | device | —            | real radio           | G5 field JSON via `?fieldperf=1` (human)                      |
 
 **Slow 4G (CDP)** uses Chrome DevTools `Network.emulateNetworkConditions` values from `Slow4GConditions` in [NetworkManager.ts](https://github.com/ChromeDevTools/devtools-frontend/blob/main/front_end/core/sdk/NetworkManager.ts): `latency` 562.5 ms, `downloadThroughput` 180000 B/s (~1.6 Mbps×0.9), `uploadThroughput` 84375 B/s (~750 Kbps×0.9). Implemented in `scripts/mobile-perf/network.ts` and `node --import tsx scripts/perf-matrix.mjs --network slow-4g`.
 
@@ -85,11 +101,11 @@ pnpm run perf:record -- --write .data/perf-raw.json
 growth is counted from the first minute on). `perf:record` writes `docs/verification/perf-mobile.json` beside the tree ids of
 the code it measured, so a later change to that code makes the record stale and the three criteria unmeasured again.
 
-| Criterion | Budget |
-| --- | --- |
-| L5-05 | at most 100 draw calls, 150k triangles, 64 MB of GPU memory and one WebGL context in the compact scene |
-| L5-06 | a cold start to the interactive scene transfers at most 3 MB (every 100 KB over is one violation) |
-| L5-09 | the JS heap grows at most 10% over a soak of at least 10 minutes |
+| Criterion | Budget                                                                                                 |
+| --------- | ------------------------------------------------------------------------------------------------------ |
+| L5-05     | at most 100 draw calls, 150k triangles, 64 MB of GPU memory and one WebGL context in the compact scene |
+| L5-06     | a cold start to the interactive scene transfers at most 3 MB (every 100 KB over is one violation)      |
+| L5-09     | the JS heap grows at most 10% over a soak of at least 10 minutes                                       |
 
 ## Interpreting results
 

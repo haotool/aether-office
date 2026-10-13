@@ -8,7 +8,7 @@ import { office } from './life-fixtures.js';
 
 const doc = readFileSync('docs/design/office-life.md', 'utf8');
 const tableRows = new Map(
-  [...doc.matchAll(/^\| (R\d+) \|(.*)\|$/gm)]
+  [...doc.matchAll(/^\| (R\d+) +\|(.*)\|$/gm)]
     .map((m) => [m[1]!, m[2]!.split(/(?<!\\)\|/).map((cell) => cell.trim())] as const)
     .filter(([, cells]) => cells.length >= 11),
 );

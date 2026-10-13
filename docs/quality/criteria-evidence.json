@@ -113,7 +113,13 @@
     "id": "L6-04",
     "credit": 1,
     "reviewers": ["PM-SELF-REVIEW"],
-    "files": ["docs/README.md", "docs/getting-started.md", "docs/how-to.md", "docs/configuration.md", "docs/architecture.md"],
+    "files": [
+      "docs/README.md",
+      "docs/getting-started.md",
+      "docs/how-to.md",
+      "docs/configuration.md",
+      "docs/architecture.md"
+    ],
     "note": "Tutorial, how-to, reference and explanation pages are indexed in docs/README.md; no documentation file is unreferenced."
   },
   {
@@ -127,7 +133,12 @@
     "id": "L6-08",
     "credit": 1,
     "reviewers": ["PM-SELF-REVIEW"],
-    "files": ["docs/adr/README.md", "docs/design/office-life.md", "docs/design/office-life-work-plan.md", "docs/internal/README.md"],
+    "files": [
+      "docs/adr/README.md",
+      "docs/design/office-life.md",
+      "docs/design/office-life-work-plan.md",
+      "docs/internal/README.md"
+    ],
     "note": "Every ADR and design record carries a status and a date; internal notes are dated snapshots in their index."
   },
   {
@@ -162,7 +173,12 @@
     "id": "L9-07",
     "credit": 1,
     "reviewers": ["PM-SELF-REVIEW"],
-    "files": ["docs/security.md", "tests/aether/route-auth.test.ts", "tests/aether/lan-access.test.ts", "tests/aether/safe-fetch.test.ts"],
+    "files": [
+      "docs/security.md",
+      "tests/aether/route-auth.test.ts",
+      "tests/aether/lan-access.test.ts",
+      "tests/aether/safe-fetch.test.ts"
+    ],
     "note": "More than twenty concrete limits and defaults in the document were compared with the constants in the code (stream clients, pending requests, wait times, file modes, rate limits) and match; the public-route sweep and the negative tests are in the suite."
   },
   {

@@ -1,5 +1,21 @@
 # Native execution
 
+[Documentation](README.md) · [Project](../README.md)
+
+<details>
+<summary>Contents</summary>
+
+- [Setup](#setup)
+- [Execution model](#execution-model)
+- [Review, verification and acceptance](#review-verification-and-acceptance)
+- [Interactive terminals (PTY)](#interactive-terminals-pty)
+- [External read-only observation](#external-read-only-observation)
+- [Live smoke test](#live-smoke-test)
+- [Process lifecycle: stop, survivors, orphans and zombies](#process-lifecycle-stop-survivors-orphans-and-zombies)
+- [Claude subscription limits](#claude-subscription-limits)
+
+</details>
+
 Native execution lets AETHER OFFICE start Codex or Claude Code itself, in isolated Git worktrees, under explicit approvals.
 It is **off by default** and needs two independent grants: a local configuration file on the runner's machine and an
 explicit per-project opt-in by the project owner. Saving settings never starts a model; only an assignment does.
@@ -148,7 +164,8 @@ session discovery. Starting a terminal runs a real local program and creates no 
 - The control plane reads what the agent in a terminal is doing (working, waiting for you, idle) from the bottom of its screen
   and shows it in the list; unfamiliar output reads as unknown, never a guess (`packages/kernel/src/terminal-state.ts`).
 - Verified on macOS (real PTY, HTTP and SQLite, restart without re-sending, Unicode, ANSI, resize, group termination, browser
-  journey) using a labeled Node fixture. Linux and WSL2 are untested; native Windows refuses to start the supervisor.
+  journey) using a labeled Node fixture. Selected Linux synthetic browser journeys also run in CI; the full Linux fault
+  matrix and WSL2 acceptance remain open. Native Windows refuses to start the supervisor.
 
 ## External read-only observation
 

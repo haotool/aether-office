@@ -4,5 +4,10 @@ pnpm-lock.yaml
 packages/providers/generated
 assets-source
 evidence
-docs
+docs/legal/THIRD_PARTY_NOTICES.md
+docs/legal/inventory.md
+docs/verification/report.md
+docs/quality/scorecard.md
+docs/quality/scorecard.json
 LICENSES
+docs/research/repo-selection-2026-10-01/index.html
