@@ -11,6 +11,7 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 - Reorganize the English and Traditional Chinese READMEs, documentation navigation, contributor guidance and release checklist.
 - Check documentation formatting and selected Linux browser workflows in CI; run source checks on both Linux and macOS.
+- Pin Linux CI to Ubuntu 24.04 and run the SHA-pinned checkout action on its supported Node 24 runtime.
 
 ### Fixed
 
