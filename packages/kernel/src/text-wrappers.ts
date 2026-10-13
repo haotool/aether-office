@@ -61,7 +61,8 @@ const ANSI = /\u001b\[[0-9;]*[A-Za-z]/g;
 const SLOT = /(\d+)/g;
 const SLOT_CHARS = /[]/g;
 const FENCE = /^ {0,3}(`{3,}|~{3,})/;
-const SPAN = /(`+)[^`]*?\1(?!`)/g;
+// The opening run is bounded so a line of tens of thousands of backticks cannot backtrack quadratically.
+const SPAN = /(`{1,16})[^`]*?\1(?!`)/g;
 
 function maskCode(text: string): { masked: string; restore: (s: string) => string } {
   const saved: string[] = [];
