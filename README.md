@@ -112,7 +112,11 @@ Claude Code; Codex has no equivalent hook contract.
 
 The original wide shots show the building and its central Git flower in dark and light themes. These retain the earlier application chrome; the feature views below show the current interface.
 
+**Dark theme**
+
 <img src="docs/images/office-overview-desktop.jpg" alt="Original wide view of the multi-floor office and central Git flower in the dark theme" width="100%" />
+
+**Light theme**
 
 <img src="docs/images/office-overview-desktop-light.jpg" alt="Original multi-floor office overview in the light theme" width="100%" />
 
@@ -126,7 +130,11 @@ Repository history becomes a branching flower above the office. The original cro
 
 Read conversations and folded tool results alongside the 3D office, then follow a supervisor's subagents and camera views.
 
+**Conversation panel**
+
 <img src="docs/images/session-conversation-desktop.jpg" alt="Office with conversation history, tool results and subagent activity" width="100%" />
+
+**Subagent squad**
 
 <img src="docs/images/squad-strings-desktop.jpg" alt="Supervisor and four subagents with activity strings and camera previews" width="100%" />
 

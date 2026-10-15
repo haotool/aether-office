@@ -104,7 +104,11 @@ pnpm hooks install --project /path/to/repo --remote-approvals
 
 保留原本的遠景圖，呈現多層樓辦公室與中央 Git 花的視覺關係。以下深、淺色總覽為較早拍攝的英語介面；後面的功能圖使用現行介面。
 
+**深色遠景**
+
 <img src="docs/images/office-overview-desktop.jpg" alt="既有深色多層樓遠景，呈現辦公室建築與中央 Git 花；較早的英語介面" width="100%" />
+
+**淺色遠景**
 
 <img src="docs/images/office-overview-desktop-light.jpg" alt="既有淺色多層樓辦公室總覽；較早的英語介面" width="100%" />
 
@@ -118,7 +122,11 @@ Git 歷史在辦公室上方生長成花。這張既有花冠特寫也呈現了�
 
 在 3D 辦公室旁閱讀對話與可展開的工具結果，並查看主管、子代理活動連線及多鏡頭預覽。
 
+**對話面板**
+
 <img src="docs/images/session-conversation-desktop.zh-TW.jpg" alt="繁中辦公室與對話面板，包含工具結果和子代理活動" width="100%" />
+
+**子代理小隊**
 
 <img src="docs/images/squad-strings-desktop.zh-TW.jpg" alt="繁中小隊近景，呈現主管、四個子代理、活動連線及多鏡頭預覽" width="100%" />
 
