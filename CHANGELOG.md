@@ -9,6 +9,8 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ### Changed
 
+- Refresh both README introductions with localized dark control-room covers, the orbital A logo, actual Git-flower and mobile captures, and a clearer path to getting started.
+
 - Mark the pre-publication open-source risk assessment as a historical snapshot and point current decisions to the release and verification ledgers.
 
 ## [0.4.1] - 2026-10-14

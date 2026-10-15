@@ -1,9 +1,6 @@
-# AETHER OFFICE
+<img src="docs/images/readme-hero.en.webp" alt="AETHER OFFICE — orbital A logo, 3D office and conversations, Git flower, and mobile feed; actual UI with synthetic demo data" width="100%" />
 
-<p align="center">
-  <strong>One office for your Claude Code and Codex sessions.</strong><br />
-  Follow the work, read the conversations, and respond from your browser or phone.
-</p>
+<h1 align="center">One office for your coding agents.</h1>
 
 <p align="center">
   <a href="https://github.com/haotool/aether-office/actions/workflows/ci.yml"><img src="https://github.com/haotool/aether-office/actions/workflows/ci.yml/badge.svg" alt="CI status" /></a>
@@ -18,13 +15,14 @@
   <a href="README.zh-TW.md">繁體中文</a>
 </p>
 
-<img src="docs/images/office-overview-desktop.jpg" alt="AETHER OFFICE: a 3D office, Git history and a live session panel" width="100%" />
+_Actual application UI with synthetic demo data. The Git flower visualizes repository history.
+[Image source and reproduction](docs/images/README.md#hero-provenance)._
 
-_Product screenshots use synthetic demo data. [Screenshot sources and regeneration](docs/images/README.md)._
+AETHER OFFICE brings your **Claude Code and Codex sessions into one local 3D office**. See who is working, read
+conversations and tool calls, and follow subagent squads without switching between terminals. The central Git flower
+grows from repository history; token and Git KPIs show the activity behind the scene.
 
-AETHER OFFICE discovers the coding sessions already running on your computer and places each one at a desk in a 3D
-office. A shared panel shows their conversations, tools, token use and activity. Open it on the same Wi-Fi from a phone
-to follow the work away from your terminal.
+Open the same office on your phone over trusted Wi-Fi to follow the work away from your desk.
 
 It runs locally: no AETHER account or cloud service is required. Your existing CLI credentials and provider subscriptions
 remain with Claude Code or Codex.
@@ -43,20 +41,6 @@ remain with Claude Code or Codex.
 | Understand activity    | Token and Git KPIs, session roles and activity signals across office floors                  | [Session roles](docs/roles.md)                                                                              |
 | Use a phone            | Pair with a one-time QR code; open the feed and conversation in a bottom sheet               | [Phone access](docs/getting-started.md#open-it-from-a-phone-or-tablet)                                      |
 | Manage execution       | Optional worktrees, terminals, bounded tasks, review and commit-bound verification           | [Native execution](docs/native-execution.md)                                                                |
-
-<details>
-<summary><strong>See the conversation panel and phone interface</strong></summary>
-
-<img src="docs/images/session-conversation-desktop.jpg" alt="Conversation panel with Markdown, tool calls and subagent activity" width="100%" />
-
-<p align="center">
-  <img src="docs/images/office-phone.jpg" alt="Office and permission card on a phone" width="240" />
-  <img src="docs/images/sessions-phone.jpg" alt="Session feed in the phone's bottom sheet" width="240" />
-</p>
-
-All images show synthetic sessions. They illustrate the interface; they are not live-provider verification evidence.
-
-</details>
 
 ## Quick start
 
@@ -114,6 +98,19 @@ pnpm hooks install --project /path/to/repo --remote-approvals
 
 Review [what the installer changes](docs/getting-started.md#exact-activity-with-hooks-optional). Remote approvals apply to
 Claude Code; Codex has no equivalent hook contract.
+
+<details>
+<summary><strong>See the conversation panel and phone interface</strong></summary>
+
+<img src="docs/images/session-conversation-desktop.jpg" alt="Conversation panel with Markdown, tool calls and subagent activity" width="100%" />
+
+<p align="center">
+  <img src="docs/images/sessions-phone.jpg" alt="Session feed in the phone's bottom sheet" width="240" />
+</p>
+
+All images show synthetic sessions. They illustrate the interface; they are not live-provider verification evidence.
+
+</details>
 
 ## Support and limits
 

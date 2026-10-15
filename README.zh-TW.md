@@ -1,9 +1,6 @@
-# AETHER OFFICE
+<img src="docs/images/readme-hero.zh-TW.webp" alt="AETHER OFFICE——軌道 A 標誌、繁中 3D 辦公室與對話、中央 Git 花及手機列表；真實介面使用合成示範資料" width="100%" />
 
-<p align="center">
-  <strong>把 Claude Code 與 Codex 的工作，放進同一間辦公室。</strong><br />
-  查看進度、閱讀對話，從瀏覽器或手機回應。
-</p>
+<h1 align="center">讓你的程式代理，在同一間辦公室協作。</h1>
 
 <p align="center">
   <a href="https://github.com/haotool/aether-office/actions/workflows/ci.yml"><img src="https://github.com/haotool/aether-office/actions/workflows/ci.yml/badge.svg" alt="CI 狀態" /></a>
@@ -18,11 +15,12 @@
   <a href="README.md">English</a>
 </p>
 
-<img src="docs/images/office-overview-desktop.jpg" alt="AETHER OFFICE 的 3D 辦公室、Git 歷史與即時 session 面板" width="100%" />
+_首圖使用繁體中文實際介面與合成示範資料；中央 Git 花呈現儲存庫歷史。
+[圖片來源與重製方式](docs/images/README.md#hero-provenance)。_
 
-_產品截圖使用合成示範資料。[截圖來源與重新產生方式](docs/images/README.md)。_
+AETHER OFFICE 把 **Claude Code 與 Codex 的工作階段，帶進同一間本機 3D 辦公室**。不用切換多個終端機，就能查看誰正在工作、閱讀對話與工具呼叫，並追蹤子代理小隊。中央 Git 花隨儲存庫歷史生長，Token 與 Git 指標則呈現場景背後的活動。
 
-AETHER OFFICE 會發現電腦上已開啟的 coding session，讓每個 session 成為 3D 辦公室裡的角色。共用面板呈現對話、工具呼叫、token 用量與工作狀態；手機連上同一個 Wi-Fi，也能查看進度。
+手機連上可信任的 Wi-Fi，也能開啟同一間辦公室，離開桌面後繼續掌握進度。
 
 服務在本機執行，不需要 AETHER 帳號或雲端服務。Claude Code、Codex 的登入憑證與訂閱仍由原本的 CLI 管理。
 
@@ -39,20 +37,6 @@ AETHER OFFICE 會發現電腦上已開啟的 coding session，讓每個 session 
 | 理解工作量       | Token 與 Git 指標、角色分層、辦公室裡的活動訊號                                  | [Session 角色](docs/roles.md)                                                                       |
 | 使用手機         | 一次性 QR 配對、底部抽屜裡的 session 列表與對話                                  | [手機連線](docs/getting-started.md#open-it-from-a-phone-or-tablet)                                  |
 | 管理執行         | 選用的 worktree、終端機、有限額任務、審查與固定 commit 驗證                      | [原生執行](docs/native-execution.md)                                                                |
-
-<details>
-<summary><strong>查看對話面板與手機介面</strong></summary>
-
-<img src="docs/images/session-conversation-desktop.jpg" alt="包含 Markdown、工具呼叫與子代理活動的對話面板" width="100%" />
-
-<p align="center">
-  <img src="docs/images/office-phone.jpg" alt="手機上的辦公室與權限批准卡片" width="240" />
-  <img src="docs/images/sessions-phone.jpg" alt="手機底部抽屜的 session 列表" width="240" />
-</p>
-
-圖片中的 session 均為合成資料，用於展示介面，不代表真實提供者的驗證結果。
-
-</details>
 
 ## 快速開始
 
@@ -106,6 +90,19 @@ pnpm hooks install --project /path/to/repo --remote-approvals
 ```
 
 安裝前請閱讀[會修改哪些檔案](docs/getting-started.md#exact-activity-with-hooks-optional)。遠端批准適用於 Claude Code；Codex 沒有相同的 hook 合約。
+
+<details>
+<summary><strong>查看對話面板與手機介面</strong></summary>
+
+<img src="docs/images/session-conversation-desktop.zh-TW.jpg" alt="包含 Markdown、工具呼叫與子代理活動的對話面板" width="100%" />
+
+<p align="center">
+  <img src="docs/images/sessions-phone.zh-TW.jpg" alt="手機底部抽屜的 session 列表" width="240" />
+</p>
+
+圖片中的 session 均為合成資料，用於展示介面，不代表真實提供者的驗證結果。
+
+</details>
 
 ## 支援範圍與限制
 

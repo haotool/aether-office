@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <title>AETHER OFFICE — README hero source</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: #071318;
+      color: #eef5ef;
+      font-family: Arial, 'PingFang TC', sans-serif;
+    }
+    main {
+      position: relative;
+      width: 1920px;
+      height: 1320px;
+      overflow: hidden;
+    }
+    .zh {
+      display: none;
+    }
+    body:has(#zh-TW:target) .en {
+      display: none;
+    }
+    body:has(#zh-TW:target) .zh {
+      display: initial;
+    }
+    .logo {
+      position: absolute;
+      left: 64px;
+      top: 54px;
+      width: 94px;
+      height: 94px;
+    }
+    h1 {
+      position: absolute;
+      left: 180px;
+      top: 56px;
+      margin: 0;
+      font-size: 76px;
+      letter-spacing: -2px;
+    }
+    .intro {
+      position: absolute;
+      left: 68px;
+      top: 166px;
+      margin: 0;
+      color: #a1beb5;
+      font-size: 30px;
+    }
+    .status {
+      position: absolute;
+      right: 66px;
+      top: 88px;
+      color: #71d4bd;
+      font-size: 18px;
+      letter-spacing: 2px;
+    }
+    .label {
+      position: absolute;
+      margin: 0;
+      color: #71d4bd;
+      font-size: 18px;
+      letter-spacing: 2px;
+    }
+    .desktop-label {
+      left: 66px;
+      top: 254px;
+    }
+    .flower-label {
+      left: 1384px;
+      top: 254px;
+    }
+    .phone-label {
+      left: 1488px;
+      top: 640px;
+    }
+    .frame {
+      position: absolute;
+      overflow: hidden;
+      border: 1px solid #6c948b55;
+      border-radius: 20px;
+      background: #08131b;
+      box-shadow: 0 24px 60px #0004;
+    }
+    .frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .desktop {
+      left: 64px;
+      top: 296px;
+      width: 1280px;
+      height: 800px;
+    }
+    .flower {
+      left: 1380px;
+      top: 296px;
+      width: 476px;
+      height: 304px;
+    }
+    .phone {
+      left: 1484px;
+      top: 682px;
+      width: 266px;
+      height: 576px;
+    }
+    .features {
+      position: absolute;
+      left: 68px;
+      top: 1142px;
+      width: 1260px;
+      font-size: 27px;
+      line-height: 1.7;
+      color: #bcd1c8;
+    }
+    .note {
+      position: absolute;
+      left: 68px;
+      top: 1258px;
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: 1px;
+      color: #89a79c;
+    }
+  </style>
+  <body>
+    <main id="zh-TW">
+      <img
+        class="logo"
+        src="../../apps/web/public/favicon.svg"
+        alt="AETHER OFFICE orbital A logo"
+      />
+      <h1>AETHER OFFICE</h1>
+      <p class="intro">
+        <span class="en">Claude Code + Codex. Together, in view.</span
+        ><span class="zh">Claude Code 與 Codex，一眼掌握工作全貌。</span>
+      </p>
+      <span class="status"
+        ><span class="en">LOCAL-FIRST / PRE-RELEASE</span
+        ><span class="zh">本機優先 / 預發行版</span></span
+      >
+      <p class="label desktop-label">
+        <span class="en">01 / THE OFFICE · CONVERSATIONS · SQUADS</span
+        ><span class="zh">01 / 3D 辦公室 · 即時對話 · 子代理小隊</span>
+      </p>
+      <p class="label flower-label">
+        <span class="en">02 / GIT HISTORY, IN BLOOM</span
+        ><span class="zh">02 / 讓 Git 歷史，綻放成花</span>
+      </p>
+      <p class="label phone-label">
+        <span class="en">03 / ON YOUR PHONE</span><span class="zh">03 / 手機隨時掌握</span>
+      </p>
+      <div class="frame desktop">
+        <img
+          class="en"
+          src="session-conversation-desktop.jpg"
+          alt="Office, conversation and subagent activity"
+        /><img
+          class="zh"
+          src="session-conversation-desktop.zh-TW.jpg"
+          alt="繁體中文辦公室、對話與子代理活動"
+        />
+      </div>
+      <div class="frame flower">
+        <img
+          class="en"
+          src="git-flower-desktop.en.jpg"
+          alt="Git flower in the actual 3D scene"
+        /><img class="zh" src="git-flower-desktop.zh-TW.jpg" alt="實際 3D 場景中央的 Git 花" />
+      </div>
+      <div class="frame phone">
+        <img class="en" src="sessions-phone.jpg" alt="Mobile session feed" /><img
+          class="zh"
+          src="sessions-phone.zh-TW.jpg"
+          alt="繁體中文手機工作列表"
+        />
+      </div>
+      <div class="features">
+        <span class="en"
+          >Follow the work. Read the conversation. See the team.<br />3D workspace · Token &amp; Git
+          KPIs · Opt-in approvals</span
+        ><span class="zh"
+          >追蹤工作進度，閱讀即時對話，看見團隊協作。<br />3D 工作空間 · Token 與 Git 指標 ·
+          選用權限批准</span
+        >
+      </div>
+      <p class="note">
+        <span class="en">ACTUAL APPLICATION CAPTURES / SYNTHETIC DEMO DATA</span
+        ><span class="zh">真實應用介面截圖 / 合成示範資料</span>
+      </p>
+    </main>
+  </body>
+</html>
