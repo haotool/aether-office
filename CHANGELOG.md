@@ -7,6 +7,10 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ## [Unreleased]
 
+### Changed
+
+- Mark the pre-publication open-source risk assessment as a historical snapshot and point current decisions to the release and verification ledgers.
+
 ## [0.4.1] - 2026-10-14
 
 ### Changed

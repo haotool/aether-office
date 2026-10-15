@@ -195,19 +195,7 @@ Score 100.0, floor 100.0, 100% of the rule weight measured.
 | Local host names and LAN addresses in documentation (confirm each is an example) | `doc-hostnames` | 0 | 0 | 5 | 0 | pass |
 | Workspace versions differing from the root, or the version hard-coded elsewhere | `version-source` | 0 | 0 | 5 | 0 | pass |
 | Version still carries a -dev suffix | `dev-version` | 0 | 0 | 5 | 0 | pass |
-| Maintainer decisions still open (docs/internal/oss-risk-assessment.md, not scored) | `open-decisions` | 7 | - | - | 0 | info |
-
-Maintainer decisions still open (docs/internal/oss-risk-assessment.md, not scored): 7
-
-```text
-docs/internal/oss-risk-assessment.md: 1. 完成歷史清理（R1、R2），`history-verify.sh --full` 為 GO；先建立 `.oss-private-patterns` 並重掃。
-docs/internal/oss-risk-assessment.md: 2. 修 `.gitleaks.toml` 讓 `oss:check` 全綠（R3）。
-docs/internal/oss-risk-assessment.md: 3. 更正 `history-cleanup.md` 的過期數字與「1 個 trailer」錯誤，再重新量測（R4）。
-docs/internal/oss-risk-assessment.md: 4. 決定專案名稱（正式商標檢索後；R5）與供應商標誌處置（R6）。
-docs/internal/oss-risk-assessment.md: 5. 啟用並實測 Private Vulnerability Reporting，補備用聯絡方式（R8）。
-docs/internal/oss-risk-assessment.md: 6. 把版本由 `0.4.0-dev.0` 換成發佈版本並讓版本測試通過；只推 `main`，不推舊標籤、worktree 分支、stash。
-docs/internal/oss-risk-assessment.md: 7. 補 AI 輔助聲明（若清除 trailer；R11）與「實驗性、無支援保證」聲明（R9）。
-```
+| Maintainer decisions still open (docs/internal/oss-risk-assessment.md, not scored) | `open-decisions` | 0 | - | - | 0 | info |
 
 ## Product maturity
 
