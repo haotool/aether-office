@@ -92,15 +92,28 @@ pnpm hooks install --project /path/to/repo --remote-approvals
 安裝前請閱讀[會修改哪些檔案](docs/getting-started.md#exact-activity-with-hooks-optional)。遠端批准適用於 Claude Code；Codex 沒有相同的 hook 合約。
 
 <details>
-<summary><strong>查看對話面板與手機介面</strong></summary>
+<summary><strong>查看對話面板、小隊、Git 歷史、用量與手機介面</strong></summary>
 
-<img src="docs/images/session-conversation-desktop.zh-TW.jpg" alt="包含 Markdown、工具呼叫與子代理活動的對話面板" width="100%" />
+### 對話與工具活動
+
+<img src="docs/images/session-conversation-desktop.zh-TW.jpg" alt="繁中桌面辦公室、對話歷史、工具結果與子代理活動" width="100%" />
+
+| 子代理小隊                                                                                                                          | Git 歷史綻放成花                                                                                                    |
+| ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| <img src="docs/images/squad-strings-desktop.zh-TW.jpg" alt="繁中介面中的主管與四個子代理，呈現活動連線和多鏡頭畫面" width="100%" /> | <img src="docs/images/git-flower-desktop.zh-TW.jpg" alt="繁中 3D 場景中，從辦公室中央生長的 Git 花" width="100%" /> |
+
+### Token 用量與 Git 活動
+
+<img src="docs/images/kpi-dashboard-desktop.zh-TW.jpg" alt="繁中 KPI 儀表板，呈現 Token 組成、每日用量、模型占比與 Git 活動" width="100%" />
+
+### 從手機列表進入對話
 
 <p align="center">
-  <img src="docs/images/sessions-phone.zh-TW.jpg" alt="手機底部抽屜的 session 列表" width="240" />
+  <img src="docs/images/sessions-phone.zh-TW.jpg" alt="繁中手機工作列表，呈現執行中工作與待處理狀態" width="220" />
+  <img src="docs/images/conversation-phone.zh-TW.jpg" alt="繁中手機對話面板，包含 Markdown、工具結果與子代理活動" width="220" />
 </p>
 
-圖片中的 session 均為合成資料，用於展示介面，不代表真實提供者的驗證結果。
+圖片中的 session 均為合成資料，用於展示介面，不代表真實提供者的驗證結果；示範對話保留原始內容語言。
 
 </details>
 

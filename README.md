@@ -100,12 +100,25 @@ Review [what the installer changes](docs/getting-started.md#exact-activity-with-
 Claude Code; Codex has no equivalent hook contract.
 
 <details>
-<summary><strong>See the conversation panel and phone interface</strong></summary>
+<summary><strong>Explore conversations, squads, Git history, KPIs and the phone interface</strong></summary>
 
-<img src="docs/images/session-conversation-desktop.jpg" alt="Conversation panel with Markdown, tool calls and subagent activity" width="100%" />
+### Conversations and tool activity
+
+<img src="docs/images/session-conversation-desktop.jpg" alt="Desktop office with conversation history, tool results and subagent activity" width="100%" />
+
+| Subagent squads                                                                                                                                         | Git history in bloom                                                                                                              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| <img src="docs/images/squad-strings-desktop.jpg" alt="A supervisor and four subagents, with activity strings and multiple camera views" width="100%" /> | <img src="docs/images/git-flower-desktop.en.jpg" alt="Git flower growing above the office in the actual 3D scene" width="100%" /> |
+
+### Token use and Git activity
+
+<img src="docs/images/kpi-dashboard-desktop.jpg" alt="KPI dashboard with token breakdown, daily use, model shares and Git activity" width="100%" />
+
+### From feed to conversation on your phone
 
 <p align="center">
-  <img src="docs/images/sessions-phone.jpg" alt="Session feed in the phone's bottom sheet" width="240" />
+  <img src="docs/images/sessions-phone.jpg" alt="Mobile session feed showing active work and requests for attention" width="220" />
+  <img src="docs/images/conversation-phone.jpg" alt="Mobile conversation with Markdown, tool results and subagent activity" width="220" />
 </p>
 
 All images show synthetic sessions. They illustrate the interface; they are not live-provider verification evidence.

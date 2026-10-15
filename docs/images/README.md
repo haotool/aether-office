@@ -7,7 +7,7 @@ of at most 250 KB, taken from a throwaway demo stack on **synthetic data**: inve
 (`harbor-web`, `ledger-api`, ...), authors, conversations and token counts, fake `claude` processes (`sleep`, named
 `claude`) and hook records. Nothing is read from a real `~/.claude` or `~/.codex`, no model is called, and the stack and its
 data directory are deleted afterwards. The LAN address in the pairing image is a stand-in (a private-range example); the QR code in
-it belongs to the deleted stack and works nowhere. The interface is shown in English, dark theme unless the name says light or ends in `zh-TW`. Synthetic conversation content keeps its original language even when the application chrome is Traditional Chinese.
+it belongs to the deleted stack and works nowhere. Session, repository, conversation and token data are synthetic; sidebar CPU, memory and disk figures are local host readings at capture time. The interface is shown in English, dark theme unless the name says light or ends in `zh-TW`. Synthetic conversation content keeps its original language even when the application chrome is Traditional Chinese.
 
 | File                                                        | Size              | Shows                                                                                                  |
 | ----------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------ |
@@ -29,6 +29,8 @@ it belongs to the deleted stack and works nowhere. The interface is shown in Eng
 | `office-phone.jpg`                                          | 390x844 @2x       | The office on a phone with a pending approval (README)                                                 |
 | `sessions-phone.jpg`                                        | 390x844 @2x       | The live sessions bottom sheet (README)                                                                |
 | `conversation-phone.jpg`                                    | 390x844 @2x       | A conversation in the bottom sheet                                                                     |
+
+Additional Traditional Chinese gallery inputs: `squad-strings-desktop.zh-TW.jpg` and `kpi-dashboard-desktop.zh-TW.jpg` (1440x900), and `conversation-phone.zh-TW.jpg` (390x844 at 2x). These and their English counterparts were captured from the same isolated synthetic demo stack for the expanded README galleries. Each language's gallery shows six views: conversation, squad, Git flower, KPI dashboard, phone feed and phone conversation.
 
 ## Hero provenance
 
