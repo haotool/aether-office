@@ -18,6 +18,6 @@ Each note is a dated snapshot written in Traditional Chinese, as the maintainers
 | [Mobile gradient and frame performance](mobile-gradient-perf.md) | Banding, dithering, GPU tiers and phone budgets: sources, audit, measurements      | 2026-10-07 |
 | [Orca view feasibility](orca-view-feasibility.md)                | A read-only office view over the Orca orchestrator: sources, risks, phases         | 2026-10-07 |
 | [Orca forward compatibility](orca-forward-compat.md)             | How a newer Orca release could work without a code change, and be trusted          | 2026-10-07 |
-| [Open-source risk assessment](oss-risk-assessment.md)            | Secrets, privacy, security, brand and maintenance risks before going public        | 2026-10-07 |
+| [Open-source risk assessment](oss-risk-assessment.md)            | Pre-publication risk snapshot with a dated current-status header                   | 2026-10-07 |
 
 The comparison of the 27 projects that shaped the design is public and lives in [`docs/research`](../research/README.md).
