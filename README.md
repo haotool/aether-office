@@ -1,4 +1,4 @@
-<img src="docs/images/readme-hero.en.webp" alt="AETHER OFFICE — orbital A logo, 3D office and conversations, Git flower, and mobile office; actual UI with synthetic demo data" width="100%" />
+<img src="docs/images/readme-hero.en.webp" alt="AETHER OFFICE — orbital A logo, 3D office and live conversation feed, Git flower, and mobile office; actual UI with synthetic demo data" width="100%" />
 
 <h1 align="center">One office for your coding agents.</h1>
 
@@ -99,68 +99,130 @@ pnpm hooks install --project /path/to/repo --remote-approvals
 Review [what the installer changes](docs/getting-started.md#exact-activity-with-hooks-optional). Remote approvals apply to
 Claude Code; Codex has no equivalent hook contract.
 
+## Product tour
+
+The live conversation feed shows work states, latest replies and subagents; Session management shows provider, branch and process details. Git commit history and event replay are separate views. Every item below links to actual desktop and phone screenshots.
+
+| Feature                  | Desktop                                              | Phone                                              |
+| ------------------------ | ---------------------------------------------------- | -------------------------------------------------- |
+| 3D office and squads     | [View](docs/images/squad-strings-desktop.jpg)        | [View](docs/images/office-phone.jpg)               |
+| Live conversation feed   | [View](docs/images/conversation-feed-desktop.en.jpg) | [View](docs/images/conversation-feed-phone.en.jpg) |
+| Conversation and tools   | [View](docs/images/session-conversation-desktop.jpg) | [View](docs/images/conversation-phone.jpg)         |
+| Session management       | [View](docs/images/sessions-desktop.en.jpg)          | [View](docs/images/sessions-list-phone.en.jpg)     |
+| Token and Git KPIs       | [View](docs/images/kpi-dashboard-desktop.jpg)        | [View](docs/images/kpi-phone.en.jpg)               |
+| Git commit history       | [View](docs/images/git-history-desktop.en.jpg)       | [View](docs/images/git-history-phone.en.jpg)       |
+| Permission review        | [View](docs/images/approvals-desktop.en.jpg)         | [View](docs/images/approvals-phone.en.jpg)         |
+| Interactive terminal     | [View](docs/images/terminals-desktop.en.jpg)         | [View](docs/images/terminals-phone.en.jpg)         |
+| Event history and replay | [View](docs/images/event-history-desktop.en.jpg)     | [View](docs/images/event-history-phone.en.jpg)     |
+
+Git history lives in the optional Advanced workspace. Permission screens show an undecided synthetic request. Terminal screens use the existing isolated PTY fixture: the on-screen “live” badge describes the local connection mode, not a real model call.
+
 <details>
-<summary><strong>Explore the office, Git flower, conversations and mobile views</strong></summary>
+<summary><strong>Desktop: conversation feed, Git history and core features</strong></summary>
 
-- [Multi-floor office](#multi-floor-office)
-- [Git flower crown](#git-flower-crown)
-- [Conversations and squads](#conversations-and-squads)
-- [Token and Git dashboard](#token-and-git-dashboard)
-- [Four views on your phone](#four-views-on-your-phone)
+### Live conversation feed
 
-### Multi-floor office
+The live conversation feed groups sessions by Needs you, Working and Recently finished, with reply previews and squad status.
 
-The original wide shots show the building and its central Git flower in dark and light themes. These retain the earlier application chrome; the feature views below show the current interface.
+<img src="docs/images/conversation-feed-desktop.en.jpg" alt="Live conversation feed — actual desktop interface, synthetic data" width="100%" />
 
-**Dark theme**
+### Git commit history
 
-<img src="docs/images/office-overview-desktop.jpg" alt="Original wide view of the multi-floor office and central Git flower in the dark theme" width="100%" />
+A synthetic Git repository supplies real commit lanes, branch refs, merges and SHAs, with worktree and Git-health information below.
 
-**Light theme**
+<img src="docs/images/git-history-desktop.en.jpg" alt="Git commit history — actual desktop interface, synthetic data" width="100%" />
 
-<img src="docs/images/office-overview-desktop-light.jpg" alt="Original multi-floor office overview in the light theme" width="100%" />
+### Conversation and tools
 
-### Git flower crown
+<img src="docs/images/session-conversation-desktop.jpg" alt="Conversation and tools — actual desktop interface, synthetic data" width="100%" />
 
-Repository history becomes a branching flower above the office. The original crown close-up includes the exploded building view.
+### 3D office and squads
 
-<img src="docs/images/office-crown-desktop.jpg" alt="Original close view of the Git flower crown above the exploded office floors" width="100%" />
+<img src="docs/images/squad-strings-desktop.jpg" alt="3D office and squads — actual desktop interface, synthetic data" width="100%" />
 
-### Conversations and squads
+### Session management
 
-Read conversations and folded tool results alongside the 3D office, then follow a supervisor's subagents and camera views.
+<img src="docs/images/sessions-desktop.en.jpg" alt="Session management — actual desktop interface, synthetic data" width="100%" />
 
-**Conversation panel**
+### Token and Git KPIs
 
-<img src="docs/images/session-conversation-desktop.jpg" alt="Office with conversation history, tool results and subagent activity" width="100%" />
+<img src="docs/images/kpi-dashboard-desktop.jpg" alt="Token and Git KPIs — actual desktop interface, synthetic data" width="100%" />
 
-**Subagent squad**
+### Permission review
 
-<img src="docs/images/squad-strings-desktop.jpg" alt="Supervisor and four subagents with activity strings and camera previews" width="100%" />
+<img src="docs/images/approvals-desktop.en.jpg" alt="Permission review — actual desktop interface, synthetic data" width="100%" />
 
-### Token and Git dashboard
+### Interactive terminal
 
-<img src="docs/images/kpi-dashboard-desktop.jpg" alt="Token breakdown, daily use, model shares and Git activity in the KPI dashboard" width="100%" />
+The synthetic PTY fixture is running with ownership controls and output. It invokes no paid model and does not attach to an existing user terminal.
 
-### Four views on your phone
+<img src="docs/images/terminals-desktop.en.jpg" alt="Interactive terminal — actual desktop interface, synthetic data" width="100%" />
 
-**01 · The 3D office — 02 · Token use and charts**
+### Event history and replay
 
-<p align="center">
-  <img src="docs/images/office-phone.jpg" alt="Mobile 3D office with a close view of an active squad" width="280" />
-  <img src="docs/images/kpi-phone.en.jpg" alt="Mobile KPI dashboard with token breakdown and daily activity chart" width="280" />
-</p>
+<img src="docs/images/event-history-desktop.en.jpg" alt="Event history and replay — actual desktop interface, synthetic data" width="100%" />
 
-**03 · The full session list — 04 · A conversation**
+### Wide office and Git-flower views
 
-<p align="center">
-  <img src="docs/images/sessions-list-phone.en.jpg" alt="Full mobile session list with session names, providers and work states" width="280" />
-  <img src="docs/images/conversation-phone.jpg" alt="Mobile conversation with a request, tool history and an agent reply" width="280" />
-</p>
+The original dark/light wide shots and flower-crown close-up retain earlier English application chrome and are labeled separately from the current views above.
 
-All workspace examples use synthetic data. Images illustrate the interface; they are not live-provider verification evidence. [Complete image index](docs/images/README.md).
+**Dark wide view**
+
+<img src="docs/images/office-overview-desktop.jpg" alt="Dark wide view — earlier English interface, synthetic data" width="100%" />
+
+**Light wide view**
+
+<img src="docs/images/office-overview-desktop-light.jpg" alt="Light wide view — earlier English interface, synthetic data" width="100%" />
+
+**Git flower crown**
+
+<img src="docs/images/office-crown-desktop.jpg" alt="Git flower crown — earlier English interface, synthetic data" width="100%" />
 
 </details>
+
+<details>
+<summary><strong>Phone: 10 actual feature views</strong></summary>
+
+**01 · Conversation feed: attention and work — 02 · Conversation feed: more work and finished sessions**
+
+<p align="center">
+  <img src="docs/images/conversation-feed-phone.en.jpg" alt="Conversation feed: attention and work — actual phone interface, synthetic data" width="280" />
+  <img src="docs/images/conversation-feed-more-phone.en.jpg" alt="Conversation feed: more work and finished sessions — actual phone interface, synthetic data" width="280" />
+</p>
+
+**03 · Conversation and tools — 04 · Git commit history**
+
+<p align="center">
+  <img src="docs/images/conversation-phone.jpg" alt="Conversation and tools — actual phone interface, synthetic data" width="280" />
+  <img src="docs/images/git-history-phone.en.jpg" alt="Git commit history — actual phone interface, synthetic data" width="280" />
+</p>
+
+**05 · 3D office and squads — 06 · Token and Git KPIs**
+
+<p align="center">
+  <img src="docs/images/office-phone.jpg" alt="3D office and squads — actual phone interface, synthetic data" width="280" />
+  <img src="docs/images/kpi-phone.en.jpg" alt="Token and Git KPIs — actual phone interface, synthetic data" width="280" />
+</p>
+
+**07 · Permission review — 08 · Interactive terminal**
+
+<p align="center">
+  <img src="docs/images/approvals-phone.en.jpg" alt="Permission review — actual phone interface, synthetic data" width="280" />
+  <img src="docs/images/terminals-phone.en.jpg" alt="Interactive terminal — actual phone interface, synthetic data" width="280" />
+</p>
+
+**09 · Session management — 10 · Event history and replay**
+
+<p align="center">
+  <img src="docs/images/sessions-list-phone.en.jpg" alt="Session management — actual phone interface, synthetic data" width="280" />
+  <img src="docs/images/event-history-phone.en.jpg" alt="Event history and replay — actual phone interface, synthetic data" width="280" />
+</p>
+
+The feed drawer keeps its actual half-screen height; the first two views show its top and scrolled conversation rows, rather than substituting management metadata.
+
+</details>
+
+Workspace examples are synthetic and conversations retain their source language. These screenshots do not establish live-provider or release verification. [Complete image index and provenance](docs/images/README.md).
 
 ## Support and limits
 
