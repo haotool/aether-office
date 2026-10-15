@@ -1,4 +1,4 @@
-<img src="docs/images/readme-hero.zh-TW.webp" alt="AETHER OFFICE——軌道 A 標誌、繁中 3D 辦公室與對話、中央 Git 花及手機列表；真實介面使用合成示範資料" width="100%" />
+<img src="docs/images/readme-hero.zh-TW.webp" alt="AETHER OFFICE——軌道 A 標誌、繁中 3D 辦公室與對話、中央 Git 花及手機辦公室；真實介面使用合成示範資料" width="100%" />
 
 <h1 align="center">讓你的程式代理，在同一間辦公室協作。</h1>
 
@@ -92,28 +92,57 @@ pnpm hooks install --project /path/to/repo --remote-approvals
 安裝前請閱讀[會修改哪些檔案](docs/getting-started.md#exact-activity-with-hooks-optional)。遠端批准適用於 Claude Code；Codex 沒有相同的 hook 合約。
 
 <details>
-<summary><strong>查看對話面板、小隊、Git 歷史、用量與手機介面</strong></summary>
+<summary><strong>查看多層樓遠景、Git 花冠、對話與手機畫面</strong></summary>
 
-### 對話與工具活動
+- [多層樓總覽](#多層樓總覽)
+- [Git 花冠](#git-花冠)
+- [即時對話與小隊](#即時對話與小隊)
+- [Token 與 Git 儀表板](#token-與-git-儀表板)
+- [手機四種工作畫面](#手機四種工作畫面)
 
-<img src="docs/images/session-conversation-desktop.zh-TW.jpg" alt="繁中桌面辦公室、對話歷史、工具結果與子代理活動" width="100%" />
+### 多層樓總覽
 
-| 子代理小隊                                                                                                                          | Git 歷史綻放成花                                                                                                    |
-| ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| <img src="docs/images/squad-strings-desktop.zh-TW.jpg" alt="繁中介面中的主管與四個子代理，呈現活動連線和多鏡頭畫面" width="100%" /> | <img src="docs/images/git-flower-desktop.zh-TW.jpg" alt="繁中 3D 場景中，從辦公室中央生長的 Git 花" width="100%" /> |
+保留原本的遠景圖，呈現多層樓辦公室與中央 Git 花的視覺關係。以下深、淺色總覽為較早拍攝的英語介面；後面的功能圖使用現行介面。
 
-### Token 用量與 Git 活動
+<img src="docs/images/office-overview-desktop.jpg" alt="既有深色多層樓遠景，呈現辦公室建築與中央 Git 花；較早的英語介面" width="100%" />
+
+<img src="docs/images/office-overview-desktop-light.jpg" alt="既有淺色多層樓辦公室總覽；較早的英語介面" width="100%" />
+
+### Git 花冠
+
+Git 歷史在辦公室上方生長成花。這張既有花冠特寫也呈現了樓層分離展開的視角。
+
+<img src="docs/images/office-crown-desktop.jpg" alt="既有 Git 花冠特寫，花朵位於分層展開的辦公室上方；較早的英語介面" width="100%" />
+
+### 即時對話與小隊
+
+在 3D 辦公室旁閱讀對話與可展開的工具結果，並查看主管、子代理活動連線及多鏡頭預覽。
+
+<img src="docs/images/session-conversation-desktop.zh-TW.jpg" alt="繁中辦公室與對話面板，包含工具結果和子代理活動" width="100%" />
+
+<img src="docs/images/squad-strings-desktop.zh-TW.jpg" alt="繁中小隊近景，呈現主管、四個子代理、活動連線及多鏡頭預覽" width="100%" />
+
+### Token 與 Git 儀表板
 
 <img src="docs/images/kpi-dashboard-desktop.zh-TW.jpg" alt="繁中 KPI 儀表板，呈現 Token 組成、每日用量、模型占比與 Git 活動" width="100%" />
 
-### 從手機列表進入對話
+### 手機四種工作畫面
+
+**01 · 3D 辦公室 — 02 · Token 用量圖表**
 
 <p align="center">
-  <img src="docs/images/sessions-phone.zh-TW.jpg" alt="繁中手機工作列表，呈現執行中工作與待處理狀態" width="220" />
-  <img src="docs/images/conversation-phone.zh-TW.jpg" alt="繁中手機對話面板，包含 Markdown、工具結果與子代理活動" width="220" />
+  <img src="docs/images/office-phone.zh-TW.jpg" alt="繁中手機 3D 辦公室，呈現工作中的子代理小隊近景" width="280" />
+  <img src="docs/images/kpi-phone.zh-TW.jpg" alt="繁中手機 KPI 儀表板，呈現 Token 組成與每日活動圖表" width="280" />
 </p>
 
-圖片中的 session 均為合成資料，用於展示介面，不代表真實提供者的驗證結果；示範對話保留原始內容語言。
+**03 · 完整 session 列表 — 04 · 閱讀對話**
+
+<p align="center">
+  <img src="docs/images/sessions-list-phone.zh-TW.jpg" alt="繁中手機完整 session 列表，呈現工作名稱、提供者與工作狀態" width="280" />
+  <img src="docs/images/conversation-phone.zh-TW.jpg" alt="繁中手機對話畫面，呈現需求、工具紀錄與代理回覆" width="280" />
+</p>
+
+工作範例均使用合成資料，介面截圖不代表真實提供者的驗證結果；示範對話保留原始內容語言。[完整圖片索引](docs/images/README.md)。
 
 </details>
 

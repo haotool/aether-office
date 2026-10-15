@@ -1,4 +1,4 @@
-<img src="docs/images/readme-hero.en.webp" alt="AETHER OFFICE — orbital A logo, 3D office and conversations, Git flower, and mobile feed; actual UI with synthetic demo data" width="100%" />
+<img src="docs/images/readme-hero.en.webp" alt="AETHER OFFICE — orbital A logo, 3D office and conversations, Git flower, and mobile office; actual UI with synthetic demo data" width="100%" />
 
 <h1 align="center">One office for your coding agents.</h1>
 
@@ -100,28 +100,57 @@ Review [what the installer changes](docs/getting-started.md#exact-activity-with-
 Claude Code; Codex has no equivalent hook contract.
 
 <details>
-<summary><strong>Explore conversations, squads, Git history, KPIs and the phone interface</strong></summary>
+<summary><strong>Explore the office, Git flower, conversations and mobile views</strong></summary>
 
-### Conversations and tool activity
+- [Multi-floor office](#multi-floor-office)
+- [Git flower crown](#git-flower-crown)
+- [Conversations and squads](#conversations-and-squads)
+- [Token and Git dashboard](#token-and-git-dashboard)
+- [Four views on your phone](#four-views-on-your-phone)
 
-<img src="docs/images/session-conversation-desktop.jpg" alt="Desktop office with conversation history, tool results and subagent activity" width="100%" />
+### Multi-floor office
 
-| Subagent squads                                                                                                                                         | Git history in bloom                                                                                                              |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| <img src="docs/images/squad-strings-desktop.jpg" alt="A supervisor and four subagents, with activity strings and multiple camera views" width="100%" /> | <img src="docs/images/git-flower-desktop.en.jpg" alt="Git flower growing above the office in the actual 3D scene" width="100%" /> |
+The original wide shots show the building and its central Git flower in dark and light themes. These retain the earlier application chrome; the feature views below show the current interface.
 
-### Token use and Git activity
+<img src="docs/images/office-overview-desktop.jpg" alt="Original wide view of the multi-floor office and central Git flower in the dark theme" width="100%" />
 
-<img src="docs/images/kpi-dashboard-desktop.jpg" alt="KPI dashboard with token breakdown, daily use, model shares and Git activity" width="100%" />
+<img src="docs/images/office-overview-desktop-light.jpg" alt="Original multi-floor office overview in the light theme" width="100%" />
 
-### From feed to conversation on your phone
+### Git flower crown
+
+Repository history becomes a branching flower above the office. The original crown close-up includes the exploded building view.
+
+<img src="docs/images/office-crown-desktop.jpg" alt="Original close view of the Git flower crown above the exploded office floors" width="100%" />
+
+### Conversations and squads
+
+Read conversations and folded tool results alongside the 3D office, then follow a supervisor's subagents and camera views.
+
+<img src="docs/images/session-conversation-desktop.jpg" alt="Office with conversation history, tool results and subagent activity" width="100%" />
+
+<img src="docs/images/squad-strings-desktop.jpg" alt="Supervisor and four subagents with activity strings and camera previews" width="100%" />
+
+### Token and Git dashboard
+
+<img src="docs/images/kpi-dashboard-desktop.jpg" alt="Token breakdown, daily use, model shares and Git activity in the KPI dashboard" width="100%" />
+
+### Four views on your phone
+
+**01 · The 3D office — 02 · Token use and charts**
 
 <p align="center">
-  <img src="docs/images/sessions-phone.jpg" alt="Mobile session feed showing active work and requests for attention" width="220" />
-  <img src="docs/images/conversation-phone.jpg" alt="Mobile conversation with Markdown, tool results and subagent activity" width="220" />
+  <img src="docs/images/office-phone.jpg" alt="Mobile 3D office with a close view of an active squad" width="280" />
+  <img src="docs/images/kpi-phone.en.jpg" alt="Mobile KPI dashboard with token breakdown and daily activity chart" width="280" />
 </p>
 
-All images show synthetic sessions. They illustrate the interface; they are not live-provider verification evidence.
+**03 · The full session list — 04 · A conversation**
+
+<p align="center">
+  <img src="docs/images/sessions-list-phone.en.jpg" alt="Full mobile session list with session names, providers and work states" width="280" />
+  <img src="docs/images/conversation-phone.jpg" alt="Mobile conversation with a request, tool history and an agent reply" width="280" />
+</p>
+
+All workspace examples use synthetic data. Images illustrate the interface; they are not live-provider verification evidence. [Complete image index](docs/images/README.md).
 
 </details>
 

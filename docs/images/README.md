@@ -9,35 +9,44 @@ of at most 250 KB, taken from a throwaway demo stack on **synthetic data**: inve
 data directory are deleted afterwards. The LAN address in the pairing image is a stand-in (a private-range example); the QR code in
 it belongs to the deleted stack and works nowhere. Session, repository, conversation and token data are synthetic; sidebar CPU, memory and disk figures are local host readings at capture time. The interface is shown in English, dark theme unless the name says light or ends in `zh-TW`. Synthetic conversation content keeps its original language even when the application chrome is Traditional Chinese.
 
-| File                                                        | Size              | Shows                                                                                                  |
-| ----------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------ |
-| `readme-hero.en.webp`                                       | 1920x1320         | English dark control-room cover: orbital A logo, office/conversation, Git flower and phone             |
-| `readme-hero.zh-TW.webp`                                    | 1920x1320         | Traditional Chinese cover with localized application chrome and captions                               |
-| `git-flower-desktop.en.jpg`, `git-flower-desktop.zh-TW.jpg` | 806x578 / 806x575 | Actual scene canvas during the flower-crown tour, in English and Traditional Chinese                   |
-| `session-conversation-desktop.zh-TW.jpg`                    | 1440x900          | Traditional Chinese office and conversation interface                                                  |
-| `sessions-phone.zh-TW.jpg`                                  | 390x844 @2x       | Traditional Chinese mobile session feed                                                                |
-| `office-overview-desktop.jpg`                               | 1440x900          | The building, the Git beanstalk with its flower crown and the live session panel (README)              |
-| `office-overview-desktop-light.jpg`                         | 1440x900          | The same in the light theme                                                                            |
-| `office-crown-desktop.jpg`                                  | 1440x900          | The crown close up: one flower per twelve commits, a great bloom on top (exploded view)                |
-| `session-conversation-desktop.jpg`                          | 1440x900          | A conversation with Markdown, a table, folded tool calls, a squad strip and subagent activity (README) |
-| `approval-card-desktop.jpg`                                 | 1440x900          | A permission request as a card (Remote approvals on) (README)                                          |
-| `kpi-dashboard-desktop.jpg`                                 | 1440x900          | The KPI dashboard for the building, 7 days (README)                                                    |
-| `squad-strings-desktop.jpg`                                 | 1440x900          | A squad around its supervisor's desk with puppet strings; stand-in subagents (`?squad=4`) (README)     |
-| `character-menu-desktop.jpg`                                | 1440x900          | A character's action menu, with the disabled items and why (README)                                    |
-| `settings-office-desktop.jpg`                               | 1440x900          | Settings, Office group                                                                                 |
-| `connect-phone-desktop.jpg`                                 | 1440x900          | The "Connect a phone" dialog with its QR code                                                          |
-| `office-phone.jpg`                                          | 390x844 @2x       | The office on a phone with a pending approval (README)                                                 |
-| `sessions-phone.jpg`                                        | 390x844 @2x       | The live sessions bottom sheet (README)                                                                |
-| `conversation-phone.jpg`                                    | 390x844 @2x       | A conversation in the bottom sheet                                                                     |
+| File                                                                             | Pixels    | View and use                                                                                           |
+| -------------------------------------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------ |
+| [approval-card-desktop.jpg](approval-card-desktop.jpg)                           | 1440x900  | Earlier approval-workflow reference capture                                                            |
+| [character-menu-desktop.jpg](character-menu-desktop.jpg)                         | 1440x900  | Earlier character action menu reference capture                                                        |
+| [connect-phone-desktop.jpg](connect-phone-desktop.jpg)                           | 1440x900  | Earlier pairing dialog with a deleted-stack QR code                                                    |
+| [conversation-phone.jpg](conversation-phone.jpg)                                 | 780x1688  | English webhook-retry conversation, tool history and agent reply; English README                       |
+| [conversation-phone.zh-TW.jpg](conversation-phone.zh-TW.jpg)                     | 780x1688  | Traditional Chinese webhook-retry conversation without the previous focus outline; Chinese README      |
+| [git-flower-desktop.en.jpg](git-flower-desktop.en.jpg)                           | 806x578   | Current English scene-only Git-flower capture; English hero                                            |
+| [git-flower-desktop.zh-TW.jpg](git-flower-desktop.zh-TW.jpg)                     | 806x575   | Current Traditional Chinese scene-only Git-flower capture; Chinese hero                                |
+| [kpi-dashboard-desktop.jpg](kpi-dashboard-desktop.jpg)                           | 1440x900  | English desktop token and Git dashboard; English README                                                |
+| [kpi-dashboard-desktop.zh-TW.jpg](kpi-dashboard-desktop.zh-TW.jpg)               | 1440x900  | Traditional Chinese desktop token and Git dashboard; Chinese README                                    |
+| [kpi-phone.en.jpg](kpi-phone.en.jpg)                                             | 780x1688  | English mobile KPI bottom sheet, token composition and daily chart; English README                     |
+| [kpi-phone.zh-TW.jpg](kpi-phone.zh-TW.jpg)                                       | 780x1688  | Traditional Chinese mobile KPI bottom sheet; Chinese README                                            |
+| [office-crown-desktop.jpg](office-crown-desktop.jpg)                             | 1440x900  | Earlier English flower crown and exploded building view; both README galleries                         |
+| [office-overview-desktop-light.jpg](office-overview-desktop-light.jpg)           | 1440x900  | Earlier English light-theme wide shot; both README galleries                                           |
+| [office-overview-desktop.jpg](office-overview-desktop.jpg)                       | 1440x900  | Earlier English dark-theme wide shot of the multi-floor building and Git flower; both README galleries |
+| [office-phone.jpg](office-phone.jpg)                                             | 780x1688  | English mobile 3D squad close-up; English README and hero                                              |
+| [office-phone.zh-TW.jpg](office-phone.zh-TW.jpg)                                 | 780x1688  | Traditional Chinese mobile 3D squad close-up; Chinese README and hero                                  |
+| [readme-hero.en.webp](readme-hero.en.webp)                                       | 1920x1320 | English control-room cover; logo, desktop conversation, Git flower and mobile 3D office                |
+| [readme-hero.zh-TW.webp](readme-hero.zh-TW.webp)                                 | 1920x1320 | Traditional Chinese control-room cover with matching application chrome                                |
+| [session-conversation-desktop.jpg](session-conversation-desktop.jpg)             | 1440x900  | Current English desktop conversation and tool activity; English README and hero                        |
+| [session-conversation-desktop.zh-TW.jpg](session-conversation-desktop.zh-TW.jpg) | 1440x900  | Current Traditional Chinese desktop conversation; Chinese README and hero                              |
+| [sessions-list-phone.en.jpg](sessions-list-phone.en.jpg)                         | 780x1688  | English full Sessions page, running-only filter disabled; English README                               |
+| [sessions-list-phone.zh-TW.jpg](sessions-list-phone.zh-TW.jpg)                   | 780x1688  | Traditional Chinese full Sessions page, running-only filter disabled; Chinese README                   |
+| [sessions-phone.jpg](sessions-phone.jpg)                                         | 780x1688  | English half-height office feed; retained reference capture                                            |
+| [sessions-phone.zh-TW.jpg](sessions-phone.zh-TW.jpg)                             | 780x1688  | Traditional Chinese half-height office feed; retained reference capture                                |
+| [settings-office-desktop.jpg](settings-office-desktop.jpg)                       | 1440x900  | Earlier office-settings reference capture                                                              |
+| [squad-strings-desktop.jpg](squad-strings-desktop.jpg)                           | 1440x900  | English supervisor, subagent squad and camera views; English README                                    |
+| [squad-strings-desktop.zh-TW.jpg](squad-strings-desktop.zh-TW.jpg)               | 1440x900  | Traditional Chinese squad and camera views; Chinese README                                             |
 
-Additional Traditional Chinese gallery inputs: `squad-strings-desktop.zh-TW.jpg` and `kpi-dashboard-desktop.zh-TW.jpg` (1440x900), and `conversation-phone.zh-TW.jpg` (390x844 at 2x). These and their English counterparts were captured from the same isolated synthetic demo stack for the expanded README galleries. Each language's gallery shows six views: conversation, squad, Git flower, KPI dashboard, phone feed and phone conversation.
+The [editable hero source](readme-hero.html) is HTML, not a screenshot. Mobile captures are 390x844 at 2x (780x1688 pixels). Each README gallery now contains ten images: three earlier wide/crown views, three current desktop feature views and four current mobile views. The full Sessions-page capture has the running-only filter turned off, so it does not imply that a filtered subset is the complete list. Earlier English application chrome is explicitly labeled in both galleries.
 
 ## Hero provenance
 
-- **Sources:** `session-conversation-desktop.jpg` and `sessions-phone.jpg` were refreshed from the current application. Their `zh-TW` counterparts were captured with the application locale set to Traditional Chinese. Both `git-flower-desktop.*.jpg` files capture only the actual scene canvas during the introductory tour; the upper bloom extends outside the original camera frame. No scene or interface content is generated or redrawn.
+- **Sources:** `session-conversation-desktop.jpg` and `office-phone.jpg` were refreshed from the current application. Their `zh-TW` counterparts were captured with the application locale set to Traditional Chinese. Both `git-flower-desktop.*.jpg` files capture only the actual scene canvas during the introductory tour; the upper bloom extends outside the original camera frame. No scene or interface content is generated or redrawn.
 - **Isolation:** captures use the repository's disposable demo stack, synthetic sessions and Chrome with ANGLE Metal. No real transcript, owner credential or paid model is used. Generated fixture identifiers and camera animation can vary between runs.
 - **Logo:** the existing project mark in `apps/web/public/favicon.svg`, used without modification.
-- **Composition:** [`readme-hero.html`](readme-hero.html) is the editable source. The dark control-room layout places the logo and title above a complete desktop capture, with a separate Git-flower detail and phone capture on the right. All images retain their aspect ratio. Captions distinguish actual UI from synthetic demo data.
+- **Composition:** [`readme-hero.html`](readme-hero.html) is the editable source. The dark control-room layout places the logo and title above a complete desktop capture, with a separate Git-flower detail and mobile 3D-office capture on the right. All images retain their aspect ratio. Captions distinguish actual UI from synthetic demo data.
 - **Languages:** open the source normally for English, or append `#zh-TW` for Traditional Chinese. This changes the captions and image inputs together. The source uses system Arial and PingFang TC; no font is distributed. The conversation examples remain English because they are source data, not interface labels.
 - **Outputs:** `readme-hero.en.webp` and `readme-hero.zh-TW.webp`, 1920x1320, WebP quality 88 with metadata removed.
 
@@ -54,7 +63,7 @@ For new source captures, use the disposable harness below with `--hold`, select 
 
 ### README layout references
 
-The layout uses a product cover, a short statement of value, a small set of useful links, and quick-start instructions before the expandable screenshot gallery. Feature, safety, support and attribution information remains text so it is searchable and accessible.
+The layout uses a product cover, a short statement of value, a small set of useful links, and quick-start instructions before the expandable screenshot gallery. The gallery has a linked five-part list and full-width desktop figures; the four phone captures are grouped in two rows. Feature, safety, support and attribution information remains text so it is searchable and accessible.
 
 - [GitHub: About READMEs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes) — project purpose, setup, help and repository-relative image paths.
 - [Awesome README](https://github.com/matiassingers/awesome-readme) — examples combining a logo, product screenshot, concise description and installation guide. Used for layout inspiration only; no artwork or source was copied.
