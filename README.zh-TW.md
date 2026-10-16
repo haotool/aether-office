@@ -1,9 +1,6 @@
-# AETHER OFFICE
+<img src="docs/images/readme-hero.zh-TW.webp" alt="AETHER OFFICE——軌道 A 標誌、繁中 3D 辦公室與即時對話列表、中央 Git 花及手機辦公室；真實介面使用合成示範資料" width="100%" />
 
-<p align="center">
-  <strong>把 Claude Code 與 Codex 的工作，放進同一間辦公室。</strong><br />
-  查看進度、閱讀對話，從瀏覽器或手機回應。
-</p>
+<h1 align="center">讓你的程式代理，在同一間辦公室協作。</h1>
 
 <p align="center">
   <a href="https://github.com/haotool/aether-office/actions/workflows/ci.yml"><img src="https://github.com/haotool/aether-office/actions/workflows/ci.yml/badge.svg" alt="CI 狀態" /></a>
@@ -18,11 +15,12 @@
   <a href="README.md">English</a>
 </p>
 
-<img src="docs/images/office-overview-desktop.jpg" alt="AETHER OFFICE 的 3D 辦公室、Git 歷史與即時 session 面板" width="100%" />
+_首圖使用繁體中文實際介面與合成示範資料；中央 Git 花呈現儲存庫歷史。
+[圖片來源與重製方式](docs/images/README.md#hero-provenance)。_
 
-_產品截圖使用合成示範資料。[截圖來源與重新產生方式](docs/images/README.md)。_
+AETHER OFFICE 把 **Claude Code 與 Codex 的工作階段，帶進同一間本機 3D 辦公室**。不用切換多個終端機，就能查看誰正在工作、閱讀對話與工具呼叫，並追蹤子代理小隊。中央 Git 花隨儲存庫歷史生長，Token 與 Git 指標則呈現場景背後的活動。
 
-AETHER OFFICE 會發現電腦上已開啟的 coding session，讓每個 session 成為 3D 辦公室裡的角色。共用面板呈現對話、工具呼叫、token 用量與工作狀態；手機連上同一個 Wi-Fi，也能查看進度。
+手機連上可信任的 Wi-Fi，也能開啟同一間辦公室，離開桌面後繼續掌握進度。
 
 服務在本機執行，不需要 AETHER 帳號或雲端服務。Claude Code、Codex 的登入憑證與訂閱仍由原本的 CLI 管理。
 
@@ -39,20 +37,6 @@ AETHER OFFICE 會發現電腦上已開啟的 coding session，讓每個 session 
 | 理解工作量       | Token 與 Git 指標、角色分層、辦公室裡的活動訊號                                  | [Session 角色](docs/roles.md)                                                                       |
 | 使用手機         | 一次性 QR 配對、底部抽屜裡的 session 列表與對話                                  | [手機連線](docs/getting-started.md#open-it-from-a-phone-or-tablet)                                  |
 | 管理執行         | 選用的 worktree、終端機、有限額任務、審查與固定 commit 驗證                      | [原生執行](docs/native-execution.md)                                                                |
-
-<details>
-<summary><strong>查看對話面板與手機介面</strong></summary>
-
-<img src="docs/images/session-conversation-desktop.jpg" alt="包含 Markdown、工具呼叫與子代理活動的對話面板" width="100%" />
-
-<p align="center">
-  <img src="docs/images/office-phone.jpg" alt="手機上的辦公室與權限批准卡片" width="240" />
-  <img src="docs/images/sessions-phone.jpg" alt="手機底部抽屜的 session 列表" width="240" />
-</p>
-
-圖片中的 session 均為合成資料，用於展示介面，不代表真實提供者的驗證結果。
-
-</details>
 
 ## 快速開始
 
@@ -106,6 +90,131 @@ pnpm hooks install --project /path/to/repo --remote-approvals
 ```
 
 安裝前請閱讀[會修改哪些檔案](docs/getting-started.md#exact-activity-with-hooks-optional)。遠端批准適用於 Claude Code；Codex 沒有相同的 hook 合約。
+
+## 產品畫面導覽
+
+即時對話列表（Feed）顯示工作狀態、最新回覆與子代理；Session 管理頁顯示提供者、分支與程序資料。Git 提交圖與事件歷史也分開呈現。下表每一項都附有桌面及手機的實際截圖。
+
+| 功能               | 電腦                                                       | 手機                                                  |
+| ------------------ | ---------------------------------------------------------- | ----------------------------------------------------- |
+| 3D 辦公室與小隊    | [查看](docs/images/squad-strings-desktop.zh-TW.jpg)        | [查看](docs/images/office-phone.zh-TW.jpg)            |
+| 即時對話列表 Feed  | [查看](docs/images/conversation-feed-desktop.zh-TW.jpg)    | [查看](docs/images/conversation-feed-phone.zh-TW.jpg) |
+| 對話與工具結果     | [查看](docs/images/session-conversation-desktop.zh-TW.jpg) | [查看](docs/images/conversation-phone.zh-TW.jpg)      |
+| Session 管理資料   | [查看](docs/images/sessions-desktop.zh-TW.jpg)             | [查看](docs/images/sessions-list-phone.zh-TW.jpg)     |
+| Token 與 Git 指標  | [查看](docs/images/kpi-dashboard-desktop.zh-TW.jpg)        | [查看](docs/images/kpi-phone.zh-TW.jpg)               |
+| Git 提交與分支歷史 | [查看](docs/images/git-history-desktop.zh-TW.jpg)          | [查看](docs/images/git-history-phone.zh-TW.jpg)       |
+| 權限請求與批准     | [查看](docs/images/approvals-desktop.zh-TW.jpg)            | [查看](docs/images/approvals-phone.zh-TW.jpg)         |
+| 互動式終端機       | [查看](docs/images/terminals-desktop.zh-TW.jpg)            | [查看](docs/images/terminals-phone.zh-TW.jpg)         |
+| 事件歷史與回放     | [查看](docs/images/event-history-desktop.zh-TW.jpg)        | [查看](docs/images/event-history-phone.zh-TW.jpg)     |
+
+Git 提交圖位於選用的進階工作區。權限畫面使用尚未決定的合成請求；終端機使用專案既有的隔離 PTY fixture，畫面中的「live」指本機連線模式，不代表真實模型呼叫。
+
+<details>
+<summary><strong>電腦：對話列表、Git 歷史與重要功能</strong></summary>
+
+### 即時對話列表 Feed
+
+即時對話列表依「需要你、工作中、剛完成」分組，呈現每個對話的摘要與小隊狀態。
+
+<img src="docs/images/conversation-feed-desktop.zh-TW.jpg" alt="即時對話列表 Feed — 實際桌面介面，合成資料" width="100%" />
+
+### Git 提交與分支歷史
+
+使用合成 Git 儲存庫呈現真實提交線、分支標籤、merge 與 SHA；下方也可查看 worktree 與 Git 健康狀態。
+
+<img src="docs/images/git-history-desktop.zh-TW.jpg" alt="Git 提交與分支歷史 — 實際桌面介面，合成資料" width="100%" />
+
+### 對話與工具結果
+
+<img src="docs/images/session-conversation-desktop.zh-TW.jpg" alt="對話與工具結果 — 實際桌面介面，合成資料" width="100%" />
+
+### 3D 辦公室與小隊
+
+<img src="docs/images/squad-strings-desktop.zh-TW.jpg" alt="3D 辦公室與小隊 — 實際桌面介面，合成資料" width="100%" />
+
+### Session 管理資料
+
+<img src="docs/images/sessions-desktop.zh-TW.jpg" alt="Session 管理資料 — 實際桌面介面，合成資料" width="100%" />
+
+### Token 與 Git 指標
+
+<img src="docs/images/kpi-dashboard-desktop.zh-TW.jpg" alt="Token 與 Git 指標 — 實際桌面介面，合成資料" width="100%" />
+
+### 權限請求與批准
+
+<img src="docs/images/approvals-desktop.zh-TW.jpg" alt="權限請求與批准 — 實際桌面介面，合成資料" width="100%" />
+
+### 互動式終端機
+
+合成 PTY fixture 已啟動並顯示控制權與輸出；沒有啟動付費模型或連接使用者原本的終端機。
+
+<img src="docs/images/terminals-desktop.zh-TW.jpg" alt="互動式終端機 — 實際桌面介面，合成資料" width="100%" />
+
+### 事件歷史與回放
+
+<img src="docs/images/event-history-desktop.zh-TW.jpg" alt="事件歷史與回放 — 實際桌面介面，合成資料" width="100%" />
+
+### 多層樓遠景與 Git 花冠
+
+保留先前的深色、淺色遠景與花冠特寫；這三張是較早拍攝的英語介面，與上方現行介面分開標示。
+
+**深色多層樓遠景**
+
+<img src="docs/images/office-overview-desktop.jpg" alt="深色多層樓遠景 — 較早的英語介面，合成資料" width="100%" />
+
+**淺色多層樓遠景**
+
+<img src="docs/images/office-overview-desktop-light.jpg" alt="淺色多層樓遠景 — 較早的英語介面，合成資料" width="100%" />
+
+**Git 花冠特寫**
+
+<img src="docs/images/office-crown-desktop.jpg" alt="Git 花冠特寫 — 較早的英語介面，合成資料" width="100%" />
+
+</details>
+
+<details>
+<summary><strong>手機：10 張實際功能畫面</strong></summary>
+
+**01 · 對話列表：待處理與執行中 — 02 · 對話列表：其他工作與剛完成**
+
+<p align="center">
+  <img src="docs/images/conversation-feed-phone.zh-TW.jpg" alt="對話列表：待處理與執行中 — 實際手機介面，合成資料" width="280" />
+  <img src="docs/images/conversation-feed-more-phone.zh-TW.jpg" alt="對話列表：其他工作與剛完成 — 實際手機介面，合成資料" width="280" />
+</p>
+
+**03 · 對話與工具結果 — 04 · Git 提交與分支歷史**
+
+<p align="center">
+  <img src="docs/images/conversation-phone.zh-TW.jpg" alt="對話與工具結果 — 實際手機介面，合成資料" width="280" />
+  <img src="docs/images/git-history-phone.zh-TW.jpg" alt="Git 提交與分支歷史 — 實際手機介面，合成資料" width="280" />
+</p>
+
+**05 · 3D 辦公室與小隊 — 06 · Token 與 Git 指標**
+
+<p align="center">
+  <img src="docs/images/office-phone.zh-TW.jpg" alt="3D 辦公室與小隊 — 實際手機介面，合成資料" width="280" />
+  <img src="docs/images/kpi-phone.zh-TW.jpg" alt="Token 與 Git 指標 — 實際手機介面，合成資料" width="280" />
+</p>
+
+**07 · 權限請求與批准 — 08 · 互動式終端機**
+
+<p align="center">
+  <img src="docs/images/approvals-phone.zh-TW.jpg" alt="權限請求與批准 — 實際手機介面，合成資料" width="280" />
+  <img src="docs/images/terminals-phone.zh-TW.jpg" alt="互動式終端機 — 實際手機介面，合成資料" width="280" />
+</p>
+
+**09 · Session 管理資料 — 10 · 事件歷史與回放**
+
+<p align="center">
+  <img src="docs/images/sessions-list-phone.zh-TW.jpg" alt="Session 管理資料 — 實際手機介面，合成資料" width="280" />
+  <img src="docs/images/event-history-phone.zh-TW.jpg" alt="事件歷史與回放 — 實際手機介面，合成資料" width="280" />
+</p>
+
+列表抽屜保留產品原本的半屏高度，前兩張分別呈現頂部與捲動後的對話，不把管理資料卡冒充對話列表。
+
+</details>
+
+工作範例均為合成資料，對話保留原始內容語言；這些介面截圖不代表真實提供者或發布驗證。[完整圖片索引與來源](docs/images/README.md)。
 
 ## 支援範圍與限制
 
