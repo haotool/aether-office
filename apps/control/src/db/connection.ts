@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import commentOnlyChecksums from './comment-only-checksums.json';
+import commentOnlyChecksums from './comment-only-checksums.json' with { type: 'json' };
 import { readFileSync, mkdirSync, chmodSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
