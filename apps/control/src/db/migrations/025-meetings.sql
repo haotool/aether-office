@@ -1,3 +1,4 @@
+-- A meeting is a bounded conversation: its own round budget and deadline, then one recorded decision.
 CREATE TABLE meetings (
   threadId TEXT PRIMARY KEY,
   projectId TEXT NOT NULL REFERENCES projects(id),

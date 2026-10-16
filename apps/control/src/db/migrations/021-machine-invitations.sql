@@ -1,4 +1,5 @@
 ALTER TABLE machines ADD COLUMN allowedProviders TEXT NOT NULL DEFAULT '["demo","claude","codex","acp"]' CHECK(json_valid(allowedProviders));
+-- Workspace roots a machine may use; an empty list means the machine was enrolled locally and is not path-restricted.
 ALTER TABLE machines ADD COLUMN allowedRoots TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(allowedRoots));
 CREATE TABLE machine_invitations (
   id TEXT PRIMARY KEY,

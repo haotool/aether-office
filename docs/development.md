@@ -157,7 +157,8 @@ The original acceptance statements are in Traditional Chinese. A green build is 
 ## Database changes
 
 Add a numbered SQL file to `apps/control/src/db/migrations` (never edit an applied one; checksums are recorded, and an edited one stops the server at start with a message that says so; a
-copy of the database, `control.sqlite.pre-migration-*.sqlite`, is made first and the newest three are kept). Update the
+copy of the database, `control.sqlite.pre-migration-*.sqlite`, is made first and the newest three are kept).
+Comments and whitespace are part of the checksum too. Eight historical comment-removal variants have an exact compatibility allowlist; do not normalize SQL or rewrite stored checksums to bypass a mismatch. Update the
 Zod schemas in `packages/contracts` and add a test that exercises the migration through the service.
 
 ## Adding a capability
