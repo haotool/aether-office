@@ -1,3 +1,4 @@
+-- Mirrors packages/kernel TRANSITIONS (a test checks parity): raw SQL can no longer skip the state machine.
 CREATE TRIGGER work_state_transition BEFORE UPDATE OF state ON work_items
 WHEN NEW.state <> OLD.state AND NOT (
   (OLD.state='backlog' AND NEW.state IN ('ready','cancelled')) OR

@@ -7,6 +7,10 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ## [Unreleased]
 
+### Fixed
+
+- Restore immutable migration SQL and accept only the exact historical comment-removal checksums, so existing databases survive rebuilds and restarts without changing their data or migration records.
+
 ### Changed
 
 - Refresh both README introductions with localized dark control-room covers, the orbital A logo, actual Git-flower and mobile captures, wide office and crown views, a desktop/mobile feature map with actual conversation feeds, Git commit history, approvals, PTY fixtures and ten mobile views, and a clearer path to getting started.

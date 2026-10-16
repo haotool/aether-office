@@ -11,6 +11,7 @@ CREATE TABLE workflow_steps (
   workflowId TEXT NOT NULL REFERENCES workflows(id),
   role TEXT NOT NULL,
   position INTEGER NOT NULL,
+  -- Provider constraints: assignment and review must use these providers when set.
   engineerProvider TEXT,
   reviewerProvider TEXT
 );
