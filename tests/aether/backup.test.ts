@@ -12,52 +12,51 @@ import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { createBackup, restoreBackup } from '../../apps/control/src/backup.js';
 import { Control } from '../../apps/control/src/control.js';
-import { command, fixture } from './fixture.js';
+import { fixture } from './fixture.js';
+import checksums from './fixtures/migration-checksums.json';
 
-it('backs up a live WAL database consistently and restores it into a new directory with identical data', async () => {
-  const directory = mkdtempSync(join(tmpdir(), 'aether-backup-'));
-  try {
-    const f = fixture(join(directory, 'live', 'control.sqlite'));
-    for (const body of ['one', 'two', 'three'])
-      f.control.execute(
-        f.sender.actor,
-        command('message.send', { recipients: [f.recipientId], body, kind: 'inform' }, f.projectId),
-      );
-    expect(f.control.ctx.sqlite.pragma('journal_mode', { simple: true })).toBe('wal');
-
-    const { manifestPath, manifest } = await createBackup(
-      f.control.ctx.sqlite,
-      join(directory, 'backups'),
-    );
-    f.control.execute(
-      f.sender.actor,
-      command(
-        'message.send',
-        { recipients: [f.recipientId], body: 'after', kind: 'inform' },
-        f.projectId,
-      ),
-    );
-    expect(manifest.rows['messages']).toBe(3);
-    expect(manifest.schemaVersions.length).toBeGreaterThan(10);
-    expect(manifest.sha256).toMatch(/^[0-9a-f]{64}$/);
-
-    const restored = restoreBackup(manifestPath, join(directory, 'restored'));
-    const control = new Control(restored.database, { mode: 'demo' });
+it.each(['original', 'withoutComments'] as const)(
+  'backs up and reopens %s migration history twice with identical data',
+  async (history) => {
+    const directory = mkdtempSync(join(tmpdir(), 'aether-backup-'));
     try {
-      expect(
-        (control.ctx.sqlite.prepare('SELECT COUNT(*) AS n FROM messages').get() as { n: number }).n,
-      ).toBe(3);
-      expect(control.ctx.sqlite.pragma('integrity_check', { simple: true })).toBe('ok');
-      expect(control.authenticate(f.owner.token).role).toBe('owner');
-    } finally {
-      control.close();
+      const f = fixture(join(directory, 'live', 'control.sqlite'));
+      const sql = f.control.ctx.sqlite;
+      for (const body of ['one', 'two', 'three']) f.send(body);
+      for (const [version, hashes] of Object.entries(checksums))
+        sql
+          .prepare('UPDATE schema_migrations SET checksum=? WHERE version=?')
+          .run(hashes[history], Number(version));
+      const tables = ['projects', 'messages', 'schema_migrations'];
+      const stored = tables.map((table) => sql.prepare(`SELECT * FROM ${table}`).all());
+      expect(sql.pragma('journal_mode', { simple: true })).toBe('wal');
+
+      const { manifestPath, manifest } = await createBackup(sql, join(directory, 'backups'));
+      f.send('after');
+      expect(manifest.rows['messages']).toBe(3);
+      expect(manifest.schemaVersions.length).toBeGreaterThan(10);
+      expect(manifest.sha256).toMatch(/^[0-9a-f]{64}$/);
+
+      const restored = restoreBackup(manifestPath, join(directory, 'restored'));
+      for (let restart = 0; restart < 2; restart++) {
+        const control = new Control(restored.database, { mode: 'demo' });
+        try {
+          expect(
+            tables.map((table) => control.ctx.sqlite.prepare(`SELECT * FROM ${table}`).all()),
+          ).toEqual(stored);
+          expect(control.ctx.sqlite.pragma('integrity_check', { simple: true })).toBe('ok');
+          expect(control.authenticate(f.owner.token).role).toBe('owner');
+        } finally {
+          control.close();
+        }
+      }
       f.control.close();
+      expect(readdirSync(join(directory, 'restored'))).toContain('control.sqlite');
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
     }
-    expect(readdirSync(join(directory, 'restored'))).toContain('control.sqlite');
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
-  }
-});
+  },
+);
 
 it('refuses tampered backups, non-empty targets, unknown formats and newer schemas, leaving nothing half-restored', async () => {
   const directory = mkdtempSync(join(tmpdir(), 'aether-backup-bad-'));
@@ -86,21 +85,14 @@ it('refuses tampered backups, non-empty targets, unknown formats and newer schem
       'BACKUP_FORMAT_UNSUPPORTED',
     );
 
-    // A backup made by a newer version (unknown applied migration) must be refused after restoring.
     const clean = await createBackup(f.control.ctx.sqlite, join(directory, 'newer'));
-    const future = new (
-      f.control.ctx.sqlite.constructor as new (p: string) => typeof f.control.ctx.sqlite
-    )(join(directory, 'newer', clean.manifest.file));
-    future.prepare("INSERT INTO schema_migrations VALUES (9999,'x',0)").run();
+    const futureFile = join(directory, 'newer', clean.manifest.file);
+    const future = new Control(futureFile, { mode: 'demo' });
+    future.ctx.sqlite.prepare("INSERT INTO schema_migrations VALUES (9999,'x',0)").run();
     future.close();
     const { createHash } = await import('node:crypto');
-    const patched = {
-      ...clean.manifest,
-      sha256: createHash('sha256')
-        .update(readFileSync(join(directory, 'newer', clean.manifest.file)))
-        .digest('hex'),
-    };
-    writeFileSync(clean.manifestPath, JSON.stringify(patched));
+    clean.manifest.sha256 = createHash('sha256').update(readFileSync(futureFile)).digest('hex');
+    writeFileSync(clean.manifestPath, JSON.stringify(clean.manifest));
     expect(() => restoreBackup(clean.manifestPath, join(directory, 'future'))).toThrow(
       'SCHEMA_VERSION_OR_CHECKSUM_MISMATCH',
     );

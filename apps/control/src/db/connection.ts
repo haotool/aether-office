@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3';
+import commentOnlyChecksums from './comment-only-checksums.json' with { type: 'json' };
 import { readFileSync, mkdirSync, chmodSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
@@ -21,6 +22,7 @@ export function backupBeforeMigration(sqlite: Database.Database, filename: strin
 }
 
 type Migration = { version: number; source: string };
+const historicalChecksums: Record<string, string> = commentOnlyChecksums;
 const checksumOf = (source: string) => createHash('sha256').update(source).digest('hex');
 
 function loadMigrations(): Migration[] {
@@ -45,7 +47,8 @@ function assertAppliedMatch(
       throw new Error(
         `SCHEMA_VERSION_OR_CHECKSUM_MISMATCH: migration ${record.version} is applied in this database but unknown to this build; the database was written by a newer version, so update AETHER or restore a backup`,
       );
-    if (checksumOf(migration.source) !== record.checksum)
+    const checksum = checksumOf(migration.source);
+    if (checksum !== record.checksum && historicalChecksums[checksum] !== record.checksum)
       throw new Error(
         `SCHEMA_VERSION_OR_CHECKSUM_MISMATCH: migration ${record.version} was edited after it was applied; restore its original text and put the change in a new numbered migration`,
       );
