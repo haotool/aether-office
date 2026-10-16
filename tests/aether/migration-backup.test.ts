@@ -2,27 +2,24 @@ import { existsSync, mkdtempSync, readdirSync, statSync, utimesSync, writeFileSy
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import {
-  KEPT_PRE_MIGRATION_BACKUPS,
-  backupBeforeMigration,
-  connect,
-} from '../../apps/control/src/db/connection.js';
+import checksums from './fixtures/migration-checksums.json';
+import * as db from '../../apps/control/src/db/connection.js';
 
 const backups = (dir: string) => readdirSync(dir).filter((n) => n.includes('.pre-migration-'));
 
 it('makes the pre-migration copy owner-only and keeps only the newest few', () => {
   const dir = mkdtempSync(join(tmpdir(), 'aether-premig-'));
   const file = join(dir, 'control.sqlite');
-  const { sqlite } = connect(file);
+  const { sqlite } = db.connect(file);
   for (let i = 0; i < 5; i++) {
     const old = join(dir, `control.sqlite.pre-migration-old${i}.sqlite`);
     writeFileSync(old, 'x');
     utimesSync(old, 1_000 + i, 1_000 + i);
   }
   writeFileSync(join(dir, 'unrelated.sqlite'), 'x');
-  backupBeforeMigration(sqlite, file);
+  db.backupBeforeMigration(sqlite, file);
   const kept = backups(dir);
-  expect(kept).toHaveLength(KEPT_PRE_MIGRATION_BACKUPS);
+  expect(kept).toHaveLength(db.KEPT_PRE_MIGRATION_BACKUPS);
   expect(kept).toContain('control.sqlite.pre-migration-old4.sqlite');
   expect(kept).not.toContain('control.sqlite.pre-migration-old0.sqlite');
   expect(existsSync(join(dir, 'unrelated.sqlite'))).toBe(true);
@@ -31,20 +28,28 @@ it('makes the pre-migration copy owner-only and keeps only the newest few', () =
   sqlite.close();
 });
 
-it('says what to do when an applied migration was edited or is unknown', () => {
-  const file = join(mkdtempSync(join(tmpdir(), 'aether-checksum-')), 'control.sqlite');
-  const tamper = (sql: string) => {
-    const { sqlite } = connect(file);
-    sqlite.prepare(sql).run();
+it.each([
+  [2, 'x'],
+  [17, '0'.repeat(64)],
+  [17, checksums['18'].withoutComments],
+] as const)(
+  'refuses an unapproved or wrong-version checksum for migration %s',
+  (version, checksum) => {
+    const file = join(mkdtempSync(join(tmpdir(), 'aether-checksum-')), 'control.sqlite');
+    const { sqlite } = db.connect(file);
+    sqlite
+      .prepare('UPDATE schema_migrations SET checksum=? WHERE version=?')
+      .run(checksum, version);
     sqlite.close();
-  };
-  tamper("UPDATE schema_migrations SET checksum='x' WHERE version=2");
-  expect(() => connect(file)).toThrow(
-    /SCHEMA_VERSION_OR_CHECKSUM_MISMATCH: migration 2 was edited/,
-  );
+    expect(() => db.connect(file)).toThrow(
+      `SCHEMA_VERSION_OR_CHECKSUM_MISMATCH: migration ${version} was edited`,
+    );
+  },
+);
+it('refuses a database written by a newer version', () => {
   const other = join(mkdtempSync(join(tmpdir(), 'aether-newer-')), 'control.sqlite');
-  const { sqlite } = connect(other);
+  const { sqlite } = db.connect(other);
   sqlite.prepare("INSERT INTO schema_migrations VALUES (9999,'x',0)").run();
   sqlite.close();
-  expect(() => connect(other)).toThrow(/migration 9999 is applied in this database but unknown/);
+  expect(() => db.connect(other)).toThrow(/migration 9999 is applied in this database but unknown/);
 });
