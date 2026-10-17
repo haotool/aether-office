@@ -208,8 +208,7 @@ test('a phone shows the 3D office filling the screen, with a floor rail and no t
 }) => {
   const context = await browser.newContext(PHONE);
   const page = await context.newPage();
-  await signIn(page);
-  await page.goto('/office');
+  await signIn(page, '/office');
   const canvas = page.locator('canvas');
   await expect(canvas).toBeVisible({ timeout: 20000 });
   await expect.poll(async () => (await canvas.boundingBox())!.height).toBeGreaterThan(844 * 0.7);
@@ -237,8 +236,7 @@ test('a phone scrolls the 2D list below the view switch and the chips, down to a
     ),
   );
   const page = await context.newPage();
-  await signIn(page);
-  await page.goto('/office');
+  await signIn(page, '/office');
   await page.getByRole('button', { name: '2D', exact: true }).tap();
   const list = page.locator('.office-2d');
   await expect(list.locator('.agent-card').first()).toBeVisible();
@@ -268,8 +266,7 @@ test('a phone on its side gives the scene the screen, and the drawer still switc
     isMobile: true,
   });
   const page = await context.newPage();
-  await signIn(page);
-  await page.goto('/office');
+  await signIn(page, '/office');
   await expect(page.locator('canvas')).toBeVisible({ timeout: 20000 });
   await expect(page.locator('.mobile-menu')).toBeVisible();
   await expect(page.locator('.sidebar')).toBeHidden();
