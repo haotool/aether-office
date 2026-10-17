@@ -32,7 +32,7 @@ Score 95.0, floor 95.0, 100% of the rule weight measured.
 | Import cycles (runtime imports, product source) | `import-cycles` | 0 | 0 | 12 | 0 | pass |
 | Files imported by more than 30 others | `fan-in` | 3 | 0 | 5 | -5 | fail |
 | Exports nothing imports | `dead-exports` | 0 | 0 | 10 | 0 | pass |
-| Code lines over the budget of 146515 | `code-lines` | 0 | 0 | 6 | 0 | pass |
+| Code lines over the budget of 146512 | `code-lines` | 0 | 0 | 6 | 0 | pass |
 | Duplicated code share (limit 3%) | `duplicates` | 0.29% | 3% | 12 | 0 | pass |
 | Uses of the any type (product source) | `any-type` | 0 | 0 | 6 | 0 | pass |
 | Type or lint suppression comments | `suppressions` | 0 | 0 | 6 | 0 | pass |
@@ -86,7 +86,7 @@ apps/runner: 3070 source lines
 apps/web: 28168 source lines
 packages/contracts: 1365 source lines
 packages/kernel: 3452 source lines
-packages/office-scene: 25557 source lines
+packages/office-scene: 25527 source lines
 packages/providers: 2051 source lines
 ```
 
@@ -141,7 +141,7 @@ Score 99.1, floor 99.1, 70% of the rule weight measured.
 **first-load** (-0.9): First-load JavaScript and CSS, transferred (budget 200 KB)
 
 ```text
-  apps/web/dist/assets/index-DKTYO_y7.js:1 80 KB
+  apps/web/dist/assets/index-CiRWR5gP.js:1 79 KB
   apps/web/dist/assets/signals-BiryGzd7.js:1 3 KB
   apps/web/dist/assets/scheduler-CaJXFZeK.js:1 1 KB
   apps/web/dist/assets/react-dom-DkN6JdHT.js:1 1 KB

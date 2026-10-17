@@ -23,8 +23,7 @@ it('reads the local fractional hour of a date', () => {
   expect(hourOf(new Date(2026, 9, 6, 21, 30))).toBe(21.5);
 });
 
-it('draws no motes or shafts on low and fewer on balanced than on high', () => {
-  expect(AIR.low).toEqual({ motes: 0, shafts: 0 });
+it('draws no motes on low and fewer on balanced than on high', () => {
+  expect(AIR.low).toEqual({ motes: 0 });
   expect(AIR.balanced.motes).toBeLessThan(AIR.high.motes);
-  expect(AIR.balanced.shafts).toBeLessThan(AIR.high.shafts);
 });

@@ -61,7 +61,7 @@ function useNavigation(props: OfficeSceneProps, layout: Layout, intro: Intro, co
     pulses: props.pulses ?? [],
     attention,
     intensity,
-    directing: (props.autoCamera ?? true) && !props.reducedMotion,
+    directing: props.autoCamera ?? true,
     resumeMs: compact ? 10_000 : 30_000,
     selectedId: props.selectedId,
     intro,
@@ -286,7 +286,7 @@ export function useSceneModel(props: OfficeSceneProps) {
     hoverEnd,
     ...crowd,
     filming: nav.directed !== null || intro.active,
-    auto: (props.autoCamera ?? true) && !props.reducedMotion,
+    auto: nav.running,
     squadScene: {
       props,
       floor,

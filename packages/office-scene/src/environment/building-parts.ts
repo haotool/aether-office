@@ -18,7 +18,6 @@ export type FloorModel = {
     speed: number;
     phase: number;
   }[];
-  sweepers: { mesh: THREE.Object3D; from: number; to: number; speed: number }[];
   streams: { points: THREE.Points; speed: number; height: number }[];
   holograms: THREE.ShaderMaterial[];
 };
@@ -28,7 +27,6 @@ export const emptyFloorModel = (): FloorModel => ({
   spinners: [],
   pulsers: [],
   orbiters: [],
-  sweepers: [],
   streams: [],
   holograms: [],
 });

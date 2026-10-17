@@ -10,6 +10,9 @@ import {
 } from '../../packages/office-scene/src/environment/building-parts.js';
 import { THEMES } from '../../packages/office-scene/src/environment/building-themes.js';
 
+import { buildFloor, disposeFloor } from '../../packages/office-scene/src/environment/building.js';
+import { defaultLayout } from '../../packages/office-scene/src/environment/layout.js';
+
 const materials = () => createMaterials('#43e6df');
 const meshesIn = (root: THREE.Object3D) => {
   const found: THREE.Mesh[] = [];
@@ -108,17 +111,21 @@ describe('department themes', () => {
     },
   );
 
-  it('builds the same floor twice', () => {
+  it('builds the same floor twice without light planes crossing occupied space', () => {
     const build = () => {
-      const root = new THREE.Group();
-      const model = emptyFloorModel();
-      THEMES.quality(root, materials(), model);
-      return [
-        meshesIn(root).length,
-        model.spinners.length,
-        model.pulsers.length,
-        model.streams.length,
-      ];
+      const model = buildFloor(defaultLayout([]), 0);
+      const meshes = meshesIn(model.group);
+      expect(
+        meshes.filter((mesh) => {
+          const size = boundsOf(mesh).getSize(new THREE.Vector3());
+          return size.x > 40 && size.y < 0.01 && mesh.position.y > 0.1;
+        }),
+      ).toHaveLength(0);
+      const result = [meshes, model.spinners, model.pulsers, model.streams].map(
+        (items) => items.length,
+      );
+      disposeFloor(model);
+      return result;
     };
     expect(build()).toEqual(build());
   });

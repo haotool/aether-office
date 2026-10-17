@@ -86,10 +86,7 @@ function followMember(
   invalidate();
 }
 
-/**
- * The camera is put exactly where the shot's move says, never chased towards it, so a held shot holds. A near shot is
- * reached by a timed, eased glide, a far one by a cut.
- */
+/** Held shots set the camera directly; nearby entries glide and far entries cut. */
 function playShot(
   f: Flight,
   directed: Directed,
@@ -97,11 +94,12 @@ function playShot(
   aspect: number,
   c: Controls,
   camera: Camera,
+  reducedMotion: boolean,
 ) {
   if (f.shot !== directed.startedAt) {
     f.shot = directed.startedAt;
     f.glide =
-      directed.entry === 'fly'
+      !reducedMotion && directed.entry === 'fly'
         ? {
             from: {
               position: camera.position.toArray(),
@@ -116,9 +114,10 @@ function playShot(
   const pose = poseAt(
     directed.shot,
     seats,
-    (now - directed.startedAt) / (directed.shot.seconds * 1000),
+    reducedMotion ? 0.5 : (now - directed.startedAt) / (directed.shot.seconds * 1000),
     aspect,
   );
+  if (reducedMotion) f.glide = null;
   const entering = f.glide;
   const u = entering ? smoothstep(Math.min(1, (now - entering.startedAt) / FLY_MS)) : 1;
   if (entering && u >= 1) f.glide = null;
@@ -279,8 +278,8 @@ export function SceneCamera({
     if (followed.current && !f.goal && !reducedMotion)
       followMember(c, camera, followed.current, delta, invalidate);
     if (directed && !flying) {
-      playShot(f, directed, seats, latestAspect.current, c, camera);
-      invalidate();
+      playShot(f, directed, seats, latestAspect.current, c, camera, reducedMotion);
+      if (!reducedMotion) invalidate();
     }
     if (!directed && easeLensHome(camera, delta)) invalidate();
     const keys = keyboardRef.current;

@@ -126,7 +126,6 @@ function core(root: THREE.Group, m: Materials, model: FloorModel) {
 
 function atmosphere(m: Materials, model: FloorModel, accent: string) {
   drones(m, model);
-  scanSweep(m, model);
   dataColumn(model, accent);
 }
 
@@ -147,14 +146,6 @@ function drones(m: Materials, model: FloorModel) {
   drone(21, 12, 3.4, 0.22, 0);
   drone(14, 8, 4.3, -0.31, 2.1);
   drone(24, 15, 2.6, 0.16, 4.2);
-}
-
-function scanSweep(m: Materials, model: FloorModel) {
-  const sweep = new THREE.Mesh(new THREE.PlaneGeometry(51, 1.2), m.holoStrong);
-  sweep.rotation.x = -Math.PI / 2;
-  sweep.position.set(0, 0.12, -17);
-  model.group.add(sweep);
-  model.sweepers.push({ mesh: sweep, from: -17, to: 17, speed: 5.5 });
 }
 
 function dataColumn(model: FloorModel, accent: string) {
