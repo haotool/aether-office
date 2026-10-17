@@ -2,6 +2,10 @@
 
 ## Unreleased scene hotfix
 
+- Resume automatic framing with one tap after manual camera control, show its actual state, and keep automatic shots static when reduced motion is enabled.
+- Preserve facial details at every model distance, keep hidden mouths beneath curved snouts, and retain a continuous mouth line through expression transitions.
+- Remove the floor scanner that crossed employees and desk legs.
+
 - Keep character models and animations stable while hovering or selecting employees.
 - Remove unoccluded decorative light shafts, lift branch links above employees, narrow the squad light funnel, and replace puppet strings with solid team workstations beside the supervisor.
 - Keep employees upright after handing in work and before departure.

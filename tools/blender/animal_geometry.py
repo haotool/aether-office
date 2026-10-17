@@ -1,13 +1,14 @@
 """The office animals' bodies: one fused fur skin, dressed in a painted uniform, with loose parts on it
 (eyes, mouths, ears, tail, boots, collar). Everything is built from code; there is nothing to hand-edit.
 
-Expressions are swapped, not morphed: each eye and mouth shape is its own small part, and a clip shows one by
-moving it out of the head and hides the others by sinking them in (see FACE_HIDE and animal_clips.py).
+Expression overlays are swapped by moving them out of the head (see FACE_HIDE and animal_clips.py);
+the base mouth line stays on the face while body animation crossfades.
 """
 import math
 import bmesh
 import bpy
 from mathutils import Euler, Matrix, Vector
+from mathutils.bvhtree import BVHTree
 from animal_rig import ao, PROP_REST, TAIL_BONES
 from animal_profiles import PROFILES, UNIFORM
 
@@ -89,6 +90,8 @@ def mesh_part(name, mat, bone, build, bones=None):
     bm = bmesh.new()
     build(bm)
     ob = ao.mesh_object(name, bm, [mat])
+    if bone.split('_')[0] in FACE_PARTS + ['brow'] or name.startswith(('eye', 'mouth', 'tongue', 'nose', 'tooth', 'fang', 'whisker')):
+        ob.vertex_groups.new(name='FaceDetail').add(list(range(len(ob.data.vertices))), 1, 'REPLACE')
     for v in ob.data.vertices:
         for b, w in (bones(v.co) if bones else {bone: 1.0}).items():
             group = ob.vertex_groups.get(b) or ob.vertex_groups.new(name=b)
@@ -97,13 +100,8 @@ def mesh_part(name, mat, bone, build, bones=None):
 
 
 def arc(bm, points, radius):
-    """A thin curved line: capsules joined along `points`, for eyelids and mouths."""
-    for a, b in zip(points, points[1:]):
-        ao.limb(bm, a, b, radius, radius, segs=8, rings=4)
-
-
-def shifted(points, dy):
-    return [(x, y + dy, z) for x, y, z in points]
+    """A continuous curved line without capsule seams."""
+    sweep_tube(bm, [(point, radius) for point in points], segs=8)
 
 
 def smooth_step(v, a, b):
@@ -244,23 +242,26 @@ def eye_parts(P, mats, lay):
 def mouth_parts(P, mats, lay):
     mx, my, mz = lay['mouth']
     half = lay['mouth_half']
-    smile = [(t * half, front_y(P, t * half, mz + .01 * t * t) - .003, mz + .01 * t * t) for t in (-1, -.5, 0, .5, 1)]
-    flat = [(t * half * .7, front_y(P, t * half * .7, mz) - .003, mz - .006) for t in (-1, -.5, 0, .5, 1)]
-    out = [mesh_part('mouth_smile', mats['ink'], 'smile', lambda bm: arc(bm, smile, .0075))]
-    out.append(mesh_part('mouth_flat', mats['ink'], 'flat', lambda bm: arc(bm, shifted(flat, FACE_HIDE), .0075)))
+    (_, _, tip_z), (_, _, tip_h) = ellipsoids(P)[-1]
+    opening_h = min(.035, (mz - tip_z + tip_h) * .6)
+    smile = [(t * half, front_y(P, t * half, mz + .01 * t * t) - .003, mz + .01 * t * t) for t in (i / 4 for i in range(-4, 5))]
+    out = [mesh_part('mouth_smile', mats['ink'], 'smile', lambda bm: arc(bm, smile, .005))]
 
     def open_mouth(bm, small):
-        w, h = (half * .62, .026) if small else (half * .9, .035)
-        y = front_y(P, 0, mz - h * .4) + FACE_HIDE - .008
-        ao.ellipsoid(bm, (0, y, mz - h * .45), (w, .02, h), segs=18, rings=12)
+        w, h = (half * .62, min(.026, opening_h)) if small else (half * .9, opening_h)
+        verts = ao.ellipsoid(bm, (0, 0, mz - h * .45), (w, .006, h), segs=18, rings=12)
+        for v in verts:
+            v.co.y += front_y(P, v.co.x, v.co.z) + FACE_HIDE - .003
 
     def tongue(bm):
-        y = front_y(P, 0, mz - .03) + FACE_HIDE - .014
-        ao.ellipsoid(bm, (0, y, mz - .047), (half * .55, .012, .016), segs=12, rings=8)
+        verts = ao.ellipsoid(bm, (0, 0, mz - opening_h), (half * .55, .004, opening_h * .3), segs=12, rings=8)
+        for v in verts:
+            v.co.y += front_y(P, v.co.x, v.co.z) + FACE_HIDE - .007
 
     out.append(mesh_part('mouth_open', mats['ink'], 'open', lambda bm: open_mouth(bm, False)))
     out.append(mesh_part('tongue_open', mats['pink'], 'open', tongue))
     out.append(mesh_part('mouth_oh', mats['ink'], 'oh', lambda bm: open_mouth(bm, True)))
+    assert all(v.co.y > front_y(P, v.co.x, v.co.z) for part in out[1:] for v in part.data.vertices), 'Hidden mouth crosses the face'
     return out
 
 
@@ -536,7 +537,15 @@ def create(species):
         from animal_forms import undead_parts
         parts = undead_parts(P, mats, lay)
     else:
-        parts = eye_parts(P, mats, lay) + mouth_parts(P, mats, lay) + nose_and_whiskers(P, mats, lay)
+        mouths = mouth_parts(P, mats, lay)
+        surface = BVHTree.FromPolygons([v.co for v in skin.data.vertices], [list(p.vertices) for p in skin.data.polygons])
+        for part in mouths:
+            for vertex in part.data.vertices:
+                x, _, z = vertex.co
+                hit, *_ = surface.ray_cast(Vector((x, -2, z)), Vector((0, 1, 0)))
+                assert hit is not None, 'Mouth misses the face'
+                vertex.co.y += hit.y - front_y(P, x, z)
+        parts = eye_parts(P, mats, lay) + mouths + nose_and_whiskers(P, mats, lay)
     parts += ear_parts(P, mats) + ([tail_part(P, mats)] if P['tail'] != 'none' else [])
     parts += outfit_parts(P, mats) + prop_parts(mats)
     return skin, parts, lay

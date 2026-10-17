@@ -255,7 +255,6 @@ function layouts(m: SceneModules) {
     out.push(
       outline(built.group),
       bare(built.orbiters),
-      bare(built.sweepers),
       bare(built.spinners),
       built.streams.map((s) => [s.speed, s.height]),
     );

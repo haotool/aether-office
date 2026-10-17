@@ -5,24 +5,11 @@ import { AIR, hourOf, tintAt, type AirQuality } from '../environment/air.js';
 import { seeded } from '../environment/seeded.js';
 import { setUniform } from '../environment/uniforms.js';
 
-// The room's air: slow dust motes and a few shafts of light from the rear windows. Each is one draw call, animated by its
-// shader's clock (no per-frame work on the CPU beyond one uniform), tinted by the hour, drawn additively.
-
 const HALF_W = 24;
 const HALF_D = 16;
 const CEILING = 5.4;
 
 const tint = () => new Color(...tintAt(hourOf(new Date())));
-
-function useDisposed(geometry: BufferGeometry, material: ShaderMaterial) {
-  useEffect(
-    () => () => {
-      geometry.dispose();
-      material.dispose();
-    },
-    [geometry, material],
-  );
-}
 
 const MOTE_VERTEX = `
   attribute vec3 phase;
@@ -79,7 +66,13 @@ export function DustMotes({ quality, animate }: { quality: AirQuality; animate: 
     });
     return { geometry: g, material: m };
   }, [count]);
-  useDisposed(geometry, material);
+  useEffect(
+    () => () => {
+      geometry.dispose();
+      material.dispose();
+    },
+    [geometry, material],
+  );
   useFrame(({ clock, size, gl }) => {
     setUniform(material, 'time', animate ? clock.elapsedTime : 0);
     setUniform(material, 'scale', size.height * gl.getPixelRatio() * 0.9);

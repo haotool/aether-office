@@ -1816,14 +1816,20 @@
       "tools/blender/build_animals.py",
       "scripts/validate-assets.mjs"
     ],
-    "testIds": ["e2e/workbench/workbench.spec.ts", "tests/aether/kernel.test.ts"],
+    "testIds": [
+      "e2e/workbench/workbench.spec.ts",
+      "tests/aether/kernel.test.ts",
+      "scripts/validate-assets.mjs",
+      "tests/aether/animal-player.test.ts",
+      "e2e/scene/hotfix.spec.ts"
+    ],
     "evidencePaths": [
       "evidence/assets-validation.json",
       "evidence/e2e-full-workflow-first.log",
       "evidence/renders/fox-3840x2160.json"
     ],
     "blockers": [
-      "The 24 GLB models pass rig, UV, PBR, 24-clip and checksum validation; the performance and VRAM gate is not complete."
+      "All 30 GLBs across eight animals, a ghost and a jiangshi pass rig, UV, PBR and checksum validation; per-family clip counts differ. Performance and VRAM measurements do not establish physical-phone or all-GPU readiness."
     ]
   },
   {
@@ -1858,7 +1864,11 @@
       "tools/blender/build_animals.py",
       "scripts/validate-assets.mjs"
     ],
-    "testIds": ["e2e/workbench/workbench.spec.ts", "tests/aether/kernel.test.ts"],
+    "testIds": [
+      "e2e/workbench/workbench.spec.ts",
+      "tests/aether/kernel.test.ts",
+      "tests/aether/office-scene-building.test.ts"
+    ],
     "evidencePaths": [
       "evidence/assets-validation.json",
       "evidence/e2e-full-workflow-first.log",
@@ -1878,14 +1888,21 @@
       "tools/blender/build_animals.py",
       "scripts/validate-assets.mjs"
     ],
-    "testIds": ["e2e/workbench/workbench.spec.ts", "tests/aether/kernel.test.ts"],
+    "testIds": [
+      "e2e/workbench/workbench.spec.ts",
+      "tests/aether/kernel.test.ts",
+      "scripts/validate-assets.mjs",
+      "tools/blender/audit_animals.py",
+      "tests/aether/animal-player.test.ts",
+      "e2e/scene/hotfix.spec.ts"
+    ],
     "evidencePaths": [
       "evidence/assets-validation.json",
       "evidence/e2e-full-workflow-first.log",
       "evidence/renders/fox-3840x2160.json"
     ],
     "blockers": [
-      "Rig and the 24 clips pass validation; the performance and VRAM gate with every animal loaded is not complete."
+      "Eight animals each have 24 clips; ghost and jiangshi have one each. Facial geometry is protected across all three LODs, mouth overlays follow the actual fused skin, and the front face shares rigid head weights. Full performance and VRAM coverage with every animal loaded on physical phones remains incomplete."
     ]
   },
   {
@@ -1962,7 +1979,7 @@
       "evidence/renders/fox-3840x2160.json"
     ],
     "blockers": [
-      "The 24 models are verified by checksum; the full campus and Earth asset gate is not complete."
+      "All 30 GLBs are verified by checksum; the full campus and Earth asset gate is not complete."
     ]
   },
   {
@@ -1977,7 +1994,13 @@
       "tools/blender/build_animals.py",
       "scripts/validate-assets.mjs"
     ],
-    "testIds": ["e2e/workbench/workbench.spec.ts", "tests/aether/kernel.test.ts"],
+    "testIds": [
+      "e2e/workbench/workbench.spec.ts",
+      "tests/aether/kernel.test.ts",
+      "e2e/scene/director.spec.ts",
+      "e2e/scene/hotfix.spec.ts",
+      "tests/aether/director.test.ts"
+    ],
     "evidencePaths": [
       "evidence/assets-validation.json",
       "evidence/e2e-full-workflow-first.log",
@@ -2171,10 +2194,10 @@
       "apps/web/src/lib/preferences/state.ts",
       "packages/office-scene/src/animals/Animal.tsx"
     ],
-    "testIds": ["e2e/ui/accessibility.spec.ts"],
+    "testIds": ["e2e/ui/accessibility.spec.ts", "e2e/scene/director.spec.ts"],
     "evidencePaths": ["evidence/e2e-full-workflow-first.log"],
     "blockers": [
-      "The product has no camera flights or particles; the preference is honoured by character animation and camera damping"
+      "Automatic framing uses static midpoint poses and immediate cuts under reduced motion; switching the preference clears an in-progress camera glide. The phone journey is browser emulation, not a physical iOS acceptance test."
     ]
   },
   {
@@ -2753,7 +2776,8 @@
       "e2e/scene/director.spec.ts"
     ],
     "blockers": [
-      "Visual quality of the camera moves is judged by eye; only the rules (shot choice, pacing, frame layout) are asserted"
+      "Visual quality of the camera moves is judged by eye; only the rules (shot choice, pacing, frame layout) are asserted",
+      "The phone regression verifies default automatic mode, actual button state, one-tap resume after dragging, and static framing with reduced motion; hardware phone camera acceptance remains unverified."
     ]
   },
   {
