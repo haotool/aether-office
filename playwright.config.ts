@@ -54,16 +54,12 @@ const storageState = {
 };
 export default defineConfig({
   testDir: './e2e',
-  fullyParallel: false,
   workers: 1,
   timeout: 60000,
   retries: Number(process.env['AETHER_E2E_RETRIES'] ?? (process.env['CI'] ? 2 : 0)),
   reporter: [['list'], ['json', { outputFile: 'evidence/e2e-results.json' }]],
   use: {
     baseURL: `http://127.0.0.1:${port}`,
-    // CI installs Playwright's own Chromium; a developer machine uses the installed Chrome.
-    channel: process.env['CI'] ? 'chromium' : 'chrome',
-    headless: true,
     locale: 'zh-TW',
     viewport: { width: 1440, height: 900 },
     trace: 'off',
@@ -73,14 +69,18 @@ export default defineConfig({
   },
   projects: [
     // e2e/ux-matrix is the audit matrix, about 15 minutes of its own (`pnpm run ux:matrix`).
-    { name: 'chrome', testIgnore: /ios-only|ux-matrix/ },
+    {
+      name: 'chrome',
+      testIgnore: /ios-only|ux-matrix/,
+      use: { channel: process.env['CI'] ? 'chromium' : 'chrome' },
+    },
     // WebKit is the engine of every browser on iOS. Opt in once `playwright install webkit` has been run.
     ...(process.env['AETHER_WEBKIT']
       ? [
           {
             name: 'webkit-iphone',
             testMatch: /(touch-flow|responsive)\.spec\.ts/,
-            use: { ...devices['iPhone 15'], browserName: 'webkit' as const, channel: undefined },
+            use: { ...devices['iPhone 15'], browserName: 'webkit' as const },
           },
         ]
       : []),

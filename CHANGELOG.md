@@ -17,6 +17,8 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ### Fixed
 
+- Scope the Playwright Chrome channel to Chrome projects so optional iPhone/WebKit tests can launch.
+
 - Document the persistent LAN setting and reload steps for macOS login services so phone QR pairing can be enabled after login.
 
 - Restore immutable migration SQL and accept only the exact historical comment-removal checksums, so existing databases survive rebuilds and restarts without changing their data or migration records.
