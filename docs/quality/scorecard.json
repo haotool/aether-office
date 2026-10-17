@@ -98,7 +98,7 @@
         },
         {
           "id": "code-lines",
-          "label": "Code lines over the budget of 146518",
+          "label": "Code lines over the budget of 146515",
           "status": "pass",
           "weight": 6,
           "value": 0,
@@ -715,7 +715,7 @@
           "penalty": 0,
           "details": [
             "apps/web/dist/assets/src-K-MFaLr7.js:1 377 KB",
-            "apps/web/dist/assets/index-CYjdjGok.js:1 91 KB",
+            "apps/web/dist/assets/index-DKTYO_y7.js:1 91 KB",
             "apps/web/dist/assets/Terminals-CCQ3Xw4Y.js:1 86 KB",
             "apps/web/dist/assets/TaskDag-CNKlTZId.js:1 56 KB",
             "apps/web/dist/assets/core-CJGtMnx9.js:1 27 KB",
@@ -749,7 +749,7 @@
           "unit": "KB",
           "penalty": 0.9,
           "details": [
-            "apps/web/dist/assets/index-CYjdjGok.js:1 80 KB",
+            "apps/web/dist/assets/index-DKTYO_y7.js:1 80 KB",
             "apps/web/dist/assets/signals-BiryGzd7.js:1 3 KB",
             "apps/web/dist/assets/scheduler-CaJXFZeK.js:1 1 KB",
             "apps/web/dist/assets/react-dom-DkN6JdHT.js:1 1 KB",
@@ -790,7 +790,7 @@
             "apps/web/dist/assets/use-latest-Toba1xOl.js:1 0 KB",
             "apps/web/dist/assets/ClaudeQuota-RKBvkaje.js:1 1 KB",
             "apps/web/dist/assets/use-kpi-7TjPNGAr.js:1 2 KB",
-            "apps/web/dist/assets/index-BIexyyhq.css:1 24 KB",
+            "apps/web/dist/assets/index-ChOeP9N1.css:1 24 KB",
             "apps/web/dist/assets/zh-DzBydsEF.js:1 18 KB"
           ]
         },

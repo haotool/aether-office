@@ -251,7 +251,7 @@ test('a message copies as Markdown and as plain text', async ({ page, context })
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await open(page);
   const reply = page.locator('.conversation .msg.assistant', { hasText: 'The build is' });
-  await reply.hover();
+  await reply.locator('.msg-who').hover();
   await reply.getByRole('button', { name: 'Copy as plain text' }).click();
   const plain = await page.evaluate(() => navigator.clipboard.readText());
   expect(plain).toContain('The build is green.');
