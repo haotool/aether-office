@@ -33,28 +33,13 @@ type NavigationOptions = {
   intro?: IntroTour | undefined;
 };
 
-function useHands(o: NavigationOptions, setFollowing: (id: string | null) => void) {
-  return useTakeOver({
-    resumeMs: o.resumeMs,
-    selectedId: o.selectedId,
-    setFollowing,
-    interruptIntro: o.intro?.interrupt,
-    onUserCamera: o.onUserCamera,
-  });
-}
-
 function useNavigationKeys(
   view: ReturnType<typeof useFloorCamera>,
   hands: ReturnType<typeof useTakeOver>,
-  onToggleAuto: (() => void) | undefined,
+  toggleFollow: () => void,
 ) {
-  const keys = useRef(new Set<string>());
   const { floor, exploded, goToFloor, setExploded } = view;
-  const { setPaused } = hands;
-  const toggleFollow = useCallback(() => {
-    setPaused(false);
-    onToggleAuto?.();
-  }, [setPaused, onToggleAuto]);
+  const keys = useRef(new Set<string>());
   const toggleExploded = useCallback(() => {
     setExploded(!exploded);
     goToFloor(floor, !exploded);
@@ -67,17 +52,27 @@ function useNavigationKeys(
     onToggleExploded: toggleExploded,
     onCamera: hands.userCamera,
   });
-  return { keys, toggleFollow, toggleExploded };
+
+  return { keys, toggleExploded };
 }
 
 export function useSceneNavigation(o: NavigationOptions) {
-  const { agents, layout, focus, intro } = o;
+  const { agents, layout, focus, intro, pulses, attention, intensity } = o;
   const view = useFloorCamera(agents, layout, intro);
   const { floor, exploded, following, fly, goToFloor, setFloor, setExploded } = view;
   const seats = useMemo(() => seatsOf(layout), [layout]);
-  const hands = useHands(o, view.setFollowing);
+  const hands = useTakeOver({
+    ...o,
+    setFollowing: view.setFollowing,
+    interruptIntro: intro?.interrupt,
+  });
   const running = o.directing && !hands.paused && !following && !intro?.active;
-  const { pulses, attention, intensity } = o;
+  const toggleFollow = useCallback(() => {
+    if (!o.directing || running) o.onToggleAuto?.();
+    view.setFollowing(null);
+    intro?.interrupt();
+    hands.setPaused(false);
+  }, [o.directing, o.onToggleAuto, running, view.setFollowing, intro?.interrupt, hands.setPaused]);
   const directed = useDirector({ agents, seats, pulses, attention, intensity }, running, view);
   const { takeOver } = hands;
   const aim = { seats, exploded, fly, takeOver, setFloor, userChoseFloor: view.userChoseFloor };
@@ -85,7 +80,7 @@ export function useSceneNavigation(o: NavigationOptions) {
   const { follow, followPoint } = useFollow(aim, following, view.setFollowing);
   const lookAtScreen = useLookAtScreen(aim);
 
-  const { keys, toggleFollow, toggleExploded } = useNavigationKeys(view, hands, o.onToggleAuto);
+  const { keys, toggleExploded } = useNavigationKeys(view, hands, toggleFollow);
 
   return {
     keys,
@@ -94,7 +89,7 @@ export function useSceneNavigation(o: NavigationOptions) {
     command: view.command,
     directed,
     seats,
-    paused: hands.paused,
+    running,
     perFloor: view.perFloor,
     following,
     follow,
@@ -102,7 +97,6 @@ export function useSceneNavigation(o: NavigationOptions) {
     followPoint,
     pause: hands.pause,
     fly,
-    goToFloor,
     toggleFollow,
     toggleExploded,
     userCamera: hands.userCamera,

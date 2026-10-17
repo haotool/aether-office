@@ -32,11 +32,6 @@ export const Floor = memo(function Floor({
       o.mesh.position.set(Math.cos(t) * o.rx, o.y + Math.sin(t * 2.3) * 0.25, Math.sin(t) * o.rz);
       o.mesh.rotation.y = -t - (Math.PI / 2) * Math.sign(o.speed);
     }
-    for (const w of model.sweepers) {
-      const span = w.to - w.from;
-      // Always drawn (never toggled invisible), so what the GPU holds does not depend on when it is sampled.
-      w.mesh.position.z = w.from + ((clock.current * w.speed) % span);
-    }
     for (const s of model.streams) {
       const attribute = s.points.geometry.getAttribute('position');
       for (let i = 0; i < attribute.count; i++) {

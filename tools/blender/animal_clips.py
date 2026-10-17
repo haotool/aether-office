@@ -73,7 +73,7 @@ def breathe(p, t, n=1, amount=.006):
     return p
 
 
-TAIL_LIFT = (-.03, .08)  # a seated animal's raised tail goes up through the chair back, a drooping one down into the seat
+TAIL_LIFT = (-.03, 0.0)  # a seated animal's raised tail goes up through the chair back, a drooping one down into the seat
 
 
 def tail(p, t, sway=.2, n=1, lift=0.0, phase=0.0):
@@ -90,15 +90,15 @@ def ears(p, t, amount=.06, n=1, back=0.0, out=0.0):
 
 
 def face(p, eye=1.0, joy=0.0, lid=0.0, smile=1.0, open=0.0, oh=0.0, flat=0.0):
-    """How much of each eye and mouth shape shows (0 hidden, 1 fully). The rest face is open eyes and a smile."""
+    """Swap expressions over a permanent smile so crossfading clips never erase the mouth."""
     for side in 'LR':
         p.move(f'eye_{side}', y=FACE_HIDE * (1 - eye))
         p.move(f'joy_{side}', y=-FACE_HIDE * joy)
         p.move(f'lid_{side}', y=-FACE_HIDE * lid)
-    p.move('smile', y=FACE_HIDE * (1 - smile))
-    p.move('open', y=-FACE_HIDE * open)
-    p.move('oh', y=-FACE_HIDE * oh)
-    p.move('flat', y=-FACE_HIDE * flat)
+    mouths = {'smile': smile, 'open': open, 'oh': oh, 'flat': flat}
+    showing = max(mouths, key=mouths.get)
+    for name in ('open', 'oh'):
+        p.move(name, y=-FACE_HIDE * (showing == name))
     return p
 
 

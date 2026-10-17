@@ -1,10 +1,10 @@
 export type AirQuality = 'low' | 'balanced' | 'high';
 
 export const AIR = {
-  low: { motes: 0, shafts: 0 },
-  balanced: { motes: 110, shafts: 3 },
-  high: { motes: 240, shafts: 5 },
-} as const satisfies Record<AirQuality, { motes: number; shafts: number }>;
+  low: { motes: 0 },
+  balanced: { motes: 110 },
+  high: { motes: 240 },
+} as const satisfies Record<AirQuality, { motes: number }>;
 
 const NIGHT = [0.45, 0.68, 1.0] as const;
 const DAY = [1.0, 0.86, 0.62] as const;

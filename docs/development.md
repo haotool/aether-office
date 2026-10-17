@@ -180,7 +180,7 @@ hand-modeled. `tools/blender/` is the source; the `.glb` files in `apps/web/publ
 blender --background --factory-startup --python tools/blender/build_animals.py -- --species all
 
 # Check every seated clip against the desk and chair, and every loop for seams
-blender --background --factory-startup --python tools/blender/audit_animals.py -- --samples 12
+blender --background --factory-startup --python tools/blender/audit_animals.py -- --samples 32
 
 # Render each animal seated from front, side and back for a visual review
 blender --background --factory-startup --python tools/blender/render_review.py -- --out /tmp/review

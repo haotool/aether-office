@@ -40,6 +40,10 @@ def assemble(species):
     with bpy.context.temp_override(object=skin,active_object=skin,selected_objects=[skin]):
         bpy.ops.object.vertex_group_limit_total(group_select_mode='ALL',limit=4)
         bpy.ops.object.vertex_group_normalize_all(group_select_mode='ALL',lock_active=False)
+    face=[v.index for v in skin.data.vertices if v.co.z>lay['mouth'][2]-.05 and v.co.y<-.1]
+    for group in skin.vertex_groups:group.remove(face)
+    skin.vertex_groups['head'].add(face,1,'REPLACE')
+    skin.vertex_groups.new(name='FaceDetail').add(face,1,'REPLACE')
     for bone in rig.data.bones:bone.use_deform=True
     mesh=ao.join(skin,parts);mesh.name=f'Aether_{species}'
     return mesh,rig,lay
@@ -113,6 +117,12 @@ def validate_lod(mesh):
     return duplicate_tris
 
 
+
+def face_points(mesh):
+    face = mesh.vertex_groups['FaceDetail'].index
+    return sorted(tuple(v.co) for v in mesh.data.vertices if any(g.group == face for g in v.groups))
+
+
 def build(species, size):
     started=time.time();bpy.context.preferences.filepaths.save_version=0;OUT.mkdir(parents=True,exist_ok=True);TEXTURES.mkdir(parents=True,exist_ok=True)
     mesh,rig,lay=assemble(species);images=bake(mesh,species,size)
@@ -127,10 +137,16 @@ def build(species, size):
     for polygon in mesh.data.polygons:polygon.material_index=0
     before=ao.tris(mesh);mesh.data.validate();assert ao.tris(mesh)==before,'Validation changed geometry'
     lods=[]
+    face=mesh.vertex_groups['FaceDetail'].index
+    protected={v.index for v in mesh.data.vertices if any(g.group==face for g in v.groups)}
+    face_tris=sum(len(p.vertices)-2 for p in mesh.data.polygons if all(v in protected for v in p.vertices))
+    mesh.vertex_groups.new(name='LodBody').add([v.index for v in mesh.data.vertices if v.index not in protected],1,'REPLACE')
+    expected_face=face_points(mesh)
     original=mesh.data.copy()
     for lod,ratio in [(0,1),(1,.35),(2,.085)]:
         if lod:
-            mesh.data=original.copy();decimate=mesh.modifiers.new('Runtime_LOD','DECIMATE');decimate.ratio=ratio;decimate.use_collapse_triangulate=True
+            mesh.data=original.copy();decimate=mesh.modifiers.new('Runtime_LOD','DECIMATE');decimate.ratio=(face_tris+(before-face_tris)*ratio)/before;decimate.use_collapse_triangulate=True
+            decimate.vertex_group='LodBody';decimate.vertex_group_factor=1
             while list(mesh.modifiers).index(decimate)>0:
                 with bpy.context.temp_override(object=mesh, active_object=mesh):bpy.ops.object.modifier_move_up(modifier=decimate.name)
             bpy.context.view_layer.objects.active=mesh;ao.apply_modifier(mesh,decimate.name)
@@ -138,6 +154,7 @@ def build(species, size):
             # Far away animals do not need the close-up texture; every LOD GLB embeds its own copy.
             for image in images.values():image.scale(512,512)
         duplicate_tris=validate_lod(mesh)
+        assert face_points(mesh)==expected_face, 'LOD changed facial geometry'
         path=OUT/f'{species}-lod{lod}.glb';export(path,rig)
         lods.append({'level':lod,'file':path.name,'sha256':digest(path),'triangles':ao.tris(mesh),'duplicateTrianglesRemoved':duplicate_tris,'bytes':path.stat().st_size})
     bounds=[list(mesh.matrix_world@Vector(c)) for c in mesh.bound_box]
