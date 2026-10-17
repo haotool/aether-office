@@ -32,7 +32,7 @@ Score 95.0, floor 95.0, 100% of the rule weight measured.
 | Import cycles (runtime imports, product source) | `import-cycles` | 0 | 0 | 12 | 0 | pass |
 | Files imported by more than 30 others | `fan-in` | 3 | 0 | 5 | -5 | fail |
 | Exports nothing imports | `dead-exports` | 0 | 0 | 10 | 0 | pass |
-| Code lines over the budget of 146519 | `code-lines` | 0 | 0 | 6 | 0 | pass |
+| Code lines over the budget of 146518 | `code-lines` | 0 | 0 | 6 | 0 | pass |
 | Duplicated code share (limit 3%) | `duplicates` | 0.29% | 3% | 12 | 0 | pass |
 | Uses of the any type (product source) | `any-type` | 0 | 0 | 6 | 0 | pass |
 | Type or lint suppression comments | `suppressions` | 0 | 0 | 6 | 0 | pass |
