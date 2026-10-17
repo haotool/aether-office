@@ -25,6 +25,7 @@ export type DrawSquad = {
   deskX: number;
   deskZ: number;
   deskRotation: number;
+  podRotation: number;
   side: 1 | -1;
   accent: string;
   overflow: number;
@@ -74,6 +75,7 @@ function drawZone(
     deskX: desk.x,
     deskZ: desk.z,
     deskRotation: desk.rotation,
+    podRotation: zone.rotation,
     side: handoverSide(desk, zone.rect),
     accent: departmentAt(zone.rect.floor).accent,
     overflow: frame.members.filter(

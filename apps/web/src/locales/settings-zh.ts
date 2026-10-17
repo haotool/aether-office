@@ -94,7 +94,7 @@ export const settingsZh = {
     '關閉 3D 辦公室裡所有裝飾性的小動畫；小隊效果仍保留，但不動。系統要求減少動態時預設開啟。',
   lifeCalmOn: '平靜模式已開啟：下方各類都不會顯示',
   stLifeRelationLabel: '關係效果',
-  stLifeRelationDesc: '小隊與其子代理：區域、光束、提線與交付。',
+  stLifeRelationDesc: '小隊與其子代理：區域、團隊工作桌、光束與交付。',
   stStringsLabel: '提線',
   stStringsDesc:
     '從控制桿連到每位工作中子代理的細光線。每次呼叫工具時繃緊，休息時放鬆。低畫質時不顯示，平靜模式下靜止。',

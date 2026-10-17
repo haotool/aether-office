@@ -153,7 +153,7 @@ export type HandoverPlan = {
 };
 
 export type MemberPose = {
-  clip: 'stand_up' | 'walk' | 'idle' | 'wave' | null;
+  clip: 'stand_up' | 'walk' | 'idle' | null;
   x: number;
   z: number;
   yaw: number;
@@ -183,7 +183,7 @@ function leavingPose({ route, t }: HandoverPlan, elapsed: number): MemberPose {
   const waved = elapsed - t.stampAt;
   if (waved < WAVE_MS)
     return pose(spot, route.face + shortest(route.face, out) * Math.min(1, waved / TURN_MS), {
-      clip: 'wave',
+      clip: 'idle',
       carrying: false,
     });
   const walked = ((waved - WAVE_MS) / 1000) * WALK_SPEED;

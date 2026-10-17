@@ -124,27 +124,10 @@ function core(root: THREE.Group, m: Materials, model: FloorModel) {
   );
 }
 
-function atmosphere(root: THREE.Group, m: Materials, model: FloorModel, accent: string) {
-  lightShafts(root, m);
+function atmosphere(m: Materials, model: FloorModel, accent: string) {
   drones(m, model);
   scanSweep(m, model);
   dataColumn(model, accent);
-}
-
-function lightShafts(root: THREE.Group, m: Materials) {
-  for (const [x, z] of [
-    [-16, -3],
-    [16, -3],
-    [-17, 11],
-    [16, 11],
-    [-17, -13],
-    [16, -13],
-  ] as const) {
-    const cone = new THREE.Mesh(new THREE.ConeGeometry(1.7, 5, 24, 1, true), m.holo);
-    cone.position.set(x, 2.55, z);
-    cone.rotation.x = Math.PI;
-    root.add(cone);
-  }
 }
 
 function drones(m: Materials, model: FloorModel) {
@@ -207,7 +190,7 @@ export function buildFloor(layout: Layout, floorIndex: number): FloorModel {
   shell(root, m);
   core(root, m, model);
   THEMES[department.id](root, m, model);
-  atmosphere(root, m, model, department.accent);
+  atmosphere(m, model, department.accent);
   for (const object of layout.objects) {
     if ((object.floor ?? 0) !== floorIndex || object.type === 'squad') continue;
     const group = new THREE.Group();

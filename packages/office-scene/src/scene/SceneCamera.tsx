@@ -16,7 +16,7 @@ export type FlyTo = {
 const MAX_DISTANCE = 300;
 const HOME_FOV = 38;
 
-const smoothstep = (t: number) => t * t * (3 - 2 * t);
+const smoothstep = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
 const lerp3 = (a: V3, b: V3, u: number): V3 => [
   MathUtils.lerp(a[0], b[0], u),
   MathUtils.lerp(a[1], b[1], u),
@@ -45,6 +45,7 @@ function holdTour(c: Controls, camera: Camera, tour: Pose) {
   camera.position.set(...tour.position);
   c.target.set(...tour.target);
   setFov(camera, tour.fov);
+  c.maxDistance = Math.max(MAX_DISTANCE, camera.position.distanceTo(c.target));
   c.update();
 }
 
@@ -168,7 +169,7 @@ function flyByKeys(
     const next = MathUtils.clamp(
       offset.length() * Math.exp(-dolly * 1.1 * delta),
       MIN_DISTANCE,
-      MAX_DISTANCE,
+      c.maxDistance,
     );
     camera.position.copy(c.target).add(offset.setLength(next));
     f.goal = null;
@@ -288,7 +289,7 @@ export function SceneCamera({
       invalidate();
     }
   });
-  return <CameraControls controls={controls} damping={!reducedMotion} />;
+  return <CameraControls controls={controls} damping={!reducedMotion && !directed && !introPose} />;
 }
 
 function CameraControls({
@@ -298,6 +299,8 @@ function CameraControls({
   controls: RefObject<ComponentRef<typeof OrbitControls> | null>;
   damping: boolean;
 }) {
+  const camera = useThree((s) => s.camera);
+  const distance = controls.current ? camera.position.distanceTo(controls.current.target) : 0;
   return (
     <OrbitControls
       ref={controls}
@@ -305,7 +308,7 @@ function CameraControls({
       enableDamping={damping}
       dampingFactor={0.07}
       minDistance={MIN_DISTANCE}
-      maxDistance={MAX_DISTANCE}
+      maxDistance={Math.max(MAX_DISTANCE, distance)}
       maxPolarAngle={Math.PI / 2.02}
       minPolarAngle={0.08}
       zoomSpeed={1.15}

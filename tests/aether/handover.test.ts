@@ -126,7 +126,7 @@ describe('the timeline', () => {
     expect(far.speed).toBeGreaterThan(1.2);
   });
 
-  it('seats the carrier with the folder until it is time, then stands, walks, faces the tray, waves and goes', () => {
+  it('seats the carrier with the folder until it is time, then stands, walks, faces the tray, pauses upright and goes', () => {
     const queued = timeline('walk', 2000, plan.route);
     const waiting = memberAt({ ...plan, t: queued }, 1000);
     expect(waiting).toMatchObject({ clip: null, x: 0, z: 0, carrying: true });
@@ -140,7 +140,7 @@ describe('the timeline', () => {
     expect(present.x).toBeCloseTo(spot.x, 5);
     expect(present.z).toBeCloseTo(spot.z, 5);
     expect(memberAt(plan, t.placeAt + 100)).toMatchObject({ clip: 'idle', carrying: false });
-    expect(memberAt(plan, t.stampAt + 100)).toMatchObject({ clip: 'wave', carrying: false });
+    expect(memberAt(plan, t.stampAt + 100)).toMatchObject({ clip: 'idle', carrying: false });
     expect(memberAt(plan, t.stampAt + WAVE_MS + 500)).toMatchObject({ clip: 'walk' });
     expect(memberAt(plan, t.total + 1).gone).toBe(true);
     expect(memberAt(plan, t.total - 1).gone).toBe(false);

@@ -155,55 +155,16 @@ const stringLayers = (page: Page) =>
     return rig ? found : -1;
   });
 
-test.describe('puppet strings', () => {
-  const base = 'perf=1&squad=3&tools=900';
-  const drawn = async (
-    page: Page,
-    expected: 0 | 1,
-    query: string,
-    prefs: Record<string, unknown> = {},
-  ) => {
-    await enter(page, `${base}${query}`, prefs);
-    await page.waitForFunction(() => '__aetherPerfRig' in window, undefined, { timeout: 30000 });
-    if (expected) await expect.poll(() => stringLayers(page), { timeout: 30000 }).toBe(expected);
-    else {
-      await frames(page, 150);
-      expect(await stringLayers(page)).toBe(0);
-    }
-  };
-
-  test('are one draw for all the strings of the scene', async ({ page }) => {
-    await drawn(page, 1, '');
-  });
-
-  test('are not drawn on the low tier', async ({ page }) => {
-    await drawn(page, 0, '', { quality: 'low' });
-  });
-
-  test('can be turned off by their setting and by the relation effects', async ({ page }) => {
-    await drawn(page, 0, '', { strings: false });
-  });
-
-  test('go with the relation effects', async ({ page }) => {
-    await drawn(page, 0, '&relation=0');
-  });
-
-  test('stay, still, in Calm mode and with reduced motion', async ({ page }) => {
-    await drawn(page, 1, '', { life: { calm: true } });
-  });
-
-  test('have a switch in Office settings that is saved', async ({ page }) => {
-    await enter(page, '');
-    await page.goto('/settings/office');
-    const strings = page.getByRole('switch', { name: 'Puppet strings', exact: true });
-    await expect(strings).toBeChecked();
-    await strings.uncheck();
-    const saved = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem('aether-ui-preferences') ?? '{}'),
-    );
-    expect(saved.state.strings).toBe(false);
-    await expect(strings).not.toBeChecked();
-  });
+test('team workstations replace puppet strings, including old saved preferences', async ({
+  page,
+}) => {
+  await enter(page, 'perf=1&squad=3&tools=900', { strings: true });
+  await page.waitForFunction(() => '__aetherPerfRig' in window, undefined, { timeout: 30000 });
+  await frames(page, 150);
+  expect(await stringLayers(page)).toBe(0);
+  await expect(page.getByRole('button', { name: /^Squad of / })).toBeAttached();
+  await page.goto('/settings/office');
+  await expect(page.getByRole('switch', { name: 'Puppet strings', exact: true })).toHaveCount(0);
 });
 
 test('the beam says it follows tokens when subagents report them, and the zone label reads the rate out', async ({

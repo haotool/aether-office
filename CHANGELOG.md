@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased scene hotfix
+
+- Keep character models and animations stable while hovering or selecting employees.
+- Remove unoccluded decorative light shafts, lift branch links above employees, narrow the squad light funnel, and replace puppet strings with solid team workstations beside the supervisor.
+- Keep employees upright after handing in work and before departure.
+- Keep camera transition covers transparent when reduced motion disables their fade.
+- Aim automatic floor shots at present employees, reject departed message recipients, and ease camera motion at the flower crown while keeping its petals and halo inside the frame.
+
 [Documentation](docs/README.md) · [Project](README.md)
 
 All notable changes are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the

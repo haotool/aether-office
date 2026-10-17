@@ -3,13 +3,12 @@ import { BufferGeometry, Float32BufferAttribute, type InstancedMesh } from 'thre
 import type { Quality } from '../scene/scene-types.js';
 import { createBeam, createDotMaterial } from './beam-shader.js';
 import { sealGeometry, sealMaterial } from './handover/handover-art.js';
-import { createStringLines } from './puppet/string-lines.js';
 import { art, squadMaterials, withColors } from './squad-art.js';
 import { createZoneDecal } from './zone-shader.js';
 
 /**
  * The squad layer's shader programs, linked while the scene loads instead of when the first subagent shows up, so the
- * first appearance does not stall. The strings and points are left out on the low tier, which never shows them.
+ * first appearance does not stall. Points are left out on the low tier.
  */
 export function SquadWarm({ quality, zh }: { quality: Quality; zh: boolean }) {
   const parts = art();
@@ -18,11 +17,6 @@ export function SquadWarm({ quality, zh }: { quality: Quality; zh: boolean }) {
   const solidMesh = useRef<InstancedMesh>(null);
   const beam = useMemo(createBeam, []);
   const decal = useMemo(createZoneDecal, []);
-  const strings = useMemo(() => {
-    const made = createStringLines();
-    made.lines.visible = false; // a scene walk that counts the drawn strings must not count this copy
-    return made;
-  }, []);
   const dots = useMemo(
     () => ({
       geometry: new BufferGeometry().setAttribute('position', new Float32BufferAttribute(3, 3)),
@@ -36,22 +30,21 @@ export function SquadWarm({ quality, zh }: { quality: Quality; zh: boolean }) {
   }, []);
   useEffect(
     () => () => {
-      for (const owned of [beam, decal, strings, dots]) {
+      for (const owned of [beam, decal, dots]) {
         owned.geometry.dispose();
         owned.material.dispose();
       }
     },
-    [beam, decal, strings, dots],
+    [beam, decal, dots],
   );
   const full = quality !== 'low';
   return (
     <group visible={false}>
       <instancedMesh ref={glowMesh} args={[parts.ring, glow, 1]} visible={false} />
-      <instancedMesh ref={solidMesh} args={[parts.dressing, solid, 1]} visible={false} />
+      <instancedMesh ref={solidMesh} args={[parts.stool, solid, 1]} visible={false} />
       <instancedMesh args={[beam.geometry, beam.material, 1]} visible={false} />
       <instancedMesh args={[decal.geometry, decal.material, 1]} visible={false} />
       <mesh args={[sealGeometry(), sealMaterial(zh, 'received')]} visible={false} />
-      {full && <primitive object={strings.lines} dispose={null} />}
       {full && <points args={[dots.geometry, dots.material]} visible={false} />}
     </group>
   );

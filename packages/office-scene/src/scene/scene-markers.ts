@@ -56,7 +56,7 @@ export function beamsOf(
     return [
       {
         id: agent.id,
-        from: [desk.x, y + 1.45, desk.z - 0.3] as Point,
+        from: [desk.x, y + 2.7, desk.z - 0.3] as Point,
         to: [0, y + 5.4, 0] as Point,
         color: beamColor(info),
         flowing: ACTIVE.includes(agent.activity),

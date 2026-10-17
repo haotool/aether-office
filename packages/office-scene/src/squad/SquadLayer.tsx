@@ -9,7 +9,6 @@ import { SquadMember, type MemberActions } from './SquadMember.js';
 import { SquadZones } from './SquadZones.js';
 import { SupervisorDesk } from './SupervisorDesk.js';
 import { Handover } from './handover/index.js';
-import { PuppetStrings, stringsEnabled } from './puppet/index.js';
 import { CHARACTER_BUDGET, type DrawSquad } from './squad-draw.js';
 import type { Point2 } from './squad-glide.js';
 import type { SquadSceneContext } from './squad-scene.js';
@@ -68,16 +67,6 @@ function SquadEffects({ squad, scene, squads, podPos }: SquadEffectsProps) {
       />
       {relation && <SupervisorDesk squads={squads} exploded={exploded} />}
       {relation && <Handover squads={squads} frame={squad} exploded={exploded} zh={scene.zh} />}
-      {stringsEnabled(quality, prefs) && (
-        <PuppetStrings
-          squads={squads}
-          frame={squad}
-          exploded={exploded}
-          simulate={!still}
-          quality={quality}
-          podPos={podPos}
-        />
-      )}
       {relation && (
         <SquadBeam
           squads={squads}
