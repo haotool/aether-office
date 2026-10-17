@@ -172,6 +172,21 @@ accepted only when addressed to a private-network address on the same port, so a
 machine is refused (this is what stops DNS rebinding). The connection is plain HTTP and the token crosses the network
 unencrypted: use a network you trust, or put a TLS tunnel such as Tailscale in front. See [security](security.md).
 
+### macOS login service
+
+For an existing `com.haotool.aether-office` LaunchAgent, set `AETHER_HOST` to `0.0.0.0` in the
+plist's `EnvironmentVariables` dictionary. The service reads its environment from the plist when launched; an export in
+a terminal does not change the running login service. Keep its working directory and data directory as configured.
+Reload the existing service after saving the plist:
+
+```sh
+launchctl bootout "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.haotool.aether-office.plist"
+launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.haotool.aether-office.plist"
+```
+
+Then reopen **Open on your phone** to generate a fresh QR code. If it still says local connections only, check the
+running service's environment with `launchctl print "gui/$(id -u)/com.haotool.aether-office"`.
+
 ## Upgrading
 
 Pull, then `pnpm install --frozen-lockfile` and `pnpm build`, and **restart the control plane** (`pnpm start`). The running
