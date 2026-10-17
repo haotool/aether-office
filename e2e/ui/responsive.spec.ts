@@ -1,6 +1,7 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Request } from '@playwright/test';
 import { signIn } from '../support/sign-in.js';
 import { PAGES } from '../support/pages.js';
+import { zh } from '../../apps/web/src/locales/zh.js';
 import { mkdirSync } from 'node:fs';
 
 const VIEWPORTS = [
@@ -15,33 +16,23 @@ const VIEWPORTS = [
   { name: 'desktop', width: 1440, height: 900, touch: false },
   { name: 'desktop-wide', width: 1920, height: 1080, touch: false },
 ] as const;
-const TYPE_FLOOR = 11;
-const TOUCH_TARGET = 36;
-
-async function login(page: Page) {
-  await signIn(page);
-  await expect(page.locator('main')).toBeVisible();
-  const projects = (await (await page.request.get('/api/projects')).json()) as { id: string }[];
-  return projects[0]!.id;
-}
+const PHONE = {
+  viewport: { width: 390, height: 844 },
+  hasTouch: true,
+  isMobile: true,
+};
 
 function audit({ touch, floor, target }: { touch: boolean; floor: number; target: number }) {
   const problems: string[] = [];
   const width = document.documentElement.clientWidth;
-  const label = (el: Element) =>
-    `${el.tagName.toLowerCase()}${el.className ? `.${String(el.className).trim().split(/\s+/)[0]}` : ''} "${(
-      el.getAttribute('aria-label') ||
-      el.textContent ||
-      ''
-    )
-      .trim()
-      .slice(0, 24)}"`;
+  const label = (el: Element) => {
+    const text = (el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 24);
+    return `${el.tagName.toLowerCase()}.${el.classList[0] ?? ''} "${text}"`;
+  };
   const shown = (el: Element) => {
-    const box = el.getBoundingClientRect();
-    const style = getComputedStyle(el);
-    return (
-      box.width > 0 && box.height > 0 && style.visibility !== 'hidden' && style.display !== 'none'
-    );
+    const { width, height } = el.getBoundingClientRect();
+    const { visibility, display } = getComputedStyle(el);
+    return width > 0 && height > 0 && visibility !== 'hidden' && display !== 'none';
   };
   if (document.documentElement.scrollWidth - width > 1)
     problems.push(`page scrolls sideways by ${document.documentElement.scrollWidth - width}px`);
@@ -169,19 +160,38 @@ for (const viewport of VIEWPORTS)
         JSON.stringify({ state: { locale: 'zh-TW', quality: 'low', view: '2d' }, version: 0 }),
       ),
     );
+    const pending = new Set<Request>();
+    page.on('request', (r) => {
+      if (r.resourceType() !== 'eventsource') pending.add(r);
+    });
+    page.on('requestfinished', (r) => pending.delete(r));
+    page.on('requestfailed', (r) => pending.delete(r));
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    const projectId = await login(page);
+    await signIn(page);
     mkdirSync('evidence/screenshots', { recursive: true });
     const failures: string[] = [];
     for (const name of PAGES) {
-      await page.goto(`/${name}?project=${projectId}`);
-      await expect(page.locator('main')).toBeVisible();
-      await page.waitForLoadState('networkidle');
+      // Document unloads cancel streams that WebKit reports as access-control errors.
+      await page.evaluate((path) => {
+        history.pushState(history.state, '', path);
+        dispatchEvent(new PopStateEvent('popstate', { state: history.state }));
+      }, `/${name}`);
+      if (name === 'office') await expect(page.locator('.office-2d')).toBeVisible();
+      else {
+        const title = {
+          ...zh,
+          agents: zh.team,
+          sessions: zh.sessionsPage,
+          knowledge: zh.knowledgeTitle,
+        }[name];
+        await expect(page.locator('main h1:visible').first()).toHaveText(title);
+      }
+      await expect.poll(() => pending.size).toBe(0);
       const problems = await page.evaluate(audit, {
         touch: viewport.touch,
-        floor: TYPE_FLOOR,
-        target: TOUCH_TARGET,
+        floor: 11,
+        target: 36,
       });
       for (const p of problems.slice(0, 6)) failures.push(`${name}: ${p}`);
       await page.screenshot({
@@ -196,13 +206,9 @@ for (const viewport of VIEWPORTS)
 test('a phone shows the 3D office filling the screen, with a floor rail and no text over it', async ({
   browser,
 }) => {
-  const context = await browser.newContext({
-    viewport: { width: 390, height: 844 },
-    hasTouch: true,
-    isMobile: true,
-  });
+  const context = await browser.newContext(PHONE);
   const page = await context.newPage();
-  await login(page);
+  await signIn(page);
   await page.goto('/office');
   const canvas = page.locator('canvas');
   await expect(canvas).toBeVisible({ timeout: 20000 });
@@ -223,11 +229,7 @@ test('a phone shows the 3D office filling the screen, with a floor rail and no t
 test('a phone scrolls the 2D list below the view switch and the chips, down to a card above the new-task button', async ({
   browser,
 }) => {
-  const context = await browser.newContext({
-    viewport: { width: 390, height: 844 },
-    hasTouch: true,
-    isMobile: true,
-  });
+  const context = await browser.newContext(PHONE);
   await context.addInitScript(() =>
     window.localStorage.setItem(
       'aether-ui-preferences',
@@ -235,7 +237,7 @@ test('a phone scrolls the 2D list below the view switch and the chips, down to a
     ),
   );
   const page = await context.newPage();
-  await login(page);
+  await signIn(page);
   await page.goto('/office');
   await page.getByRole('button', { name: '2D', exact: true }).tap();
   const list = page.locator('.office-2d');
@@ -266,7 +268,7 @@ test('a phone on its side gives the scene the screen, and the drawer still switc
     isMobile: true,
   });
   const page = await context.newPage();
-  await login(page);
+  await signIn(page);
   await page.goto('/office');
   await expect(page.locator('canvas')).toBeVisible({ timeout: 20000 });
   await expect(page.locator('.mobile-menu')).toBeVisible();
