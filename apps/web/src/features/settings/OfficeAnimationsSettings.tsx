@@ -100,16 +100,6 @@ export function OfficeAnimationsSettings() {
         id="lifeRelation"
         control={<Switch checked={life.relation} onChange={(relation) => setLife({ relation })} />}
       />
-      <Row
-        id="puppetStrings"
-        control={
-          <Switch
-            checked={prefs.strings}
-            disabled={!life.relation}
-            onChange={(strings) => prefs.set({ strings })}
-          />
-        }
-      />
       <LifeKinds life={life} setLife={setLife} />
       <Row
         id="lifeFrequency"

@@ -3,8 +3,6 @@ import type { Vec3 } from './verlet.js';
 export type Chair = { x: number; z: number; yaw: number; y: number };
 type Anchors = { cross: Vec3; head: Vec3; handL: Vec3; handR: Vec3 };
 
-export const MASTER_Y = 2.25;
-
 const CROSS: Vec3 = [0, 2.7, 0];
 const HEAD: Vec3 = [0, 1.46, 0];
 const HAND_L: Vec3 = [-0.3, 0.7, -0.26];

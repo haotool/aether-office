@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  art,
   finishInstances,
   withColors,
   writeInstance,
@@ -69,4 +70,12 @@ describe('instance writes', () => {
     finishInstances(m, 1, false);
     expect(m.count).toBe(1);
   });
+});
+
+it('fits solid team workstations inside the existing seat pitch without coplanar overlaps', () => {
+  const { stool } = art();
+  stool.computeBoundingBox();
+  const bounds = stool.boundingBox!;
+  expect(bounds.max.x - bounds.min.x).toBeLessThan(1.6);
+  expect(bounds.max.z - bounds.min.z).toBeLessThan(1.6);
 });

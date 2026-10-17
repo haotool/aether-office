@@ -85,10 +85,10 @@ describe('arrival', () => {
 describe('leaving', () => {
   const { plan } = planLeave(grid, chair, 0);
 
-  it('is a departure from the pod into the core: stand, wave, walk, sink', () => {
+  it('is a departure from the pod into the core: stand, pause, walk, sink', () => {
     expect(plan.points[0]).toEqual({ x: 0, z: 0 });
     expect(departureAt(plan, 100).clip).toBe('stand_up');
-    expect(departureAt(plan, STAND_MS + 100).clip).toBe('wave');
+    expect(departureAt(plan, STAND_MS + 100).clip).toBe('idle');
     expect(departureAt(plan, STAND_MS + WAVE_MS + 100).clip).toBe('walk');
     expect(departureAt(plan, leaveDuration(planLeave(grid, chair, 0)) + 1000).gone).toBe(true);
     expect(leaveDuration(planLeave(grid, chair, 0))).toBeGreaterThan(STAND_MS + WAVE_MS);

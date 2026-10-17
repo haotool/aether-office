@@ -1,4 +1,4 @@
-import { crownTop } from '../core/crown-layout.js';
+import { MAX_TIERS, crownTop } from '../core/crown-layout.js';
 import { EXPLODED_GAP, FLOOR_HEIGHT } from '../environment/building.js';
 import { FLOORS } from '../environment/layout.js';
 import type { Pose, V3 } from '../core/shot-camera.js';
@@ -134,25 +134,34 @@ const orbit = (t: number, b: number): Pose => ({
   fov: FOV,
 });
 
-function rise(u: number, b: number, tiers: number): Pose {
-  const { roof, bloom, middle } = crownHeights(tiers);
-  const hold = Math.max(HOLD_MIN_RADIUS, ((bloom - roof - 6 + 12) / 2 / HALF_FOV_TAN) * 1.1);
+function rise(u: number, aspect: number, tiers: number): Pose {
+  const b = farther(aspect);
+  const { roof, bloom } = crownHeights(tiers);
+  // Include the petals and widest halo, not only the stem tip.
+  const radius = tiers > 0 ? (11 + 11 * Math.min(1, tiers / MAX_TIERS)) * 2.6 : 28;
+  const top = bloom + radius * 0.7;
+  const middle = (roof + top) / 2;
+  const hold = Math.max(
+    HOLD_MIN_RADIUS,
+    1.2 * ((top - roof) / 2 / HALF_FOV_TAN + radius),
+    1.2 * (radius / (HALF_FOV_TAN * Math.max(0.1, aspect)) + radius),
+  );
   const e = smoother(u);
   const targetY = lerp(RISE_TARGET_Y, middle, e);
   return {
     position: around(
-      lerp(RISE_RADIUS, hold, e) * b,
+      lerp(RISE_RADIUS * b, hold, e),
       START_BEARING + RISE_DRIFT * e,
-      targetY + RISE_HEIGHT + (bloom + 4 - middle) * e,
+      targetY + RISE_HEIGHT + (top + 4 - middle) * e,
     ),
     target: [0, targetY, 0],
     fov: FOV,
   };
 }
 
-function hold(u: number, b: number, tiers: number): Pose {
-  const end = rise(1, b, tiers);
-  return { ...end, position: along(end.position, end.target, HOLD_PUSH * u) };
+function hold(u: number, aspect: number, tiers: number): Pose {
+  const end = rise(1, aspect, tiers);
+  return { ...end, position: along(end.position, end.target, HOLD_PUSH * smoother(u)) };
 }
 
 export function introPoseAt(t: number, frame: IntroFrame): Pose {
@@ -162,18 +171,19 @@ export function introPoseAt(t: number, frame: IntroFrame): Pose {
   const u = (t - segment.from) / (segment.to - segment.from);
   if (frame.reduced) {
     if (segment.phase === 'orbit') return orbit(0, b);
-    if (segment.phase === 'toExploded' || segment.phase === 'rise') return rise(0, b, frame.tiers);
-    return segment.phase === 'hold' ? hold(0, b, frame.tiers) : frame.home;
+    if (segment.phase === 'toExploded' || segment.phase === 'rise')
+      return rise(0, frame.aspect, frame.tiers);
+    return segment.phase === 'hold' ? hold(0, frame.aspect, frame.tiers) : frame.home;
   }
   switch (segment.phase) {
     case 'orbit':
       return orbit(t, b);
     case 'toExploded':
-      return rise(0, b, frame.tiers);
+      return rise(0, frame.aspect, frame.tiers);
     case 'rise':
-      return rise(u, b, frame.tiers);
+      return rise(u, frame.aspect, frame.tiers);
     case 'hold':
-      return hold(u, b, frame.tiers);
+      return hold(u, frame.aspect, frame.tiers);
     case 'toStacked':
       return frame.home;
   }

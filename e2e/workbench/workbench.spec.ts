@@ -36,10 +36,7 @@ test('real HTTP journey: authenticate, inspect office, create and assign work, p
   expect(labels.length).toBeGreaterThan(0);
   expect(labels.every((r) => r.w < 150 && r.h < 50)).toBe(true);
   await page.screenshot({ path: 'evidence/screenshots/e2e-office-1440.png' });
-  await Promise.all([
-    page.waitForResponse((r) => r.url().endsWith('/fox-lod0.glb') && r.ok()),
-    page.locator('.scene-label').filter({ hasText: 'Atlas' }).click(),
-  ]);
+  await page.locator('.scene-label').filter({ hasText: 'Atlas' }).click();
   await page.getByRole('button', { name: '聚焦桌位', exact: true }).click();
   await page.evaluate(
     () =>

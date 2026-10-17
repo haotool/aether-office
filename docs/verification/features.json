@@ -2974,7 +2974,7 @@
   },
   {
     "id": "OFFICE-LIFE-04",
-    "requirement": "Subagent 提線與結果交付：每位工作中的 subagent 上方有控制十字，細光線連到頭與雙手（綁在角色自己的 head/hand socket），每次開始工具呼叫時抖動、休息時放鬆、等待授權時凍結並轉琥珀色；低階畫質不顯示，平靜模式與減少動態為靜止直線，可單獨關閉。Subagent 完成時拿著資料夾走到主管桌邊放進收件匣，主管閱讀、點頭並蓋章：章只寫「RECEIVED／已收到」（只代表有結果回來，絕不寫 approved），父層工具結果旗標為錯誤時為中性灰色「RETURNED／已退回」（不用紅綠）；每層樓最多兩位同時走動、每張桌子一次一個章，低階畫質與看不到桌子時以資料夾彈入收件匣呈現，平靜與減少動態直接顯示；紀錄區朗讀「{type} handed over its result」。",
+    "requirement": "Subagent 與主管組成實體桌位團隊：子代理各有桌椅與螢幕，桌位朝向與本人一致，以頭頂細資料流顯示協作；不再顯示操偶提線。Subagent 完成時拿著資料夾走到主管桌邊放進收件匣，主管閱讀、點頭並蓋章：章只寫「RECEIVED／已收到」（只代表有結果回來，絕不寫 approved），父層工具結果旗標為錯誤時為中性灰色「RETURNED／已退回」（不用紅綠）；每層樓最多兩位同時走動、每張桌子一次一個章，低階畫質與看不到桌子時以資料夾彈入收件匣呈現，平靜與減少動態直接顯示；紀錄區朗讀「{type} handed over its result」。",
     "scope": "AETHER target; office life iteration I5, see docs/design/office-life-work-plan.md",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
@@ -2994,21 +2994,23 @@
       "scripts/contact-sheet.mjs"
     ],
     "testIds": [
-      "tests/aether/puppet-strings.test.ts",
+      "tests/aether/animal-player.test.ts",
+      "tests/aether/squad-instances.test.ts",
+      "e2e/scene/hotfix.spec.ts",
       "tests/aether/handover.test.ts",
       "tests/aether/office-squads.test.ts",
       "e2e/office-life/squad.spec.ts",
       "e2e/office-life/office-life-perf.spec.ts"
     ],
     "blockers": [
-      "Decorative: the strings and the hand-over claim no outcome. The stamp is a receipt (RECEIVED) and only a real `result.error === true` makes it a grey RETURNED; a subagent whose result flag is unknown gets RECEIVED",
-      "Perf measured on one machine (Apple M4, ANGLE Metal, balanced tier, an 806 x 540 viewport, 8 subagents, 9 interleaved rounds, a busy machine) with a 0.1 ms browser timer resolution: strings +2 draws, +1 program, +0.1 ms JS; hand-over no measurable difference; all relation effects together +8 draws, +4 programs, +1.5 GPU MB, +0.3 ms JS (read from the whole-scene JS time, which also carries the characters; the CPU profile of the follow-up puts the squad layers at 0.10 ms a frame before and 0.08 after, inside the 0.15 ms budget). The program count is over the spec's budget of 4 (6 to 7, linked at warm-up). A squad of 12 was not measured",
-      "The maintainer's review of the strings for 'not creepy' and of the carry pose is pending; they were looked at in contact sheets and screenshots only (scripts/contact-sheet.mjs --category squad). The stamp's word is small at the default camera distance and was read only in close-ups",
+      "Decorative: the team display and hand-over claim no outcome. The stamp is a receipt (RECEIVED) and only a real `result.error === true` makes it a grey RETURNED; a subagent whose result flag is unknown gets RECEIVED",
+      "Historical puppet implementation, superseded by the scene hotfix; these numbers do not verify the new workstations. Perf measured on one machine (Apple M4, ANGLE Metal, balanced tier, an 806 x 540 viewport, 8 subagents, 9 interleaved rounds, a busy machine) with a 0.1 ms browser timer resolution: strings +2 draws, +1 program, +0.1 ms JS; hand-over no measurable difference; all relation effects together +8 draws, +4 programs, +1.5 GPU MB, +0.3 ms JS (read from the whole-scene JS time, which also carries the characters; the CPU profile of the follow-up puts the squad layers at 0.10 ms a frame before and 0.08 after, inside the 0.15 ms budget). The program count is over the spec's budget of 4 (6 to 7, linked at warm-up). A squad of 12 was not measured",
+      "Maintainer acceptance of the new workstations and carry pose remains pending; browser screenshot checks use synthetic demo sessions. The stamp's word is small at the default camera distance and was read only in close-ups",
       "No Blender clip (`carry`, `conduct`) was added: the poses are procedural over existing clips, so the hand-over is not exercised with an arms-forward carry",
       "The return leg (a subagent that becomes active again after finishing) is not built: it leaves, as before",
       "The supervisor's reading and nodding use the existing one-shot clips through an emote cue and were not observed frame by frame",
       "Exercised with the `?squad=N` stand-ins (including `&result=error`), not a real Claude Code or Codex session; the `result.error` flag comes from the parent's own tool result when the server read it, else it is null",
-      "The pref `strings` is a top-level preference (not `life.strings`): `life/` belongs to the registry iteration"
+      "The old top-level `strings` preference is retained for stored-settings compatibility and no longer draws an effect"
     ]
   },
   {
@@ -3029,7 +3031,7 @@
   },
   {
     "id": "OBS-LIFE-02",
-    "requirement": "首次造訪的開場導覽：360° 環繞、分層展開、沿尖塔上升到花冠、回到起始視角；每個瀏覽器工作階段一次，任何輸入中斷並停在原處，Esc 回起始視角，不再顯示與重播，減少動態為三張靜態畫面。",
+    "requirement": "首次造訪的開場導覽：360° 環繞、分層展開、沿尖塔上升到花冠（依畫面比例將花瓣與光環完整入鏡、緩入緩出）、回到起始視角；每個瀏覽器工作階段一次，任何輸入中斷並停在原處，Esc 回起始視角，不再顯示與重播，減少動態為三張靜態畫面。",
     "scope": "AETHER target; office-life iteration I2, see docs/design/office-life.md section 6",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
@@ -3045,6 +3047,7 @@
       "tests/aether/intro-tour.test.ts",
       "tests/aether/intro-machine.test.ts",
       "tests/aether/intro-gate.test.ts",
+      "e2e/scene/hotfix.spec.ts",
       "e2e/office-life/intro.spec.ts",
       "e2e/office-life/intro-perf.spec.ts"
     ],

@@ -32,11 +32,11 @@ describe('a member sent home', () => {
     expect(plan.walkMetres).toBeGreaterThan(5);
   });
 
-  it('stands, waves, walks and is taken up by the core, in that order', () => {
+  it('stands, pauses upright, walks and is taken up by the core, in that order', () => {
     const at = (ms: number) => departureAt(plan, ms);
     expect(at(-1)).toMatchObject({ clip: null, x: 0, z: 0, yaw: 0, scale: 1, gone: false });
     expect(at(0).clip).toBe('stand_up');
-    expect(at(STAND_MS).clip).toBe('wave');
+    expect(at(STAND_MS).clip).toBe('idle');
     expect(at(STAND_MS + WAVE_MS / 2 - 1).bag).toBe(false);
     expect(at(walkStart - 1).bag).toBe(true);
     expect(at(walkStart + 500)).toMatchObject({ clip: 'walk', gone: false });

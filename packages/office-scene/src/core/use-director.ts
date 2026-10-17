@@ -53,7 +53,7 @@ export function useDirector(inputs: Inputs, running: boolean, { setFloor, setExp
       return;
     }
     shown.current.set(next.key, now);
-    for (const id of next.subjects) shown.current.set(id, now);
+    if (next.kind !== 'sweep') for (const id of next.subjects) shown.current.set(id, now);
     setExploded(false);
     setFloor(next.floor);
     timer.current = setTimeout(cut, next.seconds * 1000);
@@ -69,6 +69,16 @@ export function useDirector(inputs: Inputs, running: boolean, { setFloor, setExp
     cut();
     return () => clearTimeout(timer.current);
   }, [running, cut]);
+
+  useEffect(() => {
+    const shot = playing.current?.shot;
+    if (
+      running &&
+      shot &&
+      shot.subjects.some((id) => !inputs.agents.some((a) => a.id === id) || !inputs.seats.has(id))
+    )
+      cut();
+  }, [inputs.agents, inputs.seats, running, cut]);
 
   useCutOnMessage(inputs.pulses, running, playing, cut);
   return directed;

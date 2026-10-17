@@ -1,14 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import {
-  AdditiveBlending,
-  BufferAttribute,
-  BufferGeometry,
-  Color,
-  DoubleSide,
-  ShaderMaterial,
-} from 'three';
-import { DITHER_END, DITHER_PARS, DITHERED } from '../environment/dither.js';
+import { AdditiveBlending, BufferAttribute, BufferGeometry, Color, ShaderMaterial } from 'three';
 import { AIR, hourOf, tintAt, type AirQuality } from '../environment/air.js';
 import { seeded } from '../environment/seeded.js';
 import { setUniform } from '../environment/uniforms.js';
@@ -19,8 +11,6 @@ import { setUniform } from '../environment/uniforms.js';
 const HALF_W = 24;
 const HALF_D = 16;
 const CEILING = 5.4;
-const WINDOW_Z = -18.2;
-const PANELS = [-15, 9, -3, 21, -21] as const;
 
 const tint = () => new Color(...tintAt(hourOf(new Date())));
 
@@ -96,66 +86,4 @@ export function DustMotes({ quality, animate }: { quality: AirQuality; animate: 
   });
   if (count === 0) return null;
   return <points geometry={geometry} material={material} frustumCulled={false} />;
-}
-
-const SHAFT_VERTEX = `
-  varying vec2 vUv;
-  void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
-const SHAFT_FRAGMENT = `
-  ${DITHER_PARS}
-  uniform vec3 color;
-  uniform float time;
-  varying vec2 vUv;
-  void main() {
-    float across = 1.0 - pow(abs(vUv.x * 2.0 - 1.0), 2.0);
-    float along = 0.3 + 0.7 * pow(vUv.y, 1.2);
-    float shimmer = 0.8 + 0.2 * sin(time * 0.5 + vUv.x * 7.0);
-    gl_FragColor = vec4(color, 0.5 * across * along * shimmer);
-    ${DITHER_END}
-  }`;
-
-export function LightShafts({ quality, animate }: { quality: AirQuality; animate: boolean }) {
-  const count = AIR[quality].shafts;
-  const { geometry, material } = useMemo(() => {
-    const positions: number[] = [];
-    const uvs: number[] = [];
-    const indices: number[] = [];
-    PANELS.slice(0, count).forEach((x, i) => {
-      const reach = 13 + (i % 3) * 2;
-      const drift = 3 + i * 0.6;
-      const quad = [
-        [x - 2.2, CEILING - 0.2, WINDOW_Z + 0.1, 0, 1],
-        [x + 2.2, CEILING - 0.2, WINDOW_Z + 0.1, 1, 1],
-        [x + drift + 2.4, 0.08, WINDOW_Z + reach, 1, 0],
-        [x + drift - 2.4, 0.08, WINDOW_Z + reach, 0, 0],
-      ];
-      const first = positions.length / 3;
-      for (const [px = 0, py = 0, pz = 0, u = 0, v = 0] of quad) {
-        positions.push(px, py, pz);
-        uvs.push(u, v);
-      }
-      indices.push(first, first + 1, first + 2, first, first + 2, first + 3);
-    });
-    const g = new BufferGeometry();
-    g.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3));
-    g.setAttribute('uv', new BufferAttribute(new Float32Array(uvs), 2));
-    g.setIndex(indices);
-    const m = new ShaderMaterial({
-      uniforms: { time: { value: 0 }, color: { value: tint() } },
-      vertexShader: SHAFT_VERTEX,
-      fragmentShader: SHAFT_FRAGMENT,
-      ...DITHERED,
-      transparent: true,
-      depthWrite: false,
-      blending: AdditiveBlending,
-      side: DoubleSide,
-    });
-    return { geometry: g, material: m };
-  }, [count]);
-  useDisposed(geometry, material);
-  useFrame(({ clock }) => {
-    setUniform(material, 'time', animate ? clock.elapsedTime : 0);
-  });
-  if (count === 0) return null;
-  return <mesh geometry={geometry} material={material} frustumCulled={false} renderOrder={2} />;
 }

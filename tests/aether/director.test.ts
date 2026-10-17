@@ -79,10 +79,10 @@ it('shows every active agent in turn, whoever has been off screen longest first'
 it('sweeps the busiest floor, a different one next time, when nothing is going on', () => {
   const agents = [agent('a', 'idle'), agent('b', 'idle'), agent('c', 'idle')];
   const first = choose(agents)!;
-  expect(first).toMatchObject({ kind: 'sweep', floor: 0, subjects: [] });
+  expect(first).toMatchObject({ kind: 'sweep', floor: 0, subjects: ['a', 'b'] });
   const second = choose(agents, { previous: first as never });
   expect(second?.floor).toBe(1);
-  expect(choose([], {})).toMatchObject({ kind: 'sweep' });
+  expect(choose([], {})).toBeNull();
   expect(
     chooseShot({ agents: [], seats: new Map(), pulses: [], now: NOW, shown: none, previous: null }),
   ).toBeNull();
@@ -272,4 +272,33 @@ describe('a comfortable director', () => {
     );
     expect(styles.size).toBeGreaterThan(1);
   });
+});
+
+it('never aims at a departed recipient or an unoccupied saved seat', () => {
+  expect(choose([agent('a', 'working')], { pulses: [pulse(500)] })?.subjects).toEqual(['a']);
+  const s = choose([agent('c', 'idle')])!;
+  expect(s.floor).toBe(1);
+  const at = poseAt(s, seats, 0.5, 1.6);
+  expect(Math.hypot(at.target[0] - 8, at.target[2] + 6)).toBeLessThan(2);
+});
+
+it('keeps both employees inside a portrait pair shot throughout the dolly', async () => {
+  const THREE_BUILD = '../../packages/office-scene/node_modules/three/build/three.module.js';
+  const { PerspectiveCamera, Vector3 } = (await import(THREE_BUILD)) as typeof import('three');
+  const s = choose([agent('a', 'idle'), agent('b', 'idle')], { pulses: [pulse(500)] })!;
+  for (const aspect of [0.46, 0.7, 1.6])
+    for (const t of [0, 0.5, 1]) {
+      const at = poseAt(s, seats, t, aspect);
+      const camera = new PerspectiveCamera(at.fov, aspect, 0.4, 2400);
+      camera.position.set(...at.position);
+      camera.lookAt(new Vector3(...at.target));
+      camera.updateMatrixWorld();
+      for (const id of s.subjects) {
+        const seat = seats.get(id)!;
+        const p = new Vector3(seat.x, 1.05, seat.z + 0.75).project(camera);
+        expect(Math.abs(p.x)).toBeLessThan(0.82);
+        expect(Math.abs(p.y)).toBeLessThan(0.82);
+        expect(p.z).toBeLessThan(1);
+      }
+    }
 });

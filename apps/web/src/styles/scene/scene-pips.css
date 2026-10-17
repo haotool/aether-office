@@ -164,10 +164,11 @@
   z-index: var(--z-labels);
   background: var(--scene-bg);
   pointer-events: none;
+  opacity: 0;
   animation: cut-dip var(--dur-fast) ease-out both;
 }
 @keyframes cut-dip {
-  to {
-    opacity: 0;
+  from {
+    opacity: 1;
   }
 }
