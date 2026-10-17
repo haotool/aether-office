@@ -15,9 +15,10 @@ test('starting a frontend/backend workflow creates parallel tasks and a dependen
   await dialog.getByRole('button', { name: '建立工作流程', exact: true }).click();
   await expect(page.getByRole('button', { name: /結帳頁改版 · Frontend/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /結帳頁改版 · Backend/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: /結帳頁改版 · Integration review/ })).toContainText(
-    '等待前置',
-  );
+  const integration = page.getByRole('button', { name: /結帳頁改版 · Integration review/ });
+  await expect(integration).toContainText('等待前置');
+  await page.setViewportSize({ width: 320, height: 640 });
+  await expect(integration.locator('.badge')).toBeInViewport({ ratio: 1 });
   expect(
     (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
       .violations,
