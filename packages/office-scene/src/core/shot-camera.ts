@@ -39,7 +39,7 @@ const FOV = { closeup: 32, pair: 36, sweep: 38 } as const;
 export const FLY_MAX = 6;
 export const FLY_MS = 1400;
 
-type Framing = { e: number; back: number; exploded: boolean };
+type Framing = { e: number; back: number; aspect: number; exploded: boolean };
 
 function closeupPose(shot: Shot, subject: Seat, { e, back, exploded }: Framing): Pose {
   const base = floorY(subject.floor, exploded);
@@ -57,7 +57,7 @@ function closeupPose(shot: Shot, subject: Seat, { e, back, exploded }: Framing):
   };
 }
 
-function pairPose(shot: Shot, first: Seat, second: Seat, { e, back, exploded }: Framing): Pose {
+function pairPose(shot: Shot, first: Seat, second: Seat, { e, aspect, exploded }: Framing): Pose {
   // The same two members are always framed from the same side whoever wrote to whom, so a pair never flips on the
   // screen (the 180 degree rule); the camera trucks along the line between them in one direction.
   const [lo, hi] =
@@ -68,7 +68,11 @@ function pairPose(shot: Shot, first: Seat, second: Seat, { e, back, exploded }: 
   const dx = b[0] - a[0];
   const dz = b[2] - a[2];
   const span = Math.hypot(dx, dz) || 1;
-  const distance = Math.max(4.6, span * 0.85 + 3.2) * back;
+  const distance = Math.max(
+    4.6,
+    span * 0.85 + 3.2,
+    (span / 2 + DOLLY.pair / 2 + 0.9) / (Math.tan((FOV.pair * Math.PI) / 360) * aspect),
+  );
   const slide: V3 = [(dx / span) * (e - 0.5) * DOLLY.pair, 0, (dz / span) * (e - 0.5) * DOLLY.pair];
   const centre = add(mid, slide);
   return {
@@ -82,7 +86,11 @@ function pairPose(shot: Shot, first: Seat, second: Seat, { e, back, exploded }: 
   };
 }
 
-function sweepPose(shot: Shot, { e, back, exploded }: Framing): Pose {
+function sweepPose(
+  shot: Shot,
+  seats: ReadonlyMap<string, Seat>,
+  { e, back, exploded }: Framing,
+): Pose {
   const bearing = shot.style * 1.1;
   const radius = 34 * back;
   const base = floorY(shot.floor, exploded);
@@ -91,7 +99,19 @@ function sweepPose(shot: Shot, { e, back, exploded }: Framing): Pose {
     base + 24 + shot.style * 3,
     Math.cos(bearing) * radius,
   ];
-  const target: V3 = [0, base + 0.5, 0];
+  const occupied = shot.subjects.flatMap((id) => {
+    const seat = seats.get(id);
+    return seat ? [seat] : [];
+  });
+  const target: V3 = occupied.length
+    ? [
+        occupied.reduce((n, s) => n + s.x, 0) / occupied.length,
+        base + WATCH[1],
+        occupied.reduce((n, s) => n + s.z, 0) / occupied.length,
+      ]
+    : [0, base + 0.5, 0];
+  from[0] += target[0];
+  from[2] += target[2];
   return { position: add(from, unit(sub(target, from)), DOLLY.sweep * e), target, fov: FOV.sweep };
 }
 
@@ -105,13 +125,14 @@ export function poseAt(
   const framing = {
     e: smoother(Math.min(1, Math.max(0, t))),
     back: Math.min(1.9, Math.max(1, 1.1 / aspect)),
+    aspect: Math.max(0.1, aspect),
     exploded,
   };
   const first = shot.subjects[0] ? seats.get(shot.subjects[0]) : undefined;
   const second = shot.subjects[1] ? seats.get(shot.subjects[1]) : undefined;
   if (shot.kind === 'closeup' && first) return closeupPose(shot, first, framing);
   if (shot.kind === 'pair' && first && second) return pairPose(shot, first, second, framing);
-  return sweepPose(shot, framing);
+  return sweepPose(shot, seats, framing);
 }
 
 /**

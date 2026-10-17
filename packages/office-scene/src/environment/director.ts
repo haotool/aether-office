@@ -64,7 +64,15 @@ function messageShots({ agents, seats, pulses, now }: ShotInput, freshness: Fres
     const age = now - pulse.at;
     const from = seats.get(pulse.from);
     const to = seats.get(pulse.to);
-    if (age > PULSE_WINDOW_MS || age < -5000 || !from || !to || !byId.has(pulse.from)) continue;
+    if (
+      age > PULSE_WINDOW_MS ||
+      age < -5000 ||
+      !from ||
+      !to ||
+      !byId.has(pulse.from) ||
+      !byId.has(pulse.to)
+    )
+      continue;
     const key = `${pulse.from}>${pulse.to}`;
     const kindBonus =
       pulse.kind === 'decision' || pulse.kind === 'handoff' ? 10 : pulse.kind === 'sub' ? -15 : 0;
@@ -127,9 +135,15 @@ function attentionShots({ agents, seats, attention }: ShotInput, freshness: Fres
   return shots;
 }
 
-function sweepShot({ seats, shown, previous }: ShotInput, freshness: Freshness): Shot | null {
+function sweepShot(
+  { agents, seats, shown, previous }: ShotInput,
+  freshness: Freshness,
+): Shot | null {
   const crowd = new Map<number, number>();
-  for (const seat of seats.values()) crowd.set(seat.floor, (crowd.get(seat.floor) ?? 0) + 1);
+  for (const agent of agents) {
+    const seat = seats.get(agent.id);
+    if (seat) crowd.set(seat.floor, (crowd.get(seat.floor) ?? 0) + 1);
+  }
   const floors = [...crowd].sort((a, b) => b[1] - a[1] || a[0] - b[0]).map(([floor]) => floor);
   const [busiest] = floors;
   if (busiest === undefined) return null;
@@ -141,7 +155,7 @@ function sweepShot({ seats, shown, previous }: ShotInput, freshness: Freshness):
     key: `floor:${floor}`,
     kind: 'sweep',
     floor,
-    subjects: [],
+    subjects: agents.filter((a) => seats.get(a.id)?.floor === floor).map((a) => a.id),
     reason: 'sweep',
     seconds: SECONDS.sweep,
     score: 20,

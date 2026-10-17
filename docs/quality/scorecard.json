@@ -98,7 +98,7 @@
         },
         {
           "id": "code-lines",
-          "label": "Code lines over the budget of 146572",
+          "label": "Code lines over the budget of 146519",
           "status": "pass",
           "weight": 6,
           "value": 0,
@@ -121,7 +121,7 @@
           "details": [
             "10 lines x2: apps/control/src/services/git/git-graph.ts:6 = apps/web/src/features/tasks-git/GitGraph.tsx:6",
             "10 lines x2: packages/office-scene/src/screen/screen-dialects.ts:52 = packages/office-scene/src/screen/screen-dialects.ts:101",
-            "10 lines x2: packages/office-scene/src/squad/puppet/puppet-art.ts:2 = packages/office-scene/src/squad/squad-art.ts:33",
+            "10 lines x2: packages/office-scene/src/squad/puppet/puppet-art.ts:2 = packages/office-scene/src/squad/squad-art.ts:34",
             "9 lines x2: apps/web/src/features/operations/Knowledge.tsx:275 = apps/web/src/features/shell-chrome/QueryStatus.tsx:3",
             "9 lines x2: packages/office-scene/src/squad/SquadMember.tsx:50 = packages/office-scene/src/squad/SquadMember.tsx:78",
             "8 lines x2: apps/control/src/services/sessions/session-commands.ts:37 = apps/control/src/services/sessions/session-commands.ts:60",
@@ -291,7 +291,7 @@
       "name": "tests",
       "title": "Tests",
       "score": 100,
-      "measured": 100,
+      "measured": 82,
       "rules": [
         {
           "id": "unreached-modules",
@@ -310,19 +310,19 @@
           "label": "Share of product modules a unit test imports directly",
           "status": "pass",
           "weight": 15,
-          "value": 60.36,
+          "value": 60.77,
           "limit": 60,
           "minimum": true,
           "full": 40,
           "unit": "%",
           "penalty": 0,
           "details": [
-            "apps/control: 66/114 modules, 14628 source lines",
+            "apps/control: 66/114 modules, 14631 source lines",
             "apps/runner: 22/24 modules, 3070 source lines",
-            "apps/web: 190/337 modules, 28185 source lines",
+            "apps/web: 190/337 modules, 28168 source lines",
             "packages/contracts: 16/16 modules, 1365 source lines",
             "packages/kernel: 28/28 modules, 3452 source lines",
-            "packages/office-scene: 133/244 modules, 25872 source lines",
+            "packages/office-scene: 135/242 modules, 25557 source lines",
             "packages/providers: 14/14 modules, 2051 source lines"
           ]
         },
@@ -353,28 +353,28 @@
         {
           "id": "coverage-lines",
           "label": "Line coverage",
-          "status": "pass",
+          "status": "skipped",
           "weight": 8,
-          "value": 83,
-          "limit": 80,
-          "minimum": true,
-          "full": 40,
-          "unit": "%",
+          "value": null,
+          "limit": null,
+          "full": null,
+          "unit": "",
           "penalty": 0,
-          "details": []
+          "details": [],
+          "note": "no coverage/coverage-summary.json: run pnpm test:coverage"
         },
         {
           "id": "coverage-branches",
           "label": "Branch coverage",
-          "status": "pass",
+          "status": "skipped",
           "weight": 7,
-          "value": 78,
-          "limit": 70,
-          "minimum": true,
-          "full": 40,
-          "unit": "%",
+          "value": null,
+          "limit": null,
+          "full": null,
+          "unit": "",
           "penalty": 0,
-          "details": []
+          "details": [],
+          "note": "no coverage/coverage-summary.json: run pnpm test:coverage"
         },
         {
           "id": "test-ratio",
@@ -387,12 +387,12 @@
           "unit": "",
           "penalty": 0,
           "details": [
-            "apps/control: 14628 source lines",
+            "apps/control: 14631 source lines",
             "apps/runner: 3070 source lines",
-            "apps/web: 28185 source lines",
+            "apps/web: 28168 source lines",
             "packages/contracts: 1365 source lines",
             "packages/kernel: 3452 source lines",
-            "packages/office-scene: 25872 source lines",
+            "packages/office-scene: 25557 source lines",
             "packages/providers: 2051 source lines"
           ]
         }
@@ -402,7 +402,7 @@
       "name": "ui",
       "title": "UI system and design tokens",
       "score": 100,
-      "measured": 82,
+      "measured": 100,
       "rules": [
         {
           "id": "token-lint",
@@ -580,16 +580,15 @@
         },
         {
           "id": "role-variance",
-          "label": "Distinct control sizes per role (e2e/ui/role-variance.spec.ts)",
-          "status": "skipped",
+          "label": "Roles with more distinct sizes than allowed",
+          "status": "pass",
           "weight": 20,
-          "value": null,
-          "limit": null,
-          "full": null,
+          "value": 0,
+          "limit": 0,
+          "full": 10,
           "unit": "",
           "penalty": 0,
-          "details": [],
-          "note": "not run: the spec has no recorded result (expected evidence/role-variance.json)"
+          "details": []
         },
         {
           "id": "physical-properties",
@@ -709,20 +708,20 @@
           "label": "Web JavaScript total, gzip (budget 870 KB)",
           "status": "pass",
           "weight": 25,
-          "value": 852,
+          "value": 848,
           "limit": 870,
           "full": 435,
           "unit": "KB",
           "penalty": 0,
           "details": [
-            "apps/web/dist/assets/src-BTsZEZxt.js:1 380 KB",
-            "apps/web/dist/assets/index-l4eO4M7C.js:1 91 KB",
-            "apps/web/dist/assets/Terminals-BhCPX-ju.js:1 86 KB",
-            "apps/web/dist/assets/TaskDag-D7bAZYC1.js:1 56 KB",
+            "apps/web/dist/assets/src-K-MFaLr7.js:1 377 KB",
+            "apps/web/dist/assets/index-CYjdjGok.js:1 91 KB",
+            "apps/web/dist/assets/Terminals-CCQ3Xw4Y.js:1 86 KB",
+            "apps/web/dist/assets/TaskDag-CNKlTZId.js:1 56 KB",
             "apps/web/dist/assets/core-CJGtMnx9.js:1 27 KB",
-            "apps/web/dist/assets/ProjectPage-Dj8PeRkL.js:1 27 KB",
-            "apps/web/dist/assets/zh-CbTq9pdL.js:1 21 KB",
-            "apps/web/dist/assets/PanelBody-BODEijuo.js:1 20 KB"
+            "apps/web/dist/assets/ProjectPage-DIRuUoV3.js:1 27 KB",
+            "apps/web/dist/assets/zh-DzBydsEF.js:1 21 KB",
+            "apps/web/dist/assets/PanelBody-61lXCkZ5.js:1 20 KB"
           ]
         },
         {
@@ -730,13 +729,13 @@
           "label": "Largest JavaScript chunk, gzip (budget 400 KB)",
           "status": "pass",
           "weight": 15,
-          "value": 380,
+          "value": 377,
           "limit": 400,
           "full": 200,
           "unit": "KB",
           "penalty": 0,
           "details": [
-            "apps/web/dist/assets/src-BTsZEZxt.js:1 380 KB"
+            "apps/web/dist/assets/src-K-MFaLr7.js:1 377 KB"
           ]
         },
         {
@@ -750,49 +749,49 @@
           "unit": "KB",
           "penalty": 0.9,
           "details": [
-            "apps/web/dist/assets/index-l4eO4M7C.js:1 80 KB",
+            "apps/web/dist/assets/index-CYjdjGok.js:1 80 KB",
             "apps/web/dist/assets/signals-BiryGzd7.js:1 3 KB",
             "apps/web/dist/assets/scheduler-CaJXFZeK.js:1 1 KB",
             "apps/web/dist/assets/react-dom-DkN6JdHT.js:1 1 KB",
-            "apps/web/dist/assets/useT-CpJ8J-d2.js:1 3 KB",
-            "apps/web/dist/assets/chunk-OB3PAWPO-ODNeCJz9.js:1 12 KB",
+            "apps/web/dist/assets/useT-BruUtEDP.js:1 3 KB",
+            "apps/web/dist/assets/chunk-OB3PAWPO-DOXmeluv.js:1 12 KB",
             "apps/web/dist/assets/QueryClientProvider-CR9ma4EU.js:1 0 KB",
             "apps/web/dist/assets/polling-BNbsgHRr.js:1 7 KB",
             "apps/web/dist/assets/createLucideIcon-BgbmjCWa.js:1 1 KB",
             "apps/web/dist/assets/check-B9JY3Vq3.js:1 0 KB",
             "apps/web/dist/assets/x-DCinKwPO.js:1 0 KB",
-            "apps/web/dist/assets/api-HidvQu_c.js:1 1 KB",
-            "apps/web/dist/assets/PermissionCard-DfG09Nz-.js:1 8 KB",
+            "apps/web/dist/assets/api-DUtQ6zTZ.js:1 1 KB",
+            "apps/web/dist/assets/PermissionCard-Dnc5DavH.js:1 8 KB",
             "apps/web/dist/assets/arrow-up-right-DDxfJXAZ.js:1 0 KB",
             "apps/web/dist/assets/monitor-ND28roRt.js:1 0 KB",
             "apps/web/dist/assets/text-title-Cj9ECa86.js:1 10 KB",
             "apps/web/dist/assets/time-CPE8nN5v.js:1 0 KB",
             "apps/web/dist/assets/browser-compat-Cpt3e03-.js:1 0 KB",
-            "apps/web/dist/assets/api-commands-CCpRaWgH.js:1 0 KB",
+            "apps/web/dist/assets/api-commands-DNyNL3oK.js:1 0 KB",
             "apps/web/dist/assets/phone-Cbeil0BD.js:1 0 KB",
-            "apps/web/dist/assets/PageHeading-BGI7eY99.js:1 1 KB",
-            "apps/web/dist/assets/Badge-DWqNqciH.js:1 0 KB",
-            "apps/web/dist/assets/Modal-CBR7dyyH.js:1 1 KB",
+            "apps/web/dist/assets/PageHeading-CVt2BGpB.js:1 1 KB",
+            "apps/web/dist/assets/Badge-Ft0FRJTb.js:1 0 KB",
+            "apps/web/dist/assets/Modal-Da9dIwNn.js:1 1 KB",
             "apps/web/dist/assets/Field-B9Dixeel.js:1 0 KB",
-            "apps/web/dist/assets/install-prompt-s8prOc4L.js:1 6 KB",
+            "apps/web/dist/assets/install-prompt-FPAVXLNC.js:1 6 KB",
             "apps/web/dist/assets/departments-CfOr-c1i.js:1 1 KB",
             "apps/web/dist/assets/animal-states-fx34-YW1.js:1 1 KB",
             "apps/web/dist/assets/session-limits-lzhw8ElE.js:1 0 KB",
-            "apps/web/dist/assets/localSessions-DpSCquep.js:1 6 KB",
-            "apps/web/dist/assets/clock-out-DT2qARa2.js:1 1 KB",
-            "apps/web/dist/assets/feed-avatar-IWuj5B_E.js:1 5 KB",
+            "apps/web/dist/assets/localSessions-DTFlF3--.js:1 6 KB",
+            "apps/web/dist/assets/clock-out-wxIzI6nO.js:1 1 KB",
+            "apps/web/dist/assets/feed-avatar-BfVLbSAE.js:1 5 KB",
             "apps/web/dist/assets/copy-DAvi4YBU.js:1 0 KB",
             "apps/web/dist/assets/door-open-DeqL-zfI.js:1 0 KB",
-            "apps/web/dist/assets/PreferenceControls-BAJODtfU.js:1 1 KB",
-            "apps/web/dist/assets/use-drive-CDanVQ7V.js:1 3 KB",
-            "apps/web/dist/assets/character-actions-Bb_EOy_O.js:1 1 KB",
+            "apps/web/dist/assets/PreferenceControls-DdiSXXjH.js:1 1 KB",
+            "apps/web/dist/assets/use-drive-Xc8xIEwQ.js:1 3 KB",
+            "apps/web/dist/assets/character-actions-COJ7qaKv.js:1 1 KB",
             "apps/web/dist/assets/squad-layout-CWJgMInh.js:1 3 KB",
             "apps/web/dist/assets/context-X44HcWvZ.js:1 0 KB",
             "apps/web/dist/assets/use-latest-Toba1xOl.js:1 0 KB",
-            "apps/web/dist/assets/ClaudeQuota-D26tW0yN.js:1 1 KB",
-            "apps/web/dist/assets/use-kpi-DJsnVjkj.js:1 2 KB",
-            "apps/web/dist/assets/index-DvT2HVAa.css:1 24 KB",
-            "apps/web/dist/assets/zh-CbTq9pdL.js:1 18 KB"
+            "apps/web/dist/assets/ClaudeQuota-RKBvkaje.js:1 1 KB",
+            "apps/web/dist/assets/use-kpi-7TjPNGAr.js:1 2 KB",
+            "apps/web/dist/assets/index-BIexyyhq.css:1 24 KB",
+            "apps/web/dist/assets/zh-DzBydsEF.js:1 18 KB"
           ]
         },
         {
@@ -1215,6 +1214,6 @@
     }
   ],
   "inputs": {
-    "role-variance": "absent"
+    "role-variance": "present sha256:e9e9cc02"
   }
 }

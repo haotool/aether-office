@@ -90,13 +90,7 @@ function writeFunnel(
 ) {
   beam.start.setXYZ(i, s.x, y + BEAM_FROM_Y, s.z);
   beam.end.setXYZ(i, 0, y + BEAM_TO_Y, 0);
-  beam.meta.setXYZW(
-    i,
-    0.42 * Math.min(s.width, s.depth),
-    entry.level,
-    waiting ? 1 : 0,
-    entry.phase,
-  );
+  beam.meta.setXYZW(i, 0.055, entry.level, waiting ? 1 : 0, entry.phase);
   beam.tone.setXYZ(i, tone.r, tone.g, tone.b);
 }
 

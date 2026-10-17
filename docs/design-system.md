@@ -559,7 +559,9 @@ Two things move the camera without a hand on it. The **director** cuts between m
 horizon, no zoom, a dip for a hard cut). The **intro tour** plays on a first visit (`packages/office-scene/src/intro`): a 360°
 orbit of the stacked building (26 s, at most 16.4°/s), a cut under a 400 ms dip to the exploded view, a 15 s rise up the spire to
 the crown, a 4 s hold and a cut back to the start view, 45.8 s in all. It follows the director's comfort rules; `introPoseAt` is
-a pure function of time, and `tests/aether/intro-tour.test.ts` samples it for angular speed, level pitch, distance and the shell.
+a pure function of time. The closing frame includes the petals and halo envelope, fits the canvas aspect, and eases into and out of the final push. Tour controls allow that framing distance and preserve it if interrupted; manual navigation retains its normal range.
+
+`tests/aether/intro-tour.test.ts` samples it for angular speed, level pitch, distance and the shell.
 
 - **When.** Once per browser session, with the preference `intro: 'auto'`, never under browser automation (`?intro=force`
   overrides, for tests), after the scene is warm and frames run smoothly. On a phone it plays once ever (finishing it turns the
@@ -1126,7 +1128,7 @@ GPU.**
 
 ## Alive and futuristic, cheaply
 
-- **Air.** Dust motes (one `Points` draw, positions animated in the vertex shader) and a few window light shafts (one mesh), both
+- **Air.** Dust motes (one `Points` draw, positions animated in the vertex shader),
   tinted by the local hour: cool blue at night, warm gold by day, easing through dawn (5 to 8) and dusk (17 to 20). Focused floor only.
 - **Desk.** The screen's light spills on the desk in the department's color while the member works (stronger the harder it works);
   a member who wants a person has an amber ring pulsing on the floor round the desk; where there are no real shadows (low, phone) a
@@ -1152,16 +1154,14 @@ overlays.
 - **State.** `stepSquad` (pure) keeps who sits where: the lowest free seat, never reassigned while held, the zone's size (grows at once,
   shrinks after 10 s with no walk in flight) and the tool starts of the last minute. Poses are functions of `now - since`, so a
   frame never depends on how many frames ran.
-- **Draws.** The zone decal (one shader, a dashed outline and a soft fill), the seat rings, the hover stools, the holo panes, the
+- **Draws.** The zone decal (one shader, a dashed outline and a soft fill), the seat rings, the solid workstations, the monitor panes, the
   silhouettes, the desk dressing, the beam funnel, the filament, the halos and the points are one instanced mesh each: 10 draw calls
   (9 while no one stands as a silhouette) for any number of squads, 4 shader programs (decal, beam, points, one instanced basic;
   6 to 7 with the glow and opaque materials, the strings and the seal, see office life 4.9). Every layer writes an instance's matrix
   and colour only when it differs from what the mesh holds, so a still squad uploads nothing, and `SquadWarm` links all of these
   programs while the scene loads (one hidden copy of each, from the layers' own factories), so a squad's first appearance links none. The
-  puppet strings add 2 draw calls (all strings, all crosses) and the hand-over 1 (all folders and stamps) plus one for each stamp word
-  on show, so at most 13 (typically 12, 14 with silhouettes and both words on show); the strings add the fat-line program the relation lines
-  already use. Parts share one vertex-coloured material per kind and are built once.
-- **Beam.** An instanced tube whose centre line is a Bezier evaluated in the vertex shader (squad, then the core, then a thin
+  hand-over adds its folders and stamps. Parts share one vertex-coloured material per kind and are built once.
+- **Beam.** A narrow overhead stream (0.055 m radius) replaces the wide funnel, staying above employees and desks. An instanced tube whose centre line is a Bezier evaluated in the vertex shader (squad, then the core, then a thin
   filament to the supervisor's halo). Edge glow, bands that flow into the core, a fade at both ends and near the camera;
   brightness follows the squad's tokens per minute (tool calls per minute when there are none) through
   `tanh(1.5 ln(1 + rate) / ln(1 + reference))` with a 0.6 s lag, an amber pulse while a subagent waits for a permission. The
@@ -1170,24 +1170,11 @@ overlays.
 - **Tiers.** Zone, pods and dressing on every tier. High: bands, filament, halo, 48 points. Balanced: the same with 24 points. Low,
   Calm mode and reduced motion: the funnel stands still (brightness only), with no filament, halo or points; reduced motion also
   has subagents appear in their seats. Walks are 14 m (high), 10 m (balanced) or none (low).
-- **Puppet strings** (`squad/puppet/`). A control cross of light floats 1.25 m over each subagent that works; thin strings run from it
-  to the head and the two hands, and a master thread to the supervisor's halo. The strings are decoration that follows the
-  subagent and never pulls it: light (1.4 px, additive, 25% brightness at the body end), no face or neck strings, and they fade away
-  after they went slack. They are tied to the character's own `head_socket` and `hand_socket_L/R` (read from the model's world
-  matrices through `registerAnchors`/`anchorsOf`, so the hand strings follow the typing clip) and to fixed offsets when a model has no
-  sockets. `verlet.ts` is the simulation: six points per string in one pooled `Float32Array`, fixed 30 Hz (20 on balanced, 10 past
-  45 m, held past 90 m), 3 relaxation passes, damping 0.965, a sixth of gravity, a 0.25 Hz sway. It cannot blow up: `dt` is clamped
-  and capped at four steps, a pin that moves more than 2.5 m lays the string straight again, and a non-numeric pin or point resets
-  it. `string-motion.ts` is what a subagent does to them: taut while it works, a 4 cm dip of the cross and a 6 cm lift of the hand
-  strings (critically damped, about 250 ms) when its PreToolUse time (`tools.lastAt`) changes (never on the first look), slack over
-  1 s when it rests and then gone, frozen with an amber cross while it waits for a permission. All strings are one `LineSegments2`
-  and all crosses one instanced mesh (2 draw calls). **Off** on the low tier, with the relation effects, and by their own switch
-  (Settings, Office, Animations, "Puppet strings", pref `strings`; `&strings=0` in a preview); **still** (straight lines, no
-  simulation, redrawn at most every 0.2 s) in Calm mode and with reduced motion.
+- **Team workstations.** Solid desks, seats and monitors sit beside the supervisor. Their 1.404 m desk width and 1.592 m overall depth fit the existing 1.6 m seat pitch. Desks face in the same direction as their own subagent, independently of the supervisor's rotation. Puppet strings are no longer mounted; older saved `strings` preferences are ignored.
 - **Hand-over** (`squad/handover/`). When a subagent finishes (running to finished, with its supervisor's desk in the zone) it stands,
   walks a folder (floating at its chest) to the end of the supervisor's desk that is nearest the zone, turns to the in-tray and glides the
   folder in (0.6 s). The supervisor reads (`reading`, 1.5 s, an existing clip played as a one-shot) and then nods; the stamp goes over the
-  tray, presses (250 ms) and a seal blooms on the folder; the subagent waves and walks into the core. The stamp says **RECEIVED**
+  tray, presses (250 ms) and a seal blooms on the folder; the subagent pauses upright and walks into the core. The stamp says **RECEIVED**
   (translated in zh-TW): a receipt that a result came back, never "approved", and it never says passed or failed. When the parent's own tool
   result for the call is flagged as an error (`result.error === true`, or `ok === false`) it is a neutral grey **RETURNED** (also translated)
   and the supervisor scratches its head instead of nodding; no red and no green are used. `plan.ts` is the pure timeline (stand,

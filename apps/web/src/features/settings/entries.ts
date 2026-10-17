@@ -129,13 +129,6 @@ export const ENTRIES = [
     words: 'squad subagent beam zone 小隊 子代理 光束',
   },
   {
-    id: 'puppetStrings',
-    section: 'office',
-    label: 'stStringsLabel',
-    desc: 'stStringsDesc',
-    words: 'puppet strings squad subagent light rig 提線 弦 小隊 子代理',
-  },
-  {
     id: 'lifeKinds',
     section: 'office',
     label: 'stLifeKindsLabel',

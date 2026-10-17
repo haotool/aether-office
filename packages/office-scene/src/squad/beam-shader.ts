@@ -11,7 +11,7 @@ import { DITHER_END, DITHER_PARS, DITHERED } from '../environment/dither.js';
 
 const SEGMENTS = 48;
 const SIDES = 16;
-const CORE_WIDTH = 1.2;
+const CORE_WIDTH = 0.055;
 export const BEAM_FROM_Y = 2.6;
 export const BEAM_TO_Y = 4.6;
 export const BEAM_CAPACITY = 16;

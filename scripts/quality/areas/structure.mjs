@@ -11,7 +11,7 @@ export const LIMITS = {
   nesting: 4,
   fanIn: 30,
   duplicateShare: 3,
-  codeLines: 146572,
+  codeLines: 146519,
 };
 
 const isEntry = (file) => /\/main\.tsx?$/.test(file);

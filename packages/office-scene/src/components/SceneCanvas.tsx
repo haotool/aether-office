@@ -8,7 +8,7 @@ import { Beanstalk } from './Beanstalk.js';
 import { BranchBeams } from '../environment/BranchBeams.js';
 import { CommLinks } from '../environment/CommLinks.js';
 import { RelationLines } from './RelationLines.js';
-import { DustMotes, LightShafts } from './Atmosphere.js';
+import { DustMotes } from './Atmosphere.js';
 import { Floor } from './Floor.js';
 import { InteractionProjections } from './InteractionProjections.js';
 import { Beacons, ProjectedLabels } from './Labels.js';
@@ -80,7 +80,6 @@ function SceneAmbience({ m }: { m: SceneModel }) {
       {!exploded && !compact && props.quality !== 'low' && (
         <group position={[0, y, 0]}>
           <DustMotes quality={props.quality} animate={animate} />
-          <LightShafts quality={props.quality} animate={animate} />
         </group>
       )}
       {m.visibleFloors.map((index) => (
@@ -187,7 +186,7 @@ function SceneEye({ m }: { m: SceneModel }) {
       directed={nav.directed}
       seats={nav.seats}
       followPoint={nav.followPoint}
-      introPose={intro.pose}
+      introPose={intro.active ? intro.pose : undefined}
     />
   );
 }

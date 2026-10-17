@@ -88,7 +88,7 @@ describe('beamsOf', () => {
       () => info(),
     );
     expect(beams[0]).toMatchObject({
-      from: [10, FLOOR_Y(1) + 1.45, 3.7],
+      from: [10, FLOOR_Y(1) + 2.7, 3.7],
       to: [0, FLOOR_Y(1) + 5.4, 0],
     });
     expect(beams.map((b) => b.flowing)).toEqual([true, false]);

@@ -33,9 +33,9 @@ afterAll(removeBrowserEnv);
 const EXPECTED: Record<string, string> = {
   genomes: '8a633fee9ccf07bb',
   stalks: '5964a3e52c7fd6a4',
-  directing: '3fafc5d0d5fabcab',
+  directing: 'b5e2725d4c4a5007',
   squads: '87ac462f58344d9d',
-  layouts: '8cdd4afcdfad6fbf',
+  layouts: 'a4599fe1f5fdedae',
   deskItems: '37a32b6fc2afe27c',
   screens: '58d662ed2dc10349',
   lifeSchedule: '83f69b24eac33b4b',

@@ -25,6 +25,7 @@ const FRAMES = {
   tall: frame({ tiers: 12 }),
   phone: frame({ aspect: 0.46, tiers: 6 }),
   phoneTall: frame({ aspect: 0.46, tiers: 12 }),
+  narrowPhone: frame({ aspect: 0.35, tiers: 12 }),
   noRepo: frame({ tiers: 0 }),
 };
 const STEP = 1 / 60;
@@ -114,13 +115,13 @@ describe('introPoseAt: comfort', () => {
         for (const s of playing) expect(s.pose.fov).toBe(38);
       });
 
-      it('stays out of the shell and within the controls distances', () => {
+      it('stays out of the shell and within the camera clip range', () => {
         const { roof } = crownHeights(f.tiers);
         for (const { pose, segment } of playing) {
           const [x, y, z] = pose.position;
           if (y < roof + 1) expect(Math.abs(x) > 27.2 + 20 || Math.abs(z) > 19.2 + 20).toBe(true);
           expect(distanceOf(pose)).toBeGreaterThanOrEqual(MIN_DISTANCE);
-          expect(distanceOf(pose)).toBeLessThanOrEqual(300);
+          expect(distanceOf(pose)).toBeLessThanOrEqual(2400);
           expect(Number.isFinite(x + y + z)).toBe(true);
           expect(segment.phase).not.toBe('toExploded');
         }
@@ -181,4 +182,74 @@ describe('introPoseAt: reduced motion', () => {
     expect(introPoseAt(introLength(true) + 1, f)).toEqual(HOME);
     expect(introLength(true)).toBeLessThan(12);
   });
+});
+
+it('eases to rest at the crown instead of kicking into a linear push', () => {
+  const f = frame();
+  const a = introPoseAt(41.4, f).position;
+  const b = introPoseAt(41.401, f).position;
+  expect(Math.hypot(...a.map((v, i) => v - b[i]!))).toBeLessThan(0.00001);
+});
+
+it('frames the crown petals and halo envelope, not only the stem tip', async () => {
+  const THREE_BUILD = '../../packages/office-scene/node_modules/three/build/three.module.js';
+  const { PerspectiveCamera, Vector3 } = (await import(THREE_BUILD)) as typeof import('three');
+  for (const tiers of [1, 6, 8, 12])
+    for (const aspect of [0.35, 0.4, 0.46, 0.7, 1.3, 1.6]) {
+      const { roof, bloom } = crownHeights(tiers);
+      const radius = (11 + 11 * Math.min(1, (tiers * 12) / 150)) * 2.6;
+      for (const time of [41.4, 43.4, 45.3]) {
+        const pose = introPoseAt(time, frame({ tiers, aspect }));
+        const camera = new PerspectiveCamera(pose.fov, aspect, 0.4, 2400);
+        camera.position.set(...pose.position);
+        camera.lookAt(new Vector3(...pose.target));
+        camera.updateMatrixWorld();
+        for (const y of [roof, bloom + radius * 0.7])
+          for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+            const p = new Vector3(Math.cos(angle) * radius, y, Math.sin(angle) * radius).project(
+              camera,
+            );
+            expect(Math.abs(p.x)).toBeLessThan(0.98);
+            expect(Math.abs(p.y)).toBeLessThan(0.98);
+          }
+      }
+    }
+});
+
+it('keeps generated flowers inside the closing frame across desktop and phone lenses', async () => {
+  const { layoutStalk, spreadStalk } =
+    await import('../../packages/office-scene/src/core/stalk-layout.js');
+  const { gardenOf } = await import('../../packages/office-scene/src/core/garden-geometry.js');
+  const THREE_BUILD = '../../packages/office-scene/node_modules/three/build/three.module.js';
+  const { PerspectiveCamera, Vector3 } = (await import(THREE_BUILD)) as typeof import('three');
+  for (const count of [12, 96, 144, 500])
+    for (const low of [true, false]) {
+      const commits = Array.from({ length: count }, (_, i) => ({
+        sha: String(count - i),
+        parents: i + 1 < count ? [String(count - i - 1)] : [],
+        refs: [],
+        subject: 'Synthetic',
+        author: i % 3 ? 'Lin' : 'Ada',
+        at: 1_000_000 - i * 86_400_000,
+      }));
+      const stalk = spreadStalk(layoutStalk(commits, 1_000_000, 35)!, { floorHeight: 7, gap: 11 });
+      const garden = gardenOf(stalk, low)!;
+      for (const aspect of [0.35, 0.4, 0.46, 1.3, 1.6]) {
+        const at = introPoseAt(45.3, frame({ tiers: stalk.tiers.length, aspect }));
+        const camera = new PerspectiveCamera(at.fov, aspect, 0.4, 2400);
+        camera.position.set(...at.position);
+        camera.lookAt(new Vector3(...at.target));
+        camera.updateMatrixWorld();
+        const positions = garden.mesh.getAttribute('position');
+        const p = new Vector3();
+        let extent = 0;
+        for (let i = 0; i < positions.count; i++) {
+          p.fromBufferAttribute(positions, i).project(camera);
+          extent = Math.max(extent, Math.abs(p.x), Math.abs(p.y));
+        }
+        expect(extent).toBeLessThan(0.94);
+      }
+      garden.mesh.dispose();
+      garden.pollen?.dispose();
+    }
 });

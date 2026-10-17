@@ -23,7 +23,7 @@ export type Departure = {
   deskYaw: number;
 };
 export type DeparturePose = {
-  clip: Extract<ClipName, 'stand_up' | 'wave' | 'walk'> | null;
+  clip: Extract<ClipName, 'stand_up' | 'idle' | 'walk'> | null;
   x: number;
   z: number;
   yaw: number;
@@ -106,7 +106,7 @@ export function departureAt(
   if (waved < WAVE_MS) {
     const t = Math.min(1, waved / TURN_MS);
     return pose(seat, SEATED_HEADING + shortest(SEATED_HEADING, out) * t, {
-      clip: 'wave',
+      clip: 'idle',
       bag: waved > WAVE_MS / 2,
     });
   }

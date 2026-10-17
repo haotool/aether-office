@@ -4,7 +4,7 @@
 
 Penetration: every clip that seats the animal is sampled through its loop; every vertex of the animal (skin, ears, tail,
 props) is tested against boxes standing for the desk's chair and slab, in the animal's own frame. The furniture comes
-from packages/office-scene/src/desk-seating.json, the file the scene builds the desk from (desk frame x -> -x,
+from packages/office-scene/src/desks/desk-seating.json, the file the scene builds the desk from (desk frame x -> -x,
 z - sitter.z -> y, y -> z). A vertex inside a box by more than TOLERANCE is clipping; the report gives the deepest and
 how many vertices.
 
@@ -22,7 +22,7 @@ import build_animals as build
 import animal_clips as clips_module
 from animal_profiles import PROFILES
 
-SEATING = json.loads((Path(__file__).resolve().parents[2] / 'packages/office-scene/src/desk-seating.json').read_text())
+SEATING = json.loads((Path(__file__).resolve().parents[2] / 'packages/office-scene/src/desks/desk-seating.json').read_text())
 SITTER_Z = SEATING['sitter']['z']
 
 

@@ -80,7 +80,7 @@ function placeSquad(w: Write, s: DrawSquad, i: number) {
   const tone = w.color.set(s.accent);
   w.decal.tone.setXYZ(i, tone.r, tone.g, tone.b);
   w.decal.alpha.setX(i, 0.7);
-  const yaw = (s.deskRotation * Math.PI) / 2;
+  const yaw = (s.podRotation * Math.PI) / 2;
   s.pods.forEach((pod, n) => placePod(w, s, pod, n, y, yaw));
 }
 
@@ -173,7 +173,7 @@ export function SquadZones(props: ZoneProps) {
   const { squads } = props;
   const invalidate = useThree((s) => s.invalidate);
   const parts = art();
-  const { glow } = squadMaterials();
+  const { glow, solid } = squadMaterials();
   const rig = useZoneRig(squads);
   const { decal, last, meshes } = rig;
   const pods = [
@@ -205,10 +205,10 @@ export function SquadZones(props: ZoneProps) {
       {pods.map(([name, geometry]) => (
         <instancedMesh
           key={name}
+          name={`squad-${name}`}
           ref={meshes[name]}
-          args={[geometry, glow, POD_CAPACITY]}
+          args={[geometry, name === 'rings' ? glow : solid, POD_CAPACITY]}
           frustumCulled={false}
-          renderOrder={2}
         />
       ))}
     </group>

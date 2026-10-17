@@ -51,10 +51,10 @@ export type AnimalProps = {
 const offsetOf = (apparition: Apparition | undefined): [number, number, number] =>
   apparition === 'ghost' ? [0, 0.18, 0] : apparition === 'zombie' ? [0, 0, 0.95] : [0, 0, 0];
 
-function useAnimalRig(props: AnimalProps, ring: Ring | null) {
+function useAnimalRig(props: AnimalProps) {
   const { agent, selected, emote, reducedMotion, quality, apparition, override, onError } = props;
   const { light = false, behavior = CALM } = props;
-  const lod = quality === 'low' ? 2 : ring ? (light ? 1 : 0) : light ? 2 : 1;
+  const lod = quality === 'low' || light ? 2 : quality === 'high' ? 0 : 1;
   const species = apparition ? APPARITION_MODEL[apparition] : agent.species;
   const url = `/assets/animals/${species}-lod${lod}.glb`;
   const [model, setModel] = useState<Model | null>(null);
@@ -85,7 +85,7 @@ function useAnimalRig(props: AnimalProps, ring: Ring | null) {
 export function Animal(props: AnimalProps) {
   const { selected, reducedMotion, apparition, pace = 1 } = props;
   const ring = props.ring === undefined ? (selected ? 'selected' : null) : props.ring;
-  const { model, url, mixer } = useAnimalRig(props, ring);
+  const { model, url, mixer } = useAnimalRig(props);
   const root = useRef<Group>(null);
   useMixerUpdates(mixer, root, { reducedMotion, selected, pace });
   return (
