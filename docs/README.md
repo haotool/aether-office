@@ -42,13 +42,14 @@ architecture, development and release verification. The operational manual is in
 Written before or while the work was built, kept for the reasoning. They are history, not the current manual: where they
 differ from the pages above, the pages above win.
 
-| Document                                                  | Contents                                                                         |
-| --------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| [Office life: spec](design/office-life.md)                | Squads, signals, office-life effects and the first-visit tour: rules and budgets |
-| [Office life: work plan](design/office-life-work-plan.md) | The briefs the iterations were run from                                          |
-| [Architecture decisions](adr/README.md)                   | Why the project is built the way it is (indexed list)                            |
-| [Research](research/README.md)                            | The projects studied and what was taken from them                                |
-| [Internal notes](internal/README.md)                      | Maintainer audits and feasibility studies (zh-TW); not required to contribute    |
+| Document                                                                 | Contents                                                                         |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| [Office life: spec](design/office-life.md)                               | Squads, signals, office-life effects and the first-visit tour: rules and budgets |
+| [Office life: work plan](design/office-life-work-plan.md)                | The briefs the iterations were run from                                          |
+| [Architecture decisions](adr/README.md)                                  | Why the project is built the way it is (indexed list)                            |
+| [Research](research/README.md)                                           | The projects studied and what was taken from them                                |
+| [Internal notes](internal/README.md)                                     | Maintainer audits and feasibility studies (zh-TW); not required to contribute    |
+| [CTO review, 2026-10-15](../plans/first-principles-review-2026-10-15.md) | Historical architecture and reliability assessment; not a current backlog        |
 
 ## Release and verification
 
