@@ -45,10 +45,21 @@ function resumeCheckpoint(
       size < previous.offset ||
       prefix.length < previous.prefixLength ||
       hash(prefix.subarray(0, previous.prefixLength)) !== previous.prefixHash);
+  const retryLegacyFailure =
+    previous?.failure === 'unsupported_schema' && previous.decoderVersion !== 1;
   const checkpoint: ObserverCheckpoint =
-    previous && !rotated && previous.failure !== 'unsupported_schema'
+    previous && !rotated && !retryLegacyFailure
       ? { ...previous }
-      : { identity, offset: 0, prefixLength: 0, prefixHash: hash(''), meta: null, failure: null };
+      : {
+          decoderVersion: 1,
+          identity,
+          offset: 0,
+          prefixLength: 0,
+          prefixHash: hash(''),
+          meta: null,
+          failure: null,
+        };
+  checkpoint.decoderVersion = 1;
   checkpoint.prefixLength = prefix.length;
   checkpoint.prefixHash = hash(prefix);
   return { checkpoint, rotated };

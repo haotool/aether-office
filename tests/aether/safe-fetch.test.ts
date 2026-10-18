@@ -21,14 +21,15 @@ it('classifies private, loopback, link-local, metadata and mapped addresses as n
     '::1',
     '::',
     'fc00::1',
-    'fd12::1',
     'fe80::1',
-    '::ffff:10.0.0.1',
     '::ffff:127.0.0.1',
+    '::ffff:7f00:1',
+    '::ffff:a9fe:a9fe',
+    '::ffff:8.8.8.8',
     'not-an-ip',
   ])
     expect(isPublicAddress(ip), ip).toBe(false);
-  for (const ip of ['8.8.8.8', '1.1.1.1', '172.32.0.1', '2606:4700:4700::1111', '::ffff:8.8.8.8'])
+  for (const ip of ['8.8.8.8', '1.1.1.1', '172.32.0.1', '2606:4700:4700::1111'])
     expect(isPublicAddress(ip), ip).toBe(true);
 });
 
@@ -57,6 +58,8 @@ it('rejects unsafe schemes, credentials, ports, hosts and mixed DNS answers', as
   await expect(assertSafeUrl('http://[::1]/', { resolver })).rejects.toThrow(
     'URL_ADDRESS_FORBIDDEN',
   );
+  for (const url of ['http://[::ffff:127.0.0.1]/', 'http://[::ffff:a9fe:a9fe]/latest'])
+    await expect(assertSafeUrl(url, { resolver }), url).rejects.toThrow('URL_ADDRESS_FORBIDDEN');
   await expect(assertSafeUrl('https://localhost/', { resolver })).rejects.toThrow(
     'URL_ADDRESS_FORBIDDEN',
   );

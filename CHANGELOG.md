@@ -21,6 +21,8 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ### Fixed
 
+- Reject every IPv4-mapped IPv6 address before connector requests so hexadecimal loopback and cloud-metadata forms cannot bypass SSRF protection.
+- Retry legacy transcript checkpoints once, then retain permanent schema failures so malformed files cannot replay old observations and grow the database on every poll.
 - Load Codex and Claude Code upgrades without a release allowlist; retain protocol, path and permission validation and recover previously version-blocked observations.
 - Batch identical idle branch beams and enforce the existing message-animation GPU budgets in the performance test.
 
