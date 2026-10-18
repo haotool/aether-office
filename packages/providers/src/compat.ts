@@ -1,30 +1,20 @@
-import compat from '../generated/compat.json' with { type: 'json' };
+const version =
+  /^\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?(?:\+[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$/;
 
-// Which provider CLI releases this adapter code has been verified against. The list lives in
-// generated/compat.json so the doctor, the tests and the adapters all read one source of truth.
+// Version syntax identifies the CLI; the protocol handshake and decoded fields determine compatibility.
+export const codexRolloutVersion = (value: string): boolean => version.test(value);
+export const claudeRolloutVersion = codexRolloutVersion;
 
 export function codexVersion(output: string): string | null {
-  return /^codex-cli (\d+\.\d+\.\d+)$/.exec(output.trim())?.[1] ?? null;
+  const value = /^codex-cli (\S+)$/.exec(output.trim())?.[1];
+  return value && codexRolloutVersion(value) ? value : null;
 }
 
 export function assertCodexVersion(output: string): void {
-  const version = codexVersion(output);
-  if (!version || !compat.verifiedCliVersions.includes(version))
-    throw new Error('CODEX_VERSION_UNVERIFIED');
+  if (!codexVersion(output)) throw new Error('CODEX_VERSION_INVALID');
 }
 
-/** Claude Code is accepted per minor series (e.g. 2.1.x): patch releases do not need a code change. */
 export function assertClaudeVersion(output: string): void {
-  const match = /^(\d+\.\d+)\.\d+/.exec(output.trim());
-  const series = match?.[1];
-  if (!series || !compat.claudeCodeSeries.includes(series))
-    throw new Error('CLAUDE_VERSION_UNVERIFIED');
+  const value = /^(\S+)(?: \(Claude Code\))?$/.exec(output.trim())?.[1];
+  if (!value || !claudeRolloutVersion(value)) throw new Error('CLAUDE_VERSION_INVALID');
 }
-
-export const claudeRolloutVersion = (version: string): boolean => {
-  const match = /^(\d+\.\d+)\.\d+$/.exec(version);
-  return !!match && compat.claudeCodeSeries.includes(match[1] ?? '');
-};
-
-export const codexRolloutVersion = (version: string): boolean =>
-  compat.verifiedCliVersions.includes(version);

@@ -234,10 +234,16 @@
       "packages/providers/src/claude.ts",
       "packages/providers/src/jsonrpc.ts"
     ],
-    "testIds": ["tests/aether/providers.test.ts", "tests/aether/native-runner.test.ts"],
+    "testIds": [
+      "tests/aether/providers.test.ts",
+      "tests/aether/native-runner.test.ts",
+      "tests/aether/provider-compat.test.ts",
+      "tests/aether/claude-real.test.ts"
+    ],
     "evidencePaths": ["evidence/workflow-all-tests.log"],
     "blockers": [
-      "Launch arguments are verified against a synthetic app-server and the Claude normalizer; no live model run is authorized."
+      "Launch arguments are verified against a synthetic app-server and the Claude normalizer; no live model run is authorized.",
+      "2026-10-19: installed Claude Code 2.1.302 completed an isolated SDK initialization with no prompt; future versions are admitted by syntax, not certified for arbitrary protocol changes or paid turns."
     ]
   },
   {
@@ -479,10 +485,15 @@
       "scripts/live-smoke.ts",
       "docs/provider-compatibility.md"
     ],
-    "testIds": ["tests/aether/codex-protocol.test.ts"],
+    "testIds": [
+      "tests/aether/codex-protocol.test.ts",
+      "tests/aether/codex-real.test.ts",
+      "tests/aether/provider-compat.test.ts"
+    ],
     "evidencePaths": ["evidence/live-smoke-codex.json", "evidence/live-smoke-exchange.json"],
     "blockers": [
-      "The live evidence is one whoami and one message exchange with Codex; a real code change and an approved command were not tested."
+      "The live evidence is one whoami and one message exchange with Codex; a real code change and an approved command were not tested.",
+      "2026-10-19: installed Codex 0.163.0 initialized and created an isolated thread through the native adapter without turn/start; this is not a current live model-turn verification."
     ]
   },
   {
@@ -642,11 +653,13 @@
       "tests/aether/observer.test.ts",
       "tests/aether/observer-runner.test.ts",
       "tests/aether/observation-control.test.ts",
-      "e2e/workbench/native-workflow.spec.ts"
+      "e2e/workbench/native-workflow.spec.ts",
+      "tests/aether/runner-codex-lines.test.ts"
     ],
     "evidencePaths": ["evidence/tests-observe-nonblocking.log", "evidence/e2e-observe-final.log"],
     "blockers": [
-      "Partial lines, rotation and unknown schemas are tested on fixtures; compatibility with real provider files is unverified and the read limits cap very large files."
+      "Partial lines, rotation and unknown schemas are tested on fixtures; compatibility with real provider files is unverified and the read limits cap very large files.",
+      "Future-version fixture transcripts and legacy version-rejected checkpoint recovery pass; opaque additions are skipped, malformed known records still fail, and this does not certify every future transcript shape."
     ]
   },
   {
@@ -3048,10 +3061,11 @@
       "scripts/contact-sheet.mjs",
       "e2e/office-life/office-life-perf.spec.ts"
     ],
-    "testIds": ["tests/aether/scene-preview.test.ts"],
+    "testIds": ["tests/aether/scene-preview.test.ts", "e2e/office-life/office-life-perf.spec.ts"],
     "blockers": [
-      "No office-life effect exists yet, so the preview route renders nothing and the gate was only run once, on the existing talk=1 stand-in traffic (ANGLE Metal, Apple M4, a loaded machine); the effect budgets are unmeasured."
-    ]
+      "2026-10-19: the talk=1 stand-in traffic passed all existing GPU deltas after batching idle branch beams (Apple M4, ANGLE Metal, balanced 806x540 canvas, three interleaved rounds): +9 draw calls and +0.1 ms JS against limits of 19 and 0.4 ms. The test now asserts the limits. This scoped synthetic comparison does not certify all effects, tiers or physical phones."
+    ],
+    "evidencePaths": ["evidence/office-life-perf.json"]
   },
   {
     "id": "OBS-LIFE-02",

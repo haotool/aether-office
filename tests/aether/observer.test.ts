@@ -65,7 +65,7 @@ it('observes only approved files with complete UTF-8 lines, durable cursors, rot
     const rotated = observer.read(resumed.checkpoint);
     expect(rotated.rotated).toBe(true);
     expect(rotated.records[0]?.sessionId).toBe('second');
-    writeFileSync(file, header('third', '999.0.0'));
+    writeFileSync(file, header('third', 'not-a-version'));
     expect(observer.read(rotated.checkpoint).status).toBe('unsupported_schema');
     unlinkSync(file);
     expect(observer.read(rotated.checkpoint).status).toBe('missing');
@@ -137,7 +137,7 @@ it('uses the real Claude SDK read API on an approved file without spawning a mod
       assistantId = randomUUID();
     const base = {
       sessionId,
-      version: '2.1.286',
+      version: '999.0.0',
       cwd: realpathSync(root),
       timestamp: '2026-10-01T00:00:00.000Z',
       isSidechain: false,
@@ -183,7 +183,7 @@ it('uses the real Claude SDK read API on an approved file without spawning a mod
   }
 });
 
-it('decodes verified 0.160.0 rollouts with their non-conversation records, and still refuses unverified versions and unknown records', () => {
+it('decodes future rollouts, skips opaque additions and recovers a checkpoint rejected by the old version gate', () => {
   const root = mkdtempSync(join(tmpdir(), 'aether-observer-160-'));
   const project = realpathSync(root);
   const write = (name: string, lines: unknown[]) => {
@@ -200,7 +200,7 @@ it('decodes verified 0.160.0 rollouts with their non-conversation records, and s
   };
   try {
     const verified = write('ok.jsonl', [
-      meta('0.160.0'),
+      meta('999.0.0'),
       { type: 'world_state', payload: {} },
       { type: 'token_usage_record', payload: {} },
       { type: 'inter_agent_communication_metadata', payload: {} },
@@ -212,12 +212,17 @@ it('decodes verified 0.160.0 rollouts with their non-conversation records, and s
     ]);
     expect(verified.status).toBe('observed');
     expect(verified.records.map((r) => r.text)).toEqual(['hello']);
-    expect(write('old.jsonl', [meta('0.130.0-alpha.5'), message]).status).toBe(
-      'unsupported_schema',
-    );
+    expect(write('old.jsonl', [meta('0.130.0-alpha.5'), message]).records).toHaveLength(1);
+    const legacy = { ...verified.checkpoint!, meta: null, failure: 'unsupported_schema' as const };
+    const recovered = new CodexObserver(root, 'ok.jsonl', project).read(legacy);
+    expect(recovered.records).toEqual(verified.records);
     expect(
-      write('new.jsonl', [meta('0.160.0'), { type: 'brand_new_record', payload: {} }]).status,
-    ).toBe('unsupported_schema');
+      write('new.jsonl', [
+        meta('999.0.0'),
+        { type: 'brand_new_record', payload: {} },
+        message,
+      ]).records.map((r) => r.text),
+    ).toEqual(['hello']);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
