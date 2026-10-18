@@ -21,6 +21,9 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ### Fixed
 
+- Load Codex and Claude Code upgrades without a release allowlist; retain protocol, path and permission validation and recover previously version-blocked observations.
+- Batch identical idle branch beams and enforce the existing message-animation GPU budgets in the performance test.
+
 - Keep task status badges visible on narrow phones when a workflow is waiting on dependencies.
 
 - Scope the Playwright Chrome channel to Chrome projects so optional iPhone/WebKit tests can launch.

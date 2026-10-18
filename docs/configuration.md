@@ -63,6 +63,6 @@ the machine and is never uploaded. Each project owner must additionally enable e
 }
 ```
 
-Omit a provider you do not use. Only verified releases are accepted ([provider compatibility](provider-compatibility.md)).
+Omit a provider you do not use. New CLI versions are accepted without release-list updates; required protocol fields are validated ([provider compatibility](provider-compatibility.md)).
 Further optional sections (`verifiers`, `terminals`, `cliTerminals`, `observations`) are described in
 [native execution](native-execution.md).

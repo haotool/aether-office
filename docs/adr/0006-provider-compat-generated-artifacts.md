@@ -2,29 +2,29 @@
 
 [Documentation](../README.md) · [Project](../../README.md)
 
-- Status: accepted
+- Status: amended 2026-10-19 (version admission; generated provenance retained)
 - Date: 2026-10-08
 
 ## Context
 
 Codex and Claude Code ship fast-moving CLIs and wire protocols. The adapters must match real binaries without hand-editing
-thousands of generated lines or accepting unverified versions in production.
+thousands of generated lines. Exact release admission caused compatible upgrades to stop loading.
 
 ## Decision
 
-`packages/providers/generated/compat.json` is the single verified list (`verifiedCliVersions`, `claudeCodeSeries`, schema
-version). Runtime checks use `packages/providers/src/compat.ts` (`assertCodexVersion`, `assertClaudeVersion`). Generated
-Codex TypeScript under `packages/providers/generated/codex-*-ts` comes from the provider CLI (`codex app-server
-generate-ts`); it is committed and regenerated when the schema changes—never edited by hand for protocol fields.
-`pnpm run protocol:regen` rewrites it from the installed binary of the pinned release and records a digest of the files in
-`compat.json` (`--check` reports drift from the binary). `tests/aether/codex-schema.test.ts` compares that digest on every
-run, so a hand edit fails CI without the CLI, and regenerates the files byte for byte when the binary is installed. The
-JSON Schema `generate-json-schema` also emits is not committed: nothing imports it and the TypeScript carries the same
-protocol.
-`pnpm run doctor` and provider tests gate additions to `compat.json` ([provider-compatibility.md](../provider-compatibility.md)).
+Provider admission uses version syntax and the official runtime protocol, not a release allowlist. Codex initializes the
+stable app-server surface; Claude initializes through the pinned Agent SDK. Required response fields and approval scopes
+remain validated, opaque additions are ignored, and unknown server requests are refused. Observers validate project and
+session metadata, read only visible known message shapes and skip opaque additions. Previously rejected observer checkpoints
+can be re-read with stable event identities, without rewriting the transcript.
+
+`packages/providers/generated/compat.json` remains historical provenance for the generated Codex reference types, not an
+admission policy. Generated TypeScript is committed unmodified with a digest; offline CI can verify it without a CLI.
+`pnpm run protocol:regen` remains available for intentional protocol changes. Adding a CLI release to the historical list
+is unnecessary for runtime admission.
 
 ## Consequences
 
-- A newer Codex patch that is byte-identical to a verified schema can be listed after doctor and tests; otherwise the
-  operator sees a version mismatch, not silent drift.
-- Generated folders stay in version control so CI and offline installs typecheck without calling vendor CLIs.
+- Compatible upgrades load without repository edits, including future major and prerelease versions.
+- Genuine required-protocol changes still fail safely and can require an adapter fix; no blanket future compatibility claim.
+- No schema downloads, dependency updates or paid model probes occur during startup.

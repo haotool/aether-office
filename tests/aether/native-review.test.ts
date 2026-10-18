@@ -26,7 +26,7 @@ it.each(['codex', 'claude'] as const)(
     const binary = join(directory, 'synthetic-' + provider);
     writeFileSync(
       binary,
-      `#!${process.execPath}\nif(process.argv.includes('--version'))console.log(${JSON.stringify(provider === 'codex' ? 'codex-cli 0.159.2' : '2.1.286 (Claude Code)')});else await import(${JSON.stringify(pathToFileURL(resolve('tests/processes/' + provider + '-review.mjs')).href)});\n`,
+      `#!${process.execPath}\nif(process.argv.includes('--version'))console.log(${JSON.stringify(provider === 'codex' ? 'codex-cli 999.0.0' : '999.0.0 (Claude Code)')});else await import(${JSON.stringify(pathToFileURL(resolve('tests/processes/' + provider + '-review.mjs')).href)});\n`,
       { mode: 0o700 },
     );
     try {

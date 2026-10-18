@@ -20,28 +20,21 @@ Agent SDK, ACP, and the hook mechanisms of Claude Code and Codex. It does not pa
 
 ## Verified releases
 
-`packages/providers/generated/compat.json` is the single list of provider releases that the adapters, the transcript observers
-and `pnpm run doctor` accept.
+Provider admission does not use a release allowlist. Any syntactically valid Codex or Claude Code version, including
+prereleases and future major versions, may load without changing this repository. Version output still identifies the
+expected executable. Codex uses the stable app-server initialization handshake; Claude uses the pinned Agent SDK.
+Required response fields, request scope and permission checks remain enforced. New optional fields and unknown notifications
+are ignored; unknown server requests are refused. A breaking change to a required protocol can still need an adapter fix:
+accepting a version is not a guarantee of an untested upstream protocol or a successful model turn.
 
-- **Codex** is matched by exact release. The generated protocol types for 0.160.0 are byte-identical to 0.159.2, which
-  `tests/aether/codex-schema.test.ts` checks against the installed binary. The generated types live in
-  `packages/providers/generated/`; `pnpm run protocol:regen` rewrites them for the pinned release.
-- **Claude Code** is matched per minor series (2.1.x), because the contract is the exactly pinned
-  `@anthropic-ai/claude-agent-sdk`.
+`packages/providers/generated/compat.json` records the historical provenance and digest of the committed Codex TypeScript
+reference types. Its release list is not a runtime gate. The generated files remain unchanged; `pnpm run protocol:regen`
+is a maintainer tool for an intentional protocol update, not a prerequisite after a CLI upgrade. `pnpm run doctor` reports
+installed versions and authentication without warning simply because a version is absent from that historical list.
 
-`pnpm run doctor` reads `verifiedCliVersions` and reports an installed Codex outside it as "not verified, probably works" (a warning; `--strict` makes it fail).
-
-To add a release: install it, run `pnpm run doctor` and the provider tests, then add it to `compat.json`. A version that is not
-listed is refused rather than assumed compatible.
-
-### Known unverified: Codex 0.162.x
-
-`codex app-server generate-ts` from Codex 0.162.1 differs from the pinned 0.159.2 types in 30 entries. It adds `RequestHeader`, `EnvironmentSkillsParams`,
-`ThreadAttachmentOwner*`, `ThreadPrediction*`, `ThreadGoalMutationOrigin` and `BrowserUseExtensionRequirements`, and changes
-`ThreadItem`, `Turn`, `TurnStartParams`, `ServerNotification`, `ResponseItem` and `CodexErrorInfo`. Listing it in `compat.json` is not
-enough: the types have to be regenerated for that release and the adapters checked against the changed shapes first. Until then
-`assertCodexVersion` refuses it and `pnpm run doctor` reports it as not verified. The check against the installed binary in
-`tests/aether/codex-schema.test.ts` is skipped for an unlisted release, so updating Codex does not fail the unit tests.
+Local no-inference checks initialize installed Codex and Claude processes in temporary directories. Synthetic future-version
+CLIs exercise native start, review and observation paths. Paid turns, authentication, quota and arbitrary future breaking
+protocols are separate verification concerns.
 
 Reference documentation: [Codex App Server](https://learn.chatgpt.com/docs/app-server),
 [Claude programmatic CLI](https://code.claude.com/docs/en/headless) and
@@ -92,10 +85,10 @@ process (`tests/aether/hook-approval.test.ts`).
 
 `apps/runner/src/observer.ts` provides bounded readers for transcripts outside AETHER's control.
 
-- **Codex** requires a `session_meta` with a matching absolute `cwd` and a verified CLI version. It reads visible user and
-  assistant text and function-call names; reasoning and non-visible channels are dropped; other record families are ignored or
+- **Codex** requires a `session_meta` with a matching absolute `cwd` and a syntactically valid CLI version. It reads visible user and
+  assistant text and function-call names; reasoning and non-visible channels are dropped; opaque new record and item families are ignored without extracting text; malformed known records are
   reported unsupported; parent and fork references are not followed.
-- **Claude** requires conversation metadata with a verified version, a UUID session id and a matching absolute `cwd`. Only the
+- **Claude** requires conversation metadata with a syntactically valid version, a UUID session id and a matching absolute `cwd`. Only the
   approved file's entries are passed to the installed SDK's `getSessionMessages` with a read-only `sessionStore`; no model is
   started and only visible text blocks are emitted. This relies on the pinned SDK's alpha SessionStore API.
 - Discovery is limited to 1,000 entries and six directory levels, never follows symlinks and never selects a home directory by

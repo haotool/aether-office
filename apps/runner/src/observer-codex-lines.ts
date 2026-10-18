@@ -3,24 +3,6 @@ import { z } from 'zod';
 import { codexRolloutVersion } from '@aether/providers';
 import { hash, type Observation } from './observer-source.js';
 
-// Record types seen in real 0.159.2 and 0.160.0 rollouts that carry no conversation content. Other rollout versions
-// come from providers/generated/compat.json and are reported as unsupported_schema instead of being parsed on a guess.
-const NON_CONVERSATION_RECORDS = [
-  'turn_context',
-  'event_msg',
-  'compacted',
-  'world_state',
-  'token_usage_record',
-  'inter_agent_communication_metadata',
-];
-const IGNORED_ITEMS = [
-  'function_call_output',
-  'custom_tool_call',
-  'custom_tool_call_output',
-  'web_search_call',
-  'image_generation_call',
-  'agent_message',
-];
 const metaSchema = z.object({
   id: z.string().min(1).max(200),
   cwd: z.string().refine(isAbsolute),
@@ -92,9 +74,11 @@ function conversationRecord(
       ? { ...base, kind: 'message', role: p['role'] as 'user' | 'assistant', text }
       : null;
   }
-  if (p['type'] === 'function_call' && typeof p['name'] === 'string')
-    return { ...base, kind: 'tool', role: 'assistant', text: p['name'].slice(0, 160) };
-  return IGNORED_ITEMS.includes(String(p['type'])) ? null : UNSUPPORTED;
+  if (p['type'] === 'function_call')
+    return typeof p['name'] === 'string'
+      ? { ...base, kind: 'tool', role: 'assistant', text: p['name'].slice(0, 160) }
+      : UNSUPPORTED;
+  return typeof p['type'] === 'string' ? null : UNSUPPORTED;
 }
 
 export function decodeLine(
@@ -108,8 +92,8 @@ export function decodeLine(
   if (parsed['type'] === 'session_meta')
     return acceptMeta(parsed['payload'], checkpoint, projectRoot) ? null : UNSUPPORTED;
   if (!checkpoint.meta) return UNSUPPORTED;
-  if (NON_CONVERSATION_RECORDS.includes(String(parsed['type']))) return null;
-  if (parsed['type'] !== 'response_item') return UNSUPPORTED;
+  if (parsed['type'] !== 'response_item')
+    return typeof parsed['type'] === 'string' ? null : UNSUPPORTED;
   const item = jsonObject.safeParse(parsed['payload']);
   if (!item.success) return UNSUPPORTED;
   const p = item.data;

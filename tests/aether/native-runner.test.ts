@@ -33,7 +33,7 @@ it('runs a synthetic app-server through real HTTP, isolated Git, durable approva
   const binary = join(directory, 'synthetic-codex');
   writeFileSync(
     binary,
-    `#!${process.execPath}\nif(process.argv.includes('--version'))console.log('codex-cli 0.159.2');else await import(${JSON.stringify(pathToFileURL(resolve('tests/processes/codex-app-server.mjs')).href)});\n`,
+    `#!${process.execPath}\nif(process.argv.includes('--version'))console.log('codex-cli 999.0.0');else await import(${JSON.stringify(pathToFileURL(resolve('tests/processes/codex-app-server.mjs')).href)});\n`,
     { mode: 0o700 },
   );
   const control = new Control(join(directory, 'control.sqlite'), { mode: 'live' });

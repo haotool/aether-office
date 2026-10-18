@@ -89,7 +89,7 @@ writeFileSync(
   join(observedRoot, 'session.jsonl'),
   JSON.stringify({
     type: 'session_meta',
-    payload: { id: randomUUID(), cwd: realpathSync(repository), cli_version: '0.159.2' },
+    payload: { id: randomUUID(), cwd: realpathSync(repository), cli_version: '999.0.0' },
   }) +
     '\n' +
     JSON.stringify({
@@ -114,7 +114,7 @@ setup('live', directory);
 const binary = join(directory, 'synthetic-codex');
 writeFileSync(
   binary,
-  `#!${process.execPath}\nif(process.argv.includes('--version'))console.log('codex-cli 0.159.2');else await import(${JSON.stringify(pathToFileURL(resolve('tests/processes/codex-app-server.mjs')).href)});\n`,
+  `#!${process.execPath}\nif(process.argv.includes('--version'))console.log('codex-cli 999.0.0');else await import(${JSON.stringify(pathToFileURL(resolve('tests/processes/codex-app-server.mjs')).href)});\n`,
   { mode: 0o700 },
 );
 const verifier = join(directory, 'verify.mjs');

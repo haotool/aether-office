@@ -53,7 +53,6 @@ it('tells apart a missing CLI, a CLI that needs sign-in, a broken native module 
     'node-pty': 'native_failure',
     'better-sqlite3': 'ok',
     node: 'version_mismatch',
-    'codex-version': 'warn',
   });
 });
 
@@ -67,19 +66,17 @@ it('does not start any model session: only version and status commands are issue
   expect(issued.every((c) => /--version|auth status|login status/.test(c))).toBe(true);
 });
 
-it('says an unverified but working codex is probably fine, and lists the verified versions', () => {
-  const [check] = checkEnvironment(
-    probe({ runs: { 'codex --version': ok('codex-cli 0.170.0') } }),
-    host,
-  ).filter((c) => c.id === 'codex-version');
-  expect(check!.detail).toBe(
-    'codex 0.170.0 is not verified (it probably works); verified versions: 0.159.2, 0.160.1',
-  );
-  const verified = checkEnvironment(
-    probe({ runs: { 'codex --version': ok('codex-cli 0.160.1') } }),
+it('does not require release-list updates for future provider versions, even in strict mode', () => {
+  const checks = checkEnvironment(
+    probe({
+      runs: {
+        'codex --version': ok('codex-cli 999.0.0'),
+        'claude --version': ok('999.0.0 (Claude Code)'),
+      },
+    }),
     host,
   );
-  expect(verified.some((c) => c.id === 'codex-version')).toBe(false);
+  expect(exitCodeOf(checks, true)).toBe(0);
 });
 
 it('fails only for a missing hard prerequisite; a missing provider CLI warns, and --strict fails on any warning', () => {
