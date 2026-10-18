@@ -116,3 +116,7 @@ temporary directory. A shot that is still above 250 KB is re-taken at a lower JP
 Two images depend on timing: the overview is taken 9 s into the first-visit tour and the crown 43 s in
 (`?intro=force`, caption hidden). Look at every image before committing it: the 3D scene is alive, so a frame can land a
 little differently, and no path, host name, person or token may be visible.
+
+## Archived cover explorations
+
+[Earlier cover candidates](hero-options/README.md) are retained separately as historical layout references. They contain obsolete scene views on synthetic demo data and are not current product or acceptance evidence.
