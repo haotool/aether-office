@@ -659,7 +659,7 @@
     "evidencePaths": ["evidence/tests-observe-nonblocking.log", "evidence/e2e-observe-final.log"],
     "blockers": [
       "Partial lines, rotation and unknown schemas are tested on fixtures; compatibility with real provider files is unverified and the read limits cap very large files.",
-      "Future-version fixture transcripts and legacy version-rejected checkpoint recovery pass; opaque additions are skipped, malformed known records still fail, and this does not certify every future transcript shape."
+      "Future-version fixture transcripts and one-time legacy version-rejected checkpoint recovery pass; opaque additions are skipped, malformed known records stay failed without replaying earlier observations, and this does not certify every future transcript shape."
     ]
   },
   {
@@ -1398,7 +1398,7 @@
     ],
     "evidencePaths": [],
     "blockers": [
-      "Markdown is parsed by the kernel into a typed block tree and rendered by the web app as React elements, never as HTML (the lint rule and the text-sink tests enforce it); A2A artifact fetching is not built, so its use of safe-fetch is untested."
+      "Markdown is parsed by the kernel into a typed block tree and rendered by the web app as React elements, never as HTML (the lint rule and the text-sink tests enforce it); safe-fetch rejects dotted and hexadecimal IPv4-mapped IPv6 before requests; A2A artifact fetching is not built, so its use of safe-fetch is untested."
     ]
   },
   {

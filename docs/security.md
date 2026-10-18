@@ -78,7 +78,8 @@ local user's file permissions. Strong sandboxing of agents is outside the intend
   an explicit click that echoes back a rule Claude Code itself offered, which Claude Code then applies for that session.
   "Provider acknowledged" is recorded only when the provider's own tool event arrives.
 - **Observation is read-only.** Sessions the operator starts are shown, never controlled, unless the operator explicitly
-  stops one (owner only, identity re-checked immediately before a single `SIGTERM`).
+  stops one (owner only, identity re-checked immediately before a single `SIGTERM`). A checkpoint rejected by the old
+  decoder is retried once; a permanent schema error stays failed instead of replaying the file on every poll.
 - **Clock out ends processes in bulk, with the same guards.** `POST /api/local-sessions/clock-out` (owner only, an
   `Idempotency-Key` required, at most 50 sessions) takes session keys and the process start time the person saw, never a
   pid. For each one the server re-scans and decides on its own clock: the session must still be running, be the same

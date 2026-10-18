@@ -9,6 +9,7 @@ const metaSchema = z.object({
   cli_version: z.string().refine(codexRolloutVersion),
 });
 export const checkpointSchema = z.strictObject({
+  decoderVersion: z.literal(1).optional(),
   identity: z.string(),
   offset: z.number().int().nonnegative(),
   prefixLength: z.number().int().min(0).max(256),

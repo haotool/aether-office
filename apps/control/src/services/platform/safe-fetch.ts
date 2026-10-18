@@ -1,13 +1,15 @@
 import { lookup as dnsLookup } from 'node:dns/promises';
 import http from 'node:http';
 import https from 'node:https';
-import { isIP } from 'node:net';
+import { BlockList, isIP } from 'node:net';
 import { DomainError } from '@aether/kernel';
 
 // Blocks SSRF into private networks and cloud metadata, pins the connection to the validated address, revalidates every
 // redirect and bounds time and size.
 
 const ipv4 = (ip: string) => ip.split('.').map(Number) as [number, number, number, number];
+const mappedAddresses = new BlockList();
+mappedAddresses.addSubnet('::ffff:0:0', 96, 'ipv6');
 
 function privateV4(ip: string): boolean {
   const [a, b] = ipv4(ip);
@@ -29,10 +31,8 @@ export function isPublicAddress(ip: string): boolean {
   const kind = isIP(ip);
   if (kind === 4) return !privateV4(ip);
   if (kind !== 6) return false;
+  if (mappedAddresses.check(ip, 'ipv6')) return false;
   const lower = ip.toLowerCase();
-  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(lower);
-  const mappedV4 = mapped?.[1];
-  if (mappedV4) return !privateV4(mappedV4);
   const first = parseInt(lower.split(':')[0] || '0', 16);
   return !(
     lower === '::' ||
