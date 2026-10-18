@@ -11,7 +11,7 @@ export const LIMITS = {
   nesting: 4,
   fanIn: 30,
   duplicateShare: 3,
-  codeLines: 146494,
+  codeLines: 146493,
 };
 
 const isEntry = (file) => /\/main\.tsx?$/.test(file);
@@ -33,7 +33,7 @@ export function structure(repo, { facts, graph }) {
     .filter((fn) => fn.nesting > LIMITS.nesting)
     .sort((a, b) => b.nesting - a.nesting);
   const cycles = findCycles(new Map([...graph.runtime].filter(([f]) => PRODUCT_SOURCE.test(f))));
-  const importers = [...fanIn(graph.runtime, (f) => !SELF.test(f))].filter(
+  const importers = [...fanIn(graph.runtime, (f) => PRODUCT_SOURCE.test(f))].filter(
     ([file, n]) => n > LIMITS.fanIn && !/\/index\.tsx?$/.test(file) && !fanInExcludedTarget(file),
   );
   const dead = deadExports(

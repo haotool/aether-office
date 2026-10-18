@@ -15,8 +15,7 @@ const { listRootItems } = await loadRelease('root-items.mjs');
 const { qualityInputs, formatQualityInputs } = await loadQuality('inputs.mjs');
 const { memoryRepo } = await loadQuality('repo.mjs');
 const { fanIn } = await loadQuality('graph.mjs');
-const { LIMITS } = await loadQuality('areas/structure.mjs');
-const { fanInExcludedTarget } = await loadQuality('lib.mjs');
+const { LIMITS, structure } = await loadQuality('areas/structure.mjs');
 const { scoreRepository } = await loadQuality('run.mjs');
 const { renderTable } = await loadQuality('render.mjs');
 const { parseFloors } = await loadQuality('floors.mjs');
@@ -55,24 +54,25 @@ describe('L7-04 release tree root items', () => {
   });
 });
 
-describe('L2-03 fan-in test support exclusion', () => {
-  it('does not count e2e/support or tests paths as violations', () => {
+describe('L2-03 product fan-in', () => {
+  it.each([
+    ['tests/aether', 'apps/control/src/server.ts', 0],
+    ['e2e', 'apps/control/src/server.ts', 0],
+    ['scripts', 'apps/control/src/server.ts', 0],
+    ['apps/web/src', 'e2e/support/sign-in.ts', 0],
+    ['apps/web/src', 'apps/web/src/hub.ts', 1],
+  ])('counts imports from %s to %s as %i violations', (from, target, expected) => {
     const runtime = new Map<string, Set<string>>();
-    for (let i = 0; i < 40; i += 1)
-      runtime.set(`e2e/spec-${i}.ts`, new Set(['e2e/support/sign-in.ts']));
-    runtime.set('apps/web/src/a.ts', new Set(['apps/web/src/b.ts']));
-    const { violations, detail } = measureFanIn({ runtime, uses: [] });
-    expect(fanInExcludedTarget('e2e/support/sign-in.ts')).toBe(true);
-    expect(fanIn(runtime).get('e2e/support/sign-in.ts')).toBe(40);
-    expect(violations).toBe(0);
-    expect(detail.some((d: string) => d.includes('sign-in'))).toBe(false);
-  });
-
-  it('still flags product modules above the fan-in limit', () => {
-    const runtime = new Map<string, Set<string>>();
-    for (let i = 0; i < LIMITS.fanIn + 1; i += 1)
-      runtime.set(`apps/web/src/f${i}.ts`, new Set(['apps/web/src/hub.ts']));
-    expect(measureFanIn({ runtime, uses: [] }).violations).toBe(1);
+    for (let i = 0; i <= LIMITS.fanIn; i += 1) runtime.set(`${from}/f${i}.ts`, new Set([target]));
+    runtime.set('apps/control/src/main.ts', new Set([target]));
+    const graph = { runtime, uses: [], reexportAll: new Map() };
+    const repo = memoryRepo({ [target]: 'export const hub = 1;\n' });
+    expect(fanIn(runtime).get(target)).toBe(LIMITS.fanIn + 2);
+    expect(measureFanIn(graph).violations).toBe(expected);
+    expect(
+      structure(repo, { facts: [], graph }).find((rule: { id: string }) => rule.id === 'fan-in')
+        .value,
+    ).toBe(expected);
   });
 });
 

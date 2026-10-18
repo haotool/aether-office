@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "overall": 97.5,
+  "overall": 97.6,
   "areas": [
     {
       "name": "structure",
       "title": "Structure",
-      "score": 95,
+      "score": 96.7,
       "measured": 100,
       "rules": [
         {
@@ -73,14 +73,13 @@
           "label": "Files imported by more than 30 others",
           "status": "fail",
           "weight": 5,
-          "value": 3,
+          "value": 2,
           "limit": 0,
           "full": 3,
           "unit": "",
-          "penalty": 5,
+          "penalty": 3.33,
           "details": [
-            "apps/control/src/server.ts:1 38 importers",
-            "apps/web/src/lib/api/api.ts:1 48 importers",
+            "apps/web/src/lib/api/api.ts:1 47 importers",
             "apps/web/src/ui/useT.ts:1 146 importers"
           ]
         },
@@ -98,7 +97,7 @@
         },
         {
           "id": "code-lines",
-          "label": "Code lines over the budget of 146494",
+          "label": "Code lines over the budget of 146493",
           "status": "pass",
           "weight": 6,
           "value": 0,
@@ -318,7 +317,7 @@
           "penalty": 0,
           "details": [
             "apps/control: 66/114 modules, 14631 source lines",
-            "apps/runner: 22/24 modules, 3054 source lines",
+            "apps/runner: 22/24 modules, 3066 source lines",
             "apps/web: 190/337 modules, 28168 source lines",
             "packages/contracts: 16/16 modules, 1365 source lines",
             "packages/kernel: 28/28 modules, 3452 source lines",
@@ -388,7 +387,7 @@
           "penalty": 0,
           "details": [
             "apps/control: 14631 source lines",
-            "apps/runner: 3054 source lines",
+            "apps/runner: 3066 source lines",
             "apps/web: 28168 source lines",
             "packages/contracts: 1365 source lines",
             "packages/kernel: 3452 source lines",
