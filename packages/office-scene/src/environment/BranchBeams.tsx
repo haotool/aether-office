@@ -13,6 +13,8 @@ import {
   type MeshBasicMaterial,
 } from 'three';
 import { useByValue } from '../core/use-by-value.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { itemAt } from './checked.js';
 
 const IDLE_TINT = new Color('#8196ab');
 const IDLE_HZ = 0.3;
@@ -36,29 +38,25 @@ type BeamProps = {
   to: [number, number, number];
   color: string;
   flowing: boolean;
-  animate: boolean;
 };
 
-function useBeamCurve(from: BeamProps['from'], to: BeamProps['to'], flowing: boolean) {
-  const start = useByValue(from);
-  const end = useByValue(to);
-  const curve = useMemo(
-    () =>
-      new QuadraticBezierCurve3(
-        new Vector3(...start),
-        new Vector3(
-          (start[0] + end[0]) / 2,
-          Math.max(start[1], end[1]) + 2.2,
-          (start[2] + end[2]) / 2,
+function useBeamCurve(beams: readonly BeamProps[], flowing: boolean) {
+  const coordinates = useByValue(beams.flatMap(({ from, to }) => [...from, ...to]));
+  const { curve, geometry } = useMemo(() => {
+    const curves = beams.map(
+      ({ from, to }) =>
+        new QuadraticBezierCurve3(
+          new Vector3(...from),
+          new Vector3((from[0] + to[0]) / 2, Math.max(from[1], to[1]) + 2.2, (from[2] + to[2]) / 2),
+          new Vector3(...to),
         ),
-        new Vector3(...end),
-      ),
-    [start, end],
-  );
-  const geometry = useMemo(
-    () => new TubeGeometry(curve, 28, flowing ? 0.075 : 0.04, 6, false),
-    [curve, flowing],
-  );
+    );
+    const parts = curves.map((c) => new TubeGeometry(c, 28, flowing ? 0.075 : 0.04, 6, false));
+    const geometry = mergeGeometries(parts);
+    for (const part of parts) part.dispose();
+    if (!geometry) throw new Error('GEOMETRY_MERGE_FAILED');
+    return { curve: itemAt(curves, 0), geometry };
+  }, [coordinates, flowing]);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return { curve, geometry };
 }
@@ -86,8 +84,9 @@ function Packets({
   ));
 }
 
-function BranchBeam({ from, to, color, flowing, animate }: BeamProps) {
-  const { curve, geometry } = useBeamCurve(from, to, flowing);
+function BranchBeam({ beams, animate }: { beams: readonly BeamProps[]; animate: boolean }) {
+  const { color, flowing } = itemAt(beams, 0);
+  const { curve, geometry } = useBeamCurve(beams, flowing);
   const dashes = useMemo(() => (flowing ? null : dashTexture()), [flowing]);
   useEffect(() => () => dashes?.dispose(), [dashes]);
   const tint = useMemo(
@@ -107,7 +106,7 @@ function BranchBeam({ from, to, color, flowing, animate }: BeamProps) {
     }
     packets.current.forEach((mesh, i) => {
       if (!mesh) return;
-      mesh.position.copy(curve.getPoint((clock.current * 0.35 + i / 3) % 1));
+      curve.getPoint((clock.current * 0.35 + i / 3) % 1, mesh.position);
     });
   });
   return (
@@ -130,13 +129,20 @@ function BranchBeam({ from, to, color, flowing, animate }: BeamProps) {
   );
 }
 
-type Beam = Omit<BeamProps, 'animate'> & { id: string };
+type Beam = BeamProps & { id: string };
 
 export function BranchBeams({ beams, animate }: { beams: Beam[]; animate: boolean }) {
+  const batches = new Map<string, Beam[]>();
+  for (const beam of beams) {
+    const key = beam.flowing ? `flow:${beam.id}` : `idle:${beam.color}`;
+    const batch = batches.get(key) ?? [];
+    batch.push(beam);
+    batches.set(key, batch);
+  }
   return (
     <>
-      {beams.map((beam) => (
-        <BranchBeam key={beam.id} {...beam} animate={animate} />
+      {[...batches].map(([key, batch]) => (
+        <BranchBeam key={key} beams={batch} animate={animate} />
       ))}
     </>
   );

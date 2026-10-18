@@ -114,12 +114,6 @@ const PROVIDER_CLIS = [
 
 function providerChecks(probe: Probe): Check[] {
   const checks: Check[] = [];
-  const verified =
-    (
-      JSON.parse(probe.read('packages/providers/generated/compat.json') ?? '{}') as {
-        verifiedCliVersions?: string[];
-      }
-    ).verifiedCliVersions ?? [];
   for (const p of PROVIDER_CLIS) {
     const version = probe.run(p.id, p.version);
     if (version.kind === 'enoent') {
@@ -131,18 +125,11 @@ function providerChecks(probe: Probe): Check[] {
       continue;
     }
     const auth = probe.run(p.id, p.auth);
-    const installed = semver(version.stdout);
     checks.push({
       id: p.id,
       status: auth.kind === 'ok' ? 'ok' : 'auth_required',
       detail: `${first(version.stdout)}${auth.kind === 'ok' ? '' : ' — not signed in or sign-in could not be confirmed'}`,
     });
-    if (p.id === 'codex' && installed && verified.length && !verified.includes(installed))
-      checks.push({
-        id: 'codex-version',
-        status: 'warn',
-        detail: `codex ${installed} is not verified (it probably works); verified versions: ${verified.join(', ')}`,
-      });
   }
   return checks;
 }

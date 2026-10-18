@@ -46,7 +46,7 @@ function resumeCheckpoint(
       prefix.length < previous.prefixLength ||
       hash(prefix.subarray(0, previous.prefixLength)) !== previous.prefixHash);
   const checkpoint: ObserverCheckpoint =
-    previous && !rotated
+    previous && !rotated && previous.failure !== 'unsupported_schema'
       ? { ...previous }
       : { identity, offset: 0, prefixLength: 0, prefixHash: hash(''), meta: null, failure: null };
   checkpoint.prefixLength = prefix.length;

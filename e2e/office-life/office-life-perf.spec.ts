@@ -114,5 +114,8 @@ test.describe('office-life perf harness', () => {
         2,
       ),
     );
+    for (const [name, result] of Object.entries(deltas))
+      if (result.limit !== undefined)
+        expect.soft(result.delta, `${name} delta over baseline`).toBeLessThanOrEqual(result.limit);
   });
 });

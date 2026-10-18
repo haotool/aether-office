@@ -228,8 +228,8 @@ Workspace examples are synthetic and conversations retain their source language.
 
 | Area              | Current support                                                                                                           |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Claude Code       | 2.1.x, checked against 2.1.289; hooks, subagents, model catalog and optional remote approvals                             |
-| Codex CLI         | Exact verified releases 0.159.2, 0.160.0 and 0.160.1; unlisted releases are refused                                       |
+| Claude Code       | No release allowlist; SDK initialization and required fields determine compatibility                                      |
+| Codex CLI         | No release allowlist; stable app-server handshake and required fields determine compatibility                             |
 | macOS             | Tested browser platform; native Windows terminals are unsupported                                                         |
 | Linux             | Installation and unit tests run in CI; browser coverage is stated in the [development guide](docs/development.md#testing) |
 | External sessions | Read-only until an eligible session is continued under AETHER's control                                                   |

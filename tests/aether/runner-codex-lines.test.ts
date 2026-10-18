@@ -43,10 +43,10 @@ describe('rollout session_meta', () => {
     expect(cp.meta).toEqual({ id: 's1', cwd: ROOT, cli_version: '0.160.0' });
   });
 
-  it('refuses a session of another project, an unverified CLI version and a relative path', () => {
+  it('refuses a session of another project, malformed version metadata and a relative path', () => {
     for (const bad of [
       { cwd: '/elsewhere' },
-      { cli_version: '9.9.9' },
+      { cli_version: 'not-a-version' },
       { cwd: 'relative' },
       { id: '' },
     ]) {
@@ -137,13 +137,16 @@ describe('rollout conversation lines', () => {
       expect(decodeLine(item({ type }), 2, cp, ROOT), type).toBeNull();
   });
 
-  it('reports a format it does not know instead of guessing', () => {
+  it('skips opaque future records and items, but refuses malformed known messages', () => {
     const cp = started();
-    expect(decodeLine(line({ type: 'brand_new_record' }), 1, cp, ROOT)).toBe('unsupported_schema');
-    expect(decodeLine(item({ type: 'brand_new_item' }), 2, cp, ROOT)).toBe('unsupported_schema');
+    expect(decodeLine(line({ type: 'brand_new_record' }), 1, cp, ROOT)).toBeNull();
+    expect(decodeLine(item({ type: 'brand_new_item' }), 2, cp, ROOT)).toBeNull();
     expect(
       decodeLine(item({ type: 'message', role: 'user', content: 'not a list' }), 3, cp, ROOT),
     ).toBe('unsupported_schema');
+    expect(decodeLine(item({ type: 'function_call', name: 5 }), 4, cp, ROOT)).toBe(
+      'unsupported_schema',
+    );
     expect(decodeLine(line({ type: 'response_item', payload: 5 }), 4, cp, ROOT)).toBe(
       'unsupported_schema',
     );

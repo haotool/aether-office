@@ -44,8 +44,8 @@ AETHER_MODE=live AETHER_NATIVE_CONFIG=/absolute/path/to/native.json pnpm runner
 Finally the project owner enables execution in **Settings → Native agent execution** and sets turn and time limits.
 Closing the setting cancels work that has not started and requests cancellation of work that has.
 
-Only verified provider releases are accepted; a mismatched version refuses to start rather than assume compatibility
-([provider compatibility](provider-compatibility.md)).
+Provider versions are not allowlisted. The installed CLI may initialize through the official protocol or SDK; malformed
+required responses still fail safely ([provider compatibility](provider-compatibility.md)).
 
 ## Execution model
 

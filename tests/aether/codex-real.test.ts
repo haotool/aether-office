@@ -1,4 +1,8 @@
 import { spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { CodexAdapter } from '../../packages/providers/src/codex.js';
 import { describe, expect, it } from 'vitest';
 import { JsonRpcProcess } from '../../packages/providers/src/jsonrpc.js';
 
@@ -24,6 +28,28 @@ describe.skipIf(!installed)('the installed Codex CLI', () => {
       expect(String(response['userAgent'])).toContain(installed!.split('.').slice(0, 2).join('.'));
     } finally {
       rpc.close();
+    }
+  }, 20000);
+  it('loads an isolated native thread through the actual adapter without starting a model turn', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'aether-codex-compat-'));
+    const adapter = new CodexAdapter(
+      {
+        binary: 'codex',
+        cwd: root,
+        maxTurns: 1,
+        timeoutMs: 10000,
+        env: { ...process.env, CODEX_HOME: root },
+      },
+      { processStarted: async () => {}, event: async () => {}, permission: async () => 'deny' },
+    );
+    try {
+      expect(await adapter.run('Never submitted', AbortSignal.abort())).toMatchObject({
+        outcome: 'cancelled',
+      });
+      expect(adapter.threadId).toBeTruthy();
+    } finally {
+      adapter.close();
+      rmSync(root, { recursive: true, force: true });
     }
   }, 20000);
 });
