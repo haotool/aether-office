@@ -1,7 +1,7 @@
 {
   "target": 95,
   "floors": {
-    "structure": 95,
+    "structure": 96.7,
     "types": 100,
     "tests": 100,
     "ui": 100,

@@ -6,7 +6,7 @@ import { LIMITS } from '../areas/structure.mjs';
 import { FLAKY } from '../areas/tests.mjs';
 import { findDuplicates } from '../dup.mjs';
 import { deadExports, fanIn } from '../graph.mjs';
-import { SELF, at, fanInExcludedTarget, isSourceFile, locations, scan, top } from '../lib.mjs';
+import { at, fanInExcludedTarget, isSourceFile, locations, scan, top } from '../lib.mjs';
 import { parseFanInAllowlist } from './adr-allowlist.mjs';
 import { listRootItems } from './root-items.mjs';
 import { CODE_FILE, PRODUCT_SOURCE, lineCount, matching } from '../repo.mjs';
@@ -220,7 +220,7 @@ export function measureFanIn(graph, repo = null) {
   const allow = repo
     ? parseFanInAllowlist(repo)
     : { allowed: new Set(), violations: 0, detail: [] };
-  const importers = [...fanIn(graph.runtime, (f) => !SELF.test(f))].filter(
+  const importers = [...fanIn(graph.runtime, (f) => PRODUCT_SOURCE.test(f))].filter(
     ([file, n]) =>
       n > LIMITS.fanIn &&
       !/\/index\.tsx?$/.test(file) &&
