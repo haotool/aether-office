@@ -46,6 +46,7 @@
     "runner": "tsx apps/runner/src/main.ts",
     "lint": "node scripts/check-boundaries.mjs && node scripts/check-design-tokens.mjs",
     "setup": "tsx scripts/setup.ts",
+    "autostart": "tsx scripts/autostart.ts",
     "postinstall": "node scripts/prepare-pty.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

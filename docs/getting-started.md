@@ -172,20 +172,21 @@ accepted only when addressed to a private-network address on the same port, so a
 machine is refused (this is what stops DNS rebinding). The connection is plain HTTP and the token crosses the network
 unencrypted: use a network you trust, or put a TLS tunnel such as Tailscale in front. See [security](security.md).
 
-### macOS login service
+### Start at login (optional)
 
-For an existing `com.haotool.aether-office` LaunchAgent, set `AETHER_HOST` to `0.0.0.0` in the
-plist's `EnvironmentVariables` dictionary. The service reads its environment from the plist when launched; an export in
-a terminal does not change the running login service. Keep its working directory and data directory as configured.
-Reload the existing service after saving the plist:
+Nothing starts automatically unless you ask. After `pnpm build`:
 
 ```sh
-launchctl bootout "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.haotool.aether-office.plist"
-launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.haotool.aether-office.plist"
+pnpm autostart on          # start the control plane at login (this computer only)
+pnpm autostart on --lan    # same, reachable from a phone on your network (AETHER_HOST=0.0.0.0)
+pnpm autostart status
+pnpm autostart off
 ```
 
-Then reopen **Open on your phone** to generate a fresh QR code. If it still says local connections only, check the
-running service's environment with `launchctl print "gui/$(id -u)/com.haotool.aether-office"`.
+It installs a launchd LaunchAgent (`com.haotool.aether-office`, macOS only), using the
+current checkout, Node binary and data directory (`AETHER_DATA_DIR`, default `.data/live`). Run `on` again after moving the
+checkout or switching Node versions; it replaces an existing service of the same name. Then reopen **Open on your phone**
+for a fresh QR code. Rebuild and restart after upgrading (`pnpm autostart on` does both).
 
 ## Upgrading
 

@@ -19,6 +19,10 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ## [Unreleased]
 
+### Added
+
+- `pnpm autostart on|off|status` starts the control plane at login on macOS; it is off until requested.
+
 ### Fixed
 
 - Count only product runtime importers in both fan-in quality measures, so adding tests cannot worsen the product coupling score.
