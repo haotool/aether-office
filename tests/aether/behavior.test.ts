@@ -33,6 +33,17 @@ function run(over: Partial<BehaviorInput>, count: number) {
   return out;
 }
 
+const share = (over: Partial<BehaviorInput>, clip: ClipName) => {
+  let hits = 0;
+  let total = 0;
+  for (let s = 0; s < 80; s++)
+    for (const m of run({ ...over, seed: `seed-${s}` }, 10)) {
+      total++;
+      if (m.clip === clip) hits++;
+    }
+  return hits / total;
+};
+
 describe('what real work looks like', () => {
   const fact = (
     state: string,
@@ -102,23 +113,13 @@ describe('the behavior director', () => {
   });
 
   it('leans back to think while the model works, nods while reading, and shrugs on an error', () => {
-    const count = (over: Partial<BehaviorInput>, clip: ClipName) => {
-      let hits = 0;
-      let total = 0;
-      for (let s = 0; s < 80; s++)
-        for (const m of run({ ...over, seed: `seed-${s}` }, 10)) {
-          total++;
-          if (m.clip === clip) hits++;
-        }
-      return hits / total;
-    };
-    expect(count({ mode: 'model' }, 'thinking')).toBeGreaterThan(0.2);
-    expect(count({ mode: 'working' }, 'thinking')).toBeLessThan(
-      count({ mode: 'model' }, 'thinking'),
+    expect(share({ mode: 'model' }, 'thinking')).toBeGreaterThan(0.2);
+    expect(share({ mode: 'working' }, 'thinking')).toBeLessThan(
+      share({ mode: 'model' }, 'thinking'),
     );
-    expect(count({ mode: 'reading' }, 'nod')).toBeGreaterThan(0.15);
-    expect(count({ mode: 'working' }, 'nod')).toBe(0);
-    expect(count({ activity: 'error' }, 'shrug')).toBeGreaterThan(0.3);
+    expect(share({ mode: 'reading' }, 'nod')).toBeGreaterThan(0.15);
+    expect(share({ mode: 'working' }, 'nod')).toBe(0);
+    expect(share({ activity: 'error' }, 'shrug')).toBeGreaterThan(0.3);
   });
 
   it('keeps each clip near its configured weight over many members', () => {
@@ -139,16 +140,6 @@ describe('the behavior director', () => {
   });
 
   it('glances at the second monitor more when there is one, and yawns more after a long quiet', () => {
-    const share = (over: Partial<BehaviorInput>, clip: ClipName) => {
-      let hits = 0;
-      let total = 0;
-      for (let s = 0; s < 80; s++)
-        for (const m of run({ ...over, seed: `seed-${s}` }, 10)) {
-          total++;
-          if (m.clip === clip) hits++;
-        }
-      return hits / total;
-    };
     expect(share({ secondMonitor: true }, 'look_around')).toBeGreaterThan(
       share({ secondMonitor: false }, 'look_around') * 1.4,
     );
