@@ -51,6 +51,8 @@ unmeasured; an invalid file sets `gatesError` and keeps every **G** row unmeasur
 `{ id, credit: 0|0.5|1, reviewers, sha, files, note }`. At release time each entry must reference a known criterion id, valid
 credit, existing `files`, and a `sha` that is an ancestor of `HEAD`; otherwise that criterion stays unmeasured.
 
+**Fan-in scope:** both Structure and L2-03 count runtime importers under `apps/*/src` and `packages/*/src`. Test, e2e and script imports do not increase product coupling; a product module with more than 30 product importers still fails.
+
 **D9 fan-in allowlist:** a line `fan-in-allow: <repo-relative path>` in `docs/adr/*.md` excludes that file from L2-03 fan-in
 violations. At most five declarations repo-wide; invalid or missing paths and excess declarations add L2-03 violations.
 
