@@ -22,7 +22,7 @@ function scopeOf(pattern: string): string {
   return literal.join('/');
 }
 
-// shortcut: globs under one literal scope may conflict; use full glob intersection if false conflicts become common.
+// Conservative: patterns sharing a literal scope are treated as overlapping.
 export function patternsOverlap(a: string, b: string): boolean {
   const x = scopeOf(a);
   const y = scopeOf(b);
