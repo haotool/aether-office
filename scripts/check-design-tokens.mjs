@@ -4,7 +4,7 @@ import { RULE_NAMES, regressions, tally, violationsIn } from './design-token-rul
 
 /**
  * The design-token gate: the stylesheets take their colors, type sizes, spacing, radii and layers from
- * apps/web/src/tokens.css and nothing else (AGENTS.md, UI rules). A raw value anywhere else is a violation, so the
+ * apps/web/src/styles/core/tokens.css and nothing else (AGENTS.md, UI rules). A raw value anywhere else is a violation, so the
  * scale cannot drift back into one-off numbers. 0, 1px hairlines, 50% and unitless values are not scale values.
  *
  * The strict rules (literal px sizes, vh, @media px off the scale, px custom properties, literal seconds, shadows and
