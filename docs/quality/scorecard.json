@@ -97,7 +97,7 @@
         },
         {
           "id": "code-lines",
-          "label": "Code lines over the budget of 146478",
+          "label": "Code lines over the budget of 146476",
           "status": "pass",
           "weight": 6,
           "value": 0,
@@ -309,18 +309,18 @@
           "label": "Share of product modules a unit test imports directly",
           "status": "pass",
           "weight": 15,
-          "value": 60.77,
+          "value": 60.7,
           "limit": 60,
           "minimum": true,
           "full": 40,
           "unit": "%",
           "penalty": 0,
           "details": [
-            "apps/control: 66/114 modules, 14608 source lines",
+            "apps/control: 66/114 modules, 14604 source lines",
             "apps/runner: 22/24 modules, 3062 source lines",
-            "apps/web: 190/337 modules, 28153 source lines",
+            "apps/web: 190/337 modules, 28152 source lines",
             "packages/contracts: 16/16 modules, 1376 source lines",
-            "packages/kernel: 28/28 modules, 3452 source lines",
+            "packages/kernel: 28/29 modules, 3455 source lines",
             "packages/office-scene: 135/242 modules, 25533 source lines",
             "packages/providers: 14/14 modules, 2044 source lines"
           ]
@@ -386,11 +386,11 @@
           "unit": "",
           "penalty": 0,
           "details": [
-            "apps/control: 14608 source lines",
+            "apps/control: 14604 source lines",
             "apps/runner: 3062 source lines",
-            "apps/web: 28153 source lines",
+            "apps/web: 28152 source lines",
             "packages/contracts: 1376 source lines",
-            "packages/kernel: 3452 source lines",
+            "packages/kernel: 3455 source lines",
             "packages/office-scene: 25533 source lines",
             "packages/providers: 2044 source lines"
           ]
@@ -714,13 +714,13 @@
           "penalty": 0,
           "details": [
             "apps/web/dist/assets/src-mDg1YpRt.js:1 377 KB",
-            "apps/web/dist/assets/index-BPrb-s7W.js:1 91 KB",
+            "apps/web/dist/assets/index-BZ5WRxPQ.js:1 91 KB",
             "apps/web/dist/assets/Terminals-CnNHjm4A.js:1 86 KB",
             "apps/web/dist/assets/TaskDag-D-3a21lG.js:1 56 KB",
             "apps/web/dist/assets/core-Dty4hGcG.js:1 27 KB",
-            "apps/web/dist/assets/ProjectPage-WyQQRFUW.js:1 27 KB",
+            "apps/web/dist/assets/ProjectPage-1c7K9cBt.js:1 27 KB",
             "apps/web/dist/assets/zh-DzBydsEF.js:1 21 KB",
-            "apps/web/dist/assets/PanelBody-BZvc6PkN.js:1 20 KB"
+            "apps/web/dist/assets/PanelBody-Cag5nU0k.js:1 20 KB"
           ]
         },
         {
@@ -748,7 +748,7 @@
           "unit": "KB",
           "penalty": 0.9,
           "details": [
-            "apps/web/dist/assets/index-BPrb-s7W.js:1 79 KB",
+            "apps/web/dist/assets/index-BZ5WRxPQ.js:1 80 KB",
             "apps/web/dist/assets/signals-BiryGzd7.js:1 3 KB",
             "apps/web/dist/assets/scheduler-CaJXFZeK.js:1 1 KB",
             "apps/web/dist/assets/react-dom-DkN6JdHT.js:1 1 KB",
@@ -776,9 +776,9 @@
             "apps/web/dist/assets/departments-CfOr-c1i.js:1 1 KB",
             "apps/web/dist/assets/animal-states-fx34-YW1.js:1 1 KB",
             "apps/web/dist/assets/session-limits-DrO1JNX3.js:1 0 KB",
-            "apps/web/dist/assets/localSessions-CfYF8BBT.js:1 6 KB",
+            "apps/web/dist/assets/localSessions-DYzz-ZfK.js:1 6 KB",
             "apps/web/dist/assets/clock-out-CaVW7enB.js:1 1 KB",
-            "apps/web/dist/assets/feed-avatar-Ble3KsdZ.js:1 5 KB",
+            "apps/web/dist/assets/feed-avatar-CZ0O9aol.js:1 5 KB",
             "apps/web/dist/assets/copy-D0380n_s.js:1 0 KB",
             "apps/web/dist/assets/door-open-V6h4iHVQ.js:1 0 KB",
             "apps/web/dist/assets/PreferenceControls-CfTh7Flj.js:1 1 KB",
