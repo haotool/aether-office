@@ -1,5 +1,6 @@
 import { stat } from 'node:fs/promises';
 import { structureWrappers, type Notice } from '@aether/kernel';
+import { channelVisible } from '@aether/providers/compat';
 import { readEdge } from '../platform/file-edge.js';
 import { redactSecrets } from '../platform/redaction.js';
 
@@ -52,9 +53,7 @@ function redactNotice(n: Notice): Notice {
     case 'command':
       return { ...n, name: clip(n.name, 80), args: clip(n.args, 300) };
     case 'output':
-      return { ...n, text: clip(n.text, MAX_TEXT) };
     case 'context':
-      return { ...n, text: clip(n.text, MAX_TEXT) };
     case 'hook':
       return { ...n, text: clip(n.text, MAX_TEXT) };
     case 'interrupted':
@@ -148,6 +147,7 @@ function codexEntries(entry: Record<string, unknown>): TranscriptEntry[] {
   if (entry['type'] !== 'response_item') return [];
   const at = time(entry['timestamp']);
   const p = obj(entry['payload']);
+  if (!channelVisible(p['channel'])) return [];
   if (p['type'] === 'message' && (p['role'] === 'user' || p['role'] === 'assistant')) {
     const role = p['role'];
     return (Array.isArray(p['content']) ? p['content'] : [])
