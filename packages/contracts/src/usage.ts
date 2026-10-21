@@ -116,3 +116,14 @@ export const gitKpiResponseSchema = z.object({
   ),
 });
 export type GitKpiResponse = z.infer<typeof gitKpiResponseSchema>;
+
+export type GitGraphCommit = {
+  sha: string;
+  parents: string[];
+  refs: string[];
+  subject: string;
+  author: string;
+  at: number;
+  lane: number;
+  edges: { to: number; parent: string }[];
+};

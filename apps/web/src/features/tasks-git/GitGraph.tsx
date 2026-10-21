@@ -1,24 +1,14 @@
+import type { GitGraphCommit } from '@aether/contracts';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api/api.js';
 import { useT } from '../../ui/useT.js';
 import { POLL, poll } from '../../lib/app/polling.js';
 
-type Commit = {
-  sha: string;
-  parents: string[];
-  refs: string[];
-  subject: string;
-  author: string;
-  at: number;
-  lane: number;
-  edges: { to: number; parent: string }[];
-};
-
 export function useGitGraph(projectId: string, enabled = true) {
   return useQuery({
     queryKey: ['git-graph', projectId],
     queryFn: () =>
-      api<{ commits: Commit[]; lanes: number }>(`/api/projects/${projectId}/git-graph`),
+      api<{ commits: GitGraphCommit[]; lanes: number }>(`/api/projects/${projectId}/git-graph`),
     ...poll(POLL.slow),
     retry: false,
     enabled,
@@ -40,7 +30,7 @@ const COLORS = [
 const x = (lane: number) => 12 + lane * LANE;
 const y = (row: number) => ROW / 2 + row * ROW;
 
-type Commits = Commit[];
+type Commits = GitGraphCommit[];
 
 function LaneGraph({ commits, lanes }: { commits: Commits; lanes: number }) {
   const rowOf = new Map(commits.map((c, i) => [c.sha, i]));
