@@ -4,7 +4,7 @@ import { createInterface } from 'node:readline';
 import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 const argv = process.argv.slice(2),
-  value = (flag) => argv[argv.indexOf(flag) + 1];
+  value = (flag) => argv.find((a) => a.startsWith(`${flag}=`))?.slice(flag.length + 1);
 assert.equal(value('--tools'), 'Read,Glob,Grep');
 assert.ok(value('--disallowedTools').includes('Bash'));
 assert.ok(argv.includes('--strict-mcp-config'));

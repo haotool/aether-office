@@ -108,33 +108,33 @@ The generated table: every package in the lockfile, the licence its `package.jso
 it is used and how it was verified.
 <!-- BEGIN GENERATED: npm-inventory (scripts/oss/third-party-notices.mjs) -->
 
-431 packages in `pnpm-lock.yaml` (266 shipped). By scope and
-licence: shipped MIT: 210; dev MIT: 110; dev Apache-2.0: 29; shipped ISC: 27; dev MPL-2.0: 14; dev LicenseRef-Anthropic-Commercial-Terms: 9; shipped LicenseRef-Anthropic-Commercial-Terms: 9; shipped BSD-3-Clause: 7; shipped Apache-2.0: 6; shipped BlueOak-1.0.0: 5; dev BSD-3-Clause: 2; dev ISC: 1; shipped BSD-2-Clause: 1; shipped Unlicense: 1.
+430 packages in `pnpm-lock.yaml` (266 shipped). By scope and
+licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; dev MPL-2.0: 14; dev LicenseRef-Anthropic-Commercial-Terms: 9; shipped LicenseRef-Anthropic-Commercial-Terms: 9; shipped BSD-3-Clause: 7; shipped Apache-2.0: 6; shipped BlueOak-1.0.0: 5; dev BSD-3-Clause: 2; dev ISC: 1; shipped BSD-2-Clause: 1; shipped Unlicense: 1.
 
 | Package | Version | Declared (package.json) | Applies | Used in | Verified against |
 | --- | --- | --- | --- | --- | --- |
 | @a2a-js/sdk | 1.3.0 | Apache-2.0 | Apache-2.0 | server runtime | LICENSE reads as Apache-2.0 |
-| @agentclientprotocol/claude-agent-acp | 0.85.1 | Apache-2.0 | Apache-2.0 | dev/build | LICENSE reads as Apache-2.0 |
-| @agentclientprotocol/sdk | 1.6.0 | Apache-2.0 | Apache-2.0 | dev/build | LICENSE reads as Apache-2.0 |
+| @agentclientprotocol/claude-agent-acp | 0.94.0 | Apache-2.0 | Apache-2.0 | dev/build | LICENSE reads as Apache-2.0 |
 | @agentclientprotocol/sdk | 1.7.0 | Apache-2.0 | Apache-2.0 | server runtime | LICENSE reads as Apache-2.0 |
-| @anthropic-ai/claude-agent-sdk-darwin-arm64 | 0.3.286 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | dev/build | platform build (family licence) |
-| @anthropic-ai/claude-agent-sdk-darwin-arm64 | 0.3.287 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | server runtime | platform build (family licence) |
-| @anthropic-ai/claude-agent-sdk-darwin-x64 | 0.3.286 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | dev/build | platform build (family licence) |
-| @anthropic-ai/claude-agent-sdk-darwin-x64 | 0.3.287 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | server runtime | platform build (family licence) |
-| @anthropic-ai/claude-agent-sdk-linux-arm64-musl | 0.3.286 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | dev/build | platform build (family licence) |
-| @anthropic-ai/claude-agent-sdk-linux-arm64-musl | 0.3.287 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | server runtime | platform build (family licence) |
-| @anthropic-ai/claude-agent-sdk-linux-arm64 | 0.3.286 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | dev/build | platform build (family licence) |
-| @anthropic-ai/claude-agent-sdk-linux-arm64 | 0.3.287 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | server runtime | platform build (family licence) |
-| @anthropic-ai/claude-agent-sdk-linux-x64-musl | 0.3.286 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | dev/build | platform build (family licence) |
-| @anthropic-ai/claude-agent-sdk-linux-x64-musl | 0.3.287 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | server runtime | platform build (family licence) |
-| @anthropic-ai/claude-agent-sdk-linux-x64 | 0.3.286 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | dev/build | platform build (family licence) |
-| @anthropic-ai/claude-agent-sdk-linux-x64 | 0.3.287 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | server runtime | platform build (family licence) |
-| @anthropic-ai/claude-agent-sdk-win32-arm64 | 0.3.286 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | dev/build | platform build (family licence) |
-| @anthropic-ai/claude-agent-sdk-win32-arm64 | 0.3.287 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | server runtime | platform build (family licence) |
-| @anthropic-ai/claude-agent-sdk-win32-x64 | 0.3.286 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | dev/build | platform build (family licence) |
-| @anthropic-ai/claude-agent-sdk-win32-x64 | 0.3.287 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | server runtime | platform build (family licence) |
-| @anthropic-ai/claude-agent-sdk | 0.3.286 | SEE LICENSE IN README.md | LicenseRef-Anthropic-Commercial-Terms | dev/build | recorded decision |
-| @anthropic-ai/claude-agent-sdk | 0.3.287 | SEE LICENSE IN README.md | LicenseRef-Anthropic-Commercial-Terms | server runtime | recorded decision |
+| @agentclientprotocol/sdk | 2.0.0 | Apache-2.0 | Apache-2.0 | dev/build | LICENSE reads as Apache-2.0 |
+| @anthropic-ai/claude-agent-sdk-darwin-arm64 | 0.3.303 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | dev/build | platform build (family licence) |
+| @anthropic-ai/claude-agent-sdk-darwin-arm64 | 0.3.304 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | server runtime | platform build (family licence) |
+| @anthropic-ai/claude-agent-sdk-darwin-x64 | 0.3.303 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | dev/build | platform build (family licence) |
+| @anthropic-ai/claude-agent-sdk-darwin-x64 | 0.3.304 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | server runtime | platform build (family licence) |
+| @anthropic-ai/claude-agent-sdk-linux-arm64-musl | 0.3.303 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | dev/build | platform build (family licence) |
+| @anthropic-ai/claude-agent-sdk-linux-arm64-musl | 0.3.304 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | server runtime | platform build (family licence) |
+| @anthropic-ai/claude-agent-sdk-linux-arm64 | 0.3.303 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | dev/build | platform build (family licence) |
+| @anthropic-ai/claude-agent-sdk-linux-arm64 | 0.3.304 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | server runtime | platform build (family licence) |
+| @anthropic-ai/claude-agent-sdk-linux-x64-musl | 0.3.303 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | dev/build | platform build (family licence) |
+| @anthropic-ai/claude-agent-sdk-linux-x64-musl | 0.3.304 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | server runtime | platform build (family licence) |
+| @anthropic-ai/claude-agent-sdk-linux-x64 | 0.3.303 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | dev/build | platform build (family licence) |
+| @anthropic-ai/claude-agent-sdk-linux-x64 | 0.3.304 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | server runtime | platform build (family licence) |
+| @anthropic-ai/claude-agent-sdk-win32-arm64 | 0.3.303 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | dev/build | platform build (family licence) |
+| @anthropic-ai/claude-agent-sdk-win32-arm64 | 0.3.304 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | server runtime | platform build (family licence) |
+| @anthropic-ai/claude-agent-sdk-win32-x64 | 0.3.303 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | dev/build | platform build (family licence) |
+| @anthropic-ai/claude-agent-sdk-win32-x64 | 0.3.304 | (platform build) | LicenseRef-Anthropic-Commercial-Terms | server runtime | platform build (family licence) |
+| @anthropic-ai/claude-agent-sdk | 0.3.303 | SEE LICENSE IN README.md | LicenseRef-Anthropic-Commercial-Terms | dev/build | recorded decision |
+| @anthropic-ai/claude-agent-sdk | 0.3.304 | SEE LICENSE IN README.md | LicenseRef-Anthropic-Commercial-Terms | server runtime | recorded decision |
 | @anthropic-ai/sdk | 0.131.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @axe-core/playwright | 4.14.0 | MPL-2.0 | MPL-2.0 | dev/build | LICENSE reads as MPL-2.0 |
 | @babel/helper-string-parser | 7.29.7 | MIT | MIT | dev/build | LICENSE reads as MIT |
@@ -540,7 +540,6 @@ licence: shipped MIT: 210; dev MIT: 110; dev Apache-2.0: 29; shipped ISC: 27; de
 | yargs-parser | 18.1.3 | ISC | ISC | server runtime | LICENSE.txt reads as ISC |
 | yargs | 15.4.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | zod-to-json-schema | 3.25.2 | ISC | ISC | server runtime | LICENSE reads as ISC |
-| zod | 4.6.5 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | zod | 4.6.7 | MIT | MIT | web bundle, server runtime | LICENSE reads as MIT |
 | zustand | 4.5.7 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | zustand | 5.0.15 | MIT | MIT | web bundle | LICENSE reads as MIT |
