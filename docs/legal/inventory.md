@@ -108,8 +108,8 @@ The generated table: every package in the lockfile, the licence its `package.jso
 it is used and how it was verified.
 <!-- BEGIN GENERATED: npm-inventory (scripts/oss/third-party-notices.mjs) -->
 
-428 packages in `pnpm-lock.yaml` (265 shipped). By scope and
-licence: shipped MIT: 209; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; dev MPL-2.0: 14; dev LicenseRef-Anthropic-Commercial-Terms: 9; shipped LicenseRef-Anthropic-Commercial-Terms: 9; shipped BSD-3-Clause: 7; shipped Apache-2.0: 6; shipped BlueOak-1.0.0: 5; dev BSD-3-Clause: 2; dev ISC: 1; shipped BSD-2-Clause: 1; shipped Unlicense: 1.
+430 packages in `pnpm-lock.yaml` (266 shipped). By scope and
+licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; dev MPL-2.0: 14; dev LicenseRef-Anthropic-Commercial-Terms: 9; shipped LicenseRef-Anthropic-Commercial-Terms: 9; shipped BSD-3-Clause: 7; shipped Apache-2.0: 6; shipped BlueOak-1.0.0: 5; dev BSD-3-Clause: 2; dev ISC: 1; shipped BSD-2-Clause: 1; shipped Unlicense: 1.
 
 | Package | Version | Declared (package.json) | Applies | Used in | Verified against |
 | --- | --- | --- | --- | --- | --- |
@@ -172,14 +172,14 @@ licence: shipped MIT: 209; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | @esbuild/win32-x64 | 0.28.2 | (platform build) | MIT | dev/build | platform build (family licence) |
 | @fastify/accept-negotiator | 2.1.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @fastify/ajv-compiler | 4.0.6 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| @fastify/cookie | 11.1.2 | MIT | MIT | server runtime | LICENSE reads as MIT |
+| @fastify/cookie | 11.1.3 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @fastify/error | 4.2.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @fastify/fast-json-stringify-compiler | 5.1.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @fastify/forwarded | 3.0.2 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @fastify/merge-json-schemas | 0.2.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @fastify/proxy-addr | 5.1.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @fastify/send | 4.1.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| @fastify/static | 10.1.5 | MIT | MIT | server runtime | LICENSE reads as MIT |
+| @fastify/static | 10.1.6 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @hono/node-server | 2.1.3 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @jridgewell/resolve-uri | 3.1.2 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @jridgewell/sourcemap-codec | 1.6.0 | MIT | MIT | dev/build | LICENSE reads as MIT |
@@ -192,7 +192,7 @@ licence: shipped MIT: 209; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | @pinojs/redact | 0.4.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @playwright/test | 1.63.0 | Apache-2.0 | Apache-2.0 | dev/build | LICENSE reads as Apache-2.0 |
 | @react-three/drei | 10.7.9 | MIT | MIT | web bundle | LICENSE reads as MIT |
-| @react-three/fiber | 9.8.1 | MIT | MIT | web bundle | no licence file; package.json only |
+| @react-three/fiber | 9.8.2 | MIT | MIT | web bundle | no licence file; package.json only |
 | @rolldown/binding-android-arm-eabi | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
 | @rolldown/binding-android-arm64 | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
 | @rolldown/binding-darwin-arm64 | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
@@ -210,8 +210,8 @@ licence: shipped MIT: 209; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | @rolldown/binding-win32-x64-msvc | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
 | @rolldown/pluginutils | 1.0.1 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @stablelib/base64 | 1.0.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| @tanstack/query-core | 5.104.1 | MIT | MIT | web bundle | LICENSE reads as MIT |
-| @tanstack/react-query | 5.104.1 | MIT | MIT | web bundle | LICENSE reads as MIT |
+| @tanstack/query-core | 5.104.5 | MIT | MIT | web bundle | LICENSE reads as MIT |
+| @tanstack/react-query | 5.104.5 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | @tweenjs/tween.js | 23.1.3 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @types/better-sqlite3 | 9.6.0 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @types/chai | 5.2.3 | MIT | MIT | dev/build | LICENSE reads as MIT |
@@ -255,7 +255,7 @@ licence: shipped MIT: 209; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | @typescript/typescript-win32-x64 | 7.0.2 | (platform build) | Apache-2.0 | dev/build | platform build (family licence) |
 | @use-gesture/core | 10.3.1 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | @use-gesture/react | 10.3.1 | MIT | MIT | web bundle | LICENSE reads as MIT |
-| @vitejs/plugin-react | 6.1.1 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| @vitejs/plugin-react | 6.1.2 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @vitest/coverage-v8 | 5.0.3 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @vitest/istanbul-lib-coverage | 1.0.2 | MIT | MIT | dev/build | LICENSE reads as MIT + BSD-3-Clause |
 | @vitest/istanbul-lib-report | 1.0.2 | MIT | MIT | dev/build | LICENSE reads as MIT + BSD-3-Clause |
@@ -347,7 +347,7 @@ licence: shipped MIT: 209; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | fast-uri | 3.1.8 | BSD-3-Clause | BSD-3-Clause | server runtime | LICENSE reads as BSD-3-Clause |
 | fast-uri | 4.2.1 | BSD-3-Clause | BSD-3-Clause | server runtime | LICENSE reads as BSD-3-Clause |
 | fastify-plugin | 6.0.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| fastify | 5.12.5 | MIT | MIT | server runtime | LICENSE reads as MIT |
+| fastify | 5.12.7 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | fastq | 1.20.3 | ISC | ISC | server runtime | LICENSE reads as ISC |
 | fdir | 6.5.0 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | fflate | 0.6.11 | MIT | MIT | web bundle | LICENSE reads as MIT |
@@ -404,7 +404,7 @@ licence: shipped MIT: 209; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | lightningcss | 1.33.0 | MPL-2.0 | MPL-2.0 | dev/build | LICENSE reads as MPL-2.0 |
 | locate-path | 5.0.0 | MIT | MIT | server runtime | license reads as MIT |
 | lru-cache | 11.5.3 | BlueOak-1.0.0 | BlueOak-1.0.0 | server runtime | LICENSE.md reads as BlueOak-1.0.0 |
-| lucide-react | 1.50.0 | ISC | ISC | web bundle | LICENSE reads as MIT + ISC |
+| lucide-react | 1.60.0 | ISC | ISC | web bundle | LICENSE reads as MIT + ISC |
 | maath | 0.10.8 | MIT | MIT | web bundle | no licence file; package.json only |
 | magic-string | 1.4.2 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | magicast | 0.5.5 | MIT | MIT | dev/build | LICENSE reads as MIT |
@@ -460,10 +460,11 @@ licence: shipped MIT: 209; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | range-parser | 1.3.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | raw-body | 3.0.2 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | react-dom | 19.3.0 | MIT | MIT | web bundle | LICENSE reads as MIT |
+| react-dom | 19.3.1 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | react-router-dom | 7.18.4 | MIT | MIT | web bundle | LICENSE.md reads as MIT |
 | react-router | 7.18.4 | MIT | MIT | web bundle | LICENSE.md reads as MIT |
 | react-use-measure | 2.1.7 | MIT | MIT | web bundle | LICENSE reads as MIT |
-| react | 19.3.0 | MIT | MIT | web bundle | LICENSE reads as MIT |
+| react | 19.3.1 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | real-require | 0.2.0 | MIT | MIT | server runtime | LICENSE.md reads as MIT |
 | real-require | 1.0.0 | MIT | MIT | server runtime | LICENSE.md reads as MIT |
 | require-directory | 2.1.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
@@ -538,7 +539,8 @@ licence: shipped MIT: 209; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | yargs-parser | 18.1.3 | ISC | ISC | server runtime | LICENSE.txt reads as ISC |
 | yargs | 15.4.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | zod-to-json-schema | 3.25.2 | ISC | ISC | server runtime | LICENSE reads as ISC |
-| zod | 4.6.5 | MIT | MIT | web bundle, server runtime | LICENSE reads as MIT |
+| zod | 4.6.5 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| zod | 4.6.7 | MIT | MIT | web bundle, server runtime | LICENSE reads as MIT |
 | zustand | 4.5.7 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | zustand | 5.0.15 | MIT | MIT | web bundle | LICENSE reads as MIT |
 

@@ -78,7 +78,7 @@ identify the tools this project works with; no affiliation, sponsorship or endor
 
 ## Packages shipped with the application
 
-265 packages from the npm registry are part of the running application: those marked *web bundle* are compiled
+266 packages from the npm registry are part of the running application: those marked *web bundle* are compiled
 into `apps/web/dist`, those marked *server runtime* are loaded from `node_modules` by the control plane and the runner. The
 licence is the one that applies (for a choice such as `MIT OR Apache-2.0`, the option this project relies on is named).
 Platform builds (`*-darwin-arm64` and similar) carry the licence of their package and are installed only on a matching machine.
@@ -100,14 +100,14 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | @babel/runtime | 7.29.7 | MIT | web bundle, server runtime | Copyright (c) 2014-present Sebastian McKenzie and other contributors |
 | @fastify/accept-negotiator | 2.1.0 | MIT | server runtime | Copyright (c) 2022-present The Fastify team <https://github.com/fastify/fastify#team> |
 | @fastify/ajv-compiler | 4.0.6 | MIT | server runtime | Copyright (c) 2022-present The Fastify team <https://github.com/fastify/fastify#team> |
-| @fastify/cookie | 11.1.2 | MIT | server runtime | Copyright (c) 2017-present The Fastify team <https://github.com/fastify/fastify#team> |
+| @fastify/cookie | 11.1.3 | MIT | server runtime | Copyright (c) 2017-present The Fastify team <https://github.com/fastify/fastify#team> |
 | @fastify/error | 4.2.0 | MIT | server runtime | Copyright (c) 2020 Fastify |
 | @fastify/fast-json-stringify-compiler | 5.1.0 | MIT | server runtime | Copyright (c) 2022-present The Fastify team <https://github.com/fastify/fastify#team> |
 | @fastify/forwarded | 3.0.2 | MIT | server runtime | Copyright (c) 2014-2017 Douglas Christopher Wilson; Copyright (c) 2021-present The Fastify team <https://github.com/fastify/fastify#team> |
 | @fastify/merge-json-schemas | 0.2.1 | MIT | server runtime | Copyright (c) 2024 Fastify |
 | @fastify/proxy-addr | 5.1.1 | MIT | server runtime | Copyright (c) 2014-2016 Douglas Christopher Wilson; Copyright (c) 2021-present The Fastify team <https://github.com/fastify/fastify#team> |
 | @fastify/send | 4.1.1 | MIT | server runtime | Copyright (c) 2012 TJ Holowaychuk; Copyright (c) 2014-2022 Douglas Christopher Wilson; Copyright (c) 2023-present The Fastify team <https://github.com/fastify/fastify#team> |
-| @fastify/static | 10.1.5 | MIT | server runtime | Copyright (c) 2017-present The Fastify team <https://github.com/fastify/fastify#team> |
+| @fastify/static | 10.1.6 | MIT | server runtime | Copyright (c) 2017-present The Fastify team <https://github.com/fastify/fastify#team> |
 | @hono/node-server | 2.1.3 | MIT | server runtime | Copyright (c) 2022 - present, Yusuke Wada and Hono contributors |
 | @lukeed/ms | 2.0.2 | MIT | server runtime | Copyright (c) Luke Edwards <luke.edwards05@gmail.com> (lukeed.com) |
 | @mediapipe/tasks-vision | 0.10.17 | Apache-2.0 | web bundle | mediapipe@google.com (author; no copyright line in the licence file) |
@@ -115,10 +115,10 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | @monogrid/gainmap-js | 3.4.0 | MIT | web bundle | Copyright (c) 2023 MONOGRID |
 | @pinojs/redact | 0.4.0 | MIT | server runtime | Copyright (c) 2025 pinojs contributors |
 | @react-three/drei | 10.7.9 | MIT | web bundle | Copyright (c) 2020 react-spring |
-| @react-three/fiber | 9.8.1 | MIT | web bundle | Paul Henschel (https://github.com/drcmda) (author; no copyright line in the licence file) |
+| @react-three/fiber | 9.8.2 | MIT | web bundle | Paul Henschel (https://github.com/drcmda) (author; no copyright line in the licence file) |
 | @stablelib/base64 | 1.0.1 | MIT | server runtime | Copyright (C) 2016 Dmitry Chestnykh |
-| @tanstack/query-core | 5.104.1 | MIT | web bundle | Copyright (c) 2021-present Tanner Linsley |
-| @tanstack/react-query | 5.104.1 | MIT | web bundle | Copyright (c) 2021-present Tanner Linsley |
+| @tanstack/query-core | 5.104.5 | MIT | web bundle | Copyright (c) 2021-present Tanner Linsley |
+| @tanstack/react-query | 5.104.5 | MIT | web bundle | Copyright (c) 2021-present Tanner Linsley |
 | @use-gesture/core | 10.3.1 | MIT | web bundle | Copyright (c) 2018-present Paul Henschel <drcmda@gmail.com> |
 | @use-gesture/react | 10.3.1 | MIT | web bundle | Copyright (c) 2018-present Paul Henschel <drcmda@gmail.com> |
 | @xterm/xterm | 6.0.0 | MIT | web bundle | Copyright (c) 2017-2019, The xterm.js authors (https://github.com/xtermjs/xterm.js); Copyright (c) 2014-2016, SourceLair Private Company (https://www.sourcelair.com); Copyright (c) 2012-2013, Christopher Jeffrey (https://github.com/chjj/) |
@@ -196,7 +196,7 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | fast-uri | 3.1.8 | BSD-3-Clause | server runtime | Copyright (c) 2011-2021, Gary Court until https://github.com/garycourt/uri-js/commit/a1acf730b4bba3f1097c9f52e7d9d3aba8cdcaae; Copyright (c) 2021-present The Fastify team <https://github.com/fastify/fastify#team> |
 | fast-uri | 4.2.1 | BSD-3-Clause | server runtime | Copyright (c) 2011-2021, Gary Court until https://github.com/garycourt/uri-js/commit/a1acf730b4bba3f1097c9f52e7d9d3aba8cdcaae; Copyright (c) 2021-present The Fastify team <https://github.com/fastify/fastify#team> |
 | fastify-plugin | 6.0.0 | MIT | server runtime | Copyright (c) 2017-present The Fastify team <https://github.com/fastify/fastify#team> |
-| fastify | 5.12.5 | MIT | server runtime | Copyright (c) 2016-present The Fastify team <https://github.com/fastify/fastify#team> |
+| fastify | 5.12.7 | MIT | server runtime | Copyright (c) 2016-present The Fastify team <https://github.com/fastify/fastify#team> |
 | fastq | 1.20.3 | ISC | server runtime | Copyright (c) 2015-2020, Matteo Collina <matteo.collina@gmail.com> |
 | fflate | 0.6.11 | MIT | web bundle | Copyright (c) 2020 Arjun Barrett |
 | finalhandler | 2.1.1 | MIT | server runtime | Copyright (c) 2014-2022 Douglas Christopher Wilson <doug@somethingdoug.com> |
@@ -237,7 +237,7 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | light-my-request | 6.6.0 | BSD-3-Clause | server runtime | Copyright (c) 2017 The Fastify Team; Copyright (c) 2012-2017, Project contributors; Copyright (c) 2012-2014, Walmart |
 | locate-path | 5.0.0 | MIT | server runtime | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) |
 | lru-cache | 11.5.3 | BlueOak-1.0.0 | server runtime | Isaac Z. Schlueter <i@izs.me> (author; no copyright line in the licence file) |
-| lucide-react | 1.50.0 | ISC | web bundle | Copyright (c) 2026 Lucide Icons and Contributors; Copyright (c) 2013-present Cole Bemis |
+| lucide-react | 1.60.0 | ISC | web bundle | Copyright (c) 2026 Lucide Icons and Contributors; Copyright (c) 2013-present Cole Bemis |
 | maath | 0.10.8 | MIT | web bundle | — |
 | math-intrinsics | 1.1.0 | MIT | server runtime | Copyright (c) 2024 ECMAScript Shims |
 | media-typer | 1.1.1 | MIT | server runtime | Copyright (c) 2014-2017 Douglas Christopher Wilson |
@@ -282,10 +282,11 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | range-parser | 1.3.0 | MIT | server runtime | Copyright (c) 2012-2014 TJ Holowaychuk <tj@vision-media.ca>; Copyright (c) 2015-2016 Douglas Christopher Wilson <doug@somethingdoug.com |
 | raw-body | 3.0.2 | MIT | server runtime | Copyright (c) 2013-2014 Jonathan Ong <me@jongleberry.com>; Copyright (c) 2014-2022 Douglas Christopher Wilson <doug@somethingdoug.com> |
 | react-dom | 19.3.0 | MIT | web bundle | Copyright (c) Meta Platforms, Inc. and affiliates. |
+| react-dom | 19.3.1 | MIT | web bundle | Copyright (c) Meta Platforms, Inc. and affiliates. |
 | react-router-dom | 7.18.4 | MIT | web bundle | Copyright (c) React Training LLC 2015-2019; Copyright (c) Remix Software Inc. 2020-2021; Copyright (c) Shopify Inc. 2022-2023 |
 | react-router | 7.18.4 | MIT | web bundle | Copyright (c) React Training LLC 2015-2019; Copyright (c) Remix Software Inc. 2020-2021; Copyright (c) Shopify Inc. 2022-2023 |
 | react-use-measure | 2.1.7 | MIT | web bundle | Copyright (c) 2019-2025 Poimandres |
-| react | 19.3.0 | MIT | web bundle | Copyright (c) Meta Platforms, Inc. and affiliates. |
+| react | 19.3.1 | MIT | web bundle | Copyright (c) Meta Platforms, Inc. and affiliates. |
 | real-require | 0.2.0 | MIT | server runtime | Copyright (c) 2021 Paolo Insogna and the real-require contributors |
 | real-require | 1.0.0 | MIT | server runtime | Copyright (c) 2021 Paolo Insogna and the real-require contributors |
 | require-directory | 2.1.1 | MIT | server runtime | Copyright (c) 2011 Troy Goode <troygoode@gmail.com> |
@@ -347,7 +348,7 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | yargs-parser | 18.1.3 | ISC | server runtime | Copyright (c) 2016, Contributors |
 | yargs | 15.4.1 | MIT | server runtime | Copyright 2010 James Halliday (mail@substack.net); Modified work Copyright 2014 Contributors (ben@npmjs.com) |
 | zod-to-json-schema | 3.25.2 | ISC | server runtime | Copyright (c) 2020, Stefan Terdell |
-| zod | 4.6.5 | MIT | web bundle, server runtime | Copyright (c) 2025 Colin McDonnell |
+| zod | 4.6.7 | MIT | web bundle, server runtime | Copyright (c) 2025 Colin McDonnell |
 | zustand | 4.5.7 | MIT | web bundle | Copyright (c) 2019 Paul Henschel |
 | zustand | 5.0.15 | MIT | web bundle | Copyright (c) 2019 Paul Henschel |
 
@@ -355,7 +356,7 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 
 Each text is reproduced once, followed by the packages that ship it verbatim. These packages contain no licence file; the standard text of the licence they declare applies (MIT:
 [LICENSES/MIT.txt](../../LICENSES/MIT.txt), Apache-2.0: [LICENSES/Apache-2.0.txt](../../LICENSES/Apache-2.0.txt)) with the copyright of their
-author: `@mediapipe/tasks-vision@0.10.17` (Apache-2.0, mediapipe@google.com), `@react-three/fiber@9.8.1` (MIT, Paul Henschel (https://github.com/drcmda)), `abstract-logging@2.0.1` (MIT, James Sumners <james.sumners@gmail.com>), `draco3d@1.5.7` (Apache-2.0, Google Draco Team), `maath@0.10.8` (MIT), `standardwebhooks@1.1.1` (MIT, Standard Webhooks), `stats-gl@2.4.2` (MIT, Renaud ROHLINGER (https://github.com/RenaudRohlinger)).
+author: `@mediapipe/tasks-vision@0.10.17` (Apache-2.0, mediapipe@google.com), `@react-three/fiber@9.8.2` (MIT, Paul Henschel (https://github.com/drcmda)), `abstract-logging@2.0.1` (MIT, James Sumners <james.sumners@gmail.com>), `draco3d@1.5.7` (Apache-2.0, Google Draco Team), `maath@0.10.8` (MIT), `standardwebhooks@1.1.1` (MIT, Standard Webhooks), `stats-gl@2.4.2` (MIT, Renaud ROHLINGER (https://github.com/RenaudRohlinger)).
 
 ### Apache-2.0 (text 283ea6cc2997)
 
@@ -1739,7 +1740,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 ### ISC (text ee35498e6684)
 
-Used by: `lucide-react@1.50.0`.
+Used by: `lucide-react@1.60.0`.
 
 ```text
 ISC License
@@ -2272,7 +2273,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ### MIT (text 277d2a8e4597)
 
-Used by: `@tanstack/query-core@5.104.1`, `@tanstack/react-query@5.104.1`.
+Used by: `@tanstack/query-core@5.104.5`, `@tanstack/react-query@5.104.5`.
 
 ```text
 MIT License
@@ -2975,7 +2976,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### MIT (text 4e64c716ef91)
 
-Used by: `@fastify/cookie@11.1.2`, `@fastify/static@10.1.5`, `fastify-plugin@6.0.0`.
+Used by: `@fastify/cookie@11.1.3`, `@fastify/static@10.1.6`, `fastify-plugin@6.0.0`.
 
 ```text
 MIT License
@@ -4256,7 +4257,7 @@ SOFTWARE.
 
 ### MIT (text aa5961ad135f)
 
-Used by: `fastify@5.12.5`.
+Used by: `fastify@5.12.7`.
 
 ```text
 MIT License
@@ -4971,7 +4972,7 @@ THE SOFTWARE.
 
 ### MIT (text cf9b17822d1f)
 
-Used by: `react-dom@19.3.0`, `react@19.3.0`, `scheduler@0.28.0`, `use-sync-external-store@1.7.0`.
+Used by: `react-dom@19.3.0`, `react-dom@19.3.1`, `react@19.3.1`, `scheduler@0.28.0`, `use-sync-external-store@1.7.0`.
 
 ```text
 MIT License
@@ -5667,7 +5668,7 @@ THE SOFTWARE.
 
 ### MIT (text f61cacc2acb8)
 
-Used by: `zod@4.6.5`.
+Used by: `zod@4.6.7`.
 
 ```text
 MIT License
@@ -5956,7 +5957,7 @@ The Apache License 2.0 asks that a package's NOTICE file travel with it. None of
 
 ## Development and build tools (not distributed)
 
-These 163 packages are used to build, test and lint the project. They are not part of the built application and no
+These 164 packages are used to build, test and lint the project. They are not part of the built application and no
 notice is needed for them; they are listed so that every package in `pnpm-lock.yaml` has a reviewed licence. Packages under
 the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform builds) are used unmodified.
 
@@ -6068,7 +6069,7 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | @typescript/typescript-sunos-x64 | 7.0.2 | Apache-2.0 |
 | @typescript/typescript-win32-arm64 | 7.0.2 | Apache-2.0 |
 | @typescript/typescript-win32-x64 | 7.0.2 | Apache-2.0 |
-| @vitejs/plugin-react | 6.1.1 | MIT |
+| @vitejs/plugin-react | 6.1.2 | MIT |
 | @vitest/coverage-v8 | 5.0.3 | MIT |
 | @vitest/istanbul-lib-coverage | 1.0.2 | MIT |
 | @vitest/istanbul-lib-report | 1.0.2 | MIT |
@@ -6125,3 +6126,4 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | vite | 8.3.4 | MIT |
 | vitest | 5.0.3 | MIT |
 | why-is-node-running | 3.2.1 | MIT |
+| zod | 4.6.5 | MIT |
