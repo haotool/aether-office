@@ -5957,7 +5957,7 @@ The Apache License 2.0 asks that a package's NOTICE file travel with it. None of
 
 ## Development and build tools (not distributed)
 
-These 164 packages are used to build, test and lint the project. They are not part of the built application and no
+These 165 packages are used to build, test and lint the project. They are not part of the built application and no
 notice is needed for them; they are listed so that every package in `pnpm-lock.yaml` has a reviewed licence. Packages under
 the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform builds) are used unmodified.
 
@@ -5974,7 +5974,7 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | @anthropic-ai/claude-agent-sdk-win32-arm64 | 0.3.286 | LicenseRef-Anthropic-Commercial-Terms |
 | @anthropic-ai/claude-agent-sdk-win32-x64 | 0.3.286 | LicenseRef-Anthropic-Commercial-Terms |
 | @anthropic-ai/claude-agent-sdk | 0.3.286 | LicenseRef-Anthropic-Commercial-Terms |
-| @axe-core/playwright | 4.13.0 | MPL-2.0 |
+| @axe-core/playwright | 4.14.0 | MPL-2.0 |
 | @babel/helper-string-parser | 7.29.7 | MIT |
 | @babel/helper-validator-identifier | 7.29.7 | MIT |
 | @babel/parser | 7.29.9 | MIT |
@@ -6011,7 +6011,7 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | @jridgewell/sourcemap-codec | 1.6.0 | MIT |
 | @jridgewell/trace-mapping | 0.3.31 | MIT |
 | @oxc-project/types | 0.153.0 | MIT |
-| @playwright/test | 1.63.0 | Apache-2.0 |
+| @playwright/test | 1.64.1 | Apache-2.0 |
 | @rolldown/binding-android-arm-eabi | 1.2.13 | MIT |
 | @rolldown/binding-android-arm64 | 1.2.13 | MIT |
 | @rolldown/binding-darwin-arm64 | 1.2.13 | MIT |
@@ -6041,6 +6041,7 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | @types/draco3d | 1.4.10 | MIT |
 | @types/estree | 1.0.9 | MIT |
 | @types/node | 26.6.4 | MIT |
+| @types/node | 26.6.5 | MIT |
 | @types/offscreencanvas | 2019.7.3 | MIT |
 | @types/qrcode | 1.5.6 | MIT |
 | @types/react-dom | 19.3.0 | MIT |
@@ -6070,15 +6071,15 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | @typescript/typescript-win32-arm64 | 7.0.2 | Apache-2.0 |
 | @typescript/typescript-win32-x64 | 7.0.2 | Apache-2.0 |
 | @vitejs/plugin-react | 6.1.2 | MIT |
-| @vitest/coverage-v8 | 5.0.3 | MIT |
+| @vitest/coverage-v8 | 5.0.5 | MIT |
 | @vitest/istanbul-lib-coverage | 1.0.2 | MIT |
 | @vitest/istanbul-lib-report | 1.0.2 | MIT |
-| @vitest/mocker | 5.0.3 | MIT |
-| @vitest/spy | 5.0.3 | MIT |
+| @vitest/mocker | 5.0.5 | MIT |
+| @vitest/spy | 5.0.5 | MIT |
 | assertion-error | 2.0.1 | MIT |
 | ast-v8-to-istanbul | 1.0.7 | MIT |
-| axe-core | 4.13.0 | MPL-2.0 |
-| chai | 6.2.2 | MIT |
+| axe-core | 4.14.0 | MPL-2.0 |
+| chai | 6.3.0 | MIT |
 | csstype | 3.2.3 | MIT |
 | detect-libc | 2.1.2 | Apache-2.0 |
 | diff | 9.0.0 | BSD-3-Clause |
@@ -6102,21 +6103,21 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | lightningcss-win32-arm64-msvc | 1.33.0 | MPL-2.0 |
 | lightningcss-win32-x64-msvc | 1.33.0 | MPL-2.0 |
 | lightningcss | 1.33.0 | MPL-2.0 |
-| magic-string | 1.4.2 | MIT |
+| magic-string | 1.4.3 | MIT |
 | magicast | 0.5.5 | MIT |
 | meshoptimizer | 1.1.1 | MIT |
 | nanoid | 3.3.19 | MIT |
-| obug | 2.2.1 | MIT |
+| obug | 3.0.0 | MIT |
 | picocolors | 1.1.1 | ISC |
 | picomatch | 4.0.7 | MIT |
-| playwright-core | 1.63.0 | Apache-2.0 |
-| playwright | 1.63.0 | Apache-2.0 |
+| playwright-core | 1.64.1 | Apache-2.0 |
+| playwright | 1.64.1 | Apache-2.0 |
 | postcss | 8.5.29 | MIT |
-| prettier | 3.9.9 | MIT |
+| prettier | 3.9.10 | MIT |
 | rolldown | 1.2.13 | MIT |
 | source-map-js | 1.2.2 | BSD-3-Clause |
 | std-env | 4.3.0 | MIT |
-| tinybench | 6.2.0 | MIT |
+| tinybench | 6.2.2 | MIT |
 | tinyexec | 1.3.1 | MIT |
 | tinyglobby | 0.2.17 | MIT |
 | tinyrainbow | 3.2.0 | MIT |
@@ -6124,6 +6125,6 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | typescript | 7.0.2 | Apache-2.0 |
 | undici-types | 8.9.0 | MIT |
 | vite | 8.3.4 | MIT |
-| vitest | 5.0.3 | MIT |
+| vitest | 5.0.5 | MIT |
 | why-is-node-running | 3.2.1 | MIT |
 | zod | 4.6.5 | MIT |
