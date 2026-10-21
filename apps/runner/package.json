@@ -8,7 +8,7 @@
   "dependencies": {
     "@aether/contracts": "workspace:*",
     "@aether/providers": "workspace:*",
-    "@agentclientprotocol/sdk": "1.7.0",
+    "@agentclientprotocol/sdk": "2.0.0",
     "@anthropic-ai/claude-agent-sdk": "0.3.287",
     "@modelcontextprotocol/sdk": "1.32.1",
     "node-pty": "1.1.0",
