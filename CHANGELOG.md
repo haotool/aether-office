@@ -36,6 +36,8 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 - Restore immutable migration SQL and accept only the exact historical comment-removal checksums, so existing databases survive rebuilds and restarts without changing their data or migration records.
 
+- Quote the git commands that the git health report suggests, so a branch or worktree name with shell metacharacters cannot alter a pasted command.
+
 ### Changed
 
 - Refresh both README introductions with localized dark control-room covers, the orbital A logo, actual Git-flower and mobile captures, wide office and crown views, a desktop/mobile feature map with actual conversation feeds, Git commit history, approvals, PTY fixtures and ten mobile views, and a clearer path to getting started.
@@ -45,6 +47,8 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 ### Security
 
 - Upgrade the MCP SDK to 1.32.1 and Vite to 8.3.4, which fix the advisories that `pnpm audit` reports against 1.31.0 and 8.3.2.
+- Refuse every IANA special-purpose address in connector requests, including carrier-grade NAT, documentation and 6to4 ranges and their translated forms, and end each request at a total deadline so a server that drips bytes cannot hold it open.
+- Keep the Codex analysis channel out of the session transcript, as the runner observer already does.
 
 ## [0.4.1] - 2026-10-14
 

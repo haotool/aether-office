@@ -1398,7 +1398,7 @@
     ],
     "evidencePaths": [],
     "blockers": [
-      "Markdown is parsed by the kernel into a typed block tree and rendered by the web app as React elements, never as HTML (the lint rule and the text-sink tests enforce it); safe-fetch rejects dotted and hexadecimal IPv4-mapped IPv6 before requests; A2A artifact fetching is not built, so its use of safe-fetch is untested."
+      "Markdown is parsed by the kernel into a typed block tree and rendered by the web app as React elements, never as HTML (the lint rule and the text-sink tests enforce it); safe-fetch rejects every special-purpose address, IPv4-mapped and NAT64-translated forms included, before requests and ends a slow response at a total deadline; A2A artifact fetching is not built, so its use of safe-fetch is untested."
     ]
   },
   {
