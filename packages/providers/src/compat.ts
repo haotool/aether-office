@@ -5,6 +5,9 @@ const version =
 export const codexRolloutVersion = (value: string): boolean => version.test(value);
 export const claudeRolloutVersion = codexRolloutVersion;
 
+// Any other Codex channel carries hidden reasoning.
+export const channelVisible = (v: unknown) => v == null || /^(final|commentary)$/.test(String(v));
+
 export function codexVersion(output: string): string | null {
   const value = /^codex-cli (\S+)$/.exec(output.trim())?.[1];
   return value && codexRolloutVersion(value) ? value : null;
