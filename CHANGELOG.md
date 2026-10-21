@@ -7,6 +7,10 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ## [Unreleased]
 
+### Fixed
+
+- The brand link and the floor plaque now carry their visible words in their accessible names (WCAG 2.5.3, enforced since axe-core 4.14); the plaque's name no longer adds the department.
+
 ## [0.4.1] - 2026-10-21
 
 ### Changed

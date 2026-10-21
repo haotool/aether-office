@@ -21,12 +21,10 @@ export function SlabKpi({ badge }: { badge: FloorKpiBadge }) {
 
 /** Plain DOM (no per-frame work); the page decides when to draw it (never on a phone). */
 export function FloorPlaque({
-  zh,
   floor,
   badge,
   onOpen,
 }: {
-  zh: boolean;
   floor: number;
   badge: FloorKpiBadge;
   onOpen: (floor: number) => void;
@@ -36,17 +34,16 @@ export function FloorPlaque({
     <button
       className="floor-plaque fui"
       style={{ ['--accent' as string]: department.accent }}
-      aria-label={`${floor + 1}F ${zh ? department.zh : department.en}: ${badge.labels.tokens} ${badge.tokens}`}
       onClick={() => onOpen(floor)}
     >
-      <span className="plaque-floor">{floor + 1}F</span>
+      <span className="plaque-floor">{floor + 1}F </span>
       <span className="plaque-metric">
-        <small>{badge.labels.tokens}</small>
-        <b>{badge.tokens}</b>
+        <small>{badge.labels.tokens} </small>
+        <b>{badge.tokens} </b>
       </span>
       {badge.merged !== null && (
         <span className="plaque-metric">
-          <small>{badge.labels.merged}</small>
+          <small>{badge.labels.merged} </small>
           <b>{badge.merged}</b>
         </span>
       )}

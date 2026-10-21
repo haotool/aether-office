@@ -32,7 +32,7 @@ Score 96.7, floor 96.7, 100% of the rule weight measured.
 | Import cycles (runtime imports, product source) | `import-cycles` | 0 | 0 | 12 | 0 | pass |
 | Files imported by more than 30 others | `fan-in` | 2 | 0 | 5 | -3.33 | fail |
 | Exports nothing imports | `dead-exports` | 0 | 0 | 10 | 0 | pass |
-| Code lines over the budget of 146475 | `code-lines` | 0 | 0 | 6 | 0 | pass |
+| Code lines over the budget of 146472 | `code-lines` | 0 | 0 | 6 | 0 | pass |
 | Duplicated code share (limit 3%) | `duplicates` | 0.24% | 3% | 12 | 0 | pass |
 | Uses of the any type (product source) | `any-type` | 0 | 0 | 6 | 0 | pass |
 | Type or lint suppression comments | `suppressions` | 0 | 0 | 6 | 0 | pass |
@@ -85,7 +85,7 @@ apps/runner: 3059 source lines
 apps/web: 28152 source lines
 packages/contracts: 1376 source lines
 packages/kernel: 3455 source lines
-packages/office-scene: 25533 source lines
+packages/office-scene: 25530 source lines
 packages/providers: 2044 source lines
 ```
 
@@ -140,7 +140,7 @@ Score 99.1, floor 99.1, 70% of the rule weight measured.
 **first-load** (-0.9): First-load JavaScript and CSS, transferred (budget 200 KB)
 
 ```text
-  apps/web/dist/assets/index-Si_TBcud.js:1 80 KB
+  apps/web/dist/assets/index-tREpSNET.js:1 80 KB
   apps/web/dist/assets/signals-CqwJ1gga.js:1 3 KB
   apps/web/dist/assets/scheduler-A2pdr8AR.js:1 1 KB
   apps/web/dist/assets/react-dom-2LriPbPx.js:1 1 KB
