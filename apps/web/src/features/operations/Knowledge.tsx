@@ -5,6 +5,7 @@ import type { Work } from '@aether/contracts';
 import { api } from '../../lib/api/api.js';
 import { execute } from '../../lib/api/api-commands.js';
 import { useFormCheck } from './use-form-check.js';
+import { QueryStatus } from '../shell-chrome/QueryStatus.js';
 import { Modal } from '../../ui/Modal.js';
 import { Field } from '../../ui/Field.js';
 import { Fold } from '../../ui/Disclosure.js';
@@ -274,13 +275,7 @@ function EntryList({
   onDecide: (entry: Entry, decision: string, reason: FormDataEntryValue | null) => void;
 }) {
   const t = useT();
-  if (query.isPending) return <p>{t('loading')}</p>;
-  if (query.error)
-    return (
-      <p role="alert" className="error-text">
-        {query.error.message}
-      </p>
-    );
+  if (query.isPending || query.error) return <QueryStatus query={query} />;
   if (!query.data?.length) return <Empty title={t('empty')} />;
   return (
     <div className="knowledge-grid">
