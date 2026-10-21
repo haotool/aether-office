@@ -108,8 +108,8 @@ The generated table: every package in the lockfile, the licence its `package.jso
 it is used and how it was verified.
 <!-- BEGIN GENERATED: npm-inventory (scripts/oss/third-party-notices.mjs) -->
 
-430 packages in `pnpm-lock.yaml` (266 shipped). By scope and
-licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; dev MPL-2.0: 14; dev LicenseRef-Anthropic-Commercial-Terms: 9; shipped LicenseRef-Anthropic-Commercial-Terms: 9; shipped BSD-3-Clause: 7; shipped Apache-2.0: 6; shipped BlueOak-1.0.0: 5; dev BSD-3-Clause: 2; dev ISC: 1; shipped BSD-2-Clause: 1; shipped Unlicense: 1.
+431 packages in `pnpm-lock.yaml` (266 shipped). By scope and
+licence: shipped MIT: 210; dev MIT: 110; dev Apache-2.0: 29; shipped ISC: 27; dev MPL-2.0: 14; dev LicenseRef-Anthropic-Commercial-Terms: 9; shipped LicenseRef-Anthropic-Commercial-Terms: 9; shipped BSD-3-Clause: 7; shipped Apache-2.0: 6; shipped BlueOak-1.0.0: 5; dev BSD-3-Clause: 2; dev ISC: 1; shipped BSD-2-Clause: 1; shipped Unlicense: 1.
 
 | Package | Version | Declared (package.json) | Applies | Used in | Verified against |
 | --- | --- | --- | --- | --- | --- |
@@ -136,7 +136,7 @@ licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; de
 | @anthropic-ai/claude-agent-sdk | 0.3.286 | SEE LICENSE IN README.md | LicenseRef-Anthropic-Commercial-Terms | dev/build | recorded decision |
 | @anthropic-ai/claude-agent-sdk | 0.3.287 | SEE LICENSE IN README.md | LicenseRef-Anthropic-Commercial-Terms | server runtime | recorded decision |
 | @anthropic-ai/sdk | 0.131.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| @axe-core/playwright | 4.13.0 | MPL-2.0 | MPL-2.0 | dev/build | LICENSE reads as MPL-2.0 |
+| @axe-core/playwright | 4.14.0 | MPL-2.0 | MPL-2.0 | dev/build | LICENSE reads as MPL-2.0 |
 | @babel/helper-string-parser | 7.29.7 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @babel/helper-validator-identifier | 7.29.7 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @babel/parser | 7.29.9 | MIT | MIT | dev/build | LICENSE reads as MIT |
@@ -190,7 +190,7 @@ licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; de
 | @monogrid/gainmap-js | 3.4.0 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | @oxc-project/types | 0.153.0 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @pinojs/redact | 0.4.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| @playwright/test | 1.63.0 | Apache-2.0 | Apache-2.0 | dev/build | LICENSE reads as Apache-2.0 |
+| @playwright/test | 1.64.1 | Apache-2.0 | Apache-2.0 | dev/build | LICENSE reads as Apache-2.0 |
 | @react-three/drei | 10.7.9 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | @react-three/fiber | 9.8.2 | MIT | MIT | web bundle | no licence file; package.json only |
 | @rolldown/binding-android-arm-eabi | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
@@ -225,6 +225,7 @@ licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; de
 | @types/draco3d | 1.4.10 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @types/estree | 1.0.9 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @types/node | 26.6.4 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| @types/node | 26.6.5 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @types/offscreencanvas | 2019.7.3 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @types/qrcode | 1.5.6 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @types/react-dom | 19.3.0 | MIT | MIT | dev/build | LICENSE reads as MIT |
@@ -256,11 +257,11 @@ licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; de
 | @use-gesture/core | 10.3.1 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | @use-gesture/react | 10.3.1 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | @vitejs/plugin-react | 6.1.2 | MIT | MIT | dev/build | LICENSE reads as MIT |
-| @vitest/coverage-v8 | 5.0.3 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| @vitest/coverage-v8 | 5.0.5 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @vitest/istanbul-lib-coverage | 1.0.2 | MIT | MIT | dev/build | LICENSE reads as MIT + BSD-3-Clause |
 | @vitest/istanbul-lib-report | 1.0.2 | MIT | MIT | dev/build | LICENSE reads as MIT + BSD-3-Clause |
-| @vitest/mocker | 5.0.3 | MIT | MIT | dev/build | LICENSE reads as MIT |
-| @vitest/spy | 5.0.3 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| @vitest/mocker | 5.0.5 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| @vitest/spy | 5.0.5 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @xterm/xterm | 6.0.0 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | @xyflow/react | 12.12.0 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | @xyflow/system | 0.0.83 | MIT | MIT | web bundle | LICENSE reads as MIT |
@@ -274,7 +275,7 @@ licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; de
 | ast-v8-to-istanbul | 1.0.7 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | atomic-sleep | 1.0.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | avvio | 9.3.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| axe-core | 4.13.0 | MPL-2.0 | MPL-2.0 | dev/build | LICENSE reads as MPL-2.0 |
+| axe-core | 4.14.0 | MPL-2.0 | MPL-2.0 | dev/build | LICENSE reads as MPL-2.0 |
 | balanced-match | 4.0.4 | MIT | MIT | server runtime | LICENSE.md reads as MIT |
 | base64-js | 1.5.1 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | better-sqlite3 | 13.0.3 | MIT | MIT | server runtime | LICENSE reads as MIT |
@@ -287,7 +288,7 @@ licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; de
 | call-bound | 1.0.4 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | camelcase | 5.3.1 | MIT | MIT | server runtime | license reads as MIT |
 | camera-controls | 3.1.2 | MIT | MIT | web bundle | LICENSE reads as MIT |
-| chai | 6.2.2 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| chai | 6.3.0 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | classcat | 5.0.5 | MIT | MIT | web bundle | LICENSE.md reads as MIT |
 | cliui | 6.0.0 | ISC | ISC | server runtime | LICENSE.txt reads as ISC |
 | color-convert | 2.0.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
@@ -406,7 +407,7 @@ licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; de
 | lru-cache | 11.5.3 | BlueOak-1.0.0 | BlueOak-1.0.0 | server runtime | LICENSE.md reads as BlueOak-1.0.0 |
 | lucide-react | 1.60.0 | ISC | ISC | web bundle | LICENSE reads as MIT + ISC |
 | maath | 0.10.8 | MIT | MIT | web bundle | no licence file; package.json only |
-| magic-string | 1.4.2 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| magic-string | 1.4.3 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | magicast | 0.5.5 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | math-intrinsics | 1.1.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | media-typer | 1.1.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
@@ -426,7 +427,7 @@ licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; de
 | node-pty | 1.1.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | object-assign | 4.1.1 | MIT | MIT | server runtime | license reads as MIT |
 | object-inspect | 1.13.4 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| obug | 2.2.1 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| obug | 3.0.0 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | on-exit-leak-free | 2.1.2 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | on-finished | 2.4.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | once | 1.4.0 | ISC | ISC | server runtime | LICENSE reads as ISC |
@@ -444,12 +445,12 @@ licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; de
 | pino-std-serializers | 7.1.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | pino | 10.3.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | pkce-challenge | 5.0.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| playwright-core | 1.63.0 | Apache-2.0 | Apache-2.0 | dev/build | LICENSE reads as Apache-2.0 |
-| playwright | 1.63.0 | Apache-2.0 | Apache-2.0 | dev/build | LICENSE reads as Apache-2.0 |
+| playwright-core | 1.64.1 | Apache-2.0 | Apache-2.0 | dev/build | LICENSE reads as Apache-2.0 |
+| playwright | 1.64.1 | Apache-2.0 | Apache-2.0 | dev/build | LICENSE reads as Apache-2.0 |
 | pngjs | 5.0.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | postcss | 8.5.29 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | potpack | 1.0.2 | ISC | ISC | web bundle | LICENSE reads as ISC |
-| prettier | 3.9.9 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| prettier | 3.9.10 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | process-warning | 4.0.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | process-warning | 5.1.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | promise-worker-transferable | 1.0.4 | Apache-2.0 | Apache-2.0 | web bundle | LICENSE reads as Apache-2.0 |
@@ -507,7 +508,7 @@ licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; de
 | three-mesh-bvh | 0.8.3 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | three-stdlib | 2.36.1 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | three | 0.186.1 | MIT | MIT | web bundle | LICENSE reads as MIT |
-| tinybench | 6.2.0 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| tinybench | 6.2.2 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | tinyexec | 1.3.1 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | tinyglobby | 0.2.17 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | tinyrainbow | 3.2.0 | MIT | MIT | dev/build | LICENCE reads as MIT |
@@ -527,7 +528,7 @@ licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; de
 | utility-types | 3.11.0 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | vary | 1.1.2 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | vite | 8.3.4 | MIT | MIT | dev/build | LICENSE.md reads as Apache-2.0 + MIT |
-| vitest | 5.0.3 | MIT | MIT | dev/build | LICENSE.md reads as MIT + BSD-3-Clause |
+| vitest | 5.0.5 | MIT | MIT | dev/build | LICENSE.md reads as MIT + BSD-3-Clause |
 | webgl-constants | 1.1.1 | — | MIT | web bundle | recorded decision |
 | webgl-sdf-generator | 1.1.1 | MIT | MIT | web bundle | LICENSE.txt reads as MIT |
 | which-module | 2.0.1 | ISC | ISC | server runtime | LICENSE reads as ISC |
