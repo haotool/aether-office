@@ -49,7 +49,7 @@ describe.skipIf(!installed)('the installed Codex CLI', () => {
       expect(adapter.threadId).toBeTruthy();
     } finally {
       adapter.close();
-      rmSync(root, { recursive: true, force: true });
+      rmSync(root, { recursive: true, force: true, maxRetries: 5 });
     }
   }, 20000);
 });
