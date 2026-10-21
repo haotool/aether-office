@@ -68,7 +68,7 @@ jobs:
           path: |
             evidence/e2e-results.json
             test-results/
-  check: &verified
+  check:
     if: always()
     needs: verify
     runs-on: ubuntu-24.04
@@ -76,4 +76,3 @@ jobs:
     steps:
       - env: { RESULT: '${{ needs.verify.result }}' }
         run: test "$RESULT" = success
-  audit: *verified
