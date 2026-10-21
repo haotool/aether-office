@@ -96,6 +96,10 @@ title and the commit subjects of a pull request (`scripts/oss/commit-msg.sh`). T
 ln -s ../../scripts/oss/commit-msg.sh .git/hooks/commit-msg
 ```
 
+Leave AI-tool trailers (`Co-Authored-By: Claude <noreply@anthropic.com>`, session links) out of commit messages and out of the
+message of a squash merge: the history is kept free of them, and `pnpm run oss:check --history` warns about each one. Human
+co-authors stay.
+
 Describe in the pull request what you ran, on which platform, and anything you could not test.
 
 Maintainers preparing a release should read [Cleaning the history before publishing](../docs/release/history-cleanup.md) and

@@ -40,6 +40,7 @@ See [docs/development.md](docs/development.md#the-animals).
 
 ## Conventions
 
-Conventional commit prefixes (`feat`, `fix`, `refactor`, `perf`, `docs`, `test`, `chore`, `ci`). Small focused changes. Prefer
+Conventional commit prefixes (`feat`, `fix`, `refactor`, `perf`, `docs`, `test`, `chore`, `ci`); no AI-tool trailers in commit or
+squash-merge messages ([why](.github/CONTRIBUTING.md#commit-messages-and-pull-requests)). Small focused changes. Prefer
 the standard library and existing code over new dependencies. Record user-visible changes in `CHANGELOG.md`. Code only shrinks and
 comments are rare: see [Code only shrinks](.github/CONTRIBUTING.md#code-only-shrinks).
