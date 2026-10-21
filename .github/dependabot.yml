@@ -16,8 +16,6 @@ updates:
       dev:
         dependency-type: development
         update-types: [minor, patch]
-      major:
-        update-types: [major]
     commit-message:
       prefix: chore(deps)
 
