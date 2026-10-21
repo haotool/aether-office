@@ -37,7 +37,8 @@ headings that hold entries when the release is cut decide the increment:
 
 Commit types are inputs, not the decision: `fix`, `perf`, `refactor`, `docs`, `test`, `chore` and `ci` normally mean
 patch and `feat` normally means minor, while a maintainer reviews configuration, persistence and protocol effects
-before choosing.
+before choosing. Dependency updates (`chore(deps)`) do not choose a version by themselves; the changelog lists one only
+when it fixes an advisory (`Security`) or changes behavior.
 
 How other projects decide, and what this policy takes from each:
 
@@ -52,7 +53,8 @@ How other projects decide, and what this policy takes from each:
 
 Work accumulates under `Unreleased`. A release commit moves those entries into a dated version section. The annotated tag,
 root and workspace versions, changelog heading and compare links must agree, and the tag must point at the clean, verified
-`main` commit. Published tags and release assets are not replaced; a correction receives a new version.
+`main` commit. Published tags and release assets are not replaced; a correction receives a new version. A version section without a tag
+is not released yet: entries that land before the tag join it, and its date is the day the tag is cut.
 
 ## Keeping the release files in step
 
