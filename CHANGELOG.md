@@ -1,17 +1,5 @@
 # Changelog
 
-## Unreleased scene hotfix
-
-- Resume automatic framing with one tap after manual camera control, show its actual state, and keep automatic shots static when reduced motion is enabled.
-- Preserve facial details at every model distance, keep hidden mouths beneath curved snouts, and retain a continuous mouth line through expression transitions.
-- Remove the floor scanner that crossed employees and desk legs.
-
-- Keep character models and animations stable while hovering or selecting employees.
-- Remove unoccluded decorative light shafts, lift branch links above employees, narrow the squad light funnel, and replace puppet strings with solid team workstations beside the supervisor.
-- Keep employees upright after handing in work and before departure.
-- Keep camera transition covers transparent when reduced motion disables their fade.
-- Aim automatic floor shots at present employees, reject departed message recipients, and ease camera motion at the flower crown while keeping its petals and halo inside the frame.
-
 [Documentation](docs/README.md) · [Project](README.md)
 
 All notable changes are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the
@@ -19,35 +7,35 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ## [Unreleased]
 
+### Changed
+
+- Resume automatic framing with one tap after manual camera control, show its actual state, and keep automatic shots static when reduced motion is enabled.
+- Refresh both README introductions with localized dark control-room covers, the orbital A logo, actual Git-flower and mobile captures, wide office and crown views, a desktop/mobile feature map with actual conversation feeds, Git commit history, approvals, PTY fixtures and ten mobile views, and a clearer path to getting started.
+- Mark the pre-publication open-source risk assessment as a historical snapshot and point current decisions to the release and verification ledgers.
+
 ### Fixed
 
 - Count only product runtime importers in both fan-in quality measures, so adding tests cannot worsen the product coupling score.
-
-- Reject every IPv4-mapped IPv6 address before connector requests so hexadecimal loopback and cloud-metadata forms cannot bypass SSRF protection.
 - Retry legacy transcript checkpoints once, then retain permanent schema failures so malformed files cannot replay old observations and grow the database on every poll.
 - Load Codex and Claude Code upgrades without a release allowlist; retain protocol, path and permission validation and recover previously version-blocked observations.
 - Batch identical idle branch beams and enforce the existing message-animation GPU budgets in the performance test.
-
 - Keep task status badges visible on narrow phones when a workflow is waiting on dependencies.
-
 - Scope the Playwright Chrome channel to Chrome projects so optional iPhone/WebKit tests can launch.
-
 - Document the persistent LAN setting and reload steps for macOS login services so phone QR pairing can be enabled after login.
-
 - Restore immutable migration SQL and accept only the exact historical comment-removal checksums, so existing databases survive rebuilds and restarts without changing their data or migration records.
-
 - Quote the git commands that the git health report suggests, so a branch or worktree name with shell metacharacters cannot alter a pasted command.
-
-### Changed
-
-- Refresh both README introductions with localized dark control-room covers, the orbital A logo, actual Git-flower and mobile captures, wide office and crown views, a desktop/mobile feature map with actual conversation feeds, Git commit history, approvals, PTY fixtures and ten mobile views, and a clearer path to getting started.
-
-- Mark the pre-publication open-source risk assessment as a historical snapshot and point current decisions to the release and verification ledgers.
+- Preserve facial details at every model distance, keep hidden mouths beneath curved snouts, and retain a continuous mouth line through expression transitions.
+- Remove the floor scanner that crossed employees and desk legs.
+- Keep character models and animations stable while hovering or selecting employees.
+- Remove unoccluded decorative light shafts, lift branch links above employees, narrow the squad light funnel, and replace puppet strings with solid team workstations beside the supervisor.
+- Keep employees upright after handing in work and before departure.
+- Keep camera transition covers transparent when reduced motion disables their fade.
+- Aim automatic floor shots at present employees, reject departed message recipients, and ease camera motion at the flower crown while keeping its petals and halo inside the frame.
 
 ### Security
 
 - Upgrade the MCP SDK to 1.32.1 and Vite to 8.3.4, which fix the advisories that `pnpm audit` reports against 1.31.0 and 8.3.2.
-- Refuse every IANA special-purpose address in connector requests, including carrier-grade NAT, documentation and 6to4 ranges and their translated forms, and end each request at a total deadline so a server that drips bytes cannot hold it open.
+- Connector requests refuse every IANA special-purpose address, including hexadecimal IPv4-mapped IPv6 forms, carrier-grade NAT, documentation and 6to4 ranges and their NAT64-translated forms, and end at a total deadline so a server that drips bytes cannot hold one open.
 - Keep the Codex analysis channel out of the session transcript, as the runner observer already does.
 
 ## [0.4.1] - 2026-10-14
