@@ -42,6 +42,10 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 - Mark the pre-publication open-source risk assessment as a historical snapshot and point current decisions to the release and verification ledgers.
 
+### Security
+
+- Upgrade the MCP SDK to 1.32.1 and Vite to 8.3.4, which fix the advisories that `pnpm audit` reports against 1.31.0 and 8.3.2.
+
 ## [0.4.1] - 2026-10-14
 
 ### Changed

@@ -111,7 +111,7 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | @hono/node-server | 2.1.3 | MIT | server runtime | Copyright (c) 2022 - present, Yusuke Wada and Hono contributors |
 | @lukeed/ms | 2.0.2 | MIT | server runtime | Copyright (c) Luke Edwards <luke.edwards05@gmail.com> (lukeed.com) |
 | @mediapipe/tasks-vision | 0.10.17 | Apache-2.0 | web bundle | mediapipe@google.com (author; no copyright line in the licence file) |
-| @modelcontextprotocol/sdk | 1.31.0 | MIT | server runtime | Copyright (c) 2024 Anthropic, PBC |
+| @modelcontextprotocol/sdk | 1.32.1 | MIT | server runtime | Copyright (c) 2024 Anthropic, PBC |
 | @monogrid/gainmap-js | 3.4.0 | MIT | web bundle | Copyright (c) 2023 MONOGRID |
 | @pinojs/redact | 0.4.0 | MIT | server runtime | Copyright (c) 2025 pinojs contributors |
 | @react-three/drei | 10.7.9 | MIT | web bundle | Copyright (c) 2020 react-spring |
@@ -3620,7 +3620,7 @@ SOFTWARE.
 
 ### MIT (text 8694aa57bec3)
 
-Used by: `@modelcontextprotocol/sdk@1.31.0`.
+Used by: `@modelcontextprotocol/sdk@1.32.1`.
 
 ```text
 MIT License
@@ -6009,23 +6009,23 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | @jridgewell/resolve-uri | 3.1.2 | MIT |
 | @jridgewell/sourcemap-codec | 1.6.0 | MIT |
 | @jridgewell/trace-mapping | 0.3.31 | MIT |
-| @oxc-project/types | 0.151.0 | MIT |
+| @oxc-project/types | 0.153.0 | MIT |
 | @playwright/test | 1.63.0 | Apache-2.0 |
-| @rolldown/binding-android-arm-eabi | 1.2.11 | MIT |
-| @rolldown/binding-android-arm64 | 1.2.11 | MIT |
-| @rolldown/binding-darwin-arm64 | 1.2.11 | MIT |
-| @rolldown/binding-darwin-x64 | 1.2.11 | MIT |
-| @rolldown/binding-freebsd-x64 | 1.2.11 | MIT |
-| @rolldown/binding-linux-arm-gnueabihf | 1.2.11 | MIT |
-| @rolldown/binding-linux-arm64-gnu | 1.2.11 | MIT |
-| @rolldown/binding-linux-arm64-musl | 1.2.11 | MIT |
-| @rolldown/binding-linux-ppc64-gnu | 1.2.11 | MIT |
-| @rolldown/binding-linux-s390x-gnu | 1.2.11 | MIT |
-| @rolldown/binding-linux-x64-gnu | 1.2.11 | MIT |
-| @rolldown/binding-linux-x64-musl | 1.2.11 | MIT |
-| @rolldown/binding-openharmony-arm64 | 1.2.11 | MIT |
-| @rolldown/binding-win32-arm64-msvc | 1.2.11 | MIT |
-| @rolldown/binding-win32-x64-msvc | 1.2.11 | MIT |
+| @rolldown/binding-android-arm-eabi | 1.2.13 | MIT |
+| @rolldown/binding-android-arm64 | 1.2.13 | MIT |
+| @rolldown/binding-darwin-arm64 | 1.2.13 | MIT |
+| @rolldown/binding-darwin-x64 | 1.2.13 | MIT |
+| @rolldown/binding-freebsd-x64 | 1.2.13 | MIT |
+| @rolldown/binding-linux-arm-gnueabihf | 1.2.13 | MIT |
+| @rolldown/binding-linux-arm64-gnu | 1.2.13 | MIT |
+| @rolldown/binding-linux-arm64-musl | 1.2.13 | MIT |
+| @rolldown/binding-linux-ppc64-gnu | 1.2.13 | MIT |
+| @rolldown/binding-linux-s390x-gnu | 1.2.13 | MIT |
+| @rolldown/binding-linux-x64-gnu | 1.2.13 | MIT |
+| @rolldown/binding-linux-x64-musl | 1.2.13 | MIT |
+| @rolldown/binding-openharmony-arm64 | 1.2.13 | MIT |
+| @rolldown/binding-win32-arm64-msvc | 1.2.13 | MIT |
+| @rolldown/binding-win32-x64-msvc | 1.2.13 | MIT |
 | @rolldown/pluginutils | 1.0.1 | MIT |
 | @tweenjs/tween.js | 23.1.3 | MIT |
 | @types/better-sqlite3 | 9.6.0 | MIT |
@@ -6110,9 +6110,9 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | picomatch | 4.0.7 | MIT |
 | playwright-core | 1.63.0 | Apache-2.0 |
 | playwright | 1.63.0 | Apache-2.0 |
-| postcss | 8.5.28 | MIT |
+| postcss | 8.5.29 | MIT |
 | prettier | 3.9.9 | MIT |
-| rolldown | 1.2.11 | MIT |
+| rolldown | 1.2.13 | MIT |
 | source-map-js | 1.2.2 | BSD-3-Clause |
 | std-env | 4.3.0 | MIT |
 | tinybench | 6.2.0 | MIT |
@@ -6122,6 +6122,6 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | tsx | 4.23.15 | MIT |
 | typescript | 7.0.2 | Apache-2.0 |
 | undici-types | 8.9.0 | MIT |
-| vite | 8.3.2 | MIT |
+| vite | 8.3.4 | MIT |
 | vitest | 5.0.3 | MIT |
 | why-is-node-running | 3.2.1 | MIT |
