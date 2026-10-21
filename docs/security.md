@@ -229,7 +229,8 @@ Findings are listed under Security, Code scanning.
 **Dependabot.** `.github/dependabot.yml` opens weekly pull requests for npm (pnpm lockfile) and GitHub Actions, groups updates
 to reduce noise (the two agent SDKs whose 0.x minors can break form their own group; it names them exactly because Dependabot ranks wildcard patterns below a group defined by dependency or update type), prefixes commits with `chore(deps)`, and uses a one-day **cooldown** on version updates so proposed releases
 are at least a day old—the same idea as `minimumReleaseAge` in `pnpm-workspace.yaml`. Security updates from Dependabot are
-not delayed by that cooldown. A bot pull request is not merged as it is: its commit adds a second author email, which
+not delayed by that cooldown. Major updates are not grouped: a group that spans every dependency owns all of them while its
+pull request is open and holds back every other update, so each major update is its own pull request. A bot pull request is not merged as it is: its commit adds a second author email, which
 `quality:check` counts, and it cannot regenerate `THIRD_PARTY_NOTICES.md` or edit the release-age exceptions in
 `pnpm-workspace.yaml`, which `oss:check` and the dependency policy test require. The maintainer applies the same update on a
 branch under the maintainer identity, runs the checks and closes the bot pull request.
