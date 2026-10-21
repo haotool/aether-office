@@ -1,6 +1,6 @@
 import { isAbsolute, resolve } from 'node:path';
 import { z } from 'zod';
-import { codexRolloutVersion } from '@aether/providers';
+import { channelVisible, codexRolloutVersion } from '@aether/providers/compat';
 import { hash, type Observation } from './observer-source.js';
 
 const metaSchema = z.object({
@@ -98,11 +98,7 @@ export function decodeLine(
   const item = jsonObject.safeParse(parsed['payload']);
   if (!item.success) return UNSUPPORTED;
   const p = item.data;
-  if (
-    p['type'] === 'reasoning' ||
-    (p['channel'] != null && !['final', 'commentary'].includes(String(p['channel'])))
-  )
-    return null;
+  if (p['type'] === 'reasoning' || !channelVisible(p['channel'])) return null;
   const base = {
     sourceId: hash(`${checkpoint.identity}:${offset}:${hash(line)}`),
     sessionId: checkpoint.meta.id,

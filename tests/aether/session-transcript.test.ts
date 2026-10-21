@@ -77,7 +77,7 @@ it('reads a Claude transcript: messages, tools and results, never thinking, neve
   expect(analysis.files).toEqual(['/repo/src/login.ts']);
 });
 
-it('reads a Codex transcript: messages, function calls with patches and outputs, never reasoning', () => {
+it('reads a Codex transcript: messages, function calls with patches and outputs, never reasoning or the analysis channel', () => {
   const tail = [
     line({
       type: 'response_item',
@@ -90,7 +90,10 @@ it('reads a Codex transcript: messages, function calls with patches and outputs,
         ],
       },
     }),
-    line({ type: 'response_item', payload: { type: 'reasoning', summary: [{ text: 'PRIVATE' }] } }),
+    ...[
+      { type: 'reasoning', summary: [{ text: 'PRIVATE' }] },
+      { type: 'message', role: 'assistant', channel: 'analysis', content: [{ text: 'PRIVATE' }] },
+    ].map((payload) => line({ type: 'response_item', payload })),
     line({
       type: 'response_item',
       payload: {
