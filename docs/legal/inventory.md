@@ -186,28 +186,28 @@ licence: shipped MIT: 209; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | @jridgewell/trace-mapping | 0.3.31 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @lukeed/ms | 2.0.2 | MIT | MIT | server runtime | license reads as MIT |
 | @mediapipe/tasks-vision | 0.10.17 | Apache-2.0 | Apache-2.0 | web bundle | no licence file; package.json only |
-| @modelcontextprotocol/sdk | 1.31.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
+| @modelcontextprotocol/sdk | 1.32.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @monogrid/gainmap-js | 3.4.0 | MIT | MIT | web bundle | LICENSE reads as MIT |
-| @oxc-project/types | 0.151.0 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| @oxc-project/types | 0.153.0 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @pinojs/redact | 0.4.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @playwright/test | 1.63.0 | Apache-2.0 | Apache-2.0 | dev/build | LICENSE reads as Apache-2.0 |
 | @react-three/drei | 10.7.9 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | @react-three/fiber | 9.8.1 | MIT | MIT | web bundle | no licence file; package.json only |
-| @rolldown/binding-android-arm-eabi | 1.2.11 | (platform build) | MIT | dev/build | platform build (family licence) |
-| @rolldown/binding-android-arm64 | 1.2.11 | (platform build) | MIT | dev/build | platform build (family licence) |
-| @rolldown/binding-darwin-arm64 | 1.2.11 | (platform build) | MIT | dev/build | platform build (family licence) |
-| @rolldown/binding-darwin-x64 | 1.2.11 | (platform build) | MIT | dev/build | platform build (family licence) |
-| @rolldown/binding-freebsd-x64 | 1.2.11 | (platform build) | MIT | dev/build | platform build (family licence) |
-| @rolldown/binding-linux-arm-gnueabihf | 1.2.11 | (platform build) | MIT | dev/build | platform build (family licence) |
-| @rolldown/binding-linux-arm64-gnu | 1.2.11 | (platform build) | MIT | dev/build | platform build (family licence) |
-| @rolldown/binding-linux-arm64-musl | 1.2.11 | (platform build) | MIT | dev/build | platform build (family licence) |
-| @rolldown/binding-linux-ppc64-gnu | 1.2.11 | (platform build) | MIT | dev/build | platform build (family licence) |
-| @rolldown/binding-linux-s390x-gnu | 1.2.11 | (platform build) | MIT | dev/build | platform build (family licence) |
-| @rolldown/binding-linux-x64-gnu | 1.2.11 | (platform build) | MIT | dev/build | platform build (family licence) |
-| @rolldown/binding-linux-x64-musl | 1.2.11 | (platform build) | MIT | dev/build | platform build (family licence) |
-| @rolldown/binding-openharmony-arm64 | 1.2.11 | (platform build) | MIT | dev/build | platform build (family licence) |
-| @rolldown/binding-win32-arm64-msvc | 1.2.11 | (platform build) | MIT | dev/build | platform build (family licence) |
-| @rolldown/binding-win32-x64-msvc | 1.2.11 | (platform build) | MIT | dev/build | platform build (family licence) |
+| @rolldown/binding-android-arm-eabi | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
+| @rolldown/binding-android-arm64 | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
+| @rolldown/binding-darwin-arm64 | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
+| @rolldown/binding-darwin-x64 | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
+| @rolldown/binding-freebsd-x64 | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
+| @rolldown/binding-linux-arm-gnueabihf | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
+| @rolldown/binding-linux-arm64-gnu | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
+| @rolldown/binding-linux-arm64-musl | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
+| @rolldown/binding-linux-ppc64-gnu | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
+| @rolldown/binding-linux-s390x-gnu | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
+| @rolldown/binding-linux-x64-gnu | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
+| @rolldown/binding-linux-x64-musl | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
+| @rolldown/binding-openharmony-arm64 | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
+| @rolldown/binding-win32-arm64-msvc | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
+| @rolldown/binding-win32-x64-msvc | 1.2.13 | (platform build) | MIT | dev/build | platform build (family licence) |
 | @rolldown/pluginutils | 1.0.1 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @stablelib/base64 | 1.0.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @tanstack/query-core | 5.104.1 | MIT | MIT | web bundle | LICENSE reads as MIT |
@@ -447,7 +447,7 @@ licence: shipped MIT: 209; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | playwright-core | 1.63.0 | Apache-2.0 | Apache-2.0 | dev/build | LICENSE reads as Apache-2.0 |
 | playwright | 1.63.0 | Apache-2.0 | Apache-2.0 | dev/build | LICENSE reads as Apache-2.0 |
 | pngjs | 5.0.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| postcss | 8.5.28 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| postcss | 8.5.29 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | potpack | 1.0.2 | ISC | ISC | web bundle | LICENSE reads as ISC |
 | prettier | 3.9.9 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | process-warning | 4.0.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
@@ -472,7 +472,7 @@ licence: shipped MIT: 209; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | ret | 0.5.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | reusify | 1.1.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | rfdc | 1.4.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| rolldown | 1.2.11 | MIT | MIT | dev/build | LICENSE reads as MIT |
+| rolldown | 1.2.13 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | router | 2.2.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | safe-regex2 | 5.1.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | safe-stable-stringify | 2.5.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
@@ -525,7 +525,7 @@ licence: shipped MIT: 209; dev MIT: 108; dev Apache-2.0: 29; shipped ISC: 27; de
 | use-sync-external-store | 1.7.0 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | utility-types | 3.11.0 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | vary | 1.1.2 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| vite | 8.3.2 | MIT | MIT | dev/build | LICENSE.md reads as Apache-2.0 + MIT |
+| vite | 8.3.4 | MIT | MIT | dev/build | LICENSE.md reads as Apache-2.0 + MIT |
 | vitest | 5.0.3 | MIT | MIT | dev/build | LICENSE.md reads as MIT + BSD-3-Clause |
 | webgl-constants | 1.1.1 | — | MIT | web bundle | recorded decision |
 | webgl-sdf-generator | 1.1.1 | MIT | MIT | web bundle | LICENSE.txt reads as MIT |
