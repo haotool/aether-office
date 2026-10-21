@@ -32,7 +32,7 @@ Score 96.7, floor 96.7, 100% of the rule weight measured.
 | Import cycles (runtime imports, product source) | `import-cycles` | 0 | 0 | 12 | 0 | pass |
 | Files imported by more than 30 others | `fan-in` | 2 | 0 | 5 | -3.33 | fail |
 | Exports nothing imports | `dead-exports` | 0 | 0 | 10 | 0 | pass |
-| Code lines over the budget of 146478 | `code-lines` | 0 | 0 | 6 | 0 | pass |
+| Code lines over the budget of 146476 | `code-lines` | 0 | 0 | 6 | 0 | pass |
 | Duplicated code share (limit 3%) | `duplicates` | 0.24% | 3% | 12 | 0 | pass |
 | Uses of the any type (product source) | `any-type` | 0 | 0 | 6 | 0 | pass |
 | Type or lint suppression comments | `suppressions` | 0 | 0 | 6 | 0 | pass |
@@ -70,7 +70,7 @@ Score 100.0, floor 100.0, 82% of the rule weight measured.
 | Rule | Id | Value | Limit | Weight | Penalty | State |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
 | Product modules no unit test reaches through imports | `unreached-modules` | 0 | 0 | 25 | 0 | pass |
-| Share of product modules a unit test imports directly | `direct-tests` | 60.77% | >= 60% | 15 | 0 | pass |
+| Share of product modules a unit test imports directly | `direct-tests` | 60.7% | >= 60% | 15 | 0 | pass |
 | Fixed sleeps, fixed ports and waitForTimeout in tests | `flaky-patterns` | 0 | 0 | 20 | 0 | pass |
 | Skipped or todo tests | `skipped-tests` | 0 | 0 | 10 | 0 | pass |
 | Line coverage (no coverage/coverage-summary.json: run pnpm test:coverage) | `coverage-lines` | - | - | 8 | 0 | not run |
@@ -80,11 +80,11 @@ Score 100.0, floor 100.0, 82% of the rule weight measured.
 Unit-test lines per product source line: 0.52
 
 ```text
-apps/control: 14608 source lines
+apps/control: 14604 source lines
 apps/runner: 3062 source lines
-apps/web: 28153 source lines
+apps/web: 28152 source lines
 packages/contracts: 1376 source lines
-packages/kernel: 3452 source lines
+packages/kernel: 3455 source lines
 packages/office-scene: 25533 source lines
 packages/providers: 2044 source lines
 ```
@@ -140,7 +140,7 @@ Score 99.1, floor 99.1, 70% of the rule weight measured.
 **first-load** (-0.9): First-load JavaScript and CSS, transferred (budget 200 KB)
 
 ```text
-  apps/web/dist/assets/index-BPrb-s7W.js:1 79 KB
+  apps/web/dist/assets/index-BZ5WRxPQ.js:1 80 KB
   apps/web/dist/assets/signals-BiryGzd7.js:1 3 KB
   apps/web/dist/assets/scheduler-CaJXFZeK.js:1 1 KB
   apps/web/dist/assets/react-dom-DkN6JdHT.js:1 1 KB
