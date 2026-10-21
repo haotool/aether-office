@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process';
 import { availableParallelism } from 'node:os';
 import { promisify } from 'node:util';
+import { shQuote } from '@aether/kernel';
 import { mapPool } from '../runtime/pool.js';
 
 /**
@@ -182,9 +183,9 @@ export async function gitHealth(root: string) {
     removable: removable.map((w) => w.path),
     suggestions: [
       ...(rows.some((w) => w.prunable) ? ['git worktree prune'] : []),
-      ...removable.map((w) => `git worktree remove ${JSON.stringify(w.path)}`),
-      ...staleBranches.map((b) => `git branch -d ${b}`),
-      ...remoteMerged.map((b) => `git push origin --delete ${b.replace(/^origin\//, '')}`),
+      ...removable.map((w) => `git worktree remove ${shQuote(w.path)}`),
+      ...staleBranches.map((b) => `git branch -d ${shQuote(b)}`),
+      ...remoteMerged.map((b) => `git push origin --delete ${shQuote(b.replace(/^origin\//, ''))}`),
     ],
   };
 }
@@ -209,17 +210,12 @@ export async function worktreeSizes(
 
 type CleanResult = { path: string; outcome: 'removed' | 'skipped'; reason?: string };
 
-type CleanableWorktree = {
-  main: boolean;
-  locked: boolean;
-  merged: boolean;
-  dirty: number | null;
-};
+type Row = Awaited<ReturnType<typeof inspectWorktree>>;
 
 const insideWorktree = (dir: string, path: string) => dir === path || dir.startsWith(`${path}/`);
 
 function skipCleanWorktreeReason(
-  w: CleanableWorktree | undefined,
+  w: Row | undefined,
   path: string,
   busyDirectories: readonly string[],
 ): string | null {

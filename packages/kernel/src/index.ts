@@ -322,3 +322,4 @@ export { structureWrappers, stripCliWrappers, type Notice } from './text-wrapper
 export { cleanTitle, shortLabel, displayWidth } from './text-title.js';
 export { balanceBrackets } from './text-brackets.js';
 export { DAY_MS, HOUR_MS, MINUTE_MS, formatAgo, formatSpan } from './time.js';
+export { shQuote } from './shell.js';

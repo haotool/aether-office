@@ -1,10 +1,9 @@
 import type { AttributedSession } from '@aether/contracts';
+import { shQuote } from '@aether/kernel';
 import { useT } from '../../ui/useT.js';
 import { CopyCommand } from '../settings/kit.js';
 
-const quote = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;
-
-export const hookInstallCommand = (cwd: string) => `pnpm hooks install --project ${quote(cwd)}`;
+export const hookInstallCommand = (cwd: string) => `pnpm hooks install --project ${shQuote(cwd)}`;
 
 export const needsHook = (session: AttributedSession, working: boolean) =>
   session.provider === 'claude' && session.hook === null && working;

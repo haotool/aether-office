@@ -44,7 +44,7 @@ it('reports merged worktrees and branches, missing worktrees and sizes, and sugg
     writeFileSync(join(dir, 'wt-wip', 'c.txt'), 'c\n');
     g(repo, 'worktree', 'add', '-q', '-b', 'lost', join(dir, 'wt-lost'));
     rmSync(join(dir, 'wt-lost'), { recursive: true });
-    g(repo, 'branch', 'old-merged');
+    g(repo, 'branch', "old'$(x);merged");
     const report = await gitHealth(repo);
     const by = Object.fromEntries(report.worktrees.map((w) => [w.branch ?? w.path, w]));
     expect(report.defaultBranch).toBe('main');
@@ -52,11 +52,11 @@ it('reports merged worktrees and branches, missing worktrees and sizes, and sugg
     expect(by['wip']).toMatchObject({ merged: false, dirty: null });
     expect(by['wip']!.lastCommitAt).toBeGreaterThan(0);
     expect(by['lost']).toMatchObject({ prunable: true });
-    expect(report.staleBranches).toEqual(['old-merged']);
+    expect(report.staleBranches).toEqual(["old'$(x);merged"]);
     expect(report.suggestions).toEqual([
       'git worktree prune',
-      `git worktree remove ${JSON.stringify(join(dir, 'wt-done'))}`,
-      'git branch -d old-merged',
+      `git worktree remove '${join(dir, 'wt-done')}'`,
+      "git branch -d 'old'\\''$(x);merged'",
     ]);
     expect(report.removable).toEqual([join(dir, 'wt-done')]);
     const { sizes } = await worktreeSizes(repo);

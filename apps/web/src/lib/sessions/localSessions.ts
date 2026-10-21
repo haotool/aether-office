@@ -5,6 +5,7 @@ import {
   ROLE_LABELS,
   classifySession,
   roleOfSubagent,
+  shQuote,
   shortLabel,
   type Classification,
 } from '@aether/kernel';
@@ -127,9 +128,8 @@ export function branchResolver(sessions: readonly LocalSession[]) {
   };
 }
 
-const quote = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;
 export function sessionCommands(s: Pick<LocalSession, 'provider' | 'sessionId' | 'cwd'>) {
-  const cd = `cd ${quote(s.cwd)} && `;
+  const cd = `cd ${shQuote(s.cwd)} && `;
   return s.provider === 'claude'
     ? {
         resume: `${cd}claude --resume ${s.sessionId}`,
