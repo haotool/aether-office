@@ -7,14 +7,31 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-21
+
 ### Changed
 
+- Reorganize the English and Traditional Chinese READMEs, documentation navigation, contributor guidance and release checklist.
+- Check documentation formatting and selected Linux browser workflows in CI; run source checks on both Linux and macOS.
+- Pin Linux CI to Ubuntu 24.04 and run the SHA-pinned checkout action on its supported Node 24 runtime.
 - Resume automatic framing with one tap after manual camera control, show its actual state, and keep automatic shots static when reduced motion is enabled.
 - Refresh both README introductions with localized dark control-room covers, the orbital A logo, actual Git-flower and mobile captures, wide office and crown views, a desktop/mobile feature map with actual conversation feeds, Git commit history, approvals, PTY fixtures and ten mobile views, and a clearer path to getting started.
 - Mark the pre-publication open-source risk assessment as a historical snapshot and point current decisions to the release and verification ledgers.
 
 ### Fixed
 
+- Replies with unequal, very long backtick delimiters no longer trigger repeated quadratic scans in HTML neutralization; adjacent code spans retain their protection.
+- Browser-test retries release their synthetic terminal slots and restore deleted observer fixtures, so later tests remain independent.
+- A cell of an HTML table in a reply that held a backslash before a pipe (`a\|b`) could split into an extra column once the table
+  was turned into Markdown; the backslash is now escaped along with the pipe.
+- Neutralizing raw HTML in a very long reply no longer backtracks quadratically on thousands of `<code` openers inside `<pre>` or
+  on a long run of spaces in a code block (two regular expressions).
+- Importing a skill whose frontmatter line held tens of thousands of spaces and a stray carriage return stalled the control
+  server for seconds; the line is now read in linear time.
+- A reply with a line of tens of thousands of backticks stalled the conversation text pass for seconds; code spans are now
+  found in linear time, and a run of more than 16 backticks no longer delimits a span.
+- Checking whether a session's process had been orphaned stalled for seconds when its parent's command line was very long; the
+  check is now linear, and `--user` has to follow `systemd` within 256 characters.
 - Count only product runtime importers in both fan-in quality measures, so adding tests cannot worsen the product coupling score.
 - Retry legacy transcript checkpoints once, then retain permanent schema failures so malformed files cannot replay old observations and grow the database on every poll.
 - Load Codex and Claude Code upgrades without a release allowlist; retain protocol, path and permission validation and recover previously version-blocked observations.
@@ -35,37 +52,11 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ### Security
 
+- Bind every manual release-evidence entry to a full ancestor commit SHA instead of accepting unversioned review claims.
+- Validate version, changelog, workspace manifests, clean state and annotated tag identity before a release tag is pushed.
 - Upgrade the MCP SDK to 1.32.1 and Vite to 8.3.4, which fix the advisories that `pnpm audit` reports against 1.31.0 and 8.3.2.
 - Connector requests refuse every IANA special-purpose address, including hexadecimal IPv4-mapped IPv6 forms, carrier-grade NAT, documentation and 6to4 ranges and their NAT64-translated forms, and end at a total deadline so a server that drips bytes cannot hold one open.
 - Keep the Codex analysis channel out of the session transcript, as the runner observer already does.
-
-## [0.4.1] - 2026-10-14
-
-### Changed
-
-- Reorganize the English and Traditional Chinese READMEs, documentation navigation, contributor guidance and release checklist.
-- Check documentation formatting and selected Linux browser workflows in CI; run source checks on both Linux and macOS.
-- Pin Linux CI to Ubuntu 24.04 and run the SHA-pinned checkout action on its supported Node 24 runtime.
-
-### Fixed
-
-- Replies with unequal, very long backtick delimiters no longer trigger repeated quadratic scans in HTML neutralization; adjacent code spans retain their protection.
-- Browser-test retries release their synthetic terminal slots and restore deleted observer fixtures, so later tests remain independent.
-- A cell of an HTML table in a reply that held a backslash before a pipe (`a\|b`) could split into an extra column once the table
-  was turned into Markdown; the backslash is now escaped along with the pipe.
-- Neutralizing raw HTML in a very long reply no longer backtracks quadratically on thousands of `<code` openers inside `<pre>` or
-  on a long run of spaces in a code block (two regular expressions).
-- Importing a skill whose frontmatter line held tens of thousands of spaces and a stray carriage return stalled the control
-  server for seconds; the line is now read in linear time.
-- A reply with a line of tens of thousands of backticks stalled the conversation text pass for seconds; code spans are now
-  found in linear time, and a run of more than 16 backticks no longer delimits a span.
-- Checking whether a session's process had been orphaned stalled for seconds when its parent's command line was very long; the
-  check is now linear, and `--user` has to follow `systemd` within 256 characters.
-
-### Security
-
-- Bind every manual release-evidence entry to a full ancestor commit SHA instead of accepting unversioned review claims.
-- Validate version, changelog, workspace manifests, clean state and annotated tag identity before a release tag is pushed.
 
 ## [0.4.0] - 2026-10-13
 
