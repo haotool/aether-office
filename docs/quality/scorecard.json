@@ -97,7 +97,7 @@
         },
         {
           "id": "code-lines",
-          "label": "Code lines over the budget of 146493",
+          "label": "Code lines over the budget of 146484",
           "status": "pass",
           "weight": 6,
           "value": 0,
@@ -112,13 +112,12 @@
           "label": "Duplicated code share (limit 3%)",
           "status": "pass",
           "weight": 12,
-          "value": 0.29,
+          "value": 0.26,
           "limit": 3,
           "full": 9,
           "unit": "%",
           "penalty": 0,
           "details": [
-            "10 lines x2: apps/control/src/services/git/git-graph.ts:6 = apps/web/src/features/tasks-git/GitGraph.tsx:6",
             "10 lines x2: packages/office-scene/src/screen/screen-dialects.ts:52 = packages/office-scene/src/screen/screen-dialects.ts:101",
             "10 lines x2: packages/office-scene/src/squad/puppet/puppet-art.ts:2 = packages/office-scene/src/squad/squad-art.ts:34",
             "9 lines x2: apps/web/src/features/operations/Knowledge.tsx:275 = apps/web/src/features/shell-chrome/QueryStatus.tsx:3",
@@ -129,7 +128,8 @@
             "7 lines x2: packages/office-scene/src/characters/character-events.ts:5 = packages/office-scene/src/squad/SquadMember.tsx:20",
             "6 lines x2: apps/control/src/services/runtime/reap-zombies.ts:37 = apps/control/src/services/runtime/stop-session.ts:61",
             "6 lines x2: apps/web/src/features/office/OfficePage.tsx:28 = apps/web/src/features/office/PhoneOffice.tsx:26",
-            "6 lines x2: packages/office-scene/src/components/DeskEffects.tsx:21 = packages/office-scene/src/components/DeskGlow.tsx:10"
+            "6 lines x2: packages/office-scene/src/components/DeskEffects.tsx:21 = packages/office-scene/src/components/DeskGlow.tsx:10",
+            "6 lines x2: packages/office-scene/src/components/ProjectedBoxes.tsx:23 = packages/office-scene/src/components/Speech.tsx:121"
           ]
         },
         {
@@ -316,10 +316,10 @@
           "unit": "%",
           "penalty": 0,
           "details": [
-            "apps/control: 66/114 modules, 14631 source lines",
+            "apps/control: 66/114 modules, 14621 source lines",
             "apps/runner: 22/24 modules, 3066 source lines",
-            "apps/web: 190/337 modules, 28168 source lines",
-            "packages/contracts: 16/16 modules, 1365 source lines",
+            "apps/web: 190/337 modules, 28158 source lines",
+            "packages/contracts: 16/16 modules, 1376 source lines",
             "packages/kernel: 28/28 modules, 3452 source lines",
             "packages/office-scene: 135/242 modules, 25533 source lines",
             "packages/providers: 14/14 modules, 2041 source lines"
@@ -386,10 +386,10 @@
           "unit": "",
           "penalty": 0,
           "details": [
-            "apps/control: 14631 source lines",
+            "apps/control: 14621 source lines",
             "apps/runner: 3066 source lines",
-            "apps/web: 28168 source lines",
-            "packages/contracts: 1365 source lines",
+            "apps/web: 28158 source lines",
+            "packages/contracts: 1376 source lines",
             "packages/kernel: 3452 source lines",
             "packages/office-scene: 25533 source lines",
             "packages/providers: 2041 source lines"
