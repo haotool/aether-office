@@ -173,7 +173,7 @@ export function HudPanels({ m }: { m: SceneModel }) {
     <>
       <FloorHud zh={zh} exploded={exploded} floor={floor} perFloor={nav.perFloor} />
       {!exploded && badge && props.onOpenFloorKpi && (
-        <FloorPlaque zh={zh} floor={floor} badge={badge} onOpen={props.onOpenFloorKpi} />
+        <FloorPlaque floor={floor} badge={badge} onOpen={props.onOpenFloorKpi} />
       )}
       <BuildingPanel
         zh={zh}

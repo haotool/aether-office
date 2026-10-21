@@ -97,7 +97,7 @@
         },
         {
           "id": "code-lines",
-          "label": "Code lines over the budget of 146475",
+          "label": "Code lines over the budget of 146472",
           "status": "pass",
           "weight": 6,
           "value": 0,
@@ -321,7 +321,7 @@
             "apps/web: 190/337 modules, 28152 source lines",
             "packages/contracts: 16/16 modules, 1376 source lines",
             "packages/kernel: 28/29 modules, 3455 source lines",
-            "packages/office-scene: 135/242 modules, 25533 source lines",
+            "packages/office-scene: 135/242 modules, 25530 source lines",
             "packages/providers: 14/14 modules, 2044 source lines"
           ]
         },
@@ -391,7 +391,7 @@
             "apps/web: 28152 source lines",
             "packages/contracts: 1376 source lines",
             "packages/kernel: 3455 source lines",
-            "packages/office-scene: 25533 source lines",
+            "packages/office-scene: 25530 source lines",
             "packages/providers: 2044 source lines"
           ]
         }
@@ -713,8 +713,8 @@
           "unit": "KB",
           "penalty": 0,
           "details": [
-            "apps/web/dist/assets/src-1A5ExmoC.js:1 377 KB",
-            "apps/web/dist/assets/index-Si_TBcud.js:1 91 KB",
+            "apps/web/dist/assets/src-CaMNT6d7.js:1 377 KB",
+            "apps/web/dist/assets/index-tREpSNET.js:1 91 KB",
             "apps/web/dist/assets/Terminals-DkDBjMc-.js:1 86 KB",
             "apps/web/dist/assets/TaskDag-6vNrZ3Xd.js:1 56 KB",
             "apps/web/dist/assets/core-CC40LDuL.js:1 27 KB",
@@ -734,7 +734,7 @@
           "unit": "KB",
           "penalty": 0,
           "details": [
-            "apps/web/dist/assets/src-1A5ExmoC.js:1 377 KB"
+            "apps/web/dist/assets/src-CaMNT6d7.js:1 377 KB"
           ]
         },
         {
@@ -748,7 +748,7 @@
           "unit": "KB",
           "penalty": 0.9,
           "details": [
-            "apps/web/dist/assets/index-Si_TBcud.js:1 80 KB",
+            "apps/web/dist/assets/index-tREpSNET.js:1 80 KB",
             "apps/web/dist/assets/signals-CqwJ1gga.js:1 3 KB",
             "apps/web/dist/assets/scheduler-A2pdr8AR.js:1 1 KB",
             "apps/web/dist/assets/react-dom-2LriPbPx.js:1 1 KB",

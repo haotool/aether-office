@@ -96,7 +96,7 @@ export function Topbar({
       <NavLink to="/office" className="brand" aria-label="AETHER OFFICE">
         <img src="/favicon.svg" width="32" height="32" alt="" />
         <span>
-          AETHER<small>OFFICE</small>
+          AETHER <small>OFFICE</small>
         </span>
       </NavLink>
       <span className="top-divider" />
