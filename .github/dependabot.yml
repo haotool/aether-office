@@ -8,19 +8,16 @@ updates:
     cooldown:
       default-days: 1
     groups:
-      npm-production-minor-patch:
+      sdks:
+        patterns: ['@agentclientprotocol/*', '@anthropic-ai/*', '@modelcontextprotocol/*']
+      prod:
         dependency-type: production
-        update-types:
-          - minor
-          - patch
-      npm-development:
+        update-types: [minor, patch]
+      dev:
         dependency-type: development
-        update-types:
-          - minor
-          - patch
-      npm-major:
-        update-types:
-          - major
+        update-types: [minor, patch]
+      major:
+        update-types: [major]
     commit-message:
       prefix: chore(deps)
 
@@ -32,7 +29,6 @@ updates:
       default-days: 1
     groups:
       github-actions:
-        patterns:
-          - '*'
+        patterns: ['*']
     commit-message:
       prefix: chore(deps)
