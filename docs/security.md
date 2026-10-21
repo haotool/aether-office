@@ -227,7 +227,7 @@ pull requests, and a weekly schedule. That job alone carries `security-events: w
 Findings are listed under Security, Code scanning.
 
 **Dependabot.** `.github/dependabot.yml` opens weekly pull requests for npm (pnpm lockfile) and GitHub Actions, groups updates
-to reduce noise, prefixes commits with `chore(deps)`, and uses a one-day **cooldown** on version updates so proposed releases
+to reduce noise (the agent SDKs, whose 0.x minors can break, form their own group), prefixes commits with `chore(deps)`, and uses a one-day **cooldown** on version updates so proposed releases
 are at least a day old—the same idea as `minimumReleaseAge` in `pnpm-workspace.yaml`. Security updates from Dependabot are
 not delayed by that cooldown.
 
