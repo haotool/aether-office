@@ -215,7 +215,7 @@ sets `permissions: contents: read` at the top level; jobs that need nothing else
 actions are pinned to a full 40-character commit SHA with the release tag in a comment. `actions/checkout` uses
 `persist-credentials: false` so the job token is not left in git config for later steps.
 
-**Dependency audit gate.** After `pnpm install`, the `audit` job runs `pnpm audit:gate` (`scripts/oss/audit-gate.mjs`), which
+**Dependency audit gate.** After `pnpm install`, the Linux `verify` job runs `pnpm audit:gate` (`scripts/oss/audit-gate.mjs`), which
 reads `pnpm audit --json` and fails on unexempted **high** or **critical** advisories. If the registry audit endpoint is
 unreachable or returns unusable output, the job fails (fail-closed); re-run the job after connectivity is restored—there is
 no silent pass. Time-boxed waivers live in `docs/security/audit-exceptions.json`: each entry must include a stable `advisory`
