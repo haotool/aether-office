@@ -97,7 +97,7 @@
         },
         {
           "id": "code-lines",
-          "label": "Code lines over the budget of 146476",
+          "label": "Code lines over the budget of 146475",
           "status": "pass",
           "weight": 6,
           "value": 0,
@@ -317,7 +317,7 @@
           "penalty": 0,
           "details": [
             "apps/control: 66/114 modules, 14604 source lines",
-            "apps/runner: 22/24 modules, 3062 source lines",
+            "apps/runner: 22/24 modules, 3059 source lines",
             "apps/web: 190/337 modules, 28152 source lines",
             "packages/contracts: 16/16 modules, 1376 source lines",
             "packages/kernel: 28/29 modules, 3455 source lines",
@@ -387,7 +387,7 @@
           "penalty": 0,
           "details": [
             "apps/control: 14604 source lines",
-            "apps/runner: 3062 source lines",
+            "apps/runner: 3059 source lines",
             "apps/web: 28152 source lines",
             "packages/contracts: 1376 source lines",
             "packages/kernel: 3455 source lines",
