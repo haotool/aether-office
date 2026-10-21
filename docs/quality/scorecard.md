@@ -32,8 +32,8 @@ Score 96.7, floor 96.7, 100% of the rule weight measured.
 | Import cycles (runtime imports, product source) | `import-cycles` | 0 | 0 | 12 | 0 | pass |
 | Files imported by more than 30 others | `fan-in` | 2 | 0 | 5 | -3.33 | fail |
 | Exports nothing imports | `dead-exports` | 0 | 0 | 10 | 0 | pass |
-| Code lines over the budget of 146493 | `code-lines` | 0 | 0 | 6 | 0 | pass |
-| Duplicated code share (limit 3%) | `duplicates` | 0.29% | 3% | 12 | 0 | pass |
+| Code lines over the budget of 146484 | `code-lines` | 0 | 0 | 6 | 0 | pass |
+| Duplicated code share (limit 3%) | `duplicates` | 0.26% | 3% | 12 | 0 | pass |
 | Uses of the any type (product source) | `any-type` | 0 | 0 | 6 | 0 | pass |
 | Type or lint suppression comments | `suppressions` | 0 | 0 | 6 | 0 | pass |
 | Unfinished-work markers in comments | `todo-markers` | 0 | 0 | 5 | 0 | pass |
@@ -80,10 +80,10 @@ Score 100.0, floor 100.0, 82% of the rule weight measured.
 Unit-test lines per product source line: 0.52
 
 ```text
-apps/control: 14631 source lines
+apps/control: 14621 source lines
 apps/runner: 3066 source lines
-apps/web: 28168 source lines
-packages/contracts: 1365 source lines
+apps/web: 28158 source lines
+packages/contracts: 1376 source lines
 packages/kernel: 3452 source lines
 packages/office-scene: 25533 source lines
 packages/providers: 2041 source lines

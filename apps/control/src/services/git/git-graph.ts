@@ -1,18 +1,8 @@
+import type { GitGraphCommit } from '@aether/contracts';
 import { git } from './git-health.js';
 import { redactSecrets } from '../platform/redaction.js';
 
 const SEP = '\x1f';
-
-type GraphCommit = {
-  sha: string;
-  parents: string[];
-  refs: string[];
-  subject: string;
-  author: string;
-  at: number;
-  lane: number;
-  edges: { to: number; parent: string }[];
-};
 
 function laneForSha(lanes: (string | null)[], sha: string): number {
   let lane = lanes.indexOf(sha);
@@ -48,17 +38,17 @@ function trimTrailingEmptyLanes(lanes: (string | null)[]): void {
   while (lanes.length && lanes[lanes.length - 1] === null) lanes.pop();
 }
 
-export function layoutGraph(commits: readonly Omit<GraphCommit, 'lane' | 'edges'>[]): {
-  commits: GraphCommit[];
+export function layoutGraph(commits: readonly Omit<GitGraphCommit, 'lane' | 'edges'>[]): {
+  commits: GitGraphCommit[];
   lanes: number;
 } {
   const lanes: (string | null)[] = [];
   let width = 0;
-  const out: GraphCommit[] = [];
+  const out: GitGraphCommit[] = [];
   for (const c of commits) {
     const lane = laneForSha(lanes, c.sha);
     collapseSameShaLanes(lanes, lane, c.sha);
-    const edges: GraphCommit['edges'] = [];
+    const edges: GitGraphCommit['edges'] = [];
     c.parents.forEach((parent, index) => {
       const target = parentLane(lanes, parent, index, lane);
       edges.push({ to: target, parent });
@@ -71,7 +61,7 @@ export function layoutGraph(commits: readonly Omit<GraphCommit, 'lane' | 'edges'
   return { commits: out, lanes: width };
 }
 
-export function parseLog(text: string): Omit<GraphCommit, 'lane' | 'edges'>[] {
+export function parseLog(text: string): Omit<GitGraphCommit, 'lane' | 'edges'>[] {
   return text
     .split('\n')
     .filter(Boolean)
