@@ -31,6 +31,7 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 - Keep employees upright after handing in work and before departure.
 - Keep camera transition covers transparent when reduced motion disables their fade.
 - Aim automatic floor shots at present employees, reject departed message recipients, and ease camera motion at the flower crown while keeping its petals and halo inside the frame.
+- Wait for every process a verifier started to end before taking the after snapshot, including children that ignore SIGTERM.
 
 ### Security
 
