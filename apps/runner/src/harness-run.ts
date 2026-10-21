@@ -1,6 +1,6 @@
-import { StringDecoder } from 'node:string_decoder';
 import { spawn } from 'node:child_process';
-import { groupStopper } from '@aether/providers';
+import { setTimeout as sleep } from 'node:timers/promises';
+import { groupAlive, groupStopper } from '@aether/providers';
 import type { Harness } from './workspaces.js';
 
 const OUTPUT_LIMIT_BYTES = 1024 * 1024;
@@ -16,7 +16,6 @@ export async function runHarnessProcess(
   let outputBytes = 0;
   let capped = false;
   let timedOut = false;
-  const decoder = new StringDecoder('utf8');
   const child = spawn(harness.executable, harness.args, {
     cwd,
     env,
@@ -25,33 +24,31 @@ export async function runHarnessProcess(
   });
   const stopper = groupStopper(child);
   const { stop } = stopper;
-  const collect = (chunk: Buffer) => {
-    outputBytes += chunk.length;
+  const collect = (chunk: string) => {
+    outputBytes += Buffer.byteLength(chunk);
     if (outputBytes > OUTPUT_LIMIT_BYTES) {
       capped = true;
       stop();
       return;
     }
-    output += decoder.write(chunk);
+    output += chunk;
   };
-  for (const stream of [child.stdout, child.stderr]) stream.on('data', collect);
+  for (const stream of [child.stdout, child.stderr]) stream.setEncoding('utf8').on('data', collect);
   signal?.addEventListener('abort', stop, { once: true });
   const timer = setTimeout(() => {
     timedOut = true;
     stop();
   }, harness.timeoutMs).unref();
   if (signal?.aborted) stop();
-  let exitCode: number | null;
-  try {
-    exitCode = await new Promise<number | null>((resolve, reject) => {
-      child.once('close', resolve);
-      child.once('error', reject);
-    });
-  } finally {
+  const exitCode = await new Promise<number | null>((resolve, reject) => {
+    child.once('close', resolve);
+    child.once('error', reject);
+  }).finally(() => {
     clearTimeout(timer);
-    stopper.cancel();
     signal?.removeEventListener('abort', stop);
-    output += decoder.end();
-  }
+  });
+  stop();
+  for (let i = 0; i < 100 && child.pid && groupAlive(child.pid); i++) await sleep(20);
+  stopper.cancel();
   return { output, exitCode, capped, timedOut };
 }

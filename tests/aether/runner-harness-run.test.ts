@@ -15,6 +15,7 @@ const harness = (script: string, timeoutMs = 10_000): Harness => ({
 const run = (script: string, options: { timeoutMs?: number; signal?: AbortSignal } = {}) =>
   runHarnessProcess(harness(script, options.timeoutMs), process.cwd(), process.env, options.signal);
 const HANG = 'setInterval(() => {}, 1000)';
+const LEAVE = `const c = require("node:child_process").spawn(process.execPath, ["-e", "process.on('SIGTERM', () => {}); ${HANG}"], { stdio: "ignore" }); c.unref(); process.stdout.write(String(c.pid))`;
 
 describe('runHarnessProcess', () => {
   it('collects stdout and stderr and the exit code', async () => {
@@ -57,15 +58,16 @@ describe('runHarnessProcess', () => {
   });
 
   it('stops on an abort signal, also one that was already aborted', async () => {
-    const controller = new AbortController();
-    const pending = run(HANG, { signal: controller.signal });
-    const abort = setTimeout(() => controller.abort(), 200);
-    const result = await pending;
-    clearTimeout(abort);
+    const result = await run(HANG, { signal: AbortSignal.timeout(200) });
     expect(result.exitCode).not.toBe(0);
     expect(result.timedOut).toBe(false);
     const early = await run(HANG, { signal: AbortSignal.abort() });
     expect(early.exitCode).not.toBe(0);
+  });
+
+  it('leaves nothing of its process group running, also a child that ignores SIGTERM', async () => {
+    const { output } = await run(LEAVE);
+    expect(() => process.kill(Number(output), 0)).toThrow('ESRCH');
   });
 
   it('rejects when the executable cannot be started', async () => {
