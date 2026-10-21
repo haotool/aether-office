@@ -129,7 +129,7 @@ Score 99.1, floor 99.1, 70% of the rule weight measured.
 
 | Rule | Id | Value | Limit | Weight | Penalty | State |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
-| Web JavaScript total, gzip (budget 870 KB) | `bundle-total` | 848 KB | 870 | 25 | 0 | pass |
+| Web JavaScript total, gzip (budget 870 KB) | `bundle-total` | 849 KB | 870 | 25 | 0 | pass |
 | Largest JavaScript chunk, gzip (budget 400 KB) | `bundle-chunk` | 377 KB | 400 | 15 | 0 | pass |
 | First-load JavaScript and CSS, transferred (budget 200 KB) | `first-load` | 203 KB | 200 | 30 | -0.9 | fail |
 | Frame times and draw cost (scripts/perf-matrix.mjs) (not run: needs a real GPU (PERF_GPU=1); the measured numbers in docs/design-system.md are not re-scored) | `perf-matrix` | - | - | 30 | 0 | not run |
@@ -140,14 +140,14 @@ Score 99.1, floor 99.1, 70% of the rule weight measured.
 **first-load** (-0.9): First-load JavaScript and CSS, transferred (budget 200 KB)
 
 ```text
-  apps/web/dist/assets/index-BZ5WRxPQ.js:1 80 KB
-  apps/web/dist/assets/signals-BiryGzd7.js:1 3 KB
-  apps/web/dist/assets/scheduler-CaJXFZeK.js:1 1 KB
-  apps/web/dist/assets/react-dom-DkN6JdHT.js:1 1 KB
-  apps/web/dist/assets/useT-CKn0-Nxv.js:1 3 KB
-  apps/web/dist/assets/chunk-OB3PAWPO-DB-9SENA.js:1 12 KB
-  apps/web/dist/assets/QueryClientProvider-CR9ma4EU.js:1 0 KB
-  apps/web/dist/assets/polling-DSZtZAGb.js:1 7 KB
+  apps/web/dist/assets/index-Si_TBcud.js:1 80 KB
+  apps/web/dist/assets/signals-CqwJ1gga.js:1 3 KB
+  apps/web/dist/assets/scheduler-A2pdr8AR.js:1 1 KB
+  apps/web/dist/assets/react-dom-2LriPbPx.js:1 1 KB
+  apps/web/dist/assets/useT-B_aTsCxl.js:1 3 KB
+  apps/web/dist/assets/chunk-OB3PAWPO-CvMDgOpm.js:1 12 KB
+  apps/web/dist/assets/QueryClientProvider-OgmwHxn2.js:1 0 KB
+  apps/web/dist/assets/polling-BLoT_I3J.js:1 7 KB
   ... 35 more in scorecard.json
 ```
 
