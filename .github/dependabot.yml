@@ -9,7 +9,7 @@ updates:
       default-days: 1
     groups:
       sdks:
-        patterns: ['@agentclientprotocol/*', '@anthropic-ai/*', '@modelcontextprotocol/*']
+        patterns: ['@agentclientprotocol/claude-agent-acp', '@anthropic-ai/claude-agent-sdk']
       prod:
         dependency-type: production
         update-types: [minor, patch]
