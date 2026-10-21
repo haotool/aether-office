@@ -12,6 +12,15 @@ describe('release metadata', () => {
     expect(version).toMatch(/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/);
   });
 
+  it('names the released version and its compare links in the changelog', () => {
+    const changelog = read('CHANGELOG.md');
+    const [latest, previous] = Array.from(changelog.matchAll(/^## \[([\d.]+)\] - /gm), (m) => m[1]);
+    const compare = 'https://github.com/haotool/aether-office/compare';
+    expect(latest).toBe(version);
+    expect(changelog).toContain(`[Unreleased]: ${compare}/v${version}...HEAD`);
+    expect(changelog).toContain(`[${version}]: ${compare}/v${previous}...v${version}`);
+  });
+
   it('matches a clean annotated tag when one is being published', () => {
     const tag = process.env['AETHER_RELEASE_TAG'];
     if (!tag) return;
@@ -19,15 +28,5 @@ describe('release metadata', () => {
     expect(git('cat-file', '-t', tag)).toEqual(['tag']);
     expect(git('rev-list', '-n', '1', tag)).toEqual(git('rev-parse', 'HEAD'));
     expect(git('status', '--porcelain')).toEqual([]);
-    const changelog = read('CHANGELOG.md');
-    const previous = git('tag', '--sort=-version:refname').find(
-      (name) => name !== tag && /^v\d+\.\d+\.\d+$/.test(name),
-    );
-    for (const line of [
-      `## [${version}] - `,
-      `[Unreleased]: https://github.com/haotool/aether-office/compare/${tag}...HEAD`,
-      `[${version}]: https://github.com/haotool/aether-office/compare/${previous}...${tag}`,
-    ])
-      expect(changelog).toContain(line);
   });
 });
