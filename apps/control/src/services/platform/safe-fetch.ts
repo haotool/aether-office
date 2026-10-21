@@ -7,40 +7,26 @@ import { DomainError } from '@aether/kernel';
 // Blocks SSRF into private networks and cloud metadata, pins the connection to the validated address, revalidates every
 // redirect and bounds time and size.
 
-const ipv4 = (ip: string) => ip.split('.').map(Number) as [number, number, number, number];
-const mappedAddresses = new BlockList();
-mappedAddresses.addSubnet('::ffff:0:0', 96, 'ipv6');
-
-function privateV4(ip: string): boolean {
-  const [a, b] = ipv4(ip);
-  return (
-    a === 0 ||
-    a === 10 ||
-    a === 127 ||
-    a >= 224 ||
-    (a === 100 && b >= 64 && b <= 127) ||
-    (a === 169 && b === 254) ||
-    (a === 172 && b >= 16 && b <= 31) ||
-    (a === 192 && b === 168) ||
-    (a === 192 && b === 0) ||
-    (a === 198 && (b === 18 || b === 19))
-  );
+// IANA special-purpose ranges. Each IPv4 range is also refused behind the NAT64 prefix, so translated public hosts keep
+// working; the IPv4-mapped, 6to4 and local NAT64 prefixes are refused whole.
+const SPECIAL = `0.0.0.0/8 10.0.0.0/8 100.64.0.0/10 127.0.0.0/8 169.254.0.0/16 172.16.0.0/12 192.0.0.0/16 192.168.0.0/16
+198.18.0.0/15 198.51.100.0/24 203.0.113.0/24 224.0.0.0/3 ::/96 ::ffff:0:0/96 64:ff9b:1::/48 100::/64 2001::/23
+2001:db8::/32 2002::/16 fc00::/7 fe80::/10 fec0::/10 ff00::/8`;
+const nat64 = (net: string) => {
+  const [a = 0, b = 0, c = 0, d = 0] = net.split('.').map(Number);
+  return `64:ff9b::${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
+};
+const special = { 4: new BlockList(), 6: new BlockList() };
+for (const range of SPECIAL.split(/\s+/)) {
+  const [net = '', length = ''] = range.split('/');
+  const kind = isIP(net) as 4 | 6;
+  special[kind].addSubnet(net, Number(length), `ipv${kind}`);
+  if (kind === 4) special[6].addSubnet(nat64(net), 96 + Number(length), 'ipv6');
 }
 
 export function isPublicAddress(ip: string): boolean {
   const kind = isIP(ip);
-  if (kind === 4) return !privateV4(ip);
-  if (kind !== 6) return false;
-  if (mappedAddresses.check(ip, 'ipv6')) return false;
-  const lower = ip.toLowerCase();
-  const first = parseInt(lower.split(':')[0] || '0', 16);
-  return !(
-    lower === '::' ||
-    lower === '::1' ||
-    (first & 0xfe00) === 0xfc00 ||
-    (first & 0xffc0) === 0xfe80 ||
-    (first & 0xff00) === 0xff00
-  );
+  return (kind === 4 || kind === 6) && !special[kind].check(ip, `ipv${kind}`);
 }
 
 type Resolver = (host: string) => Promise<string[]>;
@@ -136,7 +122,6 @@ function request(
       url,
       {
         method: init.method ?? 'GET',
-        timeout: policy.timeoutMs ?? 5000,
         headers: {
           'user-agent': 'aether-office',
           accept: '*/*',
@@ -149,10 +134,12 @@ function request(
       },
       (res) => collectBody(req, maxBytes, resolve, reject)(res),
     );
-    req.on('timeout', () => {
+    // A total deadline: an idle timeout would let a server that drips bytes hold the connection open.
+    const deadline = setTimeout(() => {
       reject(new DomainError('URL_TIMEOUT', 504));
       req.destroy();
-    });
+    }, policy.timeoutMs ?? 5000);
+    req.on('close', () => clearTimeout(deadline));
     req.on('error', (error) =>
       reject(error instanceof DomainError ? error : new DomainError('URL_FETCH_FAILED', 502)),
     );
