@@ -47,7 +47,7 @@ it.skipIf(cli.status !== 0)(
       clearTimeout(timer);
       finish();
       running.close();
-      rmSync(root, { recursive: true, force: true });
+      rmSync(root, { recursive: true, force: true, maxRetries: 5 });
     }
   },
   15000,
