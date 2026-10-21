@@ -64,8 +64,9 @@ pnpm run quality:release -- --gates /tmp/aether-quality-gates.json
 
 - [ ] Open a focused pull request with the concrete behavior change, validation results and remaining limitations.
       Use a conventional title of at most 72 characters and complete the contribution certification.
-- [ ] Confirm the current PR head has successful `check`, `audit`, `commit-messages` and CodeQL runs.
-      `check` and `audit` require the Linux/macOS verification matrix; Linux also runs the selected browser workflows.
+- [ ] Confirm the current PR head has successful `check`, `commit-messages` and CodeQL runs.
+      `check` requires the Linux/macOS verification matrix; Linux also runs the advisory gate and the selected browser
+      workflows.
 - [ ] Merge the reviewed head through the ruleset. Do not bypass checks or force-push `main`.
 - [ ] Confirm the resulting `main` commit and its CI/CodeQL results. A passing earlier head is not evidence for a changed
       release tree.
