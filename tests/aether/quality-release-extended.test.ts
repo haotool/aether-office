@@ -16,7 +16,7 @@ const {
   measureMixedLanguageDocs,
   measureChangelog,
 } = await load('measure-extended.mjs');
-const { memoryRepo } = await loadRoot('repo.mjs');
+const { memoryRepo, diskRepo } = await loadRoot('repo.mjs');
 const { creditM } = await load('compute.mjs');
 
 describe('measureCoverage', () => {
@@ -97,8 +97,9 @@ describe('measureChangelog', () => {
     '',
   ].join('\n');
 
-  it('accepts the Keep a Changelog layout', () => {
+  it("accepts the Keep a Changelog layout, this repository's own changelog included", () => {
     expect(measureChangelog(memoryRepo({ 'CHANGELOG.md': good })).violations).toBe(0);
+    expect(measureChangelog(diskRepo(process.cwd())).detail).toEqual([]);
   });
 
   it('counts a missing section, odd headings, repeated kinds and working vocabulary', () => {

@@ -11,8 +11,10 @@ are separate operations; the historical procedure is in [History cleanup](histor
 - [ ] Update the version in the root `package.json` and all seven workspace manifests. Runtime services read
       `APP_VERSION` from the root; `tests/aether/version.test.ts` checks consistency. Update the sidebar's major/minor
       badge only when that series changes. Choose the increment using the [version policy](versioning.md).
-- [ ] Move the completed changes from `Unreleased` into a dated version section in [CHANGELOG.md](../../CHANGELOG.md).
-      Include upgrade steps when behavior or configuration changes. Keep earlier release entries intact.
+- [ ] Move the completed changes from `Unreleased` into a dated version section in [CHANGELOG.md](../../CHANGELOG.md),
+      leave an empty `Unreleased` above it and update the two compare links at the bottom; `tests/aether/quality-release-metadata.test.ts`
+      fails until the heading, the links and `package.json` agree. Include upgrade steps when behavior or configuration
+      changes. Keep earlier release entries intact.
 - [ ] Review the [feature ledger](../verification/report.md). Implementation and verification are separate; missing
       provider, platform, device or human evidence remains an open blocker.
 - [ ] Check the [provider compatibility contracts](../provider-compatibility.md). Synthetic tests do not verify a
