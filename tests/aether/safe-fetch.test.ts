@@ -26,11 +26,19 @@ it('classifies private, loopback, link-local, metadata and mapped addresses as n
     '::ffff:7f00:1',
     '::ffff:a9fe:a9fe',
     '::ffff:8.8.8.8',
+    '0:0:0:0:0:0:0:1',
+    '::7f00:1',
+    '64:ff9b::7f00:1',
+    '64:ff9b::a9fe:a9fe',
+    '2002:a9fe:a9fe::1',
+    'fec0::1',
+    '198.51.100.1',
     'not-an-ip',
   ])
     expect(isPublicAddress(ip), ip).toBe(false);
   for (const ip of ['8.8.8.8', '1.1.1.1', '172.32.0.1', '2606:4700:4700::1111'])
     expect(isPublicAddress(ip), ip).toBe(true);
+  expect(isPublicAddress('64:ff9b::808:808')).toBe(true);
 });
 
 it('rejects unsafe schemes, credentials, ports, hosts and mixed DNS answers', async () => {
@@ -83,8 +91,10 @@ beforeAll(async () => {
     } else if (req.url === '/redirect-same') res.writeHead(302, { location: '/' }).end();
     else if (req.url === '/loop') res.writeHead(302, { location: '/loop' }).end();
     else if (req.url === '/big') res.end(Buffer.alloc(5000));
-    else if (req.url === '/slow') setTimeout(() => res.end('late'), 500);
-    else res.end('hello');
+    else if (req.url === '/slow') {
+      const drip = setInterval(() => res.write('x'), 50);
+      res.on('close', () => clearInterval(drip));
+    } else res.end('hello');
   });
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   port = (server.address() as AddressInfo).port;
