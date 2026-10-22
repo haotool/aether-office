@@ -86,7 +86,7 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | Package | Version | Licence | Used in | Copyright |
 | --- | --- | --- | --- | --- |
 | @a2a-js/sdk | 1.3.0 | Apache-2.0 | server runtime | 2. Grant of Copyright License. Subject to the terms and conditions of |
-| @agentclientprotocol/sdk | 1.7.0 | Apache-2.0 | server runtime | 2. Grant of Copyright License. Subject to the terms and conditions of; Copyright 2025 Zed Industries, Inc. and contributors |
+| @agentclientprotocol/sdk | 1.9.0 | Apache-2.0 | server runtime | 2. Grant of Copyright License. Subject to the terms and conditions of; Copyright 2025 Zed Industries, Inc. and contributors |
 | @anthropic-ai/claude-agent-sdk-darwin-arm64 | 0.3.306 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
 | @anthropic-ai/claude-agent-sdk-darwin-x64 | 0.3.306 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
 | @anthropic-ai/claude-agent-sdk-linux-arm64-musl | 0.3.306 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
@@ -237,7 +237,7 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | light-my-request | 6.6.0 | BSD-3-Clause | server runtime | Copyright (c) 2017 The Fastify Team; Copyright (c) 2012-2017, Project contributors; Copyright (c) 2012-2014, Walmart |
 | locate-path | 5.0.0 | MIT | server runtime | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) |
 | lru-cache | 11.5.3 | BlueOak-1.0.0 | server runtime | Isaac Z. Schlueter <i@izs.me> (author; no copyright line in the licence file) |
-| lucide-react | 1.60.0 | ISC | web bundle | Copyright (c) 2026 Lucide Icons and Contributors; Copyright (c) 2013-present Cole Bemis |
+| lucide-react | 1.61.0 | ISC | web bundle | Copyright (c) 2026 Lucide Icons and Contributors; Copyright (c) 2013-present Cole Bemis |
 | maath | 0.10.8 | MIT | web bundle | — |
 | math-intrinsics | 1.1.0 | MIT | server runtime | Copyright (c) 2024 ECMAScript Shims |
 | media-typer | 1.1.1 | MIT | server runtime | Copyright (c) 2014-2017 Douglas Christopher Wilson |
@@ -811,7 +811,7 @@ THE SOFTWARE.
 
 ### Apache-2.0 (text e8e2fe35f5fd)
 
-Used by: `@agentclientprotocol/sdk@1.7.0`.
+Used by: `@agentclientprotocol/sdk@1.9.0`.
 
 ```text
 Apache License
@@ -1740,7 +1740,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 ### ISC (text ee35498e6684)
 
-Used by: `lucide-react@1.60.0`.
+Used by: `lucide-react@1.61.0`.
 
 ```text
 ISC License
@@ -6010,23 +6010,23 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | @jridgewell/resolve-uri | 3.1.2 | MIT |
 | @jridgewell/sourcemap-codec | 1.6.0 | MIT |
 | @jridgewell/trace-mapping | 0.3.31 | MIT |
-| @oxc-project/types | 0.153.0 | MIT |
+| @oxc-project/types | 0.155.0 | MIT |
 | @playwright/test | 1.64.1 | Apache-2.0 |
-| @rolldown/binding-android-arm-eabi | 1.2.13 | MIT |
-| @rolldown/binding-android-arm64 | 1.2.13 | MIT |
-| @rolldown/binding-darwin-arm64 | 1.2.13 | MIT |
-| @rolldown/binding-darwin-x64 | 1.2.13 | MIT |
-| @rolldown/binding-freebsd-x64 | 1.2.13 | MIT |
-| @rolldown/binding-linux-arm-gnueabihf | 1.2.13 | MIT |
-| @rolldown/binding-linux-arm64-gnu | 1.2.13 | MIT |
-| @rolldown/binding-linux-arm64-musl | 1.2.13 | MIT |
-| @rolldown/binding-linux-ppc64-gnu | 1.2.13 | MIT |
-| @rolldown/binding-linux-s390x-gnu | 1.2.13 | MIT |
-| @rolldown/binding-linux-x64-gnu | 1.2.13 | MIT |
-| @rolldown/binding-linux-x64-musl | 1.2.13 | MIT |
-| @rolldown/binding-openharmony-arm64 | 1.2.13 | MIT |
-| @rolldown/binding-win32-arm64-msvc | 1.2.13 | MIT |
-| @rolldown/binding-win32-x64-msvc | 1.2.13 | MIT |
+| @rolldown/binding-android-arm-eabi | 1.2.15 | MIT |
+| @rolldown/binding-android-arm64 | 1.2.15 | MIT |
+| @rolldown/binding-darwin-arm64 | 1.2.15 | MIT |
+| @rolldown/binding-darwin-x64 | 1.2.15 | MIT |
+| @rolldown/binding-freebsd-x64 | 1.2.15 | MIT |
+| @rolldown/binding-linux-arm-gnueabihf | 1.2.15 | MIT |
+| @rolldown/binding-linux-arm64-gnu | 1.2.15 | MIT |
+| @rolldown/binding-linux-arm64-musl | 1.2.15 | MIT |
+| @rolldown/binding-linux-ppc64-gnu | 1.2.15 | MIT |
+| @rolldown/binding-linux-s390x-gnu | 1.2.15 | MIT |
+| @rolldown/binding-linux-x64-gnu | 1.2.15 | MIT |
+| @rolldown/binding-linux-x64-musl | 1.2.15 | MIT |
+| @rolldown/binding-openharmony-arm64 | 1.2.15 | MIT |
+| @rolldown/binding-win32-arm64-msvc | 1.2.15 | MIT |
+| @rolldown/binding-win32-x64-msvc | 1.2.15 | MIT |
 | @rolldown/pluginutils | 1.0.1 | MIT |
 | @tweenjs/tween.js | 23.1.3 | MIT |
 | @types/better-sqlite3 | 9.6.0 | MIT |
@@ -6106,15 +6106,15 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | magic-string | 1.4.3 | MIT |
 | magicast | 0.5.5 | MIT |
 | meshoptimizer | 1.1.1 | MIT |
-| nanoid | 3.3.19 | MIT |
+| nanoid | 3.3.20 | MIT |
 | obug | 3.0.0 | MIT |
 | picocolors | 1.1.1 | ISC |
 | picomatch | 4.0.7 | MIT |
 | playwright-core | 1.64.1 | Apache-2.0 |
 | playwright | 1.64.1 | Apache-2.0 |
-| postcss | 8.5.29 | MIT |
+| postcss | 8.5.31 | MIT |
 | prettier | 3.9.10 | MIT |
-| rolldown | 1.2.13 | MIT |
+| rolldown | 1.2.15 | MIT |
 | source-map-js | 1.2.2 | BSD-3-Clause |
 | std-env | 4.3.0 | MIT |
 | tinybench | 6.2.2 | MIT |
@@ -6124,6 +6124,6 @@ the MPL-2.0 (`axe-core`, `@axe-core/playwright`, `lightningcss` and its platform
 | tsx | 4.23.15 | MIT |
 | typescript | 7.0.2 | Apache-2.0 |
 | undici-types | 8.9.0 | MIT |
-| vite | 8.3.4 | MIT |
+| vite | 8.3.5 | MIT |
 | vitest | 5.0.5 | MIT |
 | why-is-node-running | 3.2.1 | MIT |

@@ -36,7 +36,7 @@ type AcpNegotiation = {
   authMethods: string[];
 };
 
-export const ACP_SDK_VERSION = '1.7.0';
+export const ACP_SDK_VERSION = '1.9.0';
 
 export function negotiationFrom(init: InitializeResponse): AcpNegotiation {
   const caps = init.agentCapabilities;
