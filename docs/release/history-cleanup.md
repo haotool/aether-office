@@ -11,6 +11,7 @@
 - [Step by step](#step-by-step)
 - [Measured on this repository](#measured-on-this-repository)
 - [Milestone subjects](#milestone-subjects)
+- [Rewriting after publication](#rewriting-after-publication)
 - [Limits and residual risks](#limits-and-residual-risks)
 
 </details>
@@ -18,7 +19,8 @@
 > [!NOTE]
 > Historical preparation record. Public `main` has since been cleaned and published. The measurements below describe
 > pre-publication clones. Routine releases follow the [release checklist](publishing-checklist.md); another history
-> rewrite requires a separate, explicit maintenance decision.
+> rewrite requires a separate, explicit maintenance decision. The one rewrite made after publication is recorded in
+> [Rewriting after publication](#rewriting-after-publication).
 
 This page records the original problems, three cleanup strategies and the commands used to compare them. The tooling
 lives in `scripts/oss/`; each rewrite operates on a disposable clone rather than the working repository.
@@ -189,6 +191,26 @@ commit of its group, so it is a draft: it can end mid-phrase or be a test repair
 else. `plan.md` also lists the next three biggest commits of every group. Rewrite the subjects and bodies in `plan.json`
 before applying. The history published with this repository came from plan C with every subject and body written by hand:
 a subject of at most 72 characters, a short paragraph on why the step happened, and its notable changes.
+
+## Rewriting after publication
+
+On 2026-10-22 every commit made after `v0.4.0`, on `main` and on one open pull-request branch, was rewritten once more.
+Only metadata changed. Each commit keeps its tree, author date and subject, so the old and the new commit of every pair
+differ by nothing but their messages and identities, blame and bisect keep their granularity, and the commits up to
+`v0.4.0`, the tag and the evidence that names its commit keep their hashes.
+
+- Messages: AI-tool trailers and the squash-merge scaffolding around them are removed. Seven squash bodies that were pull
+  request descriptions are reduced to the explanation of the change; the descriptions stay on the pull request pages.
+- Identity: `haotool` with the noreply address is author and committer of every commit that is not upstream's.
+- Method: one `git commit-tree` per commit, in order, from a throwaway clone; nothing in the working repository is
+  rewritten. Before the push the result was checked by tree equality for every commit, `pnpm run oss:check --history`,
+  gitleaks, `git fsck` and `scripts/oss/commit-msg.sh --range`.
+- Tag: `v0.4.1` was an immutable release and its tag could not be moved. The release and the tag were deleted, the name
+  is gone for good, and `0.4.2` carries its changes ([Withdrawing a release](versioning.md#withdrawing-a-release)).
+- Push: the rulesets were switched off for the minutes of the push and restored and read back in the same command chain.
+
+GitHub still lists the old commits under `refs/pull/*` and in release attestations, and a rebase or squash merge writes the
+GitHub login as committer. Neither can be changed from the repository.
 
 ## Limits and residual risks
 

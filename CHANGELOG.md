@@ -7,11 +7,9 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ## [Unreleased]
 
-### Fixed
+## [0.4.2] - 2026-10-22
 
-- The brand link and the floor plaque now carry their visible words in their accessible names (WCAG 2.5.3, enforced since axe-core 4.14); the plaque's name no longer adds the department.
-
-## [0.4.1] - 2026-10-21
+Replaces 0.4.1, which was withdrawn on 2026-10-22: its tag was removed when the commit history was cleaned, and GitHub never lets a deleted release tag be named again. Everything 0.4.1 contained is listed here.
 
 ### Changed
 
@@ -53,6 +51,7 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 - Keep camera transition covers transparent when reduced motion disables their fade.
 - Aim automatic floor shots at present employees, reject departed message recipients, and ease camera motion at the flower crown while keeping its petals and halo inside the frame.
 - Wait for every process a verifier started to end before taking the after snapshot, including children that ignore SIGTERM.
+- The brand link and the floor plaque now carry their visible words in their accessible names (WCAG 2.5.3, enforced since axe-core 4.14); the plaque's name no longer adds the department.
 
 ### Security
 
@@ -313,6 +312,6 @@ For anyone who ran a development build before this release.
 
 - The upstream agent-office application; its attribution is kept in `THIRD_PARTY_NOTICES.md`.
 
-[Unreleased]: https://github.com/haotool/aether-office/compare/v0.4.1...HEAD
-[0.4.1]: https://github.com/haotool/aether-office/compare/v0.4.0...v0.4.1
+[Unreleased]: https://github.com/haotool/aether-office/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/haotool/aether-office/compare/v0.4.0...v0.4.2
 [0.4.0]: https://github.com/haotool/aether-office/releases/tag/v0.4.0

@@ -75,13 +75,13 @@ pnpm run quality:release -- --gates /tmp/aether-quality-gates.json
 
 ## Publish the source release
 
-Use the version from `package.json`. For example, a `0.4.1` release uses the tag `v0.4.1`:
+Use the version from `package.json`: version `X.Y.Z` is released as the tag `vX.Y.Z`:
 
 ```sh
-node scripts/oss/third-party-notices.mjs --sbom /tmp/aether-office-0.4.1.cdx.json
-git tag -a v0.4.1 -m "v0.4.1"
-AETHER_RELEASE_TAG=v0.4.1 pnpm exec vitest run tests/aether/version.test.ts tests/aether/quality-release-metadata.test.ts
-git push origin v0.4.1
+node scripts/oss/third-party-notices.mjs --sbom /tmp/aether-office-X.Y.Z.cdx.json
+git tag -a vX.Y.Z -m "vX.Y.Z"
+AETHER_RELEASE_TAG=vX.Y.Z pnpm exec vitest run tests/aether/version.test.ts tests/aether/quality-release-metadata.test.ts
+git push origin vX.Y.Z
 ```
 
 - [ ] Obtain maintainer authorization before pushing or publishing. Create the annotated tag from the verified main
