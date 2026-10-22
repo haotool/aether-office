@@ -14,10 +14,9 @@ import {
 
 const home = process.env['AETHER_LOCAL_SESSIONS_HOME']!;
 const repo = join(home, 'kpi-repo');
-const transcripts = [
-  join(home, '.claude/projects/p/kpi-claude.jsonl'),
-  join(home, '.codex/sessions', new Date().toISOString().slice(0, 10).replaceAll('-', '/')),
-];
+const day = new Date().toISOString().slice(0, 10).replaceAll('-', '/');
+const sessions = join(home, '.codex/sessions', day);
+const transcripts = [join(home, '.claude/projects/p/kpi-claude.jsonl'), sessions];
 test.afterAll(() => {
   for (const path of transcripts) rmSync(path, { recursive: true, force: true });
 });
@@ -27,7 +26,10 @@ test.beforeAll(() => {
   mkdirSync(repo, { recursive: true });
   execFileSync('git', ['init', '-q', '-b', 'main', repo]);
   const now = Date.now();
-  const at = (secondsAgo: number) => new Date(now - secondsAgo * 1000).toISOString();
+  // Older fixture lines fall out of today's KPIs in the first minutes after local midnight.
+  const midnight = new Date(now).setHours(0, 0, 0, 0);
+  const at = (secondsAgo: number) =>
+    new Date(Math.max(now - secondsAgo * 1000, midnight)).toISOString();
   const git = (...args: string[]) =>
     execFileSync('git', ['-C', repo, '-c', 'user.name=kpi', '-c', 'user.email=kpi@t', ...args], {
       encoding: 'utf8',
@@ -64,14 +66,8 @@ test.beforeAll(() => {
       },
     }),
   );
-  const day = new Date(now).toISOString().slice(0, 10).replaceAll('-', '/');
-  const rollout = join(
-    home,
-    '.codex/sessions',
-    day,
-    'rollout-kpi-019d0000-0000-7000-8000-0000000000aa.jsonl',
-  );
-  mkdirSync(join(home, '.codex/sessions', day), { recursive: true });
+  const rollout = join(sessions, 'rollout-kpi-019d0000-0000-7000-8000-0000000000aa.jsonl');
+  mkdirSync(sessions, { recursive: true });
   writeLines(rollout, [
     codexMeta(at(300), repo),
     codexContext(at(299), 'gpt-5.5'),
