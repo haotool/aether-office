@@ -4,9 +4,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
     cooldown:
       default-days: 1
+    # 2.0 removes the connection classes that packages/providers/src/acp.ts uses.
+    ignore: [{ dependency-name: '@agentclientprotocol/sdk', versions: ['2.x'] }]
     groups:
       sdks:
         patterns: ['@agentclientprotocol/claude-agent-acp', '@anthropic-ai/claude-agent-sdk']

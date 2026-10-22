@@ -233,7 +233,9 @@ not delayed by that cooldown. Major updates are not grouped: a group that spans 
 pull request is open and holds back every other update, so each major update is its own pull request. A bot pull request is not merged as it is: its commit adds a second author email, which
 `quality:check` counts, and it cannot regenerate `THIRD_PARTY_NOTICES.md` or edit the release-age exceptions in
 `pnpm-workspace.yaml`, which `oss:check` and the dependency policy test require. The maintainer applies the same update on a
-branch under the maintainer identity, runs the checks and closes the bot pull request.
+branch under the maintainer identity, runs the checks and closes the bot pull request. A major update the maintainer defers
+(the ACP SDK 2.x, which removes the connection classes the ACP client uses) is listed under `ignore` in the file, so the choice is
+visible in the repository and not only in Dependabot's own store.
 
 ## Verification
 
