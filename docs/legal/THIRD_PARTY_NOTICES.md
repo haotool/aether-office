@@ -87,15 +87,15 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | --- | --- | --- | --- | --- |
 | @a2a-js/sdk | 1.3.0 | Apache-2.0 | server runtime | 2. Grant of Copyright License. Subject to the terms and conditions of |
 | @agentclientprotocol/sdk | 1.7.0 | Apache-2.0 | server runtime | 2. Grant of Copyright License. Subject to the terms and conditions of; Copyright 2025 Zed Industries, Inc. and contributors |
-| @anthropic-ai/claude-agent-sdk-darwin-arm64 | 0.3.304 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
-| @anthropic-ai/claude-agent-sdk-darwin-x64 | 0.3.304 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
-| @anthropic-ai/claude-agent-sdk-linux-arm64-musl | 0.3.304 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
-| @anthropic-ai/claude-agent-sdk-linux-arm64 | 0.3.304 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
-| @anthropic-ai/claude-agent-sdk-linux-x64-musl | 0.3.304 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
-| @anthropic-ai/claude-agent-sdk-linux-x64 | 0.3.304 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
-| @anthropic-ai/claude-agent-sdk-win32-arm64 | 0.3.304 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
-| @anthropic-ai/claude-agent-sdk-win32-x64 | 0.3.304 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
-| @anthropic-ai/claude-agent-sdk | 0.3.304 | LicenseRef-Anthropic-Commercial-Terms | server runtime | © Anthropic PBC. All rights reserved. Use is subject to the Legal Agreements outlined here: https://code.claude.com/docs/en/legal-and-compliance. |
+| @anthropic-ai/claude-agent-sdk-darwin-arm64 | 0.3.306 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
+| @anthropic-ai/claude-agent-sdk-darwin-x64 | 0.3.306 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
+| @anthropic-ai/claude-agent-sdk-linux-arm64-musl | 0.3.306 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
+| @anthropic-ai/claude-agent-sdk-linux-arm64 | 0.3.306 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
+| @anthropic-ai/claude-agent-sdk-linux-x64-musl | 0.3.306 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
+| @anthropic-ai/claude-agent-sdk-linux-x64 | 0.3.306 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
+| @anthropic-ai/claude-agent-sdk-win32-arm64 | 0.3.306 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
+| @anthropic-ai/claude-agent-sdk-win32-x64 | 0.3.306 | LicenseRef-Anthropic-Commercial-Terms | server runtime | as @anthropic-ai/claude-agent-sdk |
+| @anthropic-ai/claude-agent-sdk | 0.3.306 | LicenseRef-Anthropic-Commercial-Terms | server runtime | © Anthropic PBC. All rights reserved. Use is subject to the Legal Agreements outlined here: https://code.claude.com/docs/en/legal-and-compliance. |
 | @anthropic-ai/sdk | 0.131.0 | MIT | server runtime | Copyright 2023 Anthropic, PBC. |
 | @babel/runtime | 7.29.7 | MIT | web bundle, server runtime | Copyright (c) 2014-present Sebastian McKenzie and other contributors |
 | @fastify/accept-negotiator | 2.1.0 | MIT | server runtime | Copyright (c) 2022-present The Fastify team <https://github.com/fastify/fastify#team> |
@@ -1790,7 +1790,7 @@ SOFTWARE.
 
 ### LicenseRef-Anthropic-Commercial-Terms (text af2be7b670a0)
 
-Used by: `@anthropic-ai/claude-agent-sdk@0.3.304`.
+Used by: `@anthropic-ai/claude-agent-sdk@0.3.306`.
 
 ```text
 © Anthropic PBC. All rights reserved. Use is subject to the Legal Agreements outlined here: https://code.claude.com/docs/en/legal-and-compliance.
