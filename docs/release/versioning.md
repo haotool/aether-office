@@ -17,8 +17,8 @@ the changelog still describes the change and its upgrade steps.
 
 ## Before 1.0
 
-- Patch (`0.4.1`): compatible fixes, security hardening, documentation and internal performance work.
-- Minor (`0.5.0`): new user-facing capability or a documented compatibility change that needs an upgrade step.
+- Patch (`0.4.Z`): compatible fixes, security hardening, documentation and internal performance work.
+- Minor (`0.Y.0`): new user-facing capability or a documented compatibility change that needs an upgrade step.
 - Major (`1.0.0`): the compatibility surface becomes stable and the stable-release evidence gates are satisfied.
 
 Semantic Versioning leaves `0.y.z` open: anything may change. This policy narrows that: a breaking change raises the
@@ -55,6 +55,15 @@ Work accumulates under `Unreleased`. A release commit moves those entries into a
 root and workspace versions, changelog heading and compare links must agree, and the tag must point at the clean, verified
 `main` commit. Published tags and release assets are not replaced; a correction receives a new version. A version section without a tag
 is not released yet: entries that land before the tag join it, and its date is the day the tag is cut.
+
+## Withdrawing a release
+
+A published tag is never moved. A release is withdrawn only when its tag would keep content that must not stay
+public, for example commits whose metadata are rewritten. The release and then its tag are deleted. GitHub
+[never lets a tag name used by an immutable release be reused](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases),
+so the next patch version carries the withdrawn version's changes and its changelog section names the version it
+replaces. `0.4.1` was withdrawn this way on 2026-10-22; see
+[Rewriting after publication](history-cleanup.md#rewriting-after-publication).
 
 ## Keeping the release files in step
 
