@@ -50,6 +50,13 @@ remain with Claude Code or Codex.
 ```sh
 git clone https://github.com/haotool/aether-office.git
 cd aether-office
+pnpm go
+```
+
+`pnpm go` installs, builds, starts the control plane and opens your browser already signed in with a one-time link (the owner
+token is never printed). To run the steps yourself:
+
+```sh
 pnpm install --frozen-lockfile
 pnpm build
 pnpm start

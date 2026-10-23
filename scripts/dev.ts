@@ -1,14 +1,13 @@
 import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
 import { say } from '../apps/control/src/stdio.js';
-import { portFree } from './ports.js';
+import { parsePort, portFree } from './ports.js';
 import { setup } from './setup.js';
 const mode = process.argv.includes('--demo') ? 'demo' : 'live';
 const directory = resolve(process.env['AETHER_DATA_DIR'] ?? `.data/${mode}`);
-const port = Number(process.env['PORT'] ?? 4310);
-const ui = port + 1;
+const port = parsePort(process.env['PORT'], 65534);
 const command = mode === 'demo' ? 'pnpm demo' : 'pnpm dev';
-if (!Number.isInteger(port) || port < 1024 || port > 65534) {
+if (port === null) {
   console.error(
     say(
       'PORT must be a whole number from 1024 to 65534 (the UI uses the next port).',
@@ -17,6 +16,7 @@ if (!Number.isInteger(port) || port < 1024 || port > 65534) {
   );
   process.exit(1);
 }
+const ui = port + 1;
 for (const [number, host] of [
   [port, process.env['AETHER_HOST'] ?? '127.0.0.1'],
   [ui, '127.0.0.1'],

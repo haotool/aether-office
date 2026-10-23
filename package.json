@@ -42,6 +42,7 @@
     "build": "node scripts/build.mjs",
     "dev": "tsx scripts/dev.ts",
     "demo": "tsx scripts/dev.ts --demo",
+    "go": "pnpm install --frozen-lockfile && tsx scripts/go.ts",
     "start": "node apps/control/dist/main.js",
     "runner": "tsx apps/runner/src/main.ts",
     "lint": "node scripts/check-boundaries.mjs && node scripts/check-design-tokens.mjs",

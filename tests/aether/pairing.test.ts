@@ -171,10 +171,25 @@ describe('signing a phone in by scanning', () => {
     expect(guess.statusCode).toBe(401);
   });
 
-  it('says there is no address to scan when LAN access is off', async () => {
+  it('offers only a link for this machine when LAN access is off, and it signs in once', async () => {
     const f = setup(false);
     const made = await f.app.inject({ method: 'POST', url: '/api/pairings', headers: bearer(f) });
-    expect(made.json()).toMatchObject({ lan: false, links: [] });
+    const { lan, links } = made.json() as {
+      lan: boolean;
+      links: { origin: string; url: string }[];
+    };
+    expect(lan).toBe(false);
+    expect(links.map((l) => l.origin)).toEqual(['http://127.0.0.1:8780']);
+    const code = links[0]!.url.split('#pair=')[1]!;
+    const redeem = () =>
+      f.app.inject({
+        method: 'POST',
+        url: '/api/pairings/redeem',
+        headers: HOST,
+        payload: { code },
+      });
+    expect((await redeem()).statusCode).toBe(200);
+    expect((await redeem()).statusCode).toBe(401);
   });
 
   it('keeps a typed token for a working day, or a month when the device is remembered', async () => {

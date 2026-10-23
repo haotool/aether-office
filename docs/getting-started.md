@@ -33,6 +33,11 @@ pnpm has built-in `setup` and `doctor` commands that shadow package scripts of t
 
 For someone who already runs `claude` or `codex` in a terminal and wants to see them.
 
+**One command:** `pnpm go` installs, builds, starts the control plane (unless one already answers on the port) and opens your
+browser already signed in. The terminal prints the same one-time sign-in link: it works once and expires in five minutes, and
+the owner token is never printed. `BROWSER=none` skips opening the browser and `BROWSER=<command>` opens another one. The steps
+below do the same by hand.
+
 1. **Install and build** (about a minute; `pnpm start` runs the built files, so the build is required):
 
    ```sh

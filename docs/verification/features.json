@@ -3401,5 +3401,25 @@
     "blockers": [
       "The scripts/dev.ts flow itself is checked by running pnpm demo by hand on a non-default port (UI served and proxied, demo runner online, busy and invalid PORT refused before anything starts); the unit tests cover the port probe and the vite config"
     ]
+  },
+  {
+    "id": "DX-GO-01",
+    "requirement": "pnpm go 一個指令完成 install、build、start（已有控制台回應時直接沿用）、開瀏覽器，並印出一次性登入連結；擁有者權杖不印出，連結只能用一次。",
+    "scope": "AETHER target; maintainer request 2026-10-23",
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": [
+      "scripts/go.ts",
+      "scripts/ports.ts",
+      "apps/control/src/routes/auth.ts",
+      "apps/control/src/services/remote/pairing.ts",
+      "scripts/clean-room.mjs"
+    ],
+    "testIds": ["tests/aether/go.test.ts", "tests/aether/pairing.test.ts"],
+    "evidencePaths": [],
+    "blockers": [
+      "The whole flow (install, build, start, link, sign-in, a second run that reuses the server, a wrong data directory, Ctrl+C) was run by hand on macOS and is repeated by pnpm run verify:clean, which is not part of CI; the unit tests cover the browser command, the port rule and the loopback link",
+      "Opening a real browser was not exercised (the runs used BROWSER=none); Linux xdg-open and other systems are untested"
+    ]
   }
 ]

@@ -9,10 +9,12 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ### Added
 
+- `pnpm go`: installs, builds, starts the control plane (unless one already answers) and opens the browser signed in with a one-time link. `BROWSER=none` or `BROWSER=<command>` chooses the browser.
 - Terminal messages of `pnpm start`, `pnpm run pair`, `pnpm run setup` and `pnpm run doctor` are shown in Traditional Chinese when the terminal locale is `zh` (`AETHER_LANG=en` or `zh-TW` overrides it).
 
 ### Changed
 
+- `POST /api/pairings` returns a link for this machine when LAN access is off (it used to return none); the web app and `pnpm run pair` still treat that case as not open to a phone.
 - `pnpm demo` and `pnpm dev` check both ports before starting and say which one is taken. `PORT` now moves the control plane, the fixture runner and the UI dev server together; the UI is on `PORT` + 1.
 - A browser that opens `localhost` on the control-plane port is redirected to `127.0.0.1` instead of receiving `HOST_FORBIDDEN`; GET and HEAD only, and every other host name is still refused.
 

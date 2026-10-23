@@ -46,6 +46,12 @@ AETHER OFFICE 把 **Claude Code 與 Codex 的工作階段，帶進同一間本�
 ```sh
 git clone https://github.com/haotool/aether-office.git
 cd aether-office
+pnpm go
+```
+
+`pnpm go` 會自動安裝、建置、啟動控制台，並以一次性連結直接在瀏覽器登入（不會印出 owner token）。想自己一步一步來：
+
+```sh
 pnpm install --frozen-lockfile
 pnpm build
 pnpm start

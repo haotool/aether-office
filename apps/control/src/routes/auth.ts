@@ -73,7 +73,10 @@ function pairingRoutes(
     const who = actor(request);
     if (!['owner', 'operator'].includes(who.role)) throw new DomainError('FORBIDDEN', 403);
     const made = pairings.create(who.id);
-    const origins = options.lan ? (options.lanAddresses ?? lanOrigins)(origin.port) : [];
+    // Without LAN access the one link is for this machine (`pnpm go` opens it).
+    const origins = options.lan
+      ? (options.lanAddresses ?? lanOrigins)(origin.port)
+      : [origin.origin];
     return {
       id: made.id,
       expiresAt: made.expiresAt,

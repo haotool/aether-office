@@ -87,6 +87,49 @@ async function smoke() {
   }
 }
 
+async function goSmoke() {
+  const port = 4562;
+  const go = spawn(pnpmCmd, [...pnpmArgs, 'go'], {
+    cwd: repo,
+    env: {
+      ...process.env,
+      PORT: String(port),
+      BROWSER: 'none',
+      AETHER_DATA_DIR: join(repo, '.data', 'go'),
+    },
+    stdio: ['ignore', 'pipe', 'ignore'],
+    detached: true,
+  });
+  let timer;
+  try {
+    const code = await new Promise((resolve, reject) => {
+      let seen = '';
+      go.stdout.on('data', (chunk) => {
+        seen += chunk;
+        const match = /#pair=([\w-]+)/.exec(seen);
+        if (match) resolve(match[1]);
+      });
+      go.once('exit', () => reject(new Error('pnpm go ended before it printed a sign-in link')));
+      timer = setTimeout(
+        () => reject(new Error('pnpm go printed no sign-in link in 5 minutes')),
+        300000,
+      );
+    });
+    const redeem = await fetch(`http://127.0.0.1:${port}/api/pairings/redeem`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: `http://127.0.0.1:${port}` },
+      body: JSON.stringify({ code }),
+    });
+    if (!redeem.ok || !redeem.headers.get('set-cookie'))
+      throw new Error('the sign-in link printed by pnpm go did not sign in');
+    results.push({ name: 'pnpm go: build, start, sign-in link', ok: true, seconds: 0 });
+    console.log('✓ pnpm go: build, start, sign-in link signs in');
+  } finally {
+    clearTimeout(timer);
+    process.kill(-go.pid, 'SIGTERM');
+  }
+}
+
 try {
   step('clone committed HEAD', 'git', ['clone', '--quiet', root, repo], { cwd: work });
   pnpm('install --frozen-lockfile', ['install', '--frozen-lockfile']);
@@ -100,6 +143,7 @@ try {
     env: { AETHER_DATA_DIR: join(repo, '.data', 'demo') },
   });
   await smoke();
+  await goSmoke();
   if (process.argv.includes('--e2e'))
     pnpm('browser tests', ['exec', 'playwright', 'test'], { timeout: 3600000 });
   console.log(`\nclean-room verification of ${head} passed (${results.length} steps)`);
