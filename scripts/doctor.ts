@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import { readFileSync, readdirSync } from 'node:fs';
 import { arch, platform, release } from 'node:os';
 import { resolve } from 'node:path';
+import { say } from '../apps/control/src/stdio.js';
 
 // Read-only: it never starts a model session and never changes anything.
 
@@ -77,7 +78,11 @@ function nodeCheck(manifest: Manifest, host: Host): Check {
 function pnpmCheck(probe: Probe, manifest: Manifest): Check {
   const pnpm = probe.run('pnpm', ['--version']);
   if (pnpm.kind === 'enoent')
-    return { id: 'pnpm', status: 'missing', detail: 'pnpm not found; run via corepack' };
+    return {
+      id: 'pnpm',
+      status: 'missing',
+      detail: say('pnpm not found; run via corepack', '找不到 pnpm；請透過 corepack 執行'),
+    };
   const pinned = manifest.packageManager?.replace('pnpm@', '');
   return {
     id: 'pnpm',
@@ -90,7 +95,7 @@ function vcsCheck(probe: Probe): Check {
   const vcs = probe.run('git', ['--version']);
   return vcs.kind === 'ok'
     ? { id: 'git', status: 'ok', detail: first(vcs.stdout) }
-    : { id: 'git', status: 'missing', detail: 'git not found' };
+    : { id: 'git', status: 'missing', detail: say('git not found', '找不到 git') };
 }
 
 function nativeChecks(probe: Probe): Check[] {
@@ -103,7 +108,7 @@ function nativeChecks(probe: Probe): Check[] {
     const error = probe.load(module, app);
     return error
       ? { id: module, status: 'native_failure', detail: error }
-      : { id: module, status: 'ok', detail: 'native module loads' };
+      : { id: module, status: 'ok', detail: say('native module loads', '原生模組可載入') };
   });
 }
 
@@ -120,7 +125,10 @@ function providerChecks(probe: Probe): Check[] {
       checks.push({
         id: p.id,
         status: 'missing',
-        detail: `${p.id} CLI not found on PATH (optional: install it to use ${p.id} sessions)`,
+        detail: say(
+          `${p.id} CLI not found on PATH (optional: install it to use ${p.id} sessions)`,
+          `PATH 裡找不到 ${p.id} CLI（選用：要用 ${p.id} 工作階段才需要安裝）`,
+        ),
       });
       continue;
     }
@@ -128,7 +136,7 @@ function providerChecks(probe: Probe): Check[] {
     checks.push({
       id: p.id,
       status: auth.kind === 'ok' ? 'ok' : 'auth_required',
-      detail: `${first(version.stdout)}${auth.kind === 'ok' ? '' : ' — not signed in or sign-in could not be confirmed'}`,
+      detail: `${first(version.stdout)}${auth.kind === 'ok' ? '' : say(' — not signed in or sign-in could not be confirmed', ' — 尚未登入，或無法確認登入狀態')}`,
     });
   }
   return checks;

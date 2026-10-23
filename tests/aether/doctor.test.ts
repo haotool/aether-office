@@ -1,7 +1,8 @@
-import { expect, it } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import { checkEnvironment, exitCodeOf, type Exec, type Probe } from '../../scripts/doctor.js';
 
 const host = { platform: 'linux', arch: 'x64', release: '6.1', node: '24.21.0' };
+afterEach(() => vi.unstubAllEnvs());
 const ok = (stdout: string): Exec => ({ kind: 'ok', stdout, code: 0 });
 
 function probe(overrides: Partial<Probe> & { runs?: Record<string, Exec> } = {}): Probe {
@@ -89,4 +90,20 @@ it('fails only for a missing hard prerequisite; a missing provider CLI warns, an
   const brokenPty = checkEnvironment(probe({ load: (m) => (m === 'node-pty' ? 'x' : null) }), host);
   expect(exitCodeOf(brokenPty, false)).toBe(1);
   expect(exitCodeOf(checkEnvironment(probe(), host), true)).toBe(0);
+});
+
+it('describes what is missing in Traditional Chinese on a zh terminal', () => {
+  vi.stubEnv('AETHER_LANG', 'zh-TW');
+  const gone: Exec = { kind: 'enoent', stdout: '', code: null };
+  const details = Object.fromEntries(
+    checkEnvironment(
+      probe({ runs: { 'git --version': gone, 'claude --version': gone } }),
+      host,
+    ).map((c) => [c.id, c.detail]),
+  );
+  expect(details['git']).toBe('找不到 git');
+  expect(details['claude']).toBe(
+    'PATH 裡找不到 claude CLI（選用：要用 claude 工作階段才需要安裝）',
+  );
+  expect(details['better-sqlite3']).toBe('原生模組可載入');
 });

@@ -3363,5 +3363,30 @@
     "testIds": ["tests/aether/lan-access.test.ts"],
     "evidencePaths": [],
     "blockers": []
+  },
+  {
+    "id": "DX-CLI-ZH-01",
+    "requirement": "pnpm start、pnpm run pair、pnpm run setup、pnpm run doctor 的終端機訊息在 zh 語系顯示繁體中文（AETHER_LANG、LC_ALL、LC_MESSAGES、LANG 依序決定），其餘語系維持英文。",
+    "scope": "AETHER target; maintainer request 2026-10-23",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": [
+      "apps/control/src/stdio.ts",
+      "apps/control/src/main.ts",
+      "apps/control/src/pair-cli.ts",
+      "apps/control/src/services/remote/pairing.ts",
+      "scripts/setup.ts",
+      "scripts/doctor.ts"
+    ],
+    "testIds": [
+      "tests/aether/stdio.test.ts",
+      "tests/aether/pair-cli.test.ts",
+      "tests/aether/pair-cli-inprocess.test.ts",
+      "tests/aether/doctor.test.ts"
+    ],
+    "evidencePaths": [],
+    "blockers": [
+      "The control-plane banner and the setup line are not covered by a test (they run at import time); the other messages are checked in both languages"
+    ]
   }
 ]

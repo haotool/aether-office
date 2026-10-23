@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { Control } from '../apps/control/src/control.js';
 import { secret } from '../apps/control/src/services/domain/identity.js';
+import { say } from '../apps/control/src/stdio.js';
 import { enroll } from '../apps/control/src/services/runtime/runners.js';
 type Identity = ReturnType<Control['authenticate']>;
 
@@ -106,5 +107,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   const mode = process.argv.includes('--demo') ? 'demo' : 'live';
   const dir = resolve(process.env['AETHER_DATA_DIR'] ?? `.data/${mode}`);
   const result = setup(mode, dir);
-  console.log(`Setup ready. ${result.projects} project(s). Owner token file: ${result.ownerFile}`);
+  console.log(
+    say(
+      `Setup ready. ${result.projects} project(s). Owner token file: ${result.ownerFile}`,
+      `設定完成：${result.projects} 個專案。擁有者權杖檔案：${result.ownerFile}`,
+    ),
+  );
 }

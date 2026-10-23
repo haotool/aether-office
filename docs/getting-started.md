@@ -60,6 +60,9 @@ For someone who already runs `claude` or `codex` in a terminal and wants to see 
 Nothing here starts a model or writes under `~/.claude` or `~/.codex`. To stop, press Ctrl+C in the terminal that runs
 `pnpm start`; the sessions you watched are not touched.
 
+Terminal messages are in English, or in Traditional Chinese when your terminal locale is `zh` (`AETHER_LANG=en` or `zh-TW`
+overrides it).
+
 ## Try the demo
 
 The demo uses fixture data and needs no sessions of your own. It runs the development servers, so it does not need a build:

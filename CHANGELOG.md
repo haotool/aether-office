@@ -7,6 +7,10 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ## [Unreleased]
 
+### Added
+
+- Terminal messages of `pnpm start`, `pnpm run pair`, `pnpm run setup` and `pnpm run doctor` are shown in Traditional Chinese when the terminal locale is `zh` (`AETHER_LANG=en` or `zh-TW` overrides it).
+
 ### Changed
 
 - A browser that opens `localhost` on the control-plane port is redirected to `127.0.0.1` instead of receiving `HOST_FORBIDDEN`; GET and HEAD only, and every other host name is still refused.

@@ -2,6 +2,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { networkInterfaces, type NetworkInterfaceInfo } from 'node:os';
 import QRCode from 'qrcode';
 import { DomainError } from '@aether/kernel';
+import { say } from '../../stdio.js';
 import { isLanHostname } from '../platform/host-policy.js';
 
 /**
@@ -108,10 +109,19 @@ export function terminalQr(text: string): string {
 
 export function pairingFailure(status: number | null, base: string, directory: string): string {
   if (status === null)
-    return `Could not reach ${base}. Is the control plane running? Start it with pnpm start (or set AETHER_CONTROL_URL or PORT to where it listens).`;
+    return say(
+      `Could not reach ${base}. Is the control plane running? Start it with pnpm start (or set AETHER_CONTROL_URL or PORT to where it listens).`,
+      `無法連線 ${base}。控制台有在執行嗎？請用 pnpm start 啟動（或把 AETHER_CONTROL_URL 或 PORT 設成它監聽的位置）。`,
+    );
   if (status === 401 || status === 403)
-    return `${base} is running but did not accept the owner token in ${directory}. It probably uses another data directory: set AETHER_DATA_DIR to the one it was started with.`;
-  return `${base} answered ${status} when asked for a pairing code.`;
+    return say(
+      `${base} is running but did not accept the owner token in ${directory}. It probably uses another data directory: set AETHER_DATA_DIR to the one it was started with.`,
+      `${base} 正在執行，但不接受 ${directory} 裡的擁有者權杖。它可能使用另一個資料目錄：請把 AETHER_DATA_DIR 設成啟動它時用的那一個。`,
+    );
+  return say(
+    `${base} answered ${status} when asked for a pairing code.`,
+    `${base} 索取配對碼時回應 ${status}。`,
+  );
 }
 
 export function pairingText(
@@ -123,10 +133,21 @@ export function pairingText(
   return [
     `\n${terminalQr(first.url)}\n\n${first.origin}`,
     ...(others.length
-      ? [`Same code on the other addresses: ${others.map((link) => link.origin).join(', ')}`]
+      ? [
+          say(
+            `Same code on the other addresses: ${others.map((link) => link.origin).join(', ')}`,
+            `其他位址用同一個配對碼：${others.map((link) => link.origin).join(', ')}`,
+          ),
+        ]
       : []),
-    `Scan it with the phone's camera (same network). It works once and expires in ${ttlSeconds / 60} minutes.`,
-    'Plain HTTP: the access token is not encrypted on the network, so use a network you trust.',
+    say(
+      `Scan it with the phone's camera (same network). It works once and expires in ${ttlSeconds / 60} minutes.`,
+      `用手機相機掃描（要在同一個網路）。只能用一次，${ttlSeconds / 60} 分鐘後失效。`,
+    ),
+    say(
+      'Plain HTTP: the access token is not encrypted on the network, so use a network you trust.',
+      '這是純 HTTP：存取權杖在網路上沒有加密，只在你信任的網路使用。',
+    ),
   ].join('\n');
 }
 

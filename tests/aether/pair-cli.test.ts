@@ -4,10 +4,21 @@ import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { pairingFailure } from '../../apps/control/src/services/remote/pairing.js';
 
+afterEach(() => vi.unstubAllEnvs());
+
 describe('pairingFailure', () => {
+  it('speaks Traditional Chinese on a zh terminal', () => {
+    vi.stubEnv('AETHER_LANG', 'zh-TW');
+    expect(pairingFailure(null, 'http://127.0.0.1:1', '/d')).toContain(
+      '無法連線 http://127.0.0.1:1',
+    );
+    expect(pairingFailure(401, 'http://127.0.0.1:1', '/d')).toContain('不接受 /d 裡的擁有者權杖');
+    expect(pairingFailure(500, 'http://x', '/d')).toBe('http://x 索取配對碼時回應 500。');
+  });
+
   it('tells apart unreachable, unauthorised and any other answer', () => {
     const unreachable = pairingFailure(null, 'http://127.0.0.1:1', '/d');
     expect(unreachable).toContain('Could not reach http://127.0.0.1:1');

@@ -4,3 +4,5 @@ import { zh } from '../../apps/web/src/locales/zh.js';
 
 registerLocale('en', en);
 registerLocale('zh-TW', zh);
+
+process.env['AETHER_LANG'] = 'en';

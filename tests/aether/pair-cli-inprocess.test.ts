@@ -75,6 +75,13 @@ describe('pair-cli, in this process', () => {
     expect(complained.join('\n')).toContain('pnpm start');
   });
 
+  it('speaks Traditional Chinese on a zh terminal', async () => {
+    vi.stubEnv('AETHER_LANG', 'zh-TW');
+    const dir = dataDir();
+    expect(await run({ AETHER_DATA_DIR: dir })).toBe(1);
+    expect(complained.join('\n')).toContain(`在 ${dir} 找不到擁有者權杖`);
+  });
+
   it('exits when the control plane cannot be reached, and never prints the token', async () => {
     const dir = dataDir('secret-token-value');
     expect(await run({ AETHER_DATA_DIR: dir })).toBe(1);
