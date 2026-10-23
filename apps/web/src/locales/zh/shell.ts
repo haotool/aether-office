@@ -76,6 +76,12 @@ export const zhShell = {
   loginHint: '輸入本機產生的存取權杖，進入你的工作空間。',
   token: '存取權杖',
   login: '進入辦公室',
+  signingIn: '正在登入…',
+  loginPhoneHint:
+    '在電腦上開啟 AETHER，按「在手機上開啟」，用這支手機的相機掃描 QR code，不需要輸入權杖。',
+  localSignIn: '使用這台電腦登入',
+  localSignInOff: '這個服務沒有開放本機直接登入，請輸入權杖。',
+  loginHaveToken: '我有權杖',
   tokenHelp: '啟動程式會顯示 owner-token 檔案的位置。權杖不會傳給模型。',
   logout: '登出',
   project: '專案',

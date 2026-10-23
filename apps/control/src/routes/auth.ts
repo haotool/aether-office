@@ -1,5 +1,6 @@
 import {
   REMEMBERED_SESSION_MS,
+  activeOwnerId,
   hash,
   identityActor,
   login,
@@ -57,6 +58,51 @@ function loginRoute({ app, control, attempts }: RouteContext, { startCookie, lim
     attempts.delete(key);
     startCookie(request, reply, session.session, ttl ?? 8 * 60 * 60 * 1000);
     return {
+      actor: session.actor,
+      csrf: session.csrf,
+      expiresAt: session.expiresAt,
+      mode: control.ctx.mode,
+    };
+  });
+}
+
+const LOOPBACK_ADDRESSES: ReadonlySet<string> = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
+const FORWARDING_HEADERS = [
+  'forwarded',
+  'x-forwarded-for',
+  'x-forwarded-host',
+  'x-forwarded-proto',
+];
+
+function thisMachine(
+  request: FastifyRequest,
+  { options, origin }: Pick<RouteContext, 'options' | 'origin'>,
+) {
+  return (
+    !!options.localSignIn &&
+    !options.trustProxy &&
+    LOOPBACK_ADDRESSES.has(request.raw.socket.remoteAddress ?? '') &&
+    request.headers.host === origin.host &&
+    request.headers.origin === origin.origin &&
+    FORWARDING_HEADERS.every((name) => request.headers[name] === undefined)
+  );
+}
+
+function localRoute(context: RouteContext, { startCookie }: Guards) {
+  const { app, control } = context;
+  app.post('/api/login/local', async (request, reply) => {
+    if (!thisMachine(request, context)) return { available: false };
+    const owner = activeOwnerId(control.ctx);
+    if (!owner) return { available: false };
+    const session = openSession(
+      control.ctx,
+      identityActor(control.ctx, owner),
+      REMEMBERED_SESSION_MS,
+    );
+    startCookie(request, reply, session.session, REMEMBERED_SESSION_MS);
+    request.log.info({ event: 'session.local' }, 'this computer signed in without a token');
+    return {
+      available: true,
       actor: session.actor,
       csrf: session.csrf,
       expiresAt: session.expiresAt,
@@ -139,6 +185,7 @@ function sessionRoutes({ app, control, actor }: RouteContext, { limited }: Guard
 export function authRoutes(context: RouteContext) {
   const guards = signInGuards(context);
   loginRoute(context, guards);
+  localRoute(context, guards);
   pairingRoutes(context, guards);
   sessionRoutes(context, guards);
 }

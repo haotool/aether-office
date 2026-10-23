@@ -12,6 +12,8 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 - The quality check no longer caps the total number of lines of code. A fixed budget that every change had to stay under made each
   feature need a separate maintainer commit and made two open pull requests conflict on the same number; the checks that judge the
   code itself (file and function size, nesting, duplication, dead exports, the per-area floors) stay.
+- The sign-in form remembers the device for 30 days unless the box is cleared, and its token field lets a browser or phone password manager save and fill it, so the token is typed once per device instead of every 8 hours.
+- A browser on the computer that runs the control plane opens straight into the office: no token to find or type. A phone on the network is told to press Open on your phone on the computer and scan the QR code; its token form waits behind I have a token and no longer opens the keyboard. The page does not sign in again after a sign-out until the person presses Sign in on this computer. `AETHER_LOCAL_SIGN_IN=0` turns the computer's sign-in off (see [Security](docs/security.md)).
 
 ### Security
 

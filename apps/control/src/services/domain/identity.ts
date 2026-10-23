@@ -5,6 +5,14 @@ import { identities } from '../../db/schema.js';
 import type { Context } from './context.js';
 export const hash = (value: string): string => createHash('sha256').update(value).digest('hex');
 export const secret = (): string => randomBytes(32).toString('base64url');
+export function activeOwnerId(ctx: Context): string | undefined {
+  return ctx.sqlite
+    .prepare(
+      "SELECT id FROM identities WHERE role='owner' AND revokedAt IS NULL AND (expiresAt IS NULL OR expiresAt>?) ORDER BY createdAt LIMIT 1",
+    )
+    .pluck()
+    .get(ctx.now()) as string | undefined;
+}
 export function identityActor(ctx: Context, id: string): Actor {
   const row = selectOne(ctx.sqlite, identities, { id });
   if (!row || row.revokedAt !== null || (row.expiresAt !== null && row.expiresAt <= ctx.now()))

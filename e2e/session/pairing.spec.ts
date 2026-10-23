@@ -41,3 +41,14 @@ test('a phone scans the link, ends up signed in without a token, and the link wo
   await phone.close();
   await second.close();
 });
+
+test('the sign-in form lets a password manager fill the token and remembers the device by default', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.getByLabel('存取權杖', { exact: true })).toHaveAttribute(
+    'autocomplete',
+    'current-password',
+  );
+  await expect(page.getByLabel('記住這台裝置 30 天')).toBeChecked();
+});

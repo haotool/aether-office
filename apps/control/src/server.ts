@@ -30,6 +30,7 @@ import {
 export const PUBLIC_ROUTES: ReadonlySet<string> = new Set([
   'GET /health',
   'POST /api/login',
+  'POST /api/login/local',
   'POST /api/pairings/redeem', // the single-use pairing code is the credential
   'GET /api/session', // answers 401 itself
   'POST /api/session/csrf', // the session cookie is the credential: it exists for the page that holds no CSRF token
