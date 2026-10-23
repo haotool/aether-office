@@ -183,22 +183,28 @@ unencrypted: use a network you trust, or put a TLS tunnel such as Tailscale in f
 
 ### macOS login service
 
-For an existing `com.haotool.aether-office` LaunchAgent, set `AETHER_HOST` to `0.0.0.0` in the
-plist's `EnvironmentVariables` dictionary. The service reads its environment from the plist when launched; an export in
-a terminal does not change the running login service. Keep its working directory and data directory as configured.
-Reload the existing service after saving the plist:
-
 ```sh
-launchctl bootout "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.haotool.aether-office.plist"
-launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.haotool.aether-office.plist"
+pnpm build
+pnpm service install
 ```
 
-Then reopen **Open on your phone** to generate a fresh QR code. If it still says local connections only, check the
-running service's environment with `launchctl print "gui/$(id -u)/com.haotool.aether-office"`.
+writes `~/Library/LaunchAgents/com.haotool.aether-office.plist` and loads it: the control plane then starts at login and
+comes back if it stops (no more often than every 30 seconds). The plist pins the Node that ran the command, so a later Node
+upgrade cannot break the native modules, and the checkout it ran from. It also keeps `PATH`, `PORT`, `AETHER_HOST`,
+`AETHER_DATA_DIR`, `AETHER_TRUST_PROXY`, `AETHER_LANG`, `AETHER_HOME` and `AETHER_NATIVE_CONFIG` as they were when you ran
+it, so `AETHER_HOST=0.0.0.0 pnpm service install` opens the service to your network; run install again to change one. It
+replaces a service with the same label.
+
+Output goes to `~/Library/Logs/aether-office/control.log`. launchd never rotates a log, so the control plane moves that file
+to `control.log.1` and empties it once it passes 10 MiB.
+
+`pnpm build` restarts a service installed from the same checkout, so updating is `git pull`, `pnpm install --frozen-lockfile`,
+`pnpm build`. `pnpm go` finds the running service and opens the browser signed in. `pnpm service uninstall` unloads and
+removes it and leaves the log. macOS only: on Linux, run `pnpm start` under your own supervisor.
 
 ## Upgrading
 
-Pull, then `pnpm install --frozen-lockfile` and `pnpm build`, and **restart the control plane** (`pnpm start`). The running
+Pull, then `pnpm install --frozen-lockfile` and `pnpm build`, and **restart the control plane** (`pnpm start`; `pnpm build` already restarts a login service installed from this checkout). The running
 server keeps the code it started with, so until it is restarted it answers an updated page in the older shape. After an update that changes
 Remote approvals, switch it off and on again in Settings and reinstall the hook (`pnpm hooks install --remote-approvals`); the
 configuration file gained a `verifyKey`, and the hook falls back to the terminal prompt until it has one.

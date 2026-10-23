@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { Control } from './control.js';
 import { createServer } from './server.js';
 import { parseTrustProxy } from './services/platform/host-policy.js';
+import { rotateLog } from './log-rotation.js';
 import { secret } from './services/domain/identity.js';
 import { lanOrigins, pairingText, requestPairing } from './services/remote/pairing.js';
 import { reconcileTerminals } from './services/platform/terminals.js';
@@ -47,10 +48,12 @@ const app = createServer(control, {
   dataDir: directory,
   logger: true,
 });
+const logFile = process.env['AETHER_LOG_FILE'];
 const timer = setInterval(() => {
   reconcileOffline(control.ctx);
   reconcileStalled(control.ctx);
   reconcileTerminals(control.ctx);
+  if (logFile) rotateLog(logFile);
 }, 10000);
 timer.unref();
 for (const signal of ['SIGINT', 'SIGTERM'] as const)
