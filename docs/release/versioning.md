@@ -17,7 +17,7 @@ the changelog still describes the change and its upgrade steps.
 
 ## Before 1.0
 
-- Patch (`0.4.Z`): compatible fixes, security hardening, documentation and internal performance work.
+- Patch (`0.5.Z`): compatible fixes, security hardening, documentation and internal performance work.
 - Minor (`0.Y.0`): new user-facing capability or a documented compatibility change that needs an upgrade step.
 - Major (`1.0.0`): the compatibility surface becomes stable and the stable-release evidence gates are satisfied.
 

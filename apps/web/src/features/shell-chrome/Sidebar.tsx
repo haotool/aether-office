@@ -51,7 +51,7 @@ function SidebarBottom({ offline, onLogout }: { offline: boolean; onLogout: () =
         <span />
         {offline ? t('offline') : t('connected')}
       </div>
-      <small>LOCAL-FIRST · v0.4</small>
+      <small>LOCAL-FIRST · v0.5</small>
       <button className="text-button" onClick={onLogout}>
         <LogOut size={14} />
         {t('logout')}

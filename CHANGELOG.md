@@ -7,6 +7,8 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-23
+
 ### Added
 
 - A frame-rate limit in Settings, General (Auto, 60 or 30 fps) caps how often the 3D scene draws, to save battery and heat on a fast screen or a phone. Auto is the behaviour so far; the perf probe counts only drawn frames.
@@ -326,6 +328,7 @@ For anyone who ran a development build before this release.
 
 - The upstream agent-office application; its attribution is kept in `THIRD_PARTY_NOTICES.md`.
 
-[Unreleased]: https://github.com/haotool/aether-office/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/haotool/aether-office/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/haotool/aether-office/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/haotool/aether-office/compare/v0.4.0...v0.4.2
 [0.4.0]: https://github.com/haotool/aether-office/releases/tag/v0.4.0

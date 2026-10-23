@@ -28,7 +28,7 @@ It runs locally: no AETHER account or cloud service is required. Your existing C
 remain with Claude Code or Codex.
 
 > [!IMPORTANT]
-> **Pre-release (`0.4.x`).** Some capabilities remain partly verified. Read the
+> **Pre-release (`0.5.x`).** Some capabilities remain partly verified. Read the
 > [verification ledger](docs/verification/report.md) and [support limits](#support-and-limits) before relying on it for a
 > critical workflow.
 

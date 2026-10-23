@@ -4,7 +4,7 @@
 
 ## Supported versions
 
-AETHER OFFICE is a pre-release (`0.4.x`). Security fixes are made on the `main` branch; there are no
+AETHER OFFICE is a pre-release (`0.5.x`). Security fixes are made on the `main` branch; there are no
 maintained release branches yet.
 
 ## Reporting a vulnerability
