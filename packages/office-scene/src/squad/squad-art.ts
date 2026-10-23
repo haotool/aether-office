@@ -27,7 +27,7 @@ export const WAITING_AMBER = '#ffc65c';
 
 const FLAT = -Math.PI / 2;
 /** The parts of one piece, as one geometry (every part carries the same attributes, so merging cannot fail). */
-export const merged = (parts: BufferGeometry[]): BufferGeometry => {
+const merged = (parts: BufferGeometry[]): BufferGeometry => {
   const geometry = mergeGeometries(parts);
   if (!geometry) throw new Error('the parts of a squad piece must share their attributes');
   return geometry;

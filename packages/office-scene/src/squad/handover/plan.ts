@@ -9,7 +9,6 @@ import {
   WALK_STRIDE_SPEED,
   WAVE_MS,
 } from '../../animals/departure.js';
-import { toWorld } from '../puppet/anchors.js';
 import { heading, length, pathIn, shortest, TURN_MS } from '../errand.js';
 import { DESK_TOP } from '../squad-art.js';
 import type { StampKind } from './stamp.js';
@@ -37,6 +36,15 @@ const STAMP_Z = -0.22;
 const TRAY_TOP_M = 0.08;
 
 type Desk = { x: number; z: number; rotation: number };
+type Frame = { x: number; z: number; yaw: number };
+type Vec3 = readonly [number, number, number];
+
+const toWorld = (frame: Frame, [x, y, z]: Vec3): Vec3 => {
+  const cos = Math.cos(frame.yaw);
+  const sin = Math.sin(frame.yaw);
+  return [frame.x + x * cos + z * sin, y, frame.z - x * sin + z * cos];
+};
+
 export type DeskPlaces = {
   spot: Point;
   tray: readonly [number, number, number];
@@ -50,7 +58,7 @@ export function handoverSide(desk: Desk, zone: { x: number; z: number }): 1 | -1
 }
 
 export function deskPlaces(desk: Desk, side: 1 | -1): DeskPlaces {
-  const frame = { x: desk.x, z: desk.z, yaw: (desk.rotation * Math.PI) / 2, y: 0 };
+  const frame = { x: desk.x, z: desk.z, yaw: (desk.rotation * Math.PI) / 2 };
   const spot = toWorld(frame, [side * SPOT_X, 0, SPOT_Z]);
   return {
     spot: { x: spot[0], z: spot[2] },
@@ -244,7 +252,7 @@ export function folderAt(plan: HandoverPlan, elapsed: number, slot: number): Fol
   const trayY = plan.places.tray[1] + Math.min(slot, TRAY_STACK_MAX - 1) * FOLDER_THICKNESS;
   const tray = { x: plan.places.tray[0], z: plan.places.tray[2] };
   if (elapsed >= t.placeAt) return HIDDEN;
-  const frame = { x: plan.origin.x, z: plan.origin.z, yaw: plan.frameYaw, y: 0 };
+  const frame = { x: plan.origin.x, z: plan.origin.z, yaw: plan.frameYaw };
   const yaw = (plan.seed % 628) / 100;
   if (plan.mode === 'pop') {
     if (elapsed < t.wait) return HIDDEN;

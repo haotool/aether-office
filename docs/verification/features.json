@@ -3016,7 +3016,6 @@
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
-      "packages/office-scene/src/squad/puppet/",
       "packages/office-scene/src/squad/handover/",
       "packages/office-scene/src/squad/SquadLayer.tsx",
       "packages/office-scene/src/squad/SquadMember.tsx",
@@ -3293,7 +3292,6 @@
       "packages/office-scene/src/squad/SquadBeam.tsx",
       "packages/office-scene/src/squad/handover/Handover.tsx",
       "packages/office-scene/src/squad/SquadWarm.tsx",
-      "packages/office-scene/src/squad/puppet/string-lines.ts",
       "packages/office-scene/src/life/LifeLayer.tsx",
       "apps/web/src/features/office/scene-preview.ts",
       "apps/web/src/features/squad/squad-preview.ts"

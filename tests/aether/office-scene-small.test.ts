@@ -10,29 +10,7 @@ import {
   lerp,
 } from '../../packages/office-scene/src/life/effects/shared.js';
 import { estimateGpuBytes } from '../../packages/office-scene/src/perf/perf-rig.js';
-import { stringsEnabled } from '../../packages/office-scene/src/squad/puppet/policy.js';
-import { crossGeometry } from '../../packages/office-scene/src/squad/puppet/puppet-art.js';
-import { SEGMENT_CAPACITY } from '../../packages/office-scene/src/squad/puppet/rig.js';
-import {
-  STRING_WIDTH,
-  createStringLines,
-} from '../../packages/office-scene/src/squad/puppet/string-lines.js';
 import { Glide } from '../../packages/office-scene/src/squad/squad-glide.js';
-
-describe('stringsEnabled', () => {
-  it('draws the puppet strings on the balanced and high tiers unless the person turned them off', () => {
-    expect(stringsEnabled('balanced', undefined)).toBe(true);
-    expect(stringsEnabled('high', {})).toBe(true);
-    expect(stringsEnabled('high', { relation: true, strings: true })).toBe(true);
-  });
-
-  it('never draws them on the low tier, nor when the relation effects or the strings are off', () => {
-    expect(stringsEnabled('low', {})).toBe(false);
-    expect(stringsEnabled('high', { relation: false })).toBe(false);
-    expect(stringsEnabled('high', { strings: false })).toBe(false);
-    expect(stringsEnabled('low', { relation: false, strings: false })).toBe(false);
-  });
-});
 
 describe('Glide', () => {
   it('starts a new key at its target and eases an old one toward it without overshooting', () => {
@@ -74,30 +52,6 @@ describe('Glide', () => {
     glide.prune(new Set(['b']));
     expect(glide.to('a', { x: 9, z: 9 }, 0.016, 1)).toEqual({ x: 9, z: 9 });
     expect(glide.to('b', { x: 9, z: 9 }, 0.016, 1)).not.toEqual({ x: 9, z: 9 });
-  });
-});
-
-describe('puppet parts', () => {
-  it('shares one control-cross geometry in vertex colours', () => {
-    const geometry = crossGeometry();
-    expect(crossGeometry()).toBe(geometry);
-    expect(geometry.getAttribute('color').count).toBe(geometry.getAttribute('position').count);
-    geometry.computeBoundingBox();
-    const size = geometry.boundingBox!.getSize(new THREE.Vector3());
-    expect(size.x).toBeGreaterThan(0.34);
-    expect(size.x).toBeLessThan(0.45);
-    expect(size.y).toBeLessThan(0.1);
-  });
-
-  it('makes all strings one soft additive draw with room for every segment', () => {
-    const { lines, material, geometry } = createStringLines();
-    expect(material.blending).toBe(THREE.AdditiveBlending);
-    expect(material.linewidth).toBe(STRING_WIDTH);
-    expect(material.depthWrite).toBe(false);
-    expect(material.vertexColors).toBe(true);
-    expect(geometry.instanceCount).toBe(0);
-    expect(lines.frustumCulled).toBe(false);
-    expect(SEGMENT_CAPACITY).toBeGreaterThan(0);
   });
 });
 

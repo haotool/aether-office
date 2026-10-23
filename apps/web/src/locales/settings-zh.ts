@@ -99,9 +99,6 @@ export const settingsZh = {
   lifeCalmOn: '平靜模式已開啟：下方各類都不會顯示',
   stLifeRelationLabel: '關係效果',
   stLifeRelationDesc: '小隊與其子代理：區域、團隊工作桌、光束與交付。',
-  stStringsLabel: '提線',
-  stStringsDesc:
-    '從控制桿連到每位工作中子代理的細光線。每次呼叫工具時繃緊，休息時放鬆。低畫質時不顯示，平靜模式下靜止。',
   stLifeKindsLabel: '小動畫的種類',
   stLifeKindsDesc: '跟著工作階段行為出現的裝飾性小動畫，不會說明任何事情是否成功。',
   lifeKindWork: '工作',

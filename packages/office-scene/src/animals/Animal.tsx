@@ -77,7 +77,7 @@ function useAnimalRig(props: AnimalProps) {
     setOneShot,
     behavior,
   });
-  useAnimalModel({ agent, url, species, light, setModel, setOneShot, ...shared });
+  useAnimalModel({ url, species, light, setModel, setOneShot, ...shared });
   useClipPlayer({ model, url, clip, oneShot, apparition, override, agentId: agent.id, ...shared });
   return { model, url, mixer };
 }

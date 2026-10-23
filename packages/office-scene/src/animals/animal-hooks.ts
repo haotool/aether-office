@@ -21,7 +21,6 @@ import {
 import type { Agent } from '@aether/contracts';
 import { acquireAnimal } from './animal-assets.js';
 import { ghostly, rimLit } from './animal-materials.js';
-import { registerAnchors } from '../squad/puppet/anchors.js';
 import { animationInterval } from '../perf/perf-control.js';
 import { useMicroActions, type BehaviorScene } from '../core/use-micro-actions.js';
 import {
@@ -81,7 +80,6 @@ export function useOneShots(o: {
 }
 
 type AnimalModelOptions = {
-  agent: Agent;
   url: string;
   species: string;
   light: boolean;
@@ -103,7 +101,7 @@ function styleCharacter(scene: Object3D, species: string, light: boolean) {
 }
 
 export function useAnimalModel(o: AnimalModelOptions) {
-  const { agent, url, species, light, setModel, setOneShot, mixer, current } = o;
+  const { url, species, light, setModel, setOneShot, mixer, current } = o;
   const invalidate = useThree((s) => s.invalidate);
   const gl = useThree((s) => s.gl);
   const stage = useThree((s) => s.scene);
@@ -113,7 +111,6 @@ export function useAnimalModel(o: AnimalModelOptions) {
     const asset = acquireAnimal(url);
     let disposed = false;
     let instance: Model | null = null;
-    let forgetAnchors: (() => void) | undefined;
     void asset
       .load()
       .then(async (loaded) => {
@@ -125,7 +122,6 @@ export function useAnimalModel(o: AnimalModelOptions) {
         styleCharacter(loaded.scene, species, light);
         mixer.current = new AnimationMixer(loaded.scene);
         mixer.current.addEventListener('finished', () => setOneShot(null));
-        forgetAnchors = registerAnchors(agent.id, loaded.scene);
         setModel(instance);
         invalidate();
       })
@@ -134,7 +130,6 @@ export function useAnimalModel(o: AnimalModelOptions) {
       });
     return () => {
       disposed = true;
-      forgetAnchors?.();
       mixer.current?.stopAllAction();
       if (instance) {
         mixer.current?.uncacheRoot(instance.scene);
@@ -146,7 +141,6 @@ export function useAnimalModel(o: AnimalModelOptions) {
       current.current = null;
       asset.release();
     };
-    // `agent.id` only labels the anchors, and the seat a model serves never changes under a mounted member.
   }, [url, species, light, invalidate, gl, camera, stage]);
 }
 

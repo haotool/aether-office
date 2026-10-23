@@ -111,9 +111,6 @@ export const settingsEn = {
   stLifeRelationLabel: 'Relation effects',
   stLifeRelationDesc:
     'Squads and their subagents: the zone, the team workstations, the beam and the hand-over.',
-  stStringsLabel: 'Puppet strings',
-  stStringsDesc:
-    'Thin strings of light from a control bar to each working subagent. They tighten on every tool call and go slack when it rests. Off on the low quality tier, still in Calm mode.',
   stLifeKindsLabel: 'Kinds of moments',
   stLifeKindsDesc:
     'Small decorative animations that follow what a session does. They never say whether anything worked.',
