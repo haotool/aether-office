@@ -107,6 +107,24 @@ export function terminalQr(text: string): string {
   return lines.join('\n');
 }
 
+type PairingOffer = {
+  lan: boolean;
+  ttlSeconds: number;
+  links: { origin: string; url: string }[];
+};
+
+/** Asks a running control plane for a one-time sign-in code as its owner: `status` is null when nothing answered, `offer` null unless it was granted. */
+export async function requestPairing(base: string, token: string) {
+  const response = await fetch(`${base}/api/pairings`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${token}`, origin: base },
+  }).catch(() => null);
+  return {
+    status: response?.status ?? null,
+    offer: response?.ok ? ((await response.json()) as PairingOffer) : null,
+  };
+}
+
 export function pairingFailure(status: number | null, base: string, directory: string): string {
   if (status === null)
     return say(

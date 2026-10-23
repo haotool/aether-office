@@ -5,7 +5,7 @@ import { Control } from './control.js';
 import { createServer } from './server.js';
 import { parseTrustProxy } from './services/platform/host-policy.js';
 import { secret } from './services/domain/identity.js';
-import { lanOrigins, pairingText } from './services/remote/pairing.js';
+import { lanOrigins, pairingText, requestPairing } from './services/remote/pairing.js';
 import { reconcileTerminals } from './services/platform/terminals.js';
 import { reconcileOffline, reconcileStalled } from './services/runtime/runners.js';
 import { print, say } from './stdio.js';
@@ -78,27 +78,16 @@ if (lan) {
   );
   if (process.env['AETHER_HOST']) {
     const base = `http://${['0.0.0.0', '::'].includes(host) ? '127.0.0.1' : host}:${port}`;
-    try {
-      const response = await fetch(`${base}/api/pairings`, {
-        method: 'POST',
-        headers: {
-          authorization: `Bearer ${readFileSync(tokenFile, 'utf8').trim()}`,
-          origin: base,
-        },
-      });
-      const made = (await response.json()) as {
-        ttlSeconds: number;
-        links: { origin: string; url: string }[];
-      };
-      print(pairingText(made.links, made.ttlSeconds));
-    } catch {
-      print(
-        say(
-          'Run `pnpm run pair` for a QR code that signs a phone in.',
-          '執行 `pnpm run pair` 取得讓手機登入的 QR code。',
-        ),
-      );
-    }
+    const token = existsSync(tokenFile) ? readFileSync(tokenFile, 'utf8').trim() : '';
+    const { offer } = await requestPairing(base, token);
+    print(
+      offer
+        ? pairingText(offer.links, offer.ttlSeconds)
+        : say(
+            'Run `pnpm run pair` for a QR code that signs a phone in.',
+            '執行 `pnpm run pair` 取得讓手機登入的 QR code。',
+          ),
+    );
   }
 } else {
   print(

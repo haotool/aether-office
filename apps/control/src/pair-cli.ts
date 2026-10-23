@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { pairingFailure, pairingText } from './services/remote/pairing.js';
+import { pairingFailure, pairingText, requestPairing } from './services/remote/pairing.js';
 import { print, say, warn } from './stdio.js';
 
 /** `pnpm run pair`: prints a one-time QR code that signs a phone in; the owner token is never printed. */
@@ -20,20 +20,12 @@ try {
   process.exit(1);
 }
 
-const response = await fetch(`${base}/api/pairings`, {
-  method: 'POST',
-  headers: { authorization: `Bearer ${token}`, origin: base },
-}).catch(() => null);
-if (!response?.ok) {
-  warn(pairingFailure(response?.status ?? null, base, directory));
+const { status, offer } = await requestPairing(base, token);
+if (!offer) {
+  warn(pairingFailure(status, base, directory));
   process.exit(1);
 }
-const made = (await response.json()) as {
-  lan: boolean;
-  ttlSeconds: number;
-  links: { origin: string; url: string }[];
-};
-if (!made.lan || !made.links.length) {
+if (!offer.lan || !offer.links.length) {
   warn(
     say(
       'This control plane is not open to the network, so a phone could not reach it.\n' +
@@ -44,4 +36,4 @@ if (!made.lan || !made.links.length) {
   );
   process.exit(1);
 }
-print(pairingText(made.links, made.ttlSeconds));
+print(pairingText(offer.links, offer.ttlSeconds));
