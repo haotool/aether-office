@@ -65,7 +65,7 @@ local user's file permissions. Strong sandboxing of agents is outside the intend
 - **The CSRF token can be re-issued to the cookie.** What changes: the CSRF token is no longer a secret the cookie cannot
   obtain. It does not need to be: a cross-site request carries no session cookie (`SameSite=Strict`), is refused by the
   Origin check (and `POST /api/session/csrf` additionally refuses a request with no `Origin`, which every browser sends on a
-  same-origin `POST`), and could not read the answer (no CORS headers). DNS rebinding is stopped by the Host check. What a
+  same-origin `POST`), and could not read the answer (no CORS headers). DNS rebinding is stopped by the Host check (a GET or HEAD for `localhost` on the same port is only redirected to the loopback address; every other name is refused). What a
   process running as the same user could already do: read `.data/live/owner-token` (and use it as a bearer) or the browser's
   cookie store; it gains nothing here, and a bearer token is refused by this route anyway. What it could not do before and can now:
   nothing that the cookie plus a forged same-origin `Origin` could not, because a local process holding the cookie was already a

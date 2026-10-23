@@ -7,6 +7,10 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ## [Unreleased]
 
+### Changed
+
+- A browser that opens `localhost` on the control-plane port is redirected to `127.0.0.1` instead of receiving `HOST_FORBIDDEN`; GET and HEAD only, and every other host name is still refused.
+
 ## [0.4.2] - 2026-10-22
 
 Replaces 0.4.1, which was withdrawn on 2026-10-22: its tag was removed when the commit history was cleaned, and GitHub never lets a deleted release tag be named again. Everything 0.4.1 contained is listed here.

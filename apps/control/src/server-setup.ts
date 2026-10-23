@@ -66,14 +66,26 @@ export function runHousekeeping(
 }
 
 /** Security headers on every answer, and the Host and Origin allow-list before any route runs. */
-export function guardRequests(app: FastifyInstance, policy: ReturnType<typeof hostPolicy>) {
+export function guardRequests(
+  app: FastifyInstance,
+  policy: ReturnType<typeof hostPolicy>,
+  canonical: URL,
+) {
   app.addHook('onRequest', async (request, reply) => {
     reply
       .header('x-content-type-options', 'nosniff')
       .header('referrer-policy', 'no-referrer')
       .header('x-frame-options', 'DENY');
     reply.header('content-security-policy', CONTENT_SECURITY_POLICY);
-    if (!policy.host(request.headers.host)) throw new DomainError('HOST_FORBIDDEN', 403);
+    if (!policy.host(request.headers.host)) {
+      // Typing localhost lands on the one address the check accepts; any other name stays refused.
+      if (
+        ['GET', 'HEAD'].includes(request.method) &&
+        request.headers.host === `localhost:${canonical.port}`
+      )
+        return reply.redirect(`${canonical.origin}${request.url}`);
+      throw new DomainError('HOST_FORBIDDEN', 403);
+    }
     if (!policy.origin(request.headers.origin)) throw new DomainError('ORIGIN_FORBIDDEN', 403);
     if (request.url.startsWith('/api/')) reply.header('cache-control', 'no-store');
   });

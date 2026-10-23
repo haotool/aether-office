@@ -3352,5 +3352,16 @@
       "The context-loss card was tested with WEBGL_lose_context in Chrome only; whether iOS Safari fires webglcontextlost for a backgrounded page was not observed, and the card replaces the scene (a context the browser would restore later is not waited for)",
       "R4 (transparent objects): attributed but nothing changed, because making them opaque did not change the render time; the cost is per draw call (per-member materials), and merging them is a larger refactor"
     ]
+  },
+  {
+    "id": "DX-LOCALHOST-01",
+    "requirement": "瀏覽器輸入 localhost:<port> 時，GET／HEAD 以 302 導向 127.0.0.1；其他主機名稱與非 GET／HEAD 請求仍回 403 HOST_FORBIDDEN，DNS rebinding 防護不變。",
+    "scope": "AETHER target; maintainer request 2026-10-23",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": ["apps/control/src/server-setup.ts", "apps/control/src/server.ts"],
+    "testIds": ["tests/aether/lan-access.test.ts"],
+    "evidencePaths": [],
+    "blockers": []
   }
 ]

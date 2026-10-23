@@ -51,7 +51,7 @@ pnpm build
 pnpm start
 ```
 
-開啟 **<http://127.0.0.1:4310>**，使用 owner token 登入。終端機會印出 token 的**檔案位置**，請妥善保管；主機驗證刻意拒絕 `localhost`，因此請使用上述完整網址。
+開啟 **<http://127.0.0.1:4310>**，使用 owner token 登入。終端機會印出 token 的**檔案位置**，請妥善保管；輸入 `localhost:4310` 會自動導向此網址，其他主機名稱一律拒絕。
 
 第一次啟動會在 `.data/live` 建立資料庫與本機憑證。最近的 Claude Code、Codex session 會自動以觀察模式出現。[首次使用指南](docs/getting-started.md)。
 

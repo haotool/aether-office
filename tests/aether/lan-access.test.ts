@@ -93,6 +93,21 @@ describe('server with LAN access', () => {
     expect((await get(f, '192.168.1.20:8780')).statusCode).toBe(403);
     expect((await get(f, '127.0.0.1:8780')).statusCode).toBe(200);
   });
+  it('sends a page request for localhost to the loopback address and refuses the rest', async () => {
+    const f = setup(false);
+    const ask = (method: 'GET' | 'HEAD' | 'POST', host: string) =>
+      f.app.inject({ method, url: '/sessions?a=1', headers: { host } });
+    const sent = await ask('GET', 'localhost:8780');
+    expect(sent.statusCode).toBe(302);
+    expect(sent.headers.location).toBe('http://127.0.0.1:8780/sessions?a=1');
+    expect((await ask('HEAD', 'localhost:8780')).statusCode).toBe(302);
+    for (const [method, host] of [
+      ['POST', 'localhost:8780'],
+      ['GET', 'localhost:9999'],
+      ['GET', 'evil.example:8780'],
+    ] as const)
+      expect((await ask(method, host)).statusCode, `${method} ${host}`).toBe(403);
+  });
 });
 
 it('makes a v4 UUID without crypto.randomUUID (a phone on plain HTTP has none)', () => {

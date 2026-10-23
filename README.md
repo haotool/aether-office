@@ -56,7 +56,7 @@ pnpm start
 ```
 
 Open **<http://127.0.0.1:4310>** and sign in with the owner token. The terminal prints its **file location**; keep the
-token private. Use this exact address: the host guard intentionally refuses `localhost`.
+token private. `localhost:4310` is sent on to this address; any other host name is refused.
 
 The first start creates `.data/live` with the database and local credentials. Recent Claude Code and Codex sessions
 appear automatically as observed sessions. [First-run guide](docs/getting-started.md).

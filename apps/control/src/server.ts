@@ -75,7 +75,7 @@ export function createServer(control: Control, options: ServerOptions) {
   if (options.routeLog) logRoutes(app, options.routeLog);
   runHousekeeping(app, control, attempts, streams);
   app.register(cookie);
-  guardRequests(app, hostPolicy(origin, options.lan ?? false));
+  guardRequests(app, hostPolicy(origin, options.lan ?? false), origin);
   // Authenticate before any handler parses or validates input, so a route can never forget to.
   app.addHook('preHandler', async (request) => {
     const url = request.routeOptions.url ?? '';

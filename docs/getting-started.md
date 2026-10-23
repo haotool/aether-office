@@ -92,8 +92,8 @@ pnpm build
 pnpm start            # AETHER_MODE defaults to live
 ```
 
-Open the address the terminal prints (`http://127.0.0.1:4310`); `localhost` is refused on purpose (the host check accepts only
-the exact address, which is what stops DNS rebinding) and answers with a JSON `HOST_FORBIDDEN` error. Sign in with the owner
+Open the address the terminal prints (`http://127.0.0.1:4310`); `localhost:4310` is sent on to it, and any other host name
+is refused with a JSON `HOST_FORBIDDEN` error (the host check is what stops DNS rebinding). Sign in with the owner
 token. Recent Claude Code and Codex sessions from this machine appear as observed characters.
 Discovery reads session ids, working directories, file times and process information plus read-only `git status`;
 transcript text is read only for the session you open, and never stored. Live mode alone only _observes_: `pnpm run setup` creates no runner credential, so the terminals page, **Continue in AETHER**,

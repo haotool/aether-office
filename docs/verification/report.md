@@ -2,11 +2,11 @@
 
 Generated from `docs/verification/features.json` (docs/verification/features.json). Do not edit by hand: run `pnpm verification:report`.
 
-Features: **175**. Implementation: 145 implemented, 30 partial, 0 not started.
+Features: **176**. Implementation: 146 implemented, 30 partial, 0 not started.
 
 | Verification | Count | Meaning |
 |---|---|---|
-| passed | 92 | Verified by the listed tests at the scope stated in the ledger. |
+| passed | 93 | Verified by the listed tests at the scope stated in the ledger. |
 | partial | 83 | Some behaviour is verified; the blockers column names what is not. |
 | blocked | 0 | Cannot be verified in this environment (for example, it needs paid or authenticated provider sessions). |
 | failed | 0 | A check ran and failed. |
@@ -15,7 +15,7 @@ Features: **175**. Implementation: 145 implemented, 30 partial, 0 not started.
 
 A passing build or test run is not a claim of production readiness. This file lists what the ledger can support, and what it cannot.
 
-## passed (92)
+## passed (93)
 
 | ID | Implementation | Requirement | Blockers |
 |---|---|---|---|
@@ -111,6 +111,7 @@ A passing build or test run is not a claim of production readiness. This file li
 | OBS-MODELS-01 | implemented | 模型目錄跟隨 CLI：由 Codex 與 Claude Code 自己的快取讀取可用模型與努力等級，標示來源與是否過期，且不寫入任何 CLI 目錄。 | — |
 | OBS-CONTEXT-01 | implemented | 每個 session 回報 context 視窗用量與壓縮時間（不解析逐字稿文字）；辦公室以量表、名牌與壓縮效果呈現，並顯示最新提問與回覆的氣泡（有界、已遮蔽、不儲存）。 | — |
 | OBS-NAV-01 | implemented | 預設導覽只顯示 CLI 使用者需要的頁面，進階頁面在設定開啟；通知預設開啟、只含專案名稱；手機可由頂端列掃 QR 配對。 | — |
+| DX-LOCALHOST-01 | implemented | 瀏覽器輸入 localhost:<port> 時，GET／HEAD 以 302 導向 127.0.0.1；其他主機名稱與非 GET／HEAD 請求仍回 403 HOST_FORBIDDEN，DNS rebinding 防護不變。 | — |
 
 ## partial (83)
 
