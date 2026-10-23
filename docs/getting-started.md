@@ -27,7 +27,7 @@
   Blender 5.2 to change the animals.
 
 pnpm has built-in `setup` and `doctor` commands that shadow package scripts of the same name; run this project's as
-`pnpm run setup` and `pnpm run doctor`. `pnpm run doctor` reports your OS, Node, pnpm, Git and provider CLI versions. A missing Claude Code or Codex CLI is only a warning (you need one of them to start sessions); a missing Git, pnpm or a native module that does not load fails the command. A provider version that is not on the verified list is reported as "not verified, probably works". `pnpm run doctor --strict` also fails on any warning (for CI).
+`pnpm run setup` and `pnpm run doctor`. `pnpm run doctor` reports your OS, Node, pnpm, Git and provider CLI versions. A missing Claude Code or Codex CLI is only a warning (you need one of them to start sessions); a missing Git, pnpm or a native module that does not load fails the command. Any Claude Code or Codex version loads (there is no release list). `pnpm run doctor --strict` also fails on any warning (for CI).
 
 ## First run in five minutes
 
