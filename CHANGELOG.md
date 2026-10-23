@@ -13,6 +13,7 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 - `pnpm service install` and `uninstall` manage a macOS login service (launchd): the generated plist pins the Node that ran it, restarts the control plane at most every 30 seconds and logs to one file that the control plane keeps under 10 MiB. `pnpm build` restarts a service installed from the same checkout.
 - `pnpm go`: installs, builds, starts the control plane (unless one already answers) and opens the browser signed in with a one-time link. `BROWSER=none` or `BROWSER=<command>` chooses the browser.
 - Terminal messages of `pnpm start`, `pnpm run pair`, `pnpm run setup` and `pnpm run doctor` are shown in Traditional Chinese when the terminal locale is `zh` (`AETHER_LANG=en` or `zh-TW` overrides it).
+- A [Traditional Chinese getting-started guide](docs/getting-started.zh-TW.md) with the same commands as the English one; the English guide, the documentation index and the Chinese README link to it.
 
 ### Changed
 

@@ -2,7 +2,7 @@
 
 Start with [Getting started](getting-started.md) to run AETHER OFFICE. Use the guides below for configuration,
 architecture, development and release verification. The operational manual is in English; a
-[Traditional Chinese introduction](../README.zh-TW.md) is also available.
+[Traditional Chinese introduction](../README.zh-TW.md) and [getting started](getting-started.zh-TW.md) are also available.
 
 > [!IMPORTANT]
 > The project is pre-release. The [feature ledger](verification/report.md) separates implementation from verification.

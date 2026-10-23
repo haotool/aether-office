@@ -3468,5 +3468,19 @@
       "No real phone and no battery or heat measurement: the saving is expected from fewer draws, it was not measured",
       "The control-room wall (MultiCam) draws behind the same gate but no spec ran it with a limit set"
     ]
+  },
+  {
+    "id": "DX-DOCS-ZH-01",
+    "requirement": "docs/getting-started.zh-TW.md 以繁體中文完整對應英文開始使用指南（同樣的章節與指令，連結與錨點可解析），並由英文指南、文件索引與繁中 README 連到它。",
+    "scope": "AETHER target; maintainer request 2026-10-23",
+    "implementationStatus": "implemented",
+    "verificationStatus": "partial",
+    "codePaths": ["docs/getting-started.zh-TW.md", "README.zh-TW.md", "docs/README.md"],
+    "testIds": ["tests/aether/docs-zh-parity.test.ts"],
+    "evidencePaths": [],
+    "blockers": [
+      "The test pins the commands and the section count, not the prose: a change to the English text still needs the Chinese text changed by hand",
+      "No native Traditional Chinese reader has reviewed the translation"
+    ]
   }
 ]

@@ -1,6 +1,6 @@
 # Getting started
 
-[Documentation](README.md) · [Project](../README.md)
+[Documentation](README.md) · [Project](../README.md) · [繁體中文](getting-started.zh-TW.md)
 
 <details>
 <summary>Contents</summary>

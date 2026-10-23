@@ -30,18 +30,18 @@ AETHER OFFICE 把 **Claude Code 與 Codex 的工作階段，帶進同一間本�
 
 ## 可以做什麼
 
-| 工作             | 能力                                                                             | 指南                                                                                                |
-| ---------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| 追蹤 session     | 工作狀態、對話歷史、Markdown、可展開的工具呼叫與子代理小隊                       | [功能說明](docs/features.md)                                                                        |
-| 回應 Claude Code | 明確啟用後的權限批准，以及受 AETHER 控制的 session 輸入；外部 session 起初為唯讀 | [遠端批准](docs/getting-started.md#answer-claude-code-permission-prompts-from-the-browser-optional) |
-| 理解工作量       | Token 與 Git 指標、角色分層、辦公室裡的活動訊號                                  | [Session 角色](docs/roles.md)                                                                       |
-| 使用手機         | 一次性 QR 配對、底部抽屜裡的 session 列表與對話                                  | [手機連線](docs/getting-started.md#open-it-from-a-phone-or-tablet)                                  |
-| 管理執行         | 選用的 worktree、終端機、有限額任務、審查與固定 commit 驗證                      | [原生執行](docs/native-execution.md)                                                                |
+| 工作             | 能力                                                                             | 指南                                                                              |
+| ---------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 追蹤 session     | 工作狀態、對話歷史、Markdown、可展開的工具呼叫與子代理小隊                       | [功能說明](docs/features.md)                                                      |
+| 回應 Claude Code | 明確啟用後的權限批准，以及受 AETHER 控制的 session 輸入；外部 session 起初為唯讀 | [遠端批准](docs/getting-started.zh-TW.md#在瀏覽器回答-claude-code-的權限提示選用) |
+| 理解工作量       | Token 與 Git 指標、角色分層、辦公室裡的活動訊號                                  | [Session 角色](docs/roles.md)                                                     |
+| 使用手機         | 一次性 QR 配對、底部抽屜裡的 session 列表與對話                                  | [手機連線](docs/getting-started.zh-TW.md#從手機或平板開啟)                        |
+| 管理執行         | 選用的 worktree、終端機、有限額任務、審查與固定 commit 驗證                      | [原生執行](docs/native-execution.md)                                              |
 
 ## 快速開始
 
 **需求：** Node.js **24.21.0**（`>=24.21.0 <25`）、pnpm **12.8.1**，以及 macOS 或 Linux。
-版本固定在 `.nvmrc` 與 `package.json`；尚未安裝 pnpm 時，請先看[環境設定](docs/getting-started.md#requirements)。
+版本固定在 `.nvmrc` 與 `package.json`；尚未安裝 pnpm 時，請先看[環境設定](docs/getting-started.zh-TW.md#環境需求)。
 
 ```sh
 git clone https://github.com/haotool/aether-office.git
@@ -59,7 +59,7 @@ pnpm start
 
 開啟 **<http://127.0.0.1:4310>**，使用 owner token 登入。終端機會印出 token 的**檔案位置**，請妥善保管；輸入 `localhost:4310` 會自動導向此網址，其他主機名稱一律拒絕。
 
-第一次啟動會在 `.data/live` 建立資料庫與本機憑證。最近的 Claude Code、Codex session 會自動以觀察模式出現。[首次使用指南](docs/getting-started.md)。
+第一次啟動會在 `.data/live` 建立資料庫與本機憑證。最近的 Claude Code、Codex session 會自動以觀察模式出現。[首次使用指南](docs/getting-started.zh-TW.md)。
 
 ### 試用示範模式
 
@@ -84,7 +84,7 @@ pnpm run pair
 
 > [!WARNING]
 > 區域網路連線預設使用明文 HTTP，token 與 cookie 未加密傳送。遠端批准需要 HTTPS，或明確啟用區域網路選項；完整可安裝 App 與離線功能也需要安全來源。
-> 請依照[手機與 HTTPS 指南](docs/getting-started.md#install-it-on-a-phone)設定。
+> 請依照[手機與 HTTPS 指南](docs/getting-started.zh-TW.md#安裝到手機)設定。
 
 ### 加入工具活動與權限批准
 
@@ -95,7 +95,7 @@ pnpm hooks install --project /path/to/repo
 pnpm hooks install --project /path/to/repo --remote-approvals
 ```
 
-安裝前請閱讀[會修改哪些檔案](docs/getting-started.md#exact-activity-with-hooks-optional)。遠端批准適用於 Claude Code；Codex 沒有相同的 hook 合約。
+安裝前請閱讀[會修改哪些檔案](docs/getting-started.zh-TW.md#以-hooks-取得精確活動選用)。遠端批准適用於 Claude Code；Codex 沒有相同的 hook 合約。
 
 ## 產品畫面導覽
 
@@ -251,12 +251,12 @@ ACP 代理與 A2A gateway 為選用能力。完整合約與升級方式見[提�
 
 ## 文件
 
-| 入門                                                          | 參考                                           | 專案                                |
-| ------------------------------------------------------------- | ---------------------------------------------- | ----------------------------------- |
-| [開始使用](docs/getting-started.md)                           | [設定](docs/configuration.md)                  | [貢獻指南](.github/CONTRIBUTING.md) |
-| [操作指南](docs/how-to.md)                                    | [提供者相容性](docs/provider-compatibility.md) | [開發指南](docs/development.md)     |
-| [功能說明](docs/features.md)                                  | [安全](docs/security.md)                       | [更新紀錄](CHANGELOG.md)            |
-| [手機與 HTTPS](docs/getting-started.md#install-it-on-a-phone) | [功能驗證台帳](docs/verification/report.md)    | [架構決策](docs/adr/README.md)      |
+| 入門                                                     | 參考                                           | 專案                                |
+| -------------------------------------------------------- | ---------------------------------------------- | ----------------------------------- |
+| [開始使用](docs/getting-started.zh-TW.md)                | [設定](docs/configuration.md)                  | [貢獻指南](.github/CONTRIBUTING.md) |
+| [操作指南](docs/how-to.md)                               | [提供者相容性](docs/provider-compatibility.md) | [開發指南](docs/development.md)     |
+| [功能說明](docs/features.md)                             | [安全](docs/security.md)                       | [更新紀錄](CHANGELOG.md)            |
+| [手機與 HTTPS](docs/getting-started.zh-TW.md#安裝到手機) | [功能驗證台帳](docs/verification/report.md)    | [架構決策](docs/adr/README.md)      |
 
 [完整文件索引](docs/README.md)另涵蓋設計紀錄、效能量測、發布流程與授權。[English introduction](README.md)。
 

@@ -2,12 +2,12 @@
 
 Generated from `docs/verification/features.json` (docs/verification/features.json). Do not edit by hand: run `pnpm verification:report`.
 
-Features: **181**. Implementation: 151 implemented, 30 partial, 0 not started.
+Features: **182**. Implementation: 152 implemented, 30 partial, 0 not started.
 
 | Verification | Count | Meaning |
 |---|---|---|
 | passed | 95 | Verified by the listed tests at the scope stated in the ledger. |
-| partial | 86 | Some behaviour is verified; the blockers column names what is not. |
+| partial | 87 | Some behaviour is verified; the blockers column names what is not. |
 | blocked | 0 | Cannot be verified in this environment (for example, it needs paid or authenticated provider sessions). |
 | failed | 0 | A check ran and failed. |
 | not_run | 0 | No check has been run. |
@@ -115,7 +115,7 @@ A passing build or test run is not a claim of production readiness. This file li
 | DX-CLI-ZH-01 | implemented | pnpm start、pnpm run pair、pnpm run setup、pnpm run doctor 的終端機訊息在 zh 語系顯示繁體中文（AETHER_LANG、LC_ALL、LC_MESSAGES、LANG 依序決定），其餘語系維持英文。 | The control-plane banner and the setup line are not covered by a test (they run at import time); the other messages are checked in both languages |
 | DX-DEMO-01 | implemented | pnpm demo／pnpm dev 啟動前先檢查控制台與 UI 兩個埠，被占用時用人話說明；PORT 會一併決定控制台、fixture runner 與 UI dev server（PORT + 1）及其 proxy。 | The scripts/dev.ts flow itself is checked by running pnpm demo by hand on a non-default port (UI served and proxied, demo runner online, busy and invalid PORT refused before anything starts); the unit tests cover the port probe and the vite config |
 
-## partial (86)
+## partial (87)
 
 | ID | Implementation | Requirement | Blockers |
 |---|---|---|---|
@@ -205,3 +205,4 @@ A passing build or test run is not a claim of production readiness. This file li
 | DX-GO-01 | implemented | pnpm go 一個指令完成 install、build、start（已有控制台回應時直接沿用）、開瀏覽器，並印出一次性登入連結；擁有者權杖不印出，連結只能用一次。 | The whole flow (install, build, start, link, sign-in, a second run that reuses the server, a wrong data directory, Ctrl+C) was run by hand on macOS and is repeated by pnpm run verify:clean, which is not part of CI; the unit tests cover the browser command, the port rule and the loopback link; Opening a real browser was not exercised (the runs used BROWSER=none); Linux xdg-open and other systems are untested |
 | DX-SERVICE-01 | implemented | pnpm service install／uninstall 產生並載入 macOS launchd plist：釘住執行安裝的 Node 與 checkout、ThrottleInterval 30 秒、單一 log 檔由控制台輪替（上限 10 MiB 並保留一份 .1），pnpm build 後自動重啟同一 checkout 安裝的服務。 | launchctl was never run against the real launchd: the tests use a stub and plutil -lint accepts the generated plist, but bootstrap, kickstart, the KeepAlive and ThrottleInterval behaviour and log rotation while launchd holds the file open were not observed, and the maintainer's own com.haotool.aether-office agent was deliberately not touched; macOS only; Linux has no service command (it says so and points at systemd) |
 | DX-FPS-01 | implemented | 設定頁「幀率上限」可選自動、60、30 fps 並跨重新載入保存；上限為 3D 場景繪製頻率的天花板（預設自動＝既有行為），在任何螢幕更新率（60、90、120、144 Hz）平均不超過上限，被擋下的最後一幀不會遺失。 | Measured only in headless Chrome on a 60 Hz loop: the 30 fps limit gave a median of 30.0 fps against 60.2 with Auto; the 60 fps limit and the 90, 120 and 144 Hz averages are verified by the pure grid function against simulated refresh rates, not on such a screen; No real phone and no battery or heat measurement: the saving is expected from fewer draws, it was not measured; The control-room wall (MultiCam) draws behind the same gate but no spec ran it with a limit set |
+| DX-DOCS-ZH-01 | implemented | docs/getting-started.zh-TW.md 以繁體中文完整對應英文開始使用指南（同樣的章節與指令，連結與錨點可解析），並由英文指南、文件索引與繁中 README 連到它。 | The test pins the commands and the section count, not the prose: a change to the English text still needs the Chinese text changed by hand; No native Traditional Chinese reader has reviewed the translation |
