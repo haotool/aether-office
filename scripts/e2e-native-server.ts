@@ -209,6 +209,7 @@ writeFileSync('.data/e2e-native-session.json', JSON.stringify({ directory, port:
 const env = {
   ...process.env,
   PORT: port,
+  AETHER_LOCAL_SIGN_IN: '0',
   AETHER_MODE: 'live',
   AETHER_DATA_DIR: directory,
   AETHER_CONTROL_URL: `http://127.0.0.1:${port}`,

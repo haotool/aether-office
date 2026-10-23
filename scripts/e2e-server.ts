@@ -13,6 +13,7 @@ writeFileSync('.data/e2e-session.json', JSON.stringify({ directory, port: Number
 const env = {
   ...process.env,
   PORT: port,
+  AETHER_LOCAL_SIGN_IN: '0',
   AETHER_MODE: 'demo',
   AETHER_DATA_DIR: directory,
   AETHER_E2E_LAN_ADDRESSES: '127.0.0.1,localhost', // pairing links the phone context can open, without listening on the network

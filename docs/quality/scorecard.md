@@ -79,9 +79,9 @@ Score 100.0, floor 100.0, 82% of the rule weight measured.
 Unit-test lines per product source line: 0.53
 
 ```text
-apps/control: 14690 source lines
+apps/control: 14748 source lines
 apps/runner: 3059 source lines
-apps/web: 28181 source lines
+apps/web: 28283 source lines
 packages/contracts: 1376 source lines
 packages/kernel: 3455 source lines
 packages/office-scene: 25065 source lines
@@ -128,7 +128,7 @@ Score 99.1, floor 99.1, 70% of the rule weight measured.
 
 | Rule | Id | Value | Limit | Weight | Penalty | State |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
-| Web JavaScript total, gzip (budget 870 KB) | `bundle-total` | 849 KB | 870 | 25 | 0 | pass |
+| Web JavaScript total, gzip (budget 870 KB) | `bundle-total` | 850 KB | 870 | 25 | 0 | pass |
 | Largest JavaScript chunk, gzip (budget 400 KB) | `bundle-chunk` | 377 KB | 400 | 15 | 0 | pass |
 | First-load JavaScript and CSS, transferred (budget 200 KB) | `first-load` | 203 KB | 200 | 30 | -0.9 | fail |
 | Frame times and draw cost (scripts/perf-matrix.mjs) (not run: needs a real GPU (PERF_GPU=1); the measured numbers in docs/design-system.md are not re-scored) | `perf-matrix` | - | - | 30 | 0 | not run |
@@ -139,7 +139,7 @@ Score 99.1, floor 99.1, 70% of the rule weight measured.
 **first-load** (-0.9): First-load JavaScript and CSS, transferred (budget 200 KB)
 
 ```text
-  apps/web/dist/assets/index-CPRp0XJx.js:1 80 KB
+  apps/web/dist/assets/index-BONmPZVP.js:1 80 KB
   apps/web/dist/assets/signals-D521Il5C.js:1 3 KB
   apps/web/dist/assets/scheduler-BPo9TGJm.js:1 1 KB
   apps/web/dist/assets/react-dom-d_Gvm-cX.js:1 1 KB
@@ -174,7 +174,7 @@ Score 100.0, floor 100.0, 100% of the rule weight measured.
 | Token patterns in tracked files | `secret-patterns` | 0 | 0 | 20 | 0 | pass |
 | Network calls from shipped web code to other origins | `web-network` | 0 | 0 | 20 | 0 | pass |
 | Unauthenticated routes with no documented credential | `public-credential` | 0 | 0 | 10 | 0 | pass |
-| Unauthenticated routes with no rate-limit evidence in their route file (12 public routes) | `public-rate-limit` | 0 | 0 | 15 | 0 | pass |
+| Unauthenticated routes with no rate-limit evidence in their route file (13 public routes) | `public-rate-limit` | 0 | 0 | 15 | 0 | pass |
 | No test covers the trust-proxy setting | `trust-proxy` | 0 | 0 | 5 | 0 | pass |
 | Build output, local data or key material tracked | `tracked-artifacts` | 0 | 0 | 5 | 0 | pass |
 

@@ -7,7 +7,8 @@ const { ApiError } = await import('../../apps/web/src/lib/api/api-error.js');
 const { ensureCsrf, forgetCsrf, refreshCsrf } =
   await import('../../apps/web/src/lib/api/api-csrf.js');
 const { execute } = await import('../../apps/web/src/lib/api/api-commands.js');
-const { login, pair } = await import('../../apps/web/src/lib/api/api-session.js');
+const { isLocalHost, localSignIn, login, markSignedOut, pair, signedOut } =
+  await import('../../apps/web/src/lib/api/api-session.js');
 afterAll(removeBrowserEnv);
 
 type Sent = { url: string; init: RequestInit & { headers: Record<string, string> } };
@@ -173,6 +174,35 @@ describe('signing in', () => {
     expect(sent[0]!.url).toBe('/api/pairings/redeem');
     expect(JSON.parse(sent[0]!.init.body as string)).toEqual({ code: 'abc123' });
     expect(env.storage.getItem('aether-csrf')).toBe('tok');
+  });
+
+  it('signs in on this computer and remembers the device', async () => {
+    reply({ ...signedIn, available: true });
+    await expect(localSignIn()).resolves.toMatchObject({ actor: { role: 'owner' } });
+    expect(sent[0]!.url).toBe('/api/login/local');
+    expect(env.storage.getItem('aether-csrf')).toBe('tok');
+  });
+
+  it('leaves the token form to the person when this computer is not offered a sign-in', async () => {
+    reply({ available: false });
+    await expect(localSignIn()).resolves.toBeNull();
+    expect(session().getItem('aether-csrf')).toBeNull();
+  });
+
+  it('treats only loopback names as this computer, never a network address', () => {
+    expect(['127.0.0.1', 'localhost', '[::1]'].every(isLocalHost)).toBe(true);
+    expect(['192.168.1.101', 'office.local', '127.0.0.1.evil.example'].some(isLocalHost)).toBe(
+      false,
+    );
+  });
+
+  it('stays signed out after a sign-out until the next sign-in', async () => {
+    expect(signedOut()).toBe(false);
+    markSignedOut(true);
+    expect(signedOut()).toBe(true);
+    reply({ ...signedIn, available: true });
+    await localSignIn();
+    expect(signedOut()).toBe(false);
   });
 
   it('does not keep a token when the sign-in is refused', async () => {

@@ -4,7 +4,7 @@ import type { SetURLSearchParams } from 'react-router-dom';
 import { type LocalSessionsResponse } from '@aether/contracts';
 import { api } from '../api/api.js';
 import { ensureCsrf, forgetCsrf } from '../api/api-csrf.js';
-import { type Session } from '../api/api-session.js';
+import { markSignedOut, type Session } from '../api/api-session.js';
 import { activityOf } from '../sessions/session-attention.js';
 import { sessionLink } from '../sessions/session-names.js';
 import { useLatest } from '../../hooks/use-latest.js';
@@ -166,6 +166,7 @@ export function useAuthSession() {
     try {
       await api('/api/logout', { method: 'POST', body: '{}' });
     } finally {
+      markSignedOut(true);
       forgetCsrf();
       setSession(null);
       client.clear();

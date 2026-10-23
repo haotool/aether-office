@@ -13,6 +13,7 @@ export type ServerOptions = {
    * separated. Unset (the default) believes none, so a forged header changes nothing. See docs/security.md.
    */
   trustProxy?: string;
+  localSignIn?: boolean;
   serveWeb?: boolean;
   dataDir?: string;
   lanAddresses?: (port: string) => string[];

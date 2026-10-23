@@ -44,6 +44,7 @@ const app = createServer(control, {
   lanAddresses:
     fixedLan && ((lanPort) => fixedLan.map((address) => `http://${address}:${lanPort}`)),
   trustProxy: parseTrustProxy(process.env['AETHER_TRUST_PROXY']),
+  localSignIn: process.env['AETHER_LOCAL_SIGN_IN'] !== '0',
   serveWeb: process.env['AETHER_SERVE_WEB'] !== '0',
   dataDir: directory,
   logger: true,

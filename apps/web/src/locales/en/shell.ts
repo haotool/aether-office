@@ -77,6 +77,13 @@ export const enShell = {
   loginHint: 'Enter the access token created locally to open your workspace.',
   token: 'Access token',
   login: 'Enter office',
+  signingIn: 'Signing in…',
+  loginPhoneHint:
+    'On your computer open AETHER, press “Open on your phone” and scan the QR code with this phone. No token needed.',
+  localSignIn: 'Sign in on this computer',
+  localSignInOff:
+    'This server does not allow signing in without a token on this computer; enter the token.',
+  loginHaveToken: 'I have a token',
   tokenHelp: 'Startup prints the owner-token file location. Tokens are never sent to models.',
   logout: 'Sign out',
   project: 'Project',
