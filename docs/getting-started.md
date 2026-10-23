@@ -72,8 +72,9 @@ pnpm install --frozen-lockfile
 pnpm demo
 ```
 
-The web UI is served at `http://127.0.0.1:4311`; the control plane and the independent fixture runner use port 4310. The
-terminal prints where the owner token is stored (`.data/demo/owner-token`). Read that local file and paste its value
+The web UI is served at `http://127.0.0.1:4311`; the control plane and the independent fixture runner use port 4310. If either
+port is taken, `pnpm demo` says which one before it starts anything; `PORT=4400 pnpm demo` moves all three (the UI is then on
+4401). The terminal prints where the owner token is stored (`.data/demo/owner-token`). Read that local file and paste its value
 into the login form. Never share the token. The demo uses no paid model and labels fixture output as fixture.
 
 To run the built artifacts instead:

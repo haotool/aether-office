@@ -2,11 +2,11 @@
 
 Generated from `docs/verification/features.json` (docs/verification/features.json). Do not edit by hand: run `pnpm verification:report`.
 
-Features: **177**. Implementation: 147 implemented, 30 partial, 0 not started.
+Features: **178**. Implementation: 148 implemented, 30 partial, 0 not started.
 
 | Verification | Count | Meaning |
 |---|---|---|
-| passed | 94 | Verified by the listed tests at the scope stated in the ledger. |
+| passed | 95 | Verified by the listed tests at the scope stated in the ledger. |
 | partial | 83 | Some behaviour is verified; the blockers column names what is not. |
 | blocked | 0 | Cannot be verified in this environment (for example, it needs paid or authenticated provider sessions). |
 | failed | 0 | A check ran and failed. |
@@ -15,7 +15,7 @@ Features: **177**. Implementation: 147 implemented, 30 partial, 0 not started.
 
 A passing build or test run is not a claim of production readiness. This file lists what the ledger can support, and what it cannot.
 
-## passed (94)
+## passed (95)
 
 | ID | Implementation | Requirement | Blockers |
 |---|---|---|---|
@@ -113,6 +113,7 @@ A passing build or test run is not a claim of production readiness. This file li
 | OBS-NAV-01 | implemented | 預設導覽只顯示 CLI 使用者需要的頁面，進階頁面在設定開啟；通知預設開啟、只含專案名稱；手機可由頂端列掃 QR 配對。 | — |
 | DX-LOCALHOST-01 | implemented | 瀏覽器輸入 localhost:<port> 時，GET／HEAD 以 302 導向 127.0.0.1；其他主機名稱與非 GET／HEAD 請求仍回 403 HOST_FORBIDDEN，DNS rebinding 防護不變。 | — |
 | DX-CLI-ZH-01 | implemented | pnpm start、pnpm run pair、pnpm run setup、pnpm run doctor 的終端機訊息在 zh 語系顯示繁體中文（AETHER_LANG、LC_ALL、LC_MESSAGES、LANG 依序決定），其餘語系維持英文。 | The control-plane banner and the setup line are not covered by a test (they run at import time); the other messages are checked in both languages |
+| DX-DEMO-01 | implemented | pnpm demo／pnpm dev 啟動前先檢查控制台與 UI 兩個埠，被占用時用人話說明；PORT 會一併決定控制台、fixture runner 與 UI dev server（PORT + 1）及其 proxy。 | The scripts/dev.ts flow itself is checked by running pnpm demo by hand on a non-default port (UI served and proxied, demo runner online, busy and invalid PORT refused before anything starts); the unit tests cover the port probe and the vite config |
 
 ## partial (83)
 

@@ -13,6 +13,7 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ### Changed
 
+- `pnpm demo` and `pnpm dev` check both ports before starting and say which one is taken. `PORT` now moves the control plane, the fixture runner and the UI dev server together; the UI is on `PORT` + 1.
 - A browser that opens `localhost` on the control-plane port is redirected to `127.0.0.1` instead of receiving `HOST_FORBIDDEN`; GET and HEAD only, and every other host name is still refused.
 
 ## [0.4.2] - 2026-10-22

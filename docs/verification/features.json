@@ -3388,5 +3388,18 @@
     "blockers": [
       "The control-plane banner and the setup line are not covered by a test (they run at import time); the other messages are checked in both languages"
     ]
+  },
+  {
+    "id": "DX-DEMO-01",
+    "requirement": "pnpm demo／pnpm dev 啟動前先檢查控制台與 UI 兩個埠，被占用時用人話說明；PORT 會一併決定控制台、fixture runner 與 UI dev server（PORT + 1）及其 proxy。",
+    "scope": "AETHER target; maintainer request 2026-10-23",
+    "implementationStatus": "implemented",
+    "verificationStatus": "passed",
+    "codePaths": ["scripts/dev.ts", "scripts/ports.ts", "apps/web/vite.config.ts"],
+    "testIds": ["tests/aether/dev-ports.test.ts"],
+    "evidencePaths": [],
+    "blockers": [
+      "The scripts/dev.ts flow itself is checked by running pnpm demo by hand on a non-default port (UI served and proxied, demo runner online, busy and invalid PORT refused before anything starts); the unit tests cover the port probe and the vite config"
+    ]
   }
 ]
