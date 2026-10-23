@@ -16,7 +16,7 @@ import { Member } from './Member.js';
 import { ProjectedSpeech } from './Speech.js';
 import { MessageCarriers } from './MessageCarriers.js';
 import { PerfProbe } from './PerfProbe.js';
-import { AdaptiveRatio, ShadowThrottle, Warmup } from './PerfControllers.js';
+import { AdaptiveRatio, FrameCap, ShadowThrottle, Warmup } from './PerfControllers.js';
 import { PIXEL_RATIO_FLOOR, SHADOW_INTERVAL_MS, antialiasFor } from '../perf/perf-control.js';
 import { SceneCamera } from '../scene/SceneCamera.js';
 import { AnimationClock, Runtime } from './SceneRuntime.js';
@@ -146,6 +146,7 @@ function SceneControllers({ m }: { m: SceneModel }) {
 
 function SceneMarkers({ m }: { m: SceneModel }) {
   const { props, layout, exploded, sceneAgents, nav } = m;
+  const walled = m.ix.wall.feeds.length > 0;
   return (
     <>
       {props.branchOf && (
@@ -163,14 +164,16 @@ function SceneMarkers({ m }: { m: SceneModel }) {
         />
       )}
       <Beacons animate={!props.reducedMotion} items={beaconsOf(sceneAgents, layout, exploded)} />
-      {m.ix.wall.feeds.length > 0 && (
+      {walled && (
         <MultiCam
           feeds={m.ix.wall.feeds}
           seats={nav.seats}
           exploded={exploded}
           wall={m.ix.wall.wall}
+          fps={props.fpsCap}
         />
       )}
+      {!walled && !!props.fpsCap && <FrameCap fps={props.fpsCap} />}
     </>
   );
 }

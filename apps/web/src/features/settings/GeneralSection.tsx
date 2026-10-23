@@ -84,6 +84,19 @@ export function GeneralSection() {
           />
         }
       />
+      <Row
+        id="fps"
+        control={
+          <Segmented
+            value={prefs.fps}
+            options={(['auto', '60', '30'] as const).map((value) => ({
+              value,
+              label: value === 'auto' ? t('stFpsAuto') : `${value} fps`,
+            }))}
+            onChange={(fps) => prefs.set({ fps })}
+          />
+        }
+      />
     </>
   );
 }

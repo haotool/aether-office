@@ -4,6 +4,7 @@ import { PerspectiveCamera, type Scene, type WebGLRenderer } from 'three';
 import type { Seat } from '../environment/director.js';
 import type { Feed, Rect } from '../core/multi-view.js';
 import { poseAt } from '../core/shot-camera.js';
+import { useFrameGate } from './PerfControllers.js';
 
 const BREATH_SECONDS = 24;
 
@@ -12,6 +13,7 @@ type MultiCamProps = {
   seats: ReadonlyMap<string, Seat>;
   exploded: boolean;
   wall: MutableRefObject<ReadonlyMap<string, Rect>>;
+  fps?: number | undefined;
 };
 
 /**
@@ -71,10 +73,11 @@ function renderFeed(
  * Renders the scene again per feed through its own camera into the rectangle of its frame. The stylesheet lays the
  * frames out and this reads where they ended up, so the picture and its frame cannot drift apart.
  */
-export function MultiCam({ feeds, seats, exploded, wall }: MultiCamProps) {
+export function MultiCam({ feeds, seats, exploded, wall, fps }: MultiCamProps) {
   const camera = useMemo(() => new PerspectiveCamera(32, 1.6, 0.4, 2400), []);
   const gl = useThree((s) => s.gl);
   const invalidate = useThree((s) => s.invalidate);
+  const due = useFrameGate(fps);
   useEffect(() => {
     const root = gl.domElement.closest<HTMLElement>('.canvas-container');
     if (!root) return;
@@ -93,6 +96,7 @@ export function MultiCam({ feeds, seats, exploded, wall }: MultiCamProps) {
     };
   }, [gl, invalidate, feeds, wall]);
   useFrame(({ gl: renderer, scene, camera: main, size, clock }) => {
+    if (!due()) return;
     renderer.setScissorTest(false);
     renderer.setViewport(0, 0, size.width, size.height);
     renderer.render(scene, main);

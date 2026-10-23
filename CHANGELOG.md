@@ -9,6 +9,7 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ### Added
 
+- A frame-rate limit in Settings, General (Auto, 60 or 30 fps) caps how often the 3D scene draws, to save battery and heat on a fast screen or a phone. Auto is the behaviour so far; the perf probe counts only drawn frames.
 - `pnpm service install` and `uninstall` manage a macOS login service (launchd): the generated plist pins the Node that ran it, restarts the control plane at most every 30 seconds and logs to one file that the control plane keeps under 10 MiB. `pnpm build` restarts a service installed from the same checkout.
 - `pnpm go`: installs, builds, starts the control plane (unless one already answers) and opens the browser signed in with a one-time link. `BROWSER=none` or `BROWSER=<command>` chooses the browser.
 - Terminal messages of `pnpm start`, `pnpm run pair`, `pnpm run setup` and `pnpm run doctor` are shown in Traditional Chinese when the terminal locale is `zh` (`AETHER_LANG=en` or `zh-TW` overrides it).

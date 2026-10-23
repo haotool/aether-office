@@ -23,6 +23,8 @@ export type OfficeSceneProps = {
   selectedId: string | null;
   onSelect: (id: string) => void;
   quality: Quality;
+  /** The most frames a second the scene draws; absent, it draws as often as the screen asks. */
+  fpsCap?: number | undefined;
   reducedMotion: boolean;
   locale: 'zh-TW' | 'en';
   focus: string;

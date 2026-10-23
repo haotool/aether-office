@@ -76,6 +76,7 @@ test.describe('on a desktop', () => {
     await page.getByRole('switch', { name: 'Git 豆莖' }).setChecked(true);
     await page.getByRole('radio', { name: '淺色' }).click();
     await page.getByRole('radio', { name: '高', exact: true }).click();
+    await page.getByRole('radio', { name: '30 fps' }).click();
     await page.getByRole('radio', { name: '2D 列表' }).click();
     await page.getByRole('combobox', { name: '介面語言' }).selectOption('en');
     await expect.poll(() => prefs(page)).toMatchObject({ locale: 'en' });
@@ -84,9 +85,11 @@ test.describe('on a desktop', () => {
     await expect(page.getByRole('switch', { name: 'Auto camera' })).not.toBeChecked();
     await expect(page.getByRole('radio', { name: 'Light' })).toBeChecked();
     await expect(page.getByRole('radio', { name: 'High' })).toBeChecked();
+    await expect(page.getByRole('radio', { name: '30 fps' })).toBeChecked();
     expect(await prefs(page)).toMatchObject({
       theme: 'light',
       quality: 'high',
+      fps: '30',
       view: '2d',
       locale: 'en',
       reducedMotion: true,

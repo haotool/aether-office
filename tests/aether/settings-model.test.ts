@@ -57,6 +57,8 @@ describe('settings search', () => {
     expect(found('外觀')).toContain('theme');
     expect(found('theme')).toContain('theme');
     expect(found('主題')).toContain('theme');
+    expect(found('fps')).toContain('fps');
+    expect(found('幀率')).toContain('fps');
   });
 
   it('needs every word, finds by description, and by the name of a group', () => {

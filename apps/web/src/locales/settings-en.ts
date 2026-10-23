@@ -43,6 +43,10 @@ export const settingsEn = {
   stOsReduced: 'Your system asks for reduced motion',
   stQualityDesc:
     '3D scene quality: Low saves power and draws no shadows; High is the sharpest and costs the most.',
+  stFpsLabel: 'Frame rate limit',
+  stFpsAuto: 'Auto',
+  stFpsDesc:
+    'The most frames a second the 3D scene draws. 30 saves the most battery and heat; Auto draws as often as the screen asks, up to 120 on a fast display.',
 
   stPermGranted: 'Browser allows it',
   stPermDenied: 'Blocked in the browser',

@@ -31,6 +31,13 @@ export const ENTRIES = [
     words: 'graphics performance battery 效能 省電',
   },
   {
+    id: 'fps',
+    section: 'general',
+    label: 'stFpsLabel',
+    desc: 'stFpsDesc',
+    words: 'fps frame rate limit cap battery heat 30 60 幀率 省電 發熱',
+  },
+  {
     id: 'notify',
     section: 'notifications',
     label: 'notifyAlerts',

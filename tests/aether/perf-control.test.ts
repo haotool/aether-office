@@ -8,6 +8,7 @@ import {
   earthTextureSize,
   pixelRatioCap,
   frameTargetMs,
+  nextDrawAt,
   shadowDue,
   startRatio,
   stepRatio,
@@ -18,6 +19,41 @@ it('redraws the shadow map the first time and then only once its interval has pa
   expect(shadowDue(100, null, 50)).toBe(true);
   expect(shadowDue(140, 100, 50)).toBe(false);
   expect(shadowDue(150, 100, 50)).toBe(true);
+});
+
+/** Frames a second a screen of `hz` gets drawn under a cap of `fps`, with a few ms of jitter on every frame. */
+function drawnPerSecond(hz: number, fps: number) {
+  let due = -Infinity;
+  let drawn = 0;
+  for (let k = 0; k < hz * 4; k++) {
+    const next = nextDrawAt((k * 1000) / hz + Math.sin(k * 12.9898) * 2, due, fps);
+    if (next === null) continue;
+    due = next;
+    drawn++;
+  }
+  return drawn / 4;
+}
+
+it('holds the average frame rate to the cap on any refresh rate and never starves a screen at it', () => {
+  for (const [hz, fps] of [
+    [60, 60],
+    [60, 30],
+    [120, 60],
+    [120, 30],
+    [144, 60],
+    [144, 30],
+  ] as const) {
+    expect(drawnPerSecond(hz, fps)).toBeGreaterThanOrEqual(fps * 0.97);
+    expect(drawnPerSecond(hz, fps)).toBeLessThanOrEqual(fps * 1.03);
+  }
+});
+
+it('waits for the next slot, forgives a frame a few ms early and does not catch up after a pause', () => {
+  const step = 1000 / 30;
+  expect(nextDrawAt(100, -Infinity, 30)).not.toBeNull();
+  expect(nextDrawAt(110, 133, 30)).toBeNull();
+  expect(nextDrawAt(130, 133, 30)).toBeCloseTo(133 + step, 5);
+  expect(nextDrawAt(5000, 133, 30)).toBeGreaterThan(5000 + step / 2);
 });
 
 it('updates a character less often the farther it is from the camera', () => {

@@ -4,10 +4,14 @@ import { DEFAULT_LIFE_PREFS, type LifePrefs } from '@aether/office-scene/model';
 import { hasLocale, loadLocale, resolveLocale, type Locale } from '../i18n/i18n.js';
 import { migratePreferences, normalizeLife, PREFS_VERSION } from './prefs-migrate.js';
 import { resolveTheme, useSystemDark, type Theme, type ThemePreference } from './theme.js';
+/** The scene's frame-rate limit per setting; `auto` draws as often as the screen asks. */
+export const FPS_CAPS = { auto: undefined, '60': 60, '30': 30 } as const;
+type FpsSetting = keyof typeof FPS_CAPS;
 export type Preferences = {
   locale: Locale;
   theme: ThemePreference;
   quality: 'low' | 'balanced' | 'high';
+  fps: FpsSetting;
   reducedMotion: boolean;
   notify: boolean;
   advanced: boolean;
@@ -27,6 +31,7 @@ export const usePreferences = create<Preferences>()(
       locale: resolveLocale(navigator.language),
       theme: 'dark',
       quality: 'balanced',
+      fps: 'auto',
       reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
       notify: true,
       advanced: false,
@@ -62,6 +67,7 @@ export const usePreferences = create<Preferences>()(
         locale: state.locale,
         theme: state.theme,
         quality: state.quality,
+        fps: state.fps,
         reducedMotion: state.reducedMotion,
         notify: state.notify,
         advanced: state.advanced,

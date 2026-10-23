@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import {
   frameTargetMs,
+  nextDrawAt,
   shadowDue,
   startRatio,
   stepRatio,
@@ -43,6 +44,34 @@ export function ShadowThrottle({ intervalMs }: { intervalMs: number }) {
       );
     }
   }, -100);
+  return null;
+}
+
+/**
+ * Whether this frame may be drawn under a cap of `fps` (none: always). A frame held back asks for another, so the end of
+ * a motion is never left undrawn; the callbacks of the held-back frame still run, only the drawing is skipped.
+ */
+export function useFrameGate(fps: number | undefined) {
+  const invalidate = useThree((s) => s.invalidate);
+  const due = useRef(-Infinity);
+  return () => {
+    if (!fps) return true;
+    const next = nextDrawAt(performance.now(), due.current, fps);
+    if (next === null) {
+      invalidate();
+      return false;
+    }
+    due.current = next;
+    return true;
+  };
+}
+
+/** A subscriber above priority 0 takes the drawing from r3f, so this draws, and only when the cap allows it. */
+export function FrameCap({ fps }: { fps: number }) {
+  const due = useFrameGate(fps);
+  useFrame(({ gl, scene, camera }) => {
+    if (due()) gl.render(scene, camera);
+  }, 1);
   return null;
 }
 

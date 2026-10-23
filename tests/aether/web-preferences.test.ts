@@ -47,6 +47,7 @@ describe('stored preferences', () => {
     expect(state).toMatchObject({
       locale: 'zh-TW',
       theme: 'dark',
+      fps: 'auto',
       view: '3d',
       notify: true,
       advanced: false,
@@ -72,12 +73,17 @@ describe('stored preferences', () => {
 
   it('persist a change but never the setter, and keep a saved language over the browser one', async () => {
     const first = await load({ language: 'en-US' });
-    first.getState().set({ locale: 'zh-TW', panelWidth: 420, theme: 'system' });
+    first.getState().set({ locale: 'zh-TW', panelWidth: 420, theme: 'system', fps: '30' });
     const written = env.storage.getItem(KEY)!;
     expect(Object.keys(stored().state)).not.toContain('set');
-    expect(stored().state).toMatchObject({ locale: 'zh-TW', panelWidth: 420, theme: 'system' });
+    expect(stored().state).toMatchObject({
+      locale: 'zh-TW',
+      panelWidth: 420,
+      theme: 'system',
+      fps: '30',
+    });
     const again = (await load({ saved: written })).getState();
-    expect(again).toMatchObject({ locale: 'zh-TW', panelWidth: 420, theme: 'system' });
+    expect(again).toMatchObject({ locale: 'zh-TW', panelWidth: 420, theme: 'system', fps: '30' });
   });
 
   it('repair a hand-edited or half-written life section on load', async () => {

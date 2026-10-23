@@ -10,6 +10,7 @@ const DEFAULT_SAMPLE = 120;
 type Collector = {
   frames: number;
   seen: number;
+  held: number;
   deltas: number[];
   js: number[];
   render: number[];
@@ -40,6 +41,7 @@ type Settings = {
 const newCollector = (frames: number, resolve: (report: PerfReport) => void): Collector => ({
   frames,
   seen: 0,
+  held: 0,
   deltas: [],
   js: [],
   render: [],
@@ -99,10 +101,17 @@ function useRenderTiming(gl: WebGLRenderer, timing: { current: Timing }) {
   }, [gl, timing]);
 }
 
-function record(c: Collector, timing: Timing, delta: number): boolean {
+/** A frame is the time between two that were drawn: under a frame-rate cap the ones held back count toward the next. */
+function record(c: Collector, timing: Timing, delta: number, drew: boolean): boolean {
   c.seen += 1;
+  if (!drew) {
+    c.held += delta;
+    return false;
+  }
+  const gap = delta + c.held;
+  c.held = 0;
   if (c.seen > WARMUP && timing.pending) {
-    c.deltas.push(delta * 1000);
+    c.deltas.push(gap * 1000);
     c.js.push(timing.pending.js);
     c.render.push(timing.pending.render);
     c.calls = Math.max(c.calls, timing.lastMain?.calls ?? 0);
@@ -151,11 +160,12 @@ export function PerfProbe({ quality, frames = DEFAULT_SAMPLE, onReport }: PerfPr
   useFrame((_state, delta) => {
     const t = timing.current;
     t.frameStart = performance.now();
+    const drew = t.main !== null;
     t.lastMain = t.main ?? t.lastMain;
     t.main = null;
     const c = collector.current;
     if (!c) return;
-    if (record(c, t, delta)) {
+    if (record(c, t, delta, drew)) {
       collector.current = null;
       if (rigRef.current) c.resolve(rigRef.current.report(c));
       return;

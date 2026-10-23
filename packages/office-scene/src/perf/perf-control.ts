@@ -46,6 +46,20 @@ export const SHADOW_INTERVAL_MS = { high: 50, balanced: 83, low: 0 } as const;
 export const shadowDue = (nowMs: number, lastMs: number | null, intervalMs: number) =>
   lastMs === null || nowMs - lastMs >= intervalMs;
 
+const CAP_SLACK_MS = 4;
+
+/**
+ * The frame-rate cap draws on a grid of `1000 / fps` ms, so the average holds on any refresh rate (a 144 Hz screen at 60
+ * is 60, not 48 or 72). A frame up to `CAP_SLACK_MS` early still counts: a callback runs a few ms after its vsync. A late
+ * frame starts the next slot from itself, so a pause ends in one frame, not a burst. Returns when the next draw is due,
+ * or null to skip this frame.
+ */
+export function nextDrawAt(nowMs: number, dueMs: number, fps: number): number | null {
+  if (nowMs < dueMs - CAP_SLACK_MS) return null;
+  const step = 1000 / fps;
+  return Math.max(dueMs + step, nowMs + step - CAP_SLACK_MS);
+}
+
 export function animationInterval(distance: number): number {
   if (distance < 22) return 0;
   if (distance < 45) return 1 / 30;

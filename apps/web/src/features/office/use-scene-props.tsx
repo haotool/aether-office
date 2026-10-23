@@ -11,7 +11,7 @@ import {
   phoneRemembersIntro,
   shouldAutoplayIntro,
 } from '../../lib/navigation/intro-gate.js';
-import { usePreferences } from '../../lib/preferences/state.js';
+import { FPS_CAPS, usePreferences } from '../../lib/preferences/state.js';
 import { SUBAGENT_INFIX } from '../../lib/sessions/subagent-id.js';
 import type { TourAction } from '../../lib/navigation/tour.js';
 import { useT } from '../../ui/useT.js';
@@ -169,6 +169,7 @@ function useScenePreferenceProps(onNotice: (message: string) => void) {
     autoCamera: prefs.autoCamera,
     onToggleAuto: () => prefs.set({ autoCamera: !prefs.autoCamera }),
     quality: prefs.quality,
+    fpsCap: FPS_CAPS[prefs.fps],
     reducedMotion: prefs.reducedMotion,
     locale: prefs.locale,
     onFailure: () => {

@@ -1052,6 +1052,11 @@ under 0.1 ms (alternating on and off in one page, four rounds).
   over the target (60 Hz while the camera moves, 30 Hz at the ambient pace, 15 Hz on a phone whose idle redraw is 50 ms), never under 0.75, with a 1 s cooldown; it steps back up
   after 90 frames within 5% of the target and a 4 s cooldown, and doubles that wait when a step up had to be undone. It never rises
   above the screen's own ratio or the tier's cap. Gaps over 250 ms (an idle scene) are not frames.
+- The frame-rate limit (Settings, General: Auto, 60 or 30 fps; `FrameCap` and `nextDrawAt`) is a ceiling on drawing and off by
+  default. A subscriber above priority 0 takes the drawing from r3f and draws on a grid of `1000 / fps` ms, a frame up to 4 ms
+  early counting, so the average holds on 60, 120 and 144 Hz screens and never passes the limit on any other (a 90 Hz screen
+  draws about 58 at 60); a frame held back asks for another, so the end of a motion is never left undrawn. The callbacks of a held-back frame still run, so motion stays on real time and the saving is the
+  GPU and the draw calls. The wall (`MultiCam`) draws behind the same gate and `PerfProbe` counts only drawn frames.
 - `Warmup` compiles every program with `compileAsync` while the canvas is held back behind a "Preparing the scene" cover (at most 4 s),
   and each character's shaders are compiled before it appears. It compiles variants a frame never uses, so the program count doubled (21 to 42).
 - Floors above the focused one and members on other floors are not drawn (cutaway), floors are merged per material (about 35 meshes),
