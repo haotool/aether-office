@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "overall": 97.6,
+  "overall": 97.7,
   "areas": [
     {
       "name": "structure",
@@ -97,7 +97,7 @@
         },
         {
           "id": "code-lines",
-          "label": "Code lines over the budget of 146459",
+          "label": "Code lines over the budget of 146522",
           "status": "pass",
           "weight": 6,
           "value": 0,
@@ -112,14 +112,13 @@
           "label": "Duplicated code share (limit 3%)",
           "status": "pass",
           "weight": 12,
-          "value": 0.24,
+          "value": 0.22,
           "limit": 3,
           "full": 9,
           "unit": "%",
           "penalty": 0,
           "details": [
             "10 lines x2: packages/office-scene/src/screen/screen-dialects.ts:52 = packages/office-scene/src/screen/screen-dialects.ts:101",
-            "10 lines x2: packages/office-scene/src/squad/puppet/puppet-art.ts:2 = packages/office-scene/src/squad/squad-art.ts:34",
             "9 lines x2: packages/office-scene/src/squad/SquadMember.tsx:50 = packages/office-scene/src/squad/SquadMember.tsx:78",
             "8 lines x2: apps/control/src/services/sessions/session-commands.ts:37 = apps/control/src/services/sessions/session-commands.ts:60",
             "8 lines x2: apps/web/src/features/operations/Knowledge.tsx:252 = apps/web/src/features/shell-chrome/Login.tsx:88",
@@ -129,7 +128,8 @@
             "6 lines x2: apps/web/src/features/office/OfficePage.tsx:28 = apps/web/src/features/office/PhoneOffice.tsx:26",
             "6 lines x2: packages/office-scene/src/components/DeskEffects.tsx:21 = packages/office-scene/src/components/DeskGlow.tsx:10",
             "6 lines x2: packages/office-scene/src/components/ProjectedBoxes.tsx:23 = packages/office-scene/src/components/Speech.tsx:121",
-            "6 lines x2: packages/office-scene/src/screen/screen-dialects.ts:86 = packages/office-scene/src/screen/screen-dialects.ts:232"
+            "6 lines x2: packages/office-scene/src/screen/screen-dialects.ts:86 = packages/office-scene/src/screen/screen-dialects.ts:232",
+            "6 lines x2: packages/providers/src/claude.ts:23 = packages/providers/src/claude.ts:50"
           ]
         },
         {
@@ -309,19 +309,19 @@
           "label": "Share of product modules a unit test imports directly",
           "status": "pass",
           "weight": 15,
-          "value": 60.7,
+          "value": 60.39,
           "limit": 60,
           "minimum": true,
           "full": 40,
           "unit": "%",
           "penalty": 0,
           "details": [
-            "apps/control: 66/114 modules, 14604 source lines",
+            "apps/control: 67/115 modules, 14690 source lines",
             "apps/runner: 22/24 modules, 3059 source lines",
-            "apps/web: 190/337 modules, 28152 source lines",
+            "apps/web: 190/337 modules, 28181 source lines",
             "packages/contracts: 16/16 modules, 1376 source lines",
             "packages/kernel: 28/29 modules, 3455 source lines",
-            "packages/office-scene: 135/242 modules, 25530 source lines",
+            "packages/office-scene: 128/235 modules, 25065 source lines",
             "packages/providers: 14/14 modules, 2044 source lines"
           ]
         },
@@ -380,18 +380,18 @@
           "label": "Unit-test lines per product source line",
           "status": "info",
           "weight": 0,
-          "value": 0.52,
+          "value": 0.53,
           "limit": null,
           "full": null,
           "unit": "",
           "penalty": 0,
           "details": [
-            "apps/control: 14604 source lines",
+            "apps/control: 14690 source lines",
             "apps/runner: 3059 source lines",
-            "apps/web: 28152 source lines",
+            "apps/web: 28181 source lines",
             "packages/contracts: 1376 source lines",
             "packages/kernel: 3455 source lines",
-            "packages/office-scene: 25530 source lines",
+            "packages/office-scene: 25065 source lines",
             "packages/providers: 2044 source lines"
           ]
         }
@@ -713,14 +713,14 @@
           "unit": "KB",
           "penalty": 0,
           "details": [
-            "apps/web/dist/assets/src-CaMNT6d7.js:1 377 KB",
-            "apps/web/dist/assets/index-tREpSNET.js:1 91 KB",
-            "apps/web/dist/assets/Terminals-DkDBjMc-.js:1 86 KB",
-            "apps/web/dist/assets/TaskDag-6vNrZ3Xd.js:1 56 KB",
-            "apps/web/dist/assets/core-CC40LDuL.js:1 27 KB",
-            "apps/web/dist/assets/ProjectPage-DDLDpkOJ.js:1 27 KB",
-            "apps/web/dist/assets/zh-DzBydsEF.js:1 21 KB",
-            "apps/web/dist/assets/PanelBody-puOreCO6.js:1 20 KB"
+            "apps/web/dist/assets/src-Ggvg_8C9.js:1 377 KB",
+            "apps/web/dist/assets/index-CPRp0XJx.js:1 92 KB",
+            "apps/web/dist/assets/Terminals-Dujl5TZW.js:1 86 KB",
+            "apps/web/dist/assets/TaskDag-5XN6dktb.js:1 56 KB",
+            "apps/web/dist/assets/core-lDT5hQ0Q.js:1 27 KB",
+            "apps/web/dist/assets/ProjectPage-BqUhWM4z.js:1 27 KB",
+            "apps/web/dist/assets/zh-BndruDX7.js:1 21 KB",
+            "apps/web/dist/assets/PanelBody-D77xfhZS.js:1 20 KB"
           ]
         },
         {
@@ -734,7 +734,7 @@
           "unit": "KB",
           "penalty": 0,
           "details": [
-            "apps/web/dist/assets/src-CaMNT6d7.js:1 377 KB"
+            "apps/web/dist/assets/src-Ggvg_8C9.js:1 377 KB"
           ]
         },
         {
@@ -748,49 +748,49 @@
           "unit": "KB",
           "penalty": 0.9,
           "details": [
-            "apps/web/dist/assets/index-tREpSNET.js:1 80 KB",
-            "apps/web/dist/assets/signals-CqwJ1gga.js:1 3 KB",
-            "apps/web/dist/assets/scheduler-A2pdr8AR.js:1 1 KB",
-            "apps/web/dist/assets/react-dom-2LriPbPx.js:1 1 KB",
-            "apps/web/dist/assets/useT-B_aTsCxl.js:1 3 KB",
-            "apps/web/dist/assets/chunk-OB3PAWPO-CvMDgOpm.js:1 12 KB",
-            "apps/web/dist/assets/QueryClientProvider-OgmwHxn2.js:1 0 KB",
-            "apps/web/dist/assets/polling-BLoT_I3J.js:1 7 KB",
-            "apps/web/dist/assets/createLucideIcon-DWzHm4-0.js:1 1 KB",
-            "apps/web/dist/assets/check-DTI-vSnX.js:1 0 KB",
-            "apps/web/dist/assets/x-BXnzkbfW.js:1 0 KB",
-            "apps/web/dist/assets/api-tNAIMK3_.js:1 1 KB",
-            "apps/web/dist/assets/PermissionCard-sHOeZbbc.js:1 8 KB",
-            "apps/web/dist/assets/arrow-up-right-BCDkMUGU.js:1 0 KB",
-            "apps/web/dist/assets/monitor-2GQqCbcq.js:1 0 KB",
+            "apps/web/dist/assets/index-CPRp0XJx.js:1 80 KB",
+            "apps/web/dist/assets/signals-D521Il5C.js:1 3 KB",
+            "apps/web/dist/assets/scheduler-BPo9TGJm.js:1 1 KB",
+            "apps/web/dist/assets/react-dom-d_Gvm-cX.js:1 1 KB",
+            "apps/web/dist/assets/chunk-OB3PAWPO-BHhCUyTW.js:1 12 KB",
+            "apps/web/dist/assets/QueryClientProvider-CVckzZZj.js:1 0 KB",
+            "apps/web/dist/assets/polling-DwZpIul7.js:1 7 KB",
+            "apps/web/dist/assets/createLucideIcon-5M9LAFzt.js:1 1 KB",
+            "apps/web/dist/assets/check-WMzoby0v.js:1 0 KB",
+            "apps/web/dist/assets/x-CdLFnkLt.js:1 0 KB",
+            "apps/web/dist/assets/useT-v4oTBFCV.js:1 3 KB",
+            "apps/web/dist/assets/api-DGWuasKn.js:1 1 KB",
+            "apps/web/dist/assets/PermissionCard-CAKJV4Rl.js:1 8 KB",
+            "apps/web/dist/assets/arrow-up-right-kbP88Xe8.js:1 0 KB",
+            "apps/web/dist/assets/monitor-19MK8-hy.js:1 0 KB",
             "apps/web/dist/assets/text-title-DjeWxyyV.js:1 10 KB",
             "apps/web/dist/assets/time-CPE8nN5v.js:1 0 KB",
             "apps/web/dist/assets/browser-compat-Cpt3e03-.js:1 0 KB",
-            "apps/web/dist/assets/api-commands-C5LilHfk.js:1 0 KB",
-            "apps/web/dist/assets/phone-83H9TEeT.js:1 0 KB",
-            "apps/web/dist/assets/PageHeading-Do1ScPrw.js:1 1 KB",
-            "apps/web/dist/assets/Badge-nrMnt6Al.js:1 0 KB",
-            "apps/web/dist/assets/Modal-pfJCOcrX.js:1 1 KB",
-            "apps/web/dist/assets/Field-3H9P3O3V.js:1 0 KB",
-            "apps/web/dist/assets/install-prompt-o-6yGRwl.js:1 6 KB",
+            "apps/web/dist/assets/api-commands-DFRcbZfW.js:1 0 KB",
+            "apps/web/dist/assets/phone-B4ZTgaMq.js:1 0 KB",
+            "apps/web/dist/assets/PageHeading-DjPCLdMy.js:1 1 KB",
+            "apps/web/dist/assets/Badge-BFg1pNoM.js:1 0 KB",
+            "apps/web/dist/assets/Modal-CSO1v7R_.js:1 1 KB",
+            "apps/web/dist/assets/Field-CYfdkwsX.js:1 0 KB",
+            "apps/web/dist/assets/install-prompt-jo6Qyvl3.js:1 6 KB",
             "apps/web/dist/assets/departments-CfOr-c1i.js:1 1 KB",
             "apps/web/dist/assets/animal-states-fx34-YW1.js:1 1 KB",
             "apps/web/dist/assets/session-limits-DrO1JNX3.js:1 0 KB",
-            "apps/web/dist/assets/localSessions-DXanHqQA.js:1 6 KB",
-            "apps/web/dist/assets/clock-out-z9MKKgJo.js:1 1 KB",
-            "apps/web/dist/assets/feed-avatar-CCn6nFLM.js:1 5 KB",
-            "apps/web/dist/assets/copy-D9ZyiPeY.js:1 0 KB",
-            "apps/web/dist/assets/door-open-BJAV7iR3.js:1 0 KB",
-            "apps/web/dist/assets/PreferenceControls-BRSe_l2-.js:1 1 KB",
-            "apps/web/dist/assets/use-drive-DVGYc7pL.js:1 3 KB",
-            "apps/web/dist/assets/character-actions-CY1wygs-.js:1 1 KB",
+            "apps/web/dist/assets/localSessions-6foOCPLa.js:1 6 KB",
+            "apps/web/dist/assets/clock-out-CznxykOh.js:1 1 KB",
+            "apps/web/dist/assets/feed-avatar-CTjj7eun.js:1 5 KB",
+            "apps/web/dist/assets/copy-CrIkE-vq.js:1 0 KB",
+            "apps/web/dist/assets/door-open-BlZAV75B.js:1 0 KB",
+            "apps/web/dist/assets/PreferenceControls-DX2PLiDn.js:1 1 KB",
+            "apps/web/dist/assets/use-drive-B7L70fua.js:1 3 KB",
+            "apps/web/dist/assets/character-actions-C7QEexy-.js:1 1 KB",
             "apps/web/dist/assets/squad-layout-BCBMhO-G.js:1 3 KB",
             "apps/web/dist/assets/context-X44HcWvZ.js:1 0 KB",
-            "apps/web/dist/assets/use-latest-DrsFwhSn.js:1 0 KB",
-            "apps/web/dist/assets/ClaudeQuota-DU8k5YjD.js:1 1 KB",
-            "apps/web/dist/assets/use-kpi-Bh2rmBRL.js:1 2 KB",
+            "apps/web/dist/assets/use-latest-BwgryMp4.js:1 0 KB",
+            "apps/web/dist/assets/ClaudeQuota-BMOKRJvq.js:1 1 KB",
+            "apps/web/dist/assets/use-kpi-CrQNCgQp.js:1 2 KB",
             "apps/web/dist/assets/index-ChOeP9N1.css:1 24 KB",
-            "apps/web/dist/assets/zh-DzBydsEF.js:1 18 KB"
+            "apps/web/dist/assets/zh-BndruDX7.js:1 18 KB"
           ]
         },
         {
@@ -1137,7 +1137,7 @@
     {
       "name": "maturity",
       "title": "Product maturity",
-      "score": 80.6,
+      "score": 80.7,
       "measured": 60,
       "rules": [
         {
@@ -1145,12 +1145,12 @@
           "label": "Ledger maturity: mean over entries (implemented and passed = 100, each partial half step = 25 less)",
           "status": "fail",
           "weight": 60,
-          "value": 83.86,
+          "value": 83.93,
           "limit": 100,
           "minimum": true,
           "full": 50,
           "unit": "",
-          "penalty": 19.37,
+          "penalty": 19.29,
           "details": [
             "docs/verification/features.json ARC-03: partial / partial",
             "docs/verification/features.json ARC-04: partial / partial",
@@ -1192,9 +1192,9 @@
             "docs/verification/features.json VIS-04: partial / partial",
             "docs/verification/features.json VIS-05: partial / partial",
             "docs/verification/features.json VIS-06: implemented / partial",
-            "... 43 more"
+            "... 47 more"
           ],
-          "note": "92 of 175 implemented and passed"
+          "note": "95 of 182 implemented and passed"
         },
         {
           "id": "maturity-audit",
