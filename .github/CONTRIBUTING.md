@@ -70,8 +70,9 @@ lower a floor to get a pull request through. A floor that is genuinely unreachab
 
 `structure` caps the lines of ts, tsx, mjs and css files (`LIMITS.codeLines` in `scripts/quality/areas/structure.mjs`). A change
 that adds lines removes at least as many elsewhere, otherwise `quality:check` fails. When code shrinks, lower the budget to the new
-total; never raise it. Comments count against it: write none by default and keep only a one or two line English comment that says
-why (an invariant, an ordering or race, a platform quirk, a security reason, an issue link), besides tool pragmas.
+total. It rises only for a feature the maintainer asked for, once everything the feature made redundant is removed, in a commit of its
+own that states the lines added and removed. Comments count against it: write none by default and keep only a one or two line English
+comment that says why (an invariant, an ordering or race, a platform quirk, a security reason, an issue link), besides tool pragmas.
 
 ## Commit messages and pull requests
 
