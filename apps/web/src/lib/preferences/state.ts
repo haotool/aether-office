@@ -17,7 +17,6 @@ export type Preferences = {
   advanced: boolean;
   view: '2d' | '3d';
   autoCamera: boolean;
-  intro: 'auto' | 'never';
   life: LifePrefs;
   strings: boolean;
   beanstalk: boolean;
@@ -38,7 +37,6 @@ export const usePreferences = create<Preferences>()(
       // On for a person. Off under browser automation: a camera that is always gliding is never "stable" to a test
       // that waits for a target to hold still before it taps it.
       autoCamera: !navigator.webdriver,
-      intro: 'auto',
       life: {
         ...DEFAULT_LIFE_PREFS,
         calm: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -73,7 +71,6 @@ export const usePreferences = create<Preferences>()(
         advanced: state.advanced,
         view: state.view,
         autoCamera: state.autoCamera,
-        intro: state.intro,
         life: state.life,
         strings: state.strings,
         beanstalk: state.beanstalk,

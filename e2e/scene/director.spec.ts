@@ -14,7 +14,7 @@ test('a fresh phone defaults to automatic framing, respects reduced motion and r
     Object.defineProperty(navigator, 'webdriver', { get: () => false });
     localStorage.setItem(
       'aether-ui-preferences',
-      JSON.stringify({ state: { view: '3d', locale: 'zh-TW', intro: 'never' }, version: 0 }),
+      JSON.stringify({ state: { view: '3d', locale: 'zh-TW' }, version: 0 }),
     );
   });
   await signIn(page, '/office?perf=1', { tap: true });

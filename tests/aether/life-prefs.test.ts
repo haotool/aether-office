@@ -25,7 +25,6 @@ describe('the persisted preferences migration', () => {
     const stored = {
       locale: 'en',
       theme: 'light',
-      intro: 'never',
       reducedMotion: false,
       panelWidth: 480,
     };

@@ -15,7 +15,6 @@ type Seed = {
   reducedMotion?: boolean;
   version?: number;
   panelCollapsed?: boolean;
-  intro?: string;
 };
 
 async function open(page: Page, path: string, seed: Seed = {}) {
@@ -264,9 +263,7 @@ test.describe('wave 2 moments', () => {
 });
 
 test.describe('settings', () => {
-  test('Office → Animations: Calm mode, kinds, frequency and the intro persist', async ({
-    page,
-  }) => {
+  test('Office → Animations: Calm mode, kinds, frequency persist', async ({ page }) => {
     await open(page, '/settings/office');
     const calm = page.getByRole('switch', { name: 'Calm mode', exact: true });
     await expect(calm).not.toBeChecked();
@@ -277,31 +274,17 @@ test.describe('settings', () => {
     await calm.uncheck();
     await page.getByRole('switch', { name: 'Memes', exact: true }).uncheck();
     await page.getByRole('radio', { name: 'Normal' }).click();
-    await page.getByRole('radio', { name: 'Never' }).click();
     const state = (await stored(page)).state;
     expect(state.life).toMatchObject({
       calm: false,
       frequency: 'normal',
       categories: { meme: false, work: true, easter: true },
     });
-    expect(state.intro).toBe('never');
     await page.reload();
     await expect(page.getByRole('switch', { name: 'Memes', exact: true })).not.toBeChecked();
     await expect(page.getByRole('radio', { name: 'Normal' })).toHaveAttribute(
       'aria-checked',
       'true',
-    );
-  });
-
-  test('Replay intro opens the office page and plays the tour, even under automation and with "Never"', async ({
-    page,
-  }) => {
-    await open(page, '/settings/office', { intro: 'never' });
-    await page.getByRole('button', { name: 'Replay intro' }).click();
-    await expect(page).toHaveURL(/\/office/);
-    await expect(page.locator('.intro-caption').getByRole('status')).toHaveText(
-      /Welcome to the office/,
-      { timeout: 40_000 },
     );
   });
 

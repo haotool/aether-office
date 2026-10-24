@@ -19,7 +19,6 @@
 - [Text in the conversation: wrappers, notices and Markdown](#text-in-the-conversation-wrappers-notices-and-markdown)
 - [Token and Git KPIs](#token-and-git-kpis)
 - [Detected models](#detected-models)
-- [The first-visit tour](#the-first-visit-tour)
 - [Clock out](#clock-out)
 - [The repository in the office](#the-repository-in-the-office)
 - [Speech bubbles, context and compaction](#speech-bubbles-context-and-compaction)
@@ -36,7 +35,7 @@ Behavioral notes for capabilities that are not obvious from the UI. The authorit
 [Text in the conversation](#text-in-the-conversation-wrappers-notices-and-markdown) · [Answering permission prompts](#answering-permission-prompts-remote-approvals) ·
 [Clock out](#clock-out) · [KPIs](#token-and-git-kpis) · [Models](#detected-models). The office: [Interacting with the characters](#interacting-with-the-characters) ·
 [The repository in the office](#the-repository-in-the-office) · [Speech bubbles, context and compaction](#speech-bubbles-context-and-compaction) ·
-[Office life](#office-life-little-moments-in-the-3d-office) · [The first-visit tour](#the-first-visit-tour) ·
+[Office life](#office-life-little-moments-in-the-3d-office) ·
 [Observed sessions, roles and squads](#observed-sessions-on-the-3d-floor). The orchestration workbench (behind Advanced):
 [Task dependency graph](#task-dependency-graph) · [Project knowledge](#project-knowledge-and-human-review) · [Agent review](#agent-review).
 
@@ -204,14 +203,6 @@ answer came from (a cache file, the CLI or a built-in fallback) and whether it i
 cache files and never writes under `~/.claude` or `~/.codex`; the aliases `fable`, `opus`, `sonnet` and `haiku` are always
 listed.
 
-## The first-visit tour
-
-On a first visit the camera plays a 46-second tour: a slow orbit of the building, the exploded view, a rise up the spire to the
-flowering crown, then back to the start view. It plays once per browser session (once ever on a phone) and never under browser
-automation. Any input stops it where the camera is, Esc lands on the start view, "Don't show again" turns it off, and with
-reduced motion it is three still views. **Replay** is in the floor panel and the phone's controls (Settings → Office has the
-preference); the room tour is separate and called "Guided tour (rooms)". `?intro=force` plays it regardless.
-
 ## Clock out
 
 Sessions that have sat idle for a day or more can be picked in one dialog and sent home together. The server re-checks each one
@@ -270,8 +261,8 @@ Without hooks the wave-1 effects that need a command do not fire and the outcome
 
 A member shows one at a time, a floor two, and the building at most three starts in any minute; out of view an effect fires at
 half chance, and at the default "rare" frequency memes and social moments at half again. Settings → Office has Calm mode (every
-kind off; on by default when the system asks for reduced motion, and a switch in the phone drawer), a switch per kind, the
-frequency and the intro tour. With reduced motion an effect is a still picture or, for those that are only motion (steam, the
+kind off; on by default when the system asks for reduced motion, and a switch in the phone drawer), a switch per kind and the
+frequency. With reduced motion an effect is a still picture or, for those that are only motion (steam, the
 circle, confetti), nothing; the low quality tier shows none. The design is in [office-life.md](design/office-life.md#53-registry);
 `?preview=life&effect=<id>&t=<ms>` holds one frame for a contact sheet.
 

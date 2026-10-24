@@ -113,13 +113,6 @@ export const settingsZh = {
   stLifeFrequencyDesc: '「少見」會把梗與社交小動畫出現的機會減半。',
   lifeRare: '少見',
   lifeNormal: '一般',
-  stIntroLabel: '開場導覽',
-  stIntroDesc: '建築物的鏡頭導覽，每次造訪播放一次。可在下方或建築面板重播。',
-  introAuto: '每次造訪一次',
-  introNever: '不再顯示',
-  stIntroReplayLabel: '重播開場導覽',
-  stIntroReplayDesc: '回到辦公室頁面，立刻再播一次建築物的鏡頭導覽。',
-  introReplayButton: '重播導覽',
 
   stSchedulesDesc: '定時建立任務：一次、每日或每週。',
   stA2aLabel: 'A2A',

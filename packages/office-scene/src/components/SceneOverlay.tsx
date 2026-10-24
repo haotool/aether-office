@@ -8,7 +8,6 @@ import { CompactHud } from './CompactHud.js';
 import { BuildingPanel, FloorHud, ShotCaption } from './SceneHud.js';
 import { FloorPlaque } from './FloorKpi.js';
 import { departmentAt, floorOfDesk, floorY, ZONE_OFFSET } from '../scene/scene-geometry.js';
-import { IntroCaption, IntroDip } from '../intro/index.js';
 import { SquadDom } from '../squad/index.js';
 
 const registerIn = (nodes: Map<string, HTMLElement>, id: string) => (node: HTMLElement | null) => {
@@ -120,19 +119,9 @@ export function SpeechBubbles({ m }: { m: SceneModel }) {
 }
 
 export function SceneCaptions({ m }: { m: SceneModel }) {
-  const { props, nav, intro, zh } = m;
+  const { props, nav, zh } = m;
   return (
     <>
-      {intro.dip && <IntroDip id={intro.dip} />}
-      {intro.caption && (
-        <IntroCaption
-          caption={intro.caption}
-          facts={intro.facts}
-          zh={zh}
-          onSkip={intro.interrupt}
-          onNever={intro.never}
-        />
-      )}
       {nav.directed?.entry === 'cut' && (
         <div className="cut-dip" key={nav.directed.startedAt} aria-hidden="true" />
       )}
@@ -150,8 +139,7 @@ export function SceneCaptions({ m }: { m: SceneModel }) {
 }
 
 export function HudPanels({ m }: { m: SceneModel }) {
-  const { props, nav, intro, zh, floor, exploded } = m;
-  const replay = intro.available ? intro.replay : undefined;
+  const { props, nav, zh, floor, exploded } = m;
   const badge = props.floorKpi?.[floor];
   if (m.compact)
     return (
@@ -166,7 +154,6 @@ export function HudPanels({ m }: { m: SceneModel }) {
         onExplode={nav.toggleExploded}
         onFollow={nav.toggleFollow}
         onLabels={() => m.setNamesOn((v) => !v)}
-        onReplayIntro={replay}
       />
     );
   return (
@@ -185,7 +172,6 @@ export function HudPanels({ m }: { m: SceneModel }) {
         onFloor={nav.showFloor}
         onExplode={nav.toggleExploded}
         onFollow={nav.toggleFollow}
-        onReplayIntro={replay}
       />
     </>
   );

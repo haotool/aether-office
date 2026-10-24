@@ -150,20 +150,6 @@ export const ENTRIES = [
     words: 'rare often meme frequency 頻率 少見',
   },
   {
-    id: 'intro',
-    section: 'office',
-    label: 'stIntroLabel',
-    desc: 'stIntroDesc',
-    words: 'tour welcome first visit orbit replay 導覽 開場 首次',
-  },
-  {
-    id: 'introReplay',
-    section: 'office',
-    label: 'stIntroReplayLabel',
-    desc: 'stIntroReplayDesc',
-    words: 'tour replay again intro welcome orbit 重播 導覽 開場',
-  },
-  {
     id: 'advanced',
     section: 'advanced',
     label: 'advancedTitle',

@@ -72,20 +72,18 @@ async function save(page, id, options = {}) {
 const settle = (page, ms = 6000) => page.waitForTimeout(ms);
 const feedRow = (page, text) => page.locator('.feed-row', { hasText: text }).first();
 
-const tour =
+const overview =
   (id, seconds, theme = 'dark') =>
   async (browser) => {
-    const { context, page } = await open(browser, { url: '/office?intro=force', theme });
-    await page.addStyleTag({ content: '.intro-caption{display:none!important}' });
+    const { context, page } = await open(browser, { url: '/office', theme });
     await page.waitForTimeout(seconds * 1000);
     await save(page, id);
     await context.close();
   };
 
 export const SHOTS = {
-  'office-overview-desktop': tour('office-overview-desktop', 9),
-  'office-overview-desktop-light': tour('office-overview-desktop-light', 9, 'light'),
-  'office-crown-desktop': tour('office-crown-desktop', 43),
+  'office-overview-desktop': overview('office-overview-desktop', 9),
+  'office-overview-desktop-light': overview('office-overview-desktop-light', 9, 'light'),
   'session-conversation-desktop': async (browser) => {
     const { context, page } = await open(browser);
     await settle(page, 4000);

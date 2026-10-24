@@ -3067,33 +3067,6 @@
     "evidencePaths": ["evidence/office-life-perf.json"]
   },
   {
-    "id": "OBS-LIFE-02",
-    "requirement": "首次造訪的開場導覽：360° 環繞、分層展開、沿尖塔上升到花冠（依畫面比例將花瓣與光環完整入鏡、緩入緩出）、回到起始視角；每個瀏覽器工作階段一次，任何輸入中斷並停在原處，Esc 回起始視角，不再顯示與重播，減少動態為三張靜態畫面。",
-    "scope": "AETHER target; office-life iteration I2, see docs/design/office-life.md section 6",
-    "implementationStatus": "implemented",
-    "verificationStatus": "partial",
-    "codePaths": [
-      "packages/office-scene/src/intro",
-      "packages/office-scene/src/scene/SceneCamera.tsx",
-      "packages/office-scene/src/scene/scene-navigation.ts",
-      "apps/web/src/lib/navigation/intro-gate.ts",
-      "apps/web/src/features/office/SceneView.tsx",
-      "apps/web/src/styles/scene/scene-intro.css"
-    ],
-    "testIds": [
-      "tests/aether/intro-tour.test.ts",
-      "tests/aether/intro-machine.test.ts",
-      "tests/aether/intro-gate.test.ts",
-      "e2e/scene/hotfix.spec.ts",
-      "e2e/office-life/intro.spec.ts",
-      "e2e/office-life/intro-perf.spec.ts"
-    ],
-    "blockers": [
-      "Frame gate measured on desktop Chrome (ANGLE Metal, Apple M4) including a phone-sized emulation on the same GPU, with other work running; no real phone or other GPU was run.",
-      "Phone and tablet were looked at in emulation only."
-    ]
-  },
-  {
     "id": "OBS-LIFE-09",
     "requirement": "面板中的 2D 小隊資訊設計：主管列下以樹狀（role=tree）巢狀顯示子代理（狀態、類型、已執行時間、工具次數、等待批准、完成後 90 秒寬限內淡出），可摺疊且記住選擇、可用鍵盤操作、有計數晶片；主管對話有小隊列與每次派出的活動卡片；子代理自己的檢視連回主管；同小隊共用強調色與連結標記；Claude 未安裝 hook 時說明並提供安裝指令；變化以節流的 live region 通報。",
     "scope": "AETHER target; office-life iteration I9, see docs/design/office-life-work-plan.md section 3 and docs/design-system.md 'Squads in the panel'",
@@ -3228,16 +3201,14 @@
   },
   {
     "id": "OFFICE-LIFE-I8-03",
-    "requirement": "對話標頭有一個預設收合的「近期小動態」摺疊，列出辦公室為該成員顯示的最近幾個動畫（最多 5 筆，標示為裝飾，只存在記憶體）；設定 → 辦公室 → 動畫有「重播導覽」按鈕，會回到辦公室頁面並立即播放開場導覽（即使選了「不再顯示」或在自動化下）。",
+    "requirement": "對話標頭有一個預設收合的「近期小動態」摺疊，列出辦公室為該成員顯示的最近幾個動畫（最多 5 筆，標示為裝飾，只存在記憶體）。",
     "scope": "AETHER target; office life iteration I8, see docs/design/office-life-work-plan.md",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
     "codePaths": [
       "apps/web/src/features/feed/RecentMoments.tsx",
       "apps/web/src/features/feed/life-moments.ts",
-      "apps/web/src/features/sessions/SessionConversation.tsx",
-      "apps/web/src/features/settings/OfficeAnimationsSettings.tsx",
-      "apps/web/src/lib/navigation/intro-gate.ts"
+      "apps/web/src/features/sessions/SessionConversation.tsx"
     ],
     "testIds": ["tests/aether/life-moments.test.ts", "e2e/office-life/office-life.spec.ts"],
     "blockers": [

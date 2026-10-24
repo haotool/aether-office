@@ -232,7 +232,7 @@ test('a phone scrolls the 2D list below the view switch and the chips, down to a
   await context.addInitScript(() =>
     window.localStorage.setItem(
       'aether-ui-preferences',
-      JSON.stringify({ state: { advanced: true, intro: 'never' }, version: 1 }),
+      JSON.stringify({ state: { advanced: true }, version: 1 }),
     ),
   );
   const page = await context.newPage();

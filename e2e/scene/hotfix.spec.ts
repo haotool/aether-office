@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 import { signIn } from '../support/sign-in.js';
-import { mockGitGraph } from '../support/git-graph.js';
 import { frames } from '../support/settled.js';
 import type { PerfRig } from '../../packages/office-scene/src/perf/perf-rig.js';
 
@@ -17,7 +16,6 @@ for (const width of [1440, 820, 390]) {
             locale: 'zh-TW',
             view: '3d',
             quality: 'balanced',
-            intro: 'never',
             autoCamera: false,
           },
           version: 0,
@@ -66,59 +64,3 @@ for (const width of [1440, 820, 390]) {
     expect(errors).toEqual([]);
   });
 }
-
-test('a tall phone frames the full crown beyond the manual camera distance limit', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 320, height: 1400 });
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.addInitScript(() =>
-    localStorage.setItem(
-      'aether-ui-preferences',
-      JSON.stringify({
-        state: {
-          locale: 'en',
-          view: '3d',
-          quality: 'low',
-          intro: 'auto',
-          beanstalk: true,
-          autoCamera: false,
-        },
-        version: 0,
-      }),
-    ),
-  );
-  await mockGitGraph(page, 144);
-  await signIn(page, '/office?intro=force&perf=1');
-  await expect(page.locator('.intro-caption [role="status"]')).toHaveText(
-    '144 commits · 12 tiers',
-    { timeout: 30000 },
-  );
-  const view = await page.evaluate(() => {
-    const rig = (window as unknown as { __aetherPerfRig: PerfRig }).__aetherPerfRig;
-    return { position: rig.camera.position.toArray() };
-  });
-  expect(Math.hypot(...view.position)).toBeGreaterThan(300);
-  await expect(page.locator('.cut-dip[data-intro]')).toHaveCSS('opacity', '0');
-  await page.screenshot({ path: 'evidence/scene-hotfix-crown-narrow.png', fullPage: true });
-  await page.mouse.click(5, 5);
-  await expect(page.locator('.intro-caption')).toBeHidden();
-  await frames(page, 20);
-  const held = await page.evaluate(() =>
-    (window as unknown as { __aetherPerfRig: PerfRig }).__aetherPerfRig.camera.position.toArray(),
-  );
-  view.position.forEach((value, i) => expect(held[i]).toBeCloseTo(value, 4));
-  for (const key of ['-', '=']) {
-    await page.keyboard.down(key);
-    await page.evaluate(() =>
-      (window as unknown as { __aetherPerfRig: PerfRig }).__aetherPerfRig.sample(0),
-    );
-    await page.keyboard.up(key);
-    const position = await page.evaluate(() =>
-      (window as unknown as { __aetherPerfRig: PerfRig }).__aetherPerfRig.camera.position.toArray(),
-    );
-    const moved = Math.hypot(...position.map((value, i) => value - held[i]!));
-    expect(moved).toBeLessThan(100);
-    if (key === '=') expect(moved).toBeGreaterThan(0.1);
-  }
-});

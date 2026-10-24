@@ -555,23 +555,9 @@ fades. Measured on the phone profile with 12 tags forced into each state: 2,300+
 
 ## The camera runs itself
 
-Two things move the camera without a hand on it. The **director** cuts between members (one slow dolly per shot, a level
-horizon, no zoom, a dip for a hard cut). The **intro tour** plays on a first visit (`packages/office-scene/src/intro`): a 360°
-orbit of the stacked building (26 s, at most 16.4°/s), a cut under a 400 ms dip to the exploded view, a 15 s rise up the spire to
-the crown, a 4 s hold and a cut back to the start view, 45.8 s in all. It follows the director's comfort rules; `introPoseAt` is
-a pure function of time. The closing frame includes the petals and halo envelope, fits the canvas aspect, and eases into and out of the final push. Tour controls allow that framing distance and preserve it if interrupted; manual navigation retains its normal range.
-
-`tests/aether/intro-tour.test.ts` samples it for angular speed, level pitch, distance and the shell.
-
-- **When.** Once per browser session, with the preference `intro: 'auto'`, never under browser automation (`?intro=force`
-  overrides, for tests), after the scene is warm and frames run smoothly. On a phone it plays once ever (finishing it turns the
-  preference off). Replay is in the floor panel and the phone's "more controls"; it ignores the gates.
-- **Ending.** Any input (pointer, wheel, touch, a key, choosing a member) stops it where the camera is; the director returns
-  after its usual quiet spell. Esc jumps to the closing cut and lands on the start view. "Don't show again" sets the preference
-  to `'never'`. Hiding the page ends it quietly.
-- **Reduced motion.** Three still views of 3 s each (start, exploded, crown), cut between, then the start view.
-- **Caption.** A glass pill (`styles/scene-intro.css`, tokens only) with `role="status"`, a Skip button and "Don't show
-  again", bottom left on a desktop and above the controls on a phone. The room tour (8 stops) is kept as "Guided tour (rooms)".
+The **director** cuts between members (one slow dolly per shot, a level horizon, no zoom, a dip for a hard cut) and returns after
+its usual quiet spell once a hand has been on the controls. The room tour (8 stops) is started by hand and is called "Guided
+tour (rooms)".
 
 ## The beanstalk
 

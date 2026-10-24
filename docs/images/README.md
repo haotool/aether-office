@@ -71,7 +71,7 @@ Permission frames show a pending request created through the hook API on the dis
 
 ## Hero provenance
 
-- **Sources:** `conversation-feed-desktop.en.jpg` and `office-phone.jpg` were refreshed from the current application. Their Traditional Chinese counterparts were captured with the application locale set to Traditional Chinese. Both `git-flower-desktop.*.jpg` files capture only the actual scene canvas during the introductory tour; the upper bloom extends outside the original camera frame. No scene or interface content is generated or redrawn.
+- **Sources:** `conversation-feed-desktop.en.jpg` and `office-phone.jpg` were refreshed from the current application. Their Traditional Chinese counterparts were captured with the application locale set to Traditional Chinese. Both `git-flower-desktop.*.jpg` files capture only the actual scene canvas, taken while the introductory tour (since removed) played; the upper bloom extends outside the original camera frame. No scene or interface content is generated or redrawn.
 - **Isolation:** captures use the repository's disposable demo stack, synthetic sessions and Chrome with ANGLE Metal. No real transcript, owner credential or paid model is used. Generated fixture identifiers and camera animation can vary between runs.
 - **Logo:** the existing project mark in `apps/web/public/favicon.svg`, used without modification.
 - **Composition:** [`readme-hero.html`](readme-hero.html) is the editable source. The dark control-room layout places the logo and title above a complete desktop Feed capture, with a separate Git-flower detail and mobile 3D-office capture on the right. All images retain their aspect ratio. Captions distinguish actual UI from synthetic demo data.
@@ -87,7 +87,7 @@ cwebp -q 88 -m 6 -metadata none /tmp/aether-readme-hero-en.png -o docs/images/re
 cwebp -q 88 -m 6 -metadata none /tmp/aether-readme-hero-zh-TW.png -o docs/images/readme-hero.zh-TW.webp
 ```
 
-For new source captures, use the disposable harness below with `--hold`, select the application language, and capture the desktop conversation, mobile feed and introductory Git-flower canvas. Do not use your live stack. Inspect the results before replacing the committed inputs.
+For new source captures, use the disposable harness below with `--hold`, select the application language, and capture the desktop conversation and mobile feed. Do not use your live stack. Inspect the results before replacing the committed inputs.
 
 ### README layout references
 
@@ -113,6 +113,5 @@ shows the same content. `--hold` keeps the stack up afterwards so you can look a
 starts a control plane and a runner on the given port (default 4511), signals only the processes it started, and removes its
 temporary directory. A shot that is still above 250 KB is re-taken at a lower JPEG quality.
 
-Two images depend on timing: the overview is taken 9 s into the first-visit tour and the crown 43 s in
-(`?intro=force`, caption hidden). Look at every image before committing it: the 3D scene is alive, so a frame can land a
+The overview images are taken 9 s after the office page opens. Look at every image before committing it: the 3D scene is alive, so a frame can land a
 little differently, and no path, host name, person or token may be visible.

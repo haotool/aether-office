@@ -14,7 +14,6 @@ import { pixelRatioCap } from '../perf/perf-control.js';
 import { usePoseCues } from './use-pose-cues.js';
 import { ACTIVE, departmentAt, floorOfDesk, floorY } from '../scene/scene-geometry.js';
 import { useSceneNavigation } from '../scene/scene-navigation.js';
-import { useIntroTour } from '../intro/index.js';
 import { useAriaLog } from '../life/index.js';
 import { useSquad } from '../squad/index.js';
 import type { OfficeSceneProps } from '../scene/scene-props.js';
@@ -43,7 +42,7 @@ function useStalk(beanstalk: OfficeSceneProps['beanstalk'], exploded: boolean) {
   return { stalk, spire, tip, showTip };
 }
 
-function useNavigation(props: OfficeSceneProps, layout: Layout, intro: Intro, compact: boolean) {
+function useNavigation(props: OfficeSceneProps, layout: Layout, compact: boolean) {
   const attention = useMemo(
     () => new Map(Object.entries(props.attention ?? {})),
     [props.attention],
@@ -64,10 +63,8 @@ function useNavigation(props: OfficeSceneProps, layout: Layout, intro: Intro, co
     directing: props.autoCamera ?? true,
     resumeMs: compact ? 10_000 : 30_000,
     selectedId: props.selectedId,
-    intro,
   });
 }
-type Intro = ReturnType<typeof useIntroTour>;
 
 function useSceneCore(props: OfficeSceneProps) {
   const placed = useMemo(
@@ -82,18 +79,8 @@ function useSceneCore(props: OfficeSceneProps) {
   const layout = squad.layout;
   const [warm, setWarm] = useState(false);
   const ready = useCallback(() => setWarm(true), []);
-  const intro = useIntroTour({
-    props: props.intro,
-    warm,
-    reducedMotion: props.reducedMotion,
-    agents: props.agents,
-    layout,
-    commits: props.beanstalk?.length ?? 0,
-    selectedId: props.selectedId,
-    focus: props.focus,
-  });
-  const nav = useNavigation(props, layout, intro, compact);
-  return { placed, zh, compact, ariaLog, pose, squad, layout, warm, ready, intro, nav };
+  const nav = useNavigation(props, layout, compact);
+  return { placed, zh, compact, ariaLog, pose, squad, layout, warm, ready, nav };
 }
 
 function floorsInView(agents: Agent[], layout: Layout, floor: number, exploded: boolean) {
@@ -264,7 +251,7 @@ function useCrowd(
 
 export function useSceneModel(props: OfficeSceneProps) {
   const core = useSceneCore(props);
-  const { layout, nav, pose, compact, zh, intro } = core;
+  const { layout, nav, pose, compact, zh } = core;
   const { floor, exploded } = nav;
   const { hovered, hoverStart, hoverEnd } = useHover();
   const dom = useDomRegistry();
@@ -285,7 +272,7 @@ export function useSceneModel(props: OfficeSceneProps) {
     hoverStart,
     hoverEnd,
     ...crowd,
-    filming: nav.directed !== null || intro.active,
+    filming: nav.directed !== null,
     auto: nav.running,
     squadScene: {
       props,
