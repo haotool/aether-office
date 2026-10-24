@@ -23,6 +23,7 @@ project follows its [pre-release version policy](docs/release/versioning.md).
   until the person presses Sign in on this computer. `AETHER_LOCAL_SIGN_IN=0` turns the computer's sign-in off (see [Security](docs/security.md)).
 - Starting a conversation is one click per agent (Claude Code, Codex) on the Terminals page, and the new terminal takes your keystrokes at once: there is no take-over or release step any more. Click the terminal and type; control is taken when you focus it and lapses by itself when you leave.
 - Queued messages wait 3 seconds, not 8, after a send before the next one goes in.
+- The sidebar and the phone's tab bar list four pages by default: Office, Local sessions, Terminals and Settings. The approvals inbox and the event history moved behind the Advanced switch, since a permission already waits in its own conversation and in the needs-you banner. Both still open by their address.
 
 ### Fixed
 

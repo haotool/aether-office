@@ -23,7 +23,7 @@ export function TabBar({
 }) {
   const t = useT();
   const tabs: readonly string[] = tabPages(advanced);
-  const more = tabs.includes('approvals') ? 0 : counts.approvals;
+  const more = advanced ? counts.approvals : 0;
   return (
     <nav className="tabbar" aria-label={t('project')}>
       {tabs.map((key) => {
