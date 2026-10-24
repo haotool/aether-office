@@ -38,6 +38,7 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 - The message box beside a session no longer waits for a full session scan to find its terminal, so it appears at once and no longer drops back to read-only under load.
 - A message is held, with an Esc button in the notice, while the terminal shows a menu or a question instead of its prompt, rather than being typed into it and lost.
 - After a message is sent the conversation shows the thinking line at once and reads the transcript every second until the reply arrives; the terminal detail now reports its agent state.
+- `pnpm dev` and `pnpm demo` no longer end on "The page could not be shown" at the office: the 3D scene package declares `react-dom`, so the lockfile holds one copy next to `react` and the dev server stops loading two.
 
 ### Security
 

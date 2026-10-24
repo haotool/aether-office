@@ -78,7 +78,7 @@ identify the tools this project works with; no affiliation, sponsorship or endor
 
 ## Packages shipped with the application
 
-267 packages from the npm registry are part of the running application: those marked *web bundle* are compiled
+266 packages from the npm registry are part of the running application: those marked *web bundle* are compiled
 into `apps/web/dist`, those marked *server runtime* are loaded from `node_modules` by the control plane and the runner. The
 licence is the one that applies (for a choice such as `MIT OR Apache-2.0`, the option this project relies on is named).
 Platform builds (`*-darwin-arm64` and similar) carry the licence of their package and are installed only on a matching machine.
@@ -282,7 +282,6 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | quick-format-unescaped | 4.0.4 | MIT | server runtime | Copyright (c) 2016-2019 David Mark Clements |
 | range-parser | 1.3.0 | MIT | server runtime | Copyright (c) 2012-2014 TJ Holowaychuk <tj@vision-media.ca>; Copyright (c) 2015-2016 Douglas Christopher Wilson <doug@somethingdoug.com |
 | raw-body | 3.0.2 | MIT | server runtime | Copyright (c) 2013-2014 Jonathan Ong <me@jongleberry.com>; Copyright (c) 2014-2022 Douglas Christopher Wilson <doug@somethingdoug.com> |
-| react-dom | 19.3.0 | MIT | web bundle | Copyright (c) Meta Platforms, Inc. and affiliates. |
 | react-dom | 19.3.1 | MIT | web bundle | Copyright (c) Meta Platforms, Inc. and affiliates. |
 | react-router-dom | 7.18.4 | MIT | web bundle | Copyright (c) React Training LLC 2015-2019; Copyright (c) Remix Software Inc. 2020-2021; Copyright (c) Shopify Inc. 2022-2023 |
 | react-router | 7.18.4 | MIT | web bundle | Copyright (c) React Training LLC 2015-2019; Copyright (c) Remix Software Inc. 2020-2021; Copyright (c) Shopify Inc. 2022-2023 |
@@ -4973,7 +4972,7 @@ THE SOFTWARE.
 
 ### MIT (text cf9b17822d1f)
 
-Used by: `react-dom@19.3.0`, `react-dom@19.3.1`, `react@19.3.1`, `scheduler@0.28.0`, `use-sync-external-store@1.7.0`.
+Used by: `react-dom@19.3.1`, `react@19.3.1`, `scheduler@0.28.0`, `use-sync-external-store@1.7.0`.
 
 ```text
 MIT License
