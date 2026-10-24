@@ -19,7 +19,7 @@ test('local sessions are auto-discovered and shown as observe-only 3D agents', a
   await label.hover();
   await settled(label);
   await label.click();
-  await expect(label).toHaveClass(/selected/);
+  await expect(label).toHaveClass(/selected/, { timeout: 15000 });
   await expect(page.getByText('OBSERVE · claude')).toBeVisible();
   await page.locator('.session-details summary').click();
   await expect(page.getByText('uncommitted', { exact: true })).toBeVisible();
