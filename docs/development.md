@@ -198,20 +198,14 @@ desk, run the audit (it must report no clipping), rebuild the models and validat
 Both gates look at a running build (`pnpm build`, then the e2e server or `pnpm demo`), never at a mock.
 
 ```sh
-# One labelled PNG per category (scene, life, squad) from real browser screenshots; --gpu uses Chrome on the real GPU (ANGLE Metal)
+# One labelled PNG per category (scene, squad) from real browser screenshots; --gpu uses Chrome on the real GPU (ANGLE Metal)
 node scripts/contact-sheet.mjs --url http://127.0.0.1:4320 --out evidence/contact-sheets --gpu
-node scripts/contact-sheet.mjs --category life --effects rubber-duck,ci-lamp --times 0,1000,2000   # via ?preview=life&effect=<id>&t=<ms>
-# One sheet per kind, each effect at times of its own (id@t1/t2/t3), the scene cropped to the member the camera is on, at 2x
-node scripts/contact-sheet.mjs --category life --effects 'rubber-duck@3000/8000/14000,coffee-refill@800/2000/3600' \
-  --sheet wellbeing --size 1600x1000 --dpr 2 --gpu
+node scripts/contact-sheet.mjs --category squad --gpu   # the squad storyboard on stand-in subagents (?squad=N&arrive=MS&leave=MS&look=1)
 
 # Baseline vs variant scene through the perf probe, interleaved and repeated, on the real GPU
-PERF_GPU=1 PERF_BASELINE='preview=life&effect=off&t=0' PERF_VARIANT='preview=life&effect=rubber-duck,ci-lamp,ship-it&t=1500' pnpm exec playwright test e2e/office-life/office-life-perf.spec.ts   # three live effects
-node scripts/contact-sheet.mjs --category squad --gpu   # the squad storyboard on stand-in subagents (?squad=N&arrive=MS&leave=MS&look=1)
 PERF_GPU=1 PERF_BASELINE='squad=8&legacy=1' PERF_VARIANT='squad=8' pnpm exec playwright test --timeout=300000 e2e/office-life/office-life-perf.spec.ts   # 8 subagents in a squad zone against at desks
 ```
 
-An effect that reads a value takes it after a colon (`ci-stack:0` is the red CI stack, `tech-debt:60` a bigger pile), and
 `?squad=3&tokens=12000` gives the stand-in subagents a token rate so the beam and its label follow tokens.
 
 The sheets are for a human to review (a pixel diff belongs on the real-GPU runner only). The perf spec writes

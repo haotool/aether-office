@@ -12,7 +12,6 @@ import { contextLabel } from './context-label.js';
 import { squadViewOf } from '../feed/feed-squads.js';
 import { HookNote, needsHook } from '../shell-chrome/HookNote.js';
 import { PermissionCards } from '../operations/PermissionCard.js';
-import { RecentMoments } from '../feed/RecentMoments.js';
 import { requestsFor, usePermissionRequests } from '../operations/permission-requests.js';
 import { SessionDetails } from './SessionDetails.js';
 import { SessionFooter } from './SessionFooter.js';
@@ -258,7 +257,6 @@ export function SessionConversation({
         <ConvNav attention={attention} trailing={trailing} onBack={onBack} onFocus={onFocus} />
         <ConvIdentity agent={agent} session={session} squad={squad} isSub={isSub} />
         <ConvContext session={session} />
-        <RecentMoments member={agent.id} />
         <ContextMeter session={session} />
         {!isSub && squad && <SquadStrip view={squad} picked={picked} onPick={setPicked} />}
       </header>

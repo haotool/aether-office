@@ -14,7 +14,7 @@ import { pixelRatioCap } from '../perf/perf-control.js';
 import { usePoseCues } from './use-pose-cues.js';
 import { ACTIVE, departmentAt, floorOfDesk, floorY } from '../scene/scene-geometry.js';
 import { useSceneNavigation } from '../scene/scene-navigation.js';
-import { useAriaLog } from '../life/index.js';
+import { useAriaLog } from './use-aria-log.js';
 import { useSquad } from '../squad/index.js';
 import type { OfficeSceneProps } from '../scene/scene-props.js';
 

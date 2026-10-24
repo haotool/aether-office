@@ -7,7 +7,7 @@ export function useAriaLog(zh: boolean) {
   const log = useRef<ReturnType<typeof mountLog> | null>(null);
   useEffect(() => {
     if (!host.current) return;
-    log.current = mountLog(host.current, sceneText(zh, 'life.logLabel'));
+    log.current = mountLog(host.current, sceneText(zh, 'log.label'));
     return () => {
       log.current?.dispose();
       log.current = null;

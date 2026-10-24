@@ -23,8 +23,6 @@ const { NotFound } = await import('../../apps/web/src/features/shell-chrome/NotF
 const { ConnectionStatus } =
   await import('../../apps/web/src/features/shell-chrome/ConnectionStatus.js');
 const { ThinkingLine } = await import('../../apps/web/src/features/conversation/ThinkingLine.js');
-const { recordMoment, withMoment, MOMENTS_PER_MEMBER } =
-  await import('../../apps/web/src/features/feed/life-moments.js');
 
 afterAll(removeBrowserEnv);
 const en = (key: Parameters<typeof translate>[1]) => translate('en', key);
@@ -305,22 +303,5 @@ describe('ThinkingLine', () => {
     const html = renderHtml(h(ThinkingLine, { since: Date.now() - 75_000 }));
     expect(textOf(html)).toContain(en('convThinking'));
     expect(textOf(html)).toMatch(/1m ?1\ds|1:1\d|75s|1 ?m/);
-  });
-});
-
-describe('life moments', () => {
-  const moment = (member: string, n: number) =>
-    ({ member, rule: `r${n}`, at: n, text: `t${n}` }) as never;
-
-  it('keeps the newest few first', () => {
-    let list: unknown[] = [];
-    for (let i = 0; i < MOMENTS_PER_MEMBER + 3; i++)
-      list = withMoment(list as never, moment('a', i));
-    expect(list).toHaveLength(MOMENTS_PER_MEMBER);
-    expect((list[0] as { at: number }).at).toBe(MOMENTS_PER_MEMBER + 2);
-  });
-
-  it('notifies listeners when the office shows a moment', () => {
-    expect(() => recordMoment(moment('a', 1))).not.toThrow();
   });
 });

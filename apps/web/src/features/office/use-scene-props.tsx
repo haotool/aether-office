@@ -34,7 +34,6 @@ import {
   useSquadPreview,
 } from '../squad/squad-preview.js';
 import { useCompactions } from '../conversation/use-compactions.js';
-import { useLifeInput } from './use-life.js';
 import { useSeats } from './use-seats.js';
 
 export type SceneViewProps = {
@@ -89,7 +88,6 @@ function useSceneLayout(
 
 function useSceneModelProps(
   { model, data }: SceneViewProps,
-  sessions: readonly AttributedSession[],
   leaving: Record<string, number>,
   squadStandIn: ReturnType<typeof useSquadPreview>,
 ) {
@@ -99,8 +97,7 @@ function useSceneModelProps(
   const talk = useTalkPreview(model.agents, talkPreview);
   const standIn = useCompactPreview(model.agents, compactPreview);
   const realCompactions = useCompactions(model.contexts);
-  const life = useLifeInput(sessions, model, prefs.life);
-  const compactionsShown = !prefs.life.calm && prefs.life.categories.work;
+  const compactionsShown = !prefs.life.calm;
   const graph = useGitGraph(data.project.id, prefs.beanstalk && prefs.view === '3d');
   return {
     pulses: talk?.pulses ?? model.pulses,
@@ -110,7 +107,6 @@ function useSceneModelProps(
     speech,
     screens: standIn?.screens ?? rush?.screens ?? model.screens,
     compactions: standIn?.compactions ?? (compactionsShown ? realCompactions : {}),
-    life,
     intensity: rush ? rush.intensity : model.intensity,
     attention: talk?.attention ?? model.attention,
     roleOf: rush ? (a: { id: string }) => rush.roles[a.id] ?? 'generalist' : model.roleOf,
@@ -120,9 +116,7 @@ function useSceneModelProps(
     branchOf: talk?.branchOf ?? model.branchOf,
     beanstalk: prefs.beanstalk ? (graph.data?.commits ?? null) : null,
     squads: squadLegacy ? undefined : (squadStandIn?.squads ?? model.squads),
-    focus:
-      (life.preview?.loop ? undefined : life.preview?.members[0]) ??
-      (squadLook && squadStandIn ? squadStandIn.look : undefined),
+    focus: squadLook && squadStandIn ? squadStandIn.look : undefined,
   };
 }
 
@@ -130,7 +124,7 @@ function useScenePreferenceProps(onNotice: (message: string) => void) {
   const t = useT();
   const prefs = usePreferences();
   return {
-    // The office-life settings own the Calm switch and the relation toggle; the squad URL preview can only turn relations off.
+    // The Office → Animations settings own the Calm switch and the relation toggle; the squad URL preview can only turn relations off.
     squadPrefs: {
       calm: prefs.life.calm,
       relation: prefs.life.relation && squadRelation,
@@ -192,7 +186,7 @@ export function useSceneProps(
   const squadStandIn = useSquadPreview(model.agents);
   const observed = [...model.observed, ...(squadStandIn?.agents ?? [])];
   const leaving = useClockOutPreview(model) ?? model.leaving;
-  const modelProps = useSceneModelProps(props, sessions, leaving, squadStandIn);
+  const modelProps = useSceneModelProps(props, leaving, squadStandIn);
   const { seat, layout } = useSceneLayout(props, observed);
   const preferenceProps = useScenePreferenceProps(props.onNotice);
   const { focus, ...rest } = modelProps;

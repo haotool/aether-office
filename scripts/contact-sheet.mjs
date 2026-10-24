@@ -52,22 +52,7 @@ const readToken = (args) => {
   return readFileSync(join(JSON.parse(raw).directory, 'owner-token'), 'utf8').trim();
 };
 
-export function shotsFor(category, args) {
-  if (category === 'scene') return SCENE_SHOTS;
-  if (category === 'squad') return SQUAD_SHOTS;
-  const effects = typeof args.effects === 'string' ? args.effects.split(',').filter(Boolean) : [];
-  const defaults = (typeof args.times === 'string' ? args.times : '0,1000,2000')
-    .split(',')
-    .map((t) => Number(t));
-  return effects.flatMap((spec) => {
-    const [effect, own] = spec.split('@');
-    const times = own ? own.split('/').map((t) => Number(t)) : defaults;
-    return times.map((t) => ({
-      id: `${effect}-${t}`,
-      query: `preview=life&effect=${effect}&t=${t}`,
-    }));
-  });
-}
+export const shotsFor = (category) => (category === 'scene' ? SCENE_SHOTS : SQUAD_SHOTS);
 
 const escape = (text) => text.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 
@@ -123,9 +108,7 @@ async function main() {
   const sheet = typeof args.sheet === 'string' ? args.sheet : null;
   const crop = typeof args.crop === 'string' ? Number(args.crop) : null;
   const [w, h] = (typeof args.size === 'string' ? args.size : '1280x800').split('x').map(Number);
-  const wanted = ['life', 'scene', 'squad'].includes(args.category)
-    ? [args.category]
-    : ['scene', 'life', 'squad'];
+  const wanted = ['scene', 'squad'].includes(args.category) ? [args.category] : ['scene', 'squad'];
   mkdirSync(out, { recursive: true });
   const token = readToken(args);
   const browser = await chromium.launch({
@@ -134,13 +117,8 @@ async function main() {
   });
   try {
     for (const category of wanted) {
-      const list = shotsFor(category, args);
-      if (!list.length) {
-        console.log(`${category}: no effects registered, nothing rendered (not a pass)`);
-        continue;
-      }
       const taken = [];
-      for (const shot of list) {
+      for (const shot of shotsFor(category)) {
         const context = await browser.newContext({
           viewport: { width: w, height: h },
           deviceScaleFactor: dpr,
@@ -149,7 +127,7 @@ async function main() {
         await enter(page, `${base}/${shot.query ? `?${shot.query}` : ''}`, token, theme, quality);
         await page.waitForTimeout(shot.settle ?? SETTLE_MS);
         const box = await page.locator('canvas').first().boundingBox();
-        const keep = crop ?? (category === 'life' ? 0.5 : 1);
+        const keep = crop ?? 1;
         const clip = box && {
           x: box.x + (box.width * (1 - keep)) / 2,
           y: box.y + (box.height * (1 - keep)) / 2,

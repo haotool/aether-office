@@ -20,7 +20,9 @@ describe('the scene words', () => {
   });
 
   it('put a value in as written, even one that looks like a pattern', () => {
-    expect(sceneText(false, 'life.push', { who: '$& {who}' })).toBe('$& {who} pushed');
+    expect(sceneText(false, 'handover.received', { type: '$& {type}' })).toBe(
+      '$& {type} handed over its result',
+    );
   });
 
   it('are one language per translator, and name the Intl locale of each', () => {

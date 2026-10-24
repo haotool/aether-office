@@ -14,7 +14,7 @@ architecture, development and release verification. The operational manual is in
 | ------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | [Getting started](getting-started.md) | First run in five minutes, hooks, phone and QR pairing, HTTPS and the installable app, upgrading |
 | [How-to guides](how-to.md)            | Short answers to specific jobs: run, connect, change the code, release                           |
-| [Features](features.md)               | How the features behave: the panel, approvals, KPIs, the office, office life, the tour           |
+| [Features](features.md)               | How the features behave: the panel, approvals, KPIs, the office                                  |
 | [Configuration](configuration.md)     | Every environment variable and the native-execution file                                         |
 | [Session roles](roles.md)             | How a session is placed on a floor: signals, evidence, accuracy                                  |
 
@@ -42,14 +42,14 @@ architecture, development and release verification. The operational manual is in
 Written before or while the work was built, kept for the reasoning. They are history, not the current manual: where they
 differ from the pages above, the pages above win.
 
-| Document                                                                 | Contents                                                                         |
-| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| [Office life: spec](design/office-life.md)                               | Squads, signals, office-life effects and the first-visit tour: rules and budgets |
-| [Office life: work plan](design/office-life-work-plan.md)                | The briefs the iterations were run from                                          |
-| [Architecture decisions](adr/README.md)                                  | Why the project is built the way it is (indexed list)                            |
-| [Research](research/README.md)                                           | The projects studied and what was taken from them                                |
-| [Internal notes](internal/README.md)                                     | Maintainer audits and feasibility studies (zh-TW); not required to contribute    |
-| [CTO review, 2026-10-15](../plans/first-principles-review-2026-10-15.md) | Historical architecture and reliability assessment; not a current backlog        |
+| Document                                                                 | Contents                                                                      |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| [Office life: spec](design/office-life.md)                               | Squads, the beam and the hand-over: rules and budgets (see its status note)   |
+| [Office life: work plan](design/office-life-work-plan.md)                | The briefs the iterations were run from                                       |
+| [Architecture decisions](adr/README.md)                                  | Why the project is built the way it is (indexed list)                         |
+| [Research](research/README.md)                                           | The projects studied and what was taken from them                             |
+| [Internal notes](internal/README.md)                                     | Maintainer audits and feasibility studies (zh-TW); not required to contribute |
+| [CTO review, 2026-10-15](../plans/first-principles-review-2026-10-15.md) | Historical architecture and reliability assessment; not a current backlog     |
 
 ## Release and verification
 

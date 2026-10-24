@@ -2975,7 +2975,7 @@
       "tests/aether/live-link.test.ts"
     ],
     "blockers": [
-      "Nothing in the web consumes conflicts, squad or outcome yet (office-life iterations I6, I8 and I9); the stream carries them and the polling endpoint answers them",
+      "Nothing in the web consumes conflicts or outcome any more (the effects that did were removed); the stream carries them and the polling endpoint answers them",
       "The conflict count is cached with the git status for 30 seconds, so a merge that just stopped on a conflict can show up that much later"
     ]
   },
@@ -3051,16 +3051,12 @@
   },
   {
     "id": "OBS-LIFE-01",
-    "requirement": "辦公室動畫有視覺與效能閘門：確定性預覽網址 ?preview=life&effect=&t=、每類一張的 contact sheet，以及在真實 GPU 上比較基準與變體場景的效能規格（未設 PERF_GPU=1 時為略過，不是通過）。",
+    "requirement": "辦公室場景有視覺與效能閘門：場景與小隊各一張的 contact sheet，以及在真實 GPU 上比較基準與變體場景的效能規格（未設 PERF_GPU=1 時為略過，不是通過）。",
     "scope": "AETHER target; office-life iteration I0, see docs/design/office-life-work-plan.md",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
-    "codePaths": [
-      "apps/web/src/features/office/scene-preview.ts",
-      "scripts/contact-sheet.mjs",
-      "e2e/office-life/office-life-perf.spec.ts"
-    ],
-    "testIds": ["tests/aether/scene-preview.test.ts", "e2e/office-life/office-life-perf.spec.ts"],
+    "codePaths": ["scripts/contact-sheet.mjs", "e2e/office-life/office-life-perf.spec.ts"],
+    "testIds": ["e2e/office-life/office-life-perf.spec.ts"],
     "blockers": [
       "2026-10-19: the talk=1 stand-in traffic passed all existing GPU deltas after batching idle branch beams (Apple M4, ANGLE Metal, balanced 806x540 canvas, three interleaved rounds): +9 draw calls and +0.1 ms JS against limits of 19 and 0.4 ms. The test now asserts the limits. This scoped synthetic comparison does not certify all effects, tiers or physical phones."
     ],
@@ -3101,80 +3097,6 @@
     ]
   },
   {
-    "id": "OBS-LIFE-03",
-    "requirement": "辦公室小動畫的核心與第一批效果：signals→effects 登錄表（每個效果有冷卻、種子化抽籤與品質／減少動態門檻；仲裁為每成員 1、每樓層 2、全棟每分鐘 3）、單一 draw call 的共用 sprite 池、aria 即時日誌（每 5 秒最多一句）、Office → Animations 設定（平靜模式、按類別開關、頻率、開場導覽）與帶測試遷移的偏好設定版本。第一批 12 個效果全為裝飾，只讀現有資料（命令的第一個字、狀態、時間），不宣稱任何結果。",
-    "scope": "AETHER target; office-life iteration I6, see docs/design/office-life.md section 5; decorative only, no outcome is claimed",
-    "implementationStatus": "implemented",
-    "verificationStatus": "partial",
-    "codePaths": [
-      "packages/office-scene/src/life",
-      "packages/office-scene/src/components/OfficeScene.tsx",
-      "packages/office-scene/src/scene/scene-props.ts",
-      "apps/web/src/features/office/life-signals.ts",
-      "apps/web/src/features/office/use-life.ts",
-      "apps/web/src/features/settings/OfficeAnimationsSettings.tsx",
-      "apps/web/src/features/office/SceneView.tsx",
-      "apps/web/src/features/shell-chrome/QuickPrefs.tsx",
-      "apps/web/src/lib/preferences/prefs-migrate.ts",
-      "apps/web/src/lib/preferences/state.ts",
-      "scripts/contact-sheet.mjs",
-      "e2e/office-life/office-life-perf.spec.ts"
-    ],
-    "testIds": [
-      "tests/aether/life-schedule.test.ts",
-      "tests/aether/life-registry.test.ts",
-      "tests/aether/life-effects.test.ts",
-      "tests/aether/life-signals.test.ts",
-      "tests/aether/life-distribution.test.ts",
-      "tests/aether/life-prefs.test.ts",
-      "tests/aether/scene-preview.test.ts",
-      "e2e/office-life/office-life.spec.ts"
-    ],
-    "blockers": [
-      "Twelve rows ship (R8, R9, R14, R17, R27, R32, R36, R38, R41, R44, R53, R56); the rest wait for the server data of I7 or for more plumbing (see the \"Implemented in I6\" notes in the design). Rows that claim an outcome (R10-R13, R17 as \"pushed\", R39, R46-R48) are not built and are refused by the scheduler without a real ok.",
-      "The frame gate was measured on desktop Chrome (ANGLE Metal, Apple M4, a loaded machine) with frozen preview frames (three desk effects, then the three crowd effects konami, standup and tech-debt) against a same-camera baseline; animated live cues, a phone-class GPU and the low tier were not measured.",
-      "Poses (the character turning to the duck, stretch, celebrate) are not played: that needs a pose hook the effect layer does not have.",
-      "The contact sheets were looked at by the engineer only; the maintainer has not reviewed them."
-    ]
-  },
-  {
-    "id": "OFFICE-LIFE-I8-01",
-    "requirement": "3D 辦公室的第二波裝飾動畫只在資料為真時出現：測試通過／失敗、CI 監看結束、建置／型別錯誤、成功的 push（R17）、強制 push、合併衝突、部署與週五下午部署、rm -rf 骷髏玩笑、sudo、curl | sh、「在我機器上能跑」、「不是 bug 是功能」、gh pr 核准的 LGTM。凡宣稱結果的規則只在提供者明確回報 ok 時啟動；ok 為 null 不產生任何結果動畫（排程器另有 claimsOutcome 防線）。R39、R40 不做（沒有真實的 404／418 資料）。每個動畫標示為裝飾，有冷卻、種子機率、品質門檻、減少動態備援與中英文朗讀文字。",
-    "scope": "AETHER target; office life iteration I8, see docs/design/office-life-work-plan.md",
-    "implementationStatus": "implemented",
-    "verificationStatus": "partial",
-    "codePaths": [
-      "packages/office-scene/src/life/registry-command-outcomes.ts",
-      "packages/office-scene/src/life/registry.ts",
-      "packages/office-scene/src/life/matchers.ts",
-      "packages/office-scene/src/life/effects/outcomes.ts",
-      "packages/office-scene/src/life/effects/danger.ts",
-      "packages/office-scene/src/life/effects/ops.ts",
-      "packages/office-scene/src/life/pools/atlas-art-signs.ts",
-      "apps/web/src/features/office/life-outcomes.ts",
-      "apps/web/src/features/office/life-signals.ts"
-    ],
-    "testIds": [
-      "tests/aether/life-command-outcomes.test.ts",
-      "tests/aether/life-outcomes.test.ts",
-      "tests/aether/life-registry.test.ts",
-      "tests/aether/life-effects.test.ts",
-      "tests/aether/life-distribution.test.ts",
-      "tests/aether/life-schedule.test.ts",
-      "e2e/office-life/office-life.spec.ts",
-      "e2e/office-life/office-life-perf.spec.ts"
-    ],
-    "blockers": [
-      "Exercised with synthetic hook records in the on-disk format and with the preview address, not a live Claude Code or Codex session; ok for Codex is often null, so its outcome rows show less",
-      "R12 words the watch command's own exit status: gh run watch exits 0 without --exit-status whatever the run did, so it never says that CI passed",
-      "R46 and R47 are derived from several real outcomes across scans and sessions (same repo, 30 and 20 minute windows); the pairing is a heuristic on the repo name",
-      "R39 and R40 are not built: no real WebFetch error text exists to label; R21 and R43 were built afterwards (OFFICE-LIFE-F1-01); R20 and R45 stay pending: R20 needs a commit signal from the beanstalk graph, R45 the member's branch on the signal and a helmet picture (a fifth atlas row)",
-      "The poses (nod, shrug, celebrate, stretch, the duck turn) were added afterwards through the pose registry (OFFICE-LIFE-F1-01); R11 shrugs where the spec said scratch_head",
-      "The simulated 8-hour day (8 members, all busy) keeps the building under 90 moments an hour and a member under 12; real days were not measured. Perf on one machine (Apple M4, ANGLE Metal, balanced tier, 806x540): the six-effect scene against the empty preview, 5 interleaved rounds, median frame and p95 equal, +1 draw call, 0 extra programs; the sprite atlas grew from 512x512 to 1024x512 and is in both scenes, so its GPU cost was not isolated; the high and low tiers and a phone viewport were not measured",
-      "Contact sheets were looked at by the engineer only; the maintainer review is pending"
-    ]
-  },
-  {
     "id": "OFFICE-LIFE-I8-02",
     "requirement": "小隊能量束的亮度以子代理每分鐘 token 速率為準（有 transcript 的 Claude 子代理，加總仍在工作者），沒有 token 資料時退回每分鐘工具呼叫數；以平滑飽和曲線 tanh(1.5·ln(1+r)/ln(1+ref)) 換算亮度；區域標籤按鈕的提示與無障礙名稱說明速率與依據（「~12K tokens/min（依 token 用量）」或「~8 tool calls/min（依工具呼叫次數）」，數字用 Intl 精簡格式），閒置時不顯示，工具呼叫速率從不被說成 token。",
     "scope": "AETHER target; office life iteration I8, see docs/design/office-life-work-plan.md",
@@ -3200,25 +3122,8 @@
     ]
   },
   {
-    "id": "OFFICE-LIFE-I8-03",
-    "requirement": "對話標頭有一個預設收合的「近期小動態」摺疊，列出辦公室為該成員顯示的最近幾個動畫（最多 5 筆，標示為裝飾，只存在記憶體）。",
-    "scope": "AETHER target; office life iteration I8, see docs/design/office-life-work-plan.md",
-    "implementationStatus": "implemented",
-    "verificationStatus": "partial",
-    "codePaths": [
-      "apps/web/src/features/feed/RecentMoments.tsx",
-      "apps/web/src/features/feed/life-moments.ts",
-      "apps/web/src/features/sessions/SessionConversation.tsx"
-    ],
-    "testIds": ["tests/aether/life-moments.test.ts", "e2e/office-life/office-life.spec.ts"],
-    "blockers": [
-      "The chip was looked at in the desktop panel and checked by the settings and axe specs; a phone-sized look is part of the responsive spec run, not a separate review",
-      "Moments live only while the page does, and only for the office page (the scene is what reports them)"
-    ]
-  },
-  {
     "id": "OFFICE-LIFE-F1-01",
-    "requirement": "角色姿勢統一由一個註冊表決定：使用者的表情動作 > 交付時的點頭 > 生活動畫的手勢；播放中的姿勢只會被更高優先權取代，同級或較低者被丟棄（不排隊）；生活動畫對同一成員的同一動作 30 秒內不重複、任何生活姿勢 8 秒內只一次；減少動態時全部丟棄。已接上橡皮鴨轉身（R8）、測試通過點頭（R10）、測試失敗／建置失敗／週五部署聳肩（R11、R13、R23）、站會伸展（R53）與 Konami 慶祝（R56）。另新增 R21（hard reset 的時光機漩渦，僅高階畫質，只說「開始」）與 R43（搜尋 TODO 的便利貼）。",
+    "requirement": "角色姿勢統一由一個註冊表決定：使用者的表情動作 > 交付時的點頭；播放中的姿勢只會被更高優先權取代，同級或較低者被丟棄（不排隊）；減少動態時全部丟棄。",
     "scope": "AETHER target; office life follow-up, see docs/design/office-life.md sections 5.3 and 5.6",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
@@ -3229,31 +3134,18 @@
       "packages/office-scene/src/components/Poser.tsx",
       "packages/office-scene/src/components/Member.tsx",
       "packages/office-scene/src/components/OfficeScene.tsx",
-      "packages/office-scene/src/squad/use-squad.ts",
-      "packages/office-scene/src/life/poses.ts",
-      "packages/office-scene/src/life/LifeLayer.tsx",
-      "packages/office-scene/src/life/registry.ts",
-      "packages/office-scene/src/life/registry-command-outcomes.ts",
-      "packages/office-scene/src/life/effects/notes.ts"
+      "packages/office-scene/src/squad/use-squad.ts"
     ],
-    "testIds": [
-      "tests/aether/pose-cues.test.ts",
-      "tests/aether/life-poses.test.ts",
-      "tests/aether/life-notes.test.ts",
-      "tests/aether/life-registry.test.ts",
-      "e2e/office-life/office-life-scene-preview.spec.ts"
-    ],
+    "testIds": ["tests/aether/pose-cues.test.ts"],
     "blockers": [
-      "Decorative: a pose is a gesture, never a claim; R21 says the reset was started, never that it worked",
-      "The poses were checked by unit tests of the rules and looked at in screenshots, not frame by frame; whether a nod reads as a nod at the default camera distance is the maintainer's call",
+      "The rules are unit tested and the poses were looked at in screenshots, not frame by frame; whether a nod reads as a nod at the default camera distance is the maintainer's call",
       "The fixed 2.5 s hold of a clip is an estimate (the models do not report clip lengths): a long clip may be cut by a higher request a little early",
-      "Micro-actions are not registry requests: they stay out of the way by Animal's own busy flag, which is also why they are the lowest priority",
-      "R20 and R45 are not built (see OFFICE-LIFE-I8-01); the sprite atlas is full at 32 cells"
+      "Micro-actions are not registry requests: they stay out of the way by Animal's own busy flag, which is also why they are the lowest priority"
     ]
   },
   {
     "id": "OFFICE-LIFE-F1-02",
-    "requirement": "小隊與生活動畫圖層在真實 GPU 上量測：高階與平衡畫質、1440x900 與 1920x1080（dpr 2）、手機設定（390x844、dpr 3、4 倍 CPU 節流、精簡模式、無尖塔），忙碌的樓層（20 位成員、8 位 subagent 的小隊含提線與交付、六個動畫循環播放）；每個圖層的 CPU 耗時以 CPU profile 歸因；圖層只在內容改變時才寫入並上傳 instance 緩衝區、無每幀配置；小隊的 shader 於暖機時連結，首次出現不再卡頓。",
+    "requirement": "小隊圖層在真實 GPU 上量測：高階與平衡畫質、1440x900 與 1920x1080（dpr 2）、手機設定（390x844、dpr 3、4 倍 CPU 節流、精簡模式、無尖塔），忙碌的樓層（20 位成員、8 位 subagent 的小隊含提線與交付）；每個圖層的 CPU 耗時以 CPU profile 歸因；圖層只在內容改變時才寫入並上傳 instance 緩衝區、無每幀配置；小隊的 shader 於暖機時連結，首次出現不再卡頓。",
     "scope": "AETHER target; office life follow-up, see docs/design/office-life.md section 4.9",
     "implementationStatus": "implemented",
     "verificationStatus": "partial",
@@ -3263,14 +3155,11 @@
       "packages/office-scene/src/squad/SquadBeam.tsx",
       "packages/office-scene/src/squad/handover/Handover.tsx",
       "packages/office-scene/src/squad/SquadWarm.tsx",
-      "packages/office-scene/src/life/LifeLayer.tsx",
-      "apps/web/src/features/office/scene-preview.ts",
       "apps/web/src/features/squad/squad-preview.ts"
     ],
     "testIds": [
       "tests/aether/squad-instances.test.ts",
-      "tests/aether/scene-preview-loop.test.ts",
-      "e2e/office-life/office-life-scene-preview.spec.ts",
+      "e2e/office-life/squad.spec.ts",
       "e2e/office-life/office-life-perf.spec.ts"
     ],
     "blockers": [
@@ -3278,8 +3167,8 @@
       "The 4x CPU throttle is an emulation of a phone, not a phone; no real phone, no Safari and no other GPU was measured",
       "The squad layer links 6 to 7 shader programs against the spec's budget of 4 (all at warm-up, so a one-time cost)",
       "On the phone profile the first appearance of the subagent characters still links 9 programs (110 to 125 ms of render calls at 4x throttle, the same with the legacy desk seating): the characters' own warm-up is an open follow-up, not the squad's",
-      "The busy building uses stand-ins (?squad, ?intensity, ?preview=life&loop=1) and a synthetic commit history, not real sessions",
-      "The official gate e2e/office-life/office-life-perf.spec.ts was run on the real GPU (balanced, 806x552, 5 rounds): 8 subagents in a squad against at desks: median and p95 frame equal, -23 draws, +6 programs (over its limit of 4, recorded as not within), +0.5 GPU MB, jsMs -0.4; six looping effects against the same camera without them: +1 draw, 0 programs, 0 jsMs, all within"
+      "The busy building uses stand-ins (?squad, ?intensity) and a synthetic commit history, not real sessions",
+      "The official gate e2e/office-life/office-life-perf.spec.ts was run on the real GPU (balanced, 806x552, 5 rounds): 8 subagents in a squad against at desks: median and p95 frame equal, -23 draws, +6 programs (over its limit of 4, recorded as not within), +0.5 GPU MB, jsMs -0.4"
     ]
   },
   {

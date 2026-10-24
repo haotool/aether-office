@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  LIFE_CLIP_COOLDOWN_MS,
-  LIFE_GAP_MS,
   POSE_HOLD_MS,
   POSE_PRIORITY,
   admitPose,
@@ -22,19 +20,12 @@ const play = (gate: PoseGate, request: PoseRequest, now: number, reduced = false
 };
 
 describe('pose priorities', () => {
-  it('ranks the person above a hand-over above a life effect', () => {
+  it('ranks the person above a hand-over', () => {
     expect(POSE_PRIORITY.emote).toBeGreaterThan(POSE_PRIORITY.handover);
-    expect(POSE_PRIORITY.handover).toBeGreaterThan(POSE_PRIORITY.life);
   });
 
   it('lets a higher source take over a pose still playing, never the other way round', () => {
-    const life = play(emptyPoseGate, ask('life'), 0)!;
-    expect(admitPose(life, ask('handover'), 100, false).ok).toBe(true);
     const handover = play(emptyPoseGate, ask('handover'), 0)!;
-    expect(admitPose(handover, ask('life', 'shrug'), 100, false)).toEqual({
-      ok: false,
-      reason: 'busy',
-    });
     expect(admitPose(handover, ask('emote', 'wave'), 100, false).ok).toBe(true);
     const emote = play(emptyPoseGate, ask('emote'), 0)!;
     expect(admitPose(emote, ask('handover'), 100, false).ok).toBe(false);
@@ -53,39 +44,13 @@ describe('pose priorities', () => {
 
   it('is per member', () => {
     const gate = play(emptyPoseGate, ask('emote'), 0)!;
-    expect(admitPose(gate, { ...ask('life'), member: 'b' }, 10, false).ok).toBe(true);
+    expect(admitPose(gate, { ...ask('handover'), member: 'b' }, 10, false).ok).toBe(true);
   });
 });
 
-describe('no pose spam', () => {
-  it('does not repeat a life clip on a member within its cooldown', () => {
-    const gate = play(emptyPoseGate, ask('life', 'shrug'), 0)!;
-    expect(admitPose(gate, ask('life', 'shrug'), LIFE_CLIP_COOLDOWN_MS - 1, false)).toEqual({
-      ok: false,
-      reason: 'cooldown',
-    });
-    expect(admitPose(gate, ask('life', 'shrug'), LIFE_CLIP_COOLDOWN_MS, false).ok).toBe(true);
-  });
-
-  it('gives a member one life pose per gap, whatever the clip', () => {
-    const gate = play(emptyPoseGate, ask('life', 'shrug'), 0)!;
-    const later = POSE_HOLD_MS + 1;
-    expect(later).toBeLessThan(LIFE_GAP_MS);
-    expect(admitPose(gate, ask('life', 'nod'), later, false)).toEqual({
-      ok: false,
-      reason: 'cooldown',
-    });
-    expect(admitPose(gate, ask('life', 'nod'), LIFE_GAP_MS, false).ok).toBe(true);
-  });
-
-  it('never throttles the person or a hand-over by the life cooldowns', () => {
-    let gate: PoseGate = emptyPoseGate;
-    for (let n = 0; n < 5; n++) gate = play(gate, ask('emote', 'wave'), n * POSE_HOLD_MS)!;
-    expect(play(gate, ask('handover'), 5 * POSE_HOLD_MS)).not.toBeNull();
-  });
-
+describe('pose holds', () => {
   it('plays nothing with reduced motion, from any source', () => {
-    for (const source of ['emote', 'handover', 'life'] as const)
+    for (const source of ['emote', 'handover'] as const)
       expect(admitPose(emptyPoseGate, ask(source), 0, true)).toEqual({
         ok: false,
         reason: 'reduced-motion',
@@ -93,10 +58,10 @@ describe('no pose spam', () => {
   });
 
   it('holds a turn for as long as it asks', () => {
-    const turn = { member: 'a', source: 'life', turn: { yaw: -0.4, holdMs: 6000 } } as const;
+    const turn = { member: 'a', source: 'handover', turn: { yaw: -0.4, holdMs: 6000 } } as const;
     const gate = play(emptyPoseGate, turn, 0)!;
-    expect(admitPose(gate, ask('life', 'shrug'), 5000, false).ok).toBe(false);
-    expect(admitPose(gate, ask('handover'), 5000, false).ok).toBe(true);
+    expect(admitPose(gate, ask('handover'), 5000, false).ok).toBe(false);
+    expect(admitPose(gate, ask('emote'), 5000, false).ok).toBe(true);
   });
 });
 

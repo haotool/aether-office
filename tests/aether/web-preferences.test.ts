@@ -96,8 +96,7 @@ describe('stored preferences', () => {
       })
     ).getState();
     expect(typeof state.life.calm).toBe('boolean');
-    expect(['normal', 'rare']).toContain(state.life.frequency);
-    expect(Object.values(state.life.categories).every((on) => typeof on === 'boolean')).toBe(true);
+    expect(Object.keys(state.life).sort()).toEqual(['calm', 'relation']);
   });
 
   it('migrate preferences saved before the life settings existed', async () => {

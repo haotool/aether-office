@@ -32,6 +32,10 @@
 > **Design record.** This is the specification the office-life work was built from, kept for the reasoning and the budgets. It
 > was written before the code and some details moved while building; for how the features behave today read
 > [features](../features.md) and the [design system](../design-system.md), and for what is verified the verification ledger.
+>
+> The signals → effects registry (§5 apart from the aria log), the little decorative effects and the intro tour (§6) were built and
+> later removed from the product: their code is gone and their file names below are history. Squads, the beam calibration (§4.4) and
+> the one aria log the squads speak through are current.
 
 What is built is tracked in the verification ledger (`OFFICE-LIFE-*` in `docs/verification/features.json`). Squads in the scene (§2, §4.1 to §4.4, §4.6, §4.10), the puppet strings (§4.5) and the hand-over with its stamp (§4.6 to §4.8) are built (I4, I5); the registry and the signals are tracked per iteration. Owner: the 3D office (`packages/office-scene`) with server work in `apps/control`.
 Work plan: [office-life-work-plan.md](office-life-work-plan.md).
@@ -523,7 +527,7 @@ looks again once a second instead of building its lists every frame.
 instanced materials, the strings, the points and the seal) linked inside the first frames of the squad, 17.6 ms of render calls on
 desktop and a worst frame of 33 ms (16.8 ms for the same scene without a squad); `SquadWarm` now builds one hidden copy of each from
 the layer's own factories, so the warm-up that already runs behind the loading cover links them (the strings and points only above
-the low tier), and the first appearance links none (0 ms of linking, worst frame 16.8 ms on desktop; `e2e/office-life/office-life-scene-preview.spec.ts` fails
+the low tier), and the first appearance links none (0 ms of linking, worst frame 16.8 ms on desktop; `squad.spec.ts` fails
 without it). The life layer needed nothing: its sprite pool is mounted from the start, so its one program is linked at warm-up, and
 looping effects start without a linking render. On the phone profile (4x CPU throttle) the worst frame on first appearance is
 still 100 to 117 ms, and it is not the squad's: the legacy seating of the same 8 characters shows 133 ms, and the 9 programs that
@@ -596,7 +600,7 @@ export function schedule(
 };
 ```
 
-The derivation lives in `apps/web/src/features/office/life-signals.ts`. It diffs successive `LocalSessionsResponse` snapshots
+The derivation lives in `life-signals.ts`. It diffs successive `LocalSessionsResponse` snapshots
 (2 s scan) plus the beanstalk commits and UI events, in the same place where `office-model.ts` already derives pulses.
 Scheduling and drawing live in the scene package. The web never decides on an animation, and the scene never parses a
 session.
@@ -698,7 +702,7 @@ Legend:
 **Implemented in I8 follow-up (rows whose tag data was already real)**: R21, R43.
 
 R29 is the existing compaction effect: it is not a registry rule, but the Work switch and Calm mode now govern it. `LIFE_RULES` in
-`packages/office-scene/src/life/registry.ts` is the source; `tests/aether/life-registry.test.ts` checks that these ids and
+`registry.ts` is the source; `life-registry.test.ts` checks that these ids and
 the categories of this table match it. The category `build` of the table is the settings group "Tests and builds" (`test`).
 How each shipped row differs from its table line, because the data is what the hook receiver keeps today (the first word of a
 command, plus a plain subcommand):
@@ -716,7 +720,7 @@ command, plus a plain subcommand):
 | R56 | Confetti on every desk in view (at most 40 desks), and the members at the desks in view (at most 24, the same as the confetti dresses) play `celebrate` 0.4 s in, through the pose registry (§5.6).                                                                                                                 |
 
 How the I8 rows differ from their table lines. An outcome row starts from a `tool.end` signal, which the web makes the first
-time a call's `ok` is known (`apps/web/src/features/office/life-outcomes.ts`); a call whose `ok` stays null makes nothing, so no
+time a call's `ok` is known (`life-outcomes.ts`); a call whose `ok` stays null makes nothing, so no
 outcome effect can start from a guess, and the scheduler drops such a signal for any rule marked `claimsOutcome` as a second
 guard. A start rule reads the `tags` the hook receiver put on the call, never its arguments. Every effect is a joke or a mark
 on the desk; none of them stops, blocks or reports anything.
@@ -812,7 +816,7 @@ a desk effect, the members of a group effect or the members at the desks in view
 | R53 stand-up                                     | each member of the circle `stretch` 1.5 s in                                                          |
 | R56 Konami                                       | the members at the desks in view `celebrate` 0.4 s in                                                 |
 
-Tests: `tests/aether/pose-cues.test.ts` (priorities, no spam, reduced motion, the turn envelope), `tests/aether/life-poses.test.ts`
+Tests: `tests/aether/pose-cues.test.ts` (priorities, no spam, reduced motion, the turn envelope), `life-poses.test.ts`
 (which rule asks what of whom). R20 (a merge's `celebrate`) is still pending (see 5.3).
 
 ---
@@ -1178,13 +1182,13 @@ Edits outside the new folders, and who else is touching those areas:
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Pure determinism  | `stepSquad`, `squadLayout`, `planErrand`/`errandAt`, `verlet` (fixed dt, a golden checksum of positions after 300 ticks), `schedule` (same signals and seeds give the same cues, cooldowns, bucket), each `effects/*` timeline at sampled t, `introPoseAt` at sampled t, `introReducer` transitions         | `tests/aether/*.test.ts` (Vitest), one file per module                                                                                             |
 | Comfort           | intro: angular velocity ≤ 16.5°/s, horizon level (no roll, constant pitch within a phase), distance ≥ `MIN_DISTANCE`, camera outside the shell box below the roof, total ≤ 46 s                                                                                                                             | removed with the tour                                                                                                                              |
-| Honesty           | no rule whose effect claims an outcome (R10–R13, R17, R39, R46–R48) fires with `ok === null`; every rule has an aria text in both locales and `decorative: true`                                                                                                                                            | `tests/aether/life-registry.test.ts`                                                                                                               |
+| Honesty           | no rule whose effect claims an outcome (R10–R13, R17, R39, R46–R48) fires with `ok === null`; every rule has an aria text in both locales and `decorative: true`                                                                                                                                            | `life-registry.test.ts`                                                                                                                            |
 | Data              | the command-tag table (≥ 60 cases); hook-spool lifecycle (start → tools → stop → 90 s grace); redaction of `label` and `result.summary`                                                                                                                                                                     | `tests/aether/command-tags.test.ts`, `hook-spool.test.ts`, the security suite                                                                      |
 | Layout            | schema v1/v2 round trips, the squad validation codes, auto placement on crowded floors                                                                                                                                                                                                                      | `tests/aether/layout*.test.ts`                                                                                                                     |
 | E2E               | intro: plays once, skip by key, tap and Esc, don't-show-again persists, Replay works, reduced motion = stills. Squad: the demo fixture spawns 3 subagents, then the zone, pods and aria log lines show; finish leads to the hand-over aria line                                                             | `e2e/office-life/squad.spec.ts` (synthetic fixture providers, labelled); the intro spec went with the tour                                         |
 | Visual regression | **contact sheets**: a deterministic preview route `?preview=life&effect=<id>&t=<ms>` (the `scene-preview.ts` pattern) renders each effect at 3 times. Playwright assembles a sheet per category; review is human; a pixel diff runs only on the real-GPU runner                                             | `e2e/office-life/office-life.spec.ts` + `scripts/contact-sheet.mjs`                                                                                |
 | Perf gates        | `PerfProbe` on a real GPU (not SwiftShader). Baseline scene vs the same scene with 1 squad × 8, 3 live memes and strings: Δ median frame ≤ 1.0 ms, Δ p95 ≤ 2.0 ms, Δ draw calls ≤ 19, Δ programs ≤ 4, Δ GPU MB ≤ 4, Δ jsMs median ≤ 0.4. Phone emulation tier: Δ median ≤ 2 ms                              | `e2e/office-life/office-life-perf.spec.ts`, run on demand (`PERF_GPU=1`); results recorded in the verification ledger as _measured_, never assumed |
-| Perf matrix       | one scene variant per case through the same probe on a device profile (desktop sizes and tiers, the phone at 4x CPU throttle), interleaved and repeated, medians; motion cost (`&loop=1` effects, strings, hand-overs running) and the first appearance (`&after=MS`: the render calls that link a program) | `scripts/perf-matrix.mjs` (results in section 4.9); `e2e/office-life/office-life-scene-preview.spec.ts` pins that a late squad links no program    |
+| Perf matrix       | one scene variant per case through the same probe on a device profile (desktop sizes and tiers, the phone at 4x CPU throttle), interleaved and repeated, medians; motion cost (`&loop=1` effects, strings, hand-overs running) and the first appearance (`&after=MS`: the render calls that link a program) | `scripts/perf-matrix.mjs` (results in section 4.9); `office-life-scene-preview.spec.ts` pins that a late squad links no program                    |
 
 ---
 

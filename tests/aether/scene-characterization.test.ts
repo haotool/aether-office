@@ -6,7 +6,6 @@ import { chooseShot } from '../../packages/office-scene/src/environment/director
 import { genomeOf } from '../../packages/office-scene/src/flowers/flower-genome.js';
 import { gardenOf } from '../../packages/office-scene/src/core/garden-geometry.js';
 import { defaultLayout } from '../../packages/office-scene/src/environment/layout.js';
-import { emptyLifeState, schedule } from '../../packages/office-scene/src/life/schedule.js';
 import { chooseFeeds } from '../../packages/office-scene/src/core/multi-view.js';
 import { currentWork } from '../../packages/office-scene/src/screen/screen-layout.js';
 import { PALETTES } from '../../packages/office-scene/src/screen/screen-theme.js';
@@ -38,7 +37,6 @@ const EXPECTED: Record<string, string> = {
   layouts: '19b4c5dfa52b6a75',
   deskItems: '37a32b6fc2afe27c',
   screens: '58d662ed2dc10349',
-  lifeSchedule: '83f69b24eac33b4b',
 };
 
 it('keeps every scene module producing what it produced', () => {
@@ -57,7 +55,6 @@ it('keeps every scene module producing what it produced', () => {
     views: { VIEWS },
     theme: { PALETTES },
     screenLayout: { currentWork },
-    schedule: { schedule, emptyLifeState },
   });
   expect(digests).toEqual(EXPECTED);
 }, 120_000);

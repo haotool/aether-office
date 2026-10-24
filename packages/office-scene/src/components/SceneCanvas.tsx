@@ -22,7 +22,6 @@ import { SceneCamera } from '../scene/SceneCamera.js';
 import { AnimationClock, Runtime } from './SceneRuntime.js';
 import { OVERVIEW, floorY } from '../scene/scene-geometry.js';
 import { beaconsOf, beamsOf, labelsOf } from '../scene/scene-markers.js';
-import { LifeLayer } from '../life/index.js';
 import { SquadLayer, SquadWarm, isPodSeat } from '../squad/index.js';
 
 function memberAt(m: SceneModel, agent: Agent) {
@@ -204,17 +203,6 @@ function SceneRelations({ m }: { m: SceneModel }) {
         visible={(f) => exploded || f <= floor}
       />
       <RelationLines edges={m.edges} animate={!props.reducedMotion} />
-      <LifeLayer
-        input={props.life}
-        seats={nav.seats}
-        floor={floor}
-        exploded={exploded}
-        quality={props.quality}
-        reducedMotion={props.reducedMotion}
-        zh={m.zh}
-        say={m.ariaLog.say}
-        pose={m.pose.request}
-      />
     </>
   );
 }

@@ -31,7 +31,7 @@ test('the fixture subagent sits in a squad zone with a focusable label', async (
   const zone = page.getByRole('button', { name: /^Squad of .*, 1 working$/ });
   await expect(zone).toBeAttached({ timeout: 15000 });
   await expect(page.locator('.scene-label', { hasText: 'Explore' })).toBeAttached();
-  await expect(page.getByRole('log', { name: 'Office activity (decorative)' })).toBeAttached();
+  await expect(page.getByRole('log', { name: 'Office activity' })).toBeAttached();
   await expect(page.getByRole('log')).toHaveCount(1);
   expect(errors).toEqual([]);
 });
@@ -42,7 +42,7 @@ test('arrivals and departures are announced, and the zone label counts the squad
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await enter(page, 'squad=3&arrive=3000&leave=9000');
-  const log = page.getByRole('log', { name: 'Office activity (decorative)' });
+  const log = page.getByRole('log', { name: 'Office activity' });
   await expect(log).toContainText('joined', { timeout: 20000 });
   await expect(log).toContainText('squad', { timeout: 20000 });
   await expect(page.getByRole('button', { name: /^Squad of .*, \d+ working/ })).toBeAttached();
@@ -54,12 +54,9 @@ test('reduced motion and the low tier show the same squad without walks', async 
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await enter(page, 'squad=2&arrive=3000', { reducedMotion: true, quality: 'low' });
-  await expect(page.getByRole('log', { name: 'Office activity (decorative)' })).toContainText(
-    'joined',
-    {
-      timeout: 20000,
-    },
-  );
+  await expect(page.getByRole('log', { name: 'Office activity' })).toContainText('joined', {
+    timeout: 20000,
+  });
   await expect(page.getByRole('button', { name: /^Squad of .*, \d+ working/ })).toBeAttached();
   expect(errors).toEqual([]);
 });
@@ -78,7 +75,7 @@ for (const theme of ['dark', 'light'] as const)
 
 test('the Chinese interface names the squad and its moments', async ({ page }) => {
   await enter(page, 'squad=2&arrive=3000', { locale: 'zh-TW' });
-  await expect(page.getByRole('log', { name: '辦公室動態（裝飾）' })).toContainText('加入了', {
+  await expect(page.getByRole('log', { name: '辦公室動態' })).toContainText('加入了', {
     timeout: 20000,
   });
   await expect(page.getByRole('button', { name: /的小隊，\d+ 位運作中/ })).toBeAttached();
@@ -191,4 +188,31 @@ test('the Chinese interface words the beam rate with its basis', async ({ page }
   ).toBeAttached({
     timeout: 20000,
   });
+});
+
+test('a squad that appears late links no new shader program', async ({ page }) => {
+  await enter(page, 'perf=60&squad=3&after=6000');
+  await page.waitForFunction(() => '__aetherPerfRig' in window, undefined, { timeout: 60_000 });
+  await frames(page, 180);
+  const before = await page.evaluate(
+    () =>
+      (window as unknown as { __aetherPerfRig: { gl: { info: { programs: unknown[] } } } })
+        .__aetherPerfRig.gl.info.programs.length,
+  );
+  await expect(page.getByRole('button', { name: /^Squad of .*, \d+ working/ })).toBeAttached({
+    timeout: 60_000,
+  });
+  await frames(page, 120);
+  const after = await page.evaluate(() => {
+    const rig = (
+      window as unknown as {
+        __aetherPerfRig: {
+          sample: (n: number) => Promise<unknown>;
+          gl: { info: { programs: unknown[] } };
+        };
+      }
+    ).__aetherPerfRig;
+    return rig.sample(30).then(() => rig.gl.info.programs.length);
+  });
+  expect(after).toBe(before);
 });

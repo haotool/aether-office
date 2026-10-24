@@ -142,25 +142,6 @@ export const standInRole = (index: number): string => {
 
 const nameHash = (name: string) => [...name].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
 
-type PreviewParams = { effect: string; t: number; loop?: true };
-
-const ONE_EFFECT = '[a-z][a-z0-9-]{0,39}(?::\\d{1,6})?';
-const EFFECT_ID = new RegExp(`^${ONE_EFFECT}(,${ONE_EFFECT}){0,5}$`);
-
-export function previewParams(url: string): PreviewParams | null {
-  const query = url.includes('?') ? url.slice(url.indexOf('?') + 1) : url;
-  const params = new URLSearchParams(query.split('#')[0]);
-  const effect = params.get('effect');
-  if (params.get('preview') !== 'life' || effect === null || !EFFECT_ID.test(effect)) return null;
-  const raw = params.get('t');
-  if (raw !== null && !/^\d{1,7}$/.test(raw)) return null;
-  return {
-    effect,
-    t: raw === null ? 0 : Number(raw),
-    ...(params.get('loop') === '1' ? { loop: true as const } : {}),
-  };
-}
-
 export function standInFacts(
   agent: Pick<Agent, 'name' | 'role'>,
   provider: ScreenFacts['provider'],
