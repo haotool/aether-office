@@ -12,6 +12,8 @@ export const zhComposer = {
   composerReadonlyRole: '你的角色可以看這個 session，但不能輸入。',
   composerQueueFull: '等待中的訊息太多，請等它們送出。',
   composerBusyNote: 'Session 正在工作，現在送的訊息會等它做完再送出。',
+  composerNotAtPrompt:
+    '終端機停在選單或問題上，不是輸入提示。訊息會等它回到輸入提示再送出；按 Esc 可以關掉選單。',
   composerQuick: '快速回覆',
   composerContinue: '繼續',
   composerYes: '是',

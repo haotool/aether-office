@@ -12,7 +12,7 @@ export const ENTER_DELAY_MS = 150;
 export const MAX_BODY = 8000;
 /** Messages that wait for the terminal (offline, busy): more than this are refused, not piled up without end. */
 export const MAX_QUEUE = 10;
-export const SETTLE_MS = 8000;
+export const SETTLE_MS = 3000;
 /** A sent message the transcript has not shown after this long is flagged rather than left looking delivered. */
 const UNCONFIRMED_MS = 90_000;
 const SKEW_MS = 60_000;
@@ -56,13 +56,21 @@ export function enqueue(list: readonly Pending[], item: Pending): Pending[] | nu
 type SendGate = {
   online: boolean;
   free: boolean;
+  atPrompt: boolean;
   working: boolean;
   holdUntil: number;
   now: number;
 };
 
 export const canSend = (g: SendGate): boolean =>
-  g.online && g.free && !g.working && g.now >= g.holdUntil;
+  g.online && g.free && g.atPrompt && !g.working && g.now >= g.holdUntil;
+
+export type ScreenState = 'working' | 'waiting' | 'idle' | 'unknown' | null;
+
+export const atPrompt = (state: ScreenState): boolean => state !== 'waiting' && state !== 'unknown';
+
+export const isAwaitingReply = (list: readonly Pending[], now: number): boolean =>
+  list.some((p) => p.state === 'sending' || (p.state === 'sent' && !isUnconfirmed(p, now)));
 
 export const nextQueued = (list: readonly Pending[]): Pending | undefined =>
   list.find((p) => p.state === 'queued');

@@ -13,6 +13,8 @@ export const enComposer = {
   composerReadonlyRole: 'Your role can read this session but not type into it.',
   composerQueueFull: 'Too many messages are waiting. Wait for them to go in.',
   composerBusyNote: 'The session is working. A message you send waits until it is done.',
+  composerNotAtPrompt:
+    'The terminal is on a menu or a question, not its prompt. A message waits until it is back at the prompt; press Esc to close the menu.',
   composerQuick: 'Quick replies',
   composerContinue: 'continue',
   composerYes: 'yes',

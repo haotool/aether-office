@@ -1,6 +1,7 @@
 // Synthetic interactive CLI that behaves like a terminal agent in the ways a composer depends on; a fixture, never a
 // model. Usage: node claude-tui.mjs --home <dir> --spool <file> [--resume <id> [--fork-session]]. A message containing
-// `slow` makes it "work" for a while so an interrupt can be tested; `/model x` is acknowledged.
+// `slow` makes it "work" for a while so an interrupt can be tested; `/model x` is acknowledged. It draws a prompt line when
+// idle and a spinner line while it works, which is what the terminal-state check reads before a message is sent.
 import { appendFileSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -46,6 +47,7 @@ const finish = (text) => {
   said(text);
   hook('Stop');
   out(`< ${text}`);
+  out('❯');
 };
 const interrupt = () => {
   if (!turn) return;
@@ -60,6 +62,7 @@ const submit = () => {
   user(text);
   hook('UserPromptSubmit');
   if (text.startsWith('/')) return finish(`command ${text}`);
+  out('✶ Working… (esc to interrupt)');
   turn = setTimeout(
     () => finish(`ECHO: ${text.replace(/\n/g, ' / ')}`),
     /\bslow\b/.test(text) ? 30_000 : 900,
@@ -68,6 +71,7 @@ const submit = () => {
 
 hook('SessionStart');
 out('FAKE CLAUDE READY');
+out('❯');
 process.stdin.setRawMode(true);
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', (chunk) => {

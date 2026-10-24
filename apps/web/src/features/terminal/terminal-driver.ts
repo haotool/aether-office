@@ -1,9 +1,10 @@
 import { api } from '../../lib/api/api.js';
 import { execute } from '../../lib/api/api-commands.js';
-import type { Step } from '../conversation/composer-model.js';
+import type { ScreenState, Step } from '../conversation/composer-model.js';
 
 export type TerminalControl = {
   state: string;
+  agentState: ScreenState;
   controlOwner: string | null;
   controlEpoch: number;
   leaseUntil: number | null;
