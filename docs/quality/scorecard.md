@@ -32,7 +32,7 @@ Score 96.7, floor 96.7, 100% of the rule weight measured.
 | Import cycles (runtime imports, product source) | `import-cycles` | 0 | 0 | 12 | 0 | pass |
 | Files imported by more than 30 others | `fan-in` | 2 | 0 | 5 | -3.33 | fail |
 | Exports nothing imports | `dead-exports` | 0 | 0 | 10 | 0 | pass |
-| Duplicated code share (limit 3%) | `duplicates` | 0.22% | 3% | 12 | 0 | pass |
+| Duplicated code share (limit 3%) | `duplicates` | 0.23% | 3% | 12 | 0 | pass |
 | Uses of the any type (product source) | `any-type` | 0 | 0 | 6 | 0 | pass |
 | Type or lint suppression comments | `suppressions` | 0 | 0 | 6 | 0 | pass |
 | Unfinished-work markers in comments | `todo-markers` | 0 | 0 | 5 | 0 | pass |
@@ -43,8 +43,8 @@ Score 96.7, floor 96.7, 100% of the rule weight measured.
 **fan-in** (-3.33): Files imported by more than 30 others
 
 ```text
-  apps/web/src/lib/api/api.ts:1 47 importers
-  apps/web/src/ui/useT.ts:1 146 importers
+  apps/web/src/lib/api/api.ts:1 48 importers
+  apps/web/src/ui/useT.ts:1 148 importers
 ```
 
 ## Types and correctness gates
@@ -69,7 +69,7 @@ Score 100.0, floor 100.0, 82% of the rule weight measured.
 | Rule | Id | Value | Limit | Weight | Penalty | State |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
 | Product modules no unit test reaches through imports | `unreached-modules` | 0 | 0 | 25 | 0 | pass |
-| Share of product modules a unit test imports directly | `direct-tests` | 60.39% | >= 60% | 15 | 0 | pass |
+| Share of product modules a unit test imports directly | `direct-tests` | 60.05% | >= 60% | 15 | 0 | pass |
 | Fixed sleeps, fixed ports and waitForTimeout in tests | `flaky-patterns` | 0 | 0 | 20 | 0 | pass |
 | Skipped or todo tests | `skipped-tests` | 0 | 0 | 10 | 0 | pass |
 | Line coverage (no coverage/coverage-summary.json: run pnpm test:coverage) | `coverage-lines` | - | - | 8 | 0 | not run |
@@ -79,9 +79,9 @@ Score 100.0, floor 100.0, 82% of the rule weight measured.
 Unit-test lines per product source line: 0.53
 
 ```text
-apps/control: 14748 source lines
+apps/control: 14818 source lines
 apps/runner: 3059 source lines
-apps/web: 28283 source lines
+apps/web: 28779 source lines
 packages/contracts: 1376 source lines
 packages/kernel: 3455 source lines
 packages/office-scene: 25065 source lines
@@ -106,7 +106,7 @@ Score 100.0, floor 100.0, 100% of the rule weight measured.
 | token-lint escape comments over the budget of 100 | `escape-comments` | 100 | 100 | 10 | 0 | pass |
 | Rules above scripts/design-token-baseline.json | `baseline-regression` | 0 | 0 | 15 | 0 | pass |
 | Roles with more distinct sizes than allowed | `role-variance` | 0 | 0 | 20 | 0 | pass |
-| Physical left/right properties (logical ones are RTL-ready) | `physical-properties` | 169 | - | - | 0 | info |
+| Physical left/right properties (logical ones are RTL-ready) | `physical-properties` | 171 | - | - | 0 | info |
 
 ## Accessibility and i18n
 
@@ -128,26 +128,26 @@ Score 99.1, floor 99.1, 70% of the rule weight measured.
 
 | Rule | Id | Value | Limit | Weight | Penalty | State |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
-| Web JavaScript total, gzip (budget 870 KB) | `bundle-total` | 850 KB | 870 | 25 | 0 | pass |
+| Web JavaScript total, gzip (budget 870 KB) | `bundle-total` | 857 KB | 870 | 25 | 0 | pass |
 | Largest JavaScript chunk, gzip (budget 400 KB) | `bundle-chunk` | 377 KB | 400 | 15 | 0 | pass |
 | First-load JavaScript and CSS, transferred (budget 200 KB) | `first-load` | 203 KB | 200 | 30 | -0.9 | fail |
 | Frame times and draw cost (scripts/perf-matrix.mjs) (not run: needs a real GPU (PERF_GPU=1); the measured numbers in docs/design-system.md are not re-scored) | `perf-matrix` | - | - | 30 | 0 | not run |
-| Stylesheet files in apps/web/src (198 KB source, 3 built file(s) at 32 KB gzip; no CSS budget is documented) | `css-sources` | 52 | - | - | 0 | info |
+| Stylesheet files in apps/web/src (199 KB source, 3 built file(s) at 32 KB gzip; no CSS budget is documented) | `css-sources` | 53 | - | - | 0 | info |
 
 ### What costs points
 
 **first-load** (-0.9): First-load JavaScript and CSS, transferred (budget 200 KB)
 
 ```text
-  apps/web/dist/assets/index-BONmPZVP.js:1 80 KB
+  apps/web/dist/assets/index-CHzDT8dL.js:1 80 KB
   apps/web/dist/assets/signals-D521Il5C.js:1 3 KB
   apps/web/dist/assets/scheduler-BPo9TGJm.js:1 1 KB
   apps/web/dist/assets/react-dom-d_Gvm-cX.js:1 1 KB
   apps/web/dist/assets/chunk-OB3PAWPO-BHhCUyTW.js:1 12 KB
   apps/web/dist/assets/QueryClientProvider-CVckzZZj.js:1 0 KB
-  apps/web/dist/assets/polling-DwZpIul7.js:1 7 KB
-  apps/web/dist/assets/createLucideIcon-5M9LAFzt.js:1 1 KB
-  ... 35 more in scorecard.json
+  apps/web/dist/assets/polling-GJm_C7Xt.js:1 7 KB
+  apps/web/dist/assets/useT-pj6LRtZW.js:1 3 KB
+  ... 42 more in scorecard.json
 ```
 
 ## Docs truth
