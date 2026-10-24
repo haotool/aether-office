@@ -199,10 +199,11 @@ export function readTerminal(ctx: Context, actor: Actor, projectId: string, id: 
   return {
     ...(ctx.sqlite
       .prepare(
-        'SELECT id,state,snapshot,controlOwner,controlEpoch,leaseUntil FROM terminal_sessions WHERE id=?',
+        'SELECT id,state,agentState,snapshot,controlOwner,controlEpoch,leaseUntil FROM terminal_sessions WHERE id=?',
       )
       .get(id) as Pick<Session, 'id' | 'state' | 'controlOwner' | 'controlEpoch' | 'leaseUntil'> & {
       snapshot: string | null;
+      agentState: TerminalAgentState | null;
     }),
     commands: ctx.sqlite
       .prepare(

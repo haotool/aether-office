@@ -4,6 +4,7 @@
  */
 export const POLL = {
   screen: 250,
+  answer: 1000,
   watching: 2000,
   prompt: 2500,
   driving: 3000,
@@ -23,6 +24,9 @@ export function pollMs<T>(live: boolean, fallback: T): T | number {
 }
 
 export const poll = (ms: number | false) => ({ refetchInterval: ms });
+
+export const driveMs = (state: string | null | undefined, awaiting: boolean): number =>
+  awaiting || state !== 'idle' ? POLL.answer : POLL.driving;
 
 export const pollBy = <T>(next: (data: T | undefined, failed: boolean) => number | false) => ({
   refetchInterval: (query: { state: { data: T | undefined; error: Error | null } }) =>

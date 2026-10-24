@@ -4,11 +4,13 @@ import {
   ENTER_DELAY_MS,
   MAX_BODY,
   MAX_QUEUE,
+  atPrompt,
   atToken,
   canSend,
   complete,
   effortCommand,
   enqueue,
+  isAwaitingReply,
   isUnconfirmed,
   modelCommand,
   nextQueued,
@@ -61,12 +63,36 @@ it('keeps a bounded queue, oldest first, and sends only when it can', () => {
   expect(
     enqueue([...list.slice(1), pending('s', 's')], pending('ok', 'x', { state: 'queued' })),
   ).not.toBeNull();
-  const gate = { online: true, free: true, working: false, holdUntil: 0, now: 10 };
+  const gate = { online: true, free: true, atPrompt: true, working: false, holdUntil: 0, now: 10 };
   expect(canSend(gate)).toBe(true);
   expect(canSend({ ...gate, online: false })).toBe(false);
   expect(canSend({ ...gate, free: false })).toBe(false);
+  expect(canSend({ ...gate, atPrompt: false })).toBe(false);
   expect(canSend({ ...gate, working: true })).toBe(false);
   expect(canSend({ ...gate, holdUntil: 11 })).toBe(false);
+});
+
+it('holds a message while the terminal shows a menu or question instead of its prompt', () => {
+  expect(atPrompt('idle')).toBe(true);
+  expect(atPrompt('working')).toBe(true);
+  expect(atPrompt(null)).toBe(true);
+  expect(atPrompt('waiting')).toBe(false);
+  expect(atPrompt('unknown')).toBe(false);
+});
+
+it('is awaiting a reply while a message is being sent or sent but not yet in the transcript', () => {
+  const now = 1_000_000 + 5_000;
+  expect(isAwaitingReply([], now)).toBe(false);
+  expect(isAwaitingReply([pending('a', 'x', { state: 'queued' })], now)).toBe(false);
+  expect(isAwaitingReply([pending('a', 'x', { state: 'failed' })], now)).toBe(false);
+  expect(isAwaitingReply([pending('a', 'x', { state: 'sending' })], now)).toBe(true);
+  expect(isAwaitingReply([pending('a', 'x', { state: 'sent' })], now)).toBe(true);
+});
+
+it('stops awaiting a message the transcript never showed', () => {
+  const lost = [pending('a', 'x', { state: 'sent' })];
+  expect(isAwaitingReply(lost, 1_000_000 + 89_000)).toBe(true);
+  expect(isAwaitingReply(lost, 1_000_000 + 91_000)).toBe(false);
 });
 
 it('matches a sent message to the transcript prompt once, by text, and flags one never seen', () => {

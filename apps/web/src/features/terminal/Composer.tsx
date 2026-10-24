@@ -126,21 +126,33 @@ function SendOrStop({
 
 function ComposerNotes({
   working,
+  stuck,
   waiting,
   status,
   interrupted,
   onStopProcess,
+  onEscape,
 }: {
   working: boolean;
+  stuck: boolean;
   waiting: boolean;
   status: string;
   interrupted: boolean;
   onStopProcess: () => void;
+  onEscape: () => void;
 }) {
   const t = useT();
   return (
     <>
       {working && waiting && <p className="composer-note">{t('composerBusyNote')}</p>}
+      {stuck && (
+        <div className="composer-stop-more">
+          <p className="composer-note">{t('composerNotAtPrompt')}</p>
+          <button type="button" className="secondary" onClick={onEscape}>
+            {t('composerEsc')}
+          </button>
+        </div>
+      )}
       {status && (
         <p id={COMPOSER_STATUS_ID} className="composer-note" role="status">
           {status}
@@ -279,8 +291,8 @@ export function Composer({ session, drive, working }: ComposerProps) {
   const [confirmStop, setConfirmStop] = useState(false);
 
   useEffect(() => {
-    if (!working) setInterrupted(false);
-  }, [working]);
+    if (!d.busy) setInterrupted(false);
+  }, [d.busy]);
 
   const blocked = blockedReason(d, t);
   const status = blocked || (!d.online ? t('composerOffline') : '') || editor.note || d.error;
@@ -291,18 +303,20 @@ export function Composer({ session, drive, working }: ComposerProps) {
         field={field}
         editor={editor}
         blocked={blocked}
-        stoppable={working && d.canWrite}
+        stoppable={d.busy && d.canWrite}
         onStop={() => {
           setInterrupted(true);
           void d.interrupt();
         }}
       />
       <ComposerNotes
-        working={working}
+        working={d.busy}
+        stuck={d.stuck}
         waiting={d.pending.some((p) => p.state === 'queued')}
         status={status}
         interrupted={interrupted}
         onStopProcess={() => setConfirmStop(true)}
+        onEscape={() => void d.sendKey(ESC)}
       />
       {confirmStop && (
         <StopProcessModal

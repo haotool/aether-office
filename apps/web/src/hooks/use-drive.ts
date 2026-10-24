@@ -7,12 +7,15 @@ import {
   CTRL_C,
   ESC,
   SETTLE_MS,
+  atPrompt,
   canSend,
   enqueue,
+  isAwaitingReply,
   nextQueued,
   sanitizeBody,
   sequenceFor,
   type Pending,
+  type ScreenState,
 } from '../features/conversation/composer-model.js';
 import { useOutbox, usePending } from '../features/conversation/outbox.js';
 import {
@@ -23,7 +26,7 @@ import {
   type TerminalControl,
 } from '../features/terminal/terminal-driver.js';
 import { isOperator } from '../lib/navigation/roles.js';
-import { POLL, poll } from '../lib/app/polling.js';
+import { POLL, driveMs, poll, pollBy } from '../lib/app/polling.js';
 
 export type Drive = { terminalId: string; projectId: string };
 
@@ -69,26 +72,39 @@ function useReachable() {
   return { online: online && reachable, lost: () => setReachable(false) };
 }
 
-function useDriveAccess(drive: Drive) {
+function useDriveTerminal(drive: Drive | null, awaiting: boolean) {
+  return useQuery({
+    queryKey: ['drive-terminal', drive?.terminalId],
+    queryFn: () => {
+      if (!drive) throw new Error('drive terminal without a terminal');
+      return api<TerminalControl>(`/api/projects/${drive.projectId}/terminals/${drive.terminalId}`);
+    },
+    enabled: !!drive,
+    ...pollBy((data: TerminalControl | undefined) => driveMs(data?.agentState, awaiting)),
+    retry: false,
+  });
+}
+
+export function useTerminalState(sessionKey: string | null, awaiting: boolean): ScreenState {
+  const { drive } = useSessionTerminal(sessionKey);
+  return useDriveTerminal(drive, awaiting).data?.agentState ?? null;
+}
+
+function useDriveAccess(drive: Drive, awaiting: boolean) {
   const me = useQuery({
     queryKey: ['session'],
     queryFn: () => api<Session>('/api/session'),
     staleTime: Infinity,
   });
   const userId = me.data?.actor.id ?? '';
-  const control = useQuery({
-    queryKey: ['drive-terminal', drive.terminalId],
-    queryFn: () =>
-      api<TerminalControl>(`/api/projects/${drive.projectId}/terminals/${drive.terminalId}`),
-    ...poll(POLL.driving),
-    retry: false,
-  });
+  const control = useDriveTerminal(drive, awaiting);
   const running = control.data?.state === 'running';
   return {
     userId,
     canWrite: isOperator(me.data?.actor.role),
     running,
     free: !!control.data && running && !heldByOther(control.data, userId, Date.now()),
+    screen: control.data?.agentState ?? null,
   };
 }
 
@@ -133,7 +149,14 @@ function useDirectWrites(
   return { error, guarded, sendKey, interrupt, stopProcess };
 }
 
-type Way = { online: boolean; free: boolean; working: boolean; canWrite: boolean; userId: string };
+type Way = {
+  online: boolean;
+  free: boolean;
+  atPrompt: boolean;
+  working: boolean;
+  canWrite: boolean;
+  userId: string;
+};
 
 function useDeliver(
   sessionKey: string,
@@ -186,7 +209,7 @@ function useFlushQueue(
   way: Way,
   guarded: (task: () => Promise<void>) => Promise<void>,
 ) {
-  const { online, free, working, canWrite, userId } = way;
+  const { online, free, atPrompt: ready, working, canWrite, userId } = way;
   const { deliver, sending, hold, tick } = useDeliver(sessionKey, drive, userId, guarded);
   const waiting = nextQueued(pending);
   useEffect(() => {
@@ -196,22 +219,25 @@ function useFlushQueue(
   }, [waiting, canWrite]);
   useEffect(() => {
     if (!waiting || sending.current || !canWrite || !userId) return;
-    if (canSend({ online, free, working, holdUntil: hold.current, now: Date.now() }))
+    if (
+      canSend({ online, free, atPrompt: ready, working, holdUntil: hold.current, now: Date.now() })
+    )
       void deliver(waiting);
   });
 }
 
 export function useDrive(sessionKey: string, drive: Drive, working: boolean) {
-  const access = useDriveAccess(drive);
-  const network = useReachable();
   const pending = usePending(sessionKey);
+  const access = useDriveAccess(drive, isAwaitingReply(pending, Date.now()));
+  const network = useReachable();
   const update = useOutbox((s) => s.update);
-  const writes = useDirectWrites(drive, access.userId, working, network);
+  const busy = working || access.screen === 'working';
+  const writes = useDirectWrites(drive, access.userId, busy, network);
   useFlushQueue(
     sessionKey,
     drive,
     pending,
-    { ...access, online: network.online, working },
+    { ...access, online: network.online, atPrompt: atPrompt(access.screen), working: busy },
     writes.guarded,
   );
 
@@ -234,6 +260,8 @@ export function useDrive(sessionKey: string, drive: Drive, working: boolean) {
     canWrite: access.canWrite,
     running: access.running,
     free: access.free,
+    busy,
+    stuck: !atPrompt(access.screen),
     online: network.online,
     pending,
     error: writes.error,

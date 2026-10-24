@@ -14,6 +14,8 @@ import { useT } from '../../ui/useT.js';
 import { sameDay } from './conv-time.js';
 import { DaySeparator, NowProvider } from './ConvTime.js';
 import { FindBar, useConvFind } from './ConvFind.js';
+import { isAwaitingReply } from './composer-model.js';
+import { usePending } from './outbox.js';
 import { PendingBubbles } from './PendingBubbles.js';
 import { seenBaseline } from '../sessions/session-seen.js';
 import { ThinkingLine } from './ThinkingLine.js';
@@ -22,6 +24,7 @@ import { useConvDensity } from './use-conv-density.js';
 import { useConvKeys } from './use-conv-keys.js';
 import { useConvScroll } from './use-conv-scroll.js';
 import { firstUnreadId, turnIds, useFreshIds } from './use-fresh-ids.js';
+import { useTerminalState } from '../../hooks/use-drive.js';
 import { useLinkLive } from '../../hooks/use-session-stream.js';
 import { groupTurns, reuseTurns, type Entry, type Turn } from './turn-groups.js';
 import { POLL, poll, pollMs } from '../../lib/app/polling.js';
@@ -52,13 +55,13 @@ type Transcript = { entries: Entry[]; updatedAt: number; truncated: boolean };
 
 const turnAt = (turn: Turn) => turn.user?.at ?? turn.blocks.find((b) => b.at)?.at ?? null;
 
-function useTranscript(sessionKey: string, working: boolean) {
+function useTranscript(sessionKey: string, working: boolean, awaiting: boolean) {
   const live = useLinkLive();
   const query = useQuery({
     queryKey: ['transcript', sessionKey],
     queryFn: () =>
       api<Transcript>(`/api/local-sessions/${encodeURIComponent(sessionKey)}/transcript`),
-    ...poll(pollMs(live, working ? POLL.watching : POLL.quiet)),
+    ...poll(awaiting ? POLL.answer : pollMs(live, working ? POLL.watching : POLL.quiet)),
     refetchIntervalInBackground: false,
     retry: false,
   });
@@ -204,15 +207,22 @@ function NewPill({ unseen, onClick }: { unseen: number; onClick: () => void }) {
   );
 }
 
+function useBusy(sessionKey: string, working: boolean) {
+  const awaiting = isAwaitingReply(usePending(sessionKey), Date.now());
+  const screen = useTerminalState(sessionKey, awaiting);
+  return { awaiting, busy: working || awaiting || screen === 'working' };
+}
+
 export function TranscriptView({ sessionKey, working, children }: TranscriptViewProps) {
   const t = useT();
   const still = usePreferences((s) => s.reducedMotion);
-  const { query, entries, turns, prompts } = useTranscript(sessionKey, working);
+  const { awaiting, busy } = useBusy(sessionKey, working);
+  const { query, entries, turns, prompts } = useTranscript(sessionKey, working, awaiting);
   const ids = useMemo(() => (entries ? turns.flatMap(turnIds) : null), [entries, turns]);
   const arrived = useFreshIds(sessionKey, ids);
   const [seenAt] = useState(() => seenBaseline(sessionKey));
   const unreadId = useMemo(() => firstUnreadId(turns, seenAt), [turns, seenAt]);
-  const showThinking = working && !hasRunningTools(turns);
+  const showThinking = busy && !hasRunningTools(turns);
   const { scroller, onScroll, toBottom, stopGliding, unseen, away } = useConvScroll(entries, still);
   const [density, toggleDensity] = useConvDensity();
   const onKeys = useConvKeys(scroller, toBottom, stopGliding, still);
