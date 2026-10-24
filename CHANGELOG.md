@@ -16,11 +16,13 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 - A browser on the computer that runs the control plane opens straight into the office, with no token to type. A phone on the network is
   told to press Open on your phone on the computer and scan the QR code; its token form waits behind I have a token. A sign-out stays
   until the person presses Sign in on this computer. `AETHER_LOCAL_SIGN_IN=0` turns the computer's sign-in off (see [Security](docs/security.md)).
+- Starting a conversation is one click per agent (Claude Code, Codex) on the Terminals page, and the new terminal takes your keystrokes at once: there is no take-over or release step any more. Click the terminal and type; control is taken when you focus it and lapses by itself when you leave.
 
 ### Fixed
 
 - A Claude Code terminal started by AETHER from a versioned install path (`…/claude/versions/<version>`) is recognized as a Claude session, so its conversation panel offers the message box instead of the read-only notice.
 - A Claude session is matched to its own terminal through the `~/.claude/sessions/<pid>.json` file Claude Code writes, not by guessing among processes in the same folder, so a message sent from the conversation panel never lands in another terminal.
+- A taken-over terminal keeps its control while the page is open instead of silently turning read-only after 30 seconds without typing.
 - The message box beside a session no longer waits for a full session scan to find its terminal, so it appears at once and no longer drops back to read-only under load.
 
 ### Security

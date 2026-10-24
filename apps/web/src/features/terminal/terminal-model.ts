@@ -1,3 +1,4 @@
+import { heldByOther, type TerminalControl } from './terminal-driver.js';
 export type TerminalRow = {
   id: string;
   profile: string;
@@ -38,3 +39,25 @@ export function profilesOf(profiles: TerminalList['profiles'] | undefined): Term
     ) ?? []
   );
 }
+
+type TerminalHint =
+  | 'terminalWritable'
+  | 'terminalClickToType'
+  | 'terminalHeld'
+  | 'terminalStarting'
+  | 'terminalEnded';
+
+export function terminalHint(
+  data: TerminalControl | undefined,
+  writable: boolean,
+  userId: string,
+  now: number,
+): TerminalHint {
+  if (writable) return 'terminalWritable';
+  if (!data || data.state === 'queued') return 'terminalStarting';
+  if (data.state !== 'running') return 'terminalEnded';
+  return heldByOther(data, userId, now) ? 'terminalHeld' : 'terminalClickToType';
+}
+
+export const profileTitle = (name: string): string =>
+  name.startsWith('claude-') ? 'Claude Code' : name.startsWith('codex-') ? 'Codex' : name;

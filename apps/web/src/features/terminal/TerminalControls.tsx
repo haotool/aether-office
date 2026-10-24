@@ -9,28 +9,11 @@ type Props = {
   act: TerminalAct;
 };
 
-function TerminalButtons({ canWrite, writable, data, act }: Props) {
+function TerminalButtons({ canWrite, data, act }: Props) {
   const t = useT();
   const whyNot = useWhy();
   return (
     <div className="form-actions">
-      <button
-        disabled={!canWrite || data?.state !== 'running'}
-        {...whyNot(
-          [canWrite, 'needOperator'],
-          [data?.state === 'running', 'whyTerminalNotRunning'],
-        )}
-        onClick={() => void act('terminal.takeover')}
-      >
-        {t('terminalTakeover')}
-      </button>
-      <button
-        disabled={!writable}
-        {...whyNot([canWrite, 'needOperator'], [writable, 'whyTerminalNotHeld'])}
-        onClick={() => void act('terminal.release')}
-      >
-        {t('terminalRelease')}
-      </button>
       <button
         className="danger"
         disabled={!canWrite || !data || data.state === 'exited'}

@@ -5,12 +5,13 @@ import { TerminalControls } from './TerminalControls.js';
 import { api } from '../../lib/api/api.js';
 import { execute } from '../../lib/api/api-commands.js';
 import { Empty } from '../../ui/Empty.js';
-import { Field } from '../../ui/Field.js';
 import { PageHeading } from '../../ui/PageHeading.js';
 import { useT, useWhy } from '../../ui/useT.js';
 import {
   AGENT_LABEL,
+  profileTitle,
   profilesOf,
+  terminalHint,
   type TerminalAccess,
   type TerminalAct,
   type TerminalDetail,
@@ -19,7 +20,10 @@ import {
   type TerminalRow,
 } from './terminal-model.js';
 import { useSnapshotSync, useXterm } from './terminal-screen.js';
+import { RENEW_TICK_MS, needsRenewal, sizeOf } from './terminal-lease.js';
+import { holdsLease, takeable } from './terminal-driver.js';
 import { POLL, poll, pollBy } from '../../lib/app/polling.js';
+import { useLatest } from '../../hooks/use-latest.js';
 
 type TerminalExit = { exitCode: number; signal: number | null };
 
@@ -34,7 +38,44 @@ function useTerminalDetail(projectId: string, id: string) {
   });
 }
 
-function useTerminalSession(projectId: string, id: string, userId: string, canWrite: boolean) {
+type TerminalViewProps = {
+  projectId: string;
+  id: string;
+  userId: string;
+  canWrite: boolean;
+  fresh: boolean;
+};
+
+/** Takes the keyboard for a conversation that was just started, and renews the lease while the screen has focus. */
+function useLease(lease: {
+  terminal: { current: { focus: () => void } | null };
+  fresh: boolean;
+  writable: boolean;
+  data: TerminalDetail | undefined;
+  act: TerminalAct;
+}) {
+  const { terminal, fresh, writable, data } = lease;
+  const [focused, setFocused] = useState(false);
+  const started = useRef(false);
+  const latest = useLatest({ data, act: lease.act });
+  useEffect(() => {
+    if (!fresh || started.current || data?.state !== 'running') return;
+    started.current = true;
+    terminal.current?.focus();
+  }, [fresh, data?.state, terminal]);
+  useEffect(() => {
+    if (!writable || !focused) return;
+    const timer = setInterval(() => {
+      const { data: current, act } = latest.current;
+      if (current && needsRenewal(current.leaseUntil, Date.now()))
+        void act('terminal.resize', sizeOf(current.snapshot));
+    }, RENEW_TICK_MS);
+    return () => clearInterval(timer);
+  }, [writable, focused, latest]);
+  return setFocused;
+}
+
+function useTerminalSession({ projectId, id, userId, canWrite, fresh }: TerminalViewProps) {
   const [error, setError] = useState('');
   const [armed, setArmed] = useState(false);
   const [gap, setGap] = useState(false);
@@ -43,12 +84,7 @@ function useTerminalSession(projectId: string, id: string, userId: string, canWr
   const access = useRef<TerminalAccess>({ enabled: false, epoch: 0 });
   const data = query.data;
   const writable =
-    canWrite &&
-    armed &&
-    !query.error &&
-    data?.state === 'running' &&
-    data.controlOwner === userId &&
-    (data.leaseUntil ?? 0) > Date.now();
+    canWrite && armed && !query.error && !!data && holdsLease(data, userId, Date.now());
   const screen = useXterm(
     projectId,
     id,
@@ -82,23 +118,18 @@ function useTerminalSession(projectId: string, id: string, userId: string, canWr
       setError(e instanceof Error ? e.message : 'TERMINAL_COMMAND_FAILED');
     }
   };
-  return { query, data, writable, act, error, gap, exit, host: screen.host, terminal };
+  const setFocused = useLease({ terminal, fresh, writable, data, act });
+  return { query, data, writable, act, error, gap, exit, setFocused, host: screen.host, terminal };
 }
 
-function TerminalView(props: { projectId: string; id: string; userId: string; canWrite: boolean }) {
+function TerminalView(props: TerminalViewProps) {
   const t = useT();
-  const { projectId, id, userId, canWrite } = props;
-  const { query, data, writable, act, error, gap, exit, host, terminal } = useTerminalSession(
-    projectId,
-    id,
-    userId,
-    canWrite,
-  );
+  const { userId, canWrite } = props;
+  const { query, data, writable, act, error, gap, exit, setFocused, host, terminal } =
+    useTerminalSession(props);
   return (
     <article className="panel">
-      <p>
-        {writable ? t('terminalControlled') : t('terminalReadOnly')} · {data?.state ?? t('loading')}
-      </p>
+      <p>{t(terminalHint(data, writable, userId, Date.now()))}</p>
       <p className="muted">{t('terminalInputNote')}</p>
       {gap && <p role="status">{t('terminalGap')}</p>}
       {data?.commands[0] && (
@@ -113,51 +144,43 @@ function TerminalView(props: { projectId: string; id: string; userId: string; ca
         </p>
       )}
       {writable && <TerminalKeys onKey={(sequence) => terminal.current?.input(sequence)} />}
-      <div ref={host} className="terminal-screen" aria-label={t('terminals')} />
+      <div
+        ref={host}
+        className="terminal-screen"
+        aria-label={t('terminals')}
+        onFocus={() => {
+          setFocused(true);
+          if (canWrite && !writable && data && takeable(data, userId, Date.now()))
+            void act('terminal.takeover');
+        }}
+        onBlur={() => setFocused(false)}
+      />
       {(error || query.error) && <p role="alert">{error || query.error?.message}</p>}
     </article>
   );
 }
 
-function ProfileSelect({ profiles }: { profiles: TerminalProfile[] }) {
-  const t = useT();
-  return (
-    <Field label={t('terminalProfile')}>
-      <select name="profile">
-        {profiles.map((p) => (
-          <option
-            key={p.machineId + p.profile}
-            value={JSON.stringify({ machineId: p.machineId, profile: p.profile })}
-          >
-            {p.label}
-          </option>
-        ))}
-      </select>
-    </Field>
-  );
-}
-
-type StartTerminalFormProps = {
+type StartTerminalProps = {
   profiles: TerminalProfile[];
   canWrite: boolean;
   projectId: string;
   onStarted: (id: string) => Promise<void>;
 };
 
-function StartTerminalForm({ profiles, canWrite, projectId, onStarted }: StartTerminalFormProps) {
+function StartTerminalButtons({ profiles, canWrite, projectId, onStarted }: StartTerminalProps) {
   const t = useT();
   const whyNot = useWhy();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const start = async (form: HTMLFormElement) => {
+  const start = async (p: TerminalProfile) => {
     setBusy(true);
     setError('');
-    const value = JSON.parse(String(new FormData(form).get('profile'))) as {
-      machineId: string;
-      profile: string;
-    };
     try {
-      const result = await execute('terminal.start', { ...value, cols: 80, rows: 24 }, projectId);
+      const result = await execute(
+        'terminal.start',
+        { machineId: p.machineId, profile: p.profile, cols: 80, rows: 24 },
+        projectId,
+      );
       await onStarted(String(result.result['id']));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'TERMINAL_START_FAILED');
@@ -167,21 +190,18 @@ function StartTerminalForm({ profiles, canWrite, projectId, onStarted }: StartTe
   };
   return (
     <>
-      <form
-        className="panel"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void start(e.currentTarget);
-        }}
-      >
-        <ProfileSelect profiles={profiles} />
-        <button
-          disabled={!canWrite || busy}
-          {...whyNot([canWrite, 'needOperator'], [!busy, 'whyBusy'])}
-        >
-          {t('terminalStart')}
-        </button>
-      </form>
+      <div className="form-actions">
+        {profiles.map((p) => (
+          <button
+            key={p.machineId + p.profile}
+            disabled={!canWrite || busy}
+            {...whyNot([canWrite, 'needOperator'], [!busy, 'whyBusy'])}
+            onClick={() => void start(p)}
+          >
+            {t('terminalNewConversation')} · {profileTitle(p.profile)}
+          </button>
+        ))}
+      </div>
       {error && <p role="alert">{error}</p>}
     </>
   );
@@ -222,6 +242,7 @@ export function Terminals({
 }) {
   const t = useT();
   const [selected, setSelected] = useState<string | null>(null);
+  const [fresh, setFresh] = useState<string | null>(null);
   const list = useQuery({
     queryKey: ['terminals', projectId],
     queryFn: () => api<TerminalList>(`/api/projects/${projectId}/terminals`),
@@ -232,12 +253,13 @@ export function Terminals({
     <>
       <PageHeading title={t('terminals')} subtitle={t('terminalNote')} />
       {profiles.length ? (
-        <StartTerminalForm
+        <StartTerminalButtons
           profiles={profiles}
           canWrite={canWrite}
           projectId={projectId}
           onStarted={async (id) => {
             setSelected(id);
+            setFresh(id);
             await list.refetch();
           }}
         />
@@ -252,6 +274,7 @@ export function Terminals({
           id={selected}
           userId={userId}
           canWrite={canWrite}
+          fresh={fresh === selected}
         />
       )}{' '}
       {list.error && <p role="alert">{list.error.message}</p>}

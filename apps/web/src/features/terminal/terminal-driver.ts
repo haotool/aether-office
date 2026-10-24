@@ -34,6 +34,12 @@ export const pendingChains = () => chains.size;
 export const heldByOther = (c: TerminalControl, userId: string, now: number): boolean =>
   c.controlOwner !== null && c.controlOwner !== userId && (c.leaseUntil ?? 0) > now;
 
+export const takeable = (c: TerminalControl, userId: string, now: number): boolean =>
+  c.state === 'running' && !heldByOther(c, userId, now);
+
+export const holdsLease = (c: TerminalControl, userId: string, now: number): boolean =>
+  c.state === 'running' && c.controlOwner === userId && (c.leaseUntil ?? 0) > now;
+
 /** The control this person holds on the terminal, taken (or renewed) when needed; refuses when someone else holds it. */
 async function control(projectId: string, terminalId: string, userId: string): Promise<number> {
   const now = await api<TerminalControl>(`/api/projects/${projectId}/terminals/${terminalId}`);
