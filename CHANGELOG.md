@@ -13,7 +13,9 @@ project follows its [pre-release version policy](docs/release/versioning.md).
   feature need a separate maintainer commit and made two open pull requests conflict on the same number; the checks that judge the
   code itself (file and function size, nesting, duplication, dead exports, the per-area floors) stay.
 - The sign-in form remembers the device for 30 days unless the box is cleared, and its token field lets a browser or phone password manager save and fill it, so the token is typed once per device instead of every 8 hours.
-- A browser on the computer that runs the control plane opens straight into the office: no token to find or type. A phone on the network is told to press Open on your phone on the computer and scan the QR code; its token form waits behind I have a token and no longer opens the keyboard. The page does not sign in again after a sign-out until the person presses Sign in on this computer. `AETHER_LOCAL_SIGN_IN=0` turns the computer's sign-in off (see [Security](docs/security.md)).
+- A browser on the computer that runs the control plane opens straight into the office, with no token to type. A phone on the network is
+  told to press Open on your phone on the computer and scan the QR code; its token form waits behind I have a token. A sign-out stays
+  until the person presses Sign in on this computer. `AETHER_LOCAL_SIGN_IN=0` turns the computer's sign-in off (see [Security](docs/security.md)).
 
 ### Security
 
@@ -242,23 +244,21 @@ For anyone who ran a development build before this release.
 
 ### Changed
 
-- Roles and departments are decided by one deterministic classifier (`packages/kernel/src/classify-session.ts`) that scores 18
-  roles from weighted signals in English and Traditional Chinese instead of the first keyword in a title. It never asks a model or
-  the network, reports a `confidence` and up to five redacted `evidence` strings, falls back to a generalist on weak evidence and
-  changes a role only after three separate looks, so characters do not flip floors. Accuracy: 84.9% to 100% on a 93-case synthetic
-  corpus, 48% to 90% on 50 hand-labelled real sessions ([docs/roles.md](docs/roles.md)).
+- Roles and departments are decided by one deterministic classifier (`packages/kernel/src/classify-session.ts`) that scores 18 roles
+  from weighted signals in English and Traditional Chinese instead of the first keyword in a title. It never asks a model or the
+  network, reports a `confidence` and up to five redacted `evidence` strings, and changes a role only after three separate looks.
+  Accuracy: 84.9% to 100% on a 93-case synthetic corpus, 48% to 90% on 50 hand-labelled real sessions ([docs/roles.md](docs/roles.md)).
 - A subagent no longer takes a desk across the room: it sits in its supervisor's squad zone (a floor with no room for a zone keeps
   desks, as before). A character keeps its desk while it stays in the office: desks are assigned once and remembered per project
   in the browser, and a saved layout is still never rearranged.
 - The automatic camera is calmer: each shot is one slow, short dolly (no orbit, no zoom, level horizon), shots are held longer,
   near shots glide and distant ones cut, a member or pair is not shown again for 30 seconds, and a touch ends a flight at once.
-- Phone performance, estimated and not yet measured on a real phone: no `backdrop-filter` blur anywhere (the glass over the scene is
-  a near-opaque tint), the name tag's shimmer and glow no longer repaint, the 3D scene stops drawing while the full-height sheet
-  covers it, and a quiet office page makes about 22 `/api` requests a minute instead of 55 (the approvals count follows the
-  event stream; permission prompts are asked for every 2.5 s only while Remote approvals is on).
+- Phone performance, estimated and not yet measured on a real phone: no `backdrop-filter` blur anywhere, no repaint from the name tag's
+  shimmer, no drawing of the 3D scene while the full-height sheet covers it, and a quiet office page makes about 22 `/api` requests a
+  minute instead of 55.
 - The first load is about 203 KB (brotli, as `pnpm run quality:report` measures it), down from 251 KB: only the language in use is
-  downloaded, the zod runtime no longer reaches the entry, and the conversation panel, the new-task form, the clock-out dialog,
-  the pairing panel, the character menu and the sign-in page load when first used. The budget is 200 KB.
+  downloaded, and the conversation panel, the new-task form, the clock-out dialog, the pairing panel, the character menu and the
+  sign-in page load when first used. The budget is 200 KB.
 - "Create task" and "Edit layout" on the office page are behind Settings → Advanced features, like the pages they open. The
   notification switch moved from the Approvals page to Settings and covers sessions as well as approvals; the pairing panel moved
   from Settings to the top bar.
@@ -271,7 +271,8 @@ For anyone who ran a development build before this release.
 - The provider marks are small decorative indicators, never branding (Codex's mark is tinted to the muted text colour);
   [docs/legal/trademarks.md](docs/legal/trademarks.md) says so.
 - The transcript endpoint returns each tool call's id and a short redacted target, and the last 120 entries.
-- A 3D floor now builds about a third faster. Furniture of the same size shares one extruded shape per build, and merging no longer constructs a throwaway default shape for every piece. In a lab run (Chrome, CPU slowed 4×, load not controlled) the longest task of the first load fell from about 323 to 269 ms and the total blocking time from about 304 to 262 ms. That is not a measurement on a real phone.
+- A 3D floor builds about a third faster: furniture of the same size shares one extruded shape per build. A lab run (Chrome, CPU
+  slowed 4×, load not controlled) is not a measurement on a real phone.
 - README and `docs/native-execution.md` state that AETHER neither stores nor forwards your Claude credentials.
 - The quality scorecard caps code lines at a recorded budget that only goes down; comments were cut to the few that explain why.
 - README states that macOS is the tested platform and that the browser tests on Linux are not verified yet. CI does not run the browser suite (it needs a GPU), so `pnpm exec playwright test` is a local and release check.
@@ -281,38 +282,19 @@ For anyone who ran a development build before this release.
 
 - A browser that came back after its tab was closed (or after iOS discarded it) looked signed in but had every write refused with
   `CSRF_REQUIRED`. The page now asks `POST /api/session/csrf` for a new token and retries once.
-- A page left open across a rebuild no longer goes blank: a chunk that cannot load reloads the page once, and any other render
-  error shows a Reload button.
-- Usage readings say what they cover. The KPI dashboard shows "Not placed in an office" (what the office tabs leave out) and an
-  unknown office is empty, never the building's numbers. The scan reports `truncated` with the real file count (the cap is 8192
-  files), unreadable files and skipped lines. "Active time" is now "Session time". Rate-limit rings show the age of their reading
-  and mark a stale one. Git KPIs flag a capped commit list and count authors by email.
-- Claude usage: the parser no longer drops a line whose keys are reordered or whose usage is spaced; a message that appears in
-  two transcripts (a resumed session) is counted once; a Codex subagent's rollout counts as part of its parent session; a session
-  whose last turn is an API error no longer shows 0% context. The KPI numbers follow a session that starts or grows.
+- A page left open across a rebuild reloads once instead of going blank, and any other render error shows a Reload button.
+- Usage readings say what they cover: an unknown office is empty rather than the building's numbers, a truncated scan is reported,
+  a rate-limit ring shows the age of its reading, and a message that appears in two transcripts (a resumed session) is counted once.
 - A hook spool rotation no longer makes every session's hook state, waiting-for-approval badge and subagent squad disappear.
-- A project folder that does not exist or cannot be read is a 400 `PROJECT_ROOT_NOT_FOUND` / `PROJECT_ROOT_INVALID`, not a 500. A
-  migration checksum mismatch says which migration and what to do.
-- `pnpm run doctor`: a missing Claude Code or Codex CLI is a warning (exit 0); a Codex version missing from `compat.json` reads
-  "not verified, probably works"; `--strict` makes warnings fail. `pnpm run pair` tells an unreachable control plane from a
-  rejected owner token. A runner started before it is enrolled prints how to enroll instead of a stack trace.
-- A reply ending in a lone backslash that also held HTML made the chat show an error instead of the message.
+- A project folder that does not exist or cannot be read is a 400 `PROJECT_ROOT_NOT_FOUND` / `PROJECT_ROOT_INVALID`, not a 500.
+- `pnpm run doctor` reads a missing Claude Code or Codex CLI as a warning, and `pnpm run pair` tells an unreachable control plane
+  from a rejected owner token.
 - First run: with no project, or no character and no session, the office page shows what AETHER does, three steps and the commands
-  to copy. A project id in the address that is not available falls back to the first project with a short notice; unknown pages
-  show "Page not found". The tab title is `<page> · AETHER OFFICE` in the interface language.
-- Create task, Propose knowledge and the login mark required fields and show their own inline errors.
-- On a phone: the 2D office list scrolls below the view switch and the KPI chips, so no card passes under them, and ends above the new-task button; the floor rail
-  scrolls instead of climbing over the top row on a short screen; a table row drawn as a card keeps every part of a value beside its
-  label; the connection says "reconnecting" or "offline" in words; the top bar keeps language and theme on screen from 320 to
-  1920 px.
-- The Sessions page says when there is no session yet, or when the filters hide every one, and a button shows them all.
-- Members beyond a floor's 48 desks take a desk on the next floor with room instead of vanishing; "Show in office" brings the
-  camera to the member on a phone too.
-- Scene fixes: close-up camera shots push in, members sent home walk with planted feet, pointing at the crown works, the
-  control-room wall no longer disappears at 1440x900 or goes black when its members change, a name tag no longer draws over a
-  speech bubble, and office chairs no longer flicker. An idle phone's pixel ratio no longer drops from 1.5 to 0.75 within seconds.
-- The layout editor is labelled experimental and docks at the side of the screen.
-- The 3D office no longer rebuilds every floor's geometry each time the session list refreshes (about every two seconds while sessions are live). A floor is rebuilt only when its furniture changes, not when someone sits down or leaves. In a lab run (Chrome, CPU slowed 4×, seven live sessions, load not controlled) the main thread had about 30 tasks over 50 ms per minute before and none after. That is not a measurement on a real phone.
+  to copy; an unknown page shows "Page not found".
+- On a phone the 2D office list, the floor rail and the top bar no longer pass under other controls, from 320 to 1920 px.
+- Members beyond a floor's 48 desks take a desk on the next floor instead of vanishing.
+- The 3D office no longer rebuilds every floor's geometry each time the session list refreshes; a floor is rebuilt only when its
+  furniture changes.
 
 ### Security
 
