@@ -306,7 +306,7 @@
           "details": [
             "apps/control: 68/116 modules, 14818 source lines",
             "apps/runner: 22/24 modules, 3059 source lines",
-            "apps/web: 192/346 modules, 28634 source lines",
+            "apps/web: 192/346 modules, 28635 source lines",
             "packages/contracts: 16/16 modules, 1376 source lines",
             "packages/kernel: 28/29 modules, 3455 source lines",
             "packages/office-scene: 124/228 modules, 24347 source lines",
@@ -376,7 +376,7 @@
           "details": [
             "apps/control: 14818 source lines",
             "apps/runner: 3059 source lines",
-            "apps/web: 28634 source lines",
+            "apps/web: 28635 source lines",
             "packages/contracts: 1376 source lines",
             "packages/kernel: 3455 source lines",
             "packages/office-scene: 24347 source lines",
@@ -389,7 +389,7 @@
       "name": "ui",
       "title": "UI system and design tokens",
       "score": 100,
-      "measured": 100,
+      "measured": 82,
       "rules": [
         {
           "id": "token-lint",
@@ -567,15 +567,16 @@
         },
         {
           "id": "role-variance",
-          "label": "Roles with more distinct sizes than allowed",
-          "status": "pass",
+          "label": "Distinct control sizes per role (e2e/ui/role-variance.spec.ts)",
+          "status": "skipped",
           "weight": 20,
-          "value": 0,
-          "limit": 0,
-          "full": 10,
+          "value": null,
+          "limit": null,
+          "full": null,
           "unit": "",
           "penalty": 0,
-          "details": []
+          "details": [],
+          "note": "not run: the spec has no recorded result (expected evidence/role-variance.json)"
         },
         {
           "id": "physical-properties",
@@ -687,7 +688,7 @@
     {
       "name": "perf",
       "title": "Performance budgets",
-      "score": 99.1,
+      "score": 99.4,
       "measured": 70,
       "rules": [
         {
@@ -702,7 +703,7 @@
           "penalty": 0,
           "details": [
             "apps/web/dist/assets/src-GlKDjNM3.js:1 374 KB",
-            "apps/web/dist/assets/index-CEHui-j_.js:1 92 KB",
+            "apps/web/dist/assets/index-D2n4CeSk.js:1 92 KB",
             "apps/web/dist/assets/Terminals-Te1ReBoX.js:1 86 KB",
             "apps/web/dist/assets/TaskDag-gy9O03YL.js:1 56 KB",
             "apps/web/dist/assets/core-lDT5hQ0Q.js:1 27 KB",
@@ -730,13 +731,13 @@
           "label": "First-load JavaScript and CSS, transferred (budget 200 KB)",
           "status": "fail",
           "weight": 30,
-          "value": 203,
+          "value": 202,
           "limit": 200,
           "full": 100,
           "unit": "KB",
-          "penalty": 0.9,
+          "penalty": 0.6,
           "details": [
-            "apps/web/dist/assets/index-CEHui-j_.js:1 80 KB",
+            "apps/web/dist/assets/index-D2n4CeSk.js:1 80 KB",
             "apps/web/dist/assets/signals-D521Il5C.js:1 3 KB",
             "apps/web/dist/assets/scheduler-BPo9TGJm.js:1 1 KB",
             "apps/web/dist/assets/react-dom-d_Gvm-cX.js:1 1 KB",
@@ -1208,6 +1209,6 @@
     }
   ],
   "inputs": {
-    "role-variance": "present sha256:e9e9cc02"
+    "role-variance": "absent"
   }
 }

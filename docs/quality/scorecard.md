@@ -9,9 +9,9 @@ Overall: **97.7** (mean of the scored areas; target 95).
 | Structure (`structure`) | 96.7 | 96.7 | 100% | fan-in 2 (-3.33) |
 | Types and correctness gates (`types`) | 100.0 | 100.0 | 100% | none |
 | Tests (`tests`) | 100.0 | 100.0 | 82% | none |
-| UI system and design tokens (`ui`) | 100.0 | 100.0 | 100% | none |
+| UI system and design tokens (`ui`) | 100.0 | 100.0 | 82% | none |
 | Accessibility and i18n (`a11y`) | 100.0 | 100.0 | 80% | none |
-| Performance budgets (`perf`) | 99.1 | 99.1 | 70% | first-load 203 (-0.9) |
+| Performance budgets (`perf`) | 99.4 | 99.4 | 70% | first-load 202 (-0.6) |
 | Docs truth (`docs`) | 100.0 | 100.0 | 100% | none |
 | Security and privacy gates (`security`) | 100.0 | 100.0 | 100% | none |
 | Open-source readiness (`oss`) | 100.0 | 100.0 | 100% | none |
@@ -81,7 +81,7 @@ Unit-test lines per product source line: 0.53
 ```text
 apps/control: 14818 source lines
 apps/runner: 3059 source lines
-apps/web: 28634 source lines
+apps/web: 28635 source lines
 packages/contracts: 1376 source lines
 packages/kernel: 3455 source lines
 packages/office-scene: 24347 source lines
@@ -90,7 +90,7 @@ packages/providers: 2044 source lines
 
 ## UI system and design tokens
 
-Score 100.0, floor 100.0, 100% of the rule weight measured.
+Score 100.0, floor 100.0, 82% of the rule weight measured.
 
 | Rule | Id | Value | Limit | Weight | Penalty | State |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
@@ -105,7 +105,7 @@ Score 100.0, floor 100.0, 100% of the rule weight measured.
 | px custom properties outside tokens.css | `custom-property-literal` | 0 | 0 | 5 | 0 | pass |
 | token-lint escape comments over the budget of 100 | `escape-comments` | 99 | 100 | 10 | 0 | pass |
 | Rules above scripts/design-token-baseline.json | `baseline-regression` | 0 | 0 | 15 | 0 | pass |
-| Roles with more distinct sizes than allowed | `role-variance` | 0 | 0 | 20 | 0 | pass |
+| Distinct control sizes per role (e2e/ui/role-variance.spec.ts) (not run: the spec has no recorded result (expected evidence/role-variance.json)) | `role-variance` | - | - | 20 | 0 | not run |
 | Physical left/right properties (logical ones are RTL-ready) | `physical-properties` | 167 | - | - | 0 | info |
 
 ## Accessibility and i18n
@@ -124,22 +124,22 @@ Score 100.0, floor 100.0, 80% of the rule weight measured.
 
 ## Performance budgets
 
-Score 99.1, floor 99.1, 70% of the rule weight measured.
+Score 99.4, floor 99.4, 70% of the rule weight measured.
 
 | Rule | Id | Value | Limit | Weight | Penalty | State |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
 | Web JavaScript total, gzip (budget 870 KB) | `bundle-total` | 853 KB | 870 | 25 | 0 | pass |
 | Largest JavaScript chunk, gzip (budget 400 KB) | `bundle-chunk` | 374 KB | 400 | 15 | 0 | pass |
-| First-load JavaScript and CSS, transferred (budget 200 KB) | `first-load` | 203 KB | 200 | 30 | -0.9 | fail |
+| First-load JavaScript and CSS, transferred (budget 200 KB) | `first-load` | 202 KB | 200 | 30 | -0.6 | fail |
 | Frame times and draw cost (scripts/perf-matrix.mjs) (not run: needs a real GPU (PERF_GPU=1); the measured numbers in docs/design-system.md are not re-scored) | `perf-matrix` | - | - | 30 | 0 | not run |
 | Stylesheet files in apps/web/src (197 KB source, 3 built file(s) at 32 KB gzip; no CSS budget is documented) | `css-sources` | 52 | - | - | 0 | info |
 
 ### What costs points
 
-**first-load** (-0.9): First-load JavaScript and CSS, transferred (budget 200 KB)
+**first-load** (-0.6): First-load JavaScript and CSS, transferred (budget 200 KB)
 
 ```text
-  apps/web/dist/assets/index-CEHui-j_.js:1 80 KB
+  apps/web/dist/assets/index-D2n4CeSk.js:1 80 KB
   apps/web/dist/assets/signals-D521Il5C.js:1 3 KB
   apps/web/dist/assets/scheduler-BPo9TGJm.js:1 1 KB
   apps/web/dist/assets/react-dom-d_Gvm-cX.js:1 1 KB
