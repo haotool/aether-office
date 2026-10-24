@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { inputBatcher } from '../../apps/web/src/features/terminal/terminal-input.js';
-import { profilesOf } from '../../apps/web/src/features/terminal/terminal-model.js';
+import {
+  profileTitle,
+  profilesOf,
+  terminalHint,
+} from '../../apps/web/src/features/terminal/terminal-model.js';
 
 describe('inputBatcher', () => {
   beforeEach(() => vi.useFakeTimers());
@@ -83,5 +87,36 @@ describe('profilesOf', () => {
       { machineId: 'm1', profile: 'bash', label: 'Mac · bash' },
     ]);
     expect(profilesOf(undefined)).toEqual([]);
+  });
+});
+
+describe('profileTitle', () => {
+  it('names a profile by the agent it starts', () => {
+    expect(profileTitle('claude-aether-office')).toBe('Claude Code');
+    expect(profileTitle('codex-aether-office')).toBe('Codex');
+    expect(profileTitle('pty-fixture')).toBe('pty-fixture');
+  });
+});
+
+describe('terminalHint', () => {
+  const NOW = 1_000_000;
+  const detail = (state: string, controlOwner: string | null, leaseUntil: number | null) =>
+    ({ state, controlOwner, leaseUntil }) as Parameters<typeof terminalHint>[0];
+
+  it('says whether you can type, can start by clicking, or must wait', () => {
+    expect(terminalHint(detail('running', 'me', NOW + 1), true, 'me', NOW)).toBe(
+      'terminalWritable',
+    );
+    expect(terminalHint(detail('running', null, null), false, 'me', NOW)).toBe(
+      'terminalClickToType',
+    );
+    expect(terminalHint(detail('running', 'me', NOW - 1), false, 'me', NOW)).toBe(
+      'terminalClickToType',
+    );
+    expect(terminalHint(detail('running', 'them', NOW + 1), false, 'me', NOW)).toBe('terminalHeld');
+    expect(terminalHint(detail('queued', null, null), false, 'me', NOW)).toBe('terminalStarting');
+    expect(terminalHint(undefined, false, 'me', NOW)).toBe('terminalStarting');
+    expect(terminalHint(detail('exited', null, null), false, 'me', NOW)).toBe('terminalEnded');
+    expect(terminalHint(detail('stopping', null, null), false, 'me', NOW)).toBe('terminalEnded');
   });
 });

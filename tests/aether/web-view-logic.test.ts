@@ -15,7 +15,9 @@ import {
 } from '../../apps/web/src/features/sessions/needs-you.js';
 import {
   heldByOther,
+  holdsLease,
   isNetworkError,
+  takeable,
 } from '../../apps/web/src/features/terminal/terminal-driver.js';
 import { sessionIdOf, sessionLink, tagOf } from '../../apps/web/src/lib/sessions/session-names.js';
 import { pageLink } from '../../apps/web/src/lib/navigation/nav.js';
@@ -128,6 +130,25 @@ describe('terminal control', () => {
     expect(heldByOther(control('them', null), 'me', NOW)).toBe(false);
     expect(heldByOther(control('me', NOW + 1), 'me', NOW)).toBe(false);
     expect(heldByOther(control(null, null), 'me', NOW)).toBe(false);
+  });
+
+  it('is held by this person while it runs and their lease has not lapsed', () => {
+    const held = (state: string, controlOwner: string | null, leaseUntil: number | null) =>
+      ({ state, controlOwner, leaseUntil }) as Parameters<typeof holdsLease>[0];
+    expect(holdsLease(held('running', 'me', NOW + 1), 'me', NOW)).toBe(true);
+    expect(holdsLease(held('running', 'me', NOW), 'me', NOW)).toBe(false);
+    expect(holdsLease(held('running', 'them', NOW + 1), 'me', NOW)).toBe(false);
+    expect(holdsLease(held('exited', 'me', NOW + 1), 'me', NOW)).toBe(false);
+  });
+
+  it('can be taken over while it runs and nobody else holds it', () => {
+    const open = (state: string, controlOwner: string | null, leaseUntil: number | null) =>
+      ({ state, controlOwner, leaseUntil }) as Parameters<typeof takeable>[0];
+    expect(takeable(open('running', null, null), 'me', NOW)).toBe(true);
+    expect(takeable(open('running', 'me', NOW + 1), 'me', NOW)).toBe(true);
+    expect(takeable(open('running', 'them', NOW), 'me', NOW)).toBe(true);
+    expect(takeable(open('running', 'them', NOW + 1), 'me', NOW)).toBe(false);
+    expect(takeable(open('exited', null, null), 'me', NOW)).toBe(false);
   });
 
   it('tells a network failure from an answer', () => {
