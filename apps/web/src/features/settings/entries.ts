@@ -126,7 +126,7 @@ export const ENTRIES = [
     section: 'office',
     label: 'stLifeCalmLabel',
     desc: 'stLifeCalmDesc',
-    words: 'calm animation motion meme quiet 平靜 動畫 安靜',
+    words: 'calm animation motion quiet 平靜 動畫 安靜',
   },
   {
     id: 'lifeRelation',
@@ -134,20 +134,6 @@ export const ENTRIES = [
     label: 'stLifeRelationLabel',
     desc: 'stLifeRelationDesc',
     words: 'squad subagent beam zone 小隊 子代理 光束',
-  },
-  {
-    id: 'lifeKinds',
-    section: 'office',
-    label: 'stLifeKindsLabel',
-    desc: 'stLifeKindsDesc',
-    words: 'animation effects memes easter eggs tests ops wellbeing social 動畫 彩蛋 梗',
-  },
-  {
-    id: 'lifeFrequency',
-    section: 'office',
-    label: 'stLifeFrequencyLabel',
-    desc: 'stLifeFrequencyDesc',
-    words: 'rare often meme frequency 頻率 少見',
   },
   {
     id: 'advanced',

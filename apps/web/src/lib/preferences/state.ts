@@ -1,8 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { DEFAULT_LIFE_PREFS, type LifePrefs } from '@aether/office-scene/model';
 import { hasLocale, loadLocale, resolveLocale, type Locale } from '../i18n/i18n.js';
-import { migratePreferences, normalizeLife, PREFS_VERSION } from './prefs-migrate.js';
+import {
+  DEFAULT_LIFE_PREFS,
+  migratePreferences,
+  normalizeLife,
+  PREFS_VERSION,
+  type LifePrefs,
+} from './prefs-migrate.js';
 import { resolveTheme, useSystemDark, type Theme, type ThemePreference } from './theme.js';
 /** The scene's frame-rate limit per setting; `auto` draws as often as the screen asks. */
 export const FPS_CAPS = { auto: undefined, '60': 60, '30': 30 } as const;

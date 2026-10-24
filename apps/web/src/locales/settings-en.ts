@@ -39,7 +39,7 @@ export const settingsEn = {
   stSystemNow: 'System is now',
   stThemeDesc: 'Follow the system, or stay dark or light.',
   stMotionDesc:
-    'Calms the scene and the interface; while it is on the automatic camera is off too. It takes your operating system’s setting the first time and is yours after that, it does not follow later system changes. Decorative office moments are controlled separately by Calm mode.',
+    'Calms the scene and the interface; while it is on the automatic camera is off too. It takes your operating system’s setting the first time and is yours after that, it does not follow later system changes.',
   stOsReduced: 'Your system asks for reduced motion',
   stQualityDesc:
     '3D scene quality: Low saves power and draws no shadows; High is the sharpest and costs the most.',
@@ -106,26 +106,11 @@ export const settingsEn = {
     'Shows the beanstalk that rises with Git history beside the 3D building. Off by default on a phone.',
   stLifeCalmLabel: 'Calm mode',
   stLifeCalmDesc:
-    'Turns off every little decorative moment in the 3D office. Squad effects stay, without motion. On by default when your system asks for reduced motion.',
-  lifeCalmOn: 'Calm mode is on: the kinds below show nothing',
+    'Stills the 3D office: squad effects stay, without motion, and the context compaction effect is hidden. On by default when your system asks for reduced motion.',
+  lifeCalmOn: 'Calm mode is on',
   stLifeRelationLabel: 'Relation effects',
   stLifeRelationDesc:
     'Squads and their subagents: the zone, the team workstations, the beam and the hand-over.',
-  stLifeKindsLabel: 'Kinds of moments',
-  stLifeKindsDesc:
-    'Small decorative animations that follow what a session does. They never say whether anything worked.',
-  lifeKindWork: 'Work',
-  lifeKindGit: 'Git',
-  lifeKindTest: 'Tests and builds',
-  lifeKindOps: 'Ops',
-  lifeKindWellbeing: 'Wellbeing',
-  lifeKindSocial: 'Social',
-  lifeKindMeme: 'Memes',
-  lifeKindEaster: 'Easter eggs',
-  stLifeFrequencyLabel: 'Meme frequency',
-  stLifeFrequencyDesc: 'Rare halves how often memes and social moments appear.',
-  lifeRare: 'Rare',
-  lifeNormal: 'Normal',
 
   stSchedulesDesc: 'Create tasks on a timer: once, daily or weekly.',
   stA2aLabel: 'A2A',

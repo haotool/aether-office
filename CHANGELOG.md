@@ -28,6 +28,7 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 ### Removed
 
 - The first-visit camera tour, with its Replay button and its switch in Settings → Office. The room tour (Guided tour) stays, and the automatic camera still cuts between members.
+- The little decorative animations of the 3D office (a rubber duck, test lamps, confetti for the Konami code and the rest), their kinds and frequency settings, and the Recent moments fold in a conversation. Calm mode and the relation switch stay, and so do squads and the compaction effect.
 
 ### Fixed
 

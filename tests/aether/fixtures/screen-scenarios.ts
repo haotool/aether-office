@@ -1,11 +1,4 @@
 import type { DeskProfile } from '../../../packages/office-scene/src/desks/desk-profile.js';
-import {
-  LIFE_CATEGORIES,
-  type LifeContext,
-  type LifePrefs,
-  type LifeSignal,
-  type SignalKind,
-} from '../../../packages/office-scene/src/life/signals.js';
 import { recordingContext } from './recording-canvas.js';
 import type { SceneModules } from './scene-scenarios.js';
 
@@ -81,60 +74,6 @@ export function screens(m: SceneModules) {
       draw(ctx);
       out.push([calls, ctx.state.scroll]);
     }
-  }
-  return out;
-}
-
-export function lifeSchedule(m: SceneModules) {
-  const r = m.seeded('life');
-  const ctx: LifeContext = {
-    floorOf: (member) => Number(member.slice(1)) % 3,
-    visible: () => true,
-    idleOn: () => ['a1', 'a2'],
-    nameOf: (member) => member,
-    zh: false,
-  };
-  const prefs: LifePrefs = {
-    calm: false,
-    frequency: 'normal',
-    relation: true,
-    categories: Object.fromEntries(
-      LIFE_CATEGORIES.map((c) => [c, true]),
-    ) as LifePrefs['categories'],
-  };
-  const kinds: SignalKind[] = [
-    'tool.start',
-    'tool.end',
-    'git.conflicts',
-    'tests.machine',
-    'tests.edited',
-    'think.long',
-    'work.long',
-    'retry.loop',
-    'debt.sustained',
-    'idle.long',
-    'activity.error',
-    'ui.konami',
-  ];
-  let state = m.schedule.emptyLifeState;
-  const out: unknown[] = [];
-  for (let i = 0; i < 200; i++) {
-    const signals = Array.from({ length: Math.floor(r() * 3) }, (): LifeSignal => {
-      const kind = kinds[Math.floor(r() * kinds.length)] ?? 'tool.start';
-      return {
-        kind,
-        member: kind === 'ui.konami' ? null : `a${Math.floor(r() * 5)}`,
-        at: 1_000_000 + i * 1000 - Math.floor(r() * 4000),
-        ok: r() < 0.5 ? r() < 0.5 : null,
-        value: Math.floor(r() * 9),
-      };
-    });
-    const run = m.schedule.schedule(state, signals, 1_000_000 + i * 1000, prefs, ctx, {
-      quality: 'high',
-      reducedMotion: false,
-    });
-    state = run.state;
-    out.push(run);
   }
   return out;
 }

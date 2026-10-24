@@ -22,7 +22,6 @@
 - [Clock out](#clock-out)
 - [The repository in the office](#the-repository-in-the-office)
 - [Speech bubbles, context and compaction](#speech-bubbles-context-and-compaction)
-- [Office life: little moments in the 3D office](#office-life-little-moments-in-the-3d-office)
 - [Observed sessions on the 3D floor](#observed-sessions-on-the-3d-floor)
 
 </details>
@@ -35,7 +34,6 @@ Behavioral notes for capabilities that are not obvious from the UI. The authorit
 [Text in the conversation](#text-in-the-conversation-wrappers-notices-and-markdown) · [Answering permission prompts](#answering-permission-prompts-remote-approvals) ·
 [Clock out](#clock-out) · [KPIs](#token-and-git-kpis) · [Models](#detected-models). The office: [Interacting with the characters](#interacting-with-the-characters) ·
 [The repository in the office](#the-repository-in-the-office) · [Speech bubbles, context and compaction](#speech-bubbles-context-and-compaction) ·
-[Office life](#office-life-little-moments-in-the-3d-office) ·
 [Observed sessions, roles and squads](#observed-sessions-on-the-3d-floor). The orchestration workbench (behind Advanced):
 [Task dependency graph](#task-dependency-graph) · [Project knowledge](#project-knowledge-and-human-review) · [Agent review](#agent-review).
 
@@ -220,51 +218,11 @@ commit or the tier. It is on for a desktop and off on a phone by default. See th
 
 Working members show their latest prompt and reply as two bubbles (up to six at once; only the selected or filmed member on a
 phone). Each desk has a gauge for the share of the model's context window in use, which turns amber from 60% and red above 85%;
-a compaction plays a short effect and a chip. Claude's transcript does not record the window, so it is a 200k window assumed (a
+a compaction plays a short effect and a chip (Settings → Office has Calm mode, which hides them and stills the squad effects; it is on by default when the system asks for reduced motion, and has a switch in the phone drawer). Claude's transcript does not record the window, so it is a 200k window assumed (a
 `[1m]` model id or a model catalog entry says otherwise) and, once the context is past 200k, inferred to be 1M: the gauge's
 tooltip says which, because the percentage falls where the window changes. A turn the CLI wrote for an API error (`<synthetic>`,
 no tokens) is skipped, so the gauge shows the last real turn, or nothing, never 0%. Both come from the local session scan (`GET /api/local-sessions/speech`,
 `usage.contextPct`, `usage.compactedAt`) and nothing is stored.
-
-## Office life: little moments in the 3D office
-
-Small, decorative animations that follow what a session does. They are pictures, not facts. Each wave-1 effect says what a
-command was _started_ as or what state a session is in, never whether it passed or was pushed. The wave-2 outcome moments (below the
-table) start only when the provider _stated_ how a command ended (Claude's `PostToolUse` or `PostToolUseFailure`, an `is_error`
-in the transcript, a Codex exit code); when the outcome is unknown nothing shows. The hidden live region "Office activity
-(decorative)" announces each one, at most one line per 5 s, in the page language.
-
-| Effect                 | Fires on (from the hook records and the scan)                                                     | Lasts | Cooldown          | Kind             |
-| ---------------------- | ------------------------------------------------------------------------------------------------- | ----- | ----------------- | ---------------- |
-| Rubber duck            | working, no tool running, nothing heard for 45 s                                                  | 18 s  | 10 min per member | Wellbeing        |
-| Test lamp and bug      | a test command starts (`pnpm test`, `vitest`, `pytest`, `go test`, `cargo test`, ...); amber only | 14 s  | 5 min per member  | Tests and builds |
-| Install disc           | an install command starts (`pnpm install`, `npm i`, `yarn`, ...)                                  | 20 s  | 10 min per member | Tests and builds |
-| Rocket or paper plane  | a `git push` command starts                                                                       | 2.6 s | 10 min per member | Git              |
-| Pager bell             | a member's state turns to error                                                                   | 3 s   | 5 min per member  | Ops              |
-| Coffee steam           | a session that began 2 h or more ago starts working                                               | 4.5 s | 45 min per member | Wellbeing        |
-| Loop ring              | the same command ran 4 times in 2 minutes                                                         | 8 s   | 10 min per member | Memes            |
-| Copy and paste keycaps | a fetch of Stack Overflow, Super User or a Stack Exchange site                                    | 2.4 s | 30 min per member | Memes            |
-| `:q!` sign             | `vim`, `vi` or `nvim` starts                                                                      | 4 s   | 1 day per member  | Memes            |
-| Pile of boxes          | 20 or more uncommitted files for 30 minutes                                                       | 45 s  | 10 min per member | Work             |
-| Stand-up circle        | a member idle 5 minutes while 3 or more are idle on the floor                                     | 12 s  | 1 h per floor     | Social           |
-| Confetti               | the viewer types the Konami code                                                                  | 4.5 s | once a day        | Easter eggs      |
-
-**Wave 2** adds fourteen more, each from a stated outcome or a command label: a green lamp and a squashed bug when a test
-command exited successfully, a red lamp and a scurrying bug when it failed, a CI stack for a watch command's exit status, a red
-squiggle for a failed build or typecheck, a rocket (now only from a push that exited successfully), danger stripes for a force
-push, a tug-of-war for merge conflicts, a launch pad for a deploy (and a Friday sign on a Friday afternoon), a bandaged skull
-gag for `rm -rf`, `sudo` and `curl | sh` chips, "works on my machine", "not a bug, a feature" and an LGTM stamp for a real pull
-request approval. A member's conversation has a closed "Recent moments" fold. `404` and `418` effects are not built (no real
-data to drive them). The labels come from the hook receiver's closed list of 23 command tags
-([provider compatibility](provider-compatibility.md#signals-for-the-office-what-each-provider-gives-what-is-derived-what-is-missing)).
-Without hooks the wave-1 effects that need a command do not fire and the outcome moments never do.
-
-A member shows one at a time, a floor two, and the building at most three starts in any minute; out of view an effect fires at
-half chance, and at the default "rare" frequency memes and social moments at half again. Settings → Office has Calm mode (every
-kind off; on by default when the system asks for reduced motion, and a switch in the phone drawer), a switch per kind and the
-frequency. With reduced motion an effect is a still picture or, for those that are only motion (steam, the
-circle, confetti), nothing; the low quality tier shows none. The design is in [office-life.md](design/office-life.md#53-registry);
-`?preview=life&effect=<id>&t=<ms>` holds one frame for a contact sheet.
 
 ## Observed sessions on the 3D floor
 

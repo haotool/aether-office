@@ -36,8 +36,6 @@ export const enFeed = {
   mdTodo: 'To do',
   convFailed: 'failed',
   convContext: 'Context',
-  momentsTitle: 'Recent moments',
-  momentsDecorative: 'decorative',
   convTrimmed: 'Only the latest part of the conversation is shown',
   noticeTaskDone: 'Background task finished',
   noticeTaskFailed: 'Background task failed',

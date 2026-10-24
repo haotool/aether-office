@@ -1,14 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from '../../packages/office-scene/node_modules/three/build/three.module.js';
-import type { Seat } from '../../packages/office-scene/src/environment/director.js';
-import { lifeContext } from '../../packages/office-scene/src/life/context.js';
-import {
-  SPOT,
-  clamp01,
-  draw,
-  envelope,
-  lerp,
-} from '../../packages/office-scene/src/life/effects/shared.js';
 import { estimateGpuBytes } from '../../packages/office-scene/src/perf/perf-rig.js';
 import { Glide } from '../../packages/office-scene/src/squad/squad-glide.js';
 
@@ -52,67 +43,6 @@ describe('Glide', () => {
     glide.prune(new Set(['b']));
     expect(glide.to('a', { x: 9, z: 9 }, 0.016, 1)).toEqual({ x: 9, z: 9 });
     expect(glide.to('b', { x: 9, z: 9 }, 0.016, 1)).not.toEqual({ x: 9, z: 9 });
-  });
-});
-
-describe('life effect helpers', () => {
-  it('clamp01 and lerp', () => {
-    expect([clamp01(-1), clamp01(0.4), clamp01(7)]).toEqual([0, 0.4, 1]);
-    expect(lerp(10, 20, 0)).toBe(10);
-    expect(lerp(10, 20, 0.25)).toBe(12.5);
-    expect(lerp(10, 20, 1)).toBe(20);
-  });
-
-  it('envelope rises, holds, falls, and is zero outside the effect', () => {
-    expect(envelope(-1, 2000)).toBe(0);
-    expect(envelope(2001, 2000)).toBe(0);
-    expect(envelope(0, 2000)).toBe(0);
-    expect(envelope(175, 2000)).toBeCloseTo(0.5);
-    expect(envelope(1000, 2000)).toBe(1);
-    expect(envelope(1825, 2000)).toBeCloseTo(0.5);
-    expect(envelope(100, 400, 100)).toBe(1);
-  });
-
-  it('draw gives the same number for the same seed and step, and a different one otherwise', () => {
-    expect(draw(7, 0)).toBe(draw(7, 0));
-    expect(draw(7, 0)).not.toBe(draw(7, 1));
-    expect(draw(7, 0)).not.toBe(draw(8, 0));
-    for (let n = 0; n < 50; n++) expect(draw(3, n)).toBeGreaterThanOrEqual(0);
-  });
-
-  it('names the spots on and over a desk, all above the floor', () => {
-    expect(Object.keys(SPOT).sort()).toEqual(['aboveScreen', 'deskRight', 'mug', 'overHead']);
-    for (const [, y] of Object.values(SPOT)) expect(y).toBeGreaterThan(0.5);
-  });
-});
-
-describe('lifeContext', () => {
-  const seats = new Map<string, Seat>([
-    ['a', { x: 1, z: 1, floor: 0, rotation: 0 }],
-    ['b', { x: 2, z: 1, floor: 1, rotation: 0 }],
-    ['c', { x: 3, z: 1, floor: 1, rotation: 0 }],
-  ]);
-  const context = (view = { floor: 1, exploded: false }, zh = false) =>
-    lifeContext(seats, view, { names: { a: 'Ada' }, idle: ['a', 'b', 'c', 'ghost'] }, zh);
-
-  it('answers which floor a member sits on, and nothing for an unknown one', () => {
-    expect(context().floorOf('b')).toBe(1);
-    expect(context().floorOf('ghost')).toBeNull();
-  });
-
-  it('sees a member only on the floor in view, or on every floor when the building is spread apart', () => {
-    expect(context().visible('a')).toBe(false);
-    expect(context().visible('b')).toBe(true);
-    expect(context().visible('ghost')).toBe(false);
-    expect(context({ floor: 1, exploded: true }).visible('a')).toBe(true);
-  });
-
-  it('lists the idle members of a floor, and names members by their title or their id', () => {
-    expect(context().idleOn(1)).toEqual(['b', 'c']);
-    expect(context().idleOn(4)).toEqual([]);
-    expect(context().nameOf('a')).toBe('Ada');
-    expect(context().nameOf('b')).toBe('b');
-    expect(context({ floor: 0, exploded: false }, true).zh).toBe(true);
   });
 });
 

@@ -5,7 +5,6 @@ import type { SceneMessage } from '../environment/carriers.js';
 import type { SceneCompaction } from '../environment/context.js';
 import type { Pulse } from '../environment/director.js';
 import type { FloorKpiBadge } from '../components/FloorKpi.js';
-import type { LifeInput } from '../life/signals.js';
 import type { PerfReport } from '../perf/perf.js';
 import type { BranchInfo, Quality } from './scene-types.js';
 import type { ScreenFacts } from '../screen/screen-facts.js';
@@ -66,8 +65,6 @@ export type OfficeSceneProps = {
   overlay?: ReactNode;
   floorKpi?: readonly (FloorKpiBadge | null)[];
   onOpenFloorKpi?: (floor: number) => void;
-  /** Office life: the signals the page derived from real sessions, the person's settings and, for a contact sheet, a preview. Decorative. */
-  life?: LifeInput;
   squads?: readonly SquadInput[];
   squadPrefs?: SquadPrefs;
 };

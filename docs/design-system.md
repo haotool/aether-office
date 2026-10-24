@@ -872,9 +872,7 @@ to one of `wave`, `nod`, `celebrate`, `cheer`, `stretch`, there being no thumbs-
 what the member is doing, and an icon rises over its head for 1.8 s. One per character per 2.5 s (a second is refused with an
 announcement, not queued), at most four icons at once, not for a sleeping rabbit, a ghost or a member leaving. Reduced motion
 plays no clip and the icon only fades. Nothing is sent to the session. The clip is asked of the scene's one pose registry
-(`use-pose-cues.ts`, see [office life 5.6](design/office-life.md#56-poses-one-registry-for-what-a-member-does-pose-cuests-use-pose-cuests-lifeposests)):
-the person outranks a hand-over's nod, which outranks a life effect's gesture, and a lower request never interrupts a higher one still
-playing.
+(`use-pose-cues.ts`): the person outranks a hand-over's nod, and a lower request never interrupts a higher one still playing.
 
 **Carrying a desk** (desktop, owner or operator): Alt + drag shows a ghost of the desk's footprint on the floor, snapped to
 the layout editor's 0.5 m grid, green where the layout rules allow it and red where not (the message says whether it is out of
@@ -1189,8 +1187,7 @@ overlays.
   finishes MS after it joined (and hands its result over), `&tools=MS` tool starts (the strings jerk), `&result=error` the finished ones come back
   flagged as an error, `&look=1` the camera goes to the middle of the squad (`&look=desk` to the supervisor's desk), `&relation=0` no dressing or
   beam, `&strings=0` no strings, `&handover=0` no hand-over, `&legacy=1` desks as before, `&after=MS` the squad first shows MS after the
-  page opened). `?preview=life&effect=a,b&t=MS&loop=1` plays life effects on from `t`, over and over, instead of holding a frame (and leaves
-  the camera where it is); `scripts/perf-matrix.mjs` measures them on the real GPU. Measured on an Apple M4 (ANGLE Metal) against the same scene with desks: median frame time 16.7
+  page opened). `scripts/perf-matrix.mjs` measures the squad on the real GPU. Measured on an Apple M4 (ANGLE Metal) against the same scene with desks: median frame time 16.7
   ms both, 26 fewer draw calls, 4 more shader programs, no GPU memory change.
 - **Puppet strings and hand-over, measured** on the same machine (Apple M4, ANGLE Metal, balanced tier, an 806 x 540 viewport, 8
   subagents in a zone, 9 interleaved rounds of 240 frames, medians, a machine that was busy). Median frame time is 16.7 ms in every

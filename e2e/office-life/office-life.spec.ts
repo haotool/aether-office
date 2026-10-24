@@ -1,24 +1,11 @@
-import { test, expect, type Browser, type Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { signIn } from '../support/sign-in.js';
-import { throughout } from '../support/settled.js';
 import AxeBuilder from '@axe-core/playwright';
-import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 
-const LOG = '[role="log"]';
-
-type Seed = {
-  theme?: 'dark' | 'light';
-  locale?: 'en' | 'zh-TW';
-  life?: Record<string, unknown>;
-  quality?: string;
-  reducedMotion?: boolean;
-  version?: number;
-  panelCollapsed?: boolean;
-};
+type Seed = { theme?: 'dark' | 'light'; version?: number };
 
 async function open(page: Page, path: string, seed: Seed = {}) {
-  const { theme = 'dark', locale = 'en', life, version = 0, ...rest } = seed;
+  const { theme = 'dark', version = 0 } = seed;
   await page.addInitScript(
     ([state, v]) => {
       // Seeded once per tab: a reload keeps what the page itself saved since.
@@ -27,15 +14,7 @@ async function open(page: Page, path: string, seed: Seed = {}) {
       window.localStorage.setItem('aether-ui-preferences', JSON.stringify({ state, version: v }));
     },
     [
-      {
-        theme,
-        locale,
-        view: '3d',
-        autoCamera: false,
-        panelCollapsed: true,
-        ...(life ? { life } : {}),
-        ...rest,
-      },
+      { theme, locale: 'en', view: '3d', autoCamera: false, panelCollapsed: true },
       version,
     ] as const,
   );
@@ -43,249 +22,23 @@ async function open(page: Page, path: string, seed: Seed = {}) {
   await page.goto(path);
 }
 
-async function scenario(browser: Browser, path: string, seed: Seed = {}) {
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  await open(page, path, seed);
-  return { page, close: () => context.close() };
-}
-
 const stored = (page: Page) =>
   page.evaluate(() => JSON.parse(localStorage.getItem('aether-ui-preferences') ?? '{}'));
-const logText = (page: Page) => page.locator(LOG).allInnerTexts();
-const duck = '/office?preview=life&effect=rubber-duck&t=4000&legacy=1';
-const heard = /is thinking it through with the rubber duck/;
-
-test.describe('the aria log', () => {
-  test('announces a preview effect once, politely, in the page language', async ({ page }) => {
-    await open(page, duck);
-    await expect(page.locator(LOG)).toHaveAttribute('aria-live', 'polite');
-    await expect(page.locator(LOG)).toHaveAttribute('aria-label', /Office activity \(decorative\)/);
-    await expect(page.locator(`${LOG} p`)).toHaveCount(1, { timeout: 30_000 });
-    expect((await logText(page)).join(' ')).toMatch(heard);
-    await throughout(page, () => expect(page.locator(`${LOG} p`)).toHaveCount(1), 90);
-  });
-
-  test('speaks Traditional Chinese for a Chinese page', async ({ page }) => {
-    await open(page, duck, { locale: 'zh-TW' });
-    await expect(page.locator(`${LOG} p`)).toHaveCount(1, { timeout: 30_000 });
-    await expect(page.locator(LOG)).toHaveAttribute('aria-label', /辦公室動態（裝飾）/);
-    expect((await logText(page)).join(' ')).toMatch(/正在跟橡皮鴨一起想/);
-  });
-
-  const silent = async (browser: Browser, seed: Seed, path = duck) => {
-    const { page, close } = await scenario(browser, path, seed);
-    await page.locator('canvas').first().waitFor({ timeout: 30_000 });
-    await expect(page.locator('.scene-warming')).toHaveCount(0, { timeout: 30_000 });
-    await throughout(page, () => expect(page.locator(`${LOG} p`)).toHaveCount(0), 240);
-    await close();
-  };
-
-  test('says nothing in Calm mode', async ({ browser }) => {
-    await silent(browser, { life: { calm: true } });
-  });
-
-  test('says nothing from a kind that is switched off', async ({ browser }) => {
-    await silent(browser, { life: { calm: false, categories: { wellbeing: false } } });
-  });
-
-  test('says nothing on the low quality tier', async ({ browser }) => {
-    await silent(browser, { quality: 'low' });
-  });
-
-  test('with reduced motion keeps a still effect', async ({ page }) => {
-    await open(page, duck, { reducedMotion: true, life: { calm: false } });
-    await expect(page.locator(`${LOG} p`)).toHaveCount(1, { timeout: 30_000 });
-  });
-
-  test('with reduced motion drops an effect that is only motion', async ({ browser }) => {
-    await silent(
-      browser,
-      { reducedMotion: true, life: { calm: false } },
-      '/office?preview=life&effect=coffee-refill&t=2000&legacy=1',
-    );
-  });
-});
-
-test.describe('real signals', () => {
-  const konami = async (page: Page) => {
-    await page.locator('canvas').first().waitFor({ timeout: 30_000 });
-    await expect(page.locator('.scene-warming')).toHaveCount(0, { timeout: 30_000 });
-    for (const key of [
-      'ArrowUp',
-      'ArrowUp',
-      'ArrowDown',
-      'ArrowDown',
-      'ArrowLeft',
-      'ArrowRight',
-      'ArrowLeft',
-      'ArrowRight',
-      'b',
-      'a',
-    ])
-      await page.keyboard.press(key);
-  };
-
-  test('the Konami code, typed on the keyboard, is announced', async ({ page }) => {
-    await open(page, '/office', { life: { calm: false } });
-    await konami(page);
-    await expect(page.locator(`${LOG} p`, { hasText: 'Konami' })).toHaveText('Konami code!', {
-      timeout: 10_000,
-    });
-  });
-
-  test('Calm mode silences the Konami code', async ({ page }) => {
-    await open(page, '/office', { life: { calm: true } });
-    await konami(page);
-    // Awaits nothing: the frames that follow must not carry an announcement (a squad's join is not Calm's to silence).
-    await throughout(
-      page,
-      () => expect(page.locator(`${LOG} p`, { hasText: 'Konami' })).toHaveCount(0),
-      90,
-    );
-  });
-});
-
-async function watchFixtureRepo(page: Page) {
-  const picker = page.locator('.project-picker select');
-  await expect(picker.locator('option', { hasText: 'fixture-repo' })).toBeAttached({
-    timeout: 15_000,
-  });
-  await picker.selectOption({ label: 'fixture-repo' });
-  await expect(page.locator('.scene-label', { hasText: 'fixture-repo' })).toBeVisible({
-    timeout: 15_000,
-  });
-}
-
-let spoolTick = 0;
-function resetSpool() {
-  const file = process.env['AETHER_HOOK_SPOOL']!;
-  const own = readFileSync(file, 'utf8')
-    .split('\n')
-    .filter((line) => line.includes('"agentId"'));
-  writeFileSync(file, own.join('\n') + '\n');
-}
-function spool(event: string, extra: Record<string, unknown>) {
-  const home = process.env['AETHER_LOCAL_SESSIONS_HOME']!;
-  appendFileSync(
-    process.env['AETHER_HOOK_SPOOL']!,
-    JSON.stringify({
-      at: Date.now() + 2 * 3_600_000 + (spoolTick += 1) * 1000,
-      provider: 'claude',
-      event,
-      sessionId: 'e2e-session',
-      cwd: join(home, 'fixture-repo'),
-      ...extra,
-    }) + '\n',
-  );
-}
-const bash = (id: string, target: string, tags: string[]) =>
-  spool('PreToolUse', { tool: 'Bash', target, tags, toolUseId: id });
-const heardLines = (page: Page, words: RegExp) => page.locator(`${LOG} p`, { hasText: words });
-
-test('a real test run is shown as the provider stated it: an unknown outcome says nothing, then fail, edit, pass is the changed-tests joke', async ({
-  page,
-}) => {
-  resetSpool();
-  // Normal frequency: "rare" would halve the meme's chance, and this is about what is shown, not the draw.
-  await open(page, '/office', {
-    life: { calm: false, frequency: 'normal' },
-    panelCollapsed: false,
-  });
-  await watchFixtureRepo(page);
-  const claimed = /tests were changed|exited successfully/;
-
-  bash('f1', 'make check', ['test']);
-  spool('PostToolUseFailure', { tool: 'Bash', toolUseId: 'f1', ok: false });
-  spool('PreToolUse', { tool: 'Edit', target: 'app.test.ts' });
-  bash('u1', 'make check', ['test']);
-  spool('PostToolUse', { tool: 'Bash', toolUseId: 'u1' });
-  const nothingClaimed = () => expect(heardLines(page, claimed)).toHaveCount(0);
-  await throughout(page, nothingClaimed, 360);
-
-  // No event marks the end of a moment, so the scene lets one go by (counted in frames, so a loaded machine waits
-  // longer): a failure's own moment is over and only one effect per member shows at a time.
-  await throughout(page, nothingClaimed, 240);
-  bash('p1', 'make check', ['test']);
-  spool('PostToolUse', { tool: 'Bash', toolUseId: 'p1', ok: true });
-  await expect(heardLines(page, /The tests were changed, then passed/)).toHaveCount(1, {
-    timeout: 30_000,
-  });
-
-  await page.locator('.session-panel .feed-row', { hasText: 'fixture-repo' }).first().click();
-  const moments = page.locator('.conv-moments');
-  await expect(moments).toBeVisible();
-  await expect(moments).not.toHaveAttribute('open', '');
-  await expect(moments.locator('summary')).toContainText(/Recent moments/);
-  await expect(moments.locator('summary')).toContainText(/decorative/);
-  await moments.locator('summary').click();
-  await expect(moments.locator('li', { hasText: /tests were changed/ })).toHaveCount(1);
-});
-
-test('a push is "pushed" only once it exited successfully', async ({ page }) => {
-  resetSpool();
-  await open(page, '/office', { life: { calm: false } });
-  await watchFixtureRepo(page);
-  bash('g1', 'git push', ['git.push']);
-  await throughout(page, () => expect(heardLines(page, /pushed/)).toHaveCount(0), 300);
-  spool('PostToolUse', { tool: 'Bash', toolUseId: 'g1', ok: true });
-  await expect(heardLines(page, /pushed/)).toHaveCount(1, { timeout: 30_000 });
-});
-
-test.describe('wave 2 moments', () => {
-  const heardFor: [string, RegExp][] = [
-    ['ci-pass', /test command exited successfully/],
-    ['ci-fail', /test command failed/],
-    ['build-error', /build command failed/],
-    ['force-push', /started a force push/],
-    ['merge-conflict', /repository has 40 conflicted files/],
-    ['launch-pad', /started a deploy/],
-    ['friday-deploy', /deploy on a Friday afternoon/],
-    ['skull-gag', /started a recursive delete command/],
-    ['lgtm', /approved a pull request/],
-    ['works-machine', /pass in one session and fail in another/],
-    ['not-a-bug', /tests were changed, then passed/],
-    ['sudo-prompt', /command with sudo/],
-    ['curl-pipe', /pipes a download into a shell/],
-  ];
-  for (const [effect, words] of heardFor)
-    test(`${effect} is announced, once`, async ({ page }) => {
-      await open(page, `/office?preview=life&effect=${effect}&t=1500&legacy=1`);
-      await expect(page.locator(`${LOG} p`)).toHaveCount(1, { timeout: 30_000 });
-      expect((await logText(page)).join(' ')).toMatch(words);
-    });
-
-  test('the CI stack words its exit status, never "CI passed"', async ({ page }) => {
-    await open(page, '/office?preview=life&effect=ci-stack:0&t=1500&legacy=1');
-    await expect(page.locator(`${LOG} p`)).toHaveCount(1, { timeout: 30_000 });
-    expect((await logText(page)).join(' ')).toMatch(/CI watch command exited with an error/);
-  });
-});
 
 test.describe('settings', () => {
-  test('Office → Animations: Calm mode, kinds, frequency persist', async ({ page }) => {
+  test('Office → Animations: Calm mode and relation effects persist', async ({ page }) => {
     await open(page, '/settings/office');
     const calm = page.getByRole('switch', { name: 'Calm mode', exact: true });
+    const relation = page.getByRole('switch', { name: 'Relation effects', exact: true });
     await expect(calm).not.toBeChecked();
-    await expect(page.getByRole('switch', { name: 'Tests and builds' })).toBeEnabled();
+    await expect(relation).toBeChecked();
     await calm.check();
     expect((await stored(page)).state.life.calm).toBe(true);
-    await expect(page.getByRole('switch', { name: 'Tests and builds' })).toBeDisabled();
     await calm.uncheck();
-    await page.getByRole('switch', { name: 'Memes', exact: true }).uncheck();
-    await page.getByRole('radio', { name: 'Normal' }).click();
-    const state = (await stored(page)).state;
-    expect(state.life).toMatchObject({
-      calm: false,
-      frequency: 'normal',
-      categories: { meme: false, work: true, easter: true },
-    });
+    await relation.uncheck();
+    expect((await stored(page)).state.life).toEqual({ calm: false, relation: false });
     await page.reload();
-    await expect(page.getByRole('switch', { name: 'Memes', exact: true })).not.toBeChecked();
-    await expect(page.getByRole('radio', { name: 'Normal' })).toHaveAttribute(
-      'aria-checked',
-      'true',
-    );
+    await expect(relation).not.toBeChecked();
   });
 
   test('the phone drawer has a Calm mode switch that is the same setting', async ({ browser }) => {
@@ -340,7 +93,7 @@ test.describe('settings', () => {
 
   test('is findable by search', async ({ page }) => {
     await open(page, '/settings');
-    await page.getByRole('searchbox').fill('easter');
-    await expect(page.getByRole('switch', { name: 'Easter eggs' })).toBeVisible();
+    await page.getByRole('searchbox').fill('calm');
+    await expect(page.getByRole('switch', { name: 'Calm mode', exact: true })).toBeVisible();
   });
 });

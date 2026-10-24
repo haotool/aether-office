@@ -13,11 +13,10 @@ import type * as Multi from '../../../packages/office-scene/src/core/multi-view.
 import type * as ScreenLayout from '../../../packages/office-scene/src/screen/screen-layout.js';
 import type * as ScreenTheme from '../../../packages/office-scene/src/screen/screen-theme.js';
 import type * as ScreenViews from '../../../packages/office-scene/src/screen/screen-views.js';
-import type * as Schedule from '../../../packages/office-scene/src/life/schedule.js';
 import type * as Squad from '../../../packages/office-scene/src/squad/squad-model.js';
 import type * as Stalk from '../../../packages/office-scene/src/core/stalk-layout.js';
 import type * as Camera from '../../../packages/office-scene/src/core/shot-camera.js';
-import { lifeSchedule, screens } from './screen-scenarios.js';
+import { screens } from './screen-scenarios.js';
 
 export type SceneModules = {
   seeded: (seed: string) => () => number;
@@ -34,7 +33,6 @@ export type SceneModules = {
   views: Pick<typeof ScreenViews, 'VIEWS'>;
   theme: Pick<typeof ScreenTheme, 'PALETTES'>;
   screenLayout: Pick<typeof ScreenLayout, 'currentWork'>;
-  schedule: Pick<typeof Schedule, 'schedule' | 'emptyLifeState'>;
 };
 
 const rounded = (_: string, v: unknown) =>
@@ -289,6 +287,5 @@ export function runScenarios(m: SceneModules): Record<string, string> {
     layouts: digest(layouts(m)),
     deskItems: digest(deskItems(m)),
     screens: digest(screens(m)),
-    lifeSchedule: digest(lifeSchedule(m)),
   };
 }
