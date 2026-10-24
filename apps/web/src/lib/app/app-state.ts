@@ -72,7 +72,7 @@ export function useApplication(session: Session) {
   const compact = usePhoneAny();
   const sel = useProjectSelection(session, shell.offline, setNotice);
   const local = useLocalSessions(session);
-  const { needs } = useAttention(
+  const { needs, asking } = useAttention(
     session,
     sel.projectId,
     sel.projects.data,
@@ -104,6 +104,7 @@ export function useApplication(session: Session) {
     sel,
     local,
     needs,
+    asking,
     canWrite,
     view,
     pick,

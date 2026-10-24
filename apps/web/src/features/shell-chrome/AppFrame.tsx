@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { X } from 'lucide-react';
 import { useT } from '../../ui/useT.js';
 import type { Application } from '../../lib/app/app-state.js';
@@ -11,6 +12,9 @@ import { SessionSheet } from '../sessions/SessionSheet.js';
 import { Sidebar } from './Sidebar.js';
 import { Telemetry } from '../kpi/Telemetry.js';
 import { Topbar } from './Topbar.js';
+import { LOCAL_PREFIX } from '../../lib/sessions/session-names.js';
+
+const NeedBanner = lazy(() => import('./NeedBanner.js').then((m) => ({ default: m.NeedBanner })));
 
 export function AppTopbar({ app }: { app: Application }) {
   const { session, sel, local, shell, view } = app;
@@ -30,6 +34,19 @@ export function AppTopbar({ app }: { app: Application }) {
       }}
       onNewProject={() => shell.setNewProject(true)}
     />
+  );
+}
+
+export function AppNeedBanner({ app }: { app: Application }) {
+  return (
+    <Suspense fallback={null}>
+      <NeedBanner
+        sessions={app.local.data?.sessions}
+        asking={app.asking}
+        notify={app.prefs.notify}
+        onOpen={(key) => app.pick.open(`${LOCAL_PREFIX}${key}`)}
+      />
+    </Suspense>
   );
 }
 

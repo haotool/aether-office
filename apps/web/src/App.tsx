@@ -8,7 +8,13 @@ import { ReasonDefs } from './ui/ReasonDefs.js';
 import { usePhone } from './lib/preferences/phone.js';
 import { useApplication } from './lib/app/app-state.js';
 import { useAuthSession, useDocumentChrome, useSignedOutTitle } from './lib/app/app-hooks.js';
-import { AppMain, AppNavigation, AppPanel, AppTopbar } from './features/shell-chrome/AppFrame.js';
+import {
+  AppMain,
+  AppNavigation,
+  AppNeedBanner,
+  AppPanel,
+  AppTopbar,
+} from './features/shell-chrome/AppFrame.js';
 import { ProjectForm } from './features/integrations/ProjectForm.js';
 import { TabBar } from './features/shell-chrome/TabBar.js';
 import { isFieldPerfRequested } from './features/field-perf/is-field-perf-requested.js';
@@ -87,6 +93,7 @@ function Application({ session, onLogout }: { session: Session; onLogout: () => 
         {t('skipToMain')}
       </a>
       <AppTopbar app={app} />
+      <AppNeedBanner app={app} />
       <div className="app-body">
         <AppNavigation app={app} onLogout={onLogout} />
         <AppMain app={app} />

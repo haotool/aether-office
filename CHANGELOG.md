@@ -7,6 +7,10 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ## [Unreleased]
 
+### Added
+
+- A banner under the top bar names the session that has waited longest for a person (what it asked for, how long, and how many others wait). `N` jumps to it, a two-tone chime sounds when a new one starts waiting and again every 30 seconds while the page is in the background, following the existing notifications switch.
+
 ### Changed
 
 - The quality check no longer caps the total number of lines of code. A fixed budget that every change had to stay under made each

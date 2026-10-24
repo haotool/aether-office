@@ -97,6 +97,8 @@ export const zhShell = {
   on: '開啟',
   readonly: '唯讀權限',
   sessionNeedsYou: 'Session 需要你',
+  needBannerNeeds: '需要你',
+  needBannerGo: '前往（N）',
   sessionFinished: 'Session 已完成',
   unread: '未讀',
   unreadHint: '需要你或剛完成、你還沒點開查看的 session',

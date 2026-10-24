@@ -99,6 +99,8 @@ export const enShell = {
   on: 'On',
   readonly: 'Read-only access',
   sessionNeedsYou: 'A session needs you',
+  needBannerNeeds: 'needs you',
+  needBannerGo: 'Go (N)',
   sessionFinished: 'A session finished',
   unread: 'UNREAD',
   unreadHint: 'Sessions that need you or just finished, not yet opened',
