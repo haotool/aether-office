@@ -15,7 +15,7 @@ const client = new QueryClient({
 // The page's own language is downloaded before the first render, so neither the login nor the app flashes keys.
 await loadLocale(usePreferences.getState().locale);
 watchInstall();
-startServiceWorker();
+await startServiceWorker();
 const root = document.getElementById('root');
 if (!root) throw new Error('root element missing');
 createRoot(root).render(

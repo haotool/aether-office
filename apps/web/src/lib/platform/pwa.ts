@@ -78,7 +78,7 @@ async function register() {
   });
 }
 
-export function startServiceWorker() {
+export async function startServiceWorker() {
   const supported = 'serviceWorker' in navigator;
   let disabled = false;
   try {
@@ -92,7 +92,8 @@ export function startServiceWorker() {
     production: import.meta.env.PROD,
     disabled,
   };
-  if (supported && disabled) void remove();
+  // Done before the first render: a chunk requested while the cache is being deleted can leave an empty cache behind.
+  if (supported && disabled) await remove().catch(() => undefined);
   if (!canRegister(env)) return;
   // After the page has settled, so that keeping the files never competes with showing them. The page works without it.
   const start = () =>
