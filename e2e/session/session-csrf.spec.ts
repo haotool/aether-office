@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { signIn as signInTo } from '../support/sign-in.js';
 
-const signIn = async (page: Page) => {
-  await signInTo(page);
+const signIn = async (page: Page, remember = true) => {
+  await signInTo(page, '/', { remember });
   await expect(page.getByRole('button', { name: '在手機上開啟' })).toBeVisible();
 };
 
@@ -14,12 +14,13 @@ const writeFromPage = async (page: Page) => {
   return (await made).status();
 };
 
-// A closed tab (or one iOS discarded) takes its sessionStorage with it; the cookie lives on for hours.
+// A closed tab (or one iOS discarded) takes its sessionStorage with it; the cookie lives on for hours. A remembered device keeps
+// its token in the browser's storage instead, so this test signs in without the box ticked.
 test('a signed-in browser that lost its tab can still write: the page asks for a new CSRF token', async ({
   context,
   page,
 }) => {
-  await signIn(page);
+  await signIn(page, false);
   expect(await writeFromPage(page)).toBe(200);
   await page.close();
 
