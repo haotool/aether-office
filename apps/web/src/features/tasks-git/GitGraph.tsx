@@ -1,19 +1,6 @@
 import type { GitGraphCommit } from '@aether/contracts';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '../../lib/api/api.js';
 import { useT } from '../../ui/useT.js';
-import { POLL, poll } from '../../lib/app/polling.js';
-
-export function useGitGraph(projectId: string, enabled = true) {
-  return useQuery({
-    queryKey: ['git-graph', projectId],
-    queryFn: () =>
-      api<{ commits: GitGraphCommit[]; lanes: number }>(`/api/projects/${projectId}/git-graph`),
-    ...poll(POLL.slow),
-    retry: false,
-    enabled,
-  });
-}
+import { useGitGraph } from './use-git-graph.js';
 
 const ROW = 24;
 const LANE = 14;

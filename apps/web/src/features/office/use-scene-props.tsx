@@ -18,7 +18,7 @@ import { useT } from '../../ui/useT.js';
 import type { AttributedSession } from '@aether/contracts';
 import type { CharacterCommand } from '../office/CharacterMenu.js';
 import { GroupBar } from '../shell-chrome/GroupBar.js';
-import { useGitGraph } from '../tasks-git/GitGraph.js';
+import { useGitGraph } from '../tasks-git/use-git-graph.js';
 import type { OfficeModel } from '../office/office-model.js';
 import {
   compactPreview,
