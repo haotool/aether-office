@@ -81,6 +81,13 @@ it('reads start times, CPU times and whole ps lines in every form ps prints them
   expect(parseProcessTable('not a ps line\n\n')).toEqual([]);
 });
 
+it('recognises Claude Code started from its versioned install path', () => {
+  const found = parseProcessList(
+    parseProcessTable(ps(20, '/Users/me/.local/share/claude/versions/2.1.309 --resume ' + UUID)),
+  );
+  expect(found.map((p) => [p.pid, p.provider, p.resume])).toEqual([[20, 'claude', UUID]]);
+});
+
 it('recognises provider CLI processes and ignores helpers that only share the name', () => {
   const found = parseProcessList(
     parseProcessTable(

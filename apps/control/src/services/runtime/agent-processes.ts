@@ -1,8 +1,10 @@
 import { execFile } from 'node:child_process';
 import { readlink } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import { basename } from 'node:path';
 import { promisify } from 'node:util';
 import type { LocalSession } from '@aether/contracts';
+import { claudeSessionOf } from './claude-process-sessions.js';
 
 const run = promisify(execFile);
 export type AgentProcess = {
@@ -109,7 +111,8 @@ export function parseProcessList(
   rows: readonly ProcessRow[],
 ): Omit<AgentProcess, 'cwd' | 'ports' | 'orphaned' | 'zombies'>[] {
   return rows.flatMap((row) => {
-    const program = basename((row.command.split(/\s+-/)[0] ?? '').trim().split(' ')[0] ?? '');
+    const executable = (row.command.split(/\s+-/)[0] ?? '').trim().split(' ')[0] ?? '';
+    const program = /\/claude\/versions\/[^/]+$/.test(executable) ? 'claude' : basename(executable);
     const provider = program === 'claude' ? 'claude' : program === 'codex' ? 'codex' : null;
     if (!provider || NOT_A_SESSION.test(row.command)) return [];
     return [
@@ -283,7 +286,7 @@ export async function readProcessTable(): Promise<ProcessRow[]> {
 
 const names = new ProcessNames();
 
-export async function listAgentProcesses(): Promise<{
+export async function listAgentProcesses(home = homedir()): Promise<{
   processes: AgentProcess[];
   desktopCodex: boolean;
   table: ProcessRow[];
@@ -292,15 +295,24 @@ export async function listAgentProcesses(): Promise<{
   const byPid = new Map(table.map((row) => [row.pid, row]));
   const candidates = parseProcessList(table);
   const pids = candidates.map((c) => c.pid);
-  const [cwds, ports] = await Promise.all([cwdsOf(pids), listeningPorts(pids, table)]);
+  const [cwds, ports, resumes] = await Promise.all([
+    cwdsOf(pids),
+    listeningPorts(pids, table),
+    Promise.all(
+      candidates.map((c) =>
+        c.resume || c.provider !== 'claude' ? c.resume : claudeSessionOf(home, c),
+      ),
+    ),
+  ]);
   names.remember(table, new Set(descendants(table, pids).keys()));
   const zombies = zombiesUnder(table, pids, names);
-  const processes = candidates.flatMap((c) => {
+  const processes = candidates.flatMap((c, i) => {
     const cwd = cwds.get(c.pid);
     return cwd
       ? [
           {
             ...c,
+            resume: resumes[i] ?? null,
             cwd,
             ports: ports.get(c.pid) ?? [],
             orphaned: isOrphaned(c, byPid),

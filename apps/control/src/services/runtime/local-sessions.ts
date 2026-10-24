@@ -140,7 +140,7 @@ async function selectSessions(home: string, now: number) {
   // Processes first: they decide which sessions are shown. A no-ps host says 'unknown', never 'none'.
   const [found, live] = await Promise.all([
     discoverRaw(home, now),
-    listAgentProcesses().catch(() => null),
+    listAgentProcesses(home).catch(() => null),
   ]);
   if (live) cpuWatch.observe(live.processes, now);
   let sessions = found;
