@@ -1,4 +1,5 @@
 import { parseStartTime, readProcessTable, type ProcessRow } from '../runtime/agent-processes.js';
+import { claudeSessionOf } from '../runtime/claude-process-sessions.js';
 import type { Context } from '../domain/context.js';
 
 const MAX_ANCESTORS = 12;
@@ -48,6 +49,31 @@ function runningTerminals(ctx: Context, projectIds: readonly string[]) {
       return [];
     }
   });
+}
+
+export async function terminalOfClaudeSession(
+  home: string,
+  sessionId: string,
+  terminals: readonly { id: string; identity: string }[],
+): Promise<string | null> {
+  for (const terminal of terminals) {
+    const process = parseIdentity(terminal.identity);
+    if (process && (await claudeSessionOf(home, process)) === sessionId) return terminal.id;
+  }
+  return null;
+}
+
+export async function terminalOfNamedSession(
+  ctx: Context,
+  home: string,
+  key: string,
+  projectIds: readonly string[],
+): Promise<{ terminalId: string; projectId: string } | null> {
+  if (!key.startsWith('claude:')) return null;
+  const terminals = runningTerminals(ctx, projectIds);
+  const id = await terminalOfClaudeSession(home, key.slice('claude:'.length), terminals);
+  const terminal = terminals.find((t) => t.id === id);
+  return terminal ? { terminalId: terminal.id, projectId: terminal.projectId } : null;
 }
 
 export async function terminalOfSession(
