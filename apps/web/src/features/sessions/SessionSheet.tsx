@@ -11,7 +11,7 @@ import {
   type Feed,
   type FeedItem,
 } from '../feed/feed-model.js';
-import { PermissionPeek } from '../operations/PermissionCard.js';
+import { PermissionPeekLazy } from '../operations/PermissionCardsLazy.js';
 import { PanelBody, type PanelProps } from './SessionPanel.js';
 
 export type SheetHeight = 'peek' | 'half' | 'full';
@@ -122,7 +122,7 @@ function PeekView({
   const item = agent ? feedItems(feed).find((i) => i.agent.id === agent.id) : undefined;
   return (
     <>
-      <PermissionPeek sessionKey={item?.key} />
+      <PermissionPeekLazy sessionKey={item?.key} />
       {agent ? (
         <MemberPeek
           agent={agent}

@@ -4,7 +4,7 @@ import type { Key } from '../../lib/i18n/i18n.js';
 import { useT } from '../../ui/useT.js';
 import { FeedRow } from '../feed/FeedRow.js';
 import { FeedSquad } from '../feed/FeedSquad.js';
-import { PermissionCards } from '../operations/PermissionCard.js';
+import { PermissionCardsLazy } from '../operations/PermissionCardsLazy.js';
 import { SquadAnnouncer } from '../squad/SquadAnnouncer.js';
 import { feedItems, type Feed, type FeedBucket } from '../feed/feed-model.js';
 import { isSquadOpen, useSquadOpen } from '../squad/squad-open.js';
@@ -67,7 +67,7 @@ export function SessionFeed({ feed, onOpen }: { feed: Feed; onOpen: (agentId: st
                   ) : (
                     <FeedRow item={item} onOpen={open} />
                   )}
-                  {bucket === 'needs' && <PermissionCards sessionKey={item.key} compact />}
+                  {bucket === 'needs' && <PermissionCardsLazy sessionKey={item.key} compact />}
                 </Fragment>
               ))}
             </details>
