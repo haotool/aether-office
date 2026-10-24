@@ -65,10 +65,11 @@ Behavioral notes for capabilities that are not obvious from the UI. The authorit
 ## Navigation: the Advanced switch
 
 The sidebar, the phone's tab bar and quick open (Ctrl/Cmd+K) show the pages a CLI user needs: office, local sessions,
-approvals, terminals, history and settings. **Settings → Advanced features** adds the pages for orchestrating several agents
-(tasks, results review, team, knowledge, messages with rooms and meetings, execution hosts, external observation, workspaces,
-and in Settings the schedules, A2A clients and integrations). The switch is per browser, off by default, and only hides
-navigation: every page still opens by its address. External observation, meeting rooms and reservations were not removed:
+terminals and settings. A tool permission waits in its own conversation and in the needs-you banner, so the approvals inbox and
+the event history sit behind the switch too. **Settings → Advanced features** adds those and the pages for orchestrating several
+agents (tasks, results review, team, knowledge, messages with rooms and meetings, execution hosts, external observation,
+workspaces, and in Settings the schedules, A2A clients and integrations). The switch is per browser, off by default, and only
+hides navigation: every page still opens by its address. External observation, meeting rooms and reservations were not removed:
 they have a runner, API, ledger and test footprint, so they sit behind the same switch.
 
 ## Settings

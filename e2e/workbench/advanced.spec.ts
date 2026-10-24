@@ -8,16 +8,18 @@ test('orchestration pages are behind Advanced: out of the sidebar and quick open
 }) => {
   await signIn(page);
   const sidebar = page.locator('.sidebar');
-  for (const name of ['終端機', '本機 Session', '工具批准', '歷史紀錄', '設定'])
+  for (const name of ['終端機', '本機 Session', '設定'])
     await expect(sidebar.getByRole('link', { name: new RegExp(`^${name}`) })).toBeVisible();
   for (const name of [
     '任務',
     '成果審查',
+    '工具批准',
     '團隊成員',
     '知識庫',
     '訊息',
     '執行主機',
     '外部觀察',
+    '歷史紀錄',
     '工作區',
   ])
     await expect(sidebar.getByRole('link', { name: new RegExp(`^${name}`) })).toHaveCount(0);
@@ -46,7 +48,7 @@ test.describe('on a phone', () => {
   }) => {
     await signIn(page);
     const tabs = page.locator('.tabbar');
-    for (const name of ['辦公室', 'Session', '工具批准', '終端機', '更多'])
+    for (const name of ['辦公室', 'Session', '終端機', '設定', '更多'])
       await expect(tabs.getByText(name, { exact: true })).toBeVisible();
     await expect(tabs.getByText('任務', { exact: true })).toHaveCount(0);
     const running = page.getByRole('button', { name: /^執行中的 Session: \d+$/ });

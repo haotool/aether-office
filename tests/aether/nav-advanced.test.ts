@@ -5,14 +5,7 @@ const keys = (list: readonly (readonly [string, ...unknown[]])[]) => list.map(([
 
 it('shows the CLI-first pages only until Advanced is on, and everything with it', () => {
   expect(keys(visibleNav(true))).toEqual(keys(nav));
-  expect(keys(visibleNav(false))).toEqual([
-    'office',
-    'terminals',
-    'sessions',
-    'approvals',
-    'history',
-    'settings',
-  ]);
+  expect(keys(visibleNav(false))).toEqual(['office', 'terminals', 'sessions', 'settings']);
 });
 
 it('every page stays in exactly one group, and a group left empty is dropped', () => {
@@ -21,10 +14,8 @@ it('every page stays in exactly one group, and a group left empty is dropped', (
   expect(visibleGroups(false).every(([, pages]) => pages.length > 0)).toBe(true);
   expect(visibleGroups(false).flatMap(([, pages]) => pages)).toEqual([
     'office',
-    'approvals',
     'sessions',
     'terminals',
-    'history',
     'settings',
   ]);
 });

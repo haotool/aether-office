@@ -43,9 +43,11 @@ const ADVANCED_PAGES: ReadonlySet<string> = new Set([
   'messages',
   'workspace',
   'reviews',
+  'approvals',
   'knowledge',
   'machines',
   'observations',
+  'history',
 ]);
 
 export const visibleNav = (advanced: boolean) =>
@@ -61,7 +63,7 @@ export const visibleGroups = (advanced: boolean) =>
 export const tabPages = (advanced: boolean) =>
   advanced
     ? (['office', 'sessions', 'tasks', 'messages'] as const)
-    : (['office', 'sessions', 'approvals', 'terminals'] as const);
+    : (['office', 'sessions', 'terminals', 'settings'] as const);
 
 export const pageLink = (page: string, projectId: string | undefined) =>
   `/${page}${projectId ? `?project=${projectId}` : ''}`;
