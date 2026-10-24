@@ -17,11 +17,13 @@ import {
 } from './features/shell-chrome/AppFrame.js';
 import { ProjectForm } from './features/integrations/ProjectForm.js';
 import { TabBar } from './features/shell-chrome/TabBar.js';
+import { LITE_PAGE } from './lib/navigation/nav.js';
 import { isFieldPerfRequested } from './features/field-perf/is-field-perf-requested.js';
 
 const Login = lazy(() =>
   import('./features/shell-chrome/Login.js').then((m) => ({ default: m.Login })),
 );
+const Lite = lazy(() => import('./features/lite/Lite.js').then((m) => ({ default: m.Lite })));
 
 const fieldPerfOverlay =
   typeof window !== 'undefined' && isFieldPerfRequested(window.location.search);
@@ -38,25 +40,28 @@ function FieldPerfOverlay() {
   return <Panel />;
 }
 
-export function App() {
+function Booting() {
   const t = useT();
+  return (
+    <div className="boot-screen">
+      <Orbit size={38} />
+      <p>{t('loading')}</p>
+    </div>
+  );
+}
+
+export function App() {
   const theme = useTheme();
   const locale = useLocale();
   const client = useQueryClient();
   const { session, setSession, checked, logout } = useAuthSession();
   useDocumentChrome(theme, locale);
   useSignedOutTitle(!!session);
-  const booting = (
-    <div className="boot-screen">
-      <Orbit size={38} />
-      <p>{t('loading')}</p>
-    </div>
-  );
   let body: ReactNode;
-  if (!checked) body = booting;
+  if (!checked) body = <Booting />;
   else if (!session)
     body = (
-      <Suspense fallback={booting}>
+      <Suspense fallback={<Booting />}>
         <Login
           onLogin={(s) => {
             setSession(s);
@@ -79,6 +84,12 @@ function Application({ session, onLogout }: { session: Session; onLogout: () => 
   const app = useApplication(session);
   const { shell, sel } = app;
   const phone = usePhone();
+  if (sel.page === LITE_PAGE)
+    return (
+      <Suspense fallback={<Booting />}>
+        <Lite app={app} />
+      </Suspense>
+    );
   return (
     <div className="application">
       <ReasonDefs />

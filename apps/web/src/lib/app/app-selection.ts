@@ -10,7 +10,7 @@ import type { AttributedSession, Project, Snapshot } from '@aether/contracts';
 import { api } from '../api/api.js';
 import { type Session } from '../api/api-session.js';
 import { fill, type Key } from '../i18n/i18n.js';
-import { isPage } from '../navigation/nav.js';
+import { LITE_PAGE, isPage } from '../navigation/nav.js';
 import { isOperator } from '../navigation/roles.js';
 import { useT } from '../../ui/useT.js';
 import { sessionIdOf } from '../sessions/session-names.js';
@@ -61,7 +61,7 @@ export function useProjectSelection(
   const [params, setParams] = useSearchParams();
   const location = useLocation();
   const page = (location.pathname.split('/')[1] || 'office') as Key;
-  const unknownPage = !isPage(page);
+  const unknownPage = !isPage(page) && page !== LITE_PAGE;
   const projects = useQuery({
     queryKey: ['projects'],
     queryFn: () => api<Project[]>('/api/projects'),

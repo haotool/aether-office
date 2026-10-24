@@ -16,11 +16,13 @@ import { ModelChip, QuickReplies } from './ComposerChips.js';
 import { ComposerMenu, type MenuRow } from './ComposerMenu.js';
 import { useCompletion, type Completion } from './use-completion.js';
 import { useDrive, type Drive } from '../../hooks/use-drive.js';
+import { TerminalKeys } from './TerminalKeys.js';
 
 type ComposerProps = {
   session: AttributedSession;
   drive: Drive;
   working: boolean;
+  keys?: boolean;
 };
 
 function useAutoGrow(field: RefObject<HTMLTextAreaElement | null>, text: string) {
@@ -281,7 +283,7 @@ function ComposerBar({
  * Nothing here claims more than the terminal does: what a command opens in the terminal itself is labelled, not
  * answered.
  */
-export function Composer({ session, drive, working }: ComposerProps) {
+export function Composer({ session, drive, working, keys = false }: ComposerProps) {
   const t = useT();
   const phone = usePhoneAny();
   const d = useDrive(session.key, drive, working);
@@ -309,6 +311,7 @@ export function Composer({ session, drive, working }: ComposerProps) {
           void d.interrupt();
         }}
       />
+      {keys && <TerminalKeys onKey={(sequence) => void d.sendKey(sequence)} />}
       <ComposerNotes
         working={d.busy}
         stuck={d.stuck}
