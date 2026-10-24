@@ -7,6 +7,12 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ## [Unreleased]
 
+### Changed
+
+- The quality check no longer caps the total number of lines of code. A fixed budget that every change had to stay under made each
+  feature need a separate maintainer commit and made two open pull requests conflict on the same number; the checks that judge the
+  code itself (file and function size, nesting, duplication, dead exports, the per-area floors) stay.
+
 ### Security
 
 - Update body-parser to 2.4.0, which fixes the high advisory GHSA-27r3-jxmh-p828 that `pnpm audit` reports against 2.3.0 (express 5 loads it for the MCP and A2A SDKs).

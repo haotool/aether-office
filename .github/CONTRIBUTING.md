@@ -66,13 +66,10 @@ floors, and commit those files with the change. `pnpm run quality -- --target 95
 reaching 95, with the exact files and lines. A change that makes a score worse fails `quality:check` until it is fixed; do not
 lower a floor to get a pull request through. A floor that is genuinely unreachable (a measurement the tested platform can no longer take, say) is lowered in its own change and written down under "Lowered floors" in the [rubric](../docs/quality/README.md), with what has to be true to raise it again. If a rule is wrong, change the rule, its test and the rubric in the same pull request.
 
-### Code only shrinks
+### Comments
 
-`structure` caps the lines of ts, tsx, mjs and css files (`LIMITS.codeLines` in `scripts/quality/areas/structure.mjs`). A change
-that adds lines removes at least as many elsewhere, otherwise `quality:check` fails. When code shrinks, lower the budget to the new
-total. It rises only for a feature the maintainer asked for, once everything the feature made redundant is removed, in a commit of its
-own that states the lines added and removed. Comments count against it: write none by default and keep only a one or two line English
-comment that says why (an invariant, an ordering or race, a platform quirk, a security reason, an issue link), besides tool pragmas.
+Write none by default. Keep only a one or two line English comment that says why (an invariant, an ordering or race, a platform
+quirk, a security reason, an issue link), besides tool pragmas.
 
 ## Commit messages and pull requests
 

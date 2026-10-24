@@ -11,7 +11,6 @@ export const LIMITS = {
   nesting: 4,
   fanIn: 30,
   duplicateShare: 3,
-  codeLines: 146522,
 };
 
 const isEntry = (file) => /\/main\.tsx?$/.test(file);
@@ -107,13 +106,6 @@ export function structure(repo, { facts, graph }) {
       value: dead.length,
       full: 80,
       details: top(dead.map((d) => at(d.file, d.line, d.name))),
-    }),
-    rule({
-      id: 'code-lines',
-      label: `Code lines over the budget of ${LIMITS.codeLines}`,
-      weight: 6,
-      value: Math.max(0, sizes.reduce((n, s) => n + s.lines, 0) - LIMITS.codeLines),
-      full: 50,
     }),
     rule({
       id: 'duplicates',
