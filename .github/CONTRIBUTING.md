@@ -88,15 +88,15 @@ same QR code within one tick could both sign in. Remove it first and test both.
 ```
 
 A pull request title follows the same rule, because it becomes the subject when the change is squash-merged. CI checks the
-title and the commit subjects of a pull request (`scripts/oss/commit-msg.sh`). To check your own commits as you write them:
+title, the commit subjects and the trailers of a pull request (`scripts/oss/commit-msg.sh`). To check your own commits as you write them:
 
 ```sh
 ln -s ../../scripts/oss/commit-msg.sh .git/hooks/commit-msg
 ```
 
 Leave AI-tool trailers (`Co-Authored-By: Claude <noreply@anthropic.com>`, session links) out of commit messages and out of the
-message of a squash merge: the history is kept free of them, and `pnpm run oss:check --history` warns about each one. Human
-co-authors stay.
+message of a squash merge: the history is kept free of them, CI fails a pull request whose commits carry one, and
+`pnpm run oss:check --history` warns about each one already in the history. Human co-authors stay.
 
 Describe in the pull request what you ran, on which platform, and anything you could not test.
 

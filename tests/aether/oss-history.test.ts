@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -129,6 +129,40 @@ describe('commit-msg.sh', () => {
     expect(check('feat:no space')).toBe(1);
     expect(check(`feat: ${'x'.repeat(70)}`)).toBe(1);
     expect(check(`feat: ${'x'.repeat(66)}`)).toBe(0);
+  });
+
+  it('rejects an AI-tool trailer in a range or a message file and lets a human co-author stay', () => {
+    const repo = join(scratch, 'trailers');
+    mkdirSync(repo);
+    git(repo, ['init', '-q', '-b', 'main']);
+    git(repo, ['config', 'commit.gpgsign', 'false']);
+    const commit = (message: string) =>
+      git(repo, ['commit', '-q', '--allow-empty', '-m', message], {
+        GIT_AUTHOR_NAME: MAINTAINER.name,
+        GIT_AUTHOR_EMAIL: MAINTAINER.email,
+        GIT_COMMITTER_NAME: MAINTAINER.name,
+        GIT_COMMITTER_EMAIL: MAINTAINER.email,
+      });
+    const range = () =>
+      spawnSync('bash', [script, '--range', 'HEAD~1..HEAD'], { cwd: repo, encoding: 'utf8' });
+    commit('feat: a base');
+    commit('fix: with a person\n\nCo-authored-by: Real Person <real@example.com>');
+    expect(range().status).toBe(0);
+    commit('fix: with a tool\n\nCo-authored-by: Cursor <cursoragent@cursor.com>');
+    const tool = range();
+    expect(tool.status).toBe(1);
+    expect(tool.stderr).toContain('fix: with a tool');
+    const file = join(scratch, 'message.txt');
+    writeFileSync(
+      file,
+      'fix: with a tool\n\nClaude-Session: https://claude.example/code/session_1\n',
+    );
+    expect(spawnSync('bash', [script, file], { encoding: 'utf8' }).status).toBe(1);
+    const hook = join(repo, '.git', 'hooks', 'commit-msg');
+    symlinkSync(script, hook);
+    expect(spawnSync(hook, [file], { encoding: 'utf8' }).status).toBe(1);
+    writeFileSync(file, 'fix: with a person\n\nCo-authored-by: Real Person <real@example.com>\n');
+    expect(spawnSync(hook, [file], { encoding: 'utf8' }).status).toBe(0);
   });
 });
 
