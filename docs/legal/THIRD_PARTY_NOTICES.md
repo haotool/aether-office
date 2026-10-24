@@ -78,7 +78,7 @@ identify the tools this project works with; no affiliation, sponsorship or endor
 
 ## Packages shipped with the application
 
-266 packages from the npm registry are part of the running application: those marked *web bundle* are compiled
+267 packages from the npm registry are part of the running application: those marked *web bundle* are compiled
 into `apps/web/dist`, those marked *server runtime* are loaded from `node_modules` by the control plane and the runner. The
 licence is the one that applies (for a choice such as `MIT OR Apache-2.0`, the option this project relies on is named).
 Platform builds (`*-darwin-arm64` and similar) carry the licence of their package and are installed only on a matching machine.
@@ -136,7 +136,7 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | base64-js | 1.5.1 | MIT | web bundle | Copyright (c) 2014 Jameson Little |
 | better-sqlite3 | 13.0.3 | MIT | server runtime | Copyright (c) 2017 Joshua Wise |
 | bidi-js | 1.1.0 | MIT | web bundle | Copyright (c) 2021 Jason Johnston |
-| body-parser | 2.3.0 | MIT | server runtime | Copyright (c) 2014 Jonathan Ong <me@jongleberry.com>; Copyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com> |
+| body-parser | 2.4.0 | MIT | server runtime | Copyright (c) 2014 Jonathan Ong <me@jongleberry.com>; Copyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com> |
 | brace-expansion | 5.0.12 | MIT | server runtime | Copyright Julian Gruber <julian@juliangruber.com>; TypeScript port Copyright Isaac Z. Schlueter <i@izs.me> |
 | buffer | 6.0.3 | MIT | web bundle | Copyright (c) Feross Aboukhadijeh, and other contributors. |
 | bytes | 3.1.2 | MIT | server runtime | Copyright (c) 2012-2014 TJ Holowaychuk <tj@vision-media.ca>; Copyright (c) 2015 Jed Watson <jed.watson@me.com> |
@@ -278,6 +278,7 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | proxy-addr | 2.0.8 | MIT | server runtime | Copyright (c) 2014-2016 Douglas Christopher Wilson |
 | qrcode | 1.5.4 | MIT | server runtime | Copyright (c) 2012 Ryan Day |
 | qs | 6.16.0 | BSD-3-Clause | server runtime | Copyright (c) 2014, Nathan LaFreniere and other [contributors](https://github.com/ljharb/qs/graphs/contributors) |
+| qs | 6.16.1 | BSD-3-Clause | server runtime | Copyright (c) 2014, Nathan LaFreniere and other [contributors](https://github.com/ljharb/qs/graphs/contributors) |
 | quick-format-unescaped | 4.0.4 | MIT | server runtime | Copyright (c) 2016-2019 David Mark Clements |
 | range-parser | 1.3.0 | MIT | server runtime | Copyright (c) 2012-2014 TJ Holowaychuk <tj@vision-media.ca>; Copyright (c) 2015-2016 Douglas Christopher Wilson <doug@somethingdoug.com |
 | raw-body | 3.0.2 | MIT | server runtime | Copyright (c) 2013-2014 Jonathan Ong <me@jongleberry.com>; Copyright (c) 2014-2022 Douglas Christopher Wilson <doug@somethingdoug.com> |
@@ -1266,7 +1267,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ### BSD-3-Clause (text 14d069c68fe7)
 
-Used by: `qs@6.16.0`.
+Used by: `qs@6.16.0`, `qs@6.16.1`.
 
 ```text
 BSD 3-Clause License
@@ -3446,7 +3447,7 @@ SOFTWARE.
 
 ### MIT (text 7cb4d976f1c8)
 
-Used by: `body-parser@2.3.0`, `type-is@2.1.0`.
+Used by: `body-parser@2.4.0`, `type-is@2.1.0`.
 
 ```text
 (The MIT License)

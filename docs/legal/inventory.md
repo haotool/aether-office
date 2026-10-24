@@ -108,8 +108,8 @@ The generated table: every package in the lockfile, the licence its `package.jso
 it is used and how it was verified.
 <!-- BEGIN GENERATED: npm-inventory (scripts/oss/third-party-notices.mjs) -->
 
-430 packages in `pnpm-lock.yaml` (266 shipped). By scope and
-licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; dev MPL-2.0: 14; dev LicenseRef-Anthropic-Commercial-Terms: 9; shipped LicenseRef-Anthropic-Commercial-Terms: 9; shipped BSD-3-Clause: 7; shipped Apache-2.0: 6; shipped BlueOak-1.0.0: 5; dev BSD-3-Clause: 2; dev ISC: 1; shipped BSD-2-Clause: 1; shipped Unlicense: 1.
+431 packages in `pnpm-lock.yaml` (267 shipped). By scope and
+licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; dev MPL-2.0: 14; dev LicenseRef-Anthropic-Commercial-Terms: 9; shipped LicenseRef-Anthropic-Commercial-Terms: 9; shipped BSD-3-Clause: 8; shipped Apache-2.0: 6; shipped BlueOak-1.0.0: 5; dev BSD-3-Clause: 2; dev ISC: 1; shipped BSD-2-Clause: 1; shipped Unlicense: 1.
 
 | Package | Version | Declared (package.json) | Applies | Used in | Verified against |
 | --- | --- | --- | --- | --- | --- |
@@ -280,7 +280,7 @@ licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; de
 | base64-js | 1.5.1 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | better-sqlite3 | 13.0.3 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | bidi-js | 1.1.0 | MIT | MIT | web bundle | LICENSE.txt reads as MIT |
-| body-parser | 2.3.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
+| body-parser | 2.4.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | brace-expansion | 5.0.12 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | buffer | 6.0.3 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | bytes | 3.1.2 | MIT | MIT | server runtime | LICENSE reads as MIT |
@@ -457,6 +457,7 @@ licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; de
 | proxy-addr | 2.0.8 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | qrcode | 1.5.4 | MIT | MIT | server runtime | license reads as MIT |
 | qs | 6.16.0 | BSD-3-Clause | BSD-3-Clause | server runtime | LICENSE.md reads as BSD-3-Clause |
+| qs | 6.16.1 | BSD-3-Clause | BSD-3-Clause | server runtime | LICENSE.md reads as BSD-3-Clause |
 | quick-format-unescaped | 4.0.4 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | range-parser | 1.3.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | raw-body | 3.0.2 | MIT | MIT | server runtime | LICENSE reads as MIT |

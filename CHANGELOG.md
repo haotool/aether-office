@@ -7,6 +7,10 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 
 ## [Unreleased]
 
+### Security
+
+- Update body-parser to 2.4.0, which fixes the high advisory GHSA-27r3-jxmh-p828 that `pnpm audit` reports against 2.3.0 (express 5 loads it for the MCP and A2A SDKs).
+
 ## [0.5.0] - 2026-10-23
 
 ### Added
