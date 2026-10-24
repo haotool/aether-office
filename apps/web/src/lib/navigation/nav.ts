@@ -67,3 +67,5 @@ export const pageLink = (page: string, projectId: string | undefined) =>
   `/${page}${projectId ? `?project=${projectId}` : ''}`;
 
 export const isPage = (page: string) => nav.some(([key]) => key === page);
+
+export const LITE_PAGE = 'lite';

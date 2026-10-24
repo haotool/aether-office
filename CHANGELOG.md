@@ -10,6 +10,7 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 ### Added
 
 - A banner under the top bar names the session that has waited longest for a person (what it asked for, how long, and how many others wait). `N` jumps to it, a two-tone chime sounds when a new one starts waiting and again every 30 seconds while the page is in the background, following the existing notifications switch.
+- `/lite` is a phone-sized view: one list of conversations with the ones that need a person on top, and, once one is opened, its transcript, permission cards, message box and a row of terminal keys (Esc, Tab, ^C, arrows, Enter). It shares the banner, `N` key and chime.
 
 ### Changed
 
