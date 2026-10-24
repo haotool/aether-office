@@ -4,7 +4,6 @@ import { DEPARTMENTS } from '@aether/kernel';
 import type { PulseKind, Shot } from '../environment/director.js';
 import { FLOORS } from '../environment/layout.js';
 import { SlabKpi, type FloorKpiBadge } from './FloorKpi.js';
-import { introWords } from '../intro/intro-text.js';
 import { departmentAt } from '../scene/scene-geometry.js';
 import { sceneT, sceneText } from '../i18n/scene-text.js';
 
@@ -134,7 +133,6 @@ type BuildingPanelProps = {
   onFloor: (floor: number) => void;
   onExplode: () => void;
   onFollow: () => void;
-  onReplayIntro?: (() => void) | undefined;
 };
 
 type DeckSlabProps = {
@@ -248,7 +246,7 @@ function PanelTools({
 }
 
 export function BuildingPanel(props: BuildingPanelProps) {
-  const { zh, onReplayIntro } = props;
+  const { zh } = props;
   const t = sceneT(zh);
   const [open, toggle] = useRememberedOpen();
   const [helpOpen, setHelpOpen] = useState(false);
@@ -264,11 +262,6 @@ export function BuildingPanel(props: BuildingPanelProps) {
         <>
           <DeckList {...props} />
           <PanelTools {...props} helpOpen={helpOpen} onHelp={() => setHelpOpen((v) => !v)} />
-          {onReplayIntro && (
-            <button className="building-replay" onClick={onReplayIntro}>
-              {introWords(zh).replay}
-            </button>
-          )}
           {helpOpen && <KeysHelp zh={zh} />}
         </>
       )}

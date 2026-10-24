@@ -126,14 +126,6 @@ export const settingsEn = {
   stLifeFrequencyDesc: 'Rare halves how often memes and social moments appear.',
   lifeRare: 'Rare',
   lifeNormal: 'Normal',
-  stIntroLabel: 'Intro tour',
-  stIntroDesc:
-    'The camera tour of the building, played once per visit. Replay it below or from the building panel.',
-  introAuto: 'Once per visit',
-  introNever: 'Never',
-  stIntroReplayLabel: 'Replay the intro',
-  stIntroReplayDesc: 'Plays the camera tour of the building again, now, on the office page.',
-  introReplayButton: 'Replay intro',
 
   stSchedulesDesc: 'Create tasks on a timer: once, daily or weekly.',
   stA2aLabel: 'A2A',

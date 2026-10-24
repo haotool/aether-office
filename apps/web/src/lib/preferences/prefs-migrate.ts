@@ -1,6 +1,6 @@
 import { DEFAULT_LIFE_PREFS, LIFE_CATEGORIES, type LifePrefs } from '@aether/office-scene/model';
 
-/** 1 added `life`; `intro` predates versioning because a missing key keeps its default. */
+/** 1 added `life`; a key that is missing keeps its default. */
 export const PREFS_VERSION = 1;
 
 const flag = (value: unknown, fallback: boolean) => (typeof value === 'boolean' ? value : fallback);

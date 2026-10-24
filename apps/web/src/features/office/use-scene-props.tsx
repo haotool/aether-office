@@ -3,14 +3,6 @@ import type { Layout, Snapshot } from '@aether/contracts';
 import type { OfficeSceneProps } from '@aether/office-scene';
 import type { FloorKpiBadge } from '@aether/office-scene/model';
 import { mergeLayout } from './layout-merge.js';
-import {
-  clearIntroReplayRequest,
-  introPlayedThisSession,
-  introReplayRequested,
-  markIntroPlayed,
-  phoneRemembersIntro,
-  shouldAutoplayIntro,
-} from '../../lib/navigation/intro-gate.js';
 import { FPS_CAPS, usePreferences } from '../../lib/preferences/state.js';
 import { SUBAGENT_INFIX } from '../../lib/sessions/subagent-id.js';
 import type { TourAction } from '../../lib/navigation/tour.js';
@@ -22,7 +14,6 @@ import { useGitGraph } from '../tasks-git/use-git-graph.js';
 import type { OfficeModel } from '../office/office-model.js';
 import {
   compactPreview,
-  introForce,
   perfFrames,
   perfRequested,
   publishPerf,
@@ -66,26 +57,6 @@ export type SceneViewProps = {
   onNotice: (message: string) => void;
   onRefresh: () => void;
 };
-
-function useSceneIntro(compact: boolean, covered: boolean): OfficeSceneProps['intro'] {
-  const prefs = usePreferences();
-  return {
-    auto:
-      !covered &&
-      shouldAutoplayIntro({
-        pref: prefs.intro,
-        playedThisSession: introPlayedThisSession(),
-        automated: navigator.webdriver,
-        force: introForce || introReplayRequested(),
-      }),
-    onDone: () => {
-      clearIntroReplayRequest();
-      markIntroPlayed();
-      if (phoneRemembersIntro(compact, introForce)) prefs.set({ intro: 'never' });
-    },
-    onNever: () => prefs.set({ intro: 'never' }),
-  };
-}
 
 function useSceneLayout(
   { data, model, preview, onRefresh }: SceneViewProps,
@@ -223,14 +194,12 @@ export function useSceneProps(
   const leaving = useClockOutPreview(model) ?? model.leaving;
   const modelProps = useSceneModelProps(props, sessions, leaving, squadStandIn);
   const { seat, layout } = useSceneLayout(props, observed);
-  const intro = useSceneIntro(compact, covered);
   const preferenceProps = useScenePreferenceProps(props.onNotice);
   const { focus, ...rest } = modelProps;
   return {
     ...rest,
     compact,
     paused: covered,
-    intro,
     ...(props.floorKpi ? { floorKpi: props.floorKpi } : {}),
     ...(props.onOpenFloorKpi ? { onOpenFloorKpi: props.onOpenFloorKpi } : {}),
     agents: squadStandIn ? [...model.agents, ...squadStandIn.agents] : model.agents,

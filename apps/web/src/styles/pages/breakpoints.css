@@ -329,8 +329,7 @@
   .member-bar,
   .floor-hud,
   .building-panel,
-  .floor-plaque,
-  .intro-caption {
+  .floor-plaque {
     border: 1px solid CanvasText;
   }
   :root :focus-visible {

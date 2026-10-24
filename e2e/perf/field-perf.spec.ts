@@ -100,7 +100,6 @@ test.describe('field perf report', () => {
                     theme: th,
                     quality: 'balanced',
                     view: '3d',
-                    intro: 'never',
                   },
                   version: 0,
                 }),

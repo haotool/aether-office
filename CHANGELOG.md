@@ -25,6 +25,10 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 - Queued messages wait 3 seconds, not 8, after a send before the next one goes in.
 - The sidebar and the phone's tab bar list four pages by default: Office, Local sessions, Terminals and Settings. The approvals inbox and the event history moved behind the Advanced switch, since a permission already waits in its own conversation and in the needs-you banner. Both still open by their address.
 
+### Removed
+
+- The first-visit camera tour, with its Replay button and its switch in Settings → Office. The room tour (Guided tour) stays, and the automatic camera still cuts between members.
+
 ### Fixed
 
 - A Claude Code terminal started by AETHER from a versioned install path (`…/claude/versions/<version>`) is recognized as a Claude session, so its conversation panel offers the message box instead of the read-only notice.

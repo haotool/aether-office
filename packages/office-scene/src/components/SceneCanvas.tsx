@@ -179,7 +179,7 @@ function SceneMarkers({ m }: { m: SceneModel }) {
 }
 
 function SceneEye({ m }: { m: SceneModel }) {
-  const { props, nav, intro } = m;
+  const { props, nav } = m;
   return (
     <SceneCamera
       command={nav.command}
@@ -189,7 +189,6 @@ function SceneEye({ m }: { m: SceneModel }) {
       directed={nav.directed}
       seats={nav.seats}
       followPoint={nav.followPoint}
-      introPose={intro.active ? intro.pose : undefined}
     />
   );
 }

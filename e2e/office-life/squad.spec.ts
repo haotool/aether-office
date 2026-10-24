@@ -13,7 +13,6 @@ async function enter(page: Page, query: string, prefs: Record<string, unknown> =
           locale: 'en',
           quality: 'balanced',
           view: '3d',
-          intro: 'never',
           ...state,
         },
         version: 0,

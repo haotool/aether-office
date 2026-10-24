@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } fro
 import type { Agent, Layout } from '@aether/contracts';
 import { FLOORS } from '../environment/layout.js';
 import { busiestFloor, floorCounts } from './floor-counts.js';
-import type { IntroTour } from '../intro/use-intro-tour.js';
 import type { FlyTo } from '../scene/SceneCamera.js';
 import { OVERVIEW, lookY } from '../scene/scene-geometry.js';
 
@@ -29,27 +28,7 @@ function useStartFloor(o: {
   }, [perFloor, fly, userChoseFloor, view, setFloor]);
 }
 
-function useTourDrive(
-  drive: IntroTour['drive'] | undefined,
-  userChoseFloor: RefObject<boolean>,
-  setFloor: Setter<number>,
-  setExploded: Setter<boolean>,
-) {
-  const driveFloor = drive?.floor;
-  const driveExploded = drive?.exploded;
-  useEffect(() => {
-    if (driveFloor === undefined || driveExploded === undefined) return;
-    userChoseFloor.current = true;
-    setFloor(driveFloor);
-    setExploded(driveExploded);
-  }, [driveFloor, driveExploded, userChoseFloor, setFloor, setExploded]);
-}
-
-export function useFloorCamera(
-  agents: readonly Agent[],
-  layout: Layout,
-  intro: IntroTour | undefined,
-) {
+export function useFloorCamera(agents: readonly Agent[], layout: Layout) {
   const [floor, setFloor] = useState(0);
   const [exploded, setExploded] = useState(false);
   const [command, setCommand] = useState<FlyTo>(OPENING);
@@ -67,7 +46,6 @@ export function useFloorCamera(
   const view = useRef({ floor, exploded });
   view.current = { floor, exploded };
   useStartFloor({ perFloor, fly, userChoseFloor, view, setFloor });
-  useTourDrive(intro?.drive, userChoseFloor, setFloor, setExploded);
 
   const goToFloor = useCallback(
     (next: number, isExploded = exploded) => {

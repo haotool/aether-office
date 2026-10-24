@@ -129,7 +129,7 @@
 | 版面編輯器                            | O    | `LayoutEditor`、`layout-merge`                              | OFFICE-LIFE-02                                                   | partial                                       | e2e `layout-editor`(2)                                                                              |
 | 辦公桌螢幕                            | O    | `office-scene`（桌面顯示）                                  | OBS-CHAR-01                                                      | impl                                          | e2e `scene`                                                                                         |
 | 辦公室小動畫                          | O    | `life-*`                                                    | OBS-LIFE-01..03、F1                                              | partial（單機量測）                           | e2e `office-life`(20)、`office-life-scene-preview`、`office-life-perf`                              |
-| 開場導覽、房間導覽                    | O    | `tour.ts`、intro                                            | OBS-LIFE-02、CAM-01                                              | partial                                       | e2e `intro`(7)、`tour`、`intro-perf`                                                                |
+| 房間導覽                              | O    | `tour.ts`                                                   | CAM-01                                                           | partial                                       | e2e `tour`                                                                                          |
 | 角色造型                              | O    | `tools/blender`、`avatar`                                   | VIS-04、VIS-08                                                   | partial                                       | e2e `avatars`、`validate-assets`                                                                    |
 | 模型目錄                              | O    | `models.ts`、`ModelsSection`                                | （CLA／CDX 周邊）                                                | impl                                          | 單元                                                                                                |
 | 診斷與 hooks CLI                      | O    | `scripts/doctor.ts`、`hooks.ts`                             | ENV-07、CLA-04                                                   | CLA-04 partial                                | 單元 `claude-hooks`、`hook-bridge`                                                                  |
@@ -250,7 +250,7 @@
 - 「Codex 觀察」：只有合成 rollout 與唯讀檔案讀取的帳本自述，沒有真實 session 的端到端畫面。
 - 「手機」：沒有任何真機驗證（見第 10 節）。
 
-**能用但文件沒寫**：設定頁的 `/` 搜尋與 `/settings/<group>` 深連結（features.md 有提）；Alt+拖曳換座位；Shift 多選；Ctrl／Cmd+K 快速開啟；`?preview=life` 與 `?intro=force` 除錯網址（文件有，但屬維護者工具）；自動採用 repo 為專案時略過 `/tmp`（文件未提，會讓在暫存目錄試用的人困惑）。
+**能用但文件沒寫**：設定頁的 `/` 搜尋與 `/settings/<group>` 深連結（features.md 有提）；Alt+拖曳換座位；Shift 多選；Ctrl／Cmd+K 快速開啟；`?preview=life` 除錯網址（文件有，但屬維護者工具）；自動採用 repo 為專案時略過 `/tmp`（文件未提，會讓在暫存目錄試用的人困惑）。
 
 **建議在開源前隱藏或移除**：A2A 閘道與 ACP 用戶端；GitHub／Linear 連接器；「邀請遠端執行主機」（需自行架 HTTPS，REM-01 自述未測真實 TLS）；訊息的房間／會議／檔案預約；版面編輯器（或標實驗性）；以及倉庫根目錄下未追蹤的 `scripts/_audit-server.ts`（維護者工作檔，此為觀察，未動它）。
 

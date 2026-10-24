@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { STAGGER_MS, type PerfReport, type SceneSpeech } from '@aether/office-scene/model';
 import type { Agent } from '@aether/contracts';
-import { introForced } from '../../lib/navigation/intro-gate.js';
 import { LOCAL_PREFIX } from '../../lib/sessions/session-names.js';
 import type { OfficeModel } from './office-model.js';
 import { standInFacts, standInRole } from './scene-preview.js';
@@ -22,8 +21,6 @@ export function publishPerf(report: PerfReport) {
   (w.__aetherPerfHistory ??= []).push(report);
   w.__aetherFieldPerfHook?.onProbe(report);
 }
-
-export const introForce = introForced(window.location.search);
 
 const rushRequested = Number(query.get('intensity') ?? '');
 

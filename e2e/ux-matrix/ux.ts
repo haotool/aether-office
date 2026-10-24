@@ -49,7 +49,6 @@ export async function openContext(browser: Browser, tag: Tag): Promise<BrowserCo
       theme: tag.theme,
       locale: tag.lang,
       advanced: true,
-      intro: 'never',
       view: '3d',
       reducedMotion: Boolean(tag.reduced),
     },

@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useRef } from 'react';
 import type { Agent, Layout } from '@aether/contracts';
 import type { Pulse, Seat } from '../environment/director.js';
-import type { IntroTour } from '../intro/use-intro-tour.js';
 import { useSceneKeys } from './scene-keys.js';
 import { useFloorCamera } from '../core/use-floor-camera.js';
 import { useTakeOver } from '../core/use-take-over.js';
@@ -30,7 +29,6 @@ type NavigationOptions = {
   directing: boolean;
   resumeMs: number;
   selectedId: string | null;
-  intro?: IntroTour | undefined;
 };
 
 function useNavigationKeys(
@@ -57,22 +55,17 @@ function useNavigationKeys(
 }
 
 export function useSceneNavigation(o: NavigationOptions) {
-  const { agents, layout, focus, intro, pulses, attention, intensity } = o;
-  const view = useFloorCamera(agents, layout, intro);
+  const { agents, layout, focus, pulses, attention, intensity } = o;
+  const view = useFloorCamera(agents, layout);
   const { floor, exploded, following, fly, goToFloor, setFloor, setExploded } = view;
   const seats = useMemo(() => seatsOf(layout), [layout]);
-  const hands = useTakeOver({
-    ...o,
-    setFollowing: view.setFollowing,
-    interruptIntro: intro?.interrupt,
-  });
-  const running = o.directing && !hands.paused && !following && !intro?.active;
+  const hands = useTakeOver({ ...o, setFollowing: view.setFollowing });
+  const running = o.directing && !hands.paused && !following;
   const toggleFollow = useCallback(() => {
     if (!o.directing || running) o.onToggleAuto?.();
     view.setFollowing(null);
-    intro?.interrupt();
     hands.setPaused(false);
-  }, [o.directing, o.onToggleAuto, running, view.setFollowing, intro?.interrupt, hands.setPaused]);
+  }, [o.directing, o.onToggleAuto, running, view.setFollowing, hands.setPaused]);
   const directed = useDirector({ agents, seats, pulses, attention, intensity }, running, view);
   const { takeOver } = hands;
   const aim = { seats, exploded, fly, takeOver, setFloor, userChoseFloor: view.userChoseFloor };

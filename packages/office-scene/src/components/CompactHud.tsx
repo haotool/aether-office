@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { FLOORS } from '../environment/layout.js';
-import { introWords } from '../intro/intro-text.js';
 import { departmentAt } from '../scene/scene-geometry.js';
 import { sceneT } from '../i18n/scene-text.js';
 import type { FloorCount } from './SceneHud.js';
@@ -29,7 +28,6 @@ type HudProps = {
   onExplode: () => void;
   onFollow: () => void;
   onLabels: () => void;
-  onReplayIntro?: (() => void) | undefined;
 };
 
 function FloorButtons({ zh, floor, exploded, perFloor, onFloor }: HudProps) {
@@ -52,7 +50,7 @@ function FloorButtons({ zh, floor, exploded, perFloor, onFloor }: HudProps) {
   });
 }
 
-function RailTools({ zh, exploded, labels, onExplode, onLabels, onReplayIntro }: HudProps) {
+function RailTools({ zh, exploded, labels, onExplode, onLabels }: HudProps) {
   const t = sceneT(zh);
   return (
     <>
@@ -78,13 +76,6 @@ function RailTools({ zh, exploded, labels, onExplode, onLabels, onReplayIntro }:
           <path d="M4 7h16M4 12h10M4 17h13" />
         </Svg>
       </button>
-      {onReplayIntro && (
-        <button className="rail-tool" aria-label={introWords(zh).replay} onClick={onReplayIntro}>
-          <Svg>
-            <path d="M8 5v14l11-7-11-7Z" />
-          </Svg>
-        </button>
-      )}
     </>
   );
 }

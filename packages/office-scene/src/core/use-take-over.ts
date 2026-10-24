@@ -4,17 +4,10 @@ type Hands = {
   resumeMs: number;
   selectedId: string | null;
   setFollowing: (id: string | null) => void;
-  interruptIntro: (() => void) | undefined;
   onUserCamera: (() => void) | undefined;
 };
 
-export function useTakeOver({
-  resumeMs,
-  selectedId,
-  setFollowing,
-  interruptIntro,
-  onUserCamera,
-}: Hands) {
+export function useTakeOver({ resumeMs, selectedId, setFollowing, onUserCamera }: Hands) {
   const [paused, setPaused] = useState(false);
   const resume = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const chosen = useRef(selectedId);
@@ -34,10 +27,9 @@ export function useTakeOver({
   );
   useEffect(() => () => clearTimeout(resume.current), []);
   const pause = useCallback(() => {
-    interruptIntro?.();
     takeOver();
     onUserCamera?.();
-  }, [takeOver, onUserCamera, interruptIntro]);
+  }, [takeOver, onUserCamera]);
   const userCamera = useCallback(() => {
     setFollowing(null);
     pause();

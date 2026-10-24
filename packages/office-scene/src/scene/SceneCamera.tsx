@@ -41,14 +41,6 @@ function setFov(camera: Camera, fov: number) {
   }
 }
 
-function holdTour(c: Controls, camera: Camera, tour: Pose) {
-  camera.position.set(...tour.position);
-  c.target.set(...tour.target);
-  setFov(camera, tour.fov);
-  c.maxDistance = Math.max(MAX_DISTANCE, camera.position.distanceTo(c.target));
-  c.update();
-}
-
 function flyToGoal(f: Flight, c: Controls, camera: Camera, delta: number, invalidate: () => void) {
   const g = f.goal;
   if (!g) return;
@@ -223,7 +215,6 @@ type SceneCameraProps = {
   seats: ReadonlyMap<string, Seat>;
   /** A member the person asked to follow: the camera keeps it in the middle (it moves with the seat, never against a hand on the controls). */
   followPoint?: V3 | null;
-  introPose?: ((aspect: number) => Pose | null) | undefined;
 };
 
 function easeLensHome(camera: Camera, delta: number): boolean {
@@ -250,7 +241,6 @@ export function SceneCamera({
   directed,
   seats,
   followPoint,
-  introPose,
 }: SceneCameraProps) {
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
   const camera = useThree((s) => s.camera);
@@ -266,13 +256,6 @@ export function SceneCamera({
     const c = controls.current;
     if (!c) return;
     const f = flight.current;
-    const tour = introPose?.(latestAspect.current) ?? null;
-    if (tour) {
-      f.goal = null;
-      holdTour(c, camera, tour);
-      invalidate();
-      return;
-    }
     const flying = f.goal !== null;
     flyToGoal(f, c, camera, delta, invalidate);
     if (followed.current && !f.goal && !reducedMotion)
@@ -288,7 +271,7 @@ export function SceneCamera({
       invalidate();
     }
   });
-  return <CameraControls controls={controls} damping={!reducedMotion && !directed && !introPose} />;
+  return <CameraControls controls={controls} damping={!reducedMotion && !directed} />;
 }
 
 function CameraControls({
