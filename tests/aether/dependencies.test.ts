@@ -58,6 +58,16 @@ describe('dependency policy', () => {
     expect(resolutions.filter((r) => !/^\{integrity: sha512-[\w+/=]+\}$/.test(r))).toEqual([]);
   });
 
+  it('resolves one copy of react and react-dom: a second one crashes the dev server', () => {
+    const lock = readFileSync('pnpm-lock.yaml', 'utf8');
+    for (const name of ['react', 'react-dom']) {
+      const copies = new Set(
+        [...lock.matchAll(new RegExp(`^ {2}${name}@(\\d+\\.\\d+\\.\\d+):`, 'gm'))].map((m) => m[1]),
+      );
+      expect([...copies], name).toHaveLength(1);
+    }
+  });
+
   it('keeps the install-time protections on', () => {
     const workspace = readFileSync('pnpm-workspace.yaml', 'utf8');
     expect(workspace).toMatch(/^trustPolicy: no-downgrade$/m);

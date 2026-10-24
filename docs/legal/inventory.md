@@ -108,8 +108,8 @@ The generated table: every package in the lockfile, the licence its `package.jso
 it is used and how it was verified.
 <!-- BEGIN GENERATED: npm-inventory (scripts/oss/third-party-notices.mjs) -->
 
-431 packages in `pnpm-lock.yaml` (267 shipped). By scope and
-licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; dev MPL-2.0: 14; dev LicenseRef-Anthropic-Commercial-Terms: 9; shipped LicenseRef-Anthropic-Commercial-Terms: 9; shipped BSD-3-Clause: 8; shipped Apache-2.0: 6; shipped BlueOak-1.0.0: 5; dev BSD-3-Clause: 2; dev ISC: 1; shipped BSD-2-Clause: 1; shipped Unlicense: 1.
+430 packages in `pnpm-lock.yaml` (266 shipped). By scope and
+licence: shipped MIT: 209; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; dev MPL-2.0: 14; dev LicenseRef-Anthropic-Commercial-Terms: 9; shipped LicenseRef-Anthropic-Commercial-Terms: 9; shipped BSD-3-Clause: 8; shipped Apache-2.0: 6; shipped BlueOak-1.0.0: 5; dev BSD-3-Clause: 2; dev ISC: 1; shipped BSD-2-Clause: 1; shipped Unlicense: 1.
 
 | Package | Version | Declared (package.json) | Applies | Used in | Verified against |
 | --- | --- | --- | --- | --- | --- |
@@ -461,7 +461,6 @@ licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; de
 | quick-format-unescaped | 4.0.4 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | range-parser | 1.3.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | raw-body | 3.0.2 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| react-dom | 19.3.0 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | react-dom | 19.3.1 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | react-router-dom | 7.18.4 | MIT | MIT | web bundle | LICENSE.md reads as MIT |
 | react-router | 7.18.4 | MIT | MIT | web bundle | LICENSE.md reads as MIT |
