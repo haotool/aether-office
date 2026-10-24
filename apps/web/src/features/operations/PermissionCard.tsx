@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Check, Eye, ShieldQuestion, X } from 'lucide-react';
-import type { PermissionRequestView } from '@aether/contracts';
+import type { PermissionDecisionInput, PermissionRequestView } from '@aether/contracts';
+import { ApiError } from '../../lib/api/api-error.js';
+import { api } from '../../lib/api/api.js';
 import { useT, useWhy } from '../../ui/useT.js';
 import type { Why } from '../../ui/whyNot.js';
 import {
-  decideError,
   mustReview,
+  REQUESTS_KEY,
   requestsFor,
   secondsLeft,
-  useDecide,
   usePermissionRequests,
 } from './permission-requests.js';
 
@@ -16,6 +18,21 @@ type PermissionCardProps = {
   request: PermissionRequestView;
   compact?: boolean;
 };
+
+function useDecide(id: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: PermissionDecisionInput) =>
+      api(`/api/permission-requests/${id}/decision`, {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    onSettled: () => client.invalidateQueries({ queryKey: REQUESTS_KEY }),
+  });
+}
+
+const decideError = (error: unknown): string =>
+  error instanceof ApiError ? error.code : 'REQUEST_FAILED';
 
 function useSecondsLeft(expiresAt: number) {
   const [now, setNow] = useState(Date.now());

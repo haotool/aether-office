@@ -1,10 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { PermissionDecisionInput, PermissionRequestView } from '@aether/contracts';
-import { ApiError } from '../../lib/api/api-error.js';
+import { useQuery } from '@tanstack/react-query';
+import type { PermissionRequestView } from '@aether/contracts';
 import { api } from '../../lib/api/api.js';
 import { POLL, pollBy } from '../../lib/app/polling.js';
 
-const KEY = ['permission-requests'];
+export const REQUESTS_KEY = ['permission-requests'];
 type Listed = { requests: PermissionRequestView[]; enabled?: boolean };
 const NONE: PermissionRequestView[] = [];
 
@@ -14,7 +13,7 @@ const NONE: PermissionRequestView[] = [];
  */
 export function usePermissionRequests(enabled = false): PermissionRequestView[] {
   const query = useQuery({
-    queryKey: KEY,
+    queryKey: REQUESTS_KEY,
     enabled,
     queryFn: () => api<Listed>('/api/permission-requests'),
     select: (listed) => listed.requests,
@@ -41,18 +40,3 @@ export const mustReview = (request: PermissionRequestView, compact: boolean, rev
 
 export const secondsLeft = (expiresAt: number, now: number) =>
   Math.max(0, Math.ceil((expiresAt - now) / 1000));
-
-export function useDecide(id: string) {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: (input: PermissionDecisionInput) =>
-      api(`/api/permission-requests/${id}/decision`, {
-        method: 'POST',
-        body: JSON.stringify(input),
-      }),
-    onSettled: () => client.invalidateQueries({ queryKey: KEY }),
-  });
-}
-
-export const decideError = (error: unknown): string =>
-  error instanceof ApiError ? error.code : 'REQUEST_FAILED';
