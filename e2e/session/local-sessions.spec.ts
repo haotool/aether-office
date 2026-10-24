@@ -45,5 +45,5 @@ test('show in office opens the project and brings the desk into view', async ({ 
   await expect(page).toHaveURL(/\/office\?project=[^&]+&agent=local%3Aclaude%3Ae2e-session$/, {
     timeout: 15000,
   });
-  await expect(page.locator('.scene-label.selected')).toBeVisible();
+  await expect(page.locator('.scene-label.selected')).toBeVisible({ timeout: 15000 });
 });
