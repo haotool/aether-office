@@ -107,11 +107,11 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | @fastify/merge-json-schemas | 0.2.1 | MIT | server runtime | Copyright (c) 2024 Fastify |
 | @fastify/proxy-addr | 5.1.1 | MIT | server runtime | Copyright (c) 2014-2016 Douglas Christopher Wilson; Copyright (c) 2021-present The Fastify team <https://github.com/fastify/fastify#team> |
 | @fastify/send | 4.1.1 | MIT | server runtime | Copyright (c) 2012 TJ Holowaychuk; Copyright (c) 2014-2022 Douglas Christopher Wilson; Copyright (c) 2023-present The Fastify team <https://github.com/fastify/fastify#team> |
-| @fastify/static | 10.1.6 | MIT | server runtime | Copyright (c) 2017-present The Fastify team <https://github.com/fastify/fastify#team> |
+| @fastify/static | 10.1.7 | MIT | server runtime | Copyright (c) 2017-present The Fastify team <https://github.com/fastify/fastify#team> |
 | @hono/node-server | 2.1.3 | MIT | server runtime | Copyright (c) 2022 - present, Yusuke Wada and Hono contributors |
 | @lukeed/ms | 2.0.2 | MIT | server runtime | Copyright (c) Luke Edwards <luke.edwards05@gmail.com> (lukeed.com) |
 | @mediapipe/tasks-vision | 0.10.17 | Apache-2.0 | web bundle | mediapipe@google.com (author; no copyright line in the licence file) |
-| @modelcontextprotocol/sdk | 1.32.1 | MIT | server runtime | Copyright (c) 2024 Anthropic, PBC |
+| @modelcontextprotocol/sdk | 1.32.2 | MIT | server runtime | Copyright (c) 2024 Anthropic, PBC |
 | @monogrid/gainmap-js | 3.4.0 | MIT | web bundle | Copyright (c) 2023 MONOGRID |
 | @pinojs/redact | 0.4.0 | MIT | server runtime | Copyright (c) 2025 pinojs contributors |
 | @react-three/drei | 10.7.9 | MIT | web bundle | Copyright (c) 2020 react-spring |
@@ -277,7 +277,6 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | promise-worker-transferable | 1.0.4 | Apache-2.0 | web bundle | 2. Grant of Copyright License. Subject to the terms and conditions of |
 | proxy-addr | 2.0.8 | MIT | server runtime | Copyright (c) 2014-2016 Douglas Christopher Wilson |
 | qrcode | 1.5.4 | MIT | server runtime | Copyright (c) 2012 Ryan Day |
-| qs | 6.16.0 | BSD-3-Clause | server runtime | Copyright (c) 2014, Nathan LaFreniere and other [contributors](https://github.com/ljharb/qs/graphs/contributors) |
 | qs | 6.16.1 | BSD-3-Clause | server runtime | Copyright (c) 2014, Nathan LaFreniere and other [contributors](https://github.com/ljharb/qs/graphs/contributors) |
 | quick-format-unescaped | 4.0.4 | MIT | server runtime | Copyright (c) 2016-2019 David Mark Clements |
 | range-parser | 1.3.0 | MIT | server runtime | Copyright (c) 2012-2014 TJ Holowaychuk <tj@vision-media.ca>; Copyright (c) 2015-2016 Douglas Christopher Wilson <doug@somethingdoug.com |
@@ -351,6 +350,7 @@ Platform builds (`*-darwin-arm64` and similar) carry the licence of their packag
 | zod | 4.6.7 | MIT | web bundle, server runtime | Copyright (c) 2025 Colin McDonnell |
 | zustand | 4.5.7 | MIT | web bundle | Copyright (c) 2019 Paul Henschel |
 | zustand | 5.0.15 | MIT | web bundle | Copyright (c) 2019 Paul Henschel |
+| zustand | 5.0.16 | MIT | web bundle | Copyright (c) 2019 Paul Henschel |
 
 ## Licence texts
 
@@ -1266,7 +1266,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ### BSD-3-Clause (text 14d069c68fe7)
 
-Used by: `qs@6.16.0`, `qs@6.16.1`.
+Used by: `qs@6.16.1`.
 
 ```text
 BSD 3-Clause License
@@ -2525,7 +2525,7 @@ SOFTWARE.
 
 ### MIT (text 384a8fa756d4)
 
-Used by: `zustand@4.5.7`, `zustand@5.0.15`.
+Used by: `zustand@4.5.7`, `zustand@5.0.15`, `zustand@5.0.16`.
 
 ```text
 MIT License
@@ -2976,7 +2976,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### MIT (text 4e64c716ef91)
 
-Used by: `@fastify/cookie@11.1.3`, `@fastify/static@10.1.6`, `fastify-plugin@6.0.0`.
+Used by: `@fastify/cookie@11.1.3`, `@fastify/static@10.1.7`, `fastify-plugin@6.0.0`.
 
 ```text
 MIT License
@@ -3621,7 +3621,7 @@ SOFTWARE.
 
 ### MIT (text 8694aa57bec3)
 
-Used by: `@modelcontextprotocol/sdk@1.32.1`.
+Used by: `@modelcontextprotocol/sdk@1.32.2`.
 
 ```text
 MIT License

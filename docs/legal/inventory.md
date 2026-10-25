@@ -109,7 +109,7 @@ it is used and how it was verified.
 <!-- BEGIN GENERATED: npm-inventory (scripts/oss/third-party-notices.mjs) -->
 
 430 packages in `pnpm-lock.yaml` (266 shipped). By scope and
-licence: shipped MIT: 209; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; dev MPL-2.0: 14; dev LicenseRef-Anthropic-Commercial-Terms: 9; shipped LicenseRef-Anthropic-Commercial-Terms: 9; shipped BSD-3-Clause: 8; shipped Apache-2.0: 6; shipped BlueOak-1.0.0: 5; dev BSD-3-Clause: 2; dev ISC: 1; shipped BSD-2-Clause: 1; shipped Unlicense: 1.
+licence: shipped MIT: 210; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; dev MPL-2.0: 14; dev LicenseRef-Anthropic-Commercial-Terms: 9; shipped LicenseRef-Anthropic-Commercial-Terms: 9; shipped BSD-3-Clause: 7; shipped Apache-2.0: 6; shipped BlueOak-1.0.0: 5; dev BSD-3-Clause: 2; dev ISC: 1; shipped BSD-2-Clause: 1; shipped Unlicense: 1.
 
 | Package | Version | Declared (package.json) | Applies | Used in | Verified against |
 | --- | --- | --- | --- | --- | --- |
@@ -179,14 +179,14 @@ licence: shipped MIT: 209; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; de
 | @fastify/merge-json-schemas | 0.2.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @fastify/proxy-addr | 5.1.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @fastify/send | 4.1.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
-| @fastify/static | 10.1.6 | MIT | MIT | server runtime | LICENSE reads as MIT |
+| @fastify/static | 10.1.7 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @hono/node-server | 2.1.3 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @jridgewell/resolve-uri | 3.1.2 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @jridgewell/sourcemap-codec | 1.6.0 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @jridgewell/trace-mapping | 0.3.31 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @lukeed/ms | 2.0.2 | MIT | MIT | server runtime | license reads as MIT |
 | @mediapipe/tasks-vision | 0.10.17 | Apache-2.0 | Apache-2.0 | web bundle | no licence file; package.json only |
-| @modelcontextprotocol/sdk | 1.32.1 | MIT | MIT | server runtime | LICENSE reads as MIT |
+| @modelcontextprotocol/sdk | 1.32.2 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | @monogrid/gainmap-js | 3.4.0 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | @oxc-project/types | 0.155.0 | MIT | MIT | dev/build | LICENSE reads as MIT |
 | @pinojs/redact | 0.4.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
@@ -456,7 +456,6 @@ licence: shipped MIT: 209; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; de
 | promise-worker-transferable | 1.0.4 | Apache-2.0 | Apache-2.0 | web bundle | LICENSE reads as Apache-2.0 |
 | proxy-addr | 2.0.8 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | qrcode | 1.5.4 | MIT | MIT | server runtime | license reads as MIT |
-| qs | 6.16.0 | BSD-3-Clause | BSD-3-Clause | server runtime | LICENSE.md reads as BSD-3-Clause |
 | qs | 6.16.1 | BSD-3-Clause | BSD-3-Clause | server runtime | LICENSE.md reads as BSD-3-Clause |
 | quick-format-unescaped | 4.0.4 | MIT | MIT | server runtime | LICENSE reads as MIT |
 | range-parser | 1.3.0 | MIT | MIT | server runtime | LICENSE reads as MIT |
@@ -543,5 +542,6 @@ licence: shipped MIT: 209; dev MIT: 109; dev Apache-2.0: 29; shipped ISC: 27; de
 | zod | 4.6.7 | MIT | MIT | web bundle, server runtime | LICENSE reads as MIT |
 | zustand | 4.5.7 | MIT | MIT | web bundle | LICENSE reads as MIT |
 | zustand | 5.0.15 | MIT | MIT | web bundle | LICENSE reads as MIT |
+| zustand | 5.0.16 | MIT | MIT | web bundle | LICENSE reads as MIT |
 
 <!-- END GENERATED: npm-inventory -->
