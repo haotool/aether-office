@@ -74,7 +74,7 @@ to read and the most lossy.
 | `scripts/oss/history-plan.mjs --strategy B\|C\|A`        | Writes `plan.json` and `plan.md`: commits kept, squashed or renamed, milestones, strip rules, identity                             |
 | `scripts/oss/history-apply.sh --plan ... --out ...`      | Creates a fresh bare clone, applies the plan with `git filter-repo`, never touches the source. `--dry-run` prints what it would do |
 | `scripts/oss/history-verify.sh <clone> --plan ...`       | Checks the result and prints go or no-go                                                                                           |
-| `scripts/oss/commit-msg.sh`                              | The commit-subject convention check (hook, `--subject`, `--range`)                                                                 |
+| `scripts/oss/commit-msg.sh`                              | The commit-subject and AI-tool-trailer check (hook, `--subject`, `--range`)                                                        |
 
 Safety: the apply script clones with `git clone --no-local`, removes the `origin` remote, writes a marker file
 (`oss-throwaway-clone.json`) and checks that the source branch and `HEAD` are unchanged when it finishes. The rewriting
