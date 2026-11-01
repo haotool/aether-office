@@ -28,7 +28,7 @@ export const DESK_TOP = SLAB_TOP;
 export const TRAY_X = 0.71;
 export const TRAY_Z = -0.18;
 export const FLOOR_LIFT = 0.035;
-export const SUPERVISOR_GOLD = '#ffc65c';
+const SUPERVISOR_GOLD = '#ffc65c';
 export const WAITING_AMBER = '#ffc65c';
 
 const FLAT = -Math.PI / 2;

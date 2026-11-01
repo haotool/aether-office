@@ -26,7 +26,7 @@ import type { SquadFrame } from './use-squad.js';
 
 const SQUAD_CAPACITY = 16;
 const MEMBER_CAPACITY = 12;
-export const PACKETS_PER_TRACE: Record<Quality, number> = { high: 2, balanced: 1, low: 0 };
+const PACKETS_PER_TRACE: Record<Quality, number> = { high: 2, balanced: 1, low: 0 };
 const LAYERS = [
   { width: 0.16, gain: 0.28 },
   { width: 0.045, gain: 1 },

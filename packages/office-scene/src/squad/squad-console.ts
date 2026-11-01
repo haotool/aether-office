@@ -4,7 +4,7 @@ import type { DrawSquad } from './squad-draw.js';
 
 type ConsoleSource = Pick<DrawSquad, 'deskX' | 'deskZ' | 'deskRotation' | 'pods'>;
 type Slot = { kind: Secondary; at: readonly [number, number, number]; tilt: number; width: number };
-export type Panel = {
+type Panel = {
   kind: Secondary;
   x: number;
   y: number;

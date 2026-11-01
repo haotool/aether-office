@@ -1,5 +1,5 @@
 import type { NavGrid, Point } from '@aether/kernel';
-import type { Hands } from '../../animals/hands.js';
+import type { Hands, Vec3 } from '../../animals/hands.js';
 import { positionAt } from '../../environment/carriers.js';
 import { hashText } from '../../environment/hash.js';
 import {
@@ -19,7 +19,7 @@ export type HandoverMode = 'walk' | 'pop' | 'tray';
 
 export const DESK_MS = 300;
 export const REACH_MS = 350;
-export const RAISE_MS = 550;
+const RAISE_MS = 550;
 export const LIFT_MS = REACH_MS + RAISE_MS;
 export const LEAD_MS = DESK_MS + LIFT_MS;
 export const GLIDE_MS = 700;
@@ -47,7 +47,6 @@ const TRAY_TOP_M = 0.08;
 
 type Desk = { x: number; z: number; rotation: number };
 type Frame = { x: number; z: number; yaw: number };
-type Vec3 = readonly [number, number, number];
 
 const toWorld = (frame: Frame, [x, y, z]: Vec3): Vec3 => {
   const cos = Math.cos(frame.yaw);

@@ -4,7 +4,7 @@ import type { DrawSquad } from './squad-draw.js';
 import type { Point2 } from './squad-glide.js';
 
 export type Segment = { from: Point2; to: Point2 };
-export type Port = Segment & { member: string };
+type Port = Segment & { member: string };
 export type Trace = { member: string; route: readonly Point2[] };
 export type LinkLayout = { segments: Segment[]; ports: Port[]; traces: Trace[] };
 
