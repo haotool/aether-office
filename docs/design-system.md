@@ -1149,7 +1149,7 @@ overlays.
   from what the mesh holds, so a still squad uploads nothing, and `SquadWarm` links all of these programs while the scene loads (one
   hidden copy of each, from the layers' own factories), so a squad's first appearance links none. The hand-over adds its folders and
   stamps. Parts share one vertex-coloured material per kind and are built once. The 10 draw calls and 4 shader programs counted for the
-  earlier overhead beam (office life 4.9) were not counted again with the links, the role screens and the screen wall.
+  earlier overhead beam (office life 4.9) are superseded by the measurement in the last bullet of this section.
 - **Desk links** (`SquadLinks.tsx`, the layout in `squad-links.ts`). Thin circuit traces on the floor replace the overhead beam, which
   hid the desks it joined: a trunk down the aisle between the desk columns, a cross bar in front of each row of desks and a lit port along
   the front of every seated desk, with packets of light running from the supervisor's desk to each port. One instanced mesh draws every segment
@@ -1195,8 +1195,8 @@ overlays.
   finishes MS after it joined (and hands its result over), `&tools=MS` tool starts (the strings jerk), `&result=error` the finished ones come back
   flagged as an error, `&look=1` the camera goes to the middle of the squad (`&look=desk` to the supervisor's desk), `&relation=0` no dressing or
   links, `&strings=0` no strings, `&handover=0` no hand-over, `&legacy=1` desks as before, `&after=MS` the squad first shows MS after the
-  page opened). `scripts/perf-matrix.mjs` measures the squad on the real GPU. Measured on an Apple M4 (ANGLE Metal) against the same scene with desks: median frame time 16.7
-  ms both, 26 fewer draw calls, 4 more shader programs, no GPU memory change.
+  page opened). `scripts/perf-matrix.mjs` measures the squad on the real GPU. Measured on an Apple M4 (ANGLE Metal) with the earlier beam, against the same scene with
+  desks: median frame time 16.7 ms both, 26 fewer draw calls, 4 more shader programs, no GPU memory change.
 - **Puppet strings and hand-over, measured** on the same machine (Apple M4, ANGLE Metal, balanced tier, an 806 x 540 viewport, 8
   subagents in a zone, 9 interleaved rounds of 240 frames, medians, a machine that was busy). Median frame time is 16.7 ms in every
   pair. The strings alone (`&strings=0` against the scene): +2 draw calls, +1 shader program (the fat-line material), +0.1 GPU MB,
@@ -1207,8 +1207,18 @@ overlays.
   gate of the spec (19 draws, 4 programs, 4 MB, 0.4 ms) but over the I4 squad budget of 0.15 ms JS. The 0.1 ms timer resolution of the
   browser makes the JS figures coarse. A squad of 12 (which does not fit the default floor) was not measured. The high tier, both sizes
   and the phone profile (4x CPU throttle) were measured since, with a busy building, the effects looping and the first appearance
-  (office life 4.9). No figure in this section was taken again after the beam gave way to the desk links, the role screens, the
-  supervisor's screen wall and the hand-over's arms.
+  (office life 4.9). The figures above were taken before the beam gave way to the desk links, the role screens, the supervisor's screen
+  wall and the hand-over's arms; the next bullet measures those.
+- **Desk links, role screens and screen wall, measured** with `e2e/office-life/office-life-perf.spec.ts` (`PERF_GPU=1`) on the same
+  machine and tier (806 x 540, 3 interleaved rounds of 240 frames, medians, a machine busy with other work): `?squad=8&tools=1200`
+  against the scene without a squad. Median frame time 16.6 ms and p95 18.1 ms in both (the display's 60 Hz). This branch: +44 draw
+  calls, +0 shader programs, +8.8 GPU MB and +1.8 to 2.2 ms JS per frame (two runs). The commit the branch started from, measured in
+  the same session: +31 draw calls, +1 program, +0.8 MB, +1.6 ms. The difference is about 13 draw calls, 8 GPU MB (six role screens of
+  640 x 400 with mip levels come to about 8 MB, one texture for every kind of work in use) and 0.2 to 0.6 ms of JS. The links, the
+  dressing, the screen wall and the hand-over's meshes together (against `&relation=0&strings=0&handover=0`): +13 draws, +2.3 MB, +0.4 ms.
+  As a whole, a squad of 8 is over the generic gate of the spec (19 draws, 4 MB, 0.4 ms), which was written for one effect. Not
+  measured: the high tier, the phone profile, a squad of 12 and a hand-over in flight (no subagent finishes in this run, so the arms'
+  solve and the folder have no figure of their own).
 
 ## KPI dashboards
 
