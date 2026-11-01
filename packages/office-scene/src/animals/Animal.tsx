@@ -18,6 +18,7 @@ import {
   type Apparition,
   type ClipName,
 } from './animal-states.js';
+import type { Hands } from './hands.js';
 
 export type { EmoteCue } from './animal-hooks.js';
 export type Ring = 'selected' | 'hover' | 'group';
@@ -38,6 +39,7 @@ export type AnimalProps = {
   apparition?: Apparition | undefined;
   override?: ClipName | undefined;
   pace?: number;
+  hands?: () => Hands;
   behavior?: BehaviorScene;
   light?: boolean;
   selected: boolean;
@@ -83,15 +85,16 @@ function useAnimalRig(props: AnimalProps) {
 }
 
 export function Animal(props: AnimalProps) {
-  const { selected, reducedMotion, apparition, pace = 1 } = props;
+  const { selected, reducedMotion, apparition, pace = 1, hands } = props;
   const ring = props.ring === undefined ? (selected ? 'selected' : null) : props.ring;
   const { model, url, mixer } = useAnimalRig(props);
   const root = useRef<Group>(null);
-  useMixerUpdates(mixer, root, { reducedMotion, selected, pace });
+  const scene = model?.url === url ? model.scene : undefined;
+  useMixerUpdates(mixer, root, { reducedMotion, selected, pace, hands, scene });
   return (
     <group ref={root} position={offsetOf(apparition)}>
       <group rotation={[0, Math.PI, 0]}>
-        {model?.url === url && <primitive object={model.scene} dispose={null} />}
+        {scene && <primitive object={scene} dispose={null} />}
         {ring && (
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.04, 0]}>
             <ringGeometry args={ring === 'hover' ? [0.44, 0.52, 40] : [0.46, 0.5, 40]} />

@@ -4,7 +4,15 @@ import { DESK_TOP } from '../squad-art.js';
 import type { DrawSquad } from '../squad-draw.js';
 import { trayView, type Book } from './book.js';
 import { MANILA, STAMP_BASE, STAMP_HANDLE, TAB } from './handover-art.js';
-import { FOLDER_THICKNESS, deskPlaces, folderAt, pressAt, type DeskPlaces } from './plan.js';
+import {
+  FOLDER_THICKNESS,
+  askew,
+  deskPlaces,
+  folderAt,
+  pressAt,
+  stackSkew,
+  type DeskPlaces,
+} from './plan.js';
 import type { StampKind } from './stamp.js';
 import { itemAt } from '../../environment/checked.js';
 
@@ -50,7 +58,8 @@ function folder(out: BoxItem[], at: At, yaw: number, shade: string, tab: string,
   });
 }
 
-const askew = (seed: number, i: number) => (((hashText(`${seed}:${i}`) % 200) - 100) / 100) * 0.14;
+const shadeOf = (supervisor: string, slot: number) =>
+  itemAt(MANILA, hashText(`${supervisor}:${slot}`) % MANILA.length);
 
 function inFlight(
   boxes: BoxItem[],
@@ -64,7 +73,7 @@ function inFlight(
       boxes,
       [pose.x, base + pose.y, pose.z],
       pose.yaw,
-      itemAt(MANILA, e.plan.seed % MANILA.length),
+      shadeOf(e.supervisor, count),
       TAB[e.plan.kind],
       pose.scale,
     );
@@ -89,8 +98,8 @@ export function handoverItems(
       folder(
         boxes,
         [home.tray[0], slotY(i), home.tray[2]],
-        askew(seal?.seed ?? 0, i),
-        itemAt(MANILA, hashText(`${s.supervisor}:${i}`) % MANILA.length),
+        home.yaw + stackSkew(i),
+        shadeOf(s.supervisor, i),
         i === count - 1 && seal ? TAB[seal.kind] : TAB.received,
       );
     inFlight(boxes, mine, { base, now, count });

@@ -25,6 +25,8 @@ import { SCREEN_H, SCREEN_W } from '../screen/screen-draw.js';
 import { SECONDARY_H, SECONDARY_W } from '../screen/screen-secondary.js';
 
 export const DESK_TOP = SLAB_TOP;
+export const TRAY_X = 0.71;
+export const TRAY_Z = -0.18;
 export const FLOOR_LIFT = 0.035;
 export const SUPERVISOR_GOLD = '#ffc65c';
 export const WAITING_AMBER = '#ffc65c';
@@ -89,8 +91,8 @@ function build() {
     trace: paint(new BoxGeometry(1, 0.01, 1), WHITE),
     panel: new PlaneGeometry(1, SECONDARY_H / SECONDARY_W),
     dressing: merged([
-      paint(at(new BoxGeometry(0.34, 0.035, 0.26), -0.55, DESK_TOP + 0.02, -0.18), '#d8c9a3'),
-      paint(at(new BoxGeometry(0.34, 0.035, 0.26), -0.55, DESK_TOP + 0.06, -0.18), '#c9b88c'),
+      paint(at(new BoxGeometry(0.34, 0.035, 0.26), -TRAY_X, DESK_TOP + 0.02, TRAY_Z), '#d8c9a3'),
+      paint(at(new BoxGeometry(0.34, 0.035, 0.26), -TRAY_X, DESK_TOP + 0.06, TRAY_Z), '#c9b88c'),
       paint(at(new BoxGeometry(1.7, 0.012, 0.03), 0, DESK_TOP + 0.006, 0.4), SUPERVISOR_GOLD),
     ]),
   };

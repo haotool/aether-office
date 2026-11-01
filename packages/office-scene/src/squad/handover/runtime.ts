@@ -7,6 +7,7 @@ import {
   advance,
   emptyBook,
   register,
+  trayView,
   type Book,
   type Cue,
   type Live,
@@ -83,6 +84,7 @@ export function createHandover() {
     view,
     book: () => book,
     planOf: (id: string, since: number) => plans.get(planKey(id, since)),
+    trayCount: (supervisor: string, now: number) => trayView(book, supervisor, now).count,
     begin(s: HandoverStart): HandoverPlan | null {
       const desk = { x: s.squad.deskX, z: s.squad.deskZ, rotation: s.squad.deskRotation };
       const places = deskPlaces(desk, s.squad.side);

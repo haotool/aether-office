@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import type { Group } from 'three';
-import { memberAt, type HandoverPlan, type MemberPose } from './plan.js';
+import type { Hands } from '../../animals/hands.js';
+import { handsAt, memberAt, type HandoverPlan, type MemberPose } from './plan.js';
 
 export function Handing({
   plan,
   startAt,
+  slot,
   children,
 }: {
   plan: HandoverPlan;
   startAt: number;
-  children: (clip: MemberPose['clip'], pace: number) => ReactNode;
+  slot: () => number;
+  children: (clip: MemberPose['clip'], pace: number, hands: () => Hands) => ReactNode;
 }) {
   const invalidate = useThree((s) => s.invalidate);
   const body = useRef<Group>(null);
@@ -34,5 +37,6 @@ export function Handing({
     if (!pose.gone) invalidate();
   });
   if (state.gone) return null;
-  return <group ref={body}>{children(state.clip, state.pace)}</group>;
+  const hands = () => handsAt(plan, Date.now() - startAt, slot());
+  return <group ref={body}>{children(state.clip, state.pace, hands)}</group>;
 }

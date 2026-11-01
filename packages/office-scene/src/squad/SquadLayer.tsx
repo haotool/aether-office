@@ -116,6 +116,7 @@ function SquadMembers({ squad, scene, known, podPos }: MembersProps) {
         arrival={squad.arrivals.get(m.id)}
         leave={squad.leaves.get(m.id)}
         handover={squad.handovers.get(m.id)}
+        slot={() => squad.handover.trayCount(m.supervisor, Date.now())}
         baseY={floorY(memberFloor, exploded)}
         podPos={podPos}
         engagements={engagements.get(m.id)}

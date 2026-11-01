@@ -40,6 +40,7 @@ type Origin = { x: number; z: number };
 
 function HandingMember({
   plan,
+  slot,
   member,
   origin,
   baseY,
@@ -47,6 +48,7 @@ function HandingMember({
   animal,
 }: {
   plan: HandoverPlan;
+  slot: () => number;
   member: SquadMemberState;
   origin: Origin;
   baseY: number;
@@ -55,9 +57,14 @@ function HandingMember({
 }) {
   return (
     <group position={[origin.x, baseY, origin.z]} rotation={[0, yaw, 0]}>
-      <Handing plan={plan} startAt={member.since}>
-        {(clip, pace) => (
-          <Animal {...animal} override={clip ?? undefined} pace={clip === 'walk' ? pace : 1} />
+      <Handing plan={plan} startAt={member.since} slot={slot}>
+        {(clip, pace, hands) => (
+          <Animal
+            {...animal}
+            override={clip ?? undefined}
+            pace={clip === 'walk' ? pace : 1}
+            hands={hands}
+          />
         )}
       </Handing>
     </group>
@@ -177,6 +184,7 @@ type SquadMemberProps = {
   arrival: Arrival | undefined;
   leave: Leave | undefined;
   handover: HandoverPlan | undefined;
+  slot: () => number;
   baseY: number;
   podPos: ReadonlyMap<string, Point2>;
   engagements: readonly Engagement[] | undefined;
@@ -210,7 +218,7 @@ function standingOf({
 }
 
 export function SquadMember(props: SquadMemberProps) {
-  const { agent, member, seat, arrival, leave, handover, baseY, podPos, engagements } = props;
+  const { agent, member, seat, arrival, leave, handover, slot, baseY, podPos, engagements } = props;
   const { emote, actions } = props;
   const drawn = useMemo(() => asSquadAgent(agent, member), [agent, member]);
   const animal: AnimalProps = {
@@ -226,7 +234,7 @@ export function SquadMember(props: SquadMemberProps) {
   if (!standing) return null;
   const { origin, yaw } = standing;
   if (handover)
-    return <HandingMember {...{ plan: handover, member, origin, baseY, yaw, animal }} />;
+    return <HandingMember {...{ plan: handover, slot, member, origin, baseY, yaw, animal }} />;
   if (leave)
     return (
       <LeavingMember {...{ leave, member, bagColor: agent.color, origin, baseY, yaw, animal }} />

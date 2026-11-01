@@ -19,6 +19,7 @@ import {
 } from '../../packages/office-scene/src/squad/handover/items.js';
 import {
   GLIDE_MS,
+  LEAD_MS,
   POP_MS,
   PRESS_TOTAL_MS,
   TRAY_STACK_MAX,
@@ -74,7 +75,7 @@ describe('the throttle', () => {
     const book = withEntry(emptyBook, 'local:s1:sub:a', 'walk', {}, first.wait);
     const second = admit(book, request({ id: 'local:s1:sub:b', walkMs: 1000 }), T0)!;
     const a = book.entries[`local:s1:sub:a@${T0}`]!.plan.t;
-    const nextPlace = STAND_MS + 1000 + 400 + GLIDE_MS + second.wait;
+    const nextPlace = LEAD_MS + STAND_MS + 1000 + 400 + GLIDE_MS + second.wait;
     expect(second.mode).toBe('walk');
     expect(nextPlace).toBeGreaterThanOrEqual(a.stampAt + PRESS_TOTAL_MS + DESK_GAP_MS);
     expect(nextPlace).toBeLessThanOrEqual(a.stampAt + PRESS_TOTAL_MS + DESK_GAP_MS + JITTER_MS + 1);
