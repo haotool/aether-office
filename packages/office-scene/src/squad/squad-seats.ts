@@ -76,6 +76,9 @@ export function podSeats(zones: readonly PlacedZone[], state: SquadState, now: n
 export const isPodSeat = (o: { id: string }) => o.id.startsWith(POD_SEAT_PREFIX);
 const POD_SEAT_PREFIX = 'pod-';
 
+export const podMembersOf = (layout: Layout): ReadonlySet<string> =>
+  new Set(layout.objects.filter(isPodSeat).flatMap((o) => (o.agentId ? [o.agentId] : [])));
+
 export function withPodSeats(layout: Layout, seats: readonly PodSeat[]): Layout {
   if (!seats.length) return layout;
   return {

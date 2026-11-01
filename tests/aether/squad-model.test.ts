@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ARRIVE_MS,
   EMPTY_SQUAD,
+  LINGER_MS,
   POD_FREE_MS,
   SHRINK_AFTER_MS,
   membersOf,
@@ -61,28 +62,24 @@ describe('seating', () => {
 
   it('never reorders: a seat is kept while held, and the lowest free one is given next', () => {
     let state = run(EMPTY_SQUAD, squads(member(1), member(2), member(3)), T0);
-    state = run(state, squads(member(1), member(3)), T0 + 1000);
+    const dropped = T0 + 1000;
+    const freed = dropped + LINGER_MS + POD_FREE_MS;
+    state = run(state, squads(member(1), member(3)), dropped);
     expect([seatOf(state, 1), seatOf(state, 3)]).toEqual([0, 2]);
-    state = run(
-      state,
-      squads(member(1), member(3), member(4, { startedAt: T0 + 2000 })),
-      T0 + 2000,
-    );
+    const stays = squads(member(1), member(3), member(4, { startedAt: T0 + 2000 }));
+    state = run(state, stays, T0 + 2000);
     expect(seatOf(state, 4)).toBe(3);
-    state = run(
-      state,
-      squads(member(1), member(3), member(4, { startedAt: T0 + 2000 })),
-      T0 + 1000 + POD_FREE_MS,
-    );
+    state = run(state, stays, dropped + LINGER_MS);
+    state = run(state, stays, freed);
     state = run(
       state,
       squads(
         member(1),
         member(3),
         member(4, { startedAt: T0 + 2000 }),
-        member(5, { startedAt: T0 + 6000 }),
+        member(5, { startedAt: freed }),
       ),
-      T0 + 6000,
+      freed,
     );
     expect(seatOf(state, 5)).toBe(1);
     expect([seatOf(state, 1), seatOf(state, 3), seatOf(state, 4)]).toEqual([0, 2, 3]);
@@ -90,18 +87,55 @@ describe('seating', () => {
 });
 
 describe('leaving', () => {
-  it('sends a finished subagent out through the core and then forgets it', () => {
+  const second = `${SUP}:sub:a2`;
+  const finished = () => squads(member(1), member(2, { status: 'finished' }));
+
+  it('lets a finished subagent sit through the linger, then sends it out through the core and forgets it', () => {
     let state = run(EMPTY_SQUAD, squads(member(1), member(2)), T0);
-    state = run(state, squads(member(1), member(2, { status: 'finished' })), T0 + 1000);
-    expect(state.members[`${SUP}:sub:a2`]).toMatchObject({
-      phase: 'leaving',
-      since: T0 + 1000,
-      until: T0 + 9000,
+    state = run(state, finished(), T0 + 1000);
+    expect(state.members[second]).toMatchObject({
+      phase: 'seated',
+      working: false,
+      finishedAt: T0 + 1000,
     });
-    state = run(state, squads(member(1), member(2, { status: 'finished' })), T0 + 9000);
-    expect(state.members[`${SUP}:sub:a2`]).toBeUndefined();
-    state = run(state, squads(member(1), member(2, { status: 'finished' })), T0 + 20_000);
-    expect(state.members[`${SUP}:sub:a2`]).toBeUndefined();
+    state = run(state, finished(), T0 + 1000 + LINGER_MS - 250);
+    expect(state.members[second]?.phase).toBe('seated');
+    const left = T0 + 1000 + LINGER_MS;
+    state = run(state, finished(), left);
+    expect(state.members[second]).toMatchObject({
+      phase: 'leaving',
+      since: left,
+      until: left + 8000,
+    });
+    state = run(state, finished(), left + 8000);
+    expect(state.members[second]).toBeUndefined();
+    state = run(state, finished(), left + 20_000);
+    expect(state.members[second]).toBeUndefined();
+  });
+
+  it('never stands up for a subagent that runs again before the linger is over', () => {
+    let state = run(EMPTY_SQUAD, squads(member(1), member(2)), T0);
+    state = run(state, finished(), T0 + 1000);
+    state = run(state, squads(member(1), member(2)), T0 + 1000 + LINGER_MS - 250);
+    expect(state.members[second]).toMatchObject({ phase: 'seated', finishedAt: null });
+    state = run(state, finished(), T0 + 1000 + LINGER_MS);
+    expect(state.members[second]).toMatchObject({
+      phase: 'seated',
+      finishedAt: T0 + 1000 + LINGER_MS,
+    });
+    state = run(state, finished(), T0 + 1000 + 2 * LINGER_MS);
+    expect(state.members[second]?.phase).toBe('leaving');
+  });
+
+  it('treats a subagent that drops out of the facts like a finished one', () => {
+    let state = run(EMPTY_SQUAD, squads(member(1), member(2)), T0);
+    state = run(state, squads(member(1)), T0 + 1000);
+    expect(state.members[second]).toMatchObject({ phase: 'seated', finishedAt: T0 + 1000 });
+    state = run(state, squads(member(1), member(2)), T0 + 1000 + LINGER_MS - 250);
+    expect(state.members[second]).toMatchObject({ phase: 'seated', finishedAt: null });
+    state = run(state, squads(member(1)), T0 + 2000 + LINGER_MS);
+    state = run(state, squads(member(1)), T0 + 2000 + 2 * LINGER_MS);
+    expect(state.members[second]?.phase).toBe('leaving');
   });
 
   it('does not seat a subagent that is already finished when first seen', () => {
@@ -120,17 +154,19 @@ describe('the zone', () => {
       return state.zones[SUP]?.seats;
     };
     expect(seatsAt(1000, 8000)).toBe(4);
-    const needed = 1000 + POD_FREE_MS - 250;
+    const needed = 1000 + LINGER_MS + POD_FREE_MS - 250;
     expect(seatsAt(8250, needed + SHRINK_AFTER_MS - 250)).toBe(4);
     expect(seatsAt(needed + SHRINK_AFTER_MS, needed + SHRINK_AFTER_MS + 250)).toBe(2);
   });
 
   it('goes away ten seconds after the last member left', () => {
+    const left = T0 + 1000 + LINGER_MS;
     let state = run(EMPTY_SQUAD, squads(member(1)), T0);
     state = run(state, [], T0 + 1000);
-    state = run(state, [], T0 + 9000);
+    state = run(state, [], left);
+    state = run(state, [], left + 8000);
     expect(state.zones[SUP]).toBeDefined();
-    state = run(state, [], T0 + 9000 + SHRINK_AFTER_MS);
+    state = run(state, [], left + 8000 + SHRINK_AFTER_MS);
     expect(state.zones[SUP]).toBeUndefined();
   });
 

@@ -3,7 +3,8 @@ import type { Agent } from '@aether/contracts';
 import { ringFor } from '../characters/character-ring.js';
 import { ProjectedLabels } from '../components/Labels.js';
 import { floorY } from '../scene/scene-geometry.js';
-import { SquadBeam, beamTier } from './SquadBeam.js';
+import { SquadConsole } from './SquadConsole.js';
+import { SquadLinks } from './SquadLinks.js';
 import { squadLabelsOf } from './SquadDom.js';
 import { SquadMember, type MemberActions } from './SquadMember.js';
 import { SquadZones } from './SquadZones.js';
@@ -66,14 +67,15 @@ function SquadEffects({ squad, scene, squads, podPos }: SquadEffectsProps) {
         podPos={podPos}
       />
       {relation && <SupervisorDesk squads={squads} exploded={exploded} />}
+      {relation && <SquadConsole squads={squads} exploded={exploded} animate={!still} />}
       {relation && <Handover squads={squads} frame={squad} exploded={exploded} zh={scene.zh} />}
       {relation && (
-        <SquadBeam
+        <SquadLinks
           squads={squads}
           frame={squad}
           exploded={exploded}
-          animate={!still && quality !== 'low'}
-          tier={beamTier(quality)}
+          animate={!still}
+          quality={quality}
         />
       )}
       {!compact && (
@@ -114,6 +116,7 @@ function SquadMembers({ squad, scene, known, podPos }: MembersProps) {
         arrival={squad.arrivals.get(m.id)}
         leave={squad.leaves.get(m.id)}
         handover={squad.handovers.get(m.id)}
+        slot={() => squad.handover.trayCount(m.supervisor, Date.now())}
         baseY={floorY(memberFloor, exploded)}
         podPos={podPos}
         engagements={engagements.get(m.id)}

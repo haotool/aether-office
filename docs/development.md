@@ -206,7 +206,7 @@ node scripts/contact-sheet.mjs --category squad --gpu   # the squad storyboard o
 PERF_GPU=1 PERF_BASELINE='squad=8&legacy=1' PERF_VARIANT='squad=8' pnpm exec playwright test --timeout=300000 e2e/office-life/office-life-perf.spec.ts   # 8 subagents in a squad zone against at desks
 ```
 
-`?squad=3&tokens=12000` gives the stand-in subagents a token rate so the beam and its label follow tokens.
+`?squad=3&tokens=12000` gives the stand-in subagents a token rate so the desk links and the zone label follow tokens.
 
 The sheets are for a human to review (a pixel diff belongs on the real-GPU runner only). The perf spec writes
 `evidence/office-life-perf.json` with the deltas of [the office-life gates](design/office-life.md#10-tests-and-gates) (median and

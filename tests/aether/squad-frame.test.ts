@@ -3,6 +3,7 @@ import type { Agent } from '../../packages/contracts/src/index.js';
 import { defaultLayout } from '../../packages/office-scene/src/environment/layout.js';
 import {
   EMPTY_SQUAD,
+  LINGER_MS,
   stepSquad,
   type SquadInput,
   type SquadMemberInput,
@@ -35,6 +36,8 @@ const member = (n: number, over: Partial<SquadMemberInput> = {}): SquadMemberInp
 const squads = (...members: SquadMemberInput[]): SquadInput[] => [{ supervisor: SUP, members }];
 const run = (state: SquadState, input: SquadInput[], now: number) =>
   stepSquad(state, { squads: input, leaveMs: () => 8000 }, now);
+const lingered = (state: SquadState, input: SquadInput[], now: number) =>
+  run(run(state, input, now), input, now + LINGER_MS);
 const plans = (): Plans => ({ arrivals: new Map(), leaves: new Map() });
 const frameOf = (state: SquadState, now: number, held: Plans = plans()) =>
   buildFrame({
@@ -77,7 +80,7 @@ describe('the squad frame', () => {
 
   it('gives a leaving member the plain way out it was planned, and no hand-over without one', () => {
     const seated = run(EMPTY_SQUAD, squads(member(1)), T0);
-    const leaving = run(seated, squads(member(1, { status: 'finished' })), T0 + 60_000);
+    const leaving = lingered(seated, squads(member(1, { status: 'finished' })), T0 + 60_000);
     const gone = leaving.members[`${SUP}:sub:a1`];
     expect(gone?.phase).toBe('leaving');
     const held = plans();
@@ -90,13 +93,22 @@ describe('the squad frame', () => {
     held.leaves.set(`${SUP}:sub:a1@${gone?.since}`, leave);
     expect(frameOf(leaving, T0 + 60_000, held).leaves.get(`${SUP}:sub:a1`)).toBe(leave);
   });
+
+  it('keeps the pod of a leaving member unfolded instead of unfolding it again', () => {
+    const seated = run(EMPTY_SQUAD, squads(member(1)), T0);
+    const leaving = lingered(seated, squads(member(1, { status: 'finished' })), T0 + 60_000);
+    const podOf = (state: SquadState, now: number) =>
+      frameOf(state, now).squads[0]?.pods.find((p) => p.member === `${SUP}:sub:a1`);
+    expect(podOf(leaving, T0 + 60_000)).toBeDefined();
+    expect(podOf(leaving, T0 + 60_000)?.since).toBeLessThanOrEqual(podOf(seated, T0 + 1000)!.since);
+  });
 });
 
 describe('what a squad frame is rebuilt for', () => {
   it('has a signature that changes with a member phase and not with the clock alone', () => {
     const seated = run(EMPTY_SQUAD, squads(member(1)), T0);
     expect(signatureOf(seated, T0 + 1000)).toBe(signatureOf(seated, T0 + 2000));
-    const leaving = run(seated, squads(member(1, { status: 'finished' })), T0 + 60_000);
+    const leaving = lingered(seated, squads(member(1, { status: 'finished' })), T0 + 60_000);
     expect(signatureOf(leaving, T0 + 60_000)).not.toBe(signatureOf(seated, T0 + 60_000));
   });
 
@@ -107,7 +119,11 @@ describe('what a squad frame is rebuilt for', () => {
       { kind: 'joined', member: `${SUP}:sub:a2`, supervisor: SUP, type: 'Explore', at: T0 + 5000 },
     ]);
     expect(eventsOf(joined, joined, T0 + 5100)).toEqual([]);
-    const left = run(joined, squads(member(1, { status: 'finished' }), member(2)), T0 + 60_000);
+    const left = lingered(
+      joined,
+      squads(member(1, { status: 'finished' }), member(2)),
+      T0 + 60_000,
+    );
     expect(eventsOf(joined, left, T0 + 60_000).map((e) => e.kind)).toContain('left');
   });
 });

@@ -33,7 +33,7 @@ const EXPECTED: Record<string, string> = {
   genomes: '8a633fee9ccf07bb',
   stalks: '5964a3e52c7fd6a4',
   directing: 'b5e2725d4c4a5007',
-  squads: '87ac462f58344d9d',
+  squads: 'fed1a581d3cfd087',
   layouts: '19b4c5dfa52b6a75',
   deskItems: '37a32b6fc2afe27c',
   screens: '58d662ed2dc10349',

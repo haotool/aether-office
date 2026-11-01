@@ -24,6 +24,7 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 - Starting a conversation is one click per agent (Claude Code, Codex) on the Terminals page, and the new terminal takes your keystrokes at once: there is no take-over or release step any more. Click the terminal and type; control is taken when you focus it and lapses by itself when you leave.
 - Queued messages wait 3 seconds, not 8, after a send before the next one goes in.
 - The sidebar and the phone's tab bar list four pages by default: Office, Local sessions, Terminals and Settings. The approvals inbox and the event history moved behind the Advanced switch, since a permission already waits in its own conversation and in the needs-you banner. Both still open by their address.
+- Squads: circuit links on the floor replace the light beam, subagent monitors show their work, and a finishing subagent lifts and sets down its folder by hand.
 
 ### Removed
 
@@ -39,6 +40,7 @@ project follows its [pre-release version policy](docs/release/versioning.md).
 - A message is held, with an Esc button in the notice, while the terminal shows a menu or a question instead of its prompt, rather than being typed into it and lost.
 - After a message is sent the conversation shows the thinking line at once and reads the transcript every second until the reply arrives; the terminal detail now reports its agent state.
 - `pnpm dev` and `pnpm demo` no longer end on "The page could not be shown" at the office: the 3D scene package declares `react-dom`, so the lockfile holds one copy next to `react` and the dev server stops loading two.
+- A finished subagent no longer stands up and sits down again.
 
 ### Security
 

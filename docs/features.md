@@ -252,17 +252,17 @@ hooks explains that its subagents need the hook and offers the command. See
 [Squads in the panel](design-system.md#squads-in-the-panel).
 
 In the 3D office a session's subagents sit together in a squad zone beside its desk, one pod each, facing the supervisor. The zone is
-placed automatically (a saved one, see the layout editor, wins) and grows at once but shrinks only after ten quiet seconds; a pod
-is kept for as long as its subagent holds it. A new subagent walks in from the elevator core (when the pod is within 14 m on high
-quality, 10 m on balanced; otherwise it appears in its seat) and sits down; a finished one, or one the session stopped reporting,
-stands, waves and walks back into the core. Past eight subagents on high (six balanced, four low) the rest stand as silhouettes and
-the zone label counts them. A funnel of light runs from the zone into the core and a filament on to a halo over the supervisor; its
-brightness follows the squad's tokens per minute (Claude subagents, read from their transcripts) and otherwise its tool calls per
-minute; the zone label's tooltip says which. The zone label is a button ("Squad of main, 3
-working") and a hidden live region announces who joined and left. Thin strings of light run from a control cross over each working subagent to its head and hands
-(they tighten and jerk on each tool call, go slack when it rests, and are off on the low tier, with the relation effects or with
-their own switch, Settings, Office, "Puppet strings"; still in Calm mode and with reduced motion). When a subagent finishes, it
-walks a folder to its supervisor's desk, puts it in the in-tray and the supervisor reads it and stamps it **RECEIVED**: a receipt that a
-result came back, not an approval. A result the parent's own tool result flags as an error gets a grey **RETURNED** stamp instead
-(never red or green). The log says "Explore handed over its result". A subagent's result summary is not shown in 3D. If the floor has
-no room for a zone the subagents keep desks of their own and the tether between desks still joins them.
+placed automatically (a saved one, see the layout editor, wins) and grows at once but shrinks only after ten quiet seconds; a pod is kept
+for as long as its subagent holds it. A new subagent walks in from the elevator core (when the pod is within 14 m on high quality, 10 m on
+balanced; otherwise it appears in its seat) and sits down; a finished one, or one the session stopped reporting, stays in its seat for
+five seconds in case it was only a blip, then stands, waves and walks back into the core. Past eight subagents on high (six balanced, four
+low) the rest stand as silhouettes and the zone label counts them. Each subagent's monitor shows the kind of work it does, and a
+supervisor with a squad gets a wall of two to five more screens around its own. A trace of light runs along the floor from the
+supervisor's desk past the squad's desks to a lit port at the front of each, with packets of light flowing along it on high and balanced
+quality; its brightness and the packets' speed follow the squad's tokens per minute (Claude subagents, read from their transcripts) and
+otherwise its tool calls per minute; the zone label's tooltip says which. The zone label is a button ("Squad of main, 3 working") and a
+hidden live region announces who joined and left. When a subagent finishes, it lifts the folder from its desk with both hands, stands,
+carries it to its supervisor's desk, leans in to set it down in the in-tray and lets go, and the supervisor reads it and stamps it
+**RECEIVED**: a receipt that a result came back, not an approval. A result the parent's own tool result flags as an error gets a grey
+**RETURNED** stamp instead (never red or green). The log says "Explore handed over its result". A subagent's result summary is not shown
+in 3D. If the floor has no room for a zone the subagents keep desks of their own and the tether between desks still joins them.

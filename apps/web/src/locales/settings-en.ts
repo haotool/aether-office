@@ -110,7 +110,7 @@ export const settingsEn = {
   lifeCalmOn: 'Calm mode is on',
   stLifeRelationLabel: 'Relation effects',
   stLifeRelationDesc:
-    'Squads and their subagents: the zone, the team workstations, the beam and the hand-over.',
+    'Squads and their subagents: the zone, the team workstations, the desk links and the hand-over.',
 
   stSchedulesDesc: 'Create tasks on a timer: once, daily or weekly.',
   stA2aLabel: 'A2A',

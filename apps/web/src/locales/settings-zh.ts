@@ -98,7 +98,7 @@ export const settingsZh = {
     '讓 3D 辦公室靜下來：小隊效果仍保留但不動，也不顯示上下文壓縮動畫。系統要求減少動態時預設開啟。',
   lifeCalmOn: '平靜模式已開啟',
   stLifeRelationLabel: '關係效果',
-  stLifeRelationDesc: '小隊與其子代理：區域、團隊工作桌、光束與交付。',
+  stLifeRelationDesc: '小隊與其子代理：區域、團隊工作桌、桌間連線與交付。',
 
   stSchedulesDesc: '定時建立任務：一次、每日或每週。',
   stA2aLabel: 'A2A',

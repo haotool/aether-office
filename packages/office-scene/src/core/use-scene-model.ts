@@ -15,7 +15,7 @@ import { usePoseCues } from './use-pose-cues.js';
 import { ACTIVE, departmentAt, floorOfDesk, floorY } from '../scene/scene-geometry.js';
 import { useSceneNavigation } from '../scene/scene-navigation.js';
 import { useAriaLog } from './use-aria-log.js';
-import { useSquad } from '../squad/index.js';
+import { podMembersOf, useSquad } from '../squad/index.js';
 import type { OfficeSceneProps } from '../scene/scene-props.js';
 
 function useHover() {
@@ -77,10 +77,11 @@ function useSceneCore(props: OfficeSceneProps) {
   const pose = usePoseCues(props.reducedMotion);
   const squad = useSquad(placed, props, ariaLog.say, pose.request);
   const layout = squad.layout;
+  const pods = useMemo(() => podMembersOf(layout), [layout]);
   const [warm, setWarm] = useState(false);
   const ready = useCallback(() => setWarm(true), []);
   const nav = useNavigation(props, layout, compact);
-  return { placed, zh, compact, ariaLog, pose, squad, layout, warm, ready, nav };
+  return { placed, zh, compact, ariaLog, pose, squad, layout, pods, warm, ready, nav };
 }
 
 function floorsInView(agents: Agent[], layout: Layout, floor: number, exploded: boolean) {
@@ -183,6 +184,7 @@ function useDomRegistry() {
 function relationsOf(
   props: OfficeSceneProps,
   nav: ReturnType<typeof useSceneCore>['nav'],
+  pods: ReadonlySet<string>,
   sceneAgents: readonly Agent[],
   hovered: string | null,
 ) {
@@ -192,7 +194,7 @@ function relationsOf(
     seats: nav.seats,
     agents: sceneAgents,
     branchOf: props.branchOf,
-    tethers: props.tethers ?? [],
+    tethers: (props.tethers ?? []).filter((t) => !pods.has(t.child)),
     focus: hovered ?? props.selectedId,
     heightOf: (f) => floorY(f, exploded),
     visible: (f) => exploded || f === floor,
@@ -224,14 +226,15 @@ function useCrowd(
   elements: ReturnType<typeof useDomRegistry>['elements'],
   hovered: string | null,
 ) {
-  const { layout, nav, compact, zh } = core;
+  const { layout, nav, compact, zh, pods } = core;
   const { floor, exploded } = nav;
   const [namesOn, setNamesOn] = useState(!compact);
   const departures = useDepartures(layout, props.leaving);
   const { visibleFloors, sceneAgents } = floorsInView(props.agents, layout, floor, exploded);
   const ix = useInteraction(props, core, sceneAgents, hovered, elements);
   const onShot = (id: string) => nav.directed?.shot.subjects.includes(id) ?? false;
-  const { engagements, edges } = relationsOf(props, nav, sceneAgents, hovered);
+  const { engagements, edges } = relationsOf(props, nav, pods, sceneAgents, hovered);
+  const arcs = (props.pulses ?? []).filter((p) => p.kind !== 'sub' || !pods.has(p.to));
   const speakers = speakersOf(props, sceneAgents, onShot, compact);
   const marks = ix.marks;
   return {
@@ -245,6 +248,7 @@ function useCrowd(
     onShot,
     engagements,
     edges,
+    arcs,
     speakers,
   };
 }

@@ -30,6 +30,7 @@ import {
   type Apparition,
   type ClipName,
 } from './animal-states.js';
+import { reachHands, type Hands } from './hands.js';
 
 const FADE_SECONDS = 0.35;
 export type Model = { scene: Object3D; clips: AnimationClip[]; url: string };
@@ -191,7 +192,19 @@ export function useClipPlayer(o: {
 export function useMixerUpdates(
   mixer: RefObject<AnimationMixer | null>,
   root: RefObject<Group | null>,
-  { reducedMotion, selected, pace }: { reducedMotion: boolean; selected: boolean; pace: number },
+  {
+    reducedMotion,
+    selected,
+    pace,
+    hands,
+    scene,
+  }: {
+    reducedMotion: boolean;
+    selected: boolean;
+    pace: number;
+    hands: (() => Hands) | undefined;
+    scene: Object3D | undefined;
+  },
 ) {
   const here = useRef(new Vector3());
   const owed = useRef(0);
@@ -207,5 +220,6 @@ export function useMixerUpdates(
     if (owed.current < interval) return;
     mixer.current.update(owed.current * pace);
     owed.current = 0;
+    if (hands && scene) reachHands(scene, hands());
   });
 }

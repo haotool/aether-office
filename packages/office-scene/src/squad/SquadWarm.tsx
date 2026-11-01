@@ -1,51 +1,53 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { BufferGeometry, Float32BufferAttribute, type InstancedMesh } from 'three';
-import type { Quality } from '../scene/scene-types.js';
-import { createBeam, createDotMaterial } from './beam-shader.js';
+import type { InstancedMesh } from 'three';
 import { sealGeometry, sealMaterial } from './handover/handover-art.js';
-import { art, squadMaterials, withColors } from './squad-art.js';
+import { acquireSecondary } from '../screen/screen-secondary.js';
+import { art, consoleMaterial, squadMaterials, withColors } from './squad-art.js';
+import { CONSOLE } from './squad-console.js';
+import { screenMaterial, screenRoleOf } from './squad-screens.js';
 import { createZoneDecal } from './zone-shader.js';
 
 /**
  * The squad layer's shader programs, linked while the scene loads instead of when the first subagent shows up, so the
- * first appearance does not stall. Points are left out on the low tier.
+ * first appearance does not stall.
  */
-export function SquadWarm({ quality, zh }: { quality: Quality; zh: boolean }) {
+export function SquadWarm({ zh }: { zh: boolean }) {
   const parts = art();
   const { glow, solid } = squadMaterials();
   const glowMesh = useRef<InstancedMesh>(null);
   const solidMesh = useRef<InstancedMesh>(null);
-  const beam = useMemo(createBeam, []);
+  const screenMesh = useRef<InstancedMesh>(null);
   const decal = useMemo(createZoneDecal, []);
-  const dots = useMemo(
-    () => ({
-      geometry: new BufferGeometry().setAttribute('position', new Float32BufferAttribute(3, 3)),
-      material: createDotMaterial(),
-    }),
-    [],
-  );
+  const probe = useMemo(() => {
+    const screen = acquireSecondary('docs', CONSOLE.theme, CONSOLE.accent, CONSOLE.repaintMs);
+    return { screen, material: consoleMaterial(screen.texture) };
+  }, []);
   useLayoutEffect(() => {
     withColors(glowMesh.current);
     withColors(solidMesh.current);
+    withColors(screenMesh.current);
   }, []);
   useEffect(
     () => () => {
-      for (const owned of [beam, decal, dots]) {
-        owned.geometry.dispose();
-        owned.material.dispose();
-      }
+      decal.geometry.dispose();
+      decal.material.dispose();
+      probe.material.dispose();
+      probe.screen.release();
     },
-    [beam, decal, dots],
+    [decal, probe],
   );
-  const full = quality !== 'low';
   return (
     <group visible={false}>
       <instancedMesh ref={glowMesh} args={[parts.ring, glow, 1]} visible={false} />
       <instancedMesh ref={solidMesh} args={[parts.stool, solid, 1]} visible={false} />
-      <instancedMesh args={[beam.geometry, beam.material, 1]} visible={false} />
+      <instancedMesh
+        ref={screenMesh}
+        args={[parts.screen, screenMaterial(screenRoleOf('general-purpose')), 1]}
+        visible={false}
+      />
       <instancedMesh args={[decal.geometry, decal.material, 1]} visible={false} />
+      <instancedMesh args={[parts.panel, probe.material, 1]} visible={false} />
       <mesh args={[sealGeometry(), sealMaterial(zh, 'received')]} visible={false} />
-      {full && <points args={[dots.geometry, dots.material]} visible={false} />}
     </group>
   );
 }

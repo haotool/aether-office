@@ -58,7 +58,7 @@ function drawZone(
       z: pod.z,
       member: m?.id ?? null,
       silhouette: !!m && m.seat >= budget,
-      since: m?.since ?? 0,
+      since: m && m.phase !== 'leaving' ? m.since : 0,
     };
   });
   const yaw = (desk.rotation * Math.PI) / 2;

@@ -34,8 +34,8 @@
 > [features](../features.md) and the [design system](../design-system.md), and for what is verified the verification ledger.
 >
 > The signals → effects registry (§5 apart from the aria log), the little decorative effects and the intro tour (§6) were built and
-> later removed from the product: their code is gone and their file names below are history. Squads, the beam calibration (§4.4) and
-> the one aria log the squads speak through are current.
+> later removed from the product: their code is gone and their file names below are history. Squads, the rate calibration of §4.4 (it
+> now drives the desk links; the beam itself is gone) and the one aria log the squads speak through are current.
 
 What is built is tracked in the verification ledger (`OFFICE-LIFE-*` in `docs/verification/features.json`). Squads in the scene (§2, §4.1 to §4.4, §4.6, §4.10), the puppet strings (§4.5) and the hand-over with its stamp (§4.6 to §4.8) are built (I4, I5); the registry and the signals are tracked per iteration. Owner: the 3D office (`packages/office-scene`) with server work in `apps/control`.
 Work plan: [office-life-work-plan.md](office-life-work-plan.md).
@@ -259,6 +259,10 @@ slots, we read them instead (§9).
 
 ### 4.4 Squad beam (`squad/SquadBeam.tsx`, `squad/beam-shader.ts`)
 
+> The beam, its filament, halo and points were replaced by desk links on the floor (`squad/SquadLinks.tsx`, laid out by
+> `squad/squad-links.ts`), because the beam hid the desks it joined. The rate and its calibration below still drive the links;
+> [the design system](../design-system.md#squads-in-the-scene) says how they look now.
+
 - Geometry: one shared tapered tube along a quadratic Bezier. It goes from the zone centroid at y = 2.6, with radius
   `r0 = 0.42·min(w, d)`, to the core at y = 4.6, with radius 1.2. It uses 48 segments × 16 sides, about 1.5k triangles,
   and is built once and **instanced** across squads: per-instance start, end and r0 are uniforms in an instanced
@@ -399,6 +403,14 @@ export function errandAt(plan: ErrandPlan, elapsedMs: number, reduced: boolean):
   a desk one stamp at a time, and the rest are shown as a pop (see below). The mode steps down and never out: **walk**, **pop** (the
   subagent leaves as usual and the folder pops into the tray: low tier, a desk not in view, a busy floor) and **tray** (Calm and
   reduced motion: the folder and the seal appear, no press and no cues).
+
+- **As built (hands).** The carrier picks the folder up from its desk and sets it down with its own paws instead of floating it. The
+  folder shows on the desk for 0.3 s; the carrier, still seated, reaches (0.35 s), grips and raises it (0.55 s), then stands (1.25 s)
+  and walks with the folder at its waist. At the tray it turns (0.4 s), leans in, lowers the folder onto the stack (0.7 s) and lets go
+  (0.3 s). The arms are solved after each animation update (`animals/hands.ts`, a two-bone solve over the existing rig), and the folder
+  and the paws come from the same function (`carryAt` in `handover/plan.ts`), so no Blender clip was added (§4.8). A finished subagent
+  sits through a 5 s linger (`LINGER_MS` in `squad-model.ts`) before it stands, so a finish that flickers for one poll does not make
+  it stand up and sit down again.
 
 ### 4.7 Hand-over props (`squad/handover/`)
 

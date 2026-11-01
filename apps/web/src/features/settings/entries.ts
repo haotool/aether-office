@@ -133,7 +133,7 @@ export const ENTRIES = [
     section: 'office',
     label: 'stLifeRelationLabel',
     desc: 'stLifeRelationDesc',
-    words: 'squad subagent beam zone 小隊 子代理 光束',
+    words: 'squad subagent link beam zone 小隊 子代理 連線 光束',
   },
   {
     id: 'advanced',

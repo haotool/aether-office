@@ -3,19 +3,26 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { STAND_MS, WAVE_MS } from '../../packages/office-scene/src/animals/departure.js';
 import {
+  DESK_MS,
+  FOLDER_THICKNESS,
   GLIDE_MS,
+  HELD_AHEAD_M,
+  LIFT_MS,
   POP_MS,
   PRESS_MS,
   PRESS_TOTAL_MS,
   READ_MS,
-  FOLDER_THICKNESS,
+  REACH_MS,
+  RELEASE_MS,
   WALK_CAP_MS,
   deskPlaces,
   folderAt,
   handoverSide,
+  handsAt,
   memberAt,
   pressAt,
   routeHandover,
+  stackSkew,
   timeline,
 } from '../../packages/office-scene/src/squad/handover/plan.js';
 import {
@@ -109,8 +116,10 @@ describe('the timeline', () => {
   const plan = makePlan();
   const t = plan.t;
 
-  it('goes stand, walk, present, stamp and leave in order, the stamp within 14 s', () => {
-    expect(t.standEnd).toBe(STAND_MS);
+  it('goes lift, stand, walk, present, stamp and leave in order, the stamp within 14 s', () => {
+    expect(t.liftAt).toBe(DESK_MS);
+    expect(t.liftEnd).toBe(t.liftAt + LIFT_MS);
+    expect(t.standEnd).toBe(t.liftEnd + STAND_MS);
     expect(t.walkEnd).toBeGreaterThan(t.standEnd);
     expect(t.turnEnd).toBeGreaterThan(t.walkEnd);
     expect(t.placeAt).toBe(t.turnEnd + GLIDE_MS);
@@ -126,36 +135,55 @@ describe('the timeline', () => {
     expect(far.speed).toBeGreaterThan(1.2);
   });
 
-  it('seats the carrier with the folder until it is time, then stands, walks, faces the tray, pauses upright and goes', () => {
+  it('keeps the carrier seated while the folder is lifted, then stands, walks, faces the tray, pauses upright and goes', () => {
     const queued = timeline('walk', 2000, plan.route);
-    const waiting = memberAt({ ...plan, t: queued }, 1000);
-    expect(waiting).toMatchObject({ clip: null, x: 0, z: 0, carrying: true });
-    expect(memberAt(plan, 10)).toMatchObject({ clip: 'stand_up', carrying: true });
+    expect(memberAt({ ...plan, t: queued }, 1000)).toMatchObject({ clip: null, x: 0, z: 0 });
+    expect(memberAt(plan, t.liftEnd - 10)).toMatchObject({ clip: null, x: 0, z: 0 });
+    expect(memberAt(plan, t.liftEnd + 10)).toMatchObject({ clip: 'stand_up' });
     const walking = memberAt(plan, (t.standEnd + t.walkEnd) / 2);
-    expect(walking).toMatchObject({ clip: 'walk', carrying: true });
+    expect(walking.clip).toBe('walk');
     expect(Math.hypot(walking.x, walking.z)).toBeGreaterThan(0.3);
     const present = memberAt(plan, t.turnEnd + 100);
-    expect(present).toMatchObject({ clip: 'idle', carrying: true });
+    expect(present.clip).toBe('idle');
     const spot = plan.route.toSpot[plan.route.toSpot.length - 1]!;
     expect(present.x).toBeCloseTo(spot.x, 5);
     expect(present.z).toBeCloseTo(spot.z, 5);
-    expect(memberAt(plan, t.placeAt + 100)).toMatchObject({ clip: 'idle', carrying: false });
-    expect(memberAt(plan, t.stampAt + 100)).toMatchObject({ clip: 'idle', carrying: false });
-    expect(memberAt(plan, t.stampAt + WAVE_MS + 500)).toMatchObject({ clip: 'walk' });
+    expect(memberAt(plan, t.placeAt + 100).clip).toBe('idle');
+    expect(memberAt(plan, t.stampAt + 100).clip).toBe('idle');
+    expect(memberAt(plan, t.stampAt + WAVE_MS + 500).clip).toBe('walk');
     expect(memberAt(plan, t.total + 1).gone).toBe(true);
     expect(memberAt(plan, t.total - 1).gone).toBe(false);
   });
 
-  it('holds the folder in its hands, glides it into the tray, then leaves it to the stack', () => {
-    expect(folderAt(plan, 100, 0).state).toBe('held');
+  it('lays the folder on the desk, holds it in the hands, lowers it into the tray, then leaves it to the stack', () => {
+    expect(folderAt(plan, 0, 0).state).toBe('desk');
+    expect(folderAt(plan, t.liftAt + REACH_MS - 10, 0).state).toBe('desk');
+    expect(folderAt(plan, t.liftAt + REACH_MS, 0).state).toBe('held');
     expect(folderAt(plan, t.walkEnd - 10, 0).state).toBe('held');
-    const glide = folderAt(plan, t.turnEnd + GLIDE_MS / 2, 0);
-    expect(glide.state).toBe('glide');
-    expect(glide.y).toBeGreaterThan(plan.places.tray[1]);
+    const lowering = folderAt(plan, t.turnEnd + GLIDE_MS / 2, 0);
+    expect(lowering.state).toBe('held');
+    expect(lowering.y).toBeGreaterThan(plan.places.tray[1]);
+    expect(lowering.y).toBeLessThan(folderAt(plan, t.turnEnd, 0).y);
     expect(folderAt(plan, t.placeAt, 0).state).toBe('hidden');
     const landing = folderAt(plan, t.placeAt - 1, 2);
     expect(landing.x).toBeCloseTo(plan.places.tray[0], 1);
     expect(landing.y).toBeCloseTo(plan.places.tray[1] + 2 * FOLDER_THICKNESS, 2);
+    expect(landing.z).toBeCloseTo(plan.places.tray[2], 1);
+  });
+
+  it('turns the folder to lie along the tray before it lands, so it does not spin on the stack', () => {
+    const squareness = (slot: number) => {
+      const landing = folderAt(plan, t.placeAt - 1, slot);
+      return Math.cos(landing.yaw - plan.places.yaw - stackSkew(slot));
+    };
+    expect(squareness(0)).toBeCloseTo(1, 3);
+    expect(squareness(3)).toBeCloseTo(1, 3);
+  });
+
+  it('skews each slot of the stack by a small fixed angle, so a landing never reshuffles the pile', () => {
+    const skews = [0, 1, 2, 3, 4].map(stackSkew);
+    expect(new Set(skews).size).toBeGreaterThan(1);
+    for (const skew of skews) expect(Math.abs(skew)).toBeLessThanOrEqual(0.14);
   });
 
   it('presses the stamp once, down, hold and up, in a quarter of a second', () => {
@@ -191,5 +219,65 @@ describe('the timeline', () => {
     const trayPlan = { ...plan, mode: 'tray' as const, t: still };
     expect(folderAt(trayPlan, 0, 0).state).toBe('hidden');
     expect(pressAt(trayPlan, 0)).toBe(0);
+  });
+});
+
+describe('the hands', () => {
+  const plan = makePlan();
+  const t = plan.t;
+  const grip = (ms: number, slot = 0) => handsAt(plan, ms, slot).grip;
+
+  it('rest until the desk is reached, close on the folder, hold it through the walk, let go at the tray and open again', () => {
+    expect(grip(0)).toBe(0);
+    expect(grip(t.liftAt - 1)).toBe(0);
+    expect(grip(t.liftAt + REACH_MS / 2)).toBeGreaterThan(0);
+    expect(grip(t.liftAt + REACH_MS / 2)).toBeLessThan(1);
+    expect(grip(t.liftAt + REACH_MS)).toBe(1);
+    expect(grip((t.standEnd + t.walkEnd) / 2)).toBe(1);
+    expect(grip(t.placeAt - 1)).toBe(1);
+    expect(grip(t.placeAt + RELEASE_MS / 2)).toBeLessThan(1);
+    expect(grip(t.placeAt + RELEASE_MS)).toBe(0);
+    expect(grip(t.total)).toBe(0);
+  });
+
+  it('lean the body to the desk and back, and to the tray and back, never leaning while the folder is carried', () => {
+    const lean = (ms: number) => handsAt(plan, ms, 0).lean;
+    expect(lean(0)).toBe(0);
+    expect(lean(t.liftAt + REACH_MS)).toBeGreaterThan(0.2);
+    expect(lean(t.liftEnd)).toBe(0);
+    expect(lean((t.standEnd + t.walkEnd) / 2)).toBe(0);
+    expect(lean(t.placeAt)).toBeGreaterThan(0.1);
+    expect(lean(t.placeAt + RELEASE_MS)).toBe(0);
+  });
+
+  it('keep the folder between them: on the desk, up to the chest, down on the stack', () => {
+    const rest = handsAt(plan, 0, 0).left;
+    const raised = handsAt(plan, t.liftEnd, 0).left;
+    const placed = handsAt(plan, t.placeAt, 3).left;
+    expect(rest[1]).toBeLessThan(raised[1]);
+    expect(placed[1]).toBeLessThan(raised[1]);
+    expect(placed[1]).toBeCloseTo(plan.places.tray[1] + 3 * FOLDER_THICKNESS, 6);
+    expect(raised[2]).toBeCloseTo(HELD_AHEAD_M, 6);
+    expect(placed[2]).toBeCloseTo(HELD_AHEAD_M, 6);
+    expect(handsAt(plan, 0, 0).right[0]).toBeCloseTo(-rest[0], 6);
+  });
+
+  it('stay on the folder from the moment it appears to the moment it lands', () => {
+    for (let ms = 0; ms < t.placeAt; ms += 97) {
+      const folder = folderAt(plan, ms, 1);
+      const body = memberAt(plan, ms);
+      const { left, right } = handsAt(plan, ms, 1);
+      const facing = body.yaw + Math.PI;
+      expect(left[1]).toBeCloseTo(right[1], 9);
+      expect(left[2]).toBeCloseTo(right[2], 9);
+      expect(folder.y).toBeCloseTo(left[1], 6);
+      expect(folder.x).toBeCloseTo(plan.origin.x + body.x + Math.sin(facing) * left[2], 6);
+      expect(folder.z).toBeCloseTo(plan.origin.z + body.z + Math.cos(facing) * left[2], 6);
+    }
+  });
+
+  it('reach the tray from the spot where the carrier stands, one arm length of carrying away', () => {
+    const { spot, tray } = plan.places;
+    expect(Math.hypot(spot.x - tray[0], spot.z - tray[2])).toBeCloseTo(HELD_AHEAD_M, 6);
   });
 });

@@ -16,13 +16,19 @@ import {
   Vector3,
   type BufferGeometry,
   type InstancedMesh,
+  type Texture,
 } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { SEAT_DEPTH } from '../animals/departure.js';
 import { SEATING, SLAB_TOP } from '../core/seating.js';
+import { SCREEN_H, SCREEN_W } from '../screen/screen-draw.js';
+import { SECONDARY_H, SECONDARY_W } from '../screen/screen-secondary.js';
 
 export const DESK_TOP = SLAB_TOP;
-export const SUPERVISOR_GOLD = '#ffc65c';
+export const TRAY_X = 0.71;
+export const TRAY_Z = -0.18;
+export const FLOOR_LIFT = 0.035;
+const SUPERVISOR_GOLD = '#ffc65c';
 export const WAITING_AMBER = '#ffc65c';
 
 const FLAT = -Math.PI / 2;
@@ -68,22 +74,25 @@ function build() {
           paint(at(new CylinderGeometry(0.12, 0.18, 0.55, 12), 0, 0.275, -SEAT_DEPTH), '#294654'),
         ]),
     ),
-    pane: merged([
-      paint(
-        at(new BoxGeometry(0.65, 0.4, 0.035), 0, SEATING.screenY, -SEAT_DEPTH - 0.15),
-        '#132b38',
-      ),
-      paint(at(new PlaneGeometry(0.58, 0.32), 0, SEATING.screenY, -SEAT_DEPTH - 0.13), '#4ba8b4'),
-    ]),
+    pane: paint(
+      at(new BoxGeometry(0.65, 0.4, 0.035), 0, SEATING.screenY, -SEAT_DEPTH - 0.15),
+      '#132b38',
+    ),
+    screen: at(
+      new PlaneGeometry(0.58, (0.58 * SCREEN_H) / SCREEN_W),
+      0,
+      SEATING.screenY,
+      -SEAT_DEPTH - 0.13,
+    ),
     silhouette: merged([
       paint(at(new CapsuleGeometry(0.2, 0.34, 3, 8), 0, 0.82, 0), WHITE),
       paint(at(new SphereGeometry(0.15, 10, 8), 0, 1.36, 0), WHITE),
     ]),
-    filament: paint(new CylinderGeometry(0.018, 0.018, 1, 5, 1, true), WHITE),
-    halo: paint(new RingGeometry(0.34, 0.4, 36).rotateX(FLAT), WHITE),
+    trace: paint(new BoxGeometry(1, 0.01, 1), WHITE),
+    panel: new PlaneGeometry(1, SECONDARY_H / SECONDARY_W),
     dressing: merged([
-      paint(at(new BoxGeometry(0.34, 0.035, 0.26), -0.55, DESK_TOP + 0.02, -0.18), '#d8c9a3'),
-      paint(at(new BoxGeometry(0.34, 0.035, 0.26), -0.55, DESK_TOP + 0.06, -0.18), '#c9b88c'),
+      paint(at(new BoxGeometry(0.34, 0.035, 0.26), -TRAY_X, DESK_TOP + 0.02, TRAY_Z), '#d8c9a3'),
+      paint(at(new BoxGeometry(0.34, 0.035, 0.26), -TRAY_X, DESK_TOP + 0.06, TRAY_Z), '#c9b88c'),
       paint(at(new BoxGeometry(1.7, 0.012, 0.03), 0, DESK_TOP + 0.006, 0.4), SUPERVISOR_GOLD),
     ]),
   };
@@ -104,6 +113,16 @@ const material = (additive: boolean, opacity: number) =>
 let materials: { glow: MeshBasicMaterial; solid: MeshBasicMaterial } | null = null;
 export const squadMaterials = () =>
   (materials ??= { glow: material(true, 0.55), solid: material(false, 1) });
+
+export const consoleMaterial = (map: Texture) =>
+  new MeshBasicMaterial({
+    map,
+    transparent: true,
+    opacity: 0.92,
+    toneMapped: false,
+    side: DoubleSide,
+    depthWrite: false,
+  });
 
 export type Instance = {
   at: readonly [number, number, number];

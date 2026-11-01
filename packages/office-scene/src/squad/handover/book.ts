@@ -5,6 +5,7 @@ import { STAND_MS } from '../../animals/departure.js';
 import { TURN_MS } from '../errand.js';
 import {
   GLIDE_MS,
+  LEAD_MS,
   POP_MS,
   PRESS_TOTAL_MS,
   TRAY_STACK_MAX,
@@ -81,7 +82,7 @@ export function admit(
   const free = deskFreeAt(book, req.supervisor, now);
   const jitter = between(seeded(`${req.id}@${req.since}`), 0, JITTER_MS);
   const natural = (m: HandoverMode) =>
-    m === 'walk' ? STAND_MS + req.walkMs + TURN_MS + GLIDE_MS : POP_MS;
+    m === 'walk' ? LEAD_MS + STAND_MS + req.walkMs + TURN_MS + GLIDE_MS : POP_MS;
   let wait = Math.max(0, free - now - natural(mode));
   if (mode === 'walk' && wait > MAX_QUEUE_MS) {
     mode = 'pop';
