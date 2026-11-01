@@ -3,6 +3,7 @@ import type { Agent } from '@aether/contracts';
 import { ringFor } from '../characters/character-ring.js';
 import { ProjectedLabels } from '../components/Labels.js';
 import { floorY } from '../scene/scene-geometry.js';
+import { SquadConsole } from './SquadConsole.js';
 import { SquadLinks } from './SquadLinks.js';
 import { squadLabelsOf } from './SquadDom.js';
 import { SquadMember, type MemberActions } from './SquadMember.js';
@@ -66,6 +67,7 @@ function SquadEffects({ squad, scene, squads, podPos }: SquadEffectsProps) {
         podPos={podPos}
       />
       {relation && <SupervisorDesk squads={squads} exploded={exploded} />}
+      {relation && <SquadConsole squads={squads} exploded={exploded} animate={!still} />}
       {relation && <Handover squads={squads} frame={squad} exploded={exploded} zh={scene.zh} />}
       {relation && (
         <SquadLinks

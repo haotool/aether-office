@@ -14,6 +14,7 @@ import {
 } from './squad-art.js';
 import { Glide, type Point2 } from './squad-glide.js';
 import { WAITING_AMBER } from './squad-art.js';
+import { SCREEN_ROLES, screenMaterial, screenRoleOf } from './squad-screens.js';
 import { ZONE_CAPACITY, createZoneDecal } from './zone-shader.js';
 import type { SquadFrame } from './use-squad.js';
 
@@ -31,6 +32,7 @@ type Items = {
   stools: Instance[];
   panes: Instance[];
   figures: Instance[];
+  screens: Record<string, Instance[]>;
 };
 
 type Write = {
@@ -72,6 +74,8 @@ function placePod(w: Write, s: DrawSquad, pod: Pod, n: number, y: number, yaw: n
   else {
     w.items.stools.push({ ...item, color: '#5f8f99' });
     w.items.panes.push(item);
+    const role = screenRoleOf(w.members[pod.member]?.type ?? '');
+    (w.items.screens[role] ??= []).push({ ...item, color: waits ? WAITING_AMBER : '#ffffff' });
   }
 }
 
@@ -102,6 +106,7 @@ type ZoneRig = {
   decal: Decal;
   glide: Glide;
   color: Color;
+  screens: RefObject<Record<string, InstancedMesh | null>>;
   last: { squads: readonly DrawSquad[]; waiting: string };
   meshes: Record<
     'decal' | 'rings' | 'stools' | 'panes' | 'figures',
@@ -119,20 +124,22 @@ function useZoneRig(squads: readonly DrawSquad[]): ZoneRig {
   const stools = useRef<InstancedMesh>(null);
   const panes = useRef<InstancedMesh>(null);
   const figures = useRef<InstancedMesh>(null);
+  const screens = useRef<Record<string, InstancedMesh | null>>({});
   return useMemo(
     () => ({
       decal,
       glide,
       color,
+      screens,
       last,
       meshes: { decal: decalMesh, rings, stools, panes, figures },
     }),
-    [decal, glide, color, last, decalMesh, rings, stools, panes, figures],
+    [decal, glide, color, screens, last, decalMesh, rings, stools, panes, figures],
   );
 }
 
 function updateFloor(rig: ZoneRig, p: ZoneProps, delta: number): boolean {
-  const { decal, glide, color, last, meshes } = rig;
+  const { decal, glide, color, screens, last, meshes } = rig;
   const { squads, exploded, animate, podPos } = p;
   const { decal: decalMesh, rings, stools, panes, figures } = meshes;
   if (!decalMesh.current || !rings.current || !stools.current || !panes.current || !figures.current)
@@ -148,7 +155,7 @@ function updateFloor(rig: ZoneRig, p: ZoneProps, delta: number): boolean {
   if (!fresh && !glide.moving && !unfolding && last.waiting === String(waiting)) return false;
   last.waiting = String(waiting);
   glide.begin();
-  const items: Items = { zones: [], rings: [], stools: [], panes: [], figures: [] };
+  const items: Items = { zones: [], rings: [], stools: [], panes: [], figures: [], screens: {} };
   const keep = new Set<string>();
   podPos.clear();
   const w: Write = {
@@ -171,6 +178,10 @@ function updateFloor(rig: ZoneRig, p: ZoneProps, delta: number): boolean {
   writeInstances(stools.current, items.stools);
   writeInstances(panes.current, items.panes);
   writeInstances(figures.current, items.figures);
+  for (const role of SCREEN_ROLES) {
+    const mesh = screens.current[role];
+    if (mesh) writeInstances(mesh, items.screens[role] ?? []);
+  }
   decal.size.needsUpdate = decal.tone.needsUpdate = decal.alpha.needsUpdate = true;
   return glide.moving || unfolding;
 }
@@ -181,7 +192,7 @@ export function SquadZones(props: ZoneProps) {
   const parts = art();
   const { glow, solid } = squadMaterials();
   const rig = useZoneRig(squads);
-  const { decal, last, meshes } = rig;
+  const { decal, screens, last, meshes } = rig;
   const pods = [
     ['rings', parts.ring],
     ['stools', parts.stool],
@@ -191,7 +202,8 @@ export function SquadZones(props: ZoneProps) {
   useLayoutEffect(() => {
     for (const mesh of [meshes.rings, meshes.stools, meshes.panes, meshes.figures])
       withColors(mesh.current);
-  }, [meshes]);
+    for (const role of SCREEN_ROLES) withColors(screens.current[role] ?? null);
+  }, [meshes, screens]);
   useEffect(() => {
     last.waiting = '\0';
     invalidate();
@@ -214,6 +226,17 @@ export function SquadZones(props: ZoneProps) {
           name={`squad-${name}`}
           ref={meshes[name]}
           args={[geometry, name === 'rings' ? glow : solid, POD_CAPACITY]}
+          frustumCulled={false}
+        />
+      ))}
+      {SCREEN_ROLES.map((role) => (
+        <instancedMesh
+          key={role}
+          name={`squad-screen-${role}`}
+          ref={(node) => {
+            screens.current[role] = node;
+          }}
+          args={[parts.screen, screenMaterial(role), POD_CAPACITY]}
           frustumCulled={false}
         />
       ))}

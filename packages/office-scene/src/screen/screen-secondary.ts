@@ -19,6 +19,7 @@ type Entry = {
   refs: number;
   lastAt: number;
   key: string;
+  every: number;
 };
 const shared = new Map<string, Entry>();
 
@@ -103,8 +104,13 @@ function paintKind(
   PAINTERS[kind](g, r, p, accent, step);
 }
 
-export function acquireSecondary(kind: Secondary, theme: Theme, accent: string) {
-  const key = `${kind}|${theme}|${accent}`;
+export function acquireSecondary(
+  kind: Secondary,
+  theme: Theme,
+  accent: string,
+  every = REPAINT_MS,
+) {
+  const key = `${kind}|${theme}|${accent}|${every}`;
   let entry = shared.get(key);
   if (!entry) {
     const canvas = document.createElement('canvas');
@@ -112,24 +118,25 @@ export function acquireSecondary(kind: Secondary, theme: Theme, accent: string) 
     canvas.height = SECONDARY_H;
     const texture = new CanvasTexture(canvas);
     texture.colorSpace = SRGBColorSpace;
-    entry = { texture, g: context2d(canvas), refs: 0, lastAt: -Infinity, key };
+    entry = { texture, g: context2d(canvas), refs: 0, lastAt: -Infinity, key, every };
     shared.set(key, entry);
   }
   entry.refs++;
   const held = entry;
   return {
     texture: held.texture,
-    paint(now: number, moving: boolean) {
-      if (now - held.lastAt < REPAINT_MS) return;
+    paint(now: number, moving: boolean): boolean {
+      if (now - held.lastAt < held.every) return false;
       held.lastAt = now;
       paintKind(
         held.g,
         kind,
         PALETTES[theme],
         accent,
-        moving ? Math.floor(now / REPAINT_MS) % 6 : 0,
+        moving ? Math.floor(now / held.every) % 6 : 0,
       );
       held.texture.needsUpdate = true;
+      return true;
     },
     release() {
       if (--held.refs > 0) return;
