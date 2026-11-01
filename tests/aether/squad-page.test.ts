@@ -10,6 +10,7 @@ import {
 import {
   isPodSeat,
   placeZones,
+  podMembersOf,
   podSeats,
   withPodSeats,
 } from '../../packages/office-scene/src/squad/squad-seats.js';
@@ -76,5 +77,12 @@ describe('the page and the scene agree about squads', () => {
     expect(seated.objects.filter(isPodSeat)).toHaveLength(3);
     expect(layout.objects.some(isPodSeat)).toBe(false);
     expect(seated.objects.filter((o) => !isPodSeat(o))).toEqual(layout.objects);
+  });
+
+  it('names who sits in a pod, and nobody else', () => {
+    const { layout, subs, zones, state } = both(3, 2);
+    const seated = withPodSeats(layout, podSeats(zones, state, 1000));
+    expect(podMembersOf(seated)).toEqual(new Set(subs.map((s) => s.id)));
+    expect(podMembersOf(layout).size).toBe(0);
   });
 });

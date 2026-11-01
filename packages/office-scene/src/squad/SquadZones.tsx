@@ -4,7 +4,14 @@ import { Color, InstancedMesh } from 'three';
 import { floorY } from '../scene/scene-geometry.js';
 import type { DrawSquad } from './squad-draw.js';
 import type { SquadMemberState } from './squad-model.js';
-import { art, squadMaterials, withColors, writeInstances, type Instance } from './squad-art.js';
+import {
+  FLOOR_LIFT,
+  art,
+  squadMaterials,
+  withColors,
+  writeInstances,
+  type Instance,
+} from './squad-art.js';
 import { Glide, type Point2 } from './squad-glide.js';
 import { WAITING_AMBER } from './squad-art.js';
 import { ZONE_CAPACITY, createZoneDecal } from './zone-shader.js';
@@ -13,7 +20,6 @@ import type { SquadFrame } from './use-squad.js';
 const POD_CAPACITY = ZONE_CAPACITY * 12;
 const GLIDE_TAU = 0.25;
 const UNFOLD_MS = 600;
-const FLOOR_LIFT = 0.035;
 
 type Decal = ReturnType<typeof createZoneDecal>;
 type Members = Readonly<Record<string, SquadMemberState>>;

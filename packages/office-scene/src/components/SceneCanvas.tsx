@@ -128,7 +128,7 @@ function SceneControllers({ m }: { m: SceneModel }) {
         onLost={props.onContextLost ?? props.onFailure}
         onRestored={props.onContextRestored}
       />
-      {props.squads !== undefined && <SquadWarm quality={props.quality} zh={m.zh} />}
+      {props.squads !== undefined && <SquadWarm zh={m.zh} />}
       <Warmup onReady={m.ready} />
       <AdaptiveRatio ceiling={m.maxRatio} smooth={m.filming} compact={m.compact} />
       {shadowsOn && <ShadowThrottle intervalMs={SHADOW_INTERVAL_MS[props.quality]} />}
@@ -197,7 +197,7 @@ function SceneRelations({ m }: { m: SceneModel }) {
   return (
     <>
       <CommLinks
-        pulses={props.pulses ?? []}
+        pulses={m.arcs}
         seats={nav.seats}
         heightOf={(f) => floorY(f, exploded)}
         visible={(f) => exploded || f <= floor}

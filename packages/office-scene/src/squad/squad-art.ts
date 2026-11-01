@@ -22,6 +22,7 @@ import { SEAT_DEPTH } from '../animals/departure.js';
 import { SEATING, SLAB_TOP } from '../core/seating.js';
 
 export const DESK_TOP = SLAB_TOP;
+export const FLOOR_LIFT = 0.035;
 export const SUPERVISOR_GOLD = '#ffc65c';
 export const WAITING_AMBER = '#ffc65c';
 
@@ -79,8 +80,7 @@ function build() {
       paint(at(new CapsuleGeometry(0.2, 0.34, 3, 8), 0, 0.82, 0), WHITE),
       paint(at(new SphereGeometry(0.15, 10, 8), 0, 1.36, 0), WHITE),
     ]),
-    filament: paint(new CylinderGeometry(0.018, 0.018, 1, 5, 1, true), WHITE),
-    halo: paint(new RingGeometry(0.34, 0.4, 36).rotateX(FLAT), WHITE),
+    trace: paint(new BoxGeometry(1, 0.01, 1), WHITE),
     dressing: merged([
       paint(at(new BoxGeometry(0.34, 0.035, 0.26), -0.55, DESK_TOP + 0.02, -0.18), '#d8c9a3'),
       paint(at(new BoxGeometry(0.34, 0.035, 0.26), -0.55, DESK_TOP + 0.06, -0.18), '#c9b88c'),
