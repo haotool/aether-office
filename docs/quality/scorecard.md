@@ -69,7 +69,7 @@ Score 100.0, floor 100.0, 82% of the rule weight measured.
 | Rule | Id | Value | Limit | Weight | Penalty | State |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
 | Product modules no unit test reaches through imports | `unreached-modules` | 0 | 0 | 25 | 0 | pass |
-| Share of product modules a unit test imports directly | `direct-tests` | 60.32% | >= 60% | 15 | 0 | pass |
+| Share of product modules a unit test imports directly | `direct-tests` | 60.4% | >= 60% | 15 | 0 | pass |
 | Fixed sleeps, fixed ports and waitForTimeout in tests | `flaky-patterns` | 0 | 0 | 20 | 0 | pass |
 | Skipped or todo tests | `skipped-tests` | 0 | 0 | 10 | 0 | pass |
 | Line coverage (no coverage/coverage-summary.json: run pnpm test:coverage) | `coverage-lines` | - | - | 8 | 0 | not run |
@@ -84,7 +84,7 @@ apps/runner: 3059 source lines
 apps/web: 27999 source lines
 packages/contracts: 1376 source lines
 packages/kernel: 3455 source lines
-packages/office-scene: 21594 source lines
+packages/office-scene: 21879 source lines
 packages/providers: 2044 source lines
 ```
 
@@ -128,8 +128,8 @@ Score 100.0, floor 100.0, 70% of the rule weight measured.
 
 | Rule | Id | Value | Limit | Weight | Penalty | State |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
-| Web JavaScript total, gzip (budget 870 KB) | `bundle-total` | 838 KB | 870 | 25 | 0 | pass |
-| Largest JavaScript chunk, gzip (budget 400 KB) | `bundle-chunk` | 362 KB | 400 | 15 | 0 | pass |
+| Web JavaScript total, gzip (budget 870 KB) | `bundle-total` | 839 KB | 870 | 25 | 0 | pass |
+| Largest JavaScript chunk, gzip (budget 400 KB) | `bundle-chunk` | 363 KB | 400 | 15 | 0 | pass |
 | First-load JavaScript and CSS, transferred (budget 200 KB) | `first-load` | 200 KB | 200 | 30 | 0 | pass |
 | Frame times and draw cost (scripts/perf-matrix.mjs) (not run: needs a real GPU (PERF_GPU=1); the measured numbers in docs/design-system.md are not re-scored) | `perf-matrix` | - | - | 30 | 0 | not run |
 | Stylesheet files in apps/web/src (196 KB source, 3 built file(s) at 32 KB gzip; no CSS budget is documented) | `css-sources` | 52 | - | - | 0 | info |
