@@ -23,6 +23,7 @@ export type SquadMemberState = {
   /** Wall clock, ms: when the phase began. Poses are pure functions of `now - since`. */
   since: number;
   until: number;
+  finishedAt: number | null;
   working: boolean;
   waiting: boolean;
   toolCount: number;
@@ -46,6 +47,7 @@ type SquadStep = {
 
 export const EMPTY_SQUAD: SquadState = { ready: false, members: {}, zones: {} };
 export const ARRIVE_MS = 6000;
+export const LINGER_MS = 5000;
 const FRESH_MS = 30_000;
 export const SHRINK_AFTER_MS = 10_000;
 const LIVE_MS = 20_000;
@@ -101,11 +103,16 @@ function settleMembers(
     if (old.phase === 'leaving') {
       if (now >= old.until) continue;
     } else if (!fact || fact.status === 'finished') {
-      next = leave(old);
+      const finishedAt = old.finishedAt ?? now;
+      next =
+        now - finishedAt >= LINGER_MS
+          ? leave(old)
+          : { ...old, finishedAt, working: false, waiting: false };
     } else {
       if (fact.toolCount > old.toolCount) pushEvent(ledger, prev, old.supervisor, now);
       next = {
         ...old,
+        finishedAt: null,
         phase: old.phase === 'arriving' && now - old.since >= ARRIVE_MS ? 'seated' : old.phase,
         working: now - fact.lastSeen < LIVE_MS,
         waiting: fact.status === 'waiting_permission',
@@ -133,6 +140,7 @@ function seatNewcomers(prev: SquadState, input: SquadStep, now: number, ledger: 
         phase: arriving ? 'arriving' : 'seated',
         since: arriving ? now : (fact.startedAt ?? now),
         until: 0,
+        finishedAt: null,
         working: now - fact.lastSeen < LIVE_MS,
         waiting: fact.status === 'waiting_permission',
         toolCount: fact.toolCount,
