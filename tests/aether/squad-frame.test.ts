@@ -93,6 +93,15 @@ describe('the squad frame', () => {
     held.leaves.set(`${SUP}:sub:a1@${gone?.since}`, leave);
     expect(frameOf(leaving, T0 + 60_000, held).leaves.get(`${SUP}:sub:a1`)).toBe(leave);
   });
+
+  it('keeps the pod of a leaving member unfolded instead of unfolding it again', () => {
+    const seated = run(EMPTY_SQUAD, squads(member(1)), T0);
+    const leaving = lingered(seated, squads(member(1, { status: 'finished' })), T0 + 60_000);
+    const podOf = (state: SquadState, now: number) =>
+      frameOf(state, now).squads[0]?.pods.find((p) => p.member === `${SUP}:sub:a1`);
+    expect(podOf(leaving, T0 + 60_000)).toBeDefined();
+    expect(podOf(leaving, T0 + 60_000)?.since).toBeLessThanOrEqual(podOf(seated, T0 + 1000)!.since);
+  });
 });
 
 describe('what a squad frame is rebuilt for', () => {
