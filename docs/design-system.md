@@ -1061,7 +1061,7 @@ machine (Apple M4, `--use-angle=metal`, Chrome), phone profile 390x844 at dpr 3 
 evidence is `jsMs` / `renderMs`, draws, programs and the GPU estimate. **Nothing here was measured on a real phone, on Safari or on another
 GPU.**
 
-- **Dithering (`dither.ts`).** The soft additive gradients (light shafts, squad beam and zone decal, clouds, holograms, petals,
+- **Dithering (`dither.ts`).** The soft additive gradients (light shafts, the squad zone decal, clouds, holograms, petals,
   pollen, glass strands) take three's `dithering` last. Three adds its noise to the colour _before_ the alpha multiplies it, so on a
   low-alpha ramp the noise is scaled away: on a synthetic additive strip (dark background, alpha 0 to 0.09) the row-mean error was
   0.291 LSB without dithering and 0.278 with the flag alone, and 0.025 with `premultipliedAlpha: true` plus the chunks
@@ -1134,42 +1134,48 @@ GPU.**
 
 ## Squads in the scene
 
-`packages/office-scene/src/squad/` draws a supervisor's subagents and the squad's beam; the scene mounts `SquadLayer` (in the
+`packages/office-scene/src/squad/` draws a supervisor's subagents and the links between their desks; the scene mounts `SquadLayer` (in the
 canvas) and `SquadDom` (the label buttons and the log, in the label layer) and reads every seat through the layout `useSquad`
 returns, in which each pod is a desk-like seat that carries the subagent's id (so the camera, the name tags, the director and the
-selection find a subagent as they find a member). The floor is not rebuilt: the zone, the supervisor's dressing and the beam are
+selection find a subagent as they find a member). The floor is not rebuilt: the zone, the supervisor's dressing and the links are
 overlays.
 
 - **State.** `stepSquad` (pure) keeps who sits where: the lowest free seat, never reassigned while held, the zone's size (grows at once,
   shrinks after 10 s with no walk in flight) and the tool starts of the last minute. Poses are functions of `now - since`, so a
   frame never depends on how many frames ran.
-- **Draws.** The zone decal (one shader, a dashed outline and a soft fill), the seat rings, the solid workstations, the monitor panes, the
-  silhouettes, the desk dressing, the beam funnel, the filament, the halos and the points are one instanced mesh each: 10 draw calls
-  (9 while no one stands as a silhouette) for any number of squads, 4 shader programs (decal, beam, points, one instanced basic;
-  6 to 7 with the glow and opaque materials, the strings and the seal, see office life 4.9). Every layer writes an instance's matrix
-  and colour only when it differs from what the mesh holds, so a still squad uploads nothing, and `SquadWarm` links all of these
-  programs while the scene loads (one hidden copy of each, from the layers' own factories), so a squad's first appearance links none. The
-  hand-over adds its folders and stamps. Parts share one vertex-coloured material per kind and are built once.
-- **Beam.** A narrow overhead stream (0.055 m radius) replaces the wide funnel, staying above employees and desks. An instanced tube whose centre line is a Bezier evaluated in the vertex shader (squad, then the core, then a thin
-  filament to the supervisor's halo). Edge glow, bands that flow into the core, a fade at both ends and near the camera;
-  brightness follows the squad's tokens per minute (tool calls per minute when there are none) through
-  `tanh(1.5 ln(1 + rate) / ln(1 + reference))` with a 0.6 s lag, an amber pulse while a subagent waits for a permission. The
-  reference rates (24 tool calls, 8 million tokens a minute) are calibrated on real transcripts and pinned to the numbers
-  documented in [office life 4.4](design/office-life.md) by `tests/aether/beam-calibration.test.ts`.
-- **Tiers.** Zone, pods and dressing on every tier. High: bands, filament, halo, 48 points. Balanced: the same with 24 points. Low,
-  Calm mode and reduced motion: the funnel stands still (brightness only), with no filament, halo or points; reduced motion also
-  has subagents appear in their seats. Walks are 14 m (high), 10 m (balanced) or none (low).
-- **Team workstations.** Solid desks, seats and monitors sit beside the supervisor. Their 1.404 m desk width and 1.592 m overall depth fit the existing 1.6 m seat pitch. Desks face in the same direction as their own subagent, independently of the supervisor's rotation. Puppet strings are no longer mounted; older saved `strings` preferences are ignored.
-- **Hand-over** (`squad/handover/`). When a subagent finishes (running to finished, with its supervisor's desk in the zone) it stands,
-  walks a folder (floating at its chest) to the end of the supervisor's desk that is nearest the zone, turns to the in-tray and glides the
-  folder in (0.6 s). The supervisor reads (`reading`, 1.5 s, an existing clip played as a one-shot) and then nods; the stamp goes over the
+- **Draws.** The zone decal (one shader, a dashed outline and a soft fill), the seat rings, the solid workstations, the monitor panes, one
+  screen mesh per kind of work, the silhouettes, the supervisor's desk dressing, its screen wall (one mesh per kind of screen) and the desk
+  links are one instanced mesh each, for any number of squads. Every layer writes an instance's matrix and colour only when it differs
+  from what the mesh holds, so a still squad uploads nothing, and `SquadWarm` links all of these programs while the scene loads (one
+  hidden copy of each, from the layers' own factories), so a squad's first appearance links none. The hand-over adds its folders and
+  stamps. Parts share one vertex-coloured material per kind and are built once. The 10 draw calls and 4 shader programs counted for the
+  earlier overhead beam (office life 4.9) were not counted again with the links, the role screens and the screen wall.
+- **Desk links** (`SquadLinks.tsx`, the layout in `squad-links.ts`). Thin circuit traces on the floor replace the overhead beam, which
+  hid the desks it joined: a trunk down the aisle between the desk columns, a cross bar in front of each row of desks and a lit port along
+  the front of every seated desk, with packets of light running from the supervisor's desk to each port. One instanced mesh draws every segment
+  twice (a soft wide layer and a thin bright core) and every packet. Brightness and the packets' speed follow the squad's tokens per minute
+  (tool calls per minute when there are none) through `tanh(1.5 ln(1 + rate) / ln(1 + reference))` with a 0.6 s lag; a port pulses amber
+  and its packets stop while its subagent waits for a permission. The reference rates (24 tool calls, 8 million tokens a minute) are
+  calibrated on real transcripts and pinned to the numbers documented in [office life 4.4](design/office-life.md) by
+  `tests/aether/beam-calibration.test.ts` (the rate keeps its old file and function names, `beam-rate.ts`).
+- **Tiers.** Zone, pods, dressing and links on every tier. High: two packets on each trace. Balanced: one. Low, Calm mode and reduced
+  motion: the links stand still (brightness only), with no packets; reduced motion also has subagents appear in their seats. Walks are
+  14 m (high), 10 m (balanced) or none (low).
+- **Team workstations.** Solid desks, seats and monitors sit beside the supervisor. Their 1.404 m desk width and 1.592 m overall depth fit the existing 1.6 m seat pitch. Desks face in the same direction as their own subagent, independently of the supervisor's rotation. Puppet strings are no longer mounted; older saved `strings` preferences are ignored. Each monitor shows the screen of its subagent's kind of
+  work (`squad-screens.ts`: Explore shows research, Plan architect, code-reviewer review, test-runner QA, security-reviewer security and
+  general-purpose a general screen; any other type takes one of these by a hash of its name), and a supervisor with a squad is walled in by
+  live-repainting screens around its own (`squad-console.ts`: two for one or two seated subagents, four for three to five, five for six
+  or more).
+- **Hand-over** (`squad/handover/`). When a subagent finishes (running to finished, with its supervisor's desk in the zone) it reaches
+  across its desk, grips the folder with both hands and raises it (0.9 s), stands, carries it at its waist to the end of the supervisor's
+  desk that is nearest the zone, turns to the in-tray, leans in to set the folder down on the stack (0.7 s) and lets go (0.3 s). The supervisor reads (`reading`, 1.5 s, an existing clip played as a one-shot) and then nods; the stamp goes over the
   tray, presses (250 ms) and a seal blooms on the folder; the subagent pauses upright and walks into the core. The stamp says **RECEIVED**
   (translated in zh-TW): a receipt that a result came back, never "approved", and it never says passed or failed. When the parent's own tool
   result for the call is flagged as an error (`result.error === true`, or `ok === false`) it is a neutral grey **RETURNED** (also translated)
-  and the supervisor scratches its head instead of nodding; no red and no green are used. `plan.ts` is the pure timeline (stand,
-  walk of at most 8 s, turn, glide, read, press, leave: the press within 14 s), `book.ts` the throttle and the state machine,
+  and the supervisor scratches its head instead of nodding; no red and no green are used. `plan.ts` is the pure timeline (lift,
+  stand, walk of at most 8 s, turn, set down, read, press, leave: the press within 14 s), `book.ts` the throttle and the state machine,
   `items.ts` what is drawn at a moment, `Handover.tsx` the meshes (one instanced mesh of unit boxes for every folder, tab and stamp, and
-  one small mesh for each seal word: three draw calls at most), `Handing.tsx` moves the carrier. The in-tray stack shows the folders
+  one small mesh for each seal word: three draw calls at most), `Handing.tsx` moves the carrier and hands its arms their targets. The in-tray stack shows the folders
   delivered (at most 5) and clears after 5 minutes without a new one. The log says "{type} handed over its result" (or "..., marked
   as an error") once, when the folder is in the tray.
   - **Throttle.** One hand-over per member, at most two carriers walking per floor (the next ones are shown as a pop: the subagent
@@ -1180,13 +1186,15 @@ overlays.
   - **An interrupted hand-over** is cut short without a stamp when its supervisor leaves, or when the carrier vanished with the
     folder still in its hands; one whose folder was already in the tray finishes.
   - **Clips.** Everything is procedural over the existing `stand_up`, `walk`, `idle`, `wave`, `reading`, `nod` and `scratch_head`; no
-    Blender clip was added. The `carry` and `conduct` clips of the spec (§4.8) are not built: the floating folder reads well in the
-    contact sheet, so they wait for the maintainer's review.
+    Blender clip was added. The carrier's arms are solved after each animation update (`animals/hands.ts`): a two-bone solve per arm that
+    puts the paw sockets on the folder's two sides, with a lean of the chest while it reaches and sets down, blended in by a grip weight that
+    is 0 before the pick-up and after the release. `carryAt` in `plan.ts` places the folder and the paws from the same numbers, so the folder
+    stays between them. The `carry` and `conduct` clips of the spec (§4.8) are not built.
 - **Accessibility.** The zone label is a real button over the zone's front edge; joins, leaves and hand-overs are said through the scene's one visually hidden `role="log"` ("Office activity").
 - **Preview.** `?squad=N` gives the first member a squad of N stand-in subagents (`&arrive=MS` one joins every MS, `&leave=MS` each
   finishes MS after it joined (and hands its result over), `&tools=MS` tool starts (the strings jerk), `&result=error` the finished ones come back
   flagged as an error, `&look=1` the camera goes to the middle of the squad (`&look=desk` to the supervisor's desk), `&relation=0` no dressing or
-  beam, `&strings=0` no strings, `&handover=0` no hand-over, `&legacy=1` desks as before, `&after=MS` the squad first shows MS after the
+  links, `&strings=0` no strings, `&handover=0` no hand-over, `&legacy=1` desks as before, `&after=MS` the squad first shows MS after the
   page opened). `scripts/perf-matrix.mjs` measures the squad on the real GPU. Measured on an Apple M4 (ANGLE Metal) against the same scene with desks: median frame time 16.7
   ms both, 26 fewer draw calls, 4 more shader programs, no GPU memory change.
 - **Puppet strings and hand-over, measured** on the same machine (Apple M4, ANGLE Metal, balanced tier, an 806 x 540 viewport, 8
@@ -1194,12 +1202,13 @@ overlays.
   pair. The strings alone (`&strings=0` against the scene): +2 draw calls, +1 shader program (the fat-line material), +0.1 GPU MB,
   +0.1 ms JS per frame; the layer's own frame callback was timed at about 0.04 ms a frame (instrumented once, then removed). The
   hand-over (`&handover=0` against the scene, 8 subagents finishing at once, 2 walking and 6 popping): +0 draw calls, programs, GPU MB and
-  JS per frame. The beam and the dressing (the relation effects with the strings and hand-over off, against `&relation=0`): +6 draws, +3
+  JS per frame. The earlier beam and the dressing (the relation effects with the strings and hand-over off, against `&relation=0`): +6 draws, +3
   programs, +1.4 GPU MB, +0.1 ms. All the relation effects together: +8 draws, +4 programs, +1.5 GPU MB, +0.3 ms JS, inside the generic
   gate of the spec (19 draws, 4 programs, 4 MB, 0.4 ms) but over the I4 squad budget of 0.15 ms JS. The 0.1 ms timer resolution of the
   browser makes the JS figures coarse. A squad of 12 (which does not fit the default floor) was not measured. The high tier, both sizes
   and the phone profile (4x CPU throttle) were measured since, with a busy building, the effects looping and the first appearance
-  (office life 4.9).
+  (office life 4.9). No figure in this section was taken again after the beam gave way to the desk links, the role screens, the
+  supervisor's screen wall and the hand-over's arms.
 
 ## KPI dashboards
 

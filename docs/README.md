@@ -44,7 +44,7 @@ differ from the pages above, the pages above win.
 
 | Document                                                                 | Contents                                                                      |
 | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| [Office life: spec](design/office-life.md)                               | Squads, the beam and the hand-over: rules and budgets (see its status note)   |
+| [Office life: spec](design/office-life.md)                               | Squads, desk links and the hand-over: rules and budgets (see its status note) |
 | [Office life: work plan](design/office-life-work-plan.md)                | The briefs the iterations were run from                                       |
 | [Architecture decisions](adr/README.md)                                  | Why the project is built the way it is (indexed list)                         |
 | [Research](research/README.md)                                           | The projects studied and what was taken from them                             |
